@@ -202,17 +202,6 @@ begin
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib64',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib64',true);
 {$endif sparc64}
-{$ifdef riscv32}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/riscv32-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/riscv32-linux-gnu',true);
-{$endif riscv32}
-{$ifdef riscv64}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/riscv64-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/riscv64-linux-gnu',true);
-{$endif riscv64}
-{$ifdef loongarch64}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/loongarch64-linux-gnu',true);
-{$endif loongarch64}
     end;
 end;
 
@@ -266,26 +255,8 @@ const defdynlinker='/lib/ld-linux-aarch64.so.1';
   const defdynlinker='/lib64/ld-linux.so.2';
 {$endif sparc64}
 
-{$ifdef riscv32}
-  const defdynlinker_generic='/lib32/ld.so.1';
-  const defdynlinker_soft_float='/lib/ld-linux-riscv32-ilp32.so.1';
-  const defdynlinker_single_float='/lib/ld-linux-riscv32-ilp32f.so.1';
-  const defdynlinker_double_float='/lib/ld-linux-riscv32-ilp32d.so.1';
-  { const defdynlinker_quad_float='/lib/ld-linux-riscv32-ilp32q.so.1'; not yet in ABI list }
-  var defdynlinker : string;
-{$endif riscv32}
 
-{$ifdef riscv64}
-  const defdynlinker_soft_float='/lib/ld-linux-riscv64-lp64.so.1';
-  const defdynlinker_single_float='/lib/ld-linux-riscv64-lp64f.so.1';
-  const defdynlinker_double_float='/lib/ld-linux-riscv64-lp64d.so.1';
-  { const defdynlinker_quad_float='/lib/ld-linux-riscv64-lp64q.so.1'; not yet in ABI list }
-  var defdynlinker : string;
-{$endif riscv64}
 
-{$ifdef loongarch64}
-  const defdynlinker='/lib64/ld-linux-loongarch-lp64d.so.1';
-{$endif loongarch64}
 
 procedure SetupDynlinker(out DynamicLinker:string;out libctype:TLibcType);
 begin
@@ -296,36 +267,6 @@ begin
     else
       defdynlinker:=defdynlinkerv2;
 {$endif powerpc64}
-{$ifdef riscv32}
-  if defdynlinker='' then
-    begin
-      case target_info.abi of
-        abi_riscv_ilp32:
-          defdynlinker:=defdynlinker_soft_float;
-        abi_riscv_ilp32f:
-          defdynlinker:=defdynlinker_single_float;
-        abi_riscv_ilp32d:
-          defdynlinker:=defdynlinker_double_float;
-      else
-        defdynlinker:=defdynlinker_generic;
-      end;
-    end;
-{$endif riscv32}
-{$ifdef riscv64}
-  if defdynlinker='' then
-    begin
-      case target_info.abi of
-        abi_riscv_lp64:
-          defdynlinker:=defdynlinker_soft_float;
-        abi_riscv_lp64f:
-          defdynlinker:=defdynlinker_single_float;
-        abi_riscv_lp64d:
-          defdynlinker:=defdynlinker_double_float;
-      else
-        defdynlinker:=defdynlinker_double_float;
-      end;
-    end;
-{$endif riscv64}
   {
     Search order:
     glibc 2.1+
@@ -453,15 +394,6 @@ begin
   platformopt:=' -EB';
   emulation_opt:=' -m elf64btsmip';
   {$endif}
-{$endif}
-{$ifdef riscv32}
-  target_opt:=' -m elf32lriscv';
-{$endif}
-{$ifdef riscv64}
-  target_opt:=' -m elf64lriscv';
-{$endif}
-{$ifdef loongarch64}
-  target_opt:='';
 {$endif}
 
 {$ifdef powerpc64}
@@ -638,11 +570,6 @@ begin
 
          { then the crtbegin* }
          if (cs_create_pic in current_settings.moduleswitches)
-{$ifdef RISCV}
-         { on RISC-V we need to use always the *S.o variants
-           if shared libraries are involved }
-         or (not SharedLibFiles.Empty)
-{$endif RISCV}
          then
            begin
              if librarysearchpath.FindFile('crtbeginS.o',false,s) then
@@ -755,11 +682,6 @@ begin
       if linklibc and (libctype<>uclibc) then
        begin
          if (cs_create_pic in current_settings.moduleswitches)
-{$ifdef RISCV}
-         { on RISC-V we need to use always the *S.o variants
-           if shared libraries are involved }
-         or linksToSharedLibFiles
-{$endif RISCV}
          then
            begin
              found1:=librarysearchpath.FindFile('crtendS.o',false,s1);
@@ -1437,21 +1359,6 @@ initialization
   RegisterExport(system_mips64el_linux,texportliblinux);
   RegisterTarget(system_mips64el_linux_info);
 {$endif MIPS64EL}
-{$ifdef riscv32}
-  RegisterImport(system_riscv32_linux,timportliblinux);
-  RegisterExport(system_riscv32_linux,texportliblinux);
-  RegisterTarget(system_riscv32_linux_info);
-{$endif riscv32}
-{$ifdef riscv64}
-  RegisterImport(system_riscv64_linux,timportliblinux);
-  RegisterExport(system_riscv64_linux,texportliblinux);
-  RegisterTarget(system_riscv64_linux_info);
-{$endif riscv64}
-{$ifdef loongarch64}
-  RegisterImport(system_loongarch64_linux,timportliblinux);
-  RegisterExport(system_loongarch64_linux,texportliblinux);
-  RegisterTarget(system_loongarch64_linux_info);
-{$endif loongarch64}
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.
 

@@ -308,11 +308,6 @@ interface
        ,top_asmlist
        ,top_callingconvention
 {$endif llvm}
-{$if defined(riscv)}
-       ,top_fenceflags
-       ,top_roundingmode
-       ,top_realconst
-{$endif defined(riscv)}
 {$ifdef wasm}
        ,top_functype
        ,top_single
@@ -552,11 +547,6 @@ interface
             top_asmlist : (asmlist: tasmlist);
             top_callingconvention: (callingconvention: tproccalloption);
         {$endif llvm}
-        {$if defined(riscv32) or defined(riscv64)}
-            top_fenceflags : (fenceflags : TFenceFlags);
-            top_roundingmode : (roundingmode : TRoundingMode);
-            top_realconst : (val_real:bestreal;special_value : TAsmRealSpecialValue);
-        {$endif defined(riscv32) or defined(riscv64)}
         {$ifdef wasm}
             top_functype : (functype: TWasmFuncType);
             top_single : (sval:single);
@@ -2973,12 +2963,6 @@ implementation
 {$ifdef aarch64}
               and not(r.refaddr in [addr_full,addr_gotpageoffset,addr_gotpage])
 {$endif aarch64}
-{$ifdef riscv}
-              and not(opcode=A_LA)
-              and not(opcode=A_FLD)
-              and not(opcode=A_FLQ)
-              and not(opcode=A_FLW)
-{$endif riscv}
               then
               internalerror(200502052);
 {$endif not llvm}

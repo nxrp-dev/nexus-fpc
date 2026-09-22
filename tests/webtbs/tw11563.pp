@@ -12,9 +12,6 @@ program ExecStack;
 {$if defined(cpuaarch64)}
     ret: longint;
 {$endif}
-{$if defined(cpuriscv64)}
-    ret: longint;
-{$endif}
 {$if defined(cpui386) or defined(cpux86_64)}
     ret: Byte;
 {$endif}
@@ -26,9 +23,6 @@ program ExecStack;
 {$endif}
 {$ifdef cpum68k}
     ret: word;
-{$endif}
-{$if defined(cpuloongarch64)}
-    ret: longint;
 {$endif}
 
     DoNothing: proc;
@@ -52,11 +46,6 @@ program ExecStack;
 {$endif}
 {$if defined(cpuaarch64)}
     ret := $d65f03c0;
-    DoNothing := proc(@ret);
-    DoNothing;
-{$endif}
-{$if defined(cpuriscv64)}
-    ret := $00008067;
     DoNothing := proc(@ret);
     DoNothing;
 {$endif}
@@ -98,11 +87,6 @@ program ExecStack;
     DoNothing;
 {$endif cpuarm}
 
-{$if defined(cpuloongarch64)}
-  ret := $20220829;
-  DoNothing := proc(@ret);
-  DoNothing;
-{$endif cpuloongarch64}
 
   end;
 begin

@@ -262,8 +262,7 @@ interface
        systems_android = [system_arm_android, system_aarch64_android, system_i386_android, system_x86_64_android, system_mipsel_android];
        systems_linux = [system_i386_linux,system_x86_64_linux,system_powerpc_linux,system_powerpc64_linux,
                        system_arm_linux,system_sparc_linux,system_sparc64_linux,system_m68k_linux,
-                       system_x86_6432_linux,system_mipseb_linux,system_mipsel_linux,system_aarch64_linux,
-                       system_riscv32_linux,system_riscv64_linux,system_loongarch64_linux];
+                       system_x86_6432_linux,system_mipseb_linux,system_mipsel_linux,system_aarch64_linux];
        systems_dragonfly = [system_x86_64_dragonfly];
        systems_freebsd = [system_aarch64_freebsd,
                           system_powerpc64_freebsd,
@@ -312,12 +311,12 @@ interface
                            obsolete_system_mips_embedded,system_arm_embedded,
                            system_powerpc64_embedded,
                            system_jvm_java32,system_mipseb_embedded,system_mipsel_embedded,
-                           system_i8086_embedded,system_riscv32_embedded,system_riscv64_embedded,
+                           system_i8086_embedded,
                            system_wasm32_embedded,
                            system_aarch64_embedded];
 
        { all FreeRTOS systems }
-       systems_freertos = [system_arm_freertos,system_riscv32_freertos];
+       systems_freertos = [system_arm_freertos];
 
        { all systems that allow section directive }
        systems_allow_section = systems_embedded+systems_freertos+systems_wasm;
@@ -372,7 +371,7 @@ interface
        { all systems that support indirect entry information }
        systems_indirect_entry_information = systems_darwin+
                                             [system_i386_win32,system_x86_64_win64,system_x86_64_linux,
-                                            system_aarch64_win64,system_loongarch64_linux];
+                                            system_aarch64_win64];
 
        { all systems for which weak linking has been tested/is supported }
        systems_weak_linking = systems_darwin + systems_solaris + systems_linux + systems_android + systems_bsd +
@@ -384,10 +383,9 @@ interface
                                    system_m68k_atari,system_m68k_palmos,system_m68k_sinclairql,system_m68k_human68k,
                                    system_i386_haiku,system_x86_64_haiku,
                                    system_i386_openbsd,system_x86_64_openbsd,
-                                   system_riscv32_linux,system_riscv64_linux,
                                    system_aarch64_win64,
                                    system_wasm32_wasip1,system_wasm32_wasip1threads,system_wasm32_wasip2,
-                                   system_loongarch64_linux,system_mipsel_ps1
+                                   system_mipsel_ps1
                                   ]+systems_darwin;
 
        { all systems that use the PE+ header in the PE/COFF file
@@ -489,14 +487,14 @@ interface
          (name: 'EABIHF' ; supported:{$if defined(arm)}true{$else}false{$endif}),
          (name: 'OLDWIN32GNU'; supported:{$ifdef I386}true{$else}false{$endif}),
          (name: 'AARCH64IOS'; supported:{$ifdef aarch64}true{$else}false{$endif}),
-         (name: 'ILP32'; supported:{$if defined(riscv32)}true{$else}false{$endif}),
-         (name: 'ILP32F'; supported:{$if defined(riscv32)}true{$else}false{$endif}),
-         (name: 'ILP32D'; supported:{$if defined(riscv32)}true{$else}false{$endif}),
-         (name: 'ILP32E'; supported:{$if defined(riscv32)}true{$else}false{$endif}),
-         (name: 'LP64'; supported:{$if defined(riscv64)}true{$else}false{$endif}),
-         (name: 'LP64F'; supported:{$if defined(riscv64)}true{$else}false{$endif}),
-         (name: 'LP64D'; supported:{$if defined(riscv64)}true{$else}false{$endif}),
-         (name: 'LP64Q'; supported:{$if defined(riscv64)}true{$else}false{$endif}),
+         (name: 'ILP32'; supported:false),
+         (name: 'ILP32F'; supported:false),
+         (name: 'ILP32D'; supported:false),
+         (name: 'ILP32E'; supported:false),
+         (name: 'LP64'; supported:false),
+         (name: 'LP64F'; supported:false),
+         (name: 'LP64D'; supported:false),
+         (name: 'LP64Q'; supported:false),
          (name: 'LINUX386_SYSV'; supported:{$if defined(i386)}true{$else}false{$endif}),
          (name: 'WINDOWED'; supported:false),
          (name: 'CALL0'; supported:false),
@@ -504,9 +502,9 @@ interface
          (name: 'N32'; supported:{$if defined(mips)}true{$else}false{$endif}),
          (name: 'O64'; supported:{$if defined(mips)}true{$else}false{$endif}),
          (name: 'N64'; supported:{$if defined(mips)}true{$else}false{$endif}),
-         (name: 'LP64S'; supported:{$if defined(loongarch64)}true{$else}false{$endif}),
-         (name: 'LP64F'; supported:{$if defined(loongarch64)}true{$else}false{$endif}),
-         (name: 'LP64D'; supported:{$if defined(loongarch64)}true{$else}false{$endif}),
+         (name: 'LP64S'; supported:false),
+         (name: 'LP64F'; supported:false),
+         (name: 'LP64D'; supported:false),
          (name: 'LP32S'; supported:{$if defined(loongarch32)}true{$else}false{$endif}),
          (name: 'LP32F'; supported:{$if defined(loongarch32)}true{$else}false{$endif}),
          (name: 'LP32D'; supported:{$if defined(loongarch32)}true{$else}false{$endif})
@@ -1171,13 +1169,7 @@ begin
 
 
 
-{$ifdef riscv32}
-  default_target(system_riscv32_linux);
-{$endif riscv32}
 
-{$ifdef riscv64}
-  default_target(system_riscv64_linux);
-{$endif riscv64}
 
 
 {$ifdef mips64eb}
@@ -1188,9 +1180,6 @@ begin
   default_target(system_mips64el_linux);
 {$endif mips64el}
 
-{$ifdef loongarch64}
-  default_target(system_loongarch64_linux);
-{$endif loongarch64}
 end;
 
 

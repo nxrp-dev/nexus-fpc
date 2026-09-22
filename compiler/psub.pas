@@ -1027,7 +1027,7 @@ implementation
       end;
 
 
-{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64) or defined(riscv32) or defined(riscv64) or defined(m68k)}
+{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64) or defined(m68k)}
     const
       exception_flags: array[boolean] of tprocinfoflags = (
         [],

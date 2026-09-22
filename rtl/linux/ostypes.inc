@@ -75,14 +75,14 @@ TYPE
 { include /include/asm-<cpu>/posix-types.h                       }
 
 const
-{$if not defined(cpux86_64) and not defined (cpuaarch64) and not defined (cpuriscv64)}
+{$if not defined(cpux86_64) and not defined (cpuaarch64)}
   _STAT_VER_LINUX_OLD = 1;
   _STAT_VER_KERNEL = 1;
   _STAT_VER_SVR4 = 2;
   _STAT_VER_LINUX = 3;
 {$else}
   _STAT_VER_KERNEL = 0;
-{$if defined(cpuaarch64) or defined(cpuriscv64)}
+{$if defined(cpuaarch64)}
   _STAT_VER_LINUX = 0;
 {$else}
   _STAT_VER_LINUX = 1;
@@ -357,14 +357,11 @@ CONST
 {$if defined(cpupowerpc)}
     O_LARGEFILE =   $10000;
 {$endif}
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpuia64) or defined(cpuriscv32) or defined(loongarch64)}
+{$if defined(cpui386) or defined(cpux86_64) or defined(cpuia64)}
     O_LARGEFILE =    $8000;
 {$endif}
 {$if defined(cpumips) or defined(cpumipsel)}
     O_LARGEFILE =    $2000;
-{$endif}
-{$if defined(cpuriscv64)}
-    O_LARGEFILE =    $0;
 {$endif}
     { mode_t possible values                                 }
     S_IRUSR =  %0100000000;     { Read permission for owner   }

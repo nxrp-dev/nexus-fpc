@@ -29,13 +29,10 @@ program pp;
   AARCH64             generate a compiler for the AARCH64 (64bit ARM)
   ARM                 generate a compiler for the ARM
   I386                generate a compiler for the Intel i386+
-  LOONGARCH64         generate a compiler for the LoongArch64 architecture
   MIPS                generate a compiler for the MIPS (Big Endian)
   MIPSEL              generate a compiler for the MIPSEL (Little Endian)
   POWERPC             generate a compiler for the PowerPC
   POWERPC64           generate a compiler for the PowerPC64 architecture
-  RISCV32             generate a compiler for the RiscV32 architecture
-  RISCV64             generate a compiler for the RiscV64 architecture
   SPARC               generate a compiler for SPARC
   SPARC64             generate a compiler for SPARC64
   X86_64              generate a compiler for the AMD x86-64 architecture
@@ -141,24 +138,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif AARCH64}
-{$ifdef RISCV32}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif RISCV32}
-{$ifdef RISCV64}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif RISCV64}
-{$ifdef LOONGARCH64}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif LOONGARCH64}
 
 {$ifndef CPUDEFINED}
   {$fatal A CPU type switch must be defined}

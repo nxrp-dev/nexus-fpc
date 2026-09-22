@@ -307,9 +307,9 @@ implementation
     {$ifdef i8086}
       cpuinfo,
     {$endif i8086}
-    {$if defined(xtensa) or defined(i386) or defined(riscv)}
+    {$if defined(xtensa) or defined(i386)}
       cpuinfo,
-    {$endif defined(xtensa) or defined(i386) or defined(riscv)}
+    {$endif defined(xtensa) or defined(i386)}
       cgbase,procinfo
       ;
 
@@ -1655,9 +1655,9 @@ implementation
       end;
 
 {$ifndef llvm}
-  {$if defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64) or defined(riscv)}
+  {$if defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
     {$define HAS_MINMAX_INTRINSICS}
-  {$endif defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64) or defined(riscv)}
+  {$endif defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
 {$endif llvm}
 
     function tifnode.internalsimplify(warn: boolean) : tnode;
@@ -1738,15 +1738,6 @@ implementation
           (is_single(tassignmentnode(thenstmnt).left.resultdef) or is_double(tassignmentnode(thenstmnt).left.resultdef) or
            is_32bitint(tassignmentnode(thenstmnt).left.resultdef) or is_64bitint(tassignmentnode(thenstmnt).left.resultdef)) and
 {$endif defined(aarch64)}
-{$if defined(riscv)}
-          { RiscV fmin/fmax/fminm/fmaxm uses the IEEE semantics (2008 or 201x) of min/max regarding NaN (using either
-            always the NaN or non-NaN operand instead of the second one in case on is NaN), so
-            we can use them only when fast math is on }
-          ((cs_opt_fastmath in current_settings.optimizerswitches) and
-           ((is_single(tassignmentnode(thenstmnt).left.resultdef) and (CPURV_HAS_F in cpu_capabilities[current_settings.cputype])) or
-            (is_double(tassignmentnode(thenstmnt).left.resultdef) and (CPURV_HAS_D in cpu_capabilities[current_settings.cputype])) or
-            (is_quad(tassignmentnode(thenstmnt).left.resultdef) and (CPURV_HAS_Q in cpu_capabilities[current_settings.cputype])))) and
-{$endif defined(riscv)}
           (
           { the right size of the assignment in the then clause must either }
 

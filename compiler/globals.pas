@@ -326,12 +326,12 @@ Const
        { specified with -FW and -Fw }
        wpofeedbackinput,
        wpofeedbackoutput : TPathStr;
-{$if defined(XTENSA) or defined(RISCV32) or defined(ARM)}
+{$if defined(XTENSA) or defined(ARM)}
        { specified with -Ff }
        idfpath           : TPathStr;
        { specified with }
        idf_version       : longint;
-{$endif defined(XTENSA) or defined(RISCV32) or defined(ARM)}
+{$endif defined(XTENSA) or defined(ARM)}
        { external assembler extra option }
        asmextraopt       : string;
 
@@ -639,18 +639,6 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_x87;
   {$endif i8086}
-  {$ifdef riscv32}
-        cputype : cpu_rv32ima;
-        optimizecputype : cpu_rv32ima;
-        asmcputype : cpu_none;
-        fputype : fpu_soft;
-  {$endif riscv32}
-  {$ifdef riscv64}
-        cputype : cpu_rv64imafdc;
-        optimizecputype : cpu_rv64imafdc;
-        asmcputype : cpu_none;
-        fputype : fpu_fd;
-  {$endif riscv64}
   {$ifdef xtensa}
         cputype : cpu_none;
         optimizecputype : cpu_none;
@@ -673,12 +661,6 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_standard;
   {$endif wasm}
-  {$ifdef loongarch64}
-        cputype : cpu_3a;
-        optimizecputype : cpu_3a;
-        asmcputype : cpu_none;
-        fputype : fpu_fd;
-  {$endif loongarch64}
 {$endif not GENERIC_CPU}
         asmmode : asmmode_standard;
 {$ifndef jvm}
@@ -1119,12 +1101,6 @@ implementation
          if idfpath <> '' then
            Replace(s,'$IDFPATH',idfpath);
 {$endif xtensa}
-{$ifdef riscv32}
-         if idf_version > 0 then
-           Replace(s,'$IDF_VERSION',idfversionstring(idf_version));
-         if idfpath <> '' then
-           Replace(s,'$IDFPATH',idfpath);
-{$endif riscv32}
 
          if not substitute_env_variables then
            exit;
@@ -1798,9 +1774,9 @@ implementation
         cshared:=false;
         rlinkpath:='';
         sysrootpath:='';
-{$if defined(XTENSA) or defined(RISCV32)}
+{$if defined(XTENSA)}
         idfpath:='';
-{$endif defined(XTENSA) or defined(RISCV32)}
+{$endif defined(XTENSA)}
 
         { Search Paths }
         unicodepath:='';

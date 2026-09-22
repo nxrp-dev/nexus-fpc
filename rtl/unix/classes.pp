@@ -26,9 +26,6 @@
 {$if defined(CPUPOWERPC) or defined(CPUPOWERPC64)}
    {$define FPC_USE_INTRINSICS}
 {$endif}
-{$if defined(CPURISCV32) or defined(CPURISCV64)}
-   {$define FPC_USE_INTRINSICS}
-{$endif}
 {$endif}
 {$endif}
 { determine the type of the resource/form file }

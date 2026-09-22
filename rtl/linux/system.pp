@@ -39,9 +39,9 @@ Unit System;
 function get_cmdline:PAnsiChar; deprecated 'use paramstr' ;
 property cmdline:PAnsiChar read get_cmdline;
 
-{$if defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K)}
+{$if defined(CPUARM) or defined(CPUM68K)}
 {$define FPC_LOAD_SOFTFPU}
-{$endif defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K)}
+{$endif defined(CPUARM) or defined(CPUM68K)}
 
 {$ifdef FPC_SOFT_FPUX80}
 {$define FPC_SOFTFLOAT_FLOATX80}
@@ -174,13 +174,6 @@ begin
 end;
 {$endif defined(CPUX86_64)}
 
-{$ifdef CPULOONGARCH64}
-{$define INITTLS}
-Function fpset_tls(p : pointer;size : SizeUInt):cint; assembler;
-asm
-  move $tp, p
-end;
-{$endif CPULOONGARCH64}
 
 {$endif not FPC_USE_LIBC}
 

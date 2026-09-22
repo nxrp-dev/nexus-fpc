@@ -1071,21 +1071,12 @@ begin
     {$endif mips}
   {$endif not mipsel}
 
-  {$ifdef riscv32}
-  Result:=arRiscV32;
-  {$endif riscv32}
 
-  {$ifdef riscv64}
-  Result:=arRiscV64;
-  {$endif riscv64}
 
   {$ifdef wasm32}
   Result:=arWasm32;
   {$endif wasm32}
 
-  {$ifdef loongarch64}
-  Result:=arLoongArch64;
-  {$endif loongarch64}
 end;
 
 Function GetCompiledPlatform : TOSVersion.TPlatform;

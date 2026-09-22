@@ -63,7 +63,6 @@ Const
       'aarch64': Result := 'a64';
       'arm': Result := 'arm';
       'i386': Result := '386';
-      'loongarch64': Result:='loongarch64';
       'mips': Result := 'mips';
       'mipsel': Result := 'mipsel';
       'mipseb': Result := 'mipseb';
@@ -71,8 +70,6 @@ Const
       'mips64el': Result := 'mips64el';
       'powerpc': Result := 'ppc';
       'powerpc64': Result := 'ppc64';
-      'riscv32': Result := 'rv32';
-      'riscv64': Result := 'rv64';
       'sparc': Result := 'sparc';
       'sparc64': Result := 'sparc64';
       'x86_64': Result := 'x64';
@@ -139,18 +136,6 @@ Const
          processorname:='mips64';
       {$endif mips}
     {$endif not mipsel}
-    {$ifdef riscv32}
-         ppcbin:='ppcrv32';
-         processorname:='riscv32';
-    {$endif riscv32}
-    {$ifdef riscv64}
-         ppcbin:='ppcrv64';
-         processorname:='riscv64';
-    {$endif riscv64}
-    {$ifdef loongarch64}
-         ppcbin:='ppcloongarch64';
-         processorname:='loongarch64';
-    {$endif loongarch64}
   end;
 
   function SplitPath(Const HStr:String):String;

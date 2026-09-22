@@ -1623,7 +1623,7 @@ ifdef CREATESHARED
 override FPCOPT+=-Cg
 endif
 ifneq ($(filter $(OS_TARGET),dragonfly freebsd openbsd netbsd linux solaris),)
-ifneq ($(filter $(CPU_TARGET),x86_64 mips mipsel mips64 mips64el riscv64 powerpc64),)
+ifneq ($(filter $(CPU_TARGET),x86_64 mips mipsel mips64 mips64el powerpc64),)
 override FPCOPT+=-Cg
 endif
 endif
@@ -2357,7 +2357,7 @@ sysutils$(PPUEXT) : $(SYSUTILS_DEPS)
 	$(COMPILER) -Fi$(OBJPASDIR)/sysutils $<
 System.SysUtils$(PPUEXT) : $(NSINC)/System.SysUtils.pp $(SYSUTILS_DEPS)
 	$(COMPILER) $(SYSUTILS_OPT) -Fi$(OBJPASDIR)/sysutils -Fi$(SYSUTILSDIR) $<
-ifneq ($(findstring $(ARCH),aarch64 arm powerpc powerpc64 riscv64 riscv32),)
+ifneq ($(findstring $(ARCH),aarch64 arm powerpc powerpc64),)
 CLASSES_DEPS_CPU:=$(CLASSES_DEPS_CPU) $(INTRINSICSUNIT)$(PPUEXT)
 endif
 CLASSES_DEPS=$(CLASSESDIR)/classes.pp $(TTHREADINCDIR)/tthread.inc $(wildcard $(OBJPASDIR)/classes/*.inc) \

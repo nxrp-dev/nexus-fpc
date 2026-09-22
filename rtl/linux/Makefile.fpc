@@ -122,17 +122,7 @@ override LOADERS=
 SYSINIT_UNITS=si_prc si_c si_g si_dll
 endif
 
-ifeq ($(ARCH),riscv32)
-override LOADERS=
-SYSINIT_UNITS=si_prc si_dll si_c
-CPU_UNITS=$(INTRINSICSUNIT)
-endif
 
-ifeq ($(ARCH),riscv64)
-override LOADERS=
-SYSINIT_UNITS=si_prc si_dll si_c si_g
-CPU_UNITS=$(INTRINSICSUNIT)
-endif
 
 ifeq ($(ARCH),mips64)
 override LOADERS=
@@ -165,10 +155,6 @@ ifeq ($(ARCH),sparc64)
   override FPCOPT+=-Fisparcgen
 endif
 
-ifeq ($(ARCH),loongarch64)
-override LOADERS=
-SYSINIT_UNITS=si_prc si_dll si_c si_g
-endif
 
 
 # Causes release PPU files not to be recompiled
@@ -258,12 +244,6 @@ ifeq ($(ARCH),sparc64)
   ASSHAREDOPT=-KPIC
 endif
 
-ifeq ($(ARCH),riscv32)
-  ASTARGET=-march=rv32imafdc
-endif
-ifeq ($(ARCH),riscv64)
-  ASTARGET=-march=rv64imafdc
-endif
 
 ifeq ($(ARCH),arm)
   ifeq ($(SUBARCH),armv6m)

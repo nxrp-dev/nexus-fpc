@@ -126,7 +126,7 @@ Type
     processorstr: TCmdStr;
     function ParseMacVersionMin(out minversion, invalidateversion: tversion; const compvarname, value: string; ios: boolean): boolean;
     procedure MaybeSetDefaultMacVersionMacro;
-{$if defined(XTENSA) or defined(RISCV32)}
+{$if defined(XTENSA)}
     function ParseVersionStr(out ver: longint; const compvarname, value: string): boolean;
     procedure MaybeSetIdfVersionMacro;
 {$endif}
@@ -189,7 +189,6 @@ const
                         + [system_i386_freebsd]
                         + [system_i386_netbsd]
                         + [system_i386_wdosx]
-                        + [system_riscv32_linux,system_riscv64_linux]
                         + [system_aarch64_linux];
 
 
@@ -1024,12 +1023,6 @@ begin
 {$ifdef sparc64}
       's',
 {$endif}
-{$ifdef riscv32}
-      'R',
-{$endif}
-{$ifdef riscv64}
-      'r',
-{$endif}
 {$ifdef jvm}
       'J',
 {$endif}
@@ -1044,9 +1037,6 @@ begin
 {$endif}
 {$ifdef wasm32}
       'W',
-{$endif}
-{$ifdef loongarch64}
-      'l',
 {$endif}
       '*' : show:=true;
      end;
@@ -1287,7 +1277,7 @@ function TOption.ParseMacVersionMin(out minversion,
     result:=true;
   end;
 
-{$if defined(XTENSA) or defined(RISCV32)}
+{$if defined(XTENSA)}
 function TOption.ParseVersionStr(out ver: longint;
   const compvarname, value: string): boolean;
 
@@ -1366,7 +1356,7 @@ function TOption.ParseVersionStr(out ver: longint;
         result:=true;
       end;
 end;
-{$endif XTENSA or RISCV32}
+{$endif XTENSA}
 
 procedure TOption.MaybeSetDefaultMacVersionMacro;
 var
@@ -1466,10 +1456,10 @@ procedure TOption.LLVMEnableSanitizers(sanitizers: TCmdStr);
 {$endif}
 
 
-{$if defined(XTENSA) or defined(RISCV32)}
+{$if defined(XTENSA)}
 procedure TOption.MaybeSetIdfVersionMacro;
 begin
-  if not(target_info.system in [system_xtensa_freertos,system_riscv32_freertos]) then
+  if not(target_info.system in [system_xtensa_freertos]) then
     exit;
   if IdfVersionSet then
     exit;
@@ -1492,23 +1482,6 @@ begin
         idf_version:=40400;
       end;
 {$endif}
-{$ifdef RISCV32}
-    ct_esp32c2:
-      begin
-        set_system_compvar('IDF_VERSION','50006');
-        idf_version:=40400;
-      end;
-    ct_esp32c3:
-      begin
-        set_system_compvar('IDF_VERSION','50006');
-        idf_version:=40400;
-      end;
-    ct_esp32c6:
-      begin
-        set_system_compvar('IDF_VERSION','50201');
-        idf_version:=50200;
-      end;
-{$endif RISCV32}
     else
       begin
         set_system_compvar('IDF_VERSION','00000');
@@ -1516,7 +1489,7 @@ begin
       end;
   end;
 end;
-{$endif XTENSA or RISCV32}
+{$endif XTENSA}
 
 procedure TOption.VerifyTargetProcessor;
   begin
@@ -3038,10 +3011,10 @@ begin
             ParaFrameworkPath.AddPath(More,false)
           else
             frameworksearchpath.AddPath(More,true)
-{$if defined(XTENSA) or defined(RISCV32)}
-        else if (target_info.system in [system_xtensa_freertos,system_riscv32_freertos]) then
+{$if defined(XTENSA)}
+        else if (target_info.system in [system_xtensa_freertos]) then
           idfpath:=FixPath(More,true)
-{$endif defined(XTENSA) or defined(RISCV32)}
+{$endif defined(XTENSA)}
         else
           IllegalPara(opt);
     'F' :
@@ -4045,13 +4018,13 @@ begin
              begin
                break;
              end
-{$if defined(XTENSA) or defined(RISCV32)}
-           else if (target_info.system in [system_xtensa_freertos,system_riscv32_freertos]) and
+{$if defined(XTENSA)}
+           else if (target_info.system in [system_xtensa_freertos]) and
               ParseVersionStr(idf_version,'IDF_VERSION',copy(More,2)) then
              begin
                break;
              end
-{$endif XTENSA or RISCV32}
+{$endif XTENSA}
            else
              IllegalPara(opt);
          end;
@@ -4709,23 +4682,7 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_COMP_IS_INT64');
       {$endif aarch64}
 
-      {$ifdef riscv32}
-        def_system_macro('CPURISCV');
-        def_system_macro('CPURISCV32');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-      {$endif riscv32}
 
-      {$ifdef riscv64}
-        def_system_macro('CPURISCV');
-        def_system_macro('CPURISCV64');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-      {$endif riscv64}
 
       {$ifdef xtensa}
         def_system_macro('CPUXTENSA');
@@ -4750,15 +4707,6 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_COMP_IS_INT64');
       {$endif wasm32}
 
-      {$ifdef loongarch64}
-        def_system_macro('CPULOONGARCH');
-        def_system_macro('CPULOONGARCH64');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-        def_system_macro('FPC_LOCALS_ARE_STACK_REG_RELATIVE');
-      {$endif loongarch64}
 
       {$if defined(cpu8bitalu)}
         def_system_macro('CPUINT8');
@@ -4791,9 +4739,6 @@ procedure read_arguments(cmd:TCmdStr);
       {$ifdef cpurox}
       {$if defined(m68k)}
         if CPUM68K_HAS_ROLROR in cpu_capabilities[init_settings.cputype] then
-          def_system_macro('FPC_HAS_INTERNAL_ROX');
-      {$elseif defined(riscv)}
-        if [CPURV_HAS_ZBB,CPURV_HAS_ZBKB]*cpu_capabilities[init_settings.cputype]<>[] then
           def_system_macro('FPC_HAS_INTERNAL_ROX');
       {$else}
         def_system_macro('FPC_HAS_INTERNAL_ROX');
@@ -5236,10 +5181,10 @@ begin
   { set Mac OS X version default macros if not specified explicitly }
   option.MaybeSetDefaultMacVersionMacro;
 
-{$if defined(XTENSA) or defined(RISCV32)}
+{$if defined(XTENSA)}
   { set ESP32 or ESP8266 default SDK versions }
   option.MaybeSetIdfVersionMacro;
-{$endif defined(XTENSA) or defined(RISCV32)}
+{$endif defined(XTENSA)}
 
 {$ifdef cpufpemu}
   { force fpu emulation on arm/wince, arm/gba, arm/embedded and arm/nds etc.
@@ -5248,8 +5193,7 @@ begin
      ((target_info.system in [system_arm_wince,system_arm_gba,
          system_m68k_atari,
          system_arm_nds,system_arm_embedded,system_arm_freertos,
-         system_riscv32_embedded,system_riscv64_embedded,system_xtensa_linux,
-         system_riscv32_freertos,
+         system_xtensa_linux,
          system_mipsel_ps1])
 {$ifdef arm}
       or (target_info.abi=abi_eabi)
@@ -5425,116 +5369,6 @@ begin
   end;
 {$endif aarch64}
 
-{$if defined(riscv32) or defined(riscv64)}
-  { RISC-V defaults }
-  case target_info.abi of
-{$ifdef RISCV32}
-    abi_riscv_ilp32f:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_rv32imaf;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_rv32imaf;
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          init_settings.fputype:=fpu_fd
-        else
-          begin
-            if not (init_settings.fputype in [fpu_fd]) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-    abi_riscv_ilp32d:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_rv32imafd;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_rv32imafd;
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          init_settings.fputype:=fpu_fd
-        else
-          begin
-            if not (init_settings.fputype in [fpu_fd]) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-{$endif RISCV32}
-{$ifdef RISCV64}
-    abi_riscv_lp64f:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_rv64imafdc;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_rv64imafdc;
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          init_settings.fputype:=fpu_fd
-        else
-          begin
-            if not (init_settings.fputype in [fpu_fd]) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-    abi_riscv_lp64d:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_rv64imafdc;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_rv64imafdc;
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          init_settings.fputype:=fpu_fd
-        else
-          begin
-            if not (init_settings.fputype in [fpu_fd]) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-    abi_riscv_lp64q:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_rv64imafdc;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_rv64imafdc;
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          init_settings.fputype:=fpu_fd
-        else
-          begin
-            if not (init_settings.fputype in [fpu_fd]) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-{$endif RISCV64}
-    else
-      ;
-  end;
-
-  { check if the fpu type requires the F and D extension }
-  if (init_settings.fputype in [fpu_fd]) and not((cpu_capabilities[init_settings.cputype]*[CPURV_HAS_F,CPURV_HAS_D])=[CPURV_HAS_F,CPURV_HAS_D]) then
-    Message2(option_unsupported_fpu,fputypestr[init_settings.fputype],cputypestr[init_settings.cputype]);
-{$endif defined(riscv32) or defined(riscv64)}
 
 {$ifdef jvm}
   { set default CPU type to Dalvik when targeting Android }
@@ -5663,14 +5497,6 @@ begin
     end;
 {$endif wasm}
 
-{$if defined(loongarch64)}
-  { LoongArch defaults }
-  if (target_info.abi = abi_loongarch_lp64d) then
-    begin
-      init_settings.cputype:=cpu_3a;
-      init_settings.fputype:=fpu_fd;
-    end;
-{$endif defined(loongarch64)}
 
   { now we can define cpu and fpu type }
   def_cpu_macros;

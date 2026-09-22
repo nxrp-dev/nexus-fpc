@@ -330,22 +330,6 @@ unit raatt;
                end;
            end;
 {$endif aarch64}
-{$if defined(riscv32) or defined(riscv64)}
-           {
-             amo* instructions contain a postfix with size, and optionally memory ordering
-             fence* can contain memory type identifier
-             floating point instructions contain size, and optionally rounding mode
-           }
-           case c of
-             '.':
-               begin
-                 repeat
-                   actasmpattern:=actasmpattern+c;
-                   c:=current_scanner.asmgetchar;
-                 until not(c in ['a'..'z','A'..'Z','.']);
-               end;
-           end;
-{$endif riscv}
 {$ifdef xtensa}
            {
              Xtensa can have multiple postfixes
@@ -363,18 +347,6 @@ unit raatt;
                end;
            end;
 {$endif xtensa}
-{$ifdef loongarch64}
-           { LoongArch have multiple postfixes. So... }
-           case c of
-             '.' :
-               begin
-                 repeat
-                   actasmpattern:=actasmpattern+c;
-                   c:=current_scanner.asmgetchar;
-                 until not(c in ['a'..'z','A'..'Z', '0'..'9', '.']);
-               end;
-           end;
-{$endif loongarch64}
            { Opcode ? }
            If is_asmopcode(upper(actasmpattern)) then
             Begin
@@ -730,7 +702,7 @@ unit raatt;
                  exit;
                end;
 {$endif arm or aarch64}
-{$if defined(arm) or defined(loongarch64)}
+{$if defined(arm)}
              '=' :
                begin
                  actasmtoken:=AS_EQUAL;
@@ -739,14 +711,6 @@ unit raatt;
                end;
 {$endif arm or loongarch64}
 
-{$ifdef loongarch64}
-             '?' :
-               begin
-                 actasmtoken:=AS_QUESTION;
-                 c:=current_scanner.asmgetchar;
-                 exit;
-               end;
-{$endif loongarch64}
 
              ',' :
                begin
@@ -757,39 +721,19 @@ unit raatt;
 
              '<' :
                begin
-{$if defined(loongarch64)}
-                 actasmtoken:=AS_LT;
-                 c:=current_scanner.asmgetchar;
-                 if c = '<' then
-                   begin
-                     actasmtoken:=AS_SHL;
-                     c:=current_scanner.asmgetchar;
-                   end;
-{$else}
                  actasmtoken:=AS_SHL;
                  c:=current_scanner.asmgetchar;
                  if c = '<' then
                   c:=current_scanner.asmgetchar;
-{$endif loongarch64}
                  exit;
                end;
 
              '>' :
                begin
-{$if defined(loongarch64)}
-                 actasmtoken:=AS_GT;
-                 c:=current_scanner.asmgetchar;
-                 if c = '>' then
-                   begin
-                     actasmtoken:=AS_SHR;
-                     c:=current_scanner.asmgetchar;
-                   end;
-{$else}
                  actasmtoken:=AS_SHR;
                  c:=current_scanner.asmgetchar;
                  if c = '>' then
                   c:=current_scanner.asmgetchar;
-{$endif loongarch64}
                  exit;
                end;
 

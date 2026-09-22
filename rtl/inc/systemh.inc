@@ -319,40 +319,7 @@ Type
   ValReal = Double;
 {$endif CPUAARCH64}
 
-{$ifdef CPURISCV32}
-  {$define DEFAULT_DOUBLE}
 
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-  {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPURISCV32}
-
-{$ifdef CPURISCV64}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPURISCV64}
 
 
 {$ifdef CPUZ80}
@@ -387,14 +354,6 @@ Type
   FarPointer = Pointer;
 {$endif CPUWASM32}
 
-{$ifdef CPULOONGARCH64}
-  {$define DEFAULT_DOUBLE}
-
-  {$define SUPPORT_SINGLE}
-  {$define SUPPORT_DOUBLE}
-
-  ValReal = Double;
-{$endif CPULOONGARCH64}
 
 
 { By default enable a simple implementation of Random for 8/16 bit CPUs }
@@ -1114,14 +1073,14 @@ function RolQWord(Const AValue : QWord;const Dist : Byte): QWord;{$ifdef SYSTEMI
 {$endif defined(cpux86_64) or defined(cpui386) or defined(cpui8086) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
 
 { currently, all supported CPUs have an internal 32 bit sar implementation }
-{ $if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel) or defined(cpuriscv)}
+{ $if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel)}
 {$define FPC_HAS_INTERNAL_SAR_DWORD}
 { $endif defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel)}
 
-{$if defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuriscv64) or defined(cpuwasm32) or defined(cpuloongarch64)}
+{$if defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
 {$define FPC_HAS_INTERNAL_SAR_QWORD}
 {$define FPC_HAS_INTERNAL_SAR_ASSIGN_QWORD}
-{$endif defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuriscv64) or defined(cpuwasm32) or defined(cpuloongarch64)}
+{$endif defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
 
 {$endif FPC_HAS_INTERNAL_SAR}
 

@@ -289,49 +289,10 @@
   {$define support_rodata}
 {$endif aarch64}
 
-{$ifdef riscv32}
-  {$define riscv}
-  {$define cpu32bit}
-  {$define cpu32bitaddr}
-  {$define cpu32bitalu}
-  {$define cpurox}
-  {$define cpufpemu}
-  {$define cputargethasfixedstack}
-  {$define cpuneedsmulhelper}
-  {$define cpuneedsdivhelper}
-  {$define cpucapabilities}
-  {$define cpurequiresproperalignment}
-  {$define SUPPORT_SAFECALL}
-{$endif riscv32}
 
 
-{$ifdef riscv64}
-  {$define riscv}
-  {$define cpu64bit}
-  {$define cpu64bitaddr}
-  {$define cpu64bitalu}
-  {$define cpurox}
-  {$define cpufpemu}
-  {$define cputargethasfixedstack}
-  {$define cpuneedsmulhelper}
-  {$define cpuneedsdivhelper}
-  {$define cpucapabilities}
-  {$define cpurequiresproperalignment}
-  {$define SUPPORT_SAFECALL}
-  {$define support_rodata}
-{$endif riscv64}
 
 
-{$ifdef loongarch64}
-  {$define loongarch}
-  {$define cpu64bit}
-  {$define cpu64bitaddr}
-  {$define cpu64bitalu}
-  {$define cputargethasfixedstack}
-  {$define cpucapabilities}
-  {$define SUPPORT_SAFECALL}
-  {$define support_rodata}
-{$endif loongarch64}
 
 { Stabs is not officially supported on 64 bit targets by gdb, except on Mac OS X
   (but there we don't support it)

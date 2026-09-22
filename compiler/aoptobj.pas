@@ -494,7 +494,7 @@ Unit AoptObj;
 
     function JumpTargetOp(ai: taicpu): poper; {$IFDEF USEINLINE}inline;{$ENDIF}
       begin
-{$if defined(MIPS) or defined(riscv64) or defined(riscv32) or defined(xtensa) or defined(loongarch64)}
+{$if defined(MIPS) or defined(xtensa)}
         { Branches of above archs can have 1,2 or 3 operands, target label is the last one. }
         result:=ai.oper[ai.ops-1];
 {$elseif defined(SPARC64)}
@@ -1731,9 +1731,6 @@ Unit AoptObj;
           (hp.condition=c_None) and
 {$endif arm or aarch64 or z80}
           (hp.ops>0) and
-{$if defined(riscv32) or defined(riscv64)}
-          (hp.oper[0]^.reg=NR_X0) and
-{$endif riscv}
           (JumpTargetOp(hp)^.typ = top_ref) and
           (JumpTargetOp(hp)^.ref^.symbol is TAsmLabel);
       end;
@@ -1792,11 +1789,6 @@ Unit AoptObj;
 {$ifndef z80}
         p.opcode := aopt_uncondjmp;
 {$endif not z80}
-{$ifdef RISCV}
-        p.loadoper(1, p.oper[p.ops-1]^);
-        p.loadreg(0, NR_X0);
-        p.ops:=2;
-{$endif}
 {$ifdef xtensa}
         p.opcode := aopt_uncondjmp;
         p.loadoper(0, p.oper[p.ops-1]^);
@@ -2472,7 +2464,7 @@ Unit AoptObj;
 
       var p1: tai;
           p2: tai;
-{$if not defined(MIPS) and not defined(riscv64) and not defined(riscv32) and not defined(JVM) and not defined(loongarch64) and not defined(WASM)}
+{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
           p3: tai;
 {$endif}
           ThisLabel, l: tasmlabel;
@@ -2519,7 +2511,7 @@ Unit AoptObj;
                       Exit;
                   end;
 
-{$if not defined(MIPS) and not defined(riscv64) and not defined(riscv32) and not defined(JVM) and not defined(loongarch64) and not defined(WASM)}
+{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
                 p3 := p2;
 {$endif not MIPS and not RV64 and not RV32 and not JVM and not loongarch64 and not WASM}
 
@@ -2530,7 +2522,7 @@ Unit AoptObj;
                    { TODO: For anyone with experience with MIPS or RISC-V, please add support for tracing
                      conditional jumps. [Kit] }
 
-{$if not defined(MIPS) and not defined(riscv64) and not defined(riscv32) and not defined(JVM) and not defined(loongarch64) and not defined(WASM)}
+{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
   { for MIPS, it isn't enough to check the condition; first operands must be same, too. }
                    or
                    condition_in(hp.condition, taicpu(p1).condition) or
@@ -2577,7 +2569,7 @@ Unit AoptObj;
                     GetFinalDestination := True;
                     Exit;
                   end
-{$if not defined(MIPS) and not defined(riscv64) and not defined(riscv32) and not defined(JVM) and not defined(loongarch64) and not defined(WASM)}
+{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
                 else
                   if condition_in(inverse_cond(hp.condition), taicpu(p1).condition) then
                     begin

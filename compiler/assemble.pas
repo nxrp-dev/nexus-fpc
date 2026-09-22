@@ -1865,10 +1865,6 @@ Implementation
                        Code16:=tai_directive(hp).name='16';
                      end
 {$endif ARM}
-{$ifdef RISCV}
-                   asd_option:
-                     internalerror(2019031701);
-{$endif RISCV}
                    else
                      internalerror(2010011101);
                  end;

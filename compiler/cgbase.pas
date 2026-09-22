@@ -93,38 +93,6 @@ interface
          addr_low_call,    // counterpart of two above, generate call_hi16 and call_lo16 relocs
          addr_high_call
          {$ENDIF}
-         {$if defined(RISCV32) or defined(RISCV64)}
-         ,
-         addr_hi20,
-         addr_lo12,
-         addr_pcrel_hi20,
-         addr_pcrel_lo12,
-         addr_pcrel,
-         addr_got_pcrel_hi,
-         addr_plt
-         {$endif RISCV}
-         {$if defined(LOONGARCH64)}
-         ,
-         addr_b16, { %b16(sym) }
-         addr_b21, { %b21(sym) }
-         addr_b26, { %b26(sym) }
-         addr_pcrel, { Some times we only use sym like 'bxx rd,rj,sym'. And la.pcrel..sym }
-         addr_plt, { %plt(sym) }
-         addr_abs_hi20, { %abs_hi20(sym) }
-         addr_abs_lo12, { %abs_lo12(sym) }
-         addr_abs64_lo20, { %abs_lo20(sym) }
-         addr_abs64_hi12, { %abs_hi12(sym) }
-         addr_pc_hi20, { %pc_hi20(sym) }
-         addr_got_pc_hi20, { %got_pc_hi20(sym) }
-         addr_got_pc_lo12, { %got_pc_lo12(sym) }
-         addr_pc_lo12, { %pc_lo12(sym) }
-         addr_got, { la.got..sym }
-         addr_abs, { la.abs..sym }
-         addr_reg_reg, { use by [ld/st]x }
-         addr_reg_12i, { use by [ld/st] }
-         addr_reg_14i, { use by [ldptr/stptr] }
-         addr_reg { use by jr.. }
-         {$endif LOONGARCH64}
          {$IFDEF Z80}
          ,addr_lo8
          ,addr_hi8

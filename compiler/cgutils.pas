@@ -75,9 +75,6 @@ unit cgutils;
          index       : tregister;
          refaddr     : trefaddr;
          scalefactor : byte;
-{$if defined(riscv32) or defined(riscv64)}
-         symboldata  : tlinkedlistitem;
-{$endif riscv32/64}
 {$ifdef arm}
          symboldata  : tlinkedlistitem;
          signindex   : shortint;
@@ -582,8 +579,6 @@ uses
 {$elseif defined(ARM)}
         result:=(cs_check_fpu_exceptions in current_settings.localswitches) and
           not(FPUARM_HAS_EXCEPTION_TRAPPING in fpu_capabilities[current_settings.fputype]);
-{$elseif defined(RISCV)}
-        result:=cs_check_fpu_exceptions in current_settings.localswitches;
 {$elseif defined(XTENSA)}
         result:=cs_check_fpu_exceptions in current_settings.localswitches;
 {$else}

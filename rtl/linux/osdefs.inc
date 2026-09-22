@@ -91,15 +91,7 @@
   {$define FPC_USEGETTIMEOFDAY}
 {$endif cpusparc64}
 
-{$ifdef cpuriscv32}
-  {$define generic_linux_syscalls}
-  {$undef usestime}
-{$endif cpuriscv32}
 
-{$ifdef cpuriscv64}
-  {$define generic_linux_syscalls}
-  {$undef usestime}
-{$endif cpuriscv64}
 
 
 
@@ -116,10 +108,3 @@
     {$define MMAP2}
   {$endif}
 {$endif android}
-
-{$ifdef cpuloongarch64}
-  {$define generic_linux_syscalls}
-  {$define use_statx_syscall}
-  {$define use_prlimit64}
-  {$undef usestime}
-{$endif cpuloongarch64}

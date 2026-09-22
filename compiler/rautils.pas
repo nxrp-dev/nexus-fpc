@@ -85,9 +85,6 @@ type
       OPR_SHIFTEROP : (shifterop : tshifterop);
       OPR_COND      : (cc : tasmcond);
 {$endif aarch64}
-{$if defined(riscv32) or defined(riscv64)}
-      OPR_FENCEFLAGS: (fenceflags : TFenceFlags);
-{$endif aarch64}
 {$ifdef wasm32}
       OPR_FLOATCONSTANT: (floatval:double);
       OPR_FUNCTYPE     : (functype: TWasmFuncType);
@@ -1332,10 +1329,6 @@ end;
               OPR_INDEXEDREG:
                 ai.loadindexedreg(i-1,indexedreg,regindex);
 {$endif aarch64}
-{$if defined(riscv32) or defined(riscv64)}
-             OPR_FENCEFLAGS:
-               ai.loadfenceflags(i-1,fenceflags);
-{$endif riscv32 or riscv64}
 {$ifdef wasm32}
               OPR_FLOATCONSTANT:
                 case opcode of

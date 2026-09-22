@@ -8124,7 +8124,7 @@ s += chr(68);
 s += chr(69);
 s += chr(70);
 s += chr(71);
-{$if not defined(cpuarm) and not defined(cpusparc) and not defined(cpuaarch64) and not defined(cpuriscv)}
+{$if not defined(cpuarm) and not defined(cpusparc) and not defined(cpuaarch64)}
 s += chr(72);
 s += chr(73);
 s += chr(74);
@@ -13077,7 +13077,7 @@ s += chr(80);
 s += chr(81);
 s += chr(82);
 s += chr(83);
-{$endif not defined(cpuarm) and not defined(cpusparc) and not defined(cpuaarch64) and not defined(cpuriscv)}
+{$endif not defined(cpuarm) and not defined(cpusparc) and not defined(cpuaarch64)}
 {$endif not fpc_pic}
 writeln(s)
 END.

@@ -829,7 +829,7 @@ unit optloop;
     const
 {$if defined(i386) or defined(i8086)}
       RECORD_TEMP_LIMIT = 3;
-{$elseif defined(aarch64) or defined(riscv64)}
+{$elseif defined(aarch64)}
       RECORD_TEMP_LIMIT = 15;
 {$else}
       RECORD_TEMP_LIMIT = 7;

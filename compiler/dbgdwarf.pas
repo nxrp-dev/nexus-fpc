@@ -3728,12 +3728,9 @@ implementation
                     if (prevlabel = nil) or
                        { darwin's assembler cannot create an uleb128 of the difference
                          between to symbols
-                         same goes for Solaris native assembler
-                         ... and riscv }
+                         same goes for Solaris native assembler }
 
-                       (target_info.system in systems_darwin+[system_riscv32_linux,system_riscv64_linux,
-                                                              system_riscv32_embedded,system_riscv64_embedded,
-                                                              system_riscv32_freertos]) or
+                       (target_info.system in systems_darwin) or
                        (target_asm.id=as_solaris_as) then
                       begin
                         asmline.concat(tai_const.create_8bit(DW_LNS_extended_op));

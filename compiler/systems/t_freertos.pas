@@ -39,9 +39,6 @@ implementation
        TlinkerFreeRTOS=class(texternallinker)
        private
           Function  WriteResponseFile: Boolean;
-{$ifdef RISCV32}
-          procedure GenerateDefaultLinkerScripts(var memory_filename,sections_filename: AnsiString);
-{$endif RISCV32}
        public
           constructor Create; override;
           procedure SetDefaultInfo; override;
@@ -96,7 +93,7 @@ Var
 begin
   WriteResponseFile:=False;
   linklibc:=(SharedLibFiles.Find('c')<>nil);
-{$if defined(ARM) or defined(i386) or defined(x86_64) or defined(MIPSEL) or defined(RISCV32)}
+{$if defined(ARM) or defined(i386) or defined(x86_64) or defined(MIPSEL)}
   prtobj:='';
 {$else}
   prtobj:='prt0';
@@ -550,18 +547,6 @@ begin
     end;
 {$endif MIPSEL}
 
-{$ifdef RISCV32}
-  with linkres do
-    begin
-      Add('SECTIONS');
-      Add('{');
-      Add('  .data :');
-      Add('  {');
-      Add('    KEEP (*(.fpc .fpc.n_version .fpc.n_links))');
-      Add('  }');
-      Add('}');
-    end;
-{$endif RISCV32}
 
   { Write and Close response }
   linkres.writetodisk;
@@ -572,293 +557,6 @@ begin
 end;
 
 
-{$ifdef RISCV32}
-{ If espX.project.ld or espX_out.ld scripts cannot be located, generate
-  default scripts so that linking can proceed.  Note: the generated
-  scripts may not match the actual options chosen when the libraries
-  were built. }
-procedure TlinkerFreeRTOS.GenerateDefaultLinkerScripts(var memory_filename,
-  sections_filename: AnsiString);
-type
-  Tesp_idf_index=(esp32c3_v5_0=0);
-const
-  esp_fragment_list: array[esp32c3_v5_0..esp32c3_v5_0] of array of string=(
-    ('riscv/linker',
-     'esp_ringbuf/linker',
-     'driver/linker',
-     'esp_pm/linker',
-     'esp_mm/linker',
-     'spi_flash/linker',
-     'esp_system/linker',
-     'esp_system/app',
-     'esp_rom/linker',
-     'hal/linker',
-     'log/linker',
-     'heap/linker',
-     'soc/linker',
-     'esp_hw_support/linker',
-     'freertos/linker',
-     'freertos/linker_common',
-     'newlib/newlib',
-     'newlib/system_libs',
-     'esp_common/common',
-     'esp_common/soc',
-     'app_trace/linker',
-     'esp_event/linker',
-     'esp_phy/linker',
-     'lwip/linker',
-     'esp_netif/linker',
-     'esp_wifi/linker',
-     'bt/linker',
-     'esp_adc/linker',
-     'esp_gdbstub/linker',
-     'esp_lcd/linker',
-     'esp_psram/linker',
-     'espcoredump/linker'));
-
-var
-  S: Ansistring;
-  t: Text;
-  hp: TCmdStrListItem;
-  filepath: TCmdStr = '';
-  i,j: integer;
-  idf_index: Tesp_idf_index;
-  lib,
-  binstr,
-  cmdstr: AnsiString;
-  success: boolean;
-begin
-  { generate a sdkconfig.h if none is provided,
-    only a few fields are provided to far.
-    Assume that if linker scripts are not located,
-    sdkconfig.h is also missing }
-  Assign(t,outputexedir+'/sdkconfig.h');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  if (current_settings.controllertype = ct_esp32c3) then
-    begin
-      writeln(t,'#pragma once');
-      writeln(t,'#define CONFIG_APP_BUILD_USE_FLASH_SECTIONS 1');
-    end;
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  { generate an sdkconfig if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/sdkconfig')) then
-    begin
-      Assign(t,outputexedir+'/sdkconfig');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an Kconfig if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/Kconfig')) then
-    begin
-      Assign(t,outputexedir+'/Kconfig');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an Kconfig.projbuild if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/Kconfig.projbuild')) then
-    begin
-      Assign(t,outputexedir+'/Kconfig.projbuild');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an kconfigs.in if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/kconfigs.in')) then
-    begin
-      Assign(t,outputexedir+'/kconfigs.in');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an kconfigs_projbuild.in if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/kconfigs_projbuild.in')) then
-    begin
-      Assign(t,outputexedir+'/kconfigs_projbuild.in');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate a config.env if none is provided,
-    COMPONENT_KCONFIGS and COMPONENT_KCONFIGS_PROJBUILD are dummy fields and might
-    be needed to be filed properly }
-  Assign(t,outputexedir+'/config.env');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  writeln(t,'{');
-  if (current_settings.controllertype = ct_esp32c3) then
-    begin
-      writeln(t,'    "COMPONENT_KCONFIGS": "Kconfig",');
-      writeln(t,'    "COMPONENT_KCONFIGS_PROJBUILD": "Kconfig.projbuild",');
-      writeln(t,'    "IDF_CMAKE": "y",');
-      writeln(t,'    "IDF_TARGET": "esp32c3",');
-      writeln(t,'    "IDF_ENV_FPGA": "",');
-      writeln(t,'    "IDF_PATH": "'+TargetFixPath(idfpath,false)+'",');
-      writeln(t,'    "COMPONENT_KCONFIGS_SOURCE_FILE": "'+outputexedir+'/kconfigs.in",');
-      writeln(t,'    "COMPONENT_KCONFIGS_PROJBUILD_SOURCE_FILE": "'+outputexedir+'/kconfigs_projbuild.in"');
-    end;
-  writeln(t,'}');
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  { generate ldgen_libraries }
-  Assign(t,outputexedir+'/ldgen_libraries');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  { extract libraries from linker options and add to static libraries list }
-  Info.ExtraOptions:=trim(Info.ExtraOptions);
-  i := pos('-l', Info.ExtraOptions);
-  while i > 0 do
-   begin
-     j:=pos(' ',Info.ExtraOptions);
-     if j=0 then
-       j:=length(Info.ExtraOptions)+1;
-     lib:=copy(Info.ExtraOptions,i+2,j-i-2);
-     AddStaticCLibrary(lib);
-     delete(Info.ExtraOptions,i,j);
-     trim(Info.ExtraOptions);
-     i := pos('-l', Info.ExtraOptions);
-   end;
-  hp:=TCmdStrListItem(StaticLibFiles.First);
-  while assigned(hp) do
-    begin
-      FindLibraryFile(hp.Str,target_info.staticClibprefix,target_info.staticClibext,filepath);
-      writeln(t,filepath);
-      hp:=TCmdStrListItem(hp.Next);
-    end;
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  memory_filename:=IncludeTrailingPathDelimiter(outputexedir)+memory_filename;
-  cmdstr:='-C -P -x c -E -o '+memory_filename+' -I $OUTPUT ';
-  binstr:='gcc';
-  if current_settings.controllertype = ct_none then
-    Message(exec_f_controllertype_expected)
-  else if current_settings.controllertype = ct_esp32c3 then
-    begin
-      if idf_version>=40400 then
-        cmdstr:=cmdstr+'-I $IDF_PATH/components/esp_system/ld $IDF_PATH/components/esp_system/ld/esp32c3/memory.ld.in'
-      else
-        cmdstr:=cmdstr+'$IDF_PATH/components/esp32c3/ld/esp32c3.ld';
-    end;
-  Replace(cmdstr,'$IDF_PATH',idfpath);
-  Replace(cmdstr,'$OUTPUT',outputexedir);
-  success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,true);
-
-  { generate linker maps }
-{$ifdef UNIX}
-  binstr:=TargetFixPath(idfpath,false)+'/tools/ldgen/ldgen.py';
-{$else}
-  binstr:='python';
-{$endif UNIX}
-  if source_info.exeext<>'' then
-    binstr:=binstr+source_info.exeext;
-
-  sections_filename:=IncludeTrailingPathDelimiter(outputexedir)+sections_filename;
-
-  cmdstr:={$ifndef UNIX}'$IDF_PATH/tools/ldgen/ldgen.py '+{$endif UNIX}
-          '--config $OUTPUT/sdkconfig --fragments';
-
-  { Pick corresponding linker fragments list for SDK version }
-  idf_index:=esp32c3_v5_0;
-
-  for S in esp_fragment_list[idf_index] do
-    cmdstr:=cmdstr+' $IDF_PATH/components/'+S+'.lf';
-
-  if (current_settings.controllertype = ct_esp32c3) then
-    begin
-     if idf_version>=40400 then
-       cmdstr:=cmdstr+' --input $IDF_PATH/components/esp_system/ld/esp32c3/sections.ld.in'
-     else
-       cmdstr:=cmdstr+' --input $IDF_PATH/components/esp32/ld/esp32c3.project.ld.in';
-    end
-  else;
-
-  S:=FindUtil(utilsprefix+'objdump');
-  cmdstr:=cmdstr+' --output '+sections_filename+
-          ' --kconfig $IDF_PATH/Kconfig'+
-          ' --env-file $OUTPUT/config.env'+
-          ' --libraries-file $OUTPUT/ldgen_libraries'+
-          ' --objdump '+S;
-
-  Replace(cmdstr,'$IDF_PATH',idfpath);
-  Replace(cmdstr,'$OUTPUT',outputexedir);
-  if success then
-    success:=DoExec(binstr,cmdstr,true,false);
-end;
-{$endif RISCV32}
 
 
 function TlinkerFreeRTOS.MakeExecutable:boolean;
@@ -872,12 +570,12 @@ var
   DynLinkStr,
   StripStr,
   FixedExeFileName: string;
-  {$if defined(RISCV32) or defined(ARM)}
+  {$if defined(ARM)}
   memory_script,
   sections_script,
   cntrlr,
   extraopts: AnsiString;
-  {$endif defined(RISCV32) or defined(ARM)}
+  {$endif defined(ARM)}
 begin
   { for future use }
   StaticStr:='';
@@ -888,94 +586,6 @@ begin
   Result:=false;
   extraopts:='';
 
-{$ifdef RISCV32}
-  { idfpath can be set by -Ff, else default to environment value of IDF_PATH }
-  if idfpath='' then
-    idfpath := trim(GetEnvironmentVariable('IDF_PATH'));
-  idfpath:=ExcludeTrailingBackslash(idfpath);
-{$ifdef RISCV32}
-  case current_settings.controllertype of
-    ct_esp32c2: cntrlr:='esp32c2';
-    ct_esp32c3: cntrlr:='esp32c3';
-    ct_esp32c6:
-      begin
-        cntrlr:='esp32c6';
-        { Extra option required to generate bin file }
-        extraopts:=' --flash-mmu-page-size 32KB ';
-      end
-    else
-      cntrlr:='';
-    end;
-{$endif RISCV32}
-
-  { Locate linker scripts.  If not found, generate defaults. }
-  { Cater for different script names in different esp-idf versions }
-  if idf_version >= 40400 then
-    begin
-      memory_script := 'memory.ld';
-      sections_script := 'sections.ld';
-    end
-  else
-  begin
-    memory_script := cntrlr+'_out.ld';
-    sections_script := cntrlr+'.project.ld';
-  end;
-
-  if not (FindLibraryFile(memory_script,'','',memory_script) and
-         FindLibraryFile(sections_script,'','',sections_script)) then
-    GenerateDefaultLinkerScripts(memory_script,sections_script);
-    begin
-      Info.ExeCmd[1]:=Info.ExeCmd[1]+' -u call_user_start_cpu0 -u ld_include_panic_highint_hdl -u esp_app_desc -u vfs_include_syscalls_impl -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u newlib_include_locks_impl '+
-       '-u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u app_main -u uxTopUsedPriority '+
-       '-L $IDF_PATH/components/esp_rom/'+cntrlr+'/ld ';
-      if idf_version<40400 then
-        Info.ExeCmd[1]:=Info.ExeCmd[1]+' -L $IDF_PATH/components/'+cntrlr+'/ld'
-      else
-        Info.ExeCmd[1]:=Info.ExeCmd[1]+' -L $IDF_PATH/components/soc/'+cntrlr+'/ld';
-
-      Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+memory_script+' -T '+sections_script;
-      Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.ld -T '+cntrlr+'.rom.api.ld';
-  {$ifdef RISCV32}
-      if idf_version>=50300 then
-        begin
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -L $IDF_PATH/components/riscv/ld';
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+'rom.api.ld';
-       end;
-
-      if current_settings.controllertype=ct_esp32c2 then
-        if idf_version>=50200 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.rvfp.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld -T '+cntrlr+'.rom.newlib-nano.ld -T '+cntrlr+'.rom.heap.ld'
-        else if idf_version>=50000 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.rvfp.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld -T '+cntrlr+'.rom.newlib-time.ld -T '+cntrlr+'.rom.newlib-nano.ld -T '+cntrlr+'.rom.heap.ld'
-        else
-          Comment(V_Error,'Unsupported esp-idf version specified');
-
-      if current_settings.controllertype=ct_esp32c3 then
-        begin
-         Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib.ld  -T '+cntrlr+'.rom.version.ld -T '+cntrlr+'.rom.eco3.ld';
-         if idf_version<50000 then
-           Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.newlib-time.ld';
-         if idf_version>=50000 then
-           Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.eco3_bt_funcs.ld';
-         if idf_version>=50300 then
-           Info.ExeCmd[1]:=Info.ExeCmd[1]+' --allow-multiple -T'+cntrlr+'.rom.bt_funcs.ld -T '+cntrlr+'.rom.ble_master.ld -T '+cntrlr+'.rom.ble_50.ld -T '+cntrlr+'.rom.ble_smp.ld -T '+
-             cntrlr+'.rom.ble_dtm.ld -T '+cntrlr+'.rom.ble_test.ld -T '+cntrlr+'.rom.ble_scan.ld';
-         if idf_version>=50500 then
-           Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libc.ld';
-        end
-        else
-          Comment(V_Error,'Unsupported esp-idf version specified');
-
-      if current_settings.controllertype=ct_esp32c6 then
-        if idf_version>=50200 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.rvfp.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld -T '+cntrlr+'.rom.phy.ld -T '+cntrlr+'.rom.coexist.ld -T '+cntrlr+'.rom.net80211.ld -T '+cntrlr+'.rom.pp.ld -T '+cntrlr+'.rom.wdt.ld -T '+cntrlr+'.rom.systimer.ld -T '+cntrlr+'.rom.newlib-normal.ld -T '+cntrlr+'.rom.heap.ld'
-        else
-         Comment(V_Error,'Unsupported esp-idf version specified');
-  {$endif RISCV32}
-      Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.peripherals.ld'
-    end;
-  Replace(Info.ExeCmd[1],'$IDF_PATH',idfpath);
-{$endif RISCV32}
 
   FixedExeFileName:=maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.elf')));
 
@@ -1022,34 +632,10 @@ begin
   if success and not(cs_link_nolink in current_settings.globalswitches) then
     success:=PostProcessExecutable(FixedExeFileName,false);
 
-{$ifdef RISCV32}
-  if success then
-    begin
-{$if defined(DARWIN)}
-      success:=FindFileInExeLocations('python',true,binstr);
-      cmdstr:=idfpath+'/components/esptool_py/esptool/esptool.py ';
-{$elseif defined(UNIX)}
-      binstr:=TargetFixPath(idfpath,false)+'/components/esptool_py/esptool/esptool.py';
-      cmdstr:='';
-{$else}
-      binstr:='python';
-      cmdstr:=idfpath+'/components/esptool_py/esptool/esptool.py ';
-{$endif UNIX}
-        begin
-          success:=DoExec(binstr,cmdstr+'--chip '+cntrlr+' elf2image '+
-            '--flash_size '+tostr(embedded_controllers[current_settings.controllertype].flashsize div (1024*1024))+'MB '+
-            '--elf-sha256-offset 0xb0 '+extraopts+
-            '-o '+maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.bin')))+' '+
-            FixedExeFileName,
-            true,false);
-        end;
-    end;
-{$else}
   if success then
     success:=DoExec(FindUtil(utilsprefix+'objcopy'),'-O binary '+
       FixedExeFileName+' '+
       maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.bin'))),true,false);
-{$endif RISCV32}
 
   MakeExecutable:=success;   { otherwise a recursive call to link method }
 end;
@@ -1238,14 +824,6 @@ initialization
 {$endif mipsel}
 
 
-{$ifdef riscv32}
-  RegisterLinker(ld_freertos,TlinkerFreeRTOS);
-  RegisterTarget(system_riscv32_freertos_info);
-{$endif riscv32}
 
-{$ifdef riscv64}
-  RegisterLinker(ld_freertos,TlinkerFreeRTOS);
-  RegisterTarget(system_riscv64_embedded_info);
-{$endif riscv64}
 
 end.
