@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,darwin,haiku}
+{ %target=linux,darwin}
 { %note=This test needs C libraries }
 { %OPT=-pg }
 

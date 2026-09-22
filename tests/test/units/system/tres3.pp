@@ -1,6 +1,6 @@
 { Test for resource enumeration functions. }
 
-{%TARGET=win64,linux,freebsd,darwin,netbsd,openbsd,solaris,haiku,android}
+{%TARGET=win64,linux,darwin,android}
 
 {$mode objfpc}
 

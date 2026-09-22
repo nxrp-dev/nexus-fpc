@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,darwin,solaris,android,haiku }
+{ %target=linux,darwin,android }
 
 {$mode objfpc}
 program testr;

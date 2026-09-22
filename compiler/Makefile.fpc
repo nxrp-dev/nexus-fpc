@@ -283,7 +283,7 @@ OPTWPOCOLLECT=-OWdevirtcalls,optvmts -FW$(BASEDIR)/pp1.wpo
 OPTWPOPERFORM=-Owdevirtcalls,optvmts -Fw$(BASEDIR)/pp1.wpo
 # symbol liveness WPO requires nm, smart linking and no stripping (the latter
 # is forced by the Makefile when necessary)
-ifneq ($(findstring $(OS_TARGET),darwin linux dragonfly freebsd solaris),)
+ifneq ($(findstring $(OS_TARGET),darwin linux),)
 ifdef LINKSMART
 ifdef CREATESMART
 OPTWPOCOLLECT+=-OWsymbolliveness -Xs-

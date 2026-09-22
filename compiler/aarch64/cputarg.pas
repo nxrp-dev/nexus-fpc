@@ -35,9 +35,6 @@ implementation
              Targets
 **************************************}
 
-    {$ifndef NOTARGETBSD}
-      ,t_bsd
-    {$endif}
     {$ifndef NOTARGETLINUX}
       ,t_linux
     {$endif}

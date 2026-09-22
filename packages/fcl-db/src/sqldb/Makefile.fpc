@@ -6,13 +6,9 @@
 main=fcl-db
 
 [target]
-dirs_beos=sqlite
 dirs_linux=sqlite
-dirs_freebsd=sqlite
 dirs_darwin=sqlite
 dirs_iphonesim=sqlite
-dirs_netbsd=sqlite
-dirs_openbsd=sqlite
 dirs_win32=sqlite
 dirs_win64=sqlite
 dirs_wince=sqlite

@@ -1,4 +1,4 @@
-{ %target=darwin,linux,freebsd,solaris,android,haiku}
+{ %target=darwin,linux,android}
 { %NEEDLIBRARY }
 { %delfiles=tw8730a tw8730b }
 

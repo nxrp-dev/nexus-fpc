@@ -1,4 +1,4 @@
-{ %target=linux,darwin,freebsd,openbsd,netbsd,solaris,android,win64}
+{ %target=linux,darwin,android,win64}
 
 {$mode objfpc}
 

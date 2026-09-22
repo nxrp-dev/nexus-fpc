@@ -8,20 +8,18 @@ uses {$ifdef unix}cthreads,{$endif} fpmkunit;
 procedure add_rtl_objpas(const ADirectory: string);
 
 Const
-  // All Unixes have full set of KVM+Crt in unix/ except QNX which is not
-  // in workable state atm.
-  UnixLikes = AllUnixOSes -[QNX]; // qnx never was active in 2.x afaik
+  UnixLikes = AllUnixOSes;
 
 //  AllUnixOSes  = [Linux,FreeBSD,NetBSD,OpenBSD,Darwin,QNX,BeOS,Solaris,Haiku,iphonesim,ios,aix,Android];
 //    unixlikes-[beos];
 //
   StrUtilsOSes  = [atari,gba,macosclassic,nds,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
   VarUtilsOSes  = [atari,gba,macosclassic,nds,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
-  ConvUtilsOSes = [macosclassic,sinclairql,human68k,win32,win64]+UnixLikes-[BeOS]+AllWebAssemblyOSes;
+  ConvUtilsOSes = [macosclassic,sinclairql,human68k,win32,win64]+UnixLikes+AllWebAssemblyOSes;
   ConvUtilOSes  = [atari];
   DateUtilsOSes = [gba,nds,macosclassic,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
   DateUtilOSes  = [atari];
-  StdConvsOSes  = [win32,win64]+UnixLikes-[BeOS]+AllWebAssemblyOSes;
+  StdConvsOSes  = [win32,win64]+UnixLikes+AllWebAssemblyOSes;
   FmtBCDOSes    = [atari,gba,nds,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
   VariantsOSes  = [atari,gba,nds,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
   RttiOSes      = [atari,gba,nds,sinclairql,human68k,wii,win32,win64]+UnixLikes+AllWebAssemblyOSes;
@@ -29,7 +27,7 @@ Const
   AllTargetsObjPas = DateUtilsOses +DateUtilOSes+
                   VarutilsOses + ConvutilsOSes + ConvutilOSes + StdConvsOSes+
                   FmtBCDOSes + StrUtilsOSes + UITypesOSes;
-  MonitorOSes   = [Win32,win64]+UnixLikes-[BeOS,Haiku]+[wasip1,wasip1threads];
+  MonitorOSes   = [Win32,win64]+UnixLikes+[wasip1,wasip1threads];
 
 Var
   P : TPackage;

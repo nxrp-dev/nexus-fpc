@@ -61,16 +61,6 @@ uses
             result:=result+'-pc';
           result:=result+'-windows-msvc19'
         end
-      else if target_info.system in systems_freebsd then
-        result:=result+'-unknown-freebsd'
-      else if target_info.system in systems_openbsd then
-        result:=result+'-unknown-openbsd'
-      else if target_info.system in systems_netbsd then
-        result:=result+'-unknown-netbsd'
-      else if target_info.system in systems_solaris then
-        result:=result+'-sun-solaris2'
-      else if target_info.system in [system_i386_haiku] then
-        result:=result+'-unknown-haiku'
       else if target_info.system in systems_embedded then
         result:=result+'-none'
       else

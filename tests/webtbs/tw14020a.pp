@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,darwin,solaris,haiku }
+{ %target=linux,darwin }
 
 program project1;
 

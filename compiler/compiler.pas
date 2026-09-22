@@ -63,22 +63,12 @@ uses
 {$ifdef android}
   ,i_android
 {$endif android}
-{$ifdef bsd}
 {$ifdef darwin}
   ,i_darwin
-{$else darwin}
-  ,i_bsd
 {$endif darwin}
-{$endif bsd}
-{$ifdef haiku}
-  ,i_haiku
-{$endif haiku}
 {$ifdef linux}
   ,i_linux
 {$endif linux}
-{$ifdef solaris}
-  ,i_sunos
-{$endif solaris}
 {$ifdef windows}
   ,i_win
 {$endif windows}

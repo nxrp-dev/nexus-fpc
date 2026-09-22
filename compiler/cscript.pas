@@ -311,11 +311,7 @@ Begin
   AddStart('DoExitLink ()');
   AddStart('{ echo "An error occurred while assembling $1"; exit 1; }');
   AddStart('DoExitAsm ()');
-  {$ifdef BEOS}
-   AddStart('#!/boot/beos/bin/sh');
-  {$else}
    AddStart('#!/bin/sh');
-  {$endif}
   inherited WriteToDisk;
 end;
 

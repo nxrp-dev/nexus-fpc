@@ -236,20 +236,20 @@ begin
         begin
           AddUnit('fpimage');
         end;
-    T:=P.Targets.AddUnit('freetypeh.pp',[solaris,iphonesim,ios,darwin,freebsd,openbsd,netbsd,linux,haiku,beos,win32,win64,aix,dragonfly,android]);
+    T:=P.Targets.AddUnit('freetypeh.pp',[iphonesim,ios,darwin,linux,win32,win64,aix,android]);
       T.CPUS:=T.CPUS-[wasm32];
       T.Dependencies.AddInclude('libfreetype.inc');
-    T:=P.Targets.AddUnit('freetypehdyn.pp',[solaris,iphonesim,ios,darwin,freebsd,openbsd,netbsd,linux,haiku,beos,win32,win64,aix,dragonfly,android]);
+    T:=P.Targets.AddUnit('freetypehdyn.pp',[iphonesim,ios,darwin,linux,win32,win64,aix,android]);
       T.ResourceStrings:=true;
       T.CPUS:=T.CPUS-[wasm32];
       T.Dependencies.AddInclude('libfreetype.inc');
-    T:=P.Targets.AddUnit('freetype.pp',[solaris,iphonesim,ios,darwin,freebsd,openbsd,netbsd,linux,haiku,beos,win32,win64,aix,dragonfly,android]);
+    T:=P.Targets.AddUnit('freetype.pp',[iphonesim,ios,darwin,linux,win32,win64,aix,android]);
       with T.Dependencies do
         begin
           AddUnit('freetypeh');
           AddUnit('fpimgcmn');
         end;
-    T:=P.Targets.AddUnit('ftfont.pp',[solaris,iphonesim,ios,darwin,freebsd,openbsd,netbsd,linux,haiku,beos,win32,win64,aix,dragonfly,android]);
+    T:=P.Targets.AddUnit('ftfont.pp',[iphonesim,ios,darwin,linux,win32,win64,aix,android]);
       with T.Dependencies do
         begin
           AddUnit('fpcanvas');

@@ -1,6 +1,6 @@
 { %norun }
 { %needlibrary }
-{ %target=win64,linux,android,haiku}
+{ %target=win64,linux,android}
 
 library tw7838a;
 

@@ -1,4 +1,4 @@
-{ %TARGET=linux,haiku}
+{ %TARGET=linux}
 { %SKIPEMU=qemu-arm }
 
 { Old file: tbs0105.pp }

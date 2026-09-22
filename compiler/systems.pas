@@ -545,48 +545,10 @@ interface
 
     procedure InitSystems;
 
-    {$ifdef FreeBSD}
-        function GetOSRelDate:Longint;
-    {$endif}
-
 implementation
 
     uses
-      cutils{$ifdef FreeBSD},SysCtl,BaseUnix{$endif};
-
-{****************************************************************************
-           OS runtime version detection utility routine
-****************************************************************************}
-
-{$ifdef FreeBSD}
-function GetOSRelDate:Longint;
-
-var
-        mib  : array[0..1] of cint;
-        rval : cint;
-        len  : size_t;
-        i    : longint;
-        v    : longint;
-        oerrno : cint;
-        S    : AnsiString;
-
-Begin
-        s:='ab';
-        SetLength(S,50);
-        mib[0] := CTL_KERN;
-        mib[1] := KERN_OSRELDATE;
-        len    := 4;
-        oerrno:= fpgeterrno;
-        if (FPsysctl(pcint(@mib), 2, pchar(@v), @len, NIL, 0) = -1) Then
-             Begin
-                if (fpgeterrno = ESysENOMEM) Then
-                        fpseterrno(oerrno);
-                GetOSRelDate:=0;
-           End
-        else
-         GetOSRelDate:=v;
-End;
-{$endif}
+      cutils;
 
 
 {****************************************************************************
@@ -897,26 +859,6 @@ begin
     default_target(system_x86_64_linux);
     {$define default_target_set}
    {$endif}
-   {$ifdef dragonfly}
-    default_target(system_x86_64_dragonfly);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef freebsd}
-    default_target(system_x86_64_freebsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef openbsd}
-    default_target(system_x86_64_openbsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef netbsd}
-    default_target(system_x86_64_netbsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef solaris}
-    default_target(system_x86_64_solaris);
-    {$define default_target_set}
-   {$endif}
    {$ifdef darwin}
     default_target(system_x86_64_darwin);
     {$define default_target_set}
@@ -946,10 +888,6 @@ begin
   {$ifdef cpuaarch64}
     default_target(source_info.system);
   {$else cpuaarch64}
-    {$ifdef freebsd}
-      {$define default_target_set}
-      default_target(system_aarch64_freebsd);
-    {$endif freebsd}
     {$if defined(ios)}
       {$define default_target_set}
       default_target(system_aarch64_ios);

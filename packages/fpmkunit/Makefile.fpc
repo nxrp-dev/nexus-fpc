@@ -41,7 +41,7 @@ ifneq ($(findstring $(OS_SOURCE),win32 win64),)
 UNIT_PROCESS+=-Fi../fcl-process/src/win -Fi../fcl-process/src/winall
 USE_PROCESS_DUMMY_DIR=0
 endif
-ifneq ($(findstring $(OS_SOURCE),linux freebsd darwin iphonesim netbsd openbsd solaris haiku aix android dragonfly),)
+ifneq ($(findstring $(OS_SOURCE),linux darwin iphonesim aix android),)
 UNIT_PROCESS+=-Fi../fcl-process/src/unix
 USE_PROCESS_DUMMY_DIR=0
 endif
@@ -71,7 +71,7 @@ endif
 LOCALFPMAKE=./fpmake$(SRCEXEEXT)
 # Force -Cg for bootstrap depending on XX_SOURCE for the same targets as 
 # as those XX_SOURCE (avoid linker warnings about mixing abi and non-abi files of mips-linux)
-ifneq ($(findstring $(OS_SOURCE),dragonfly freebsd openbsd netbsd linux solaris),)
+ifneq ($(findstring $(OS_SOURCE),linux),)
 ifneq ($(findstring $(CPU_SOURCE),x86_64 mips mipsel),)
 override FPCMAKEOPT+=-Cg
 endif

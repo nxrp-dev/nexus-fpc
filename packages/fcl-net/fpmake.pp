@@ -20,7 +20,7 @@ begin
     P.Version:='3.3.1';
     P.Dependencies.Add('fcl-base');
     P.Dependencies.Add('fcl-xml');
-    P.Dependencies.Add('fcl-async',[linux,freebsd,netbsd,openbsd,dragonfly]);
+    P.Dependencies.Add('fcl-async',[linux]);
     P.Dependencies.Add('rtl-extra');
 
     P.Author := 'Sebastian Guenther and Free Pascal development team';
@@ -64,14 +64,14 @@ begin
     T.ResourceStrings := True;
 
     // HTTP Client
-    T:=P.Targets.AddUnit('fpsock.pp',[linux,freebsd,netbsd,openbsd,dragonfly]);
+    T:=P.Targets.AddUnit('fpsock.pp',[linux]);
       with T.Dependencies do
         begin
           AddUnit('resolve');
         end;
     T.ResourceStrings := True;
 
-    T:=P.Targets.AddUnit('cnetdb.pp',[linux,freebsd,solaris,android,openbsd,dragonfly]);
+    T:=P.Targets.AddUnit('cnetdb.pp',[linux,android]);
 
     P.ExamplePath.Add('examples');
     P.Targets.AddExampleProgram('examples/ip6test.pp');

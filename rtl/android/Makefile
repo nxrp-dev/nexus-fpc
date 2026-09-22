@@ -3,8 +3,8 @@
 #
 default: all
 MAKEFILETARGETS=x86_64-android aarch64-android
-BSDs = freebsd netbsd openbsd darwin dragonfly
-UNIXs = linux $(BSDs) solaris qnx haiku
+BSDs = darwin
+UNIXs = linux $(BSDs)
 LIMIT83fs = atari human68k
 FORCE:
 .PHONY: FORCE
@@ -1124,55 +1124,11 @@ EXEEXT=
 HASSHAREDLIB=1
 SHORTSUFFIX=lnx
 endif
-ifeq ($(OS_TARGET),dragonfly)
-BATCHEXT=.sh
-EXEEXT=
-HASSHAREDLIB=1
-SHORTSUFFIX=df
-endif
-ifeq ($(OS_TARGET),freebsd)
-BATCHEXT=.sh
-EXEEXT=
-HASSHAREDLIB=1
-SHORTSUFFIX=fbs
-endif
-ifeq ($(OS_TARGET),netbsd)
-BATCHEXT=.sh
-EXEEXT=
-HASSHAREDLIB=1
-SHORTSUFFIX=nbs
-endif
-ifeq ($(OS_TARGET),openbsd)
-BATCHEXT=.sh
-EXEEXT=
-HASSHAREDLIB=1
-SHORTSUFFIX=obs
-endif
 ifeq ($(OS_TARGET),atari)
 EXEEXT=.ttp
 SHORTSUFFIX=ata
 endif
 ALL_EXEEXT+=.ttp
-ifeq ($(OS_TARGET),beos)
-BATCHEXT=.sh
-EXEEXT=
-SHORTSUFFIX=be
-endif
-ifeq ($(OS_TARGET),haiku)
-BATCHEXT=.sh
-EXEEXT=
-SHORTSUFFIX=hai
-endif
-ifeq ($(OS_TARGET),solaris)
-BATCHEXT=.sh
-EXEEXT=
-SHORTSUFFIX=sun
-endif
-ifeq ($(OS_TARGET),qnx)
-BATCHEXT=.sh
-EXEEXT=
-SHORTSUFFIX=qnx
-endif
 ifneq ($(filter $(OS_TARGET),darwin iphonesim ios),)
 BATCHEXT=.sh
 EXEEXT=
@@ -1443,11 +1399,6 @@ endif
 ifneq ($(CPU_TARGET),$(CPU_SOURCE))
 override FPCOPT+=-P$(ARCH)
 endif
-ifeq ($(OS_SOURCE),openbsd)
-override FPCOPT+=-FD$(NEW_BINUTILS_PATH)
-override FPCMAKEOPT+=-FD$(NEW_BINUTILS_PATH)
-override FPMAKE_BUILD_OPT+=-FD$(NEW_BINUTILS_PATH)
-endif
 ifndef CROSSBOOTSTRAP
 ifneq ($(BINUTILSPREFIX),)
 override FPCOPT+=-XP$(BINUTILSPREFIX)
@@ -1553,7 +1504,7 @@ endif
 ifdef CREATESHARED
 override FPCOPT+=-Cg
 endif
-ifneq ($(filter $(OS_TARGET),dragonfly freebsd openbsd netbsd linux solaris),)
+ifneq ($(filter $(OS_TARGET),linux),)
 ifneq ($(filter $(CPU_TARGET),x86_64),)
 override FPCOPT+=-Cg
 endif

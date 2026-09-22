@@ -1,5 +1,5 @@
 { %fail }
-{ %target=linux,win64,freebsd,darwin}
+{ %target=linux,win64,darwin}
 program test;
 var
   execBase: pointer;

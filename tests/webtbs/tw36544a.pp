@@ -1,5 +1,5 @@
 { %norun }
-{ %target=win64,darwin,linux,freebsd,solaris,android,haiku}
+{ %target=win64,darwin,linux,android}
 { %needlibrary }
 {$mode objfpc}
 library tw36544a;

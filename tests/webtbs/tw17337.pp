@@ -1,4 +1,4 @@
-{ %target=win64, linux, freebsd }
+{ %target=win64,linux }
 { %cpu=x86_64}
 { %opt=-Aas }
 

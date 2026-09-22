@@ -1,4 +1,4 @@
-{ %target=linux,darwin,freebsd,netbsd,openbsd,sunos,haiku}
+{ %target=linux,darwin}
 { %cpu=x86_64,ia64,alpha}
 { %opt=-Xa }
 

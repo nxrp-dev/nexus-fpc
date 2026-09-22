@@ -1,5 +1,5 @@
 { %opt=-Ct -Cs7340032 }
-{ %target=win64,linux,freebsd,darwin,openbsd}
+{ %target=win64,linux,darwin}
 program project1;
 
 {$mode objfpc}

@@ -1,5 +1,5 @@
 {%skiptarget=$nothread }
-{ %target=darwin,linux,freebsd,solaris,haiku }
+{ %target=darwin,linux }
 
 {$mode objfpc}
 uses

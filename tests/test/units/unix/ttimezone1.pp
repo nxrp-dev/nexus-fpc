@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,openbsd,darwin,netbsd }
+{ %target=linux,darwin }
 uses
   BaseUnix,unix;
 

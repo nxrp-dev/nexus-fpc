@@ -1,6 +1,6 @@
 { %norun }
 { %needlibrary }
-{ %target=win64,darwin,linux,freebsd,solaris,android,haiku}
+{ %target=win64,darwin,linux,android}
 
 library tw9089a;
 

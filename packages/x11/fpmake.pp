@@ -18,7 +18,7 @@ begin
     P.Directory:=ADirectory;
 {$endif ALLPACKAGES}
     P.Version:='3.3.1';
-    P.OSes:=[beos,haiku,freebsd,solaris,netbsd,openbsd,linux,aix,dragonfly,android];
+    P.OSes:=[linux,aix,android];
     if Defaults.CPU=jvm then
       P.OSes := P.OSes - [android];
     // Do not build x11 on iPhone (=arm-darwin)

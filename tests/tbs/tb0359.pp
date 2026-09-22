@@ -1,4 +1,4 @@
-{ %TARGET=linux,freebsd,darwin,solaris,haiku }
+{ %TARGET=linux,darwin }
 
 {$linklib c}
 

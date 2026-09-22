@@ -1,5 +1,5 @@
 { %needlibrary }
-{ %target=linux,haiku }
+{ %target=linux }
 {$mode objfpc}
 
 {$if (FPC_FULLVERSION<=30301) and defined(linux)}

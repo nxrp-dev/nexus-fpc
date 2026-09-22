@@ -8,19 +8,17 @@ uses {$ifdef unix}cthreads,{$endif} fpmkunit;
 procedure add_rtl_extra(const ADirectory: string);
 
 Const
-  // All Unixes have full set of KVM+Crt in unix/ except QNX which is not
-  // in workable state atm.
-  UnixLikes = AllUnixOSes -[QNX]; // qnx never was active in 2.x afaik
+  UnixLikes = AllUnixOSes;
 
   ClocaleOSes   = UnixLikes -[android];
-  CLocaleIncOSes= [Aix,freebsd,netbsd,openbsd,solaris,darwin,iphonesim,ios,dragonfly];
+  CLocaleIncOSes= [Aix,darwin,iphonesim,ios];
 
-  IPCOSes       = UnixLikes-[aix,android,beos,haiku];
-  IPCBSDs       = [FreeBSD,NetBSD,OpenBSD,DragonFly];
+  IPCOSes       = UnixLikes-[aix,android];
+  IPCBSDs       = [Darwin,iphonesim,ios];
 //  IPCcdeclOSes  = [Darwin,iphonesim,ios];
 
-  PrinterOSes   = [win32,win64,atari]+unixlikes-[beos,haiku];
-  SerialOSes    = [android,linux,netbsd,openbsd,win32,win64];
+  PrinterOSes   = [win32,win64,atari]+unixlikes;
+  SerialOSes    = [android,linux,win32,win64];
   UComplexOSes  = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
   MatrixOSes    = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
   ObjectsOSes   = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
@@ -50,15 +48,8 @@ begin
     if Defaults.CPU=jvm then
       P.OSes := P.OSes - [java,android];
 
-    Socksyscall := [beos,freebsd,haiku,linux,netbsd,dragonfly];
+    Socksyscall := [linux];
     Socklibc  := unixlikes-socksyscall;
-{$ifdef FPC_USE_SYSCALL}
-    if Defaults.OS=openbsd then
-      begin
-        system.include(Socksyscall,openbsd);
-        system.exclude(Socklibc,openbsd);
-      end;
-{$endif}
     P.Email := '';
     P.Description := 'Rtl-extra, RTL not needed for bootstrapping';
     P.NeedLibC:= false;

@@ -1,4 +1,4 @@
-{ %target=win64,darwin,linux,freebsd,solaris,android,haiku}
+{ %target=win64,darwin,linux,android}
 uses
   SysUtils;
 
