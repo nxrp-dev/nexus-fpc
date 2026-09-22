@@ -760,11 +760,6 @@ initialization
   RegisterExport(system_x86_64_iphonesim,texportlibdarwin);
   RegisterTarget(system_x86_64_iphonesim_info);
 {$endif}
-{$ifdef arm}
-  RegisterImport(system_arm_ios,timportlibdarwin);
-  RegisterExport(system_arm_ios,texportlibdarwin);
-  RegisterTarget(system_arm_ios_info);
-{$endif arm}
 {$ifdef aarch64}
   RegisterImport(system_aarch64_ios,timportlibdarwin);
   RegisterExport(system_aarch64_ios,texportlibdarwin);

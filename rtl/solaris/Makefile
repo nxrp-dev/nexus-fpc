@@ -4,9 +4,8 @@
 default: all
 MAKEFILETARGETS=x86_64-solaris
 BSDs = freebsd netbsd openbsd darwin dragonfly
-UNIXs = linux $(BSDs) solaris qnx haiku aix
-LIMIT83fs = go32v2 watcom msdos atari human68k
-OSNeedsComspecToRunBatch = go32v2 watcom
+UNIXs = linux $(BSDs) solaris qnx haiku
+LIMIT83fs = atari human68k
 FORCE:
 .PHONY: FORCE
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
@@ -181,34 +180,10 @@ FULL_SOURCE=$(CPU_SOURCE)-$(OS_SOURCE)-$(L_SUB_SOURCE)
 else
 FULL_SOURCE=$(CPU_SOURCE)-$(OS_SOURCE)
 endif
-ifeq ($(CPU_TARGET),armeb)
-ARCH=arm
-override FPCOPT+=-Cb
-else
-ifeq ($(CPU_TARGET),armel)
-ARCH=arm
-override FPCOPT+=-CaEABI
-else
 ARCH=$(CPU_TARGET)
-endif
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-embedded)
-endif
 ifdef SUB_TARGET 
 FPCOPT+=-t$(SUB_TARGET)
 FPMAKE_OPT+=--subtarget=$(SUB_TARGET)
-endif
-ifeq ($(CPU_OS_TARGET),arm-embedded)
-ifeq ($(SUBARCH),)
-$(error When compiling for arm-embedded, a sub-architecture (e.g. SUBARCH=armv4t or SUBARCH=armv7m) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
-endif
-ifeq ($(CPU_OS_TARGET),arm-freertos)
-ifeq ($(SUBARCH),)
-$(error When compiling for arm-freertos, a sub-architecture (e.g. SUBARCH=armv6m or SUBARCH=armv7em) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
 endif
 ifneq ($(filter $(OS_SOURCE),$(LIMIT83fs)),)
 TARGETSUFFIX=$(OS_TARGET)
@@ -291,19 +266,11 @@ endif
 ifndef BINUTILSPREFIX
 ifndef CROSSBINDIR
 ifdef CROSSCOMPILE
-ifneq ($(OS_TARGET),msdos)
 ifndef DARWIN2DARWIN
 BINUTILSPREFIX=$(CPU_TARGET)-$(OS_TARGET)-
 ifeq ($(OS_TARGET),android)
-ifeq ($(CPU_TARGET),arm)
-BINUTILSPREFIX=arm-linux-androideabi-
-else
 BINUTILSPREFIX=$(CPU_TARGET)-linux-android-
 endif
-endif
-endif
-else
-BINUTILSPREFIX=$(OS_TARGET)-
 endif
 endif
 endif
@@ -473,8 +440,6 @@ LPC1768UNIT=EmbeddedApi.lpc1768
 LPC21X4UNIT=EmbeddedApi.lpc21x4
 LPC8XXUNIT=EmbeddedApi.lpc8xx
 LSTRINGSUNIT=System.LStrings
-MACOSUNIT=MacOSApi.MacOS
-MACOSTPUNIT=MacOSApi.MacOSTP
 MACPASUNIT=macpas
 MACUTILSUNIT=MacOSApi.MacUtils
 MAILBOXUNIT=EmbeddedApi.mailbox
@@ -717,8 +682,6 @@ LPC1768UNIT=lpc1768
 LPC21X4UNIT=lpc21x4
 LPC8XXUNIT=lpc8xx
 LSTRINGSUNIT=lstrings
-MACOSUNIT=macos
-MACOSTPUNIT=macostp
 MACUTILSUNIT=macutils
 MACPASUNIT=macpas
 MAILBOXUNIT=mailbox
@@ -1102,19 +1065,6 @@ ifeq ($(OS_TARGET),go32v1)
 STATICLIBPREFIX=
 SHORTSUFFIX=v1
 endif
-ifeq ($(OS_TARGET),go32v2)
-STATICLIBPREFIX=
-SHORTSUFFIX=dos
-IMPORTLIBPREFIX=
-endif
-ifeq ($(OS_TARGET),watcom)
-STATICLIBPREFIX=
-OEXT=.obj
-ASMEXT=.asm
-SHAREDLIBEXT=.dll
-SHORTSUFFIX=wat
-IMPORTLIBPREFIX=
-endif
 ifeq ($(OS_TARGET),android)
 BATCHEXT=.sh
 EXEEXT=
@@ -1176,13 +1126,6 @@ BATCHEXT=.sh
 EXEEXT=
 SHORTSUFFIX=qnx
 endif
-ifeq ($(OS_TARGET),macosclassic)
-BATCHEXT=
-EXEEXT=
-DEBUGSYMEXT=.xcoff
-SHORTSUFFIX=mac
-IMPORTLIBPREFIX=imp
-endif
 ifneq ($(filter $(OS_TARGET),darwin iphonesim ios),)
 BATCHEXT=.sh
 EXEEXT=
@@ -1190,47 +1133,6 @@ HASSHAREDLIB=1
 SHORTSUFFIX=dwn
 EXEDBGEXT=.dSYM
 endif
-ifeq ($(OS_TARGET),gba)
-EXEEXT=.gba
-SHAREDLIBEXT=.so
-SHORTSUFFIX=gba
-endif
-ALL_EXEEXT+=.gba
-ifeq ($(OS_TARGET),symbian)
-SHAREDLIBEXT=.dll
-SHORTSUFFIX=symbian
-endif
-ifeq ($(OS_TARGET),NativeNT)
-SHAREDLIBEXT=.dll
-SHORTSUFFIX=nativent
-endif
-ifeq ($(OS_TARGET),wii)
-EXEEXT=.dol
-SHAREDLIBEXT=.so
-SHORTSUFFIX=wii
-endif
-ALL_EXEEXT+=.dol
-ifeq ($(OS_TARGET),aix)
-BATCHEXT=.sh
-EXEEXT=
-SHAREDLIBEXT=.a
-SHORTSUFFIX=aix
-endif
-ifeq ($(OS_TARGET),msdos)
-STATICLIBPREFIX=
-STATICLIBEXT=.a
-SHORTSUFFIX=d16
-endif
-ifeq ($(OS_TARGET),embedded)
-ifeq ($(CPU_TARGET),i8086)
-STATICLIBPREFIX=
-STATICLIBEXT=.a
-else
-EXEEXT=.bin
-endif
-SHORTSUFFIX=emb
-endif
-ALL_EXEEXT+=.bin
 ifneq ($(filter $(OS_SOURCE),$(LIMIT83fs)),)
 FPCMADE=fpcmade.$(SHORTSUFFIX)
 ZIPSUFFIX=$(SHORTSUFFIX)
@@ -2607,9 +2509,7 @@ cwstring$(PPUEXT) : $(CWSTRING_DEPS)
 UnixApi.CWString$(PPUEXT) : $(NSINC)/UnixApi.CWString.pp $(CWSTRING_DEPS)
 	$(COMPILER) $(CWSTRING_OPT) $<
 ifneq ($(UNIXINC),)
-ifneq ($(OS_TARGET),macosclassic)
   CTYPES_DEPS_OS+=$(UNIXTYPEUNIT)$(PPUEXT)
-endif
 endif
 CTYPES_DEPS=$(INC)/ctypes.pp \
 	    $(SYSTEMUNIT)$(PPUEXT) \

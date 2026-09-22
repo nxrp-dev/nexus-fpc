@@ -30,12 +30,6 @@ unit compiler;
 interface
 
 uses
-{$ifdef GO32V2}
-  emu387,
-{$endif GO32V2}
-{$ifdef WATCOM}
-  emu387,
-{$endif WATCOM}
 {$if defined(unix)}
   { system code page stuff for unix }
   unixcp,
@@ -76,36 +70,18 @@ uses
   ,i_bsd
 {$endif darwin}
 {$endif bsd}
-{$ifdef gba}
-  ,i_gba
-{$endif gba}
 {$ifdef haiku}
   ,i_haiku
 {$endif haiku}
 {$ifdef linux}
   ,i_linux
 {$endif linux}
-{$ifdef macos}
-  ,i_macos
-{$endif macos}
-{$ifdef nds}
-  ,i_nds
-{$endif nds}
 {$ifdef solaris}
   ,i_sunos
 {$endif solaris}
-{$ifdef wii}
-  ,i_wii
-{$endif wii}
 {$ifdef windows}
   ,i_win
 {$endif windows}
-{$ifdef symbian}
-  ,i_symbian
-{$endif symbian}
-{$ifdef aix}
-  ,i_aix
-{$endif aix}
   ,ctask
   ,globtype;
 

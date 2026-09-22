@@ -1,4 +1,3 @@
-{ %skiptarget=wince }
 
 uses
    crt;

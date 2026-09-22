@@ -1,4 +1,3 @@
-﻿{%skiptarget=wince}
 {$codepage utf-8}
 uses
   unicodeducet, fpwidestring,

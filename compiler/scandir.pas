@@ -355,8 +355,7 @@ unit scandir;
       var
          hs : string;
       begin
-        if not (target_info.system in systems_all_windows + [system_powerpc_macosclassic,
-                                       system_arm_nds, system_i8086_msdos,
+        if not (target_info.system in systems_all_windows + [system_i8086_msdos,
                                        system_i8086_embedded, system_m68k_atari] +
                                        systems_nativent) then
           begin
@@ -379,12 +378,6 @@ unit scandir;
                    SetApptype(app_cui)
                  else if (hs='NATIVE') and (target_info.system in systems_windows + systems_nativent) then
                    SetApptype(app_native)
-                 else if (hs='TOOL') and (target_info.system in [system_powerpc_macosclassic]) then
-                   SetApptype(app_tool)
-                 else if (hs='ARM9') and (target_info.system in [system_arm_nds]) then
-                   SetApptype(app_arm9)
-                 else if (hs='ARM7') and (target_info.system in [system_arm_nds]) then
-                   SetApptype(app_arm7)
                  else if (hs='COM') and (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
                    SetApptype(app_com)
                  else if (hs='EXE') and (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then

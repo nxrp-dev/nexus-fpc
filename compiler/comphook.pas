@@ -260,9 +260,6 @@ begin
          flush(output);
        end;
    end;
-{$ifdef macos}
-  Yield;
-{$endif}
 end;
 
 
@@ -346,7 +343,6 @@ begin
      (status.currentsource<>'') and
      (status.currentline>0) then
     begin
-{$ifndef macos}
       { Adding the column should not confuse RHIDE,
       even if it does not yet use it PM
       but only if it is after error or warning !! PM }
@@ -369,13 +365,6 @@ begin
           MsgLocStr:=status.currentsourcepath+MsgLocStr
         else
           MsgLocStr:=status.currentsourceppufilename+':'+MsgLocStr;
- {$else macos}
-      { MPW style error }
-      if status.currentcolumn>0 then
-        MsgLocStr:='File "'+status.currentsourcepath+status.currentsource+'"; Line '+tostr(status.currentline)+' #[' + tostr(status.currentcolumn) + ']'
-      else
-        MsgLocStr:='File "'+status.currentsourcepath+status.currentsource+'"; Line '+tostr(status.currentline)+' # ';
- {$endif macos}
     end;
   if MsgLocStr<>'' then
     MsgLocStr:=MsgLocStr+' ';

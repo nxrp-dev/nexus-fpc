@@ -63,8 +63,6 @@ do
     case $d in
       darwin)
         TARGETS="darwin,ios,iphonesim" ;;
-      macos)
-        TARGETS="macosclassic" ;;
       *)
         TARGETS="$d" ;;
     esac

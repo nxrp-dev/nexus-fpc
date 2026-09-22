@@ -3,11 +3,11 @@
 #
 
 [target]
-programs=fpc ppufiles ppudump ppumove mka64ins mkarmins mkx86ins msg2inc mkx86inl
+programs=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
 
 [clean]
 units=ppu crc
-programs=fpc ppufiles ppudump ppumove mka64ins mkarmins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+programs=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 
 [compiler]
 unitdir=..

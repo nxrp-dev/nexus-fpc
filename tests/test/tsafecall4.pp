@@ -1,4 +1,4 @@
-{ %TARGET=win64,wince,linux,android}
+{ %TARGET=win64,linux,android}
 { %OPT=-CE -OoNOCONSTPROP }
 program tsafecall4;
 

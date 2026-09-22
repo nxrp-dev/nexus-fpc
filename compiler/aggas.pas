@@ -564,11 +564,6 @@ implementation
              if (atype in [sec_stub]) then
                writer.AsmWrite('.section ');
            end;
-         system_powerpc_macosclassic:
-           begin
-             if atype<>sec_toc then
-               writer.AsmWrite('.csect ');
-           end;
          system_wasm32_wasip1,
          system_wasm32_wasip1threads,
          system_wasm32_wasip2,

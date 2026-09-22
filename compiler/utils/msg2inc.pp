@@ -19,9 +19,6 @@ program msg2inc;
 {$ifdef unix}
   {$define EOL_ONE_CHAR}
 {$endif unix}
-{$ifdef macos}
-  {$define EOL_ONE_CHAR}
-{$endif}
 {$ifdef wasi}
   {$define EOL_ONE_CHAR}
 {$endif}

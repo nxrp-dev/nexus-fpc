@@ -1,4 +1,3 @@
-{ %skiptarget=go32v2 }
 { %opt=-CE -Oonofastmath }
 
 {$ifdef fpc}{$mode objfpc}{$endif}

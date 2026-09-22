@@ -2094,10 +2094,6 @@ begin
 
   { Features }
   case target_info.system of
-    system_arm_gba:
-      target_unsup_features:=[f_dynlibs];
-    system_arm_nds:
-      target_unsup_features:=[f_threading,f_commandargs,f_fileio,f_textio,f_consoleio,f_dynlibs];
     system_i386_nativent:
       // until these features are implemented, they are disabled in the compiler
       target_unsup_features:=[f_stackcheck];
@@ -3827,7 +3823,7 @@ begin
          end;
        'C':
          begin
-           if target_info.system in systems_all_windows+systems_macos then
+           if target_info.system in systems_all_windows then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_gui)
@@ -3877,7 +3873,7 @@ begin
          end;
        'G':
          begin
-           if target_info.system in systems_all_windows+systems_macos then
+           if target_info.system in systems_all_windows then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_cui)
@@ -4063,18 +4059,6 @@ begin
              end
            else
 {$endif defined(m68k)}
-             IllegalPara(opt);
-         end;
-       'T':
-         begin
-           if target_info.system in systems_macos then
-             begin
-               if UnsetBool(More, j, opt, false) then
-                 SetApptype(app_cui)
-               else
-                 SetApptype(app_tool);
-             end
-           else
              IllegalPara(opt);
          end;
        'X':
@@ -5059,12 +5043,12 @@ begin
 {$endif defined(XTENSA)}
 
 {$ifdef cpufpemu}
-  { force fpu emulation on arm/wince, arm/gba, arm/embedded and arm/nds etc.
+  { force fpu emulation on arm/wince and arm/embedded etc.
     if fpu type not explicitly set }
   if not(option.FPUSetExplicitly) and
-     ((target_info.system in [system_arm_wince,system_arm_gba,
+     ((target_info.system in [system_arm_wince,
          system_m68k_atari,
-         system_arm_nds,system_arm_embedded,system_arm_freertos,
+         system_arm_embedded,system_arm_freertos,
          system_xtensa_linux])
 {$ifdef arm}
       or (target_info.abi=abi_eabi)

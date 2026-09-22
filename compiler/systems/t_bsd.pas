@@ -765,11 +765,6 @@ initialization
   RegisterExport(system_x86_64_netbsd,texportlibbsd);
   RegisterTarget(system_x86_64_netbsd_info);
 {$endif}
-{$ifdef arm}
-  RegisterImport(system_arm_netbsd,timportlibbsd);
-  RegisterExport(system_arm_netbsd,texportlibbsd);
-  RegisterTarget(system_arm_netbsd_info);
-{$endif arm}
 
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.

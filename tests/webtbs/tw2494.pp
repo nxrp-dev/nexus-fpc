@@ -1,4 +1,3 @@
-{ %skiptarget=aix }
 
 { this kills one of the make-processes when executed during a testsuite
   run on AIX/ppc64 }

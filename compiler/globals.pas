@@ -709,10 +709,7 @@ Const
 
 implementation
 
-{$if defined(macos)}
-    uses
-      macutils;
-{$elseif defined(mswindows)}
+{$if defined(mswindows)}
     uses
       windirs;
 {$endif}
@@ -1592,9 +1589,6 @@ implementation
 {$ifdef os2}
   {$define need_path_search}
 {$endif os2}
-{$ifdef macos}
-  {$define need_path_search}
-{$endif macos}
 
    procedure get_exepath;
      var
@@ -1616,11 +1610,7 @@ implementation
         begin
           hs1 := ExtractFileName(exeName);
           hs1 := ChangeFileExt(hs1,source_info.exeext);
-{$ifdef macos}
-          FindFile(hs1,GetEnvironmentVariable('Commands'),false,localExepath);
-{$else macos}
           FindFile(hs1,GetEnvironmentVariable('PATH'),false,localExepath);
-{$endif macos}
           localExepath:=ExtractFilePath(localExepath);
         end;
 {$endif need_path_search}

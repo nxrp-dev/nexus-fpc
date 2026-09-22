@@ -1,5 +1,5 @@
 { %NORUN }
-{ %TARGET=win64,wince}
+{ %TARGET=win64}
 
 program tb0596;
 

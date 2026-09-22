@@ -46,8 +46,6 @@ FOR /D %%d IN ("%RTLDIR%\*") DO (
 		PUSHD "%RTLDIR%\%%~nd"
 		IF "%%~nd" EQU "darwin" (
 			SET TARGETS=darwin,ios,iphonesim
-		) ELSE IF "%%~nd" EQU "macos" (
-			SET TARGETS=macosclassic
 		) ELSE (
 			SET TARGETS=%%~nd
 		)

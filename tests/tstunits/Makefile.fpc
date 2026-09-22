@@ -31,9 +31,6 @@ endif
 ifneq ($(BINUTILSPREFIX),)
 override TESTOPT+=-XP$(BINUTILSPREFIX) -Xc
 endif
-ifeq ($(OS_TARGET),msdos)
-override TESTOPT+=-CX
-endif
 TESTCOMPILER:=$(FPC) $(TESTOPT)
 
 FPCFPMAKE=$(NATIVE_FPC)
@@ -90,11 +87,9 @@ INSTALLOPT=INSTALL_PREFIX=$(DUMMYINSTALLDIR) INSTALL_UNITDIR=$(BASEDIR)/$(COMPIL
 FPCUNITDIR=$(FPCDIR)/packages/fcl-fpcunit/src
 
 fpcunit-stamp.$(FULL_TARGET):
-ifneq ($(OS_TARGET),msdos)
 ifneq ($(CPU_TARGET),jvm)
  	$(TESTCOMPILER) -Fu$(BASEDIR)/$(COMPILER_TARGETDIR) $(FPCUNITDIR)/testutils
         $(TESTCOMPILER) -Fu$(BASEDIR)/$(COMPILER_TARGETDIR) $(FPCUNITDIR)/fpcunit
-endif
 endif
         $(ECHO) Compiled > fpcunit-stamp.$(FULL_TARGET)
 
@@ -145,9 +140,7 @@ erroru$(PPUEXT) : erroru.pp
         $(TESTCOMPILER) erroru.pp
 
 ptest$(PPUEXT) : ../test/cg/ptest.pp
-ifneq ($(OS_TARGET),msdos)
         $(TESTCOMPILER) ../test/cg/ptest.pp
-endif
 
 popuperr$(PPUEXT) : popuperr.pp
         $(TESTCOMPILER) popuperr.pp

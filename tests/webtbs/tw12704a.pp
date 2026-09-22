@@ -1,6 +1,6 @@
 { %norun }
 { %needlibrary }
-{ %target=darwin,linux,freebsd,solaris,haiku,aix,android}
+{ %target=darwin,linux,freebsd,solaris,haiku,android}
 
 {$mode delphi}
 

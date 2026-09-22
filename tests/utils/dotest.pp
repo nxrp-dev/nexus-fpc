@@ -602,7 +602,6 @@ begin
     (LTarget='solaris') or
     (LTarget='iphonesim') or
     (LTarget='darwin') or
-    (LTarget='aix') or
     (LTarget='android') or
     (LTarget='dragonfly');
 
@@ -622,12 +621,6 @@ begin
       DllExt:='.dll';
       DllPrefix:='';
     end
-  else if LTarget='gba' then
-    ExeExt:='.gba'
-  else if LTarget='nds' then
-    ExeExt:='.bin'
-  else if LTarget='wii' then
-    ExeExt:='.dol'
   else if (LTarget='wasip1') or (LTarget='wasip1threads') then
     ExeExt:='.wasm';
 end;
@@ -920,8 +913,7 @@ begin
       { Add runtime library path to current dir to find .so files }
       if Config.NeedLibrary then
         begin
-          if (CompilerTarget='darwin') or
-	     (CompilerTarget='aix') then
+          if (CompilerTarget='darwin') then
             args:=args+' -Fl'+TestOutputDir
 	  else
           { do not use single quote for -k as they are mishandled on
@@ -1408,9 +1400,6 @@ begin
       {$I+}
       ioresult;
       s:=CurrDir+SplitFileName(TestExe);
-      { Add -Ssource_file_name for dosbox_wrapper }
-      if pos('dosbox_wrapper',EmulatorName)>0 then
-        s:=s+' -S'+PPFile[current];
       execres:=ExecuteEmulated(EmulatorName,EmulatorOpts+' '+s,FullExeLogFile,StartTicks,EndTicks);
       {$I-}
        ChDir(OldDir);

@@ -1,5 +1,5 @@
 { %target=darwin }
-{ %cpu=x86_64,arm,aarch64}
+{ %cpu=x86_64,aarch64}
 { %opt=-vh -Seh }
 { %fail }
 

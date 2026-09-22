@@ -259,16 +259,15 @@ interface
        system_any = system_none;
 
        systems_wince = [system_arm_wince];
-       systems_android = [system_arm_android, system_aarch64_android, system_x86_64_android];
+       systems_android = [system_aarch64_android, system_x86_64_android];
        systems_linux = [system_x86_64_linux,
-                       system_arm_linux,system_m68k_linux,
+                       system_m68k_linux,
                        system_x86_6432_linux,system_aarch64_linux];
        systems_dragonfly = [system_x86_64_dragonfly];
        systems_freebsd = [system_aarch64_freebsd,
                           system_x86_64_freebsd];
        systems_netbsd  = [system_m68k_netbsd,
-                          system_x86_64_netbsd,
-                          system_arm_netbsd];
+                          system_x86_64_netbsd];
        systems_openbsd = [system_x86_64_openbsd];
 
        systems_bsd = systems_freebsd + systems_netbsd + systems_openbsd + systems_dragonfly;
@@ -283,7 +282,7 @@ interface
                              [system_arm_wince];
 
        { all darwin systems }
-       systems_ios = [system_arm_ios,system_aarch64_ios];
+       systems_ios = [system_aarch64_ios];
        systems_iphonesim = [system_x86_64_iphonesim,system_aarch64_iphonesim];
        systems_macosx = [system_x86_64_darwin,
                          system_aarch64_darwin];
@@ -300,7 +299,6 @@ interface
        systems_embedded = [system_m68k_embedded,
                            obsolete_system_vm_embedded,
                            obsolete_system_ia64_embedded,system_x86_64_embedded,
-                           system_arm_embedded,
                            system_jvm_java32,
                            system_i8086_embedded,
                            system_wasm32_embedded,
@@ -327,9 +325,6 @@ interface
        { all symbian systems }
        systems_symbian = [system_arm_symbian];
 
-       { all classic Mac OS targets }
-       systems_macos = [system_m68k_macosclassic];
-
        { all native nt systems }
        systems_nativent = [system_i386_nativent];
 
@@ -342,14 +337,13 @@ interface
        systems_objc_supported = systems_darwin;
 
        { systems using the non-fragile Objective-C ABI }
-       systems_objc_nfabi = [system_x86_64_darwin,system_arm_ios,system_aarch64_ios,system_aarch64_darwin,system_x86_64_iphonesim,system_aarch64_iphonesim];
+       systems_objc_nfabi = [system_x86_64_darwin,system_aarch64_ios,system_aarch64_darwin,system_x86_64_iphonesim,system_aarch64_iphonesim];
 
        { systems supporting "blocks" }
        systems_blocks_supported = systems_darwin;
 
        { all systems supporting exports from programs or units }
-       systems_unit_program_exports = [system_arm_wince,
-                                         system_x86_64_win64,
+       systems_unit_program_exports = [system_x86_64_win64,
                                          system_aarch64_win64]+systems_linux+systems_android+systems_wasm;
 
        { all systems that reference symbols in other binaries using indirect imports }
@@ -396,9 +390,6 @@ interface
          system_jvm_java32,
          system_jvm_android32
        ];
-
-       { all systems based on the PlayStation 1 }
-       systems_ps1 = [system_mipsel_ps1];
 
        { all systems where typed constants have to be translated into node
          trees that initialise the data instead of into data sections }
@@ -942,36 +933,7 @@ begin
 
 
 
-{$ifdef arm}
-  {$ifdef cpuarm}
-    default_target(source_info.system);
-  {$else cpuarm}
-    {$ifdef WINDOWS}
-      {$define default_target_set}
-      default_target(system_arm_wince);
-    {$endif}
-    {$ifdef linux}
-      {$define default_target_set}
-      default_target(system_arm_linux);
-    {$endif}
-    {$ifdef netbsd}
-      {$define default_target_set}
-      default_target(system_arm_netbsd);
-    {$endif}
-    {$ifdef android}
-      {$define default_target_set}
-      default_target(system_arm_android);
-    {$endif}
-    {$ifdef darwin}
-      {$define default_target_set}
-      default_target(system_arm_ios);
-    {$endif}
-    {$ifndef default_target_set}
-      default_target(system_arm_linux);
-      {$define default_target_set}
-    {$endif}
-  {$endif cpuarm}
-{$endif arm}
+
 
 
 
@@ -1006,10 +968,6 @@ begin
     {$ifndef default_target_set}
       default_target(system_aarch64_linux);
       {$define default_target_set}
-    {$endif}
-    {$ifdef embedded}
-      {$define default_target_set}
-      default_target(system_aarch64_embedded);
     {$endif}
   {$endif cpuaarch64}
 {$endif aarch64}

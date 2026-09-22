@@ -366,10 +366,6 @@ function open_iconv_for_cps(cp: TSystemCodePage; const otherencoding: PAnsiChar;
   end;
 
 
-{$ifdef aix}
-{$i cwstraix.inc}
-{$endif aix}
-
 procedure Wide2AnsiMove(source:pwidechar; var dest:RawByteString; cp:TSystemCodePage; len:SizeInt);
   var
     outlength,

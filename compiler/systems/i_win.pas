@@ -101,74 +101,6 @@ unit i_win;
             llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128';
           );
 
-       system_arm_wince_info : tsysteminfo =
-          (
-            system       : system_arm_wince;
-            name         : 'WinCE for ARM';
-            shortname    : 'WinCE';
-            flags        : [tf_files_case_aware{,tf_winlikewidestring},
-                            tf_smartlink_sections,tf_requires_proper_alignment,tf_no_pic_supported,
-                            tf_has_winlike_resources,
-                            tf_safecall_exceptions,tf_no_backquote_support,tf_supports_hidden_symbols];
-            cpu          : cpu_arm;
-            unit_env     : '';
-            extradefines : 'UNDER_CE;WINDOWS;FPC_OS_UNICODE';
-            exeext       : '.exe';
-            defext       : '.def';
-            scriptext    : '.bat';
-            smartext     : '.sl';
-            unitext      : '.ppu';
-            unitlibext   : '.ppl';
-            asmext       : '.s';
-            objext       : '.o';
-            resext       : '.res';
-            resobjext    : '.or';
-            sharedlibext : '.dll';
-            staticlibext : '.a';
-            staticlibprefix : 'libp';
-            sharedlibprefix : '';
-            sharedClibext : '.dll';
-            staticClibext : '.a';
-            staticClibprefix : 'lib';
-            sharedClibprefix : '';
-            importlibprefix : 'libimp';
-            importlibext : '.a';
-            Cprefix      : '';
-            newline      : #13#10;
-            dirsep       : '\';
-            assem        : as_arm_pecoffwince;
-            assemextern  : as_gas;
-            link         : ld_int_windows;
-            linkextern   : ld_windows;
-            ar           : ar_gnu_ar_scripted;
-            res          : res_gnu_windres;
-            dbg          : dbg_stabs;
-            script       : script_dos;
-            endian       : endian_little;
-            alignment    :
-              (
-                procalign       : 4;
-                loopalign       : 4;
-                jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 4;
-                varalignmin     : 0;
-                varalignmax     : 4;
-                localalignmin   : 0;
-                localalignmax   : 4;
-                recordalignmin  : 0;
-                recordalignmax  : 4;
-                maxCrecordalign : 4
-              );
-            first_parm_offset : 8;
-            stacksize    : 262144;
-            stackalign   : 4;
-            abi          : abi_default;
-            llvmdatalayout : 'todo';
-          );
 
        system_aarch64_win64_info : tsysteminfo =
           (
@@ -254,11 +186,6 @@ initialization
   {$endif WIN64}
 {$endif CPUX86_64}
 
-{$ifdef CPUARM}
-  {$ifdef WINCE}
-    set_source_info(system_arm_wince_info);
-  {$endif WINCE}
-{$endif CPUARM}
 
 {$ifdef CPUAARCH64}
   {$ifdef WIN64}

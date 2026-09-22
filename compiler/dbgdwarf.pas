@@ -3534,7 +3534,7 @@ implementation
       begin
         { Reference all DEBUGINFO sections from the main .fpc section }
         { to prevent eliminating them by smartlinking                 }
-        if (target_info.system in ([system_powerpc_macosclassic]+systems_darwin+systems_wasm)) then
+        if (target_info.system in (systems_darwin+systems_wasm)) then
           exit;
         new_section(list,sec_fpc,'links',0);
 

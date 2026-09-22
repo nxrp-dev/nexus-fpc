@@ -1,4 +1,4 @@
-{ %target=wince,win64}
+{ %target=win64}
 { %opt=-gh }
 {$AppType CONSOLE}
 uses

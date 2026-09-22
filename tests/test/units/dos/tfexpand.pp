@@ -1,4 +1,3 @@
-{ %skiptarget=wince }
 
 {
     This file is part of the Free Pascal test suite.

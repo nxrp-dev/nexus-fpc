@@ -100,11 +100,6 @@ endif
 
 
 
-ifeq ($(ARCH),arm)
-override LOADERS+=ucprt0
-CPU_UNITS=$(CPUUNIT) $(INTRINSICSUNIT)
-endif
-
 
 
 
@@ -152,13 +147,6 @@ endif
 
 
 
-ifeq ($(ARCH),arm)
-  ifeq ($(SUBARCH),armv6m)
-    ASTARGET+=-mthumb --def __thumb__=1
-    ARMTHUMB=1
-  endif
-  ASTARGET+= -meabi=5
-endif
 
 
 #

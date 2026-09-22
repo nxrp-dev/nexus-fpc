@@ -40,12 +40,6 @@ endif
 ifeq ($(CPU_TARGET),alpha)
 PPSUF=axp
 endif
-ifeq ($(CPU_TARGET),arm)
-PPSUF=arm
-endif
-ifeq ($(CPU_TARGET),armeb)
-PPSUF=arm
-endif
 ifeq ($(CPU_TARGET),aarch64)
 PPSUF=a64
 endif
@@ -152,14 +146,6 @@ ifneq ($(OPT),)
 OPTNEW+=$(OPT)
 endif
 
-# some targets do not generate PIC by default so we have select explicitly
-# the general threading model when compiling the final versions of rtl and packages
-ifneq ($(findstring $(OS_TARGET),linux),)
-ifneq ($(findstring $(CPU_TARGET),arm),)
-override OPTNEW+=-CVglobal-dynamic
-endif
-endif
-
 CLEANOPTS=FPC=$(PPNEW)
 BUILDOPTS=FPC=$(PPNEW) FPCFPMAKE=$(FPCFPMAKENEW) RELEASE=1 'OPT=$(OPTNEW)' 'FPCMAKEOPT=$(OPT)'
 ifdef CROSSCOMPILE
@@ -176,7 +162,7 @@ INSTALLOPTS=FPC=$(PPNEW) ZIPDESTDIR=$(BASEDIR) FPCMAKE=$(FPCMAKENEW)
 BuildOnlyBaseCPUs=
 
 ifneq ($(wildcard utils),)
-NOUTILSTARGETS=embedded gba nds macosclassic $(BuildOnlyBaseCPUs) freertos
+NOUTILSTARGETS=$(BuildOnlyBaseCPUs)
 ifeq ($(findstring $(OS_TARGET),$(NOUTILSTARGETS)),)
 ifdef BUILDFULLNATIVE
 UTILS=1

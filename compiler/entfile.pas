@@ -1616,21 +1616,12 @@ begin
   strm:=nil;
   if outputallowed then
     begin
-      {$ifdef MACOS}
-      {FPas is FreePascal's creator code on MacOS. See systems/mac_crea.txt}
-      SetDefaultMacOSCreator('FPas');
-      SetDefaultMacOSFiletype('FPPU');
-      {$endif}
       ok:=false;
       try
         strm:=CFileStreamClass.Create(fname,fmCreate);
         ok:=true;
       except
       end;
-      {$ifdef MACOS}
-      SetDefaultMacOSCreator('MPS ');
-      SetDefaultMacOSFiletype('TEXT');
-      {$endif}
       if not ok then
        exit;
     end;

@@ -37,9 +37,6 @@ interface
 {$if defined(go32v2) or defined(watcom)}
       Dos,
 {$endif}
-{$ifdef macos}
-      macutils,
-{$endif macos}
 {$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
 {$ELSE}
@@ -526,10 +523,7 @@ end;
    function CurDirRelPath(systeminfo: tsysteminfo): TCmdStr;
 
    begin
-     if systeminfo.system <> system_powerpc_macosclassic then
-       CurDirRelPath:= '.'+systeminfo.DirSep
-     else
-       CurDirRelPath:= ':'
+     CurDirRelPath:= '.'+systeminfo.DirSep
    end;
 
 
@@ -547,9 +541,6 @@ end;
            otherwise it's always a relative path, no matter if it starts with a directory
            separator or not. (KB) *)
         if (length(s)>0) and (Pos(':',s) <> 0) then
-          result:=true;
-{$elseif defined(macos)}
-        if IsMacFullPath(s) then
           result:=true;
 {$elseif defined(win32) or defined(win64) or defined(go32v2) or defined(os2) or defined(watcom)}
         if ((length(s)>0) and (s[1] in AllowDirectorySeparators)) or
@@ -744,152 +735,20 @@ end;
       end;
 
 
-  {Actually the version in macutils.pp could be used,
-   but that would not work for crosscompiling, so this is a slightly modified
-   version of it.}
-  function TranslatePathToMac (const path: TCmdStr; mpw: Boolean): TCmdStr;
-
-    function GetVolumeIdentifier: TCmdStr;
-
-    begin
-      GetVolumeIdentifier := '{Boot}'
-      (*
-      if mpw then
-        GetVolumeIdentifier := '{Boot}'
-      else
-        GetVolumeIdentifier := macosBootVolumeName;
-      *)
-    end;
-
-    var
-      slashPos, oldpos, newpos, oldlen, maxpos: Longint;
-
-  begin
-    oldpos := 1;
-    slashPos := Pos('/', path);
-    TranslatePathToMac:='';
-    if (slashPos <> 0) then   {its a unix path}
-      begin
-        if slashPos = 1 then
-          begin      {its a full path}
-            oldpos := 2;
-            TranslatePathToMac := GetVolumeIdentifier;
-          end
-        else     {its a partial path}
-          TranslatePathToMac := ':';
-      end
-    else
-      begin
-        slashPos := Pos('\', path);
-        if (slashPos <> 0) then   {its a dos path}
-          begin
-            if slashPos = 1 then
-              begin      {its a full path, without drive letter}
-                oldpos := 2;
-                TranslatePathToMac := GetVolumeIdentifier;
-              end
-            else if (Length(path) >= 2) and (path[2] = ':') then {its a full path, with drive letter}
-              begin
-                oldpos := 4;
-                TranslatePathToMac := GetVolumeIdentifier;
-              end
-            else     {its a partial path}
-              TranslatePathToMac := ':';
-          end;
-      end;
-
-    if (slashPos <> 0) then   {its a unix or dos path}
-      begin
-        {Translate "/../" to "::" , "/./" to ":" and "/" to ":" }
-        newpos := Length(TranslatePathToMac);
-        oldlen := Length(path);
-        SetLength(TranslatePathToMac, newpos + oldlen);  {It will be no longer than what is already}
-                                                                        {prepended plus length of path.}
-        maxpos := Length(TranslatePathToMac);          {Get real maxpos, can be short if String is ShortString}
-
-        {There is never a slash in the beginning, because either it was an absolute path, and then the}
-        {drive and slash was removed, or it was a relative path without a preceding slash.}
-        while oldpos <= oldlen do
-          begin
-            {Check if special dirs, ./ or ../ }
-            if path[oldPos] = '.' then
-              if (oldpos + 1 <= oldlen) and (path[oldPos + 1] = '.') then
-                begin
-                  if (oldpos + 2 > oldlen) or (path[oldPos + 2] in ['/', '\']) then
-                    begin
-                      {It is "../" or ".."  translates to ":" }
-                      if newPos = maxPos then
-                        begin {Shouldn't actually happen, but..}
-                          Exit('');
-                        end;
-                      newPos := newPos + 1;
-                      TranslatePathToMac[newPos] := ':';
-                      oldPos := oldPos + 3;
-                      continue;  {Start over again}
-                    end;
-                end
-              else if (oldpos + 1 > oldlen) or (path[oldPos + 1] in ['/', '\']) then
-                begin
-                  {It is "./" or "."  ignore it }
-                  oldPos := oldPos + 2;
-                  continue;  {Start over again}
-                end;
-
-            {Collect file or dir name}
-            while (oldpos <= oldlen) and not (path[oldPos] in ['/', '\']) do
-              begin
-                if newPos = maxPos then
-                  begin {Shouldn't actually happen, but..}
-                    Exit('');
-                  end;
-                newPos := newPos + 1;
-                TranslatePathToMac[newPos] := path[oldPos];
-                oldPos := oldPos + 1;
-              end;
-
-            {When we come here there is either a slash or we are at the end.}
-            if (oldpos <= oldlen) then
-              begin
-                if newPos = maxPos then
-                  begin {Shouldn't actually happen, but..}
-                    Exit('');
-                  end;
-                newPos := newPos + 1;
-                TranslatePathToMac[newPos] := ':';
-                oldPos := oldPos + 1;
-              end;
-          end;
-
-        SetLength(TranslatePathToMac, newpos);
-      end
-    else if (path = '.') then
-      TranslatePathToMac := ':'
-    else if (path = '..') then
-      TranslatePathToMac := '::'
-    else
-      TranslatePathToMac := path;  {its a mac path}
-  end;
-
-
    function _FixFileName(const s:TCmdStr; const info:tsysteminfo):TCmdStr;
      var
        i      : sizeint;
      begin
-       if info.system = system_powerpc_macosclassic then
-         Result:=TranslatePathToMac(s, true)
+       if (tf_files_case_aware in info.flags) or
+          (tf_files_case_sensitive in info.flags) then
+         Result:=s
        else
-        begin
-          if (tf_files_case_aware in info.flags) or
-             (tf_files_case_sensitive in info.flags) then
-            Result:=s
-          else
-            Result:=Lower(s);
-          for i:=1 to length(s) do
-           case s[i] of
-             '/','\' :
-               if s[i]<>info.dirsep then
-                 Result[i]:=info.dirsep;
-           end;
+         Result:=Lower(s);
+       for i:=1 to length(s) do
+        case s[i] of
+          '/','\' :
+            if s[i]<>info.dirsep then
+              Result[i]:=info.dirsep;
         end;
      end;
 
@@ -1213,11 +1072,7 @@ end;
        found:=FindFile(FixFileName(bin),exepath,allowcache,foundfile);
       if not found then
        begin
-{$ifdef macos}
-         Path:=GetEnvironmentVariable('Commands');
-{$else}
          Path:=GetEnvironmentVariable('PATH');
-{$endif}
          found:=FindFile(FixFileName(bin),Path,allowcache,foundfile);
        end;
       FindFileInExeLocations:=found;

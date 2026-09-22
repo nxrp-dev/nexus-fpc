@@ -1,4 +1,4 @@
-{ %cpu=arm,x86_64}
+{ %cpu=x86_64}
 { %opt=-CF64 }
 
 var

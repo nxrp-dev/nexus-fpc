@@ -1,4 +1,4 @@
-{ %TARGET = win64,wince}
+{ %TARGET = win64}
 { tests that the different string types are converted correctly when dispatching }
 
 program tdispvar2;

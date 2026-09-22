@@ -1,5 +1,4 @@
 { %opt=-CE }
-{ %skiptarget=go32v2 }
 { This test generates trouble in ntvdm.exe under Windows
   for go32v2 executables }
 { Source provided for Free Pascal Bug Report 3157 }

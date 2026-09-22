@@ -1,4 +1,3 @@
-{ %SKIPTARGET=go32v2 }
 { %OPT=-gh }
 {$ifdef fpc}
 {$mode objfpc}

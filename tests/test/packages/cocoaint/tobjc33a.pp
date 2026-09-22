@@ -1,6 +1,6 @@
 { %fail }
 { %target=darwin }
-{ %cpu=x86_64,arm}
+{ %cpu=x86_64}
 
 { Written by Jonas Maebe in 2010, released into the public domain }
 

@@ -1,4 +1,4 @@
-{ %skiptarget=go32v2,macos }
+{ %skiptarget=macos}
 { On macos PPCAsm reports error: Branch destination out of range }
 
 { %opt=-Sc }

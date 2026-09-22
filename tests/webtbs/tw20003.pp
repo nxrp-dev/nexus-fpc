@@ -1,4 +1,3 @@
-{ %skiptarget=aix }
 { %opt=-gs }
 program ustabslink;
 

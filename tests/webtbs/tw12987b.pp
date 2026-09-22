@@ -1,4 +1,4 @@
-{ %target=win64,wince}
+{ %target=win64}
 { %needlibrary }
 
 uses

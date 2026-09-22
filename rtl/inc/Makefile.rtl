@@ -145,8 +145,6 @@ LPC1768UNIT=EmbeddedApi.lpc1768
 LPC21X4UNIT=EmbeddedApi.lpc21x4
 LPC8XXUNIT=EmbeddedApi.lpc8xx
 LSTRINGSUNIT=System.LStrings
-MACOSUNIT=MacOSApi.MacOS
-MACOSTPUNIT=MacOSApi.MacOSTP
 MACPASUNIT=macpas
 MACUTILSUNIT=MacOSApi.MacUtils
 MAILBOXUNIT=EmbeddedApi.mailbox
@@ -395,8 +393,6 @@ LPC1768UNIT=lpc1768
 LPC21X4UNIT=lpc21x4
 LPC8XXUNIT=lpc8xx
 LSTRINGSUNIT=lstrings
-MACOSUNIT=macos
-MACOSTPUNIT=macostp
 MACUTILSUNIT=macutils
 MACPASUNIT=macpas
 MAILBOXUNIT=mailbox
@@ -1564,9 +1560,7 @@ UnixApi.CWString$(PPUEXT) : $(NSINC)/UnixApi.CWString.pp $(CWSTRING_DEPS)
 #
 
 ifneq ($(UNIXINC),)
-ifneq ($(OS_TARGET),macosclassic)
   CTYPES_DEPS_OS+=$(UNIXTYPEUNIT)$(PPUEXT)
-endif
 endif
 
 CTYPES_DEPS=$(INC)/ctypes.pp \

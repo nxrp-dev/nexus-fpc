@@ -69,8 +69,6 @@ uses
         result:=result+'-unknown-netbsd'
       else if target_info.system in systems_solaris then
         result:=result+'-sun-solaris2'
-      else if target_info.system in systems_aix then
-        result:=result+'-ibm-aix53'
       else if target_info.system in [system_i386_haiku] then
         result:=result+'-unknown-haiku'
       else if target_info.system in systems_embedded then

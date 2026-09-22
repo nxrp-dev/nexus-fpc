@@ -128,11 +128,6 @@ DB_UPLOADDIR=/home/fpc/testsuite/incoming
 ifdef inWinNT
 inWinDOS=1
 endif
-ifeq ($(OS_SOURCE),go32v2)
-inWinDOS=1
-inDOS=1
-SINGLEDOTESTRUNS=1
-endif
 
 ################################
 # Misc

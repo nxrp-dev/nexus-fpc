@@ -27,7 +27,6 @@ program pp;
   Supported CPUs, alphabetically sorted
   -----------------------------------------------------------------
   AARCH64             generate a compiler for the AARCH64 (64bit ARM)
-  ARM                 generate a compiler for the ARM
   I386                generate a compiler for the Intel i386+
   X86_64              generate a compiler for the AMD x86-64 architecture
 
@@ -42,15 +41,6 @@ program pp;
                       use external messagefiles, default for TP
   LLVM                Create an LLVM-based code generator for the selected
                       target architecture (not supported for all targets)
-
-  -----------------------------------------------------------------
-  ARM specific switches
-  -----------------------------------------------------------------
-  FPC_ARMEL           create an arm eabi compiler
-  FPC_ARMEB           create an arm big endian compiler
-  FPC_OARM            create an arm oabi compiler, only needed when the host
-                      compiler is ARMEL or ARMEB
-  FPC_ARMHF           create an armhf (eabi vfp variant) compiler
 
   -----------------------------------------------------------------
   I386 specific switches
@@ -90,12 +80,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif x86_64}
-{$ifdef ARM}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif ARM}
 {$ifdef AARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}
@@ -142,7 +126,7 @@ uses
   profile,
 {$endif profile}
 {$ifndef NOCATCH}
-  {$if defined(Unix) or defined(Go32v2) or defined(Watcom)}
+  {$if defined(Unix)}
     catch,
   {$endif}
 {$endif NOCATCH}

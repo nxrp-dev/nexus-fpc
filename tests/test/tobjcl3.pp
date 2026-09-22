@@ -1,5 +1,5 @@
 { %target=darwin }
-{ %cpu=x86_64,arm}
+{ %cpu=x86_64}
 { %NEEDLIBRARY }
 { %fail }
 

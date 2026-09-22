@@ -1,4 +1,4 @@
-{%TARGET=darwin,haiku,linux,freebsd,netbsd,openbsd,solaris,aix,android }
+{%TARGET=darwin,haiku,linux,freebsd,netbsd,openbsd,solaris,android }
 
 {$mode fpc}
 

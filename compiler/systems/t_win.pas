@@ -1877,12 +1877,6 @@ initialization
   RegisterRes(res_win64_gorc_info,TWinLikeResourceFile);
   RegisterTarget(system_x64_win64_info);
 {$endif x86_64}
-{$ifdef arm}
-  RegisterImport(system_arm_wince,TImportLibWin);
-  RegisterExport(system_arm_wince,TExportLibWin);
-  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
-  RegisterTarget(system_arm_wince_info);
-{$endif arm}
 {$ifdef aarch64}
   RegisterImport(system_aarch64_win64,TImportLibWin);
   RegisterExport(system_aarch64_win64,TExportLibWin);

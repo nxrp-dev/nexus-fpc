@@ -1199,11 +1199,6 @@ initialization
   RegisterTarget(system_x86_64_linux_info);
   RegisterTarget(system_x86_6432_linux_info);
 {$endif x86_64}
-{$ifdef ARM}
-  RegisterImport(system_arm_linux,timportliblinux);
-  RegisterExport(system_arm_linux,texportliblinux);
-  RegisterTarget(system_arm_linux_info);
-{$endif ARM}
 {$ifdef aarch64}
   RegisterImport(system_aarch64_linux,timportliblinux);
   RegisterExport(system_aarch64_linux,texportliblinux);

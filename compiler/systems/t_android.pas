@@ -487,11 +487,6 @@ end;
 
 initialization
   RegisterLinker(ld_android,TLinkerAndroid);
-{$ifdef ARM}
-  RegisterImport(system_arm_android,timportlibandroid);
-  RegisterExport(system_arm_android,texportlibandroid);
-  RegisterTarget(system_arm_android_info);
-{$endif ARM}
 {$ifdef AARCH64}
   RegisterImport(system_aarch64_android,timportlibandroid);
   RegisterExport(system_aarch64_android,texportlibandroid);

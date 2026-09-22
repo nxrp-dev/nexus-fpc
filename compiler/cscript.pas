@@ -70,15 +70,6 @@ type
     Procedure WriteToDisk;override;
   end;
 
-  TAsmScriptMPW = class (TAsmScript)
-    Constructor Create (Const ScriptName : TCmdStr); override;
-    Procedure AddAsmCommand (Const Command, Options,FileName : TCmdStr);override;
-    Procedure AddLinkCommand (Const Command, Options, FileName : TCmdStr);override;
-    Procedure AddDeleteCommand (Const FileName : TCmdStr);override;
-    Procedure AddDeleteDirCommand (Const FileName : TCmdStr);override;
-    Procedure WriteToDisk;override;
-  end;
-
   TLinkRes = Class (TScript)
     section: string[30];
     fRealResponseFile: Boolean;
@@ -329,62 +320,6 @@ Begin
 end;
 
 
-{****************************************************************************
-                                  MPW (MacOS) Asm Response
-****************************************************************************}
-
-Constructor TAsmScriptMPW.Create (Const ScriptName : TCmdStr);
-begin
-  Inherited Create(ScriptName);
-end;
-
-
-Procedure TAsmScriptMPW.AddAsmCommand (Const Command, Options,FileName : TCmdStr);
-begin
-  if FileName<>'' then
-    Add('Echo Assembling '+ScriptFixFileName(FileName));
-  Add(maybequoted(command)+' '+Options);
-  Add('Exit If "{Status}" != 0');
-end;
-
-
-Procedure TAsmScriptMPW.AddLinkCommand (Const Command, Options, FileName : TCmdStr);
-begin
-  if FileName<>'' then
-    Add('Echo Linking '+ScriptFixFileName(FileName));
-  Add(maybequoted(command)+' '+Options);
-  Add('Exit If "{Status}" != 0');
-
-  {Add resources}
-  if apptype = app_cui then {If SIOW}
-    begin
-      Add('Rez -append "{RIncludes}"SIOW.r -o '+ ScriptFixFileName(FileName));
-      Add('Exit If "{Status}" != 0');
-    end;
-end;
-
-
-Procedure TAsmScriptMPW.AddDeleteCommand (Const FileName : TCmdStr);
-begin
- Add('Delete ' + MaybeQuoted (ScriptFixFileName(FileName)));
-end;
-
-
-Procedure TAsmScriptMPW.AddDeleteDirCommand (Const FileName : TCmdStr);
-begin
- Add('Delete ' + MaybeQuoted (ScriptFixFileName (FileName)));
-end;
-
-
-Procedure TAsmScriptMPW.WriteToDisk;
-Begin
-  AddStart('# Script for assembling and linking a FreePascal program on MPW (MacOS)');
-  Add('Echo Done');
-  inherited WriteToDisk;
-end;
-
-
-
 Procedure GenerateAsmRes(const st : TCmdStr);
 begin
   AsmRes:=GenerateScript(st);
@@ -403,8 +338,6 @@ function GenerateScript(const st: TCmdStr): TAsmScript;
         Result:=TAsmScriptUnix.Create(st);
       script_dos :
         Result:=TAsmScriptDos.Create(st);
-      script_mpw :
-        Result:=TAsmScriptMPW.Create(st);
       else
         internalerror(2013112805);
     end;

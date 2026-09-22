@@ -1,4 +1,4 @@
-{ %TARGET=linux,wince,haiku}
+{ %TARGET=linux,haiku}
 { %needlibrary }
 { %NORUN }
 

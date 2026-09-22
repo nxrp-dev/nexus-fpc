@@ -1,6 +1,6 @@
 { %norun }
 { %needlibrary }
-{ %target=win64,wince,darwin,linux,freebsd,solaris,aix,android,haiku}
+{ %target=win64,darwin,linux,freebsd,solaris,android,haiku}
 
 library tw16949a;
 

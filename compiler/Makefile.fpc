@@ -32,7 +32,7 @@ fpcdir=..
 unexport FPC_VERSION FPC_COMPILERINFO
 
 # Which platforms are ready for inclusion in the cycle
-CYCLETARGETS=arm x86_64 armeb aarch64
+CYCLETARGETS=x86_64 aarch64
 
 # Platforms not yet ready
 BETATARGETS=
@@ -41,7 +41,7 @@ BETATARGETS=
 ALLTARGETS=$(CYCLETARGETS)
 
 # All OS targets that do not support native compiler
-NO_NATIVE_COMPILER_OS_LIST=embedded freertos gba macosclassic nds sinclairql symbian watcom wii ps1
+NO_NATIVE_COMPILER_OS_LIST=sinclairql
 # All CPU targets that do not support native compiler
 NO_NATIVE_COMPILER_CPU_LIST=
 
@@ -70,12 +70,6 @@ endif
 ifdef X86_64
 PPC_TARGET=x86_64
 endif
-ifdef ARM
-PPC_TARGET=arm
-endif
-ifdef ARMEB
-PPC_TARGET=armeb
-endif
 ifdef AARCH64
 PPC_TARGET=aarch64
 endif
@@ -86,11 +80,7 @@ ifndef PPC_TARGET
 PPC_TARGET=$(CPU_TARGET)
 endif
 
-ifeq ($(PPC_TARGET),armeb)
-CPC_TARGET=arm
-else
 CPC_TARGET=$(PPC_TARGET)
-endif
 
 # Default is to generate a compiler for the same
 # target as OS_TARGET (a native compiler)
@@ -198,9 +188,6 @@ MSGFILES=$(wildcard msg/error*.msg)
 ifeq ($(CPC_TARGET),x86_64)
 CPUSUF=x64
 endif
-ifeq ($(CPC_TARGET),arm)
-CPUSUF=arm
-endif
 ifeq ($(CPC_TARGET),aarch64)
 CPUSUF=a64
 endif
@@ -269,7 +256,7 @@ override LOCALOPT+=-d$(CPC_TARGET)
 
 #include LLVM define/directory if requested
 ifdef LLVM
-ifeq ($(findstring $(PPC_TARGET),x86_64 aarch64 arm),)
+ifeq ($(findstring $(PPC_TARGET),x86_64 aarch64),)
 $(error The $(PPC_TARGET) architecture is not (yet) supported by the FPC/LLVM code generator)
 endif
 
@@ -286,16 +273,6 @@ ifeq ($(PPC_TARGET),x86_64)
 override LOCALOPT+=-Fux86 -Fix86
 endif
 
-
-# ARM specific
-ifeq ($(PPC_TARGET),arm)
-override LOCALOPT+=-Fuarmgen
-endif
-
-# ARMEB specific
-ifeq ($(PPC_TARGET),armeb)
-override LOCALOPT+=-Fuarmgen
-endif
 
 # AArch64 specific
 ifeq ($(PPC_TARGET),aarch64)
@@ -320,7 +297,7 @@ endif
 # Setup Targets
 #####################################################################
 
-ifneq ($(findstring $(OS_TARGET),win64 aix),)
+ifeq ($(OS_TARGET),win64)
 USE_CMP_FOR_DIFF=1
 endif
 
@@ -501,8 +478,8 @@ endif
 # cpu targets
 #####################################################################
 
-PPC_TARGETS=arm armeb x86_64 aarch64
-PPC_SUFFIXES=386 arm armeb x64 8086 a64
+PPC_TARGETS=x86_64 aarch64
+PPC_SUFFIXES=386 x64 8086 a64
 INSTALL_TARGETS=$(addsuffix _exe_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 CLEAN_TARGETS=$(addsuffix _clean,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 SYMLINKINSTALL_TARGETS=$(addsuffix _symlink_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
@@ -601,16 +578,12 @@ insdatx86 : $(COMPILER_UNITTARGETDIR) x86/x86ins.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86ins.pp
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) x86_64 && mv -f x8664tab.inc x8664op.inc x8664nop.inc x8664att.inc x8664ats.inc x8664int.inc x8664pro.inc ../x86_64
 
-insdatarm : arm/armins.dat
-	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkarmins.pp
-        cd arm && ..$(PATHSEP)utils$(PATHSEP)mkarmins$(SRCEXEEXT)
-
 insdataarch64 : aarch64/a64ins.dat
 	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mka64ins.pp
         cd aarch64 && ..$(PATHSEP)utils$(PATHSEP)mka64ins$(SRCEXEEXT)
 
 
-insdat: insdatx86 insdatarm insdataarch64
+insdat: insdatx86 insdataarch64
 
 regdatx86 : x86/x86reg.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86reg.pp
@@ -618,15 +591,11 @@ regdatx86 : x86/x86reg.dat
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT) x86_64
         mv -f x86/r8664*.inc x86_64
 
-regdatarm : arm/armreg.dat
-	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkarmreg.pp
-        cd arm && ..$(PATHSEP)utils$(PATHSEP)mkarmreg$(SRCEXEEXT)
-
 regdataarch64 : aarch64/a64reg.dat
 	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mka64reg.pp
         cd aarch64 && ..$(PATHSEP)utils$(PATHSEP)mka64reg$(SRCEXEEXT)
 
-regdat : regdatx86 regdatarm regdataarch64
+regdat : regdatx86 regdataarch64
 
 intrdatx86 : x86/x86intr.dat
 		$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86inl.pp
@@ -909,7 +878,7 @@ ifeq ($(OS_SOURCE),win64)
   EXCLUDE_80BIT_TARGETS=1
 endif
 
-ifneq ($(findstring $(CPU_SOURCE),aarch64 arm),)
+ifneq ($(findstring $(CPU_SOURCE),aarch64),)
   EXCLUDE_80BIT_TARGETS=1
 endif
 endif

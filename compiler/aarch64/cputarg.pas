@@ -50,9 +50,6 @@ implementation
     {$ifndef NOTARGETWIN64}
       ,t_win
     {$endif}
-    {$ifndef NOTARGETEMBEDDED}
-      ,t_embed
-    {$endif}
 
 {**************************************
              Assemblers

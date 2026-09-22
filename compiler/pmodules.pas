@@ -2640,7 +2640,7 @@ type
 
            cnodeutils.RegisterModuleInitFunction(initpd);
          end
-        else if (target_info.system in ([system_powerpc_macosclassic]+systems_darwin+systems_aix)) then
+        else if (target_info.system in (systems_darwin+systems_aix)) then
           begin
             { create a stub with the name of the desired main routine, with
               the same signature as the C "main" function, and call through to

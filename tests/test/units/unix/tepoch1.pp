@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,openbsd,aix,darwin,netbsd }
+{ %target=linux,freebsd,openbsd,darwin,netbsd }
 uses
   unix;
 var

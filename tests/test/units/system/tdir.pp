@@ -7,7 +7,6 @@
 { current directory.                                      }
 {       testdir                                           }
 
-{ %skiptarget=wince }
 
 Program tdir;
 {$I-}

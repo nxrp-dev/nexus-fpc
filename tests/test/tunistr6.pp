@@ -1,4 +1,3 @@
-﻿{%skiptarget=wince}
 {$codepage utf-8}
 {$if defined(go32v2) or defined(wasi)}
   {$define USE_INTERNAL_UNICODE}

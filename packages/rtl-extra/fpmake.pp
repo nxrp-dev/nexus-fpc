@@ -19,14 +19,14 @@ Const
   IPCBSDs       = [FreeBSD,NetBSD,OpenBSD,DragonFly];
 //  IPCcdeclOSes  = [Darwin,iphonesim,ios];
 
-  PrinterOSes   = [go32v2,msdos,win32,win64,atari]+unixlikes-[beos,haiku];
+  PrinterOSes   = [win32,win64,atari]+unixlikes-[beos,haiku];
   SerialOSes    = [android,linux,netbsd,openbsd,win32,win64];
-  UComplexOSes  = [atari,embedded,gba,go32v2,msdos,nativent,nds,sinclairql,human68k,symbian,watcom,wii,wince,win32,win64,freertos,wasip1,wasip1threads]+UnixLikes;
-  MatrixOSes    = [atari,embedded,gba,go32v2,msdos,nativent,nds,sinclairql,human68k,symbian,watcom,wii,win32,win64,wince,freertos,wasip1,wasip1threads]+UnixLikes;
-  ObjectsOSes   = [atari,embedded,gba,go32v2,macosclassic,msdos,nds,sinclairql,human68k,symbian,watcom,wii,win32,win64,wince,freertos,wasip1,wasip1threads]+UnixLikes;
-  WinsockOSes   = [win32,win64,wince];
-  WinSock2OSes  = [win32,win64,wince];
-  SocketsOSes   = UnixLikes+[wince,win32,win64];
+  UComplexOSes  = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
+  MatrixOSes    = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
+  ObjectsOSes   = [atari,sinclairql,human68k,win32,win64,wasip1,wasip1threads]+UnixLikes;
+  WinsockOSes   = [win32,win64];
+  WinSock2OSes  = [win32,win64];
+  SocketsOSes   = UnixLikes+[win32,win64];
   gpmOSes = [Linux,Android];
   AllTargetsextra = ObjectsOSes + UComplexOSes + MatrixOSes+
                       SerialOSes +PrinterOSes+SocketsOSes+gpmOSes;
@@ -68,10 +68,7 @@ begin
     P.SourcePath.Add('src/darwin',[iphonesim,ios]);
     P.SourcePath.Add('src/unix',AllUnixOSes);
     P.SourcePath.Add('src/bsd',AllBSDOSes);
-    // We also need the win/ directory for WinCE as this uses the sockets
-    // unit from that directory. Maybe we should try to merge the WinSock(2)
-    // units to remove the wince directory completely...
-    P.SourcePath.Add('src/win',[win32,win64,wince]);
+    P.SourcePath.Add('src/win',[win32,win64]);
 
     P.IncludePath.Add('src/bsd',AllBSDOSes);
     P.IncludePath.Add('src/inc');

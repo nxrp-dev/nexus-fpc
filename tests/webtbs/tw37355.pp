@@ -1,4 +1,4 @@
-{ %TARGET=win64,wince}
+{ %TARGET=win64}
 program tw37355;
 {$MODE OBJFPC}
 {$macro on}

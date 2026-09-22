@@ -1,7 +1,6 @@
 { Old file: tbs0016.pp }
 {  }
 
-{ %skiptarget=wince }
 
 {$ifdef usecrt}
   uses

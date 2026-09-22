@@ -1,4 +1,3 @@
-{%skiptarget=wince}
 
 program tb0532;
 

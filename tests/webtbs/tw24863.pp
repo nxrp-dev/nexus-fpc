@@ -1,5 +1,4 @@
 { %OPT=-Sc }
-{ %SKIPTARGET=go32v2 }
 { Test skipped for go32v2, because it forbids the
   testsuite to complete without manually killing the program }
 program test2;

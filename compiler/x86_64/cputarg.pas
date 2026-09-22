@@ -57,9 +57,6 @@ implementation
     {$ifndef NOTARGETHAIKU}
       ,t_haiku
     {$endif}
-    {$ifndef NOTARGETEMBEDDED}
-      ,t_embed
-    {$endif}
     {$ifndef NOTARGETANDROID}
       ,t_android
     {$endif}
