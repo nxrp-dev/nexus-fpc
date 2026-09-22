@@ -361,13 +361,6 @@ implementation
         create_fpu_types;
         s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
 {$endif aarch64}
-{$ifdef avr}
-        s32floattype:=cfloatdef.create(s32real,true);
-        s64floattype:=cfloatdef.create(s64real,true);
-        s80floattype:=cfloatdef.create(s80real,true);
-        sc80floattype:=cfloatdef.create(sc80real,true);
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif avr}
 {$ifdef z80}
         s32floattype:=cfloatdef.create(s32real,true);
         s64floattype:=cfloatdef.create(s64real,true);

@@ -397,16 +397,6 @@ interface
         mark_AsmBlockStart,mark_AsmBlockEnd,
         mark_NoLineInfoStart,mark_NoLineInfoEnd,mark_BlockStart,
         mark_Position
-{$ifdef avr}
-        { spilling on avr destroys the flags as it might use adiw/add/adc, so in case
-          the flags are allocated during spilling, this marker must be translated into
-          a push of the flags when assembler post processing is carried out }
-        ,mark_may_store_flags_with_r26
-        { spilling on avr destroys the flags as it might use adiw/add/adc, so in case
-          the flags are allocated during spilling, this marker must be translated into
-          a pop of the flags when assembler post processing is carried out }
-        ,mark_may_restore_flags_with_r26
-{$endif avr}
       );
 
       TRegAllocType = (ra_alloc,ra_dealloc,ra_sync,ra_resize,ra_markused);
@@ -787,9 +777,6 @@ interface
           constructor Create_int_codeptr_unaligned(_value: int64);
           constructor Create_int_dataptr(_value: int64);
           constructor Create_int_dataptr_unaligned(_value: int64);
-{$ifdef avr}
-          constructor Create_int_dataptr_unaligned(_value: int64; size: taiconst_type);
-{$endif}
 {$ifdef i8086}
           constructor Create_seg_name(const name:string);
           constructor Create_dgroup;
@@ -1913,11 +1900,6 @@ implementation
                consttype:=aitconst_ptr;
            end;
 {$else i8086}
-{$ifdef avr}
-         if assigned(_sym) and (_sym.typ=AT_FUNCTION) then
-           consttype:=aitconst_gs
-         else
-{$endif avr}
          consttype:=aitconst_ptr;
 {$endif i8086}
          { sym is allowed to be nil, this is used to write nil pointers }
@@ -2048,11 +2030,7 @@ implementation
           consttype:=aitconst_farptr
         else
 {$endif i8086}
-{$ifdef avr}
-          consttype:=aitconst_gs;
-{$else avr}
           consttype:=aitconst_ptr;
-{$endif avr}
         sym:=nil;
         endsym:=nil;
         symofs:=0;
@@ -2069,11 +2047,7 @@ implementation
           consttype:=aitconst_farptr
         else
 {$endif i8086}
-{$ifdef avr}
-          consttype:=aitconst_gs;
-{$else avr}
           consttype:=aitconst_ptr_unaligned;
-{$endif avr}
         sym:=nil;
         endsym:=nil;
         symofs:=0;
@@ -2115,19 +2089,6 @@ implementation
       end;
 
 
-{$ifdef avr}
-    constructor tai_const.Create_int_dataptr_unaligned(_value: int64;
-      size: taiconst_type);
-      begin
-        inherited Create;
-        typ:=ait_const;
-        consttype:=size;
-        sym:=nil;
-        endsym:=nil;
-        symofs:=0;
-        value:=_value;
-      end;
-{$endif avr}
 
 {$ifdef i8086}
     constructor tai_const.Create_seg_name(const name:string);

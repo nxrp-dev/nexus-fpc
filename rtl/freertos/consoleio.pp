@@ -159,7 +159,6 @@ var
 var
   pstdout : ^Text;
 
-{$ifndef CPUAVR}
 initialization
   { Setup stdin, stdout and stderr }
   SysInitStdIO;
@@ -175,7 +174,6 @@ finalization
      Writeln(pstdout^,'');
    End;
   SysFlushStdIO;
-{$endif CPUAVR}
 
 end.
 

@@ -1012,10 +1012,6 @@ end;
 {$endif}
 
 {$ifndef FPC_STR_ENUM_INTERN}
-{ currently, the avr code generator fails on this procedure, so we disable it,
-  this is not a good solution but fixing compilation of this procedure for
-  avr is hard, requires significant changes to the register allocator to take
-  care of different register classes }
 procedure fpc_chararray_enum(ordinal,len:sizeint;typinfo,ord2strindex:pointer;out a : array of AnsiChar);compilerproc;
 var
   ss : shortstring;

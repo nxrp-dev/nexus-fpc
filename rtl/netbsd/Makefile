@@ -204,27 +204,9 @@ $(error When compiling for arm-embedded, a sub-architecture (e.g. SUBARCH=armv4t
 endif
 override FPCOPT+=-Cp$(SUBARCH)
 endif
-ifeq ($(CPU_OS_TARGET),avr-embedded)
-ifeq ($(SUBARCH),)
-$(error When compiling for avr-embedded, a sub-architecture (e.g. SUBARCH=avr25 or SUBARCH=avr35) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
-endif
 ifeq ($(CPU_OS_TARGET),mipsel-embedded)
 ifeq ($(SUBARCH),)
 $(error When compiling for mipsel-embedded, a sub-architecture (e.g. SUBARCH=pic32mx) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
-endif
-ifeq ($(CPU_OS_TARGET),xtensa-embedded)
-ifeq ($(SUBARCH),)
-$(error When compiling for xtensa-embedded, a sub-architecture (e.g. SUBARCH=lx106 or SUBARCH=lx6) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
-endif
-ifeq ($(CPU_OS_TARGET),xtensa-freertos)
-ifeq ($(SUBARCH),)
-$(error When compiling for xtensa-freertos, a sub-architecture (e.g. SUBARCH=lx106 or SUBARCH=lx6) must be defined)
 endif
 override FPCOPT+=-Cp$(SUBARCH)
 endif

@@ -17,9 +17,6 @@ unit buildrtl;
 {$ifdef CPUARM}
       stellaris
 {$endif CPUARM}
-{$ifdef CPUAVR}
-      atmega128
-{$endif CPUAVR}
       ;
 
   implementation

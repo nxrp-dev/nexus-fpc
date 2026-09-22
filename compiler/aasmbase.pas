@@ -205,9 +205,6 @@ interface
 {$endif wasm}
          { on avr the compiler needs to replace cond. jumps with too large offsets
            so we have to store an offset somewhere to calculate jump distances }
-{$ifdef AVR}
-         offset     : longint;
-{$endif AVR}
          bind       : TAsmsymbind;
          typ        : TAsmsymtype;
 {$ifdef llvm}

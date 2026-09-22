@@ -125,12 +125,6 @@ interface
          addr_reg_14i, { use by [ldptr/stptr] }
          addr_reg { use by jr.. }
          {$endif LOONGARCH64}
-         {$IFDEF AVR}
-         ,addr_lo8
-         ,addr_lo8_gs
-         ,addr_hi8
-         ,addr_hi8_gs
-         {$ENDIF}
          {$IFDEF Z80}
          ,addr_lo8
          ,addr_hi8

@@ -208,10 +208,6 @@ type
      ,
      {$i x86/cx86innr.inc}
 {$endif }
-{$if defined(AVR)}
-     ,
-     {$i ccpuinnr.inc}
-{$endif }
 {$if defined(Z80)}
      ,
      {$i ccpuinnr.inc}

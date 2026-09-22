@@ -198,11 +198,7 @@ interface
                     MessagePos(filepos,asmr_e_invalid_reference_syntax);
                   { Subscribed access }
                   if forceref or
-{$ifdef avr}
-                     (sofs>=tcgsize2size[sym.localloc.size])
-{$else avr}
                      (sofs<>0)
-{$endif avr}
                      then
                     begin
                       op.typ:=top_ref;
@@ -222,13 +218,6 @@ interface
                       if reg2opsize(op.reg)<>TCGSize2Opsize[sym.localloc.size] then
                         op.reg:=newreg(getregtype(op.reg),getsupreg(op.reg),cgsize2subreg(getregtype(op.reg),sym.localloc.size));
 {$endif x86}
-{$ifdef avr}
-                      case sofs of
-                        1: op.reg:=cg.GetNextReg(op.reg);
-                        2: op.reg:=cg.GetNextReg(cg.GetNextReg(op.reg));
-                        3: op.reg:=cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(op.reg)));
-                      end;
-{$endif avr}
                     end;
                 end;
               LOC_FPUREGISTER,

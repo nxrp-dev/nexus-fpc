@@ -70,9 +70,6 @@ endif
 ifeq ($(CPU_TARGET),mips64el)
 PPSUF=mips64el
 endif
-ifeq ($(CPU_TARGET),avr)
-PPSUF=avr
-endif
 ifeq ($(CPU_TARGET),aarch64)
 PPSUF=a64
 endif
@@ -81,9 +78,6 @@ PPSUF=rv32
 endif
 ifeq ($(CPU_TARGET),riscv64)
 PPSUF=rv64
-endif
-ifeq ($(CPU_TARGET),xtensa)
-PPSUF=xtensa
 endif
 ifeq ($(CPU_TARGET),loongarch64)
 PPSUF=loongarch64

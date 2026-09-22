@@ -1722,7 +1722,7 @@ Unit AoptObj;
     { Returns True if hp is an unconditional jump to a label }
     function IsJumpToLabelUncond(hp: taicpu): boolean;
       begin
-{$if defined(avr) or defined(z80)}
+{$if defined(z80)}
         result:=(hp.opcode in aopt_uncondjmp) and
 {$else}
         result:=(hp.opcode=aopt_uncondjmp) and
@@ -1783,9 +1783,6 @@ Unit AoptObj;
       procedure on an instruction that you already know is a conditional jump }
     procedure TAOptObj.MakeUnconditional(p: taicpu);
       begin
-        { TODO: If anyone can improve this particular optimisation to work on
-          AVR, please do (it's currently not called at all). [Kit] }
-{$if not defined(avr)}
 {$if defined(powerpc) or defined(powerpc64)}
         p.condition.cond := C_None;
         p.condition.simple := True;
@@ -1805,7 +1802,6 @@ Unit AoptObj;
         p.loadoper(0, p.oper[p.ops-1]^);
         p.ops:=1;
 {$endif}
-{$endif not avr}
 {$ifdef mips}
         { MIPS conditional jump instructions also contain register
           operands. A proper implementation is needed here. }
@@ -2331,13 +2327,8 @@ Unit AoptObj;
                             Result := True;
                             Exit;
 
-{$if not defined(avr)}
                           end
                         else
-                          { NOTE: There is currently no watertight, cross-platform way to create
-                            an unconditional jump without access to the cg object.  If anyone can
-                            improve this particular optimisation to work on AVR,
-                            please do. [Kit] }
                           begin
                             { Since inv(cond1) is a subset of cond2, jmp<cond2> will always branch if
                               jmp<cond1> does not, so change jmp<cond2> to an unconditional jump. }
@@ -2353,7 +2344,6 @@ Unit AoptObj;
 
                             { See if more optimisations are possible }
                             Continue;
-{$endif}
                           end;
                       end;
                   end;

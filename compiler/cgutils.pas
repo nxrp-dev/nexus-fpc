@@ -91,9 +91,6 @@ unit cgutils;
          addressmode : taddressmode;
          shiftmode   : tshiftmode;
 {$endif aarch64}
-{$ifdef avr}
-         addressmode : taddressmode;
-{$endif avr}
 {$ifdef m68k}
          { indexed increment and decrement mode }
          { (An)+ and -(An)                      }

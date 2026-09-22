@@ -84,7 +84,7 @@ begin
     // from the 'android' dir, not the 'unix' dir.
     T:=P.Targets.AddUnit('real48utils.pp',AllTargetsextra-[msdos]  { msdos excluded temporarily, until bitpacked records containing longints on 16-bit targets are fixed }
                                                          -[wasip1,wasip1threads] { internal error on the WebAssembly target }
-                                                         -[embedded]);   { at least avr has no floats }
+                                                         -[embedded]);
     if Defaults.CPU<>jvm then
       T:=P.Targets.AddUnit('clocale.pp',[android]);
 

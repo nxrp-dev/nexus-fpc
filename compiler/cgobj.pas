@@ -766,16 +766,10 @@ implementation
 {$if defined(cpu8bitalu) or defined(cpu16bitalu)}
     function tcg.GetNextReg(const r: TRegister): TRegister;
       begin
-{$ifdef AVR}
-        { the AVR code generator depends on the fact that it can do GetNextReg also on physical registers }
-        if (getsupreg(r)>=first_int_imreg) and not(has_next_reg[getsupreg(r)]) then
-          internalerror(2017091103);
-{$else AVR}
         if getsupreg(r)<first_int_imreg then
           internalerror(2013051401);
         if not has_next_reg[getsupreg(r)] then
           internalerror(2017091104);
-{$endif AVR}
         if getregtype(r)<>R_INTREGISTER then
           internalerror(2017091101);
         if getsubreg(r)<>R_SUBWHOLE then
@@ -828,14 +822,14 @@ implementation
         alloccpuregisters(list,R_INTREGISTER,paramanager.get_volatile_registers_int(pocall_default));
         if uses_registers(R_ADDRESSREGISTER) then
           alloccpuregisters(list,R_ADDRESSREGISTER,paramanager.get_volatile_registers_address(pocall_default));
-{$if not(defined(i386)) and not(defined(i8086)) and not(defined(avr))}
+{$if not(defined(i386)) and not(defined(i8086))}
         if uses_registers(R_FPUREGISTER) then
           alloccpuregisters(list,R_FPUREGISTER,paramanager.get_volatile_registers_fpu(pocall_default));
 {$ifdef cpumm}
         if uses_registers(R_MMREGISTER) then
           alloccpuregisters(list,R_MMREGISTER,paramanager.get_volatile_registers_mm(pocall_default));
 {$endif cpumm}
-{$endif not(defined(i386)) and not(defined(i8086)) and not(defined(avr))}
+{$endif not(defined(i386)) and not(defined(i8086))}
       end;
 
 
@@ -853,14 +847,14 @@ implementation
         dealloccpuregisters(list,R_INTREGISTER,paramanager.get_volatile_registers_int(pocall_default));
         if uses_registers(R_ADDRESSREGISTER) then
           dealloccpuregisters(list,R_ADDRESSREGISTER,paramanager.get_volatile_registers_address(pocall_default));
-{$if not(defined(i386)) and not(defined(i8086)) and not(defined(avr))}
+{$if not(defined(i386)) and not(defined(i8086))}
         if uses_registers(R_FPUREGISTER) then
           dealloccpuregisters(list,R_FPUREGISTER,paramanager.get_volatile_registers_fpu(pocall_default));
 {$ifdef cpumm}
         if uses_registers(R_MMREGISTER) then
           dealloccpuregisters(list,R_MMREGISTER,paramanager.get_volatile_registers_mm(pocall_default));
 {$endif cpumm}
-{$endif not(defined(i386)) and not(defined(i8086)) and not(defined(avr))}
+{$endif not(defined(i386)) and not(defined(i8086))}
       end;
 
 
@@ -2022,12 +2016,7 @@ implementation
         tmpreg : tregister;
         tmpref : treference;
       begin
-        if assigned(ref.symbol)
-          { for avrtiny, the code generator generates a ref which is Z relative and while using it,
-            Z is changed, so the following code breaks }
-          {$ifdef avr}
-            and not((CPUAVR_16_REGS in cpu_capabilities[current_settings.cputype]) or (tcgsize2size[size]=1))
-          {$endif avr} then
+        if assigned(ref.symbol) then
           begin
             tmpreg:=getaddressregister(list);
             a_loadaddr_ref_reg(list,ref,tmpreg);
@@ -2060,12 +2049,7 @@ implementation
         tmpreg : tregister;
         tmpref : treference;
       begin
-        if assigned(ref.symbol)
-          { for avrtiny, the code generator generates a ref which is Z relative and while using it,
-            Z is changed, so the following code breaks }
-          {$ifdef avr}
-            and not((CPUAVR_16_REGS in cpu_capabilities[current_settings.cputype]) or (tcgsize2size[size]=1))
-          {$endif avr} then
+        if assigned(ref.symbol) then
           begin
             tmpreg:=getaddressregister(list);
             a_loadaddr_ref_reg(list,ref,tmpreg);
@@ -2301,12 +2285,7 @@ implementation
       begin
         if not (Op in [OP_NOT,OP_NEG]) then
           internalerror(2020050710);
-        if assigned(ref.symbol)
-          { for avrtiny, the code generator generates a ref which is Z relative and while using it,
-            Z is changed, so the following code breaks }
-          {$ifdef avr}
-            and not((CPUAVR_16_REGS in cpu_capabilities[current_settings.cputype]) or (tcgsize2size[size]=1))
-          {$endif avr} then
+        if assigned(ref.symbol) then
           begin
             tmpreg:=getaddressregister(list);
             a_loadaddr_ref_reg(list,ref,tmpreg);

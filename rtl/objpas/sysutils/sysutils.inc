@@ -1079,10 +1079,6 @@ begin
   Result:=arRiscV64;
   {$endif riscv64}
 
-  {$ifdef xtensa}
-  Result:=arXtensa;
-  {$endif xtensa}
-
   {$ifdef wasm32}
   Result:=arWasm32;
   {$endif wasm32}

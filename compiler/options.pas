@@ -133,9 +133,6 @@ Type
 {$ifdef llvm}
     procedure LLVMEnableSanitizers(sanitizers: TCmdStr);
 {$endif llvm}
-{$ifdef AVR}
-    function ParseLinkerDiscardOptions(const s:TCmdStr):boolean;
-{$endif AVR}
     procedure VerifyTargetProcessor;
   end;
 
@@ -1033,9 +1030,6 @@ begin
 {$ifdef riscv64}
       'r',
 {$endif}
-{$ifdef avr}
-      'V',
-{$endif}
 {$ifdef jvm}
       'J',
 {$endif}
@@ -1471,29 +1465,6 @@ procedure TOption.LLVMEnableSanitizers(sanitizers: TCmdStr);
   end;
 {$endif}
 
-{$ifdef AVR}
-function TOption.ParseLinkerDiscardOptions(const s: TCmdStr): boolean;
-var
-  i: Integer;
-  c: char;
-begin
-  i:=2;
-  while i<=length(s) do
-   begin
-     c:=upcase(s[i]);
-     case c of
-      'C' : include(init_settings.globalswitches,cs_link_discard_copydata);
-      'J' : include(init_settings.globalswitches,cs_link_discard_jmp_main);
-      'S' : include(init_settings.globalswitches,cs_link_discard_start);
-      'Z' : include(init_settings.globalswitches,cs_link_discard_zeroreg_sp);
-     else
-      exit(false);
-     end;
-     inc(i);
-   end;
-  result:=true;
-end;
-{$endif AVR}
 
 {$if defined(XTENSA) or defined(RISCV32)}
 procedure TOption.MaybeSetIdfVersionMacro;
@@ -2244,12 +2215,6 @@ begin
     end;
 {$endif i8086}
 
-{$ifdef AVR}
-  if (target_info.system = system_avr_embedded) and
-     (cs_link_cvt in init_settings.globalswitches) and
-     not(CPUAVR_HAS_CVT in cpu_capabilities[init_settings.cputype]) then
-    Message1(option_e_avr_cvt_unsupported, embedded_controllers[init_settings.controllertype].controllerunitstr);
-{$endif AVR}
 
 {$ifndef i8086_link_intern_debuginfo}
   if (cs_debuginfo in init_settings.moduleswitches) and
@@ -2509,15 +2474,6 @@ begin
              IllegalPara(opt);
             break;
           end;
-{$ifdef AVR}
-       'C' : include(init_settings.globalswitches,cs_link_cvt);
-       'd' :
-          begin
-            if not ParseLinkerDiscardOptions(more) then
-              IllegalPara(opt);
-            break;
-          end;
-{$endif AVR}
 {$ifdef cpufpemu}
        'e' :
           begin
@@ -2566,11 +2522,7 @@ begin
               l:=length(more)-j+1;
             val(copy(more,j+1,l-1),heapsize,code);
             if (code<>0)
-{$ifdef AVR}
-            or (heapsize<32)
-{$else AVR}
             or (heapsize<1024)
-{$endif AVR}
             then
               IllegalPara(opt)
             else if l<=length(more)-j then
@@ -4645,12 +4597,6 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_COMP_IS_INT64');
       {$endif arm}
 
-      {$ifdef avr}
-        def_system_macro('CPUAVR');
-        def_system_macro('CPU16');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif avr}
 
       {$ifdef jvm}
         def_system_macro('CPUJVM');
@@ -4824,12 +4770,9 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('CPUINT64');
       {$endif defined(cpu64bitalu)}
 
-      {$if defined(avr)}
-        def_system_macro('FPC_HAS_INTERNAL_ABS_SHORTINT');
-      {$endif}
-      {$if defined(i8086) or defined(avr)}
+      {$if defined(i8086)}
         def_system_macro('FPC_HAS_INTERNAL_ABS_SMALLINT');
-      {$endif i8086 or avr}
+      {$endif i8086}
       { abs(long) is handled internally on all CPUs }
         def_system_macro('FPC_HAS_INTERNAL_ABS_LONG');
       { abs(int64) is handled internally on all CPUs }
@@ -4991,18 +4934,8 @@ begin
   if target_info.system in (systems_embedded+systems_freertos) then
     begin
       case target_info.system of
-{$ifdef AVR}
-        system_avr_embedded:
-          if init_settings.controllertype in [ct_avrsim,ct_avrsim6] then
-            heapsize:=8192
-          else
-            heapsize:=128;
-{$endif AVR}
         system_arm_freertos:
           heapsize:=8192;
-        system_xtensa_freertos:
-          { keep default value }
-          ;
         system_arm_embedded:
           heapsize:=256;
         system_mipsel_embedded:

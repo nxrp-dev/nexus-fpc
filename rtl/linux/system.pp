@@ -39,9 +39,9 @@ Unit System;
 function get_cmdline:PAnsiChar; deprecated 'use paramstr' ;
 property cmdline:PAnsiChar read get_cmdline;
 
-{$if defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K) or defined(CPUXTENSA)}
+{$if defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K)}
 {$define FPC_LOAD_SOFTFPU}
-{$endif defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K) or defined(CPUXTENSA)}
+{$endif defined(CPURISCV32) or defined(CPURISCV64) or defined(CPUARM) or defined(CPUM68K)}
 
 {$ifdef FPC_SOFT_FPUX80}
 {$define FPC_SOFTFLOAT_FLOATX80}

@@ -28,7 +28,6 @@ program pp;
   -----------------------------------------------------------------
   AARCH64             generate a compiler for the AARCH64 (64bit ARM)
   ARM                 generate a compiler for the ARM
-  AVR                 generate a compiler for the AVR
   I386                generate a compiler for the Intel i386+
   LOONGARCH64         generate a compiler for the LoongArch64 architecture
   MIPS                generate a compiler for the MIPS (Big Endian)
@@ -40,7 +39,6 @@ program pp;
   SPARC               generate a compiler for SPARC
   SPARC64             generate a compiler for SPARC64
   X86_64              generate a compiler for the AMD x86-64 architecture
-  XTENSA              generate a compiler for XTENSA
 
   -----------------------------------------------------------------
   Other compiler switches
@@ -137,12 +135,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif MIPS}
-{$ifdef AVR}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif AVR}
 {$ifdef AARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}
@@ -161,12 +153,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif RISCV64}
-{$ifdef XTENSA}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif XTENSA}
 {$ifdef LOONGARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}

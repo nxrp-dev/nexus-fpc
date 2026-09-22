@@ -62,7 +62,6 @@ Const
     case processorstr of
       'aarch64': Result := 'a64';
       'arm': Result := 'arm';
-      'avr': Result := 'avr';
       'i386': Result := '386';
       'loongarch64': Result:='loongarch64';
       'mips': Result := 'mips';
@@ -77,7 +76,6 @@ Const
       'sparc': Result := 'sparc';
       'sparc64': Result := 'sparc64';
       'x86_64': Result := 'x64';
-      'xtensa': Result := 'xtensa'
       else
         error('Illegal processor type "'+processorstr+'"');
     end;
@@ -149,10 +147,6 @@ Const
          ppcbin:='ppcrv64';
          processorname:='riscv64';
     {$endif riscv64}
-    {$ifdef xtensa}
-         ppcbin:='ppcxtensa';
-         processorname:='xtensa';
-    {$endif xtensa}
     {$ifdef loongarch64}
          ppcbin:='ppcloongarch64';
          processorname:='loongarch64';

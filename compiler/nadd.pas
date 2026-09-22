@@ -4863,7 +4863,7 @@ const
       begin
         result:=(nodetype=muln) and
                 not(torddef(resultdef).ordtype in [u8bit,s8bit
-                {$if defined(cpu16bitalu) or defined(avr)},u16bit,s16bit{$endif}]);
+                {$if defined(cpu16bitalu)},u16bit,s16bit{$endif}]);
       end;
 {$endif cpuneedsmulhelper}
 

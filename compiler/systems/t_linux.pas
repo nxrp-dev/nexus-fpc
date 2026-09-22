@@ -283,10 +283,6 @@ const defdynlinker='/lib/ld-linux-aarch64.so.1';
   var defdynlinker : string;
 {$endif riscv64}
 
-{$ifdef xtensa}
-  const defdynlinker='/lib/ld.so.1';
-{$endif xtensa}
-
 {$ifdef loongarch64}
   const defdynlinker='/lib64/ld-linux-loongarch-lp64d.so.1';
 {$endif loongarch64}
@@ -481,22 +477,6 @@ begin
       emulation_opt:=' -m elf64ppc';
     end;
 {$endif powerpc64}
-{$ifdef xtensa}
-  if target_info.endian=endian_little then
-    begin
-      target_opt:=' -b elf32-xtensa-le';
-      emulation_opt:=' -m elf32xtensa';
-    end
-  else
-    begin
-      target_opt:=' -b elf32-xtensa-be';
-      emulation_opt:=' -m elf32xtensa';
-    end;
-  if target_info.abi=abi_xtensa_call0 then
-    platformopt:=platformopt+' --abi-call0'
-  else if target_info.abi=abi_xtensa_windowed then
-    platformopt:=platformopt+' --abi-windowed';
-  {$endif}
 {$ifdef arm}
   platformopt:=' -z noexecstack';
 {$endif arm}
@@ -1467,11 +1447,6 @@ initialization
   RegisterExport(system_riscv64_linux,texportliblinux);
   RegisterTarget(system_riscv64_linux_info);
 {$endif riscv64}
-{$ifdef xtensa}
-  RegisterImport(system_xtensa_linux,timportliblinux);
-  RegisterExport(system_xtensa_linux,texportliblinux);
-  RegisterTarget(system_xtensa_linux_info);
-{$endif xtensa}
 {$ifdef loongarch64}
   RegisterImport(system_loongarch64_linux,timportliblinux);
   RegisterExport(system_loongarch64_linux,texportliblinux);

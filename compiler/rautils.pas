@@ -51,9 +51,7 @@ type
   TOprRec = record
     case typ:TOprType of
       OPR_NONE      : ();
-{$if defined(AVR)}
-      OPR_CONSTANT  : (val:longint);
-{$elseif defined(i8086)}
+{$if defined(i8086)}
       OPR_CONSTANT  : (val:longint);
 {$elseif defined(Z80)}
       OPR_CONSTANT  : (val:longint);

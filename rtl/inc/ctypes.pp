@@ -127,7 +127,7 @@ type
 {$if defined(longdouble_is_double) or not defined(FPC_HAS_CEXTENDED)}
   clongdouble=double;
 {$else}
-  {$if defined(cpui8086) or defined(cpui386) or defined(cpux86_64) or defined(cpuavr)}
+  {$if defined(cpui8086) or defined(cpui386) or defined(cpux86_64)}
   clongdouble = cextended;
   {$else}
   {$define longdouble_assignment_overload_real128}

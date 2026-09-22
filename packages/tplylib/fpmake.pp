@@ -27,8 +27,8 @@ begin
     P.OSes := P.OSes - [palmos];
     { Program does not fit in 16-bit memory constraints }
     P.OSes := P.OSes - [msdos];
-    { avr-embedded and i8086-embedded do not meet needed requirements }
-    if Defaults.CPU in [avr,i8086] then
+    { i8086-embedded does not meet needed requirements }
+    if Defaults.CPU in [i8086] then
       P.OSes := P.OSes - [embedded];
     P.OSes := P.OSes - [wasip2, ps1];
 

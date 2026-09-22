@@ -44,9 +44,7 @@ type
 {$endif FPC_HAS_FEATURE_TEXTIO}
 
 const
-{$if defined(CPUAVR)}
-  STACK_MARGIN_MAX = 64;    { Stack size margin for stack checking }
-{$elseif defined(CPUZ80)}
+{$if defined(CPUZ80)}
   STACK_MARGIN_MAX = 64;    { Stack size margin for stack checking }
 {$elseif defined(CPULOONGARCH64)}
   STACK_MARGIN_MAX = 65536;    { Stack size margin for stack checking }
@@ -269,13 +267,6 @@ function do_isdevice(handle:thandle):boolean;forward;
   {$define SYSPROCDEFINED}
 {$endif cpuarm}
 
-{$ifdef cpuavr}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i avr.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpuavr}
 
 {$ifdef cpumipsel}
   {$ifdef SYSPROCDEFINED}
@@ -334,13 +325,6 @@ function do_isdevice(handle:thandle):boolean;forward;
   {$define SYSPROCDEFINED}
 {$endif cpuriscv64}
 
-{$ifdef cpuxtensa}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i xtensa.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpuxtensa}
 
 {$ifdef cpuz80}
   {$ifdef SYSPROCDEFINED}
@@ -1277,7 +1261,6 @@ Begin
 {$ifdef SYSTEMDEBUG}
   writeln('InternalExit');
 {$endif SYSTEMDEBUG}
-{$ifndef CPUAVR}
   while exitProc<>nil Do
    Begin
      InOutRes:=0;
@@ -1285,7 +1268,6 @@ Begin
      exitProc:=nil;
      current_exit();
    End;
-{$endif CPUAVR}
 
 {$ifdef FPC_HAS_FEATURE_CONSOLEIO}
   { the embedded system unit itself contains no routines for console i/o

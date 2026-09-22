@@ -1560,13 +1560,7 @@ unit rgobj;
       freeze_moves(n);
     end;
 
-{ The spilling approach selected by SPILLING_NEW does not work well for AVR as it exploits apparently the problem of the current
-  reg. allocator with AVR. The current reg. allocator is not aware of the fact that r1-r15 and r16-r31 are not equal on AVR }
-{$if defined(AVR)}
-{$define SPILLING_OLD}
-{$else defined(AVR)}
 { $define SPILLING_NEW}
-{$endif defined(AVR)}
 {$ifndef SPILLING_NEW}
 {$define SPILLING_OLD}
 {$endif SPILLING_NEW}

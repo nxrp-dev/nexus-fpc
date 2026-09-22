@@ -49,9 +49,6 @@
   {$goto+}
 {$endif CPUPOWERPC}
 
-{$ifdef CPUAVR}
-  {$goto+}
-{$endif CPUAVR}
 
 
 { needed for insert,delete,readln }
@@ -312,22 +309,6 @@ Type
   {$endif}
 {$endif CPUARM}
 
-{$ifdef CPUAVR}
-  {$define DEFAULT_SINGLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Real;
-  {$endif}
-{$endif CPUAVR}
 
 {$ifdef CPUAARCH64}
   {$define DEFAULT_DOUBLE}
@@ -373,20 +354,6 @@ Type
   {$endif}
 {$endif CPURISCV64}
 
-{$ifdef CPUXTENSA}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPUXTENSA}
 
 {$ifdef CPUZ80}
   {$define DEFAULT_SINGLE}
@@ -1197,7 +1164,7 @@ function fpc_SarInt64(Const AValue : Int64;const Shift : Byte): Int64;compilerpr
 {$endif}
 
 {$ifdef FPC_HAS_INTERNAL_BSR}
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpuarm) or defined(cpuaarch64) or defined(cpupowerpc32) or defined(cpupowerpc64) or defined(cpuxtensa)}
+{$if defined(cpui386) or defined(cpux86_64) or defined(cpuarm) or defined(cpuaarch64) or defined(cpupowerpc32) or defined(cpupowerpc64)}
 {$define FPC_HAS_INTERNAL_BSR_BYTE}
 {$define FPC_HAS_INTERNAL_BSR_WORD}
 {$define FPC_HAS_INTERNAL_BSR_DWORD}

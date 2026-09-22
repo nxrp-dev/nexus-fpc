@@ -143,10 +143,6 @@ implementation
         pocall_internproc:
           result:=llvm_callingconvention_name(pocall_default);
 {$endif x86}
-{$ifdef avr}
-        pocall_interrupt:
-          result:='avr_intrcc';
-{$endif avr}
 {$if defined(arm) and not defined(FPC_ARMHF)}
         pocall_hardfloat:
           result:='arm_aapcs_vfpcc';

@@ -259,11 +259,7 @@ implementation
         FFrameEndLabel:=nil;
         FLastLocLabel:=nil;
         code_alignment_factor:=1;
-{$if defined(avr)}
-        data_alignment_factor:=-1;
-{$else defined(avr)}
         data_alignment_factor:=-4;
-{$endif defined(avr)}
         FDwarfList:=TAsmList.Create;
       end;
 
@@ -285,15 +281,6 @@ implementation
         list.concat(tai_const.create_8bit(DW_CFA_offset_extended));
         list.concat(tai_const.create_uleb128bit(dwarf_reg(NR_RETURN_ADDRESS_REG)));
         list.concat(tai_const.create_uleb128bit((-sizeof(aint)) div data_alignment_factor));
-      end;
-{$elseif defined(avr)}
-    procedure TDwarfAsmCFILowLevel.generate_initial_instructions(list:TAsmList);
-      begin
-        list.concat(tai_const.create_8bit(DW_CFA_def_cfa));
-        list.concat(tai_const.create_uleb128bit(32));
-        list.concat(tai_const.create_uleb128bit(2));
-        list.concat(tai_const.create_8bit(DW_CFA_offset+36));
-        list.concat(tai_const.create_uleb128bit((-1) div data_alignment_factor));
       end;
 {$elseif defined(arm)}
     procedure TDwarfAsmCFILowLevel.generate_initial_instructions(list:TAsmList);
@@ -482,11 +469,7 @@ implementation
                   current_asmdata.getlabel(curpos,alt_dbgframe);
                   list.concat(tai_label.create(curpos));
                   list.concat(tai_const.Create_sym(hp.oper[0].beginsym));
-{$if defined(avr)}
-                  list.concat(tai_const.create_rel_sym(aitconst_32bit,hp.oper[0].beginsym,hp.oper[0].endsym));
-{$else defined(avr)}
                   list.concat(tai_const.create_rel_sym(aitconst_ptr,hp.oper[0].beginsym,hp.oper[0].endsym));
-{$endif defined(avr)}
 
                   { we wrote a 'z' into the CIE augmentation data }
                   if datatype=dt_eh_frame then

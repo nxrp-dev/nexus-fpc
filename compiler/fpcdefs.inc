@@ -218,18 +218,6 @@
 {$endif arm}
 
 
-{$ifdef avr}
-  {$define cpu8bit}
-  {$define cpu16bitaddr}
-  {$define cpu8bitalu}
-  {$define cpuflags}
-  {$define cpunofpu}
-  {$define cpunodefaultint}
-  {$define cpuneedsdivhelper}
-  {$define cpuneedsmulhelper}
-  {$define cpurefshaveindexreg}
-  {$define cpucapabilities}
-{$endif avr}
 
 {$ifdef mipsel}
   {$define mips}
@@ -333,18 +321,6 @@
   {$define support_rodata}
 {$endif riscv64}
 
-{$ifdef xtensa}
-  {$define cpu32bit}
-  {$define cpu32bitaddr}
-  {$define cpu32bitalu}
-  {$define cpufpemu}
-  {$define cpuflags} { xtensa has a boolean extension }
-  {$define cputargethasfixedstack}
-  {$define cpuneedsdivhelper}
-  {$define cpucapabilities}
-  {$define cpurequiresproperalignment}
-  {$define cpufloatintregmov}
-{$endif xtensa}
 
 {$ifdef loongarch64}
   {$define loongarch}

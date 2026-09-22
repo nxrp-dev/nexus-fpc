@@ -48,11 +48,6 @@ interface
       DbgBase, dbgdwarfconst;
 
     type
-      {$ifdef avr}
-      // re-map to larger types because of offsets required to distinguish different memory spaces
-      puint = cardinal;
-      pint = longint;
-      {$endif avr}
 
       TDwarfFile = record
         Index: integer;
@@ -327,10 +322,6 @@ implementation
       { Implementation-defined range start.   }
       DW_LANG_hi_user = $ffff;
 
-      {$ifdef avr}
-      // More space required to include memory type offset
-      aitconst_ptr_unaligned = aitconst_32bit_unaligned;
-      {$endif avr}
 
     type
       { Names and codes for macro information.   }
@@ -3007,12 +2998,7 @@ implementation
                  end;
                *)
                templist.concat(tai_const.create_8bit(3));
-               {$ifdef avr}
-               // Add $800000 to indicate that the address is in memory space
-               templist.concat(tai_const.create_int_dataptr_unaligned(sym.addroffset + $800000, aitconst_ptr_unaligned));
-               {$else}
                templist.concat(tai_const.create_int_dataptr_unaligned(sym.addroffset));
-               {$endif}
                blocksize:=1+sizeof(puint);
             end;
           toasm :

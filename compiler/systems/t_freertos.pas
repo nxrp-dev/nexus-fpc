@@ -39,9 +39,9 @@ implementation
        TlinkerFreeRTOS=class(texternallinker)
        private
           Function  WriteResponseFile: Boolean;
-{$if defined(XTENSA) or defined(RISCV32)}
+{$ifdef RISCV32}
           procedure GenerateDefaultLinkerScripts(var memory_filename,sections_filename: AnsiString);
-{$endif (XTENSA) or defined(RISCV32)}
+{$endif RISCV32}
        public
           constructor Create; override;
           procedure SetDefaultInfo; override;
@@ -76,15 +76,7 @@ const
 var
   platformopt : string;
 begin
-  {$ifdef xtensa}
-  if target_info.endian=endian_little then
-    platformopt:=' -b elf32-xtensa-le -m elf32xtensa'
-  else
-    platformopt:=' -b elf32-xtensa-be -m elf32xtensa';
-  platformopt:=platformopt+' $PLATFORMABI';
-  {$else}
   platformopt:='';
-  {$endif}
   Info.ExeCmd[1]:='ld -g '+platform_select+platformopt+' $OPT $DYNLINK $STATIC $GCSECTIONS $STRIP $MAP -L. -o $EXE -T $RES';
 end;
 
@@ -104,7 +96,7 @@ Var
 begin
   WriteResponseFile:=False;
   linklibc:=(SharedLibFiles.Find('c')<>nil);
-{$if defined(ARM) or defined(i386) or defined(x86_64) or defined(AVR) or defined(MIPSEL) or defined(RISCV32) or defined(XTENSA)}
+{$if defined(ARM) or defined(i386) or defined(x86_64) or defined(MIPSEL) or defined(RISCV32)}
   prtobj:='';
 {$else}
   prtobj:='prt0';
@@ -143,9 +135,6 @@ begin
       LinkRes.AddFileName(s);
     end;
 
-  { xtensa FreeRTOS links always against libc, the runtime needs it }
-  if not(target_info.system in [system_xtensa_freertos]) then
-    begin
       { try to add crti and crtbegin if linking to C }
       if linklibc then
        begin
@@ -154,7 +143,6 @@ begin
          if librarysearchpath.FindFile('crti.o',false,s) then
           LinkRes.AddFileName(s);
        end;
-    end;
 
   while not ObjectFiles.Empty do
    begin
@@ -186,9 +174,6 @@ begin
         end;
     end;
 
-  { xtensa FreeRTOS links always against libc, the runtime needs it }
-  if not(target_info.system in [system_xtensa_freertos]) then
-    begin
      { Write sharedlibraries like -l<lib>, also add the needed dynamic linker
        here to be sure that it gets linked this is needed for glibc2 systems (PFV) }
      linklibc:=false;
@@ -214,13 +199,9 @@ begin
        LinkRes.Add('-lc');
        LinkRes.Add('-lgcc');
       end;
-    end;
 
   LinkRes.Add(')');
 
-  { xtensa FreeRTOS links always against libc }
-  if not(target_info.system in [system_xtensa_freertos]) then
-    begin
       { objects which must be at the end }
       if linklibc then
        begin
@@ -236,7 +217,6 @@ begin
             LinkRes.Add(')');
           end;
        end;
-    end;
 
 {$ifdef ARM}
   with embedded_controllers[current_settings.controllertype] do
@@ -382,270 +362,6 @@ begin
     end;
 {$endif x86_64}
 
-{$ifdef AVR}
-  with linkres do
-    begin
-      { linker script from ld 2.19 }
-      Add('ENTRY(_START)');
-      Add('OUTPUT_FORMAT("elf32-avr","elf32-avr","elf32-avr")');
-      case current_settings.cputype of
-       cpu_avr1:
-         Add('OUTPUT_ARCH(avr:1)');
-       cpu_avr2:
-         Add('OUTPUT_ARCH(avr:2)');
-       cpu_avr25:
-         Add('OUTPUT_ARCH(avr:25)');
-       cpu_avr3:
-         Add('OUTPUT_ARCH(avr:3)');
-       cpu_avr31:
-         Add('OUTPUT_ARCH(avr:31)');
-       cpu_avr35:
-         Add('OUTPUT_ARCH(avr:35)');
-       cpu_avr4:
-         Add('OUTPUT_ARCH(avr:4)');
-       cpu_avr5:
-         Add('OUTPUT_ARCH(avr:5)');
-       cpu_avr51:
-         Add('OUTPUT_ARCH(avr:51)');
-       cpu_avr6:
-         Add('OUTPUT_ARCH(avr:6)');
-       cpu_avrxmega3:
-         Add('OUTPUT_ARCH(avr:103)');
-       cpu_avrtiny:
-         Add('OUTPUT_ARCH(avr:100)');
-       else
-         Internalerror(2015072701);
-      end;
-      Add('MEMORY');
-      with embedded_controllers[current_settings.controllertype] do
-        begin
-          Add('{');
-          Add('  text      (rx)   : ORIGIN = 0, LENGTH = 0x'+IntToHex(flashsize,6));
-          Add('  data      (rw!x) : ORIGIN = 0x'+IntToHex($800000+srambase,6)+', LENGTH = 0x'+IntToHex(sramsize,6));
-          Add('  eeprom    (rw!x) : ORIGIN = 0x810000, LENGTH = 0x'+IntToHex(eepromsize,6));
-          Add('  fuse      (rw!x) : ORIGIN = 0x820000, LENGTH = 1K');
-          Add('  lock      (rw!x) : ORIGIN = 0x830000, LENGTH = 1K');
-          Add('  signature (rw!x) : ORIGIN = 0x840000, LENGTH = 1K');
-          Add('}');
-          Add('_stack_top = 0x' + IntToHex(srambase+sramsize-1,4) + ';');
-        end;
-      Add('SECTIONS');
-      Add('{');
-      Add('  /* Read-only sections, merged into text segment: */');
-      Add('  .hash          : { *(.hash)		}');
-      Add('  .dynsym        : { *(.dynsym)		}');
-      Add('  .dynstr        : { *(.dynstr)		}');
-      Add('  .gnu.version   : { *(.gnu.version)	}');
-      Add('  .gnu.version_d   : { *(.gnu.version_d)	}');
-      Add('  .gnu.version_r   : { *(.gnu.version_r)	}');
-      Add('  .rel.init      : { *(.rel.init)		}');
-      Add('  .rela.init     : { *(.rela.init)	}');
-      Add('  .rel.text      :');
-      Add('    {');
-      Add('      *(.rel.text)');
-      Add('      *(.rel.text.*)');
-      Add('      *(.rel.gnu.linkonce.t*)');
-      Add('    }');
-      Add('  .rela.text     :');
-      Add('    {');
-      Add('      *(.rela.text)');
-      Add('      *(.rela.text.*)');
-      Add('      *(.rela.gnu.linkonce.t*)');
-      Add('    }');
-      Add('  .rel.fini      : { *(.rel.fini)		}');
-      Add('  .rela.fini     : { *(.rela.fini)	}');
-      Add('  .rel.rodata    :');
-      Add('    {');
-      Add('      *(.rel.rodata)');
-      Add('      *(.rel.rodata.*)');
-      Add('      *(.rel.gnu.linkonce.r*)');
-      Add('    }');
-      Add('  .rela.rodata   :');
-      Add('    {');
-      Add('      *(.rela.rodata)');
-      Add('      *(.rela.rodata.*)');
-      Add('      *(.rela.gnu.linkonce.r*)');
-      Add('    }');
-      Add('  .rel.data      :');
-      Add('    {');
-      Add('      *(.rel.data)');
-      Add('      *(.rel.data.*)');
-      Add('      *(.rel.gnu.linkonce.d*)');
-      Add('    }');
-      Add('  .rela.data     :');
-      Add('    {');
-      Add('      *(.rela.data)');
-      Add('      *(.rela.data.*)');
-      Add('      *(.rela.gnu.linkonce.d*)');
-      Add('    }');
-      Add('  .rel.ctors     : { *(.rel.ctors)	}');
-      Add('  .rela.ctors    : { *(.rela.ctors)	}');
-      Add('  .rel.dtors     : { *(.rel.dtors)	}');
-      Add('  .rela.dtors    : { *(.rela.dtors)	}');
-      Add('  .rel.got       : { *(.rel.got)		}');
-      Add('  .rela.got      : { *(.rela.got)		}');
-      Add('  .rel.bss       : { *(.rel.bss)		}');
-      Add('  .rela.bss      : { *(.rela.bss)		}');
-      Add('  .rel.plt       : { *(.rel.plt)		}');
-      Add('  .rela.plt      : { *(.rela.plt)		}');
-      Add('  /* Internal text space or external memory.  */');
-      Add('  .text   :');
-      Add('  {');
-      Add('    KEEP(*(.init .init.*))');
-      Add('    /* For data that needs to reside in the lower 64k of progmem.  */');
-      Add('    *(.progmem.gcc*)');
-      Add('    *(.progmem*)');
-      Add('    . = ALIGN(2);');
-      Add('     __trampolines_start = . ;');
-      Add('    /* The jump trampolines for the 16-bit limited relocs will reside here.  */');
-      Add('    *(.trampolines)');
-      Add('    *(.trampolines*)');
-      Add('     __trampolines_end = . ;');
-      Add('    /* For future tablejump instruction arrays for 3 byte pc devices.');
-      Add('       We don''t relax jump/call instructions within these sections.  */');
-      Add('    *(.jumptables)');
-      Add('    *(.jumptables*)');
-      Add('    /* For code that needs to reside in the lower 128k progmem.  */');
-      Add('    *(.lowtext)');
-      Add('    *(.lowtext*)');
-      Add('     __ctors_start = . ;');
-      Add('     *(.ctors)');
-      Add('     __ctors_end = . ;');
-      Add('     __dtors_start = . ;');
-      Add('     *(.dtors)');
-      Add('     __dtors_end = . ;');
-      Add('    KEEP(SORT(*)(.ctors))');
-      Add('    KEEP(SORT(*)(.dtors))');
-      Add('    /* From this point on, we don''t bother about wether the insns are');
-      Add('       below or above the 16 bits boundary.  */');
-      Add('    *(.init0)  /* Start here after reset.  */');
-      Add('    KEEP (*(.init0))');
-      Add('    *(.init1)');
-      Add('    KEEP (*(.init1))');
-      Add('    *(.init2)  /* Clear __zero_reg__, set up stack pointer.  */');
-      Add('    KEEP (*(.init2))');
-      Add('    *(.init3)');
-      Add('    KEEP (*(.init3))');
-      Add('    *(.init4)  /* Initialize data and BSS.  */');
-      Add('    KEEP (*(.init4))');
-      Add('    *(.init5)');
-      Add('    KEEP (*(.init5))');
-      Add('    *(.init6)  /* C++ constructors.  */');
-      Add('    KEEP (*(.init6))');
-      Add('    *(.init7)');
-      Add('    KEEP (*(.init7))');
-      Add('    *(.init8)');
-      Add('    KEEP (*(.init8))');
-      Add('    *(.init9)  /* Call main().  */');
-      Add('    KEEP (*(.init9))');
-      Add('    *(.text)');
-      Add('    . = ALIGN(2);');
-      Add('    *(.text.*)');
-      Add('    . = ALIGN(2);');
-      Add('    *(.fini9)  /* _exit() starts here.  */');
-      Add('    KEEP (*(.fini9))');
-      Add('    *(.fini8)');
-      Add('    KEEP (*(.fini8))');
-      Add('    *(.fini7)');
-      Add('    KEEP (*(.fini7))');
-      Add('    *(.fini6)  /* C++ destructors.  */');
-      Add('    KEEP (*(.fini6))');
-      Add('    *(.fini5)');
-      Add('    KEEP (*(.fini5))');
-      Add('    *(.fini4)');
-      Add('    KEEP (*(.fini4))');
-      Add('    *(.fini3)');
-      Add('    KEEP (*(.fini3))');
-      Add('    *(.fini2)');
-      Add('    KEEP (*(.fini2))');
-      Add('    *(.fini1)');
-      Add('    KEEP (*(.fini1))');
-      Add('    *(.fini0)  /* Infinite loop after program termination.  */');
-      Add('    KEEP (*(.fini0))');
-      Add('     _etext = . ;');
-      Add('  }  > text');
-      Add('  .data	  : AT (ADDR (.text) + SIZEOF (.text))');
-      Add('  {');
-      Add('     PROVIDE (__data_start = .) ;');
-      Add('    *(.data)');
-      Add('    *(.data*)');
-      Add('    *(.rodata)  /* We need to include .rodata here if gcc is used */');
-      Add('    *(.rodata*) /* with -fdata-sections.  */');
-      Add('    *(.gnu.linkonce.d*)');
-      Add('    . = ALIGN(2);');
-      Add('     _edata = . ;');
-      Add('     PROVIDE (__data_end = .) ;');
-      Add('  }  > data');
-      Add('  .bss   : AT (ADDR (.bss))');
-      Add('  {');
-      Add('     PROVIDE (__bss_start = .) ;');
-      Add('    *(.bss)');
-      Add('    *(.bss*)');
-      Add('    *(COMMON)');
-      Add('     PROVIDE (__bss_end = .) ;');
-      Add('  }  > data');
-      Add('   __data_load_start = LOADADDR(.data);');
-      Add('   __data_load_end = __data_load_start + SIZEOF(.data);');
-      Add('  /* Global data not cleared after reset.  */');
-      Add('  .noinit  :');
-      Add('  {');
-      Add('     PROVIDE (__noinit_start = .) ;');
-      Add('    *(.noinit*)');
-      Add('     PROVIDE (__noinit_end = .) ;');
-      Add('     _end = . ;');
-      Add('     PROVIDE (__heap_start = .) ;');
-      Add('  }  > data');
-      Add('  .eeprom  :');
-      Add('  {');
-      Add('    *(.eeprom*)');
-      Add('     __eeprom_end = . ;');
-      Add('  }  > eeprom');
-      Add('  .fuse  :');
-      Add('  {');
-      Add('    KEEP(*(.fuse))');
-      Add('    KEEP(*(.lfuse))');
-      Add('    KEEP(*(.hfuse))');
-      Add('    KEEP(*(.efuse))');
-      Add('  }  > fuse');
-      Add('  .lock  :');
-      Add('  {');
-      Add('    KEEP(*(.lock*))');
-      Add('  }  > lock');
-      Add('  .signature  :');
-      Add('  {');
-      Add('    KEEP(*(.signature*))');
-      Add('  }  > signature');
-      Add('  /* Stabs debugging sections.  */');
-      Add('  .stab 0 : { *(.stab) }');
-      Add('  .stabstr 0 : { *(.stabstr) }');
-      Add('  .stab.excl 0 : { *(.stab.excl) }');
-      Add('  .stab.exclstr 0 : { *(.stab.exclstr) }');
-      Add('  .stab.index 0 : { *(.stab.index) }');
-      Add('  .stab.indexstr 0 : { *(.stab.indexstr) }');
-      Add('  .comment 0 : { *(.comment) }');
-      Add('  /* DWARF debug sections.');
-      Add('     Symbols in the DWARF debugging sections are relative to the beginning');
-      Add('     of the section so we begin them at 0.  */');
-      Add('  /* DWARF 1 */');
-      Add('  .debug          0 : { *(.debug) }');
-      Add('  .line           0 : { *(.line) }');
-      Add('  /* GNU DWARF 1 extensions */');
-      Add('  .debug_srcinfo  0 : { *(.debug_srcinfo) }');
-      Add('  .debug_sfnames  0 : { *(.debug_sfnames) }');
-      Add('  /* DWARF 1.1 and DWARF 2 */');
-      Add('  .debug_aranges  0 : { *(.debug_aranges) }');
-      Add('  .debug_pubnames 0 : { *(.debug_pubnames) }');
-      Add('  /* DWARF 2 */');
-      Add('  .debug_info     0 : { *(.debug_info) *(.gnu.linkonce.wi.*) }');
-      Add('  .debug_abbrev   0 : { *(.debug_abbrev) }');
-      Add('  .debug_line     0 : { *(.debug_line) }');
-      Add('  .debug_frame    0 : { *(.debug_frame) }');
-      Add('  .debug_str      0 : { *(.debug_str) }');
-      Add('  .debug_loc      0 : { *(.debug_loc) }');
-      Add('  .debug_macinfo  0 : { *(.debug_macinfo) }');
-      Add('}');
-    end;
-{$endif AVR}
 
 {$ifdef MIPSEL}
   case current_settings.controllertype of
@@ -847,19 +563,6 @@ begin
     end;
 {$endif RISCV32}
 
-{$ifdef XTENSA}
-  with linkres do
-    begin
-      Add('SECTIONS');
-      Add('{');
-      Add('  .data :');
-      Add('  {');
-      Add('    KEEP (*(.fpc .fpc.n_version .fpc.n_links))');
-      Add('  }');
-      Add('}');
-    end;
-{$endif XTENSA}
-
   { Write and Close response }
   linkres.writetodisk;
   linkres.free;
@@ -867,346 +570,6 @@ begin
   WriteResponseFile:=True;
 
 end;
-
-{$ifdef XTENSA}
-{ If espX.project.ld or espX_out.ld scripts cannot be located, generate
-  default scripts so that linking can proceed.  Note: the generated
-  scripts may not match the actual options chosen when the libraries
-  were built. }
-procedure TlinkerFreeRTOS.GenerateDefaultLinkerScripts(var memory_filename,
-  sections_filename: AnsiString);
-type
-  Tesp_idf_index=(esp32_v4_2=0,esp32_v4_4,esp8266_v3_3);
-const
-  esp_fragment_list: array[esp32_v4_2..esp8266_v3_3] of array of string=(
-    ('xtensa/linker',
-    'soc/linker',
-    'esp_event/linker',
-    'spi_flash/linker',
-    'esp_wifi/linker',
-    'lwip/linker',
-    'heap/linker',
-    'esp_ringbuf/linker',
-    'espcoredump/linker',
-    'esp32/linker',
-    'esp32/ld/esp32_fragments',
-    'freertos/linker',
-    'newlib/newlib',
-    'esp_gdbstub/linker'),
-    ('driver/linker',
-    'esp_pm/linker',
-    'spi_flash/linker',
-    'esp_gdbstub/linker',
-    'espcoredump/linker',
-    'esp_phy/linker',
-    'esp_system/linker',
-    'esp_system/app',
-    'hal/linker',
-    'esp_event/linker',
-    'esp_wifi/linker',
-    'lwip/linker',
-    'log/linker',
-    'heap/linker',
-    'soc/linker',
-    'esp_hw_support/linker',
-    'xtensa/linker',
-    'esp_common/common',
-    'esp_common/soc',
-    'freertos/linker',
-    'newlib/newlib',
-    'newlib/system_libs',
-    'app_trace/linker',
-    'bt/linker'),
-    ('esp8266/ld/esp8266_fragments',
-    'esp8266/ld/esp8266_bss_fragments',
-    'esp8266/linker',
-    'freertos/linker',
-    'log/linker',
-    'lwip/linker',
-    'spi_flash/linker'));
-
-var
-  S: Ansistring;
-  t: Text;
-  hp: TCmdStrListItem;
-  filepath: TCmdStr = '';
-  i,j: integer;
-  idf_index: Tesp_idf_index;
-  lib,
-  binstr,
-  cmdstr: AnsiString;
-  success: boolean;
-begin
-  { generate a sdkconfig.h if none is provided,
-    only a few fields are provided to far.
-    Assume that if linker scripts are not located,
-    sdkconfig.h is also missing }
-  Assign(t,outputexedir+'/sdkconfig.h');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  if (current_settings.controllertype = ct_esp32) then
-    begin
-      writeln(t,'#pragma once');
-      writeln(t,'#define CONFIG_APP_BUILD_USE_FLASH_SECTIONS 1');
-      writeln(t,'#define CONFIG_BT_RESERVE_DRAM 0x0');
-      writeln(t,'#define CONFIG_ESP32_ULP_COPROC_RESERVE_MEM 0');
-      writeln(t,'#define CONFIG_ESP32_TRACEMEM_RESERVE_DRAM 0x0');
-    end
-  else
-    begin
-      { TODO: APP_OFFSET & APP_SIZE depends on partition table
-        Default for partition table: Single factory app, no OTA }
-      writeln(t,'#define APP_OFFSET 0x10000');
-      writeln(t,'#define APP_SIZE 0xf0000');
-      { Include build version of sdkconfig.h for custom configuration, if available }
-      S:=idfpath+'/libs/sdkconfig.h';
-      if SysUtils.FileExists(S) then
-        writeln(t,'#include "'+S+'"')
-      else
-        { Assume SOC_FULL_ICACHE option not selected (default) }
-        writeln(t,'#define CONFIG_SOC_IRAM_SIZE 0xC000');
-    end;
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  { generate an sdkconfig if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/sdkconfig')) then
-    begin
-      Assign(t,outputexedir+'/sdkconfig');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an Kconfig if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/Kconfig')) then
-    begin
-      Assign(t,outputexedir+'/Kconfig');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an Kconfig.projbuild if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/Kconfig.projbuild')) then
-    begin
-      Assign(t,outputexedir+'/Kconfig.projbuild');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an kconfigs.in if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/kconfigs.in')) then
-    begin
-      Assign(t,outputexedir+'/kconfigs.in');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate an kconfigs_projbuild.in if none is provided,
-    this is a dummy so far }
-  if not(Sysutils.FileExists(outputexedir+'/kconfigs_projbuild.in')) then
-    begin
-      Assign(t,outputexedir+'/kconfigs_projbuild.in');
-      {$push}{$I-}
-      Rewrite(t);
-      if ioresult<>0 then
-        exit;
-
-      writeln(t);
-
-      Close(t);
-      if ioresult<>0 then
-        exit;
-      {$pop}
-    end;
-
-  { generate a config.env if none is provided,
-    COMPONENT_KCONFIGS and COMPONENT_KCONFIGS_PROJBUILD are dummy fields and might
-    be needed to be filed properly }
-  Assign(t,outputexedir+'/config.env');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  writeln(t,'{');
-  if (current_settings.controllertype = ct_esp32) then
-    begin
-      writeln(t,'    "COMPONENT_KCONFIGS": "Kconfig",');
-      writeln(t,'    "COMPONENT_KCONFIGS_PROJBUILD": "Kconfig.projbuild",');
-      writeln(t,'    "IDF_CMAKE": "y",');
-      writeln(t,'    "IDF_TARGET": "esp32",');
-      writeln(t,'    "IDF_PATH": "'+TargetFixPath(idfpath,false)+'",');
-      writeln(t,'    "COMPONENT_KCONFIGS_SOURCE_FILE": "'+outputexedir+'/kconfigs.in",');
-      writeln(t,'    "COMPONENT_KCONFIGS_PROJBUILD_SOURCE_FILE": "'+outputexedir+'/kconfigs_projbuild.in"');
-    end
-  else
-    begin
-      writeln(t,'    "IDF_PATH": "'+TargetFixPath(idfpath,false)+'",');
-      writeln(t,'    "IDF_TARGET": "esp8266",');
-      writeln(t,'    "IDF_CMAKE": "n"');
-    end;
-  writeln(t,'}');
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  { generate ldgen_libraries }
-  Assign(t,outputexedir+'/ldgen_libraries');
-  {$push}{$I-}
-  Rewrite(t);
-  if ioresult<>0 then
-    exit;
-
-  { extract libraries from linker options and add to static libraries list }
-  Info.ExtraOptions:=trim(Info.ExtraOptions);
-  i := pos('-l', Info.ExtraOptions);
-  while i > 0 do
-   begin
-     j:=pos(' ',Info.ExtraOptions);
-     if j=0 then
-       j:=length(Info.ExtraOptions)+1;
-     lib:=copy(Info.ExtraOptions,i+2,j-i-2);
-     AddStaticCLibrary(lib);
-     delete(Info.ExtraOptions,i,j);
-     trim(Info.ExtraOptions);
-     i := pos('-l', Info.ExtraOptions);
-   end;
-  hp:=TCmdStrListItem(StaticLibFiles.First);
-  while assigned(hp) do
-    begin
-      FindLibraryFile(hp.Str,target_info.staticClibprefix,target_info.staticClibext,filepath);
-      writeln(t,filepath);
-      hp:=TCmdStrListItem(hp.Next);
-    end;
-
-  Close(t);
-  if ioresult<>0 then
-    exit;
-  {$pop}
-
-  memory_filename:=IncludeTrailingPathDelimiter(outputexedir)+memory_filename;
-  cmdstr:='-C -P -x c -E -o '+memory_filename+' -I $OUTPUT ';
-  binstr:='gcc';
-  if current_settings.controllertype = ct_none then
-    Message(exec_f_controllertype_expected)
-  else if current_settings.controllertype = ct_esp32 then
-    begin
-      if idf_version>=40400 then
-        cmdstr:=cmdstr+'-I $IDF_PATH/components/esp_system/ld $IDF_PATH/components/esp_system/ld/esp32/memory.ld.in'
-      else
-        cmdstr:=cmdstr+'$IDF_PATH/components/esp32/ld/esp32.ld';
-    end
-  else
-    cmdstr:=cmdstr+'$IDF_PATH/components/esp8266/ld/esp8266.ld';
-  Replace(cmdstr,'$IDF_PATH',idfpath);
-  Replace(cmdstr,'$OUTPUT',outputexedir);
-  success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,true);
-
-  { generate linker maps }
-{$ifdef UNIX}
-  binstr:=TargetFixPath(idfpath,false)+'/tools/ldgen/ldgen.py';
-{$else}
-  binstr:='python';
-{$endif UNIX}
-  if source_info.exeext<>'' then
-    binstr:=binstr+source_info.exeext;
-
-  sections_filename:=IncludeTrailingPathDelimiter(outputexedir)+sections_filename;
-
-  cmdstr:={$ifndef UNIX}'$IDF_PATH/tools/ldgen/ldgen.py '+{$endif UNIX}
-          '--config $OUTPUT/sdkconfig --fragments';
-
-  { Pick corresponding linker fragments list for SDK version }
-  if (current_settings.controllertype = ct_esp32) then
-    if idf_version>=40400 then
-      idf_index:=esp32_v4_4
-    else
-      idf_index:=esp32_v4_2
-  else
-    idf_index:=esp8266_v3_3;
-
-  for S in esp_fragment_list[idf_index] do
-    cmdstr:=cmdstr+' $IDF_PATH/components/'+S+'.lf';
-
-  if (current_settings.controllertype = ct_esp32) then
-    begin
-     if idf_version>=40400 then
-       cmdstr:=cmdstr+' --input $IDF_PATH/components/esp_system/ld/esp32/sections.ld.in'
-     else
-       cmdstr:=cmdstr+' --input $IDF_PATH/components/esp32/ld/esp32.project.ld.in';
-    end
-  else
-    begin
-      cmdstr:=cmdstr+
-              ' --env "COMPONENT_KCONFIGS_PROJBUILD=  $IDF_PATH/components/bootloader/Kconfig.projbuild'+
-              ' $IDF_PATH/components/esptool_py/Kconfig.projbuild  $IDF_PATH/components/partition_table/Kconfig.projbuild"'+
-              ' --env "COMPONENT_KCONFIGS=$IDF_PATH/components/app_update/Kconfig'+
-              ' $IDF_PATH/components/esp8266/Kconfig  $IDF_PATH/components/freertos/Kconfig'+
-              ' $IDF_PATH/components/log/Kconfig $IDF_PATH/components/lwip/Kconfig"'+
-              ' --input $IDF_PATH/components/esp8266/ld/esp8266.project.ld.in';
-    end;
-
-  S:=FindUtil(utilsprefix+'objdump');
-  cmdstr:=cmdstr+' --output '+sections_filename+
-          ' --kconfig $IDF_PATH/Kconfig'+
-          ' --env-file $OUTPUT/config.env'+
-          ' --libraries-file $OUTPUT/ldgen_libraries'+
-          ' --objdump '+S;
-
-  Replace(cmdstr,'$IDF_PATH',idfpath);
-  Replace(cmdstr,'$OUTPUT',outputexedir);
-  if success then
-    success:=DoExec(binstr,cmdstr,true,false);
-end;
-{$endif XTENSA}
 
 
 {$ifdef RISCV32}
@@ -1509,12 +872,12 @@ var
   DynLinkStr,
   StripStr,
   FixedExeFileName: string;
-  {$if defined(XTENSA) or defined(RISCV32) or defined(ARM)}
+  {$if defined(RISCV32) or defined(ARM)}
   memory_script,
   sections_script,
   cntrlr,
   extraopts: AnsiString;
-  {$endif defined(XTENSA) or defined(RISCV32) or defined(ARM)}
+  {$endif defined(RISCV32) or defined(ARM)}
 begin
   { for future use }
   StaticStr:='';
@@ -1525,22 +888,11 @@ begin
   Result:=false;
   extraopts:='';
 
-{$if defined(XTENSA) or defined(RISCV32)}
+{$ifdef RISCV32}
   { idfpath can be set by -Ff, else default to environment value of IDF_PATH }
   if idfpath='' then
     idfpath := trim(GetEnvironmentVariable('IDF_PATH'));
   idfpath:=ExcludeTrailingBackslash(idfpath);
-
-{$ifdef XTENSA}
-  case current_settings.controllertype of
-    ct_esp32: cntrlr:='esp32';
-    ct_esp32s2: cntrlr:='esp32s2';
-    ct_esp32s3: cntrlr:='esp32s3';
-    ct_esp8266: cntrlr:='esp8266';
-    else
-      cntrlr:='';
-  end;
-{$endif XTENSA}
 {$ifdef RISCV32}
   case current_settings.controllertype of
     ct_esp32c2: cntrlr:='esp32c2';
@@ -1572,16 +924,6 @@ begin
   if not (FindLibraryFile(memory_script,'','',memory_script) and
          FindLibraryFile(sections_script,'','',sections_script)) then
     GenerateDefaultLinkerScripts(memory_script,sections_script);
-
-{$ifdef XTENSA}
-    if (current_settings.controllertype=ct_esp8266) then
-      begin
-       Info.ExeCmd[1] := Info.ExeCmd[1]+' -u call_user_start -u g_esp_sys_info -u _printf_float -u _scanf_float '+
-         '-L $IDF_PATH/components/'+cntrlr+'/ld -T '+cntrlr+'.peripherals.ld -T '+cntrlr+'.rom.ld '+ { SDK scripts }
-         '-T '+memory_script+' -T '+sections_script; { Project scripts }
-      end
-    else
-{$endif XTENSA}
     begin
       Info.ExeCmd[1]:=Info.ExeCmd[1]+' -u call_user_start_cpu0 -u ld_include_panic_highint_hdl -u esp_app_desc -u vfs_include_syscalls_impl -u pthread_include_pthread_impl -u pthread_include_pthread_cond_impl -u pthread_include_pthread_local_storage_impl -u newlib_include_locks_impl '+
        '-u newlib_include_heap_impl -u newlib_include_syscalls_impl -u newlib_include_pthread_impl -u app_main -u uxTopUsedPriority '+
@@ -1593,43 +935,6 @@ begin
 
       Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+memory_script+' -T '+sections_script;
       Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.ld -T '+cntrlr+'.rom.api.ld';
-{$ifdef XTENSA}
-      if current_settings.controllertype = ct_esp32 then
-        if idf_version>=50200 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.syscalls.ld -T '+cntrlr+'.rom.newlib-funcs.ld'
-        else if idf_version>=50000 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.syscalls.ld -T '+cntrlr+'.rom.newlib-funcs.ld'
-        else if idf_version>=40400 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.syscalls.ld -T '+cntrlr+'.rom.newlib-funcs.ld -T '+cntrlr+'.rom.newlib-time.ld'
-        else if idf_version>=40300 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.syscalls.ld -T '+cntrlr+'.rom.newlib-funcs.ld -T '+cntrlr+'.rom.newlib-time.ld'
-        else
-          begin
-            //Currently not supported
-          end;
-      if current_settings.controllertype = ct_esp32s2 then
-        if idf_version>=50200 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-funcs.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.spiflash.ld'
-        else if idf_version>=50000 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-funcs.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.spiflash.ld'
-        else if idf_version>=40400 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib-funcs.ld -T '+cntrlr+'.rom.newlib-data.ld -T '+cntrlr+'.rom.spiflash.ld -T '+cntrlr+'.rom.newlib-time.ld'
-        else
-          begin
-            //Currently not supported
-          end;
-      if current_settings.controllertype = ct_esp32s3 then
-        if idf_version>=50200 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld'
-        else if idf_version>=50000 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld'
-        else if idf_version>=40400 then
-          Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.rom.libgcc.ld -T '+cntrlr+'.rom.newlib.ld -T '+cntrlr+'.rom.version.ld -T '+cntrlr+'.rom.newlib-time.ld'
-        else
-          begin
-            //Currently not supported
-          end;
-  {$endif XTENSA}
   {$ifdef RISCV32}
       if idf_version>=50300 then
         begin
@@ -1670,7 +975,7 @@ begin
       Info.ExeCmd[1]:=Info.ExeCmd[1]+' -T '+cntrlr+'.peripherals.ld'
     end;
   Replace(Info.ExeCmd[1],'$IDF_PATH',idfpath);
-{$endif defined(XTENSA) or defined(RISCV32)}
+{$endif RISCV32}
 
   FixedExeFileName:=maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.elf')));
 
@@ -1687,17 +992,6 @@ begin
 { Call linker }
   SplitBinCmd(Info.ExeCmd[1],binstr,cmdstr);
   Replace(cmdstr,'$OPT',Info.ExtraOptions);
-  {$ifdef xtensa}
-  if target_info.abi=abi_xtensa_call0 then
-   begin
-    if current_settings.controllertype=ct_esp8266 then
-     Replace(cmdstr,'$PLATFORMABI','')
-    else
-     Replace(cmdstr,'$PLATFORMABI','--abi-call0');
-   end
-  else if target_info.abi=abi_xtensa_windowed then
-   Replace(cmdstr,'$PLATFORMABI','--abi-windowed');
-  {$endif}
   if not(cs_link_on_target in current_settings.globalswitches) then
    begin
     Replace(cmdstr,'$EXE',FixedExeFileName);
@@ -1728,7 +1022,7 @@ begin
   if success and not(cs_link_nolink in current_settings.globalswitches) then
     success:=PostProcessExecutable(FixedExeFileName,false);
 
-{$if defined(XTENSA) or defined(RISCV32)}
+{$ifdef RISCV32}
   if success then
     begin
 {$if defined(DARWIN)}
@@ -1741,19 +1035,6 @@ begin
       binstr:='python';
       cmdstr:=idfpath+'/components/esptool_py/esptool/esptool.py ';
 {$endif UNIX}
-
-{$ifdef XTENSA}
-      if (current_settings.controllertype = ct_esp8266) then
-        begin
-          success:=DoExec(binstr,cmdstr+'--chip esp8266 elf2image --flash_mode dout --flash_freq 40m '+
-            '--flash_size '+tostr(embedded_controllers[current_settings.controllertype].flashsize div (1024*1024))+'MB '+
-            '--version=3 '+
-            '-o '+maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.bin')))+' '+
-            FixedExeFileName,
-            true,false);
-        end
-      else
-{$endif XTENSA}
         begin
           success:=DoExec(binstr,cmdstr+'--chip '+cntrlr+' elf2image '+
             '--flash_size '+tostr(embedded_controllers[current_settings.controllertype].flashsize div (1024*1024))+'MB '+
@@ -1768,7 +1049,7 @@ begin
     success:=DoExec(FindUtil(utilsprefix+'objcopy'),'-O binary '+
       FixedExeFileName+' '+
       maybequoted(ScriptFixFileName(ChangeFileExt(current_module.exefilename,'.bin'))),true,false);
-{$endif defined(XTENSA) or defined(RISCV32)}
+{$endif RISCV32}
 
   MakeExecutable:=success;   { otherwise a recursive call to link method }
 end;
@@ -1941,11 +1222,6 @@ initialization
   RegisterTarget(system_arm_freertos_info);
 {$endif arm}
 
-{$ifdef avr}
-  RegisterLinker(ld_freertos,TlinkerFreeRTOS);
-  RegisterTarget(system_avr_embedded_info);
-{$endif avr}
-
 {$ifdef i386}
   RegisterLinker(ld_freertos,TlinkerFreeRTOS);
   RegisterTarget(system_i386_embedded_info);
@@ -1972,8 +1248,4 @@ initialization
   RegisterTarget(system_riscv64_embedded_info);
 {$endif riscv64}
 
-{$ifdef xtensa}
-  RegisterLinker(ld_freertos,TlinkerFreeRTOS);
-  RegisterTarget(system_xtensa_freertos_info);
-{$endif xtensa}
 end.

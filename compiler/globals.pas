@@ -604,12 +604,6 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_sse64;
   {$endif x86_64}
-  {$ifdef avr}
-        cputype : cpuinfo.cpu_avr5;
-        optimizecputype : cpuinfo.cpu_avr5;
-        asmcputype : cpu_none;
-        fputype : fpu_none;
-  {$endif avr}
   {$ifdef mips}
   {$ifdef mips64}
         cputype : cpu_mips3;
