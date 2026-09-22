@@ -132,12 +132,14 @@ interface
 {$ifdef arm}
          eVCobj     : boolean;
 {$endif arm}
-       public
-         constructor createcoff(const n:string;awin32:boolean;acObjSection:TObjSectionClass);
-         procedure CreateDebugSections;override;
-         function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
-         procedure writereloc(data:aint;len:aword;p:TObjSymbol;reloctype:TObjRelocationType);override;
-       end;
+        public
+          constructor createcoff(const n:string;awin32:boolean;acObjSection:TObjSectionClass);
+          procedure CreateDebugSections;override;
+          function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
+          function  createsection(atype:TAsmSectionType;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;override;overload;
+          function  createsection(atype:TAsmSectionType;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string='';aorder:TAsmSectionOrder=secorder_default):TObjSection;override;overload;
+          procedure writereloc(data:aint;len:aword;p:TObjSymbol;reloctype:TObjRelocationType);override;
+        end;
 
        TDJCoffObjData = class(TCoffObjData)
          constructor create(const n:string);override;
@@ -533,7 +535,8 @@ implementation
          checksum: longword;
          assoc   : word;
          select  : byte;
-         empty   : array[0..2] of char;
+         reserved: byte;
+         assocHigh: word;
        end;
        pcoffsectionrec=^coffsectionrec;
        coffreloc=packed record
@@ -802,6 +805,7 @@ implementation
             v.nlines:=SwapEndian(v.nlines);
             v.checksum:=SwapEndian(v.checksum);
             v.assoc:=SwapEndian(v.assoc);
+            v.assocHigh:=SwapEndian(v.assocHigh);
           end;
       end;
 (*
@@ -1200,6 +1204,8 @@ const pemagic : array[0..3] of byte = (
           result:=result or PE_SCN_MEM_READ;
         if not (oso_load in aoptions) then
           result:=result or PE_SCN_MEM_DISCARDABLE;
+        if oso_comdat in aoptions then
+          result:=result or PE_SCN_LNK_COMDAT;
         case aalign of
            1 : result:=result or PE_SCN_ALIGN_1BYTES;
            2 : result:=result or PE_SCN_ALIGN_2BYTES;
@@ -1622,16 +1628,53 @@ const pemagic : array[0..3] of byte = (
               begin
                 case aorder of
                   secorder_begin :
-                    sep:='.b_';
+                    if target_info.system=system_x86_64_win64 then
+                      sep:='$B_'
+                    else
+                      sep:='.b_';
                   secorder_end :
-                    sep:='.z_';
+                    if target_info.system=system_x86_64_win64 then
+                      sep:='$Y_'
+                    else
+                      sep:='.z_';
                   else
-                    sep:='.n_';
+                    if target_info.system=system_x86_64_win64 then
+                      sep:='$N_'
+                    else
+                      sep:='.n_';
                 end;
                 result:=secname+sep+aname
               end
             else
               result:=secname;
+          end;
+      end;
+
+
+    function TCoffObjData.createsection(atype:TAsmSectionType;const aname:string;aorder:TAsmSectionOrder):TObjSection;
+      begin
+        result:=inherited createsection(atype,aname,aorder);
+        if (target_info.system=system_x86_64_win64) and
+           create_smartlink_sections and
+           (aname<>'') and
+           not (atype in [sec_user,sec_fpc,sec_pdata]) then
+          begin
+            result.SecOptions:=result.SecOptions+[oso_comdat];
+            result.ComdatSelection:=oscs_none;
+          end;
+      end;
+
+
+    function TCoffObjData.createsection(atype:TAsmSectionType;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string;aorder:TAsmSectionOrder):TObjSection;
+      begin
+        result:=inherited createsection(atype,secflags,aprogbits,aname,aorder);
+        if (target_info.system=system_x86_64_win64) and
+           create_smartlink_sections and
+           (aname<>'') and
+           not (atype in [sec_user,sec_fpc,sec_pdata]) then
+          begin
+            result.SecOptions:=result.SecOptions+[oso_comdat];
+            result.ComdatSelection:=oscs_none;
           end;
       end;
 
@@ -1865,6 +1908,7 @@ const pemagic : array[0..3] of byte = (
     procedure TCoffObjOutput.section_write_symbol(p:TObject;arg:pointer);
       var
         secrec : coffsectionrec;
+        comdatkey : string;
         padding : word;
       begin
         with TCoffObjSection(p) do
@@ -1885,6 +1929,29 @@ const pemagic : array[0..3] of byte = (
               secrec.nrelocs:=ObjRelocations.count
             else
               secrec.nrelocs:=65535;
+            if oso_comdat in SecOptions then
+              begin
+                case ComdatSelection of
+                  oscs_none:
+                    secrec.select:=IMAGE_COMDAT_SELECT_NODUPLICATES;
+                  oscs_any:
+                    secrec.select:=IMAGE_COMDAT_SELECT_ANY;
+                  oscs_same_size:
+                    secrec.select:=IMAGE_COMDAT_SELECT_SAME_SIZE;
+                  oscs_exact_match:
+                    secrec.select:=IMAGE_COMDAT_SELECT_EXACT_MATCH;
+                  oscs_associative:
+                    begin
+                      secrec.select:=IMAGE_COMDAT_SELECT_ASSOCIATIVE;
+                      if not assigned(AssociativeSection) then
+                        internalerror(2026092201);
+                      secrec.assoc:=word(AssociativeSection.index and $ffff);
+                      secrec.assocHigh:=word(AssociativeSection.index shr 16);
+                    end;
+                  oscs_largest:
+                    secrec.select:=IMAGE_COMDAT_SELECT_LARGEST;
+                end;
+              end;
             inc(symidx);
 	    MaybeSwap(secrec);
             FCoffSyms.write(secrec,sizeof(secrec));
@@ -1893,6 +1960,19 @@ const pemagic : array[0..3] of byte = (
             padding:=0;
             if bigobj then
               FCoffSyms.write(padding,sizeof(padding));
+            { A non-associative COMDAT needs a public key symbol. }
+            if (oso_comdat in SecOptions) and
+               (ComdatSelection<>oscs_associative) then
+              begin
+                if ComdatSelection=oscs_none then
+                  { NODUPLICATES smartlink sections need a unique key. }
+                  comdatkey:='$fpc$comdat$'+lower(current_module.modulename^)+'$'+tostr(index)
+                else
+                  { Other selection modes coalesce sections with the same
+                    stable section-based key. }
+                  comdatkey:='$fpc$comdat$'+name;
+                write_symbol(comdatkey,0,index,COFF_SYM_GLOBAL,0);
+              end;
           end;
       end;
 
@@ -2051,7 +2131,9 @@ const pemagic : array[0..3] of byte = (
              filenamelen:=sizeof(coffsymbol);
            FCoffSyms.write(filename[1],filenamelen);
            { Sections }
-           secidx:=0;
+            for i:=0 to ObjSectionList.Count-1 do
+              TObjSection(ObjSectionList[i]).index:=i+1;
+            secidx:=0;
            ObjSectionList.ForEachCall(@section_write_symbol,@secidx);
            { ObjSymbols }
            for i:=0 to ObjSymbolList.Count-1 do

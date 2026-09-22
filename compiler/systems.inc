@@ -320,6 +320,7 @@
              ld_wdosx,
              ld_wii,
              ld_windows,
+             ld_lld_windows,
              ld_int_go32v2,    { implemented internal linkers }
              ld_int_linux,
              ld_int_nativent,

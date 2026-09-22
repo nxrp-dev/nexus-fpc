@@ -4,8 +4,7 @@ Build Windows-hosted NexusFPC compilers for the retained Linux CPU targets.
 .DESCRIPTION
 Builds separate ppcrossx64.exe and ppcrossa64.exe binaries from the repository's
 native x86-64 Windows compiler. Invoke them with -Tlinux to select Linux output.
-The optional x86-64 Linux RTL build uses Clang and LLD. The AArch64 RTL build
-requires Linux cross binutils.
+The optional Linux RTL build uses Clang and LLD.
 .EXAMPLE
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-NexusFPCLinuxCrossBuild.ps1
 .EXAMPLE
@@ -48,10 +47,7 @@ try {
 
     if ($BuildRTL) {
         foreach ($cpu in $TargetCpu) {
-            $tools = if ($cpu -eq 'x86_64') { @('clang.exe', 'ld.lld.exe') } else {
-                @("$cpu-linux-as.exe", "$cpu-linux-ld.exe")
-            }
-            foreach ($tool in $tools) {
+            foreach ($tool in @('clang.exe', 'ld.lld.exe')) {
                 if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
                     throw "Linux RTL build requires $tool on PATH. Supply -BinutilsDir if it is installed elsewhere."
                 }
@@ -88,6 +84,13 @@ try {
             "PPC_TARGET=$cpu", "CPU_UNITDIR=$($cpu)_cross"
         )
         if ($cpu -eq 'x86_64') { $common += 'LOCALOPT=-dFPC_SOFT_FPUX80' }
+        if ($cpu -eq 'aarch64') {
+            Invoke-MakeStep "compiler-$cpu-linux-clean-units" (@('-C', (Join-Path $SourceRoot 'compiler'),
+                'aarch64_cross_clean', 'CYCLETARGETS=aarch64_cross') + $common)
+            Invoke-MakeStep "compiler-$cpu-linux-clean-exe" (@('-C', (Join-Path $SourceRoot 'compiler'),
+                'execlean', 'PPC_SUFFIXES=', 'TEMPWPONAME1=', 'TEMPWPONAME2=', 'ALL_G_COMPILERS=') +
+                $common + "EXENAME=$compilerName")
+        }
         Invoke-MakeStep "compiler-$cpu-linux" (@('-B', '-C', (Join-Path $SourceRoot 'compiler'), 'compiler') + $common + "EXENAME=$compilerName")
         if (-not (Test-Path -LiteralPath $compiler) -or
             (& $compiler -Tlinux -iTP) -ne $cpu -or $LASTEXITCODE -ne 0 -or
@@ -98,11 +101,11 @@ try {
 
         if ($BuildRTL) {
             $rtlOptions = @("FPC=$($compiler -replace '\\', '/')", "CPU_TARGET=$cpu", 'OS_TARGET=linux')
-            if ($cpu -eq 'x86_64') {
+            if ($cpu -in @('x86_64', 'aarch64')) {
                 # Match the root Makefile's CROSSASPROG/CROSSASTARGET forwarding.
                 # Clang needs -x assembler because the startup files end in .as.
                 $crossAsProg = 'clang'
-                $crossAsTarget = '--target=x86_64-unknown-linux-gnu -c -x assembler'
+                $crossAsTarget = "--target=$cpu-unknown-linux-gnu -c -x assembler"
                 $rtlOptions += @("ASPROG=$crossAsProg", "ASTARGET=$crossAsTarget",
                     'BINUTILSPREFIX=', 'OPT=-Aas-clang -XLL')
                 Invoke-MakeStep "rtl-$cpu-linux-clean" (@('-C', (Join-Path $SourceRoot 'rtl\linux'), 'clean') + $rtlOptions)

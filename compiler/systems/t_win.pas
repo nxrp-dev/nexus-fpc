@@ -64,6 +64,7 @@ interface
         procedure generatenasmlib;virtual;
       end;
 
+{$ifdef aarch64}
       TInternalLinkerWin = class(tinternallinker)
         constructor create;override;
         procedure DefaultLinkScript;override;
@@ -82,6 +83,20 @@ interface
          function  MakeSharedLibrary:boolean;override;
          procedure InitSysInitUnitName;override;
       end;
+{$endif aarch64}
+
+{$ifdef x86_64}
+      TExternalLinkerWin64LLD=class(TExternalLinker)
+      private
+         function WriteLLDResponseFile(const OutputFile:string;IsDLL:boolean):boolean;
+         function DoLLDLink(const OutputFile:string;IsDLL:boolean):boolean;
+      public
+         constructor Create;override;
+         function MakeExecutable:boolean;override;
+         function MakeSharedLibrary:boolean;override;
+         procedure InitSysInitUnitName;override;
+      end;
+{$endif x86_64}
 
       TDLLScannerWin=class(tDLLScanner)
       private
@@ -953,6 +968,7 @@ implementation
                             TInternalLinkerWin
 ****************************************************************************}
 
+{$ifdef aarch64}
     constructor TInternalLinkerWin.Create;
       begin
         inherited Create;
@@ -1145,18 +1161,7 @@ implementation
       begin
         with Info do
          begin
-{$ifdef aarch64}
            targetopts:='-b pei-aarch64-little';
-{$endif aarch64}
-{$ifdef x86_64}
-           targetopts:='-b pei-x86-64';
-{$endif x86_64}
-{$ifdef i386}
-           targetopts:='-b pei-i386 -m i386pe';
-{$endif i386}
-{$ifdef arm}
-           targetopts:='-m arm_wince_pe';
-{$endif arm}
            ExeCmd[1]:='ld '+targetopts+' $OPT $GCSECTIONS $MAP $STRIP $APPTYPE $ENTRY  $IMAGEBASE $RELOC -o $EXE -T $RES';
            DllCmd[1]:='ld '+targetopts+' $OPT $GCSECTIONS $MAP $STRIP --dll $APPTYPE $ENTRY  $IMAGEBASE $RELOC -o $EXE -T $RES';
            { ExeCmd[2]:='dlltool --as $ASBIN --dllname $EXE --output-exp exp.$$$ $RELOC $DEF';
@@ -1255,13 +1260,7 @@ implementation
              end;
 
             Add('SEARCH_DIR("/usr/i686-pc-cygwin/lib"); SEARCH_DIR("/usr/lib"); SEARCH_DIR("/usr/lib/w32api");');
-{$if defined(aarch64)}
             Add('OUTPUT_FORMAT(pei-aarch64-little)');
-{$elseif defined(x86_64)}
-            Add('OUTPUT_FORMAT(pei-x86-64)');
-{$else not 86_64}
-            Add('OUTPUT_FORMAT(pei-i386)');
-{$endif not x86_64}
             Add('ENTRY(_mainCRTStartup)');
             Add('SECTIONS');
             Add('{');
@@ -1432,11 +1431,7 @@ implementation
         StripStr:='';
         MapStr:='';
         GCSectionsStr:='';
-{$ifdef AARCH64}
         AsBinStr:=FindUtil(utilsprefix+'clang');
-{$else not AARCH64}
-        AsBinStr:=FindUtil(utilsprefix+'as');
-{$endif AARCH64}
         if RelocSection then
           RelocStr:='--base-file base.$$$';
         if create_smartlink_sections then
@@ -1542,11 +1537,7 @@ implementation
         StripStr:='';
         MapStr:='';
         GCSectionsStr:='';
-{$ifdef AARCH64}
         AsBinStr:=FindUtil(utilsprefix+'clang');
-{$else not AARCH64}
-        AsBinStr:=FindUtil(utilsprefix+'as');
-{$endif AARCH64}
         if RelocSection then
          RelocStr:='--base-file base.$$$';
         if create_smartlink_sections then
@@ -1618,7 +1609,190 @@ implementation
         MakeSharedLibrary:=success;   { otherwise a recursive call to link method }
       end;
 
+{$endif aarch64}
 
+
+{$ifdef x86_64}
+{****************************************************************************
+                            TExternalLinkerWin64LLD
+****************************************************************************}
+
+    constructor TExternalLinkerWin64LLD.Create;
+      begin
+        inherited Create;
+        SharedLibFiles.doubles:=true;
+        StaticLibFiles.doubles:=true;
+      end;
+
+
+    function TExternalLinkerWin64LLD.WriteLLDResponseFile(const OutputFile:string;IsDLL:boolean):boolean;
+      var
+        LinkRes : TLinkRes;
+        HPath   : TCmdStrListItem;
+        S,S2,
+        SubsystemStr : TCmdStr;
+        I       : longint;
+        StackReserve : qword;
+      begin
+        WriteLLDResponseFile:=false;
+        LinkRes:=TLinkRes.Create(outputexedir+Info.ResName,true);
+        with LinkRes do
+          begin
+            Add('/machine:x64');
+            Add('/nodefaultlib');
+            Add('/out:'+MaybeQuoted(OutputFile));
+            if Info.ExtraOptions<>'' then
+              Add(Info.ExtraOptions);
+            if IsDLL then
+              begin
+                Add('/dll');
+                Add('/noimplib');
+                if apptype=app_gui then
+                  Add('/entry:_DLLWinMainCRTStartup')
+                else
+                  Add('/entry:_DLLMainCRTStartup');
+              end
+            else if apptype=app_gui then
+              Add('/entry:_WinMainCRTStartup')
+            else
+              Add('/entry:_mainCRTStartup');
+
+            case apptype of
+              app_native:
+                SubsystemStr:='/subsystem:native';
+              app_gui:
+                SubsystemStr:='/subsystem:windows';
+              else
+                SubsystemStr:='/subsystem:console';
+            end;
+            if SetPESubSysVersionSetExplicitely then
+              SubsystemStr:=SubsystemStr+','+tostr(pesubsysversionmajor)+'.'+tostr(pesubsysversionminor);
+            Add(SubsystemStr);
+
+            if create_smartlink_sections then
+              Add('/opt:ref,noicf')
+            else
+              Add('/opt:noref,noicf');
+            if cs_link_strip in current_settings.globalswitches then
+              Add('/debug:none')
+            else if cs_debuginfo in current_settings.moduleswitches then
+              Add('/debug:dwarf');
+            if RelocSection then
+              Add('/fixed:no')
+            else
+              Add('/fixed');
+            Add('/timestamp:0');
+            if SetPEUserVersionSetExplicitely then
+              Add('/version:'+tostr(peuserversionmajor)+'.'+tostr(peuserversionminor))
+            else if dllversion<>'' then
+              Add('/version:'+tostr(dllmajor)+'.'+tostr(dllminor));
+            if SetPEOSVersionSetExplicitely then
+              Add('/osversion:'+tostr(peosversionmajor)+'.'+tostr(peosversionminor))
+            else if SetPESubSysVersionSetExplicitely then
+              { lld-link otherwise copies an explicit subsystem version into
+                the OS version fields as well. }
+              Add('/osversion:6.0');
+            if ImageBaseSetExplicity then
+              Add('/base:0x'+HexStr(imagebase,SizeOf(imagebase)*2));
+            StackReserve:=stacksize;
+            if MaxStackSizeSetExplicity then
+              StackReserve:=maxstacksize;
+            if StackReserve<>0 then
+              if MinStackSizeSetExplicity then
+                Add('/stack:'+tostr(StackReserve)+','+tostr(minstacksize))
+              else
+                Add('/stack:'+tostr(StackReserve));
+            if cs_link_map in current_settings.globalswitches then
+              Add('/map:'+MaybeQuoted(ChangeFileExt(OutputFile,'.map')));
+
+            HPath:=TCmdStrListItem(current_module.locallibrarysearchpath.First);
+            while assigned(HPath) do
+              begin
+                Add('/libpath:'+MaybeQuoted(HPath.Str));
+                HPath:=TCmdStrListItem(HPath.Next);
+              end;
+            HPath:=TCmdStrListItem(LibrarySearchPath.First);
+            while assigned(HPath) do
+              begin
+                Add('/libpath:'+MaybeQuoted(HPath.Str));
+                HPath:=TCmdStrListItem(HPath.Next);
+              end;
+
+            while not ObjectFiles.Empty do
+              begin
+                S:=ObjectFiles.GetFirst;
+                if S<>'' then
+                  AddFileName(MaybeQuoted(S));
+              end;
+            while not StaticLibFiles.Empty do
+              begin
+                S:=StaticLibFiles.GetFirst;
+                if S<>'' then
+                  AddFileName(MaybeQuoted(S));
+              end;
+            while not SharedLibFiles.Empty do
+              begin
+                S:=SharedLibFiles.GetFirst;
+                if FindLibraryFile(S,target_info.staticClibprefix,target_info.staticClibext,S2) then
+                  AddFileName(MaybeQuoted(S2))
+                else
+                  begin
+                    if Pos(target_info.sharedlibprefix,S)=1 then
+                      Delete(S,1,Length(target_info.sharedlibprefix));
+                    I:=Pos(target_info.sharedlibext,S);
+                    if I>0 then
+                      Delete(S,I,Length(target_info.sharedlibext));
+                    AddFileName(MaybeQuoted(target_info.staticClibprefix+S+target_info.staticClibext));
+                  end;
+              end;
+            if not DefFile.Empty then
+              begin
+                DefFile.WriteFile;
+                Add('/def:'+MaybeQuoted(DefFile.FName));
+              end;
+            WriteToDisk;
+          end;
+        LinkRes.Free;
+        WriteLLDResponseFile:=true;
+      end;
+
+
+    function TExternalLinkerWin64LLD.DoLLDLink(const OutputFile:string;IsDLL:boolean):boolean;
+      var
+        CmdStr : TCmdStr;
+      begin
+        if not(cs_link_nolink in current_settings.globalswitches) then
+          Message1(exec_i_linking,OutputFile);
+        if not WriteLLDResponseFile(OutputFile,IsDLL) then
+          exit(false);
+        CmdStr:='@'+MaybeQuoted(outputexedir+Info.ResName);
+        DoLLDLink:=DoExec(FindUtil('lld-link'),CmdStr,true,false);
+        if DoLLDLink and
+           not(cs_link_nolink in current_settings.globalswitches) then
+          DeleteFile(outputexedir+Info.ResName);
+      end;
+
+
+    function TExternalLinkerWin64LLD.MakeExecutable:boolean;
+      begin
+        MakeExecutable:=DoLLDLink(current_module.exefilename,false);
+      end;
+
+
+    function TExternalLinkerWin64LLD.MakeSharedLibrary:boolean;
+      begin
+        MakeSharedLibrary:=DoLLDLink(current_module.sharedlibfilename,true);
+      end;
+
+
+    procedure TExternalLinkerWin64LLD.InitSysInitUnitName;
+      begin
+        GlobalInitSysInitUnitName(self);
+      end;
+{$endif x86_64}
+
+
+{$ifdef aarch64}
     function TExternalLinkerWin.postprocessexecutable(const fn : string;isdll:boolean):boolean;
       type
         tdosheader = packed record
@@ -1815,6 +1989,7 @@ implementation
       begin
         GlobalInitSysInitUnitName(self);
       end;
+{$endif aarch64}
 
 
 {****************************************************************************
@@ -1867,9 +2042,12 @@ implementation
 *****************************************************************************}
 
 initialization
+{$ifdef aarch64}
   RegisterLinker(ld_int_windows,TInternalLinkerWin);
   RegisterLinker(ld_windows,TExternalLinkerWin);
+{$endif aarch64}
 {$ifdef x86_64}
+  RegisterLinker(ld_lld_windows,TExternalLinkerWin64LLD);
   RegisterImport(system_x86_64_win64,TImportLibWin);
   RegisterExport(system_x86_64_win64,TExportLibWin);
   RegisterDLLScanner(system_x86_64_win64,TDLLScannerWin);
