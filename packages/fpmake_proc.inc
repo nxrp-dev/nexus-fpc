@@ -1,22 +1,8 @@
-procedure add_bfd(const ADirectory: string);
-begin
-  with Installer do
-{$include bfd/fpmake.pp}
-end;
-
-
-procedure add_cairo(const ADirectory: string);
-begin
-  with Installer do
-{$include cairo/fpmake.pp}
-end;
-
 procedure add_cocoaint(const ADirectory: string);
 begin
   with Installer do
 {$include cocoaint/fpmake.pp}
 end;
-
 
 procedure add_fcl_async(const ADirectory: string);
 begin
@@ -31,7 +17,6 @@ begin
 end;
 
 {$include fcl-db/fpmake.pp}
-
 
 procedure add_fcl_fpcunit(const ADirectory: string);
 begin
@@ -93,18 +78,11 @@ begin
 {$include fpmkunit/fpmake.pp}
 end;
 
-procedure add_gtk2(const ADirectory: string);
-begin
-  with Installer do
-{$include gtk2/fpmake.pp}
-end;
-
 procedure add_hash(const ADirectory: string);
 begin
   with Installer do
 {$include hash/fpmake.pp}
 end;
-
 
 procedure add_iconvenc(const ADirectory: string);
 begin
@@ -124,48 +102,16 @@ begin
 {$include jni/fpmake.pp}
 end;
 
-
 procedure add_libffi(const ADirectory: string);
 begin
   with Installer do
 {$include libffi/fpmake.pp}
 end;
 
-procedure add_libfontconfig(const ADirectory: string);
-begin
-  with Installer do
-{$include libfontconfig/fpmake.pp}
-end;
-
-procedure add_libpcre(const ADirectory: string);
-begin
-  with Installer do
-{$include libpcre/fpmake.pp}
-end;
-
-procedure add_libpng(const ADirectory: string);
-begin
-  with Installer do
-{$include libpng/fpmake.pp}
-end;
-
 procedure add_libtar(const ADirectory: string);
 begin
   with Installer do
 {$include libtar/fpmake.pp}
-end;
-
-procedure add_objcrtl(const ADirectory: string);
-begin
-  with Installer do
-{$include objcrtl/fpmake.pp}
-end;
-
-
-procedure add_opengles(const ADirectory: string);
-begin
-  with Installer do
-{$include opengles/fpmake.pp}
 end;
 
 procedure add_openssl(const ADirectory: string);
@@ -186,19 +132,10 @@ begin
 {$include paszlib/fpmake.pp}
 end;
 
-
-
-
 procedure add_pthreads(const ADirectory: string);
 begin
   with Installer do
 {$include pthreads/fpmake.pp}
-end;
-
-procedure add_regexpr(const ADirectory: string);
-begin
-  with Installer do
-{$include regexpr/fpmake.pp}
 end;
 
 {$include rtl-extra/fpmake.pp}
@@ -206,7 +143,6 @@ end;
 {$include rtl-generics/fpmake.pp}
 
 {$include rtl-objpas/fpmake.pp}
-
 
 procedure add_sqlite(const ADirectory: string);
 begin
@@ -226,13 +162,6 @@ begin
 {$include univint/fpmake.pp}
 end;
 
-procedure add_unzip(const ADirectory: string);
-begin
-  with Installer do
-{$include unzip/fpmake.pp}
-end;
-
-
 procedure add_winunits_base(const ADirectory: string);
 begin
   with Installer do
@@ -243,11 +172,5 @@ procedure add_x11(const ADirectory: string);
 begin
   with Installer do
 {$include x11/fpmake.pp}
-end;
-
-procedure add_zlib(const ADirectory: string);
-begin
-  with Installer do
-{$include zlib/fpmake.pp}
 end;
 

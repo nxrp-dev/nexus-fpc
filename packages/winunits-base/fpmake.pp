@@ -128,7 +128,6 @@ begin
     P.Targets.AddExampleProgram('hhex.pp');
     P.Targets.AddExampleProgram('hhex2.pp');
     P.Targets.AddExampleProgram('hhex3.pp');
-    P.Targets.AddExampleProgram('hhex4.pp');
 
     P.NamespaceMap:='namespaces.lst';
 

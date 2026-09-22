@@ -20,7 +20,6 @@ begin
     P.Version:='3.3.1';
     P.Dependencies.Add('univint',[Darwin,iPhoneSim,ios]);
     p.Dependencies.Add('rtl-objpas');
-    P.Dependencies.Add('pthreads',AllUnixOSes);
 
     P.Author := '<various>';
     P.License := 'LGPL with modification, ';
