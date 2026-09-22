@@ -190,11 +190,7 @@ type
 {$if sizeof(kernel_mode_t) < 4}
         __pad1    : array[1..4-sizeof(mode_t)] of byte;
 {$endif}
-{$ifdef cpupowerpc}
-        seq       : cuint;
-{$else}
         seq       : cushort;
-{$endif}
         __pad2    : cushort;
         __unused1 : culong;
         __unused2 : culong;

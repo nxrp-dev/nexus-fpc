@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 function test : int64;assembler;
   asm
         MOV $'=TXEHTAP',%RAX // FAIL: LONG STRING "PATHEXT="

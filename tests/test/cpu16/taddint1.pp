@@ -1,4 +1,4 @@
-{ %cpu=i8086 }
+{ %cpu=i8086}
 
 {
   Test for additions on CPUs with a 16-bit native integer.

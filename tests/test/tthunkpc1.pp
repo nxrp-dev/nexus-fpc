@@ -1,4 +1,4 @@
-{ %CPU=wasm32 }
+{ %CPU=wasm32}
 // Test that methods of parent interfaces (without RTTI and hence no thunk class) are also added to thunk class.
 // tthunkpc2 contains interface without rtti
 unit tthunkpc1;

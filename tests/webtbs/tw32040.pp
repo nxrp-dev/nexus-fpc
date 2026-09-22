@@ -1,4 +1,4 @@
-{ %cpu=avr }
+{ %cpu=avr}
 { %norun }
 const
   c0 = 0;

@@ -1,5 +1,5 @@
 { %skiptarget=win64 }
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %opt=-vw -Sew -Cg }
 { %fail }
 

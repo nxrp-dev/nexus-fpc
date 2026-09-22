@@ -1,5 +1,4 @@
 { %target=darwin,iphonesim}
-{ %skipcpu=powerpc,powerpc64 }
 
 {$mode delphi}
 {$modeswitch cblocks}

@@ -1869,19 +1869,6 @@ implementation
 initialization
   RegisterLinker(ld_int_windows,TInternalLinkerWin);
   RegisterLinker(ld_windows,TExternalLinkerWin);
-{$ifdef i386}
-  { Win32 }
-  RegisterImport(system_i386_win32,TImportLibWin);
-  RegisterExport(system_i386_win32,TExportLibWin);
-  RegisterDLLScanner(system_i386_win32,TDLLScannerWin);
-  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
-  RegisterTarget(system_i386_win32_info);
-  { WinCE }
-  RegisterImport(system_i386_wince,TImportLibWin);
-  RegisterExport(system_i386_wince,TExportLibWin);
-  RegisterDLLScanner(system_i386_wince,TDLLScannerWin);
-  RegisterTarget(system_i386_wince_info);
-{$endif i386}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_win64,TImportLibWin);
   RegisterExport(system_x86_64_win64,TExportLibWin);

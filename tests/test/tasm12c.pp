@@ -1,4 +1,4 @@
-{ %CPU=i8086 }
+{ %CPU=i8086}
 { %NORUN }
 
 {$asmmode intel}

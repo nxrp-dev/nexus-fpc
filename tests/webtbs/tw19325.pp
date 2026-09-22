@@ -1,4 +1,4 @@
-{ %target=win32,win64 }
+{ %target=win64}
 Program StrRedir;
 uses Classes, Process, Sysutils;
 const MaxByte = 255;

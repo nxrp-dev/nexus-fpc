@@ -6,9 +6,6 @@ uses
 {$ifdef cpu68k}
   {$define COMP_IS_INT64}
 {$endif cpu68k}
-{$ifdef cpupowerpc}
-  {$define COMP_IS_INT64}
-{$endif cpupowerpc}
 {$ifdef FPC_COMP_IS_INT64}
   {$define COMP_IS_INT64}
 {$endif FPC_COMP_IS_INT64}

@@ -1,4 +1,4 @@
-{ %CPU=avr }
+{ %CPU=avr}
 { %norun }
 program test;
 begin

@@ -1,5 +1,5 @@
 { %norun }
-{ %cpu=avr }
+{ %cpu=avr}
 program indirect_absolute_asm;
 
 

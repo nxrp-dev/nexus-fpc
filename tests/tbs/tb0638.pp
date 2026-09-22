@@ -1,4 +1,4 @@
-{ %cpu=i8086 }
+{ %cpu=i8086}
 {$MODE TP}
 program tsegie;
 

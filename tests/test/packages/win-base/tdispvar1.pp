@@ -1,4 +1,4 @@
-{ %TARGET=win32,win64 }
+{ %TARGET=win64}
 { %NOTE=This test requires an installed OpenOffice }
 { %INTERACTIVE }
 { This test does create Open Office crashes.

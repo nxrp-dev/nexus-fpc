@@ -1,5 +1,5 @@
 { %fail }
-{ %cpu=i386,x86_64 }
+{ %cpu=x86_64}
 {$asmmode intel}
 
 { The formal's Single type must not silently override an explicit qword. }

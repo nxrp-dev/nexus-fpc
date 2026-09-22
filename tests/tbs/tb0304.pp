@@ -1,4 +1,4 @@
-{ %TARGET=win32,wince }
+{ %TARGET=wince}
 { %needlibrary }
 { %NORUN }
 library test;

@@ -226,41 +226,41 @@ Const
   OSCPUSupported : array[TOS,TCpu] of boolean = (
     { os          none   i386   m68k   ppc    sparc  x86_64 arm    ppc64  avr    armeb  mips   mipsel mips64 mips64el jvm    i8086 aarch64 wasm32 sparc64 riscv32 riscv64  xtensa obsolete_z80,   loongarch64}
     { none }    ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { linux }   ( false, true,  false,  true,  true,  true,  true,  true,  false, true , true , true , true , true ,   false, false, true , false, true ,  false ,  false,    false , false, false),
-    { go32v2 }  ( false, true,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { win32 }   ( false, true,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { linux }   ( false, false,  false,  false,  false,  true,  true,  false,  false, true , false , false , false , false ,   false, false, true , false, false ,  false ,  false,    false , false, false),
+    { go32v2 }  ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { win32 }   ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
 { obsolete_os2 }( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { freebsd } ( false, true,  false, false, false, true,  false, true,  false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
-    { beos }    ( false, true,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { netbsd }  ( false, true,  false,  true,  true,  true,  true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { freebsd } ( false, false,  false, false, false, true,  false, false,  false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
+    { beos }    ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { netbsd }  ( false, false,  false,  false,  false,  true,  true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { obsolete_amiga }   ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { atari }   ( false, false, false,  false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { solaris } ( false, true,  false, false, true,  true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { solaris } ( false, false,  false, false, false,  true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { qnx }     ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
 { obsolete_netware } ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { openbsd } ( false, true,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { wdosx }   ( false, true,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { openbsd } ( false, false,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { wdosx }   ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { palmos }  ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-{ macosclassic }( false, false, false,  true,  false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { darwin }  ( false, true,  false, true,  false, true,  false,  true, false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
+{ macosclassic }( false, false, false,  false,  false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { darwin }  ( false, false,  false, false,  false, true,  false,  false, false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
 { obsolete_emx }( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { watcom }  ( false, true,  false, false, false ,false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { watcom }  ( false, false,  false, false, false ,false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { obsolete_morphos } ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
 { obsolete_netwlibc }( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { win64   } ( false, false, false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, true,  false, false,  false,  false,   false, false, false),
-    { wince    }( false, true,  false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { wince    }( false, false,  false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { gba    }  ( false, false, false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { nds    }  ( false, false, false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { embedded }( false, true,  false,  true,  true,  true,  true,  true,  false,  true , false, true,  false, false,    false, false , true , false, false,  false,   false,   false, false,  false),
-    { symbian } ( false, true,  false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { haiku }   ( false, true,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { iphonesim}( false, true,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
-    { aix    }  ( false, false, false, true,  false, false, false, true,  false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { embedded }( false, false,  false,  false,  false,  true,  true,  false,  false,  true , false, false,  false, false,    false, false , true , false, false,  false,   false,   false, false,  false),
+    { symbian } ( false, false,  false, false, false, false, true,  false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { haiku }   ( false, false,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { iphonesim}( false, false,  false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, true , false, false,  false,  false,   false, false, false),
+    { aix    }  ( false, false, false, false,  false, false, false, false,  false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { java }    ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { android } ( false, true,  false, false, false, true,  true,  false, false, false, false, true,  false, false,   false, false, true,  false, false,  false,  false,   false, false, false),
-    { nativent }( false, true,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { android } ( false, false,  false, false, false, true,  true,  false, false, false, false, false,  false, false,   false, false, true,  false, false,  false,  false,   false, false, false),
+    { nativent }( false, false,  false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { msdos }   ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false , false, false, false,  false,  false,   false, false, false),
-    { wii }     ( false, false, false, true , false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { wii }     ( false, false, false, false , false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { obsolete_aros }    ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { dragonfly}( false, false, false, false, false, true,  false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { obsolete_win16 }   ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
@@ -272,7 +272,7 @@ Const
     {sinclairql}( false, false, false,  false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { wasip1 }  ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { human68k }( false, false, false,  false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
-    { ps1 }     ( false, false, false, false, false, false, false, false, false, false, false, true,  false, false,   false, false, false, false, false,  false,  false,   false, false, false),
+    { ps1 }     ( false, false, false, false, false, false, false, false, false, false, false, false,  false, false,   false, false, false, false, false,  false,  false,   false, false, false),
  {wasip1threads}( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false),
     { wasip2 }  ( false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false, false, false,  false,  false,   false, false, false)
   );
@@ -3199,13 +3199,9 @@ begin
       { expect for OpenBSD which does not allow this }
       if not(
          ((SourceCPU=aarch64) and (CPU=arm)) or
-         ((SourceCPU=powerpc64) and (CPU=powerpc)) or
          ((SourceCPU=x86_64) and (CPU=i386)) or
-         ((SourceCPU=sparc64) and (CPU=sparc)) or
          ((CPU=aarch64) and (SourceCPU=arm)) or
-         ((CPU=powerpc64) and (SourceCPU=powerpc)) or
-         ((CPU=x86_64) and (SourceCPU=i386)) or
-         ((CPU=sparc64) and (SourceCPU=sparc))
+         ((CPU=x86_64) and (SourceCPU=i386))
          ) or (SourceOS=openbsd) then
         UseBinutilsPrefix:=true;
     end;
@@ -3229,16 +3225,8 @@ begin
     case CPU of
       i386:         result := GetGccDirArch('cpui386',['-m32']);
       x86_64:       result := GetGccDirArch('cpux86_64',['-m64']);
-      powerpc:      result := GetGccDirArch('cpupowerpc',['-m32']);
-      powerpc64:    result := GetGccDirArch('cpupowerpc64',['-m64']);
       arm:          result := GetGccDirArch('cpuarm',['-marm','-march=armv2']);
       aarch64:      result := GetGccDirArch('cpuaarch64',['-march=aarch64','-mcmodel=large']);
-      mips:         result := GetGccDirArch('cpumips',['-mips32','-EB','-mabi=32']);
-      mipsel:       result := GetGccDirArch('cpumipsel',['-mips32','-EL','-mabi=32']);
-      mips64el:     result := GetGccDirArch('cpumipsel',['-mips64','-EL','-mabi=64']);
-      mips64:       result := GetGccDirArch('cpumipsel',['-mips64','-EB','-mabi=64']);
-      sparc:        result := GetGccDirArch('cpusparc',['-m32']);
-      sparc64:      result := GetGccDirArch('cpusparc64',['-m64']);
     else
       ; // avoid compiler warning
     end {case}
@@ -3246,8 +3234,6 @@ begin
     case CPU of
       i386:     result := GetGccDirArch('cpui386',['-arch', 'i386']);
       x86_64:   result := GetGccDirArch('cpux86_64',['-arch','x86_64']);
-      powerpc:  result := GetGccDirArch('cpupowerpc',['-arch','ppc']);
-      powerpc64:result := GetGccDirArch('cpupowerpc64',['-arch','ppc64']);
       { this target uses clang }
       aarch64:  result := ''
     else

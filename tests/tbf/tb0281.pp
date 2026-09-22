@@ -1,5 +1,5 @@
 { %fail }
-{ %cpu=aarch64 }
+{ %cpu=aarch64}
 { %opt=-s }  { the compiler must throw the error }
 
 begin

@@ -136,20 +136,8 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
 
     procedure CInitThreadvar(var offset : dword;size : dword);
       begin
-        {$ifdef cpusparc}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpusparc}
 
-        {$ifdef cpusparc64}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpusparc64}
 
-        {$ifdef cpupowerpc}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,8);
-        {$endif cpupowerc}
 
         {$ifdef cpui386}
         {$define threadvarblocksize_set}
@@ -171,10 +159,6 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
         threadvarblocksize:=align(threadvarblocksize,16);
         {$endif cpux86_64}
 
-        {$ifdef cpupowerpc64}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpupowerpc64}
 
         {$ifdef cpuaarch64}
         {$define threadvarblocksize_set}
@@ -182,10 +166,6 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
         {$endif cpuaarch64}
 
 
-        {$ifdef cpumips}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpumips}
 
 
 

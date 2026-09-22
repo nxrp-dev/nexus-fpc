@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 { %fail }
 
 // ADDPS is an SSE-only instruction, it must not accept MMX registers

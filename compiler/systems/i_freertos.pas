@@ -113,16 +113,6 @@ initialization
     set_source_info(system_arm_freertos_info);
   {$endif embedded}
 {$endif CPUARM}
-{$ifdef CPUMIPSEL}
-  {$ifdef embedded}
-    set_source_info(system_mipsel_freertos_info);
-  {$endif embedded}
-{$endif CPUMIPSEL}
-{$ifdef CPUI386}
-  {$ifdef embedded}
-    set_source_info(system_i386_freertos_info);
-  {$endif embedded}
-{$endif CPUI386}
 {$ifdef CPUX86_64}
   {$ifdef embedded}
     set_source_info(system_x86_64_freertos_info);

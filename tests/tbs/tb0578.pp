@@ -1,5 +1,5 @@
 { %OPT=-Sew }
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 { %NORUN }
 
 {$asmmode intel}

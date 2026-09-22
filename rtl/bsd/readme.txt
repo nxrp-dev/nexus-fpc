@@ -42,5 +42,4 @@ sysctl.pp		Some basic sysctl headers, needed for implementation
 sysposix.inc		BSD specific part of the implementation
 i386/syscall.inc	The primitives for performing syscalls
 i386/syscallh.inc	Headers to syscall.inc
-powerpc/syscall.inc	likewise for PPC.
 

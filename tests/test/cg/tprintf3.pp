@@ -1,4 +1,4 @@
-{ %cpu=i386,powerpc,powerpc64,x86_64,arm }
+{ %cpu=x86_64,arm}
 { %NOTE=This test requires a C library }
 
 {$mode macpas}

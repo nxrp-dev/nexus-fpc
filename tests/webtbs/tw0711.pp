@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 program TestGetPutim; {Compiled with the 0.99.13 version under GO32V2!}
 

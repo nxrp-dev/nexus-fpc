@@ -1,4 +1,4 @@
-{ %CPU=avr }
+{ %CPU=avr}
 { %OPT=-Sm -Wpavrsim }
 program macrotest;
 const

@@ -1,5 +1,5 @@
 { %target=win64, linux, freebsd }
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %opt=-Aas }
 
 {$asmmode att}

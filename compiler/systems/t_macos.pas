@@ -446,13 +446,4 @@ end;
 *****************************************************************************}
 
 initialization
-{$ifdef powerpc}
-{$ifndef macos}
-  RegisterLinker(ld_mpw,TLinkerMacOS);
-{$else}
-  RegisterLinker(ld_mpw,TLinkerMPW);
-{$endif}
-  RegisterTarget(system_powerpc_macosclassic_info);
-  RegisterImport(system_powerpc_macosclassic,timportlibmacos);
-{$endif powerpc}
 end.

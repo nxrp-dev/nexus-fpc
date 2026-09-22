@@ -1,4 +1,4 @@
-{ %target=linux,solaris,freebsd,win32 }
+{ %target=linux,solaris,freebsd}
 { %fail }
 { %opt=-vw -Sew }
 

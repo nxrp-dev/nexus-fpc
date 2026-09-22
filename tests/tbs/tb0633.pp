@@ -1,5 +1,5 @@
 { %NORUN }
-{ %TARGET=win32,win64,wince }
+{ %TARGET=win64,wince}
 { %OPT=-Sew }
 
 program tb0633;

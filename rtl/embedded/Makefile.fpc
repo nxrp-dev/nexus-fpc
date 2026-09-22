@@ -44,11 +44,6 @@ COMMON=$(RTL)/common
 PROCINC=$(RTL)/$(CPU_TARGET)
 UNITPREFIX=rtl
 LOADERS=
-ifeq ($(ARCH),mipsel)
-ifeq ($(SUBARCH),pic32mx)
-override LOADERS=startup
-endif
-endif
 
 ifdef RELEASE
 override FPCOPT+=-Ur
@@ -123,15 +118,6 @@ ifeq ($(ARCH),x86_64)
 endif
 
 
-ifeq ($(ARCH),mipsel)
-ifeq ($(SUBARCH),pic32mx)
-CPU_UNITS=pic32mx1xxfxxxb pic32mx2xxfxxxb pic32mx1xxfxxxc pic32mx2xxfxxxc pic32mx1xxfxxxd pic32mx2xxfxxxd pic32mx7x5fxxxl pic32mx7x5fxxxh
-CPU_UNITS_DEFINED=1
-endif
-ifeq ($(CPU_UNITS_DEFINED),)
-$(error No CPUs enabled for given SUBARCH, pass either a SUBARCH or set CPU_UNITS_DEFINED=1 if you know what you are doing)
-endif
-endif
 
 
 
@@ -200,11 +186,6 @@ else
 $(eval UNIT_REG_NAME=$(subst EmbeddedApi.,,$(1)))
 $(eval UNIT_REG_NAME=$(subst ARMApi.,,$(UNIT_REG_NAME)))
 # mipsel is also not yet in namespaced
-ifeq ($(ARCH),mipsel)
-$(1)$(PPUEXT): $(ARCH)/$(1).pp $(SYSTEMUNIT)$(PPUEXT) $(addsuffix $(PPUEXT),$(CPU_SPECIFIC_COMMON_UNITS))
-else
-$(1)$(PPUEXT): $(NSOSDIR)/$(ARCH)/$(1).pp $(ARCH)/$(UNIT_REG_NAME).pp $(SYSTEMUNIT)$(PPUEXT) $(addsuffix $(PPUEXT),$(CPU_SPECIFIC_COMMON_UNITS))
-endif
 endif
 endef
 $(foreach unit,$(CPU_UNITS),$(eval $(call CPU_UNITS_RULE,$(unit))))

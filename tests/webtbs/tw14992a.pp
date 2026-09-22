@@ -1,4 +1,4 @@
-{ %target=win32,wince,win64 }
+{ %target=wince,win64}
 { %needlibrary }
 { %opt=-gh }
 { %norun }

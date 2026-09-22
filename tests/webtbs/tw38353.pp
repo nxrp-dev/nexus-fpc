@@ -1,5 +1,5 @@
 { %OPT=-Cg -O2 }
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 
 { -Cg and -O2 options together lead to
   the generation of instruction:

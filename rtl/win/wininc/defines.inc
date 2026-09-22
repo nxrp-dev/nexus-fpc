@@ -6001,16 +6001,6 @@ Type
      EXCEPTION_EXECUTE_FAULT = 8;
      {$endif}
 
-{$ifdef cpupowerpc32}
-  { ppc  }
-  const
-     CONTEXT_CONTROL = 1;
-     CONTEXT_FLOATING_POINT = 2;
-     CONTEXT_INTEGER = 4;
-     CONTEXT_DEBUG_REGISTERS = 8;
-     CONTEXT_FULL = (CONTEXT_CONTROL or CONTEXT_FLOATING_POINT) or CONTEXT_INTEGER;
-     CONTEXT_DEBUGGER = CONTEXT_FULL;
-{$endif}
 
 {$ifdef cpui386}
   { x86  }

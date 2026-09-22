@@ -1,4 +1,4 @@
-{ %CPU=i388,x86_64 }
+{ %CPU=i388,x86_64}
 {$OPTIMIZATION ON}
 {$FPUTYPE SSE3}
 

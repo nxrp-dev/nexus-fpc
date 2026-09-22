@@ -1,4 +1,4 @@
-{ %cpu=x86_64,i386 }
+{ %cpu=x86_64}
 { %opt=-Cpcoreavx2 -O3 }
 {$mode objfpc} {$h+} {$modeswitch advancedrecords} {$modeswitch duplicatelocals}
 uses

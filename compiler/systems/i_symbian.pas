@@ -30,72 +30,6 @@ unit i_symbian;
        systems;
 
     const
-       system_i386_symbian_info : tsysteminfo =
-          (
-            system       : system_i386_symbian;
-            name         : 'Symbian OS for i386';
-            shortname    : 'Symbian';
-            flags        : [tf_files_case_aware, tf_has_dllscanner,
-                            tf_smartlink_library];
-            cpu          : cpu_i386;
-            unit_env     : 'SYMBIANUNITS';
-            extradefines : 'SYMBIAN';
-            exeext       : '.exe';
-            defext       : '.def';
-            scriptext    : '.bat';
-            smartext     : '.sl';
-            unitext      : '.ppu';
-            unitlibext   : '.ppl';
-            asmext       : '.s';
-            objext       : '.o';
-            resext       : '.res';
-            resobjext    : '.or';
-            sharedlibext : '.dll';
-            staticlibext : '.a';
-            staticlibprefix : 'libp';
-            sharedlibprefix : '';
-            sharedClibext : '.dll';
-            staticClibext : '.a';
-            staticClibprefix : 'lib';
-            sharedClibprefix : '';
-            importlibprefix : 'libimp';
-            importlibext : '.a';
-            Cprefix      : '_';
-            newline      : #13#10;
-            dirsep       : '\';
-            assem        : as_gas;
-            assemextern  : as_gas;
-            link         : ld_none;
-            linkextern   : ld_windows;
-            ar           : ar_gnu_ar;
-            res          : res_gnu_windres;
-            dbg          : dbg_stabs;
-            script       : script_dos;
-            endian       : endian_little;
-            alignment    :
-              (
-                procalign       : 16;
-                loopalign       : 4;
-                jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 16;
-                varalignmin     : 0;
-                varalignmax     : 16;
-                localalignmin   : 4;
-                localalignmax   : 8;
-                recordalignmin  : 0;
-                recordalignmax  : 4;
-                maxCrecordalign : 16
-              );
-            first_parm_offset : 8;
-            stacksize    : 262144;
-            stackalign   : 4;
-            abi          : abi_default;
-            llvmdatalayout : 'todo';
-          );
 
        system_arm_symbian_info : tsysteminfo =
           (
@@ -169,11 +103,6 @@ implementation
 
 initialization
 
-{$ifdef CPUI386}
-  {$ifdef Symbian}
-  set_source_info(system_i386_symbian_info);
-  {$endif Symbian}
-{$endif CPUI386}
 
 {$ifdef CPUARM}
   {$ifdef Symbian}

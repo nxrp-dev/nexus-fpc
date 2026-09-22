@@ -7,7 +7,7 @@
 { This program tests support for non-ASCII characters in  }
 { path names                                              }
 
-{ %target=win32,win64,darwin,freebsd,openbsd,netbsd,linux,haiku,aix,nativent }
+{ %target=win64,darwin,freebsd,openbsd,netbsd,linux,haiku,aix}
 
 Program tdir;
 {$codepage utf-8}

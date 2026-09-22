@@ -32,10 +32,10 @@ fpcdir=..
 unexport FPC_VERSION FPC_COMPILERINFO
 
 # Which platforms are ready for inclusion in the cycle
-CYCLETARGETS=i386 powerpc sparc arm x86_64 powerpc64 armeb mipsel mips aarch64 sparc64
+CYCLETARGETS=arm x86_64 armeb aarch64
 
 # Platforms not yet ready
-BETATARGETS=mips64 mips64el
+BETATARGETS=
 
 # All supported targets used for clean
 ALLTARGETS=$(CYCLETARGETS)
@@ -67,22 +67,6 @@ CROSSINSTALL=1
 endif
 endif
 
-# Allow POWERPC, POWERPC64, I386 defines for target cpu
-ifdef POWERPC
-PPC_TARGET=powerpc
-endif
-ifdef POWERPC64
-PPC_TARGET=powerpc64
-endif
-ifdef SPARC
-PPC_TARGET=sparc
-endif
-ifdef SPARC64
-PPC_TARGET=sparc64
-endif
-ifdef I386
-PPC_TARGET=i386
-endif
 ifdef X86_64
 PPC_TARGET=x86_64
 endif
@@ -91,18 +75,6 @@ PPC_TARGET=arm
 endif
 ifdef ARMEB
 PPC_TARGET=armeb
-endif
-ifdef MIPS
-PPC_TARGET=mips
-endif
-ifdef MIPSEL
-PPC_TARGET=mipsel
-endif
-ifdef MIPS64
-PPC_TARGET=mips64
-endif
-ifdef MIPS64EL
-PPC_TARGET=mips64el
 endif
 ifdef AARCH64
 PPC_TARGET=aarch64
@@ -223,38 +195,11 @@ override OPT=
 MSGFILES=$(wildcard msg/error*.msg)
 
 # ppcSUFFIX
-ifeq ($(CPC_TARGET),i386)
-CPUSUF=386
-endif
-ifeq ($(CPC_TARGET),powerpc)
-CPUSUF=ppc
-endif
-ifeq ($(CPC_TARGET),powerpc64)
-CPUSUF=ppc64
-endif
-ifeq ($(CPC_TARGET),sparc)
-CPUSUF=sparc
-endif
-ifeq ($(CPC_TARGET),sparc64)
-CPUSUF=sparc64
-endif
 ifeq ($(CPC_TARGET),x86_64)
 CPUSUF=x64
 endif
 ifeq ($(CPC_TARGET),arm)
 CPUSUF=arm
-endif
-ifeq ($(CPC_TARGET),mips)
-CPUSUF=mips
-endif
-ifeq ($(CPC_TARGET),mipsel)
-CPUSUF=mipsel
-endif
-ifeq ($(CPC_TARGET),mips64)
-CPUSUF=mips64
-endif
-ifeq ($(CPC_TARGET),mips64el)
-CPUSUF=mips64el
 endif
 ifeq ($(CPC_TARGET),aarch64)
 CPUSUF=a64
@@ -336,36 +281,11 @@ endif
 override LOCALOPT+=-dllvm -Fullvm
 endif
 
-# i386 specific
-ifeq ($(PPC_TARGET),i386)
-override LOCALOPT+=-Fux86 -Fix86
-endif
-
 # x86_64 specific
 ifeq ($(PPC_TARGET),x86_64)
 override LOCALOPT+=-Fux86 -Fix86
 endif
 
-# PowerPC specific
-ifeq ($(PPC_TARGET),powerpc)
-override LOCALOPT+=-Fuppcgen
-endif
-
-# PowerPC64 specific
-ifeq ($(PPC_TARGET),powerpc64)
-override LOCALOPT+=-Fuppcgen
-endif
-
-
-# Sparc specific
-ifeq ($(PPC_TARGET),sparc)
-override LOCALOPT+=-Fusparcgen -Fisparcgen
-endif
-
-# Sparc specific
-ifeq ($(PPC_TARGET),sparc64)
-override LOCALOPT+=-Fusparcgen -Fisparcgen
-endif
 
 # ARM specific
 ifeq ($(PPC_TARGET),arm)
@@ -375,26 +295,6 @@ endif
 # ARMEB specific
 ifeq ($(PPC_TARGET),armeb)
 override LOCALOPT+=-Fuarmgen
-endif
-
-# mips specific
-ifeq ($(PPC_TARGET),mips)
-override LOCALOPT+=-Fumips
-endif
-
-# mipsel specific
-ifeq ($(PPC_TARGET),mipsel)
-override LOCALOPT+=-Fumips
-endif
-
-# mips64 specific
-ifeq ($(PPC_TARGET),mips64)
-override LOCALOPT+=-Fumips
-endif
-
-# mips64el specific
-ifeq ($(PPC_TARGET),mips64el)
-override LOCALOPT+=-Fumips
 endif
 
 # AArch64 specific
@@ -420,7 +320,7 @@ endif
 # Setup Targets
 #####################################################################
 
-ifneq ($(findstring $(OS_TARGET),win32 win64 aix),)
+ifneq ($(findstring $(OS_TARGET),win64 aix),)
 USE_CMP_FOR_DIFF=1
 endif
 
@@ -601,8 +501,8 @@ endif
 # cpu targets
 #####################################################################
 
-PPC_TARGETS=i386 powerpc sparc arm armeb x86_64 powerpc64 mips mipsel mips64 mips64el aarch64 sparc64
-PPC_SUFFIXES=386 ppc sparc arm armeb x64 ppc64 mips mipsel mips64 mips64el 8086 a64 sparc64
+PPC_TARGETS=arm armeb x86_64 aarch64
+PPC_SUFFIXES=386 arm armeb x64 8086 a64
 INSTALL_TARGETS=$(addsuffix _exe_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 CLEAN_TARGETS=$(addsuffix _clean,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 SYMLINKINSTALL_TARGETS=$(addsuffix _symlink_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
@@ -699,7 +599,6 @@ msg: msgtxt.inc
 
 insdatx86 : $(COMPILER_UNITTARGETDIR) x86/x86ins.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86ins.pp
-        cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) && mv -f i386tab.inc i386op.inc i386nop.inc i386att.inc i386atts.inc i386int.inc i386prop.inc ../i386
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) x86_64 && mv -f x8664tab.inc x8664op.inc x8664nop.inc x8664att.inc x8664ats.inc x8664int.inc x8664pro.inc ../x86_64
 
 insdatarm : arm/armins.dat
@@ -716,7 +615,6 @@ insdat: insdatx86 insdatarm insdataarch64
 regdatx86 : x86/x86reg.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86reg.pp
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT)
-        mv -f x86/r386*.inc i386
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT) x86_64
         mv -f x86/r8664*.inc x86_64
 
@@ -724,34 +622,17 @@ regdatarm : arm/armreg.dat
 	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkarmreg.pp
         cd arm && ..$(PATHSEP)utils$(PATHSEP)mkarmreg$(SRCEXEEXT)
 
-regdatsp : sparcgen/spreg.dat
-            $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkspreg.pp
-        cd sparcgen && ..$(PATHSEP)utils$(PATHSEP)mkspreg$(SRCEXEEXT)
-		mv -f sparcgen/rsp*.inc sparc
-
-regdatsp64 : sparcgen/spreg.dat
-            $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkspreg.pp
-        cd sparcgen && ..$(PATHSEP)utils$(PATHSEP)mkspreg$(SRCEXEEXT) sparc64
-		mv -f sparcgen/rsp*.inc sparc64
-
 regdataarch64 : aarch64/a64reg.dat
 	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mka64reg.pp
         cd aarch64 && ..$(PATHSEP)utils$(PATHSEP)mka64reg$(SRCEXEEXT)
 
-regdatmips : mips/mipsreg.dat
-	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkmpsreg.pp
-        cd mips && ..$(PATHSEP)utils$(PATHSEP)mkmpsreg$(SRCEXEEXT)
-
-
-regdat : regdatx86 regdatarm regdatsp regdataarch64 regdatmips regdatsp64
+regdat : regdatx86 regdatarm regdataarch64
 
 intrdatx86 : x86/x86intr.dat
 		$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86inl.pp
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86inl$(SRCEXEEXT)
         cp -f x86/cpummprocs.inc ../rtl/x86_64
 		cp -f x86/cpumminnr.inc ../rtl/x86_64
-        cp -f x86/cpummprocs.inc ../rtl/i386
-		cp -f x86/cpumminnr.inc ../rtl/i386
 
 intrdat : intrdatx86
 
@@ -1018,7 +899,7 @@ cvstest:
 # 4. build all supported cross compilers except the
 #    current PPC_TARGET which was already build
 # unless FPC_SUPPORT_X87_TYPES_ON_WIN64 is set,
-# win64 cannot compile i386 compiler
+# win64 cannot compile targets that require 80bit real support.
 # This is also the case for other CPUs that don't support
 # 80bit real type, unless -dFPC_SOFT_FPUX80
 # option is used.
@@ -1028,7 +909,7 @@ ifeq ($(OS_SOURCE),win64)
   EXCLUDE_80BIT_TARGETS=1
 endif
 
-ifneq ($(findstring $(CPU_SOURCE),aarch64 arm mips mipsel mips64 mips64el powerpc powerpc64 sparc sparc64),)
+ifneq ($(findstring $(CPU_SOURCE),aarch64 arm),)
   EXCLUDE_80BIT_TARGETS=1
 endif
 endif
@@ -1036,7 +917,7 @@ endif
 ifndef EXCLUDE_80BIT_TARGETS
 FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
 else
-FULL_TARGETS=$(filter-out x86_64,$(filter-out i386,$(filter-out $(PPC_TARGET),$(CYCLETARGETS))))
+FULL_TARGETS=$(filter-out x86_64,$(filter-out $(PPC_TARGET),$(CYCLETARGETS)))
 endif
 
 full: fullcycle

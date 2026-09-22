@@ -1,4 +1,4 @@
-{ %skipcpu=i386,powerpc }
+{ %skipcpu=i386}
 { %skiptarget=linux }
 { %fail }
 

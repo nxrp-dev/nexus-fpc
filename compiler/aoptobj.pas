@@ -1780,12 +1780,7 @@ Unit AoptObj;
       procedure on an instruction that you already know is a conditional jump }
     procedure TAOptObj.MakeUnconditional(p: taicpu);
       begin
-{$if defined(powerpc) or defined(powerpc64)}
-        p.condition.cond := C_None;
-        p.condition.simple := True;
-{$else powerpc}
         p.condition := C_None;
-{$endif powerpc}
 {$ifndef z80}
         p.opcode := aopt_uncondjmp;
 {$endif not z80}
@@ -1793,11 +1788,6 @@ Unit AoptObj;
         p.opcode := aopt_uncondjmp;
         p.loadoper(0, p.oper[p.ops-1]^);
         p.ops:=1;
-{$endif}
-{$ifdef mips}
-        { MIPS conditional jump instructions also contain register
-          operands. A proper implementation is needed here. }
-        internalerror(2020071301);
 {$endif}
       end;
 

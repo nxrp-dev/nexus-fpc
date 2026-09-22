@@ -1,4 +1,4 @@
-{ %target=win32,win64 }
+{ %target=win64}
 { %needlibrary }
 
 unit

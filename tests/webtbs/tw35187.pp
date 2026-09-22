@@ -1,5 +1,5 @@
-{ %target=win32,win64,linux }
-{ %cpu=i386,x86_64 }
+{ %target=win64,linux}
+{ %cpu=x86_64}
 { %opt=-O1 }
 
 program tw35187;

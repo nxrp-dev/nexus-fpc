@@ -1,5 +1,5 @@
 { %NORUN }
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 
 program tasm28;
 

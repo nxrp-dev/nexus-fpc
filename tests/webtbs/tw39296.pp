@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %skiptarget=win64 }
 
 function bytepara(b: byte; s: shortint): boolean; assembler; nostackframe;

@@ -1,5 +1,5 @@
 { %target=linux }
-{ %cpu=arm }
+{ %cpu=arm}
 { %norun }
 { %opt=-Cparmv7m -s }
 

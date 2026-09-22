@@ -174,8 +174,6 @@ implementation
             if not(cs_profile in current_settings.moduleswitches) then
               begin
                 case target_info.system of
-                  system_powerpc_darwin,
-                  system_powerpc64_darwin,
                   system_i386_darwin,
                   system_x86_64_darwin:
                     begin
@@ -237,8 +235,6 @@ implementation
             if (apptype=app_bundle) then
               begin
                 case target_info.system of
-                  system_powerpc_darwin,
-                  system_powerpc64_darwin,
                   system_i386_darwin,
                   system_x86_64_darwin:
                     begin
@@ -273,8 +269,6 @@ implementation
             else
               begin
                 case target_info.system of
-                  system_powerpc_darwin,
-                  system_powerpc64_darwin,
                   system_i386_darwin,
                   system_x86_64_darwin:
                     begin
@@ -333,13 +327,9 @@ implementation
     function tlinkerdarwin.GetLinkArch: TCmdStr;
       begin
         case target_info.system of
-          system_powerpc_darwin:
-            result:='-arch ppc';
           system_i386_darwin,
           system_i386_iphonesim:
             result:='-arch i386';
-          system_powerpc64_darwin:
-            result:='-arch ppc64';
           system_x86_64_darwin,
           system_x86_64_iphonesim:
             result:='-arch x86_64';
@@ -770,24 +760,6 @@ initialization
   RegisterExport(system_x86_64_iphonesim,texportlibdarwin);
   RegisterTarget(system_x86_64_iphonesim_info);
 {$endif}
-{$ifdef i386}
-  RegisterImport(system_i386_darwin,timportlibdarwin);
-  RegisterExport(system_i386_darwin,texportlibdarwin);
-  RegisterTarget(system_i386_darwin_info);
-  RegisterImport(system_i386_iphonesim,timportlibdarwin);
-  RegisterExport(system_i386_iphonesim,texportlibdarwin);
-  RegisterTarget(system_i386_iphonesim_info);
-{$endif i386}
-{$ifdef powerpc}
-  RegisterImport(system_powerpc_darwin,timportlibdarwin);
-  RegisterExport(system_powerpc_darwin,texportlibdarwin);
-  RegisterTarget(system_powerpc_darwin_info);
-{$endif powerpc}
-{$ifdef powerpc64}
-  RegisterImport(system_powerpc64_darwin,timportlibdarwin);
-  RegisterExport(system_powerpc64_darwin,texportlibdarwin);
-  RegisterTarget(system_powerpc64_darwin_info);
-{$endif powerpc64}
 {$ifdef arm}
   RegisterImport(system_arm_ios,timportlibdarwin);
   RegisterExport(system_arm_ios,texportlibdarwin);

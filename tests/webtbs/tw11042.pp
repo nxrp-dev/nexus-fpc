@@ -1,4 +1,4 @@
-{ %cpu=arm }
+{ %cpu=arm}
 { %norun }
 
 TYPE

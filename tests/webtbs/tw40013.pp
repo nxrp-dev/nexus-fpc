@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 { %opt=-Cpcoreavx2 -O4 }
 uses
   cpu;

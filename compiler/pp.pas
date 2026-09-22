@@ -29,12 +29,6 @@ program pp;
   AARCH64             generate a compiler for the AARCH64 (64bit ARM)
   ARM                 generate a compiler for the ARM
   I386                generate a compiler for the Intel i386+
-  MIPS                generate a compiler for the MIPS (Big Endian)
-  MIPSEL              generate a compiler for the MIPSEL (Little Endian)
-  POWERPC             generate a compiler for the PowerPC
-  POWERPC64           generate a compiler for the PowerPC64 architecture
-  SPARC               generate a compiler for SPARC
-  SPARC64             generate a compiler for SPARC64
   X86_64              generate a compiler for the AMD x86-64 architecture
 
   -----------------------------------------------------------------
@@ -96,42 +90,12 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif x86_64}
-{$ifdef POWERPC}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif POWERPC}
-{$ifdef POWERPC64}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif POWERPC64}
-{$ifdef SPARC}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif SPARC}
-{$ifdef SPARC64}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif SPARC64}
 {$ifdef ARM}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif ARM}
-{$ifdef MIPS}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif MIPS}
 {$ifdef AARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}

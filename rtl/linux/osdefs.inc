@@ -28,8 +28,7 @@
   {$endif}
 {$endif}
 
-{$if defined(cpupowerpc) or defined(cpupowerpc64) or
-  defined(cpui386) or
+{$if defined(cpui386) or
   defined(cpum68k) or
   (defined(cpuarm) and defined(FPC_ABI_EABI))}
   {$define HAS_UGETRLIMIT}
@@ -61,9 +60,6 @@
 {$define WAIT4}
 {$endif CPUx86_64}
 
-{$ifdef CPUSPARC}
-{$define WAIT4}
-{$endif CPUSPARC}
 
 {$ifdef cpui386}
 {$define OLDMMAP}
@@ -87,9 +83,6 @@
   {$define userenameat}
 {$endif cpuaarch64}
 
-{$ifdef cpusparc64}
-  {$define FPC_USEGETTIMEOFDAY}
-{$endif cpusparc64}
 
 
 

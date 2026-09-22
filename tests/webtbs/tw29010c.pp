@@ -1,4 +1,4 @@
-{ %cpu=i8086 }
+{ %cpu=i8086}
 program tw29010c;
 
 var

@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux}
+{ %TARGET=linux}
 
 { Old file: tbs0052.pp }
 {  Graph, collects missing graph unit routines          OK 0.99.9 (PM) }

@@ -1,4 +1,4 @@
-{ %cpu=i8086,i386 }
+{ %cpu=i8086}
 
 {$ifdef fpc}
 {$mode tp}

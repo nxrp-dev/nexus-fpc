@@ -1,5 +1,5 @@
 { %fail }
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 begin
   asm
     movq (%rdi,%rsp),%rax

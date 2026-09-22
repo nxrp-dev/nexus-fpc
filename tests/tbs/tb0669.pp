@@ -1,4 +1,4 @@
-{ %CPU=aarch64 }
+{ %CPU=aarch64}
 { %NORUN }
 
 program tb0669;

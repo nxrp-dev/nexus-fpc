@@ -1,4 +1,4 @@
-{ %CPU=AARCH64 }
+{ %CPU=AARCH64}
 program tw40474e;
 
 { This test evaluates the correct interpretation of the BIC mnemonic.  It is

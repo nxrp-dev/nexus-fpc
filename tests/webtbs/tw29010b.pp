@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 program tw29010b;
 
 {$ifdef fpc}

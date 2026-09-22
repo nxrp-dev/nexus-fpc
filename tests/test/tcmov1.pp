@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 {$mode objfpc}{$asmmode att}
 
 // Test correct assembling of cmov instructions

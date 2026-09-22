@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 { %NORUN }
 
 program tb0628;

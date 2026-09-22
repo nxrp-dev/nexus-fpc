@@ -1,5 +1,5 @@
 { %fail }
-{ %cpu=avr }
+{ %cpu=avr}
 {$goto on}
 program test;
 

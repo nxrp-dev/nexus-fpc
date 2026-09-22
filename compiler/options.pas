@@ -182,9 +182,9 @@ var
 
 const
   { gprof (requires implementation of g_profilecode in the code generator) }
-  supported_targets_pg = [system_i386_linux,system_x86_64_linux,system_mipseb_linux,system_mipsel_linux,system_arm_linux]
+  supported_targets_pg = [system_i386_linux,system_x86_64_linux,system_arm_linux]
                         + [system_i386_win32]
-                        + [system_powerpc_darwin,system_x86_64_darwin]
+                        + [system_x86_64_darwin]
                         + [system_i386_GO32V2]
                         + [system_i386_freebsd]
                         + [system_i386_netbsd]
@@ -1005,24 +1005,6 @@ begin
 {$ifdef arm}
       'A',
 {$endif}
-{$ifdef mipsel}
-      'm',
-{$endif}
-{$ifdef mipseb}
-      'M',
-{$endif}
-{$ifdef powerpc}
-      'P',
-{$endif}
-{$ifdef powerpc64}
-      'p',
-{$endif}
-{$ifdef sparc}
-      'S',
-{$endif}
-{$ifdef sparc64}
-      's',
-{$endif}
 {$ifdef jvm}
       'J',
 {$endif}
@@ -1394,16 +1376,6 @@ begin
     end;
   { nothing specified -> defaults }
   case target_info.system of
-    system_powerpc_darwin:
-      begin
-        if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.3.0',false) then
-          internalerror(2022090910);
-      end;
-    system_powerpc64_darwin:
-      begin
-        if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.4.0',false) then
-          internalerror(2022090911);
-      end;
     system_i386_darwin,
     system_x86_64_darwin:
       begin
@@ -4513,21 +4485,7 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_COMP_IS_INT64');
       {$endif}
 
-      {$ifdef powerpc}
-        def_system_macro('CPUPOWERPC');
-        def_system_macro('CPUPOWERPC32');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif}
 
-      {$ifdef POWERPC64}
-        def_system_macro('CPUPOWERPC');
-        def_system_macro('CPUPOWERPC64');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif}
 
       {$ifdef x86_64}
         def_system_macro('CPUX86_64');
@@ -4546,22 +4504,7 @@ procedure read_arguments(cmd:TCmdStr);
       {$endif FPC_SUPPORT_X87_TYPES_ON_WIN64}
       {$endif}
 
-      {$ifdef sparc}
-        def_system_macro('CPUSPARCGEN');
-        def_system_macro('CPUSPARC');
-        def_system_macro('CPUSPARC32');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif}
 
-      {$ifdef sparc64}
-        def_system_macro('CPUSPARCGEN');
-        def_system_macro('CPUSPARC64');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif}
 
       {$ifdef arm}
         def_system_macro('CPUARM');
@@ -4578,75 +4521,9 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_COMP_IS_INT64');
       {$endif jvm}
 
-      {$ifdef mipsel}
-        def_system_macro('CPUMIPS');
-        def_system_macro('CPUMIPSEL');
-        def_system_macro('CPUMIPS32');
-        def_system_macro('CPUMIPSEL32');
-        def_system_macro('CPU32');
-        if target_info.system <> system_mipsel_ps1 then begin
-          def_system_macro('FPC_HAS_TYPE_DOUBLE');
-          def_system_macro('FPC_HAS_TYPE_SINGLE');
-          def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
-        end;
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-        { On most systems, locals are accessed relative to base pointer,
-          but for MIPS cpu, they are accessed relative to stack pointer.
-          This needs adaptation for so low level routines,
-          like MethodPointerLocal and related objects unit functions. }
-        def_system_macro('FPC_LOCALS_ARE_STACK_REG_RELATIVE');
-      {$endif mipsel}
 
-      {$ifdef mipseb}
-        def_system_macro('CPUMIPS');
-        def_system_macro('CPUMIPSEB');
-        def_system_macro('CPUMIPS32');
-        def_system_macro('CPUMIPSEB32');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_HAS_TYPE_DOUBLE');
-        def_system_macro('FPC_HAS_TYPE_SINGLE');
-        def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-        { See comment above for mipsel }
-        def_system_macro('FPC_LOCALS_ARE_STACK_REG_RELATIVE');
-      {$endif mipseb}
 
-      {$ifdef mips64eb}
-        def_system_macro('CPUMIPS');
-        def_system_macro('CPUMIPS64');
-        def_system_macro('CPUMIPSEB64');
-        def_system_macro('CPUMIPS64EB');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-        { See comment above for mipsel }
-        def_system_macro('FPC_LOCALS_ARE_STACK_REG_RELATIVE');
-      {$endif mips64eb}
 
-      {$ifdef mips64el}
-        def_system_macro('CPUMIPS');
-        def_system_macro('CPUMIPS64');
-        def_system_macro('CPUMIPSEL64');
-        def_system_macro('CPUMIPS64EL');
-        def_system_macro('CPU64');
-        def_system_macro('FPC_HAS_TYPE_DOUBLE');
-        def_system_macro('FPC_HAS_TYPE_SINGLE');
-        def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-        { On most systems, locals are accessed relative to base pointer,
-          but for MIPS cpu, they are accessed relative to stack pointer.
-          This needs adaptation for so low level routines,
-          like MethodPointerLocal and related objects unit functions. }
-        def_system_macro('FPC_LOCALS_ARE_STACK_REG_RELATIVE');
-      {$endif mips64el}
 
       {$ifdef i8086}
         def_system_macro('CPU86');  { Borland compatibility }
@@ -4745,9 +4622,6 @@ procedure read_arguments(cmd:TCmdStr);
       {$endif}
       {$endif}
 
-      {$ifdef powerpc64}
-        def_system_macro('FPC_HAS_LWSYNC');
-      {$endif}
 
       def_system_macro('FPC_HAS_ANSICHAR_CHAR');
       { currently, all supported CPUs have an internal sar implementation }
@@ -4882,8 +4756,6 @@ begin
         system_arm_freertos:
           heapsize:=8192;
         system_arm_embedded:
-          heapsize:=256;
-        system_mipsel_embedded:
           heapsize:=256;
         else
           heapsize:=256;
@@ -5193,8 +5065,7 @@ begin
      ((target_info.system in [system_arm_wince,system_arm_gba,
          system_m68k_atari,
          system_arm_nds,system_arm_embedded,system_arm_freertos,
-         system_xtensa_linux,
-         system_mipsel_ps1])
+         system_xtensa_linux])
 {$ifdef arm}
       or (target_info.abi=abi_eabi)
 {$endif arm}
@@ -5385,70 +5256,6 @@ begin
   { don't generate dwarf cfi, llvm will do that }
   exclude(target_info.flags,tf_needs_dwarf_cfi);
 {$endif llvm}
-{$ifdef mipsel}
-  case target_info.system of
-    system_mipsel_android:
-      begin
-        { set default cpu type to MIPS32 rev. 1 and hard float for MIPS-Android unless specified otherwise }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_mips32;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_mips32;
-        if not option.FPUSetExplicitly then
-          init_settings.fputype:=fpu_mips2;
-      end;
-    system_mipsel_embedded:
-      begin
-        { set default cpu type to PIC32MX and softfloat for MIPSEL-EMBEDDED target unless specified otherwise }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_pic32mx;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_pic32mx;
-        if not option.FPUSetExplicitly then
-          init_settings.fputype:=fpu_soft;
-      end;
-    system_mipsel_PS1:
-      begin
-{
-          init_settings.optimizerswitches:=[
-                                          cs_opt_stackframe,
-                                          cs_opt_size,              // makes smaller
-                                          cs_opt_uncertain,
-                                          cs_opt_peephole,
-                                          cs_opt_tailrecursion,
-                                          cs_opt_nodecse,           // makes smaller - don't sets vars to 0
-                                          cs_opt_nodedfa,
-                                          cs_opt_loopstrength,
-                                          cs_opt_reorder_fields,
-                                          cs_opt_dead_values,       // makes smaller
-                                          cs_opt_remove_empty_proc, // makes smaller
-                                          cs_opt_dead_store_eliminate,
-                                          cs_opt_forcenostackframe,
-                                          cs_opt_unused_para,       // makes smaller
-                                          cs_opt_consts];
-
-          // dont work: cs_opt_regvar, cs_opt_constant_propagate
-          // dont compile: cs_opt_scheduler
-          // makes larger: cs_opt_autoinline
-}
-        init_settings.optimizerswitches:=[];
-        init_settings.debugswitches:= [];
-
-        { set default cpu type to MIPS1 with SoftFPU }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_mips1;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_mips1;
-        if not option.FPUSetExplicitly then
-          begin
-            include(init_settings.moduleswitches,cs_fp_emulation);
-            init_settings.fputype:=fpu_none;
-          end;
-      end;
-    else
-      ;
-  end;
-{$endif mipsel}
 {$ifdef m68k}
   if init_settings.cputype in cpu_coldfire then
     def_system_macro('CPUCOLDFIRE');
@@ -5615,35 +5422,7 @@ begin
     end;
 {$endif}
 
-{$if defined(powerpc64)}
-  { on sysv targets, default to elfv2 for little endian and to elfv1 for
-    big endian (unless specified otherwise). As the gcc man page says:
-    "Overriding the default ABI requires special system support and is
-     likely to fail in spectacular ways" }
-  if not option.ABISetExplicitly then
-    begin
-      if (target_info.abi=abi_powerpc_sysv) and
-         (target_info.endian=endian_little) then
-        target_info.abi:=abi_powerpc_elfv2;
-     if (target_info.abi=abi_powerpc_elfv2) and
-         (target_info.endian=endian_big) then
-        target_info.abi:=abi_powerpc_sysv;
-    if (target_info.system=system_powerpc64_freebsd)  then
-        target_info.abi:=abi_powerpc_elfv2;
-    end;
-{$endif}
 
-{$if defined(powerpc) or defined(powerpc64)}
-  { define _CALL_ELF symbol like gcc }
-  case target_info.abi of
-    abi_powerpc_sysv:
-      set_system_compvar('_CALL_ELF','1');
-    abi_powerpc_elfv2:
-      set_system_compvar('_CALL_ELF','2');
-    else
-      ;
-    end;
-{$endif}
 
   { Section smartlinking conflicts with import sections on Windows }
   if GenerateImportSection and

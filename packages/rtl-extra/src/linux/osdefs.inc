@@ -65,9 +65,6 @@
 {$define WAIT4}
 {$endif CPUx86_64}
 
-{$ifdef CPUSPARC}
-{$define WAIT4}
-{$endif CPUSPARC}
 
 {$ifdef cpui386}
 {$define OLDMMAP}

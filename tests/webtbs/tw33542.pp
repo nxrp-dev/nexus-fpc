@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 { %TARGET=linux }
 program vectorcall_pd_test1;
 

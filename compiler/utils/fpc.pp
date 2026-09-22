@@ -85,14 +85,6 @@ Const
          ppcbin:='ppc386';
          processorname:='i386';
     {$endif i386}
-    {$ifdef powerpc}
-         ppcbin:='ppcppc';
-         processorname:='powerpc';
-    {$endif powerpc}
-    {$ifdef powerpc64}
-         ppcbin:='ppcppc64';
-         processorname:='powerpc64';
-    {$endif powerpc64}
     {$ifdef arm}
          ppcbin:='ppcarm';
          processorname:='arm';
@@ -101,41 +93,14 @@ Const
          ppcbin:='ppca64';
          processorname:='aarch64';
     {$endif aarch64}
-    {$ifdef sparc}
-         ppcbin:='ppcsparc';
-         processorname:='sparc';
-    {$endif sparc}
-    {$ifdef sparc64}
-         ppcbin:='ppcsparc64';
-         processorname:='sparc64';
-    {$endif sparc64}
     {$ifdef x86_64}
          ppcbin:='ppcx64';
          processorname:='x86_64';
     {$endif x86_64}
-    {$ifdef mipsel}
-         ppcbin:='ppcmipsel';
-         processorname:='mipsel';
-    {$else : not mipsel}
-      {$ifdef mipseb}
-          ppcbin:='ppcmipseb';
-          processorname:='mipseb';
-      {$else : not mipseb}
         {$ifdef mips}
           ppcbin:='ppcmips';
           processorname:='mips';
         {$endif mips}
-      {$endif not mipseb}
-    {$endif not mipsel}
-    {$ifdef mips64el}
-         ppcbin:='ppcmips64el';
-         processorname:='mips64el';
-    {$else : not mips64el}
-      {$ifdef mips64}
-         ppcbin:='ppcmips64';
-         processorname:='mips64';
-      {$endif mips}
-    {$endif not mipsel}
   end;
 
   function SplitPath(Const HStr:String):String;

@@ -1,4 +1,4 @@
-{ %target=win32,win64,wince }
+{ %target=win64,wince}
 { %needlibrary }
 { %result=-1073741502 }
 { ToDo: check whether the exit code is the same for the following targets:  darwin,linux,freebsd,solaris,beos,aix,android,haiku }

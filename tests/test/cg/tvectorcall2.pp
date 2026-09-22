@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 program vectorcall_hva_test2;
 
 {$IFNDEF CPUX86_64}

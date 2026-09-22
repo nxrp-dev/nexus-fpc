@@ -765,27 +765,6 @@ initialization
   RegisterExport(system_x86_64_netbsd,texportlibbsd);
   RegisterTarget(system_x86_64_netbsd_info);
 {$endif}
-{$ifdef i386}
-  RegisterImport(system_i386_freebsd,timportlibbsd);
-  RegisterExport(system_i386_freebsd,texportlibbsd);
-  RegisterTarget(system_i386_freebsd_info);
-  RegisterImport(system_i386_netbsd,timportlibbsd);
-  RegisterExport(system_i386_netbsd,texportlibbsd);
-  RegisterTarget(system_i386_netbsd_info);
-  RegisterImport(system_i386_openbsd,timportlibbsd);
-  RegisterExport(system_i386_openbsd,texportlibbsd);
-  RegisterTarget(system_i386_openbsd_info);
-{$endif i386}
-{$ifdef powerpc}
-  RegisterImport(system_powerpc_netbsd,timportlibbsd);
-  RegisterExport(system_powerpc_netbsd,texportlibbsd);
-  RegisterTarget(system_powerpc_netbsd_info);
-{$endif powerpc}
-{$ifdef powerpc64}
-  RegisterImport(system_powerpc64_freebsd,timportlibbsd);
-  RegisterExport(system_powerpc64_freebsd,texportlibbsd);
-  RegisterTarget(system_powerpc64_freebsd_info);
-{$endif powerpc64}
 {$ifdef arm}
   RegisterImport(system_arm_netbsd,timportlibbsd);
   RegisterExport(system_arm_netbsd,texportlibbsd);

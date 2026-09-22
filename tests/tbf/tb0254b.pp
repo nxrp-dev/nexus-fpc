@@ -1,4 +1,4 @@
-{ %CPU=x86_64,powerpc64,aarch64 }
+{ %CPU=x86_64,aarch64}
 
 {$MODE DELPHI}  // (1) _NOT_ using delphi mode works
 unit tb0254b;

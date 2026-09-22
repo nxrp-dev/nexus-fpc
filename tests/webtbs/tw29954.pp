@@ -1,5 +1,5 @@
 { %norun }
-{ %cpu=i386,x86_64 }
+{ %cpu=x86_64}
 { %opt=-Sew -vw }
 {$mode objfpc}
 { The test checks that MOVSS instruction assembles without warning.

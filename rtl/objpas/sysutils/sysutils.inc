@@ -1035,13 +1035,7 @@ begin
   Result:=arM68k;
   {$endif m68k}
 
-  {$ifdef powerpc}
-  Result:=arPowerPC
-  {$endif powerpc}
 
-  {$ifdef powerpc64}
-  Result:=arPower64
-  {$endif powerpc64}
 
   {$ifdef arm}
   Result:=arARM32;
@@ -1051,25 +1045,12 @@ begin
   Result:=arARM64
   {$endif aarch64}
 
-  {$ifdef sparc}
-  Result:=arSparc;
-  {$endif sparc}
 
-  {$ifdef sparc64}
-  Result:=arSparc64;
-  {$endif sparc64}
 
   {$ifdef CPUX86_64}
   Result:=arIntelX64;
   {$endif x86_64}
 
-  {$ifdef mipsel}
-  Result:=arMipsel
-  {$else : not mipsel}
-    {$ifdef mips}
-      Result:=arMips;
-    {$endif mips}
-  {$endif not mipsel}
 
 
 

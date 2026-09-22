@@ -1,5 +1,5 @@
 { %interactive }
-{ %target=win32, win64 }
+{ %target=win64}
 
 program consoleutf8;
 

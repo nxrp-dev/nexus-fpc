@@ -34,23 +34,8 @@ endif
 
 # New compiler
 ifndef PPNEW
-ifeq ($(CPU_TARGET),i386)
-PPSUF=386
-endif
 ifeq ($(CPU_TARGET),x86_64)
 PPSUF=x64
-endif
-ifeq ($(CPU_TARGET),sparc)
-PPSUF=sparc
-endif
-ifeq ($(CPU_TARGET),sparc64)
-PPSUF=sparc64
-endif
-ifeq ($(CPU_TARGET),powerpc)
-PPSUF=ppc
-endif
-ifeq ($(CPU_TARGET),powerpc64)
-PPSUF=ppc64
 endif
 ifeq ($(CPU_TARGET),alpha)
 PPSUF=axp
@@ -60,15 +45,6 @@ PPSUF=arm
 endif
 ifeq ($(CPU_TARGET),armeb)
 PPSUF=arm
-endif
-ifeq ($(CPU_TARGET),mips)
-PPSUF=mips
-endif
-ifeq ($(CPU_TARGET),mipsel)
-PPSUF=mipsel
-endif
-ifeq ($(CPU_TARGET),mips64el)
-PPSUF=mips64el
 endif
 ifeq ($(CPU_TARGET),aarch64)
 PPSUF=a64
@@ -122,7 +98,7 @@ ALLTARGET=all
 else
 ifndef ALLTARGET
 SHAREDTARGETS=
-SMARTTARGETS=win32 go32v2 linux freebsd netbsd openbsd darwin
+SMARTTARGETS=linux freebsd netbsd openbsd darwin
 ifneq ($(findstring $(OS_TARGET),$(SHAREDTARGETS)),)
 ALLTARGET=shared
 else
@@ -179,7 +155,7 @@ endif
 # some targets do not generate PIC by default so we have select explicitly
 # the general threading model when compiling the final versions of rtl and packages
 ifneq ($(findstring $(OS_TARGET),linux),)
-ifneq ($(findstring $(CPU_TARGET),i386 arm),)
+ifneq ($(findstring $(CPU_TARGET),arm),)
 override OPTNEW+=-CVglobal-dynamic
 endif
 endif

@@ -204,12 +204,6 @@ $(error When compiling for arm-embedded, a sub-architecture (e.g. SUBARCH=armv4t
 endif
 override FPCOPT+=-Cp$(SUBARCH)
 endif
-ifeq ($(CPU_OS_TARGET),mipsel-embedded)
-ifeq ($(SUBARCH),)
-$(error When compiling for mipsel-embedded, a sub-architecture (e.g. SUBARCH=pic32mx) must be defined)
-endif
-override FPCOPT+=-Cp$(SUBARCH)
-endif
 ifeq ($(CPU_OS_TARGET),arm-freertos)
 ifeq ($(SUBARCH),)
 $(error When compiling for arm-freertos, a sub-architecture (e.g. SUBARCH=armv6m or SUBARCH=armv7em) must be defined)
@@ -304,11 +298,7 @@ ifeq ($(OS_TARGET),android)
 ifeq ($(CPU_TARGET),arm)
 BINUTILSPREFIX=arm-linux-androideabi-
 else
-ifeq ($(CPU_TARGET),i386)
-BINUTILSPREFIX=i686-linux-android-
-else
 BINUTILSPREFIX=$(CPU_TARGET)-linux-android-
-endif
 endif
 endif
 endif
@@ -1170,10 +1160,6 @@ EXEEXT=
 HASSHAREDLIB=1
 SHORTSUFFIX=obs
 endif
-ifeq ($(OS_TARGET),win32)
-SHAREDLIBEXT=.dll
-SHORTSUFFIX=w32
-endif
 ifeq ($(OS_TARGET),atari)
 EXEEXT=.ttp
 SHORTSUFFIX=ata
@@ -1628,7 +1614,7 @@ ifdef CREATESHARED
 override FPCOPT+=-Cg
 endif
 ifneq ($(filter $(OS_TARGET),dragonfly freebsd openbsd netbsd linux solaris),)
-ifneq ($(filter $(CPU_TARGET),x86_64 mips mipsel mips64 mips64el powerpc64),)
+ifneq ($(filter $(CPU_TARGET),x86_64),)
 override FPCOPT+=-Cg
 endif
 endif
@@ -2362,7 +2348,7 @@ sysutils$(PPUEXT) : $(SYSUTILS_DEPS)
 	$(COMPILER) -Fi$(OBJPASDIR)/sysutils $<
 System.SysUtils$(PPUEXT) : $(NSINC)/System.SysUtils.pp $(SYSUTILS_DEPS)
 	$(COMPILER) $(SYSUTILS_OPT) -Fi$(OBJPASDIR)/sysutils -Fi$(SYSUTILSDIR) $<
-ifneq ($(findstring $(ARCH),aarch64 arm powerpc powerpc64),)
+ifneq ($(findstring $(ARCH),aarch64 arm),)
 CLASSES_DEPS_CPU:=$(CLASSES_DEPS_CPU) $(INTRINSICSUNIT)$(PPUEXT)
 endif
 CLASSES_DEPS=$(CLASSESDIR)/classes.pp $(TTHREADINCDIR)/tthread.inc $(wildcard $(OBJPASDIR)/classes/*.inc) \

@@ -1,4 +1,4 @@
-{ %cpu=arm }
+{ %cpu=arm}
 program tb0597;
 
 var x: longword;

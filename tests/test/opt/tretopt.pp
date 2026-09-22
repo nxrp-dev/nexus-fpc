@@ -257,32 +257,6 @@ var
   t: tr;
 begin
   asm
-{$ifdef cpupowerpc32}
-    la  r3,t
-  {$if not defined(macos) and not defined(aix)}
-    lis  r4,p3@ha
-    addi r4,r4,p3@l
-  {$else}
-    lwz  r4,p3(r2)
-  {$endif}
-    stw  r3,0(r4)
-{$endif}
-{$ifdef cpupowerpc64}
-    la  r3,t
-{$if defined(darwin)}
-    lis  r4, p3@ha
-    std  r3,p3@l(r4)
-{$elseif defined(aix)}
-    ld   r4,p3(r2)
-    std  r3,0(r4)
-{$else}
-    lis  r4, p3@highesta
-    ori  r4, r4, p3@highera
-    sldi r4, r4, 32
-    oris r4, r4, p3@ha
-    std  r3,p3@l(r4)
-{$endif darwin}
-{$endif cpupowerpc64}
 {$ifdef cpui386}
     leal t,%eax
 {$ifndef FPC_PIC}
@@ -313,32 +287,6 @@ var
 begin
   inlined:=true;
   asm
-{$ifdef cpupowerpc32}
-    la  r3,t
-  {$if not defined(macos) and not defined(aix)}
-    lis  r4,p3@ha
-    addi r4,r4,p3@l
-  {$else}
-    lwz  r4,p3(r2)
-  {$endif}
-    stw  r3,0(r4)
-{$endif}
-{$ifdef cpupowerpc64}
-    la  r3,t
-{$if defined(darwin)}
-    lis  r4, p3@ha
-    std  r3,p3@l(r4)
-{$elseif defined(aix)}
-    ld   r4,p3(r2)
-    std  r3,0(r4)
-{$else}
-    lis  r4, p3@highesta
-    ori  r4, r4, p3@highera
-    sldi r4, r4, 32
-    oris r4, r4, p3@ha
-    std  r3,p3@l(r4)
-{$endif darwin}
-{$endif cpupowerpc64}
 {$ifdef cpui386}
     leal t,%eax
 {$ifndef FPC_PIC}

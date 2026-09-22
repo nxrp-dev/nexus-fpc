@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 { %fail }
 
 // push and pop with 32-bit operands aren't encodable in x86_64

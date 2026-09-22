@@ -1,4 +1,4 @@
-{ %cpu=i386,x86_64 }
+{ %cpu=x86_64}
 { %opt=-Cpcoreavx2 }
 function popc ( a, b: byte):byte;
 var z,v: byte;

@@ -1,5 +1,5 @@
 { %FAIL }
-{ %CPU=i8086 }
+{ %CPU=i8086}
 
 program tanonfunc58;
 

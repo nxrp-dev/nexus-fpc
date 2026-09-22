@@ -215,19 +215,11 @@ const
   KD_TEXT0        = 2;    {obsolete}
   KD_TEXT1        = 3;    {obsolete}
 
-{$if defined(cpumips) or defined(cpumipsel)}
-  MAP_GROWSDOWN  = $1000;       { stack-like segment }
-  MAP_DENYWRITE  = $2000;       { ETXTBSY }
-  MAP_EXECUTABLE = $4000;      { mark it as an executable }
-  MAP_LOCKED     = $8000;      { pages are locked }
-  MAP_NORESERVE  = $4000;      { don't check for reservations; not defined for linux/mips? }
-{$else cpumips}
   MAP_GROWSDOWN  = $100;       { stack-like segment }
   MAP_DENYWRITE  = $800;       { ETXTBSY }
   MAP_EXECUTABLE = $1000;      { mark it as an executable }
   MAP_LOCKED     = $2000;      { pages are locked }
   MAP_NORESERVE  = $4000;      { don't check for reservations }
-{$endif cpumips}
 
 type
   TCloneFunc = function(args:pointer):longint;cdecl;
@@ -698,13 +690,9 @@ end;
 
 function sync_file_range(fd: cInt; offset: off64_t; nbytes: off64_t; flags: cuInt): cInt;
 begin
-{$if defined(cpupowerpc) or defined(cpuarm)}
+{$if defined(cpuarm)}
   sync_file_range := do_syscall(syscall_nr_sync_file_range2, TSysParam(fd), TSysParam(flags),
     TSysParam(hi(offset)), TSysParam(lo(offset)), TSysParam(hi(nbytes)), TSysParam(lo(nbytes)));
-{$else}
-{$if defined(cpupowerpc64)}
-  sync_file_range := do_syscall(syscall_nr_sync_file_range2, TSysParam(fd), TSysParam(flags),
-    TSysParam(offset), TSysParam(nbytes));
 {$else}
 {$ifdef cpu64}
   sync_file_range := do_syscall(syscall_nr_sync_file_range, TSysParam(fd), TSysParam(offset),
@@ -712,7 +700,6 @@ begin
 {$else}
   sync_file_range := do_syscall(syscall_nr_sync_file_range, TSysParam(fd), TSysParam(lo(offset)),
     TSysParam(hi(offset)), TSysParam(lo(nbytes)), TSysParam(hi(nbytes)), TSysParam(flags));
-{$endif}
 {$endif}
 {$endif}
 end;
@@ -876,10 +863,7 @@ end;
 
 { on 32 bit systems, we should use the 64 bit time calls }
 {$if (sizeof(time_t)<=4)}
-  { mipsel-android doesn't have them as it is not part of newer android versions anymode }
-  {$if not(defined(ANDROID) and defined(CPUMIPSEL))}
     {$define USE_TIME64}
-  {$endif  not(defined(ANDROID) and defined(CPUMIPSEL))}
 {$endif (sizeof(clong)<=4)}
 
 Function utimensat(dfd: cint; path:PAnsiChar;const times:TTimespecArr;flags:cint):cint;

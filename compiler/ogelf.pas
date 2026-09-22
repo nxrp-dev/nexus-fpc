@@ -76,9 +76,6 @@ interface
        public
          ident: TElfIdent;
          flags: longword;
-{$ifdef mips}
-         gp_value: longword;
-{$endif mips}
          constructor create(const n:string);override;
          function  sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;override;
          procedure CreateDebugSections;override;
@@ -3129,9 +3126,7 @@ implementation
       pltreltags: array[boolean] of longword=(DT_REL,DT_RELA);
       relsztags:  array[boolean] of longword=(DT_RELSZ,DT_RELASZ);
       relenttags: array[boolean] of longword=(DT_RELENT,DT_RELAENT);
-      {$ifndef MIPS}
       relcnttags: array[boolean] of longword=(DT_RELCOUNT,DT_RELACOUNT);
-      {$endif MIPS}
 
     procedure TElfExeOutput.FinishDynamicTags;
       var
@@ -3156,10 +3151,8 @@ implementation
             writeDynTag(pltreltags[rela],dynrelocsec);
             writeDynTag(relsztags[rela],dynrelocsec.Size);
             writeDynTag(relenttags[rela],dynrelocsec.shentsize);
-{$ifndef MIPS}
             if (relative_reloc_count>0) then
               writeDynTag(relcnttags[rela],relative_reloc_count);
-{$endif MIPS}
           end;
 
         WriteTargetDynamicTags;

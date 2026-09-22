@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 { Old file: tbs0057.pp }
 {  Graph, shows a crash with switch graph/text/graph    OK 0.99.9 (PM) }

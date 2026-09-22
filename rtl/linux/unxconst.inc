@@ -80,9 +80,5 @@ Const
   fs_xia      = $012FD16D;
 
   {Constants Termios/Ioctl (used in Do_IsDevice) }
-  {$if defined(PowerPC) or defined(Powerpc64)}
-  IOCtl_TCGETS=$402c7413;
-  {$else}
   IOCtl_TCGETS=$5401; // TCGETS is also in termios.inc, but the sysunix needs only this
-  {$endif}
 

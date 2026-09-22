@@ -532,11 +532,6 @@ end;
 
 initialization
   RegisterLinker(ld_haiku,TLinkerhaiku);
-{$ifdef i386}
-  RegisterImport(system_i386_haiku,timportlibhaiku);
-  RegisterExport(system_i386_haiku,texportlibhaiku);
-  RegisterTarget(system_i386_haiku_info);
-{$endif i386}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_haiku,timportlibhaiku);
   RegisterExport(system_x86_64_haiku,texportlibhaiku);

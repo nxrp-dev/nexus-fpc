@@ -1,4 +1,4 @@
-{ %CPU=wasm32 }
+{ %CPU=wasm32}
 program tthunkcl2;
 
 {$mode objfpc}

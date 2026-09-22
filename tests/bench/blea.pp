@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 program blea;
 
 {$IF not defined(CPUX86) and not defined(CPUX86_64)}

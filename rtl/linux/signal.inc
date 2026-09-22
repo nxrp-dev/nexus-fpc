@@ -20,29 +20,12 @@
 
 Const
   { For sending a signal }
-{$if defined(CPUSPARC) or defined(CPUSPARC64)}
-  SA_SIGINFO   = $200;
-  SA_NOMASK    = $20;
-
-  SIG_BLOCK   = 1;
-  SIG_UNBLOCK = 2;
-  SIG_SETMASK = 4;
-{$else : not (CPUSPARC or CPUSPARC64)}
-{$ifdef CPUMIPS}
-  SA_NOCLDSTOP = 1;
-  SA_NOCLDWAIT = $10000;
-  SA_SIGINFO   = 8;
-  SIG_BLOCK   = 1;
-  SIG_UNBLOCK = 2;
-  SIG_SETMASK = 3;
-{$else CPUMIPS}
   SA_NOCLDSTOP = 1;
   SA_NOCLDWAIT = 2;
   SA_SIGINFO   = 4;
   SIG_BLOCK   = 0;
   SIG_UNBLOCK = 1;
   SIG_SETMASK = 2;
-{$endif CPUMIPS}
   SA_RESTORER  = $04000000;
   SA_ONSTACK   = $08000000;
   SA_RESTART   = $10000000;
@@ -53,48 +36,11 @@ Const
   SA_NOMASK    = SA_NODEFER;
   SA_ONESHOT   = SA_RESETHAND;
 
-{$endif not (CPUSPARC or CPUSPARC64) }
 
   SIG_DFL = 0 ;
   SIG_IGN = 1 ;
   SIG_ERR = -1 ;
 
-{$if defined(CPUSPARC) or defined(CPUSPARC64)}
-  SIGHUP     = 1;
-  SIGINT     = 2;
-  SIGQUIT    = 3;
-  SIGILL     = 4;
-  SIGTRAP    = 5;
-  SIGABRT    = 6;
-  SIGIOT     = 6;
-  SIGEMT     = 7;
-  SIGFPE     = 8;
-  SIGKILL    = 9;
-  SIGBUS     = 10;
-  SIGSEGV    = 11;
-  SIGSYS     = 12;
-  SIGPIPE    = 13;
-  SIGALRM    = 14;
-  SIGTERM    = 15;
-  SIGURG     = 16;
-  SIGSTOP    = 17;
-  SIGTSTP    = 18;
-  SIGCONT    = 19;
-  SIGCHLD    = 20;
-  SIGTTIN    = 21;
-  SIGTTOU    = 22;
-  SIGIO      = 23;
-  SIGPOLL    = SIGIO;
-  SIGXCPU    = 24;
-  SIGXFSZ    = 25;
-  SIGVTALRM  = 26;
-  SIGPROF    = 27;
-  SIGWINCH   = 28;
-  SIGLOST    = 29;
-  SIGPWR     = SIGLOST;
-  SIGUSR1    = 30;
-  SIGUSR2    = 31;
-{$else defined(CPUSPARC) or defined(CPUSPARC64)}
   SIGHUP     = 1;
   SIGINT     = 2;
   SIGQUIT    = 3;
@@ -108,28 +54,6 @@ Const
   SIGPIPE    = 13;
   SIGALRM    = 14;
   SIGTERM    = 15;
-{$ifdef CPUMIPS}
-  SIGEMT     = 7;
-  SIGBUS     = 10;
-  SIGSYS     = 12;
-  SIGUSR1    = 16;
-  SIGUSR2    = 17;
-  SIGCHLD    = 18;
-  SIGPWR     = 19;
-  SIGWINCH   = 20;
-  SIGURG     = 21;
-  SIGIO      = 22;
-  SIGPOLL    = 22;
-  SIGSTOP    = 23;
-  SIGTSTP    = 24;
-  SIGCONT    = 25;
-  SIGTTIN    = 26;
-  SIGTTOU    = 27;
-  SIGVTALRM  = 28;
-  SIGPROF    = 29;
-  SIGXCPU    = 30;
-  SIGXFSZ    = 31;
-{$else not CPUMIPS}
   SIGBUS     = 7;
   SIGUSR1    = 10;
   SIGUSR2    = 12;
@@ -150,8 +74,6 @@ Const
   SIGPOLL    = SIGIO;
   SIGPWR     = 30;
   SIGUNUSED  = 31;
-{$endif not CPUMIPS}
-{$endif defined(CPUSPARC) or defined(CPUSPARC64)}
 
 { si_code field values for tsiginfo.si_code when si_signo = SIGFPE }
 const
@@ -176,13 +98,8 @@ type
   psiginfo = ^tsiginfo;
   tsiginfo = record
        si_signo : longint;
-{$ifdef CPUMIPS}
-       si_code : longint;
-       si_errno : longint;
-{$else not CPUMIPS}
        si_errno : longint;
        si_code : longint;
-{$endif not CPUMIPS}
        _sifields : record
            case longint of
               0 : ( _pad : array[0..(SI_PAD_SIZE)-1] of longint );
@@ -241,20 +158,10 @@ type
     sa_restorer: sigrestorerhandler_t;
   end;
 {$else}
-  {$ifdef cpumips}
-  sigactionrec = record
-    sa_flags: cuint;
-    sa_handler: sigactionhandler_t;
-    sa_mask: sigset_t;
-    sa_restorer: sigrestorerhandler_t; { Doesn't seem to exist on MIPS }
-    sa_resv :  array [0..0] of cint;
-  end;
-  {$else not mips}
   sigactionrec = record
     sa_handler: sigactionhandler_t;
     sa_flags: culong;
     sa_restorer: sigrestorerhandler_t;
     sa_mask: sigset_t;
   end;
-  {$endif not mips}
 {$endif}

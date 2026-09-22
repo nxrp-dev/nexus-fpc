@@ -1,4 +1,4 @@
-{ %cpu=i386,x86_64 }
+{ %cpu=x86_64}
 { %norun }
 { %opt=-Rintel -O4 -a }
 

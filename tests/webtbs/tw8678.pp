@@ -1,4 +1,4 @@
-{ %cpu=powerpc,powerpc64,sparc,arm,x86_64 }
+{ %cpu=arm,x86_64}
 
 var
   l: longint;

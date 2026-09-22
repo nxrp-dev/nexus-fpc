@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 
 function proc_msabidefault(para1,para2,para3,para4: qword): boolean; ms_abi_default;
 assembler;

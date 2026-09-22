@@ -1,5 +1,5 @@
 { %norun }
-{ %cpu=arm }
+{ %cpu=arm}
 
 begin
   asm

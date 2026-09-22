@@ -14,14 +14,6 @@
  **********************************************************************}
 
   fMachineType:=mmtpowerpc; //default
-  {$IFDEF CPUPOWERPC32}
-  fMachineType:=mmtpowerpc;
-  fSubMachineType.fPpcSubType:=msmppc_all;
-  {$ENDIF}
-  {$IFDEF CPUPOWERPC64}
-  fMachineType:=mmtpowerpc64;
-  fSubMachineType.fPpc64SubType:=msmppc64_all;
-  {$ENDIF}
   {$IFDEF CPUI386}
   fMachineType:=mmti386;
   fSubMachineType.f386SubType:=msm386_all;

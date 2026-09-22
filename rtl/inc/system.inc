@@ -202,21 +202,7 @@ function do_isdevice(handle:thandle):boolean;forward;
   {$define SYSPROCDEFINED}
 {$endif cpux86_64}
 
-{$ifdef cpupowerpc32}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i powerpc.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpupowerpc32}
 
-{$ifdef cpupowerpc64}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i powerpc64.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpupowerpc64}
 
 {$ifdef cpualpha}
   {$ifdef SYSPROCDEFINED}
@@ -234,21 +220,7 @@ function do_isdevice(handle:thandle):boolean;forward;
   {$define SYSPROCDEFINED}
 {$endif cpuiA64}
 
-{$ifdef cpusparc}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i sparc.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpusparc}
 
-{$ifdef cpusparc64}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i sparc64.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpusparc64}
 
 {$ifdef cpuarm}
   {$ifdef SYSPROCDEFINED}
@@ -268,38 +240,9 @@ function do_isdevice(handle:thandle):boolean;forward;
 {$endif cpuarm}
 
 
-{$ifdef cpumipsel}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  { there is no mipsel.inc, we use mips.inc instead }
-  {$i mips.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpumipsel}
 
-{$ifdef cpumipseb}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i mips.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpumipseb}
 
-{$ifdef cpumips64el}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i mips64el.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpumips64el}
 
-{$ifdef cpumips64eb}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i mips64.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpumips64eb}
 
 {$ifdef cpuaarch64}
   {$ifdef SYSPROCDEFINED}

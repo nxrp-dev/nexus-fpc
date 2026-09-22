@@ -75,14 +75,11 @@ SYSINIT_UNITS=
 
 LOADERS=prt0 dllprt0
 
-ifeq ($(findstring $(ARCH),i386 x86_64 arm),$(ARCH))
+ifeq ($(findstring $(ARCH),x86_64 arm),$(ARCH))
 CPU_UNITS=$(CPUUNIT)
 endif
 ifeq ($(ARCH),x86_64)
 CPU_UNITS+=$(INTRINSICSUNIT)
-endif
-ifeq ($(ARCH),i386)
-CPU_UNITS+=$(MMXUNIT) $(INTRINSICSUNIT)
 endif
 ifeq ($(ARCH),aarch64)
 CPU_UNITS+=$(INTRINSICSUNIT)
@@ -119,14 +116,7 @@ SYSCPUDEPS=$(addprefix $(PROCINC)/,$(CPUINCNAMES))
 SYSDEPS=$(SYSINCDEPS) $(SYSCPUDEPS)
 
 # Select 32/64 mode
-ifeq ($(ARCH),i386)
-  ASTARGET=--32
-endif
 
-# Select mips32 instruction set and PIC for MIPS
-ifeq ($(ARCH),mipsel)
-  ASTARGET=-mips32 -KPIC
-endif
 
 ifneq ($(findstring $(ARCH),aarch64 x86_64),)
   CPUBITS=64

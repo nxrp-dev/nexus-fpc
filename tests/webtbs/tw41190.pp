@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 program test;
 {$mode objfpc}
 

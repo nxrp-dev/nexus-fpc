@@ -1,5 +1,5 @@
-{ %target=linux,darwin,freebsd,netbsd,openbsd,sunos,beos,haiku }
-{ %cpu=x86_64,powerpc64,mips64,sparc64,ia64,alpha }
+{ %target=linux,darwin,freebsd,netbsd,openbsd,sunos,haiku}
+{ %cpu=x86_64,ia64,alpha}
 { %opt=-Xa }
 
 { windows does not support statics > 2GB }

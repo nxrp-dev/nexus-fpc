@@ -1,5 +1,5 @@
-{%target=win32,win64,wince}
-{%cpu=x86_64,i386,arm}
+{%target=win64,wince}
+{%cpu=x86_64,arm}
 {%result=229}
 
 {$mode objfpc}

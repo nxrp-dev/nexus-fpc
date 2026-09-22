@@ -68,31 +68,6 @@ interface
          addr_full,
          addr_pic,
          addr_pic_no_got
-         {$IF defined(POWERPC) or defined(POWERPC64) or defined(SPARC) or defined(MIPS) or defined(SPARC64)}
-         ,
-         { since we have only 16bit offsets, we need to be able to specify the high
-           and lower 16 bits of the address of a symbol of up to 64 bit }
-         addr_low,         // bits 48-63
-         addr_high,        // bits 32-47
-         {$IF defined(POWERPC64)}
-         addr_higher,      // bits 16-31
-         addr_highest,     // bits 00-15
-         {$ENDIF}
-         addr_higha        // bits 16-31, adjusted
-         {$IF defined(POWERPC64)}
-         ,
-         addr_highera,     // bits 32-47, adjusted
-         addr_highesta     // bits 48-63, adjusted
-         {$ENDIF}
-         {$ENDIF POWERPC or POWERPC64 or SPARC or MIPS or SPARC64}
-         {$IFDEF MIPS}
-         ,
-         addr_pic_call16,  // like addr_pic, but generates call16 reloc instead of got16
-         addr_low_pic,     // for large GOT model, generate got_hi16 and got_lo16 relocs
-         addr_high_pic,
-         addr_low_call,    // counterpart of two above, generate call_hi16 and call_lo16 relocs
-         addr_high_call
-         {$ENDIF}
          {$IFDEF Z80}
          ,addr_lo8
          ,addr_hi8
@@ -108,10 +83,6 @@ interface
          ,addr_gotpage
          ,addr_gotpageoffset
          {$ENDIF AARCH64}
-         {$ifdef SPARC64}
-         ,addr_gdop_hix22
-         ,addr_gdop_lox22
-         {$endif SPARC64}
          {$IFDEF ARM}
          ,addr_gottpoff
          ,addr_tpoff

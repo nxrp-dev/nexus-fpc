@@ -1,5 +1,5 @@
 { %opt=-vw -Sew }
-{ %cpu=x86_64,i386 }
+{ %cpu=x86_64}
 Function Fast_ReciprocalSquareRoot(number: Single): Single;
     Begin
         Asm

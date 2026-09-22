@@ -1,4 +1,4 @@
-{ %cpu=avr }
+{ %cpu=avr}
 { %norun }
 const
   foo = %00011000;

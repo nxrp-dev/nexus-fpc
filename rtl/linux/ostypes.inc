@@ -198,7 +198,7 @@ type
    kernel_off_t = clong;
    kernel_loff_t = clonglong;
 
-{$if defined(cpu32) and not(defined(cpupowerpc)) and not(defined(cpumips)) and not defined(cpumipsel))}
+{$if defined(cpu32)}
    kernel_mode_t = cushort;
    kernel_uid_t = cushort;
    kernel_gid_t = cushort;
@@ -215,9 +215,6 @@ type
                 l_start : kernel_off_t; { starting offset }
                 l_len   : kernel_off_t; { len = 0 means until end of file }
                 l_pid   : pid_t;        { lock owner }
-{$if defined(cpusparc) or defined(cpusparc64)}
-                __pad   : cshort;
-{$endif}
                End;
 
 {$ifndef cpu64}
@@ -227,9 +224,6 @@ type
                 l_start : kernel_loff_t; { starting offset }
                 l_len   : kernel_loff_t; { len = 0 means until end of file }
                 l_pid   : pid_t;         { lock owner }
-{$ifdef cpusparc}
-                __pad   : cshort;
-{$endif}
                End;
 {$endif}
 
@@ -293,32 +287,6 @@ CONST
     O_RDONLY  =          0;        { Open read-only.  }
     O_WRONLY  =          1;        { Open write-only. }
     O_RDWR    =          2;        { Open read/write. }
-{$if defined(cpusparc) or defined(cpusparc64)}
-    O_APPEND  =          8;
-    O_CREAT   =       $200;
-    O_TRUNC   =       $400;
-    O_EXCL    =       $800;
-    O_SYNC    =      $2000;
-    O_NONBLOCK =     $4000;
-    O_NDELAY  =      O_NONBLOCK or 4;
-    O_NOCTTY  =      $8000;
-    O_DIRECTORY =   $10000;
-    O_NOFOLLOW =    $20000;
-    O_DIRECT  =    $100000;
-{$else : not (cpusparc or cpusparc64)}
-{$ifdef cpumips}
-    O_CREAT   =       $100;
-    O_EXCL    =       $400;
-    O_NOCTTY  =       $800;
-    O_TRUNC   =       $200;
-    O_APPEND  =         $8;
-    O_NONBLOCK =       $80;
-    O_NDELAY  =     O_NONBLOCK;
-    O_SYNC    =        $10;
-    O_DIRECT  =      $8000;
-    O_DIRECTORY =   $10000;
-    O_NOFOLLOW =    $20000;
-{$else : not cpumips}
     O_CREAT   =        $40;
     O_EXCL    =        $80;
     O_NOCTTY  =       $100;
@@ -330,8 +298,6 @@ CONST
     O_DIRECT  =      $4000;
     O_DIRECTORY =   $10000;
     O_NOFOLLOW =    $20000;
-{$endif not cpumips}
-{$endif not (cpusparc or cpusparc64)}
 
     AT_FDCWD = -100;
     AT_SYMLINK_NOFOLLOW = $100;
@@ -351,17 +317,8 @@ CONST
 {$if defined(cpuarm) or defined(cpualpha) or defined(cpublackfin) or defined(cpum68k) or defined(cpuaarch64)}
     O_LARGEFILE =   $20000;
 {$endif}
-{$if defined(cpusparc) or defined(cpusparc64)}
-    O_LARGEFILE =   $40000;
-{$endif}
-{$if defined(cpupowerpc)}
-    O_LARGEFILE =   $10000;
-{$endif}
 {$if defined(cpui386) or defined(cpux86_64) or defined(cpuia64)}
     O_LARGEFILE =    $8000;
-{$endif}
-{$if defined(cpumips) or defined(cpumipsel)}
-    O_LARGEFILE =    $2000;
 {$endif}
     { mode_t possible values                                 }
     S_IRUSR =  %0100000000;     { Read permission for owner   }
@@ -399,21 +356,12 @@ CONST
   MAP_PRIVATE   =2;
  {$ENDIF}
 
- {$if defined(cpumips) or  defined(cpumipsel)}
-  MAP_ANONYMOUS  = $800;
-  MAP_GROWSDOWN  = $1000;       { stack-like segment }
-  MAP_DENYWRITE  = $2000;       { ETXTBSY }
-  MAP_EXECUTABLE = $4000;      { mark it as an executable }
-  MAP_LOCKED     = $8000;      { pages are locked }
-  MAP_NORESERVE  = $4000;      { don't check for reservations }
- {$else}
   MAP_ANONYMOUS  = $20;
   MAP_GROWSDOWN  = $100;       { stack-like segment }
   MAP_DENYWRITE  = $800;       { ETXTBSY }
   MAP_EXECUTABLE = $1000;      { mark it as an executable }
   MAP_LOCKED     = $2000;      { pages are locked }
   MAP_NORESERVE  = $4000;      { don't check for reservations }
- {$endif cpumips}
 
   { For File control mechanism }
   F_GetFd  = 1;
@@ -421,19 +369,11 @@ CONST
   F_GetFl  = 3;
   F_SetFl  = 4;
 
-{$if defined(cpusparc) or defined(cpusparc64)}
-  F_GetLk  = 7;
-  F_SetLk  = 8;
-  F_SetLkW = 9;
-  F_SetOwn = 5;
-  F_GetOwn = 6;
-{$else}
   F_GetLk  = 5;
   F_SetLk  = 6;
   F_SetLkW = 7;
   F_SetOwn = 8;
   F_GetOwn = 9;
-{$endif}
 
   F_SETLEASE = 1024;
   F_GETLEASE = 1025;
@@ -490,17 +430,6 @@ type
   tcpu_set_t = cpu_set_t;
   pcpu_set_t = ^tcpu_set_t;
 
-{$if defined(cpupowerpc)}
-const
-  { FP exception related constants for prctl(); PowerPC specific }
-  PR_GET_FPEXC    = 11;   { get floating point exception mode }
-  PR_SET_FPEXC    = 12;   { set floating point exception mode }
-
-  PR_FP_EXC_DISABLED = 0; { FP exceptions disabled }
-  PR_FP_EXC_NONREC   = 1; { async non-recoverable exc. mode }
-  PR_FP_EXC_ASYNC    = 2; { async recoverable exc. mode }
-  PR_FP_EXC_PRECISE  = 3; { precise exception mode }
-{$endif}
 
     {*************************************************************************}
     {                               SIGNALS                                   }

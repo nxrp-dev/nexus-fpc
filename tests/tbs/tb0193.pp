@@ -24,23 +24,6 @@ end ['EAX'];
 end ['D0'];
 {$define implemented}
 {$endif CPU68K}
-{$ifdef cpupowerpc}
-{$if not defined(macos) and not defined(aix)}
-       lis r3, stacksize@ha
-       lwz r3, stacksize@l(r3)
-{$else macos}
-       lwz r3, stacksize(r2)
-       lwz r3, 0(r3)
-{$endif macos}
-end;
-{$define implemented}
-{$endif cpupowerpc}
-{$ifdef cpusparc}
-       sethi   %hi(stacksize),%i0
-       or      %i0,%lo(stacksize),%i0
-end;
-{$define implemented}
-{$endif cpusparc}
 {$ifdef cpuarm}
        ldr r0,.Lpstacksize
        ldr r0,[r0]
@@ -51,12 +34,6 @@ end;
 end;
 {$define implemented}
 {$endif cpuarm}
-{$ifdef cpumips}
-  la $v0,stacksize
-  lw $v0,($v0)
- end;
-{$define implemented}
-{$endif cpumips}
 {$ifdef cpuaarch64}
   adrp x0,stacksize@PAGE
   ldr  x0,[x0,stacksize@PAGEOFF]

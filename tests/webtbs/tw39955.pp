@@ -1,4 +1,4 @@
-{ %cpu=i386,i8086 }
+{ %cpu=i8086}
 { %opt=-Op80386 -O2 }
 const
   StrLen = 11 {5 or 11};

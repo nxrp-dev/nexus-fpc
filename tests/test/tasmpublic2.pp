@@ -1,4 +1,4 @@
-{ %CPU=i8086 }
+{ %CPU=i8086}
 program tasmpublic2;
 
 {$goto on}

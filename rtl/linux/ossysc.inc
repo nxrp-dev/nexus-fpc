@@ -135,8 +135,7 @@ end;
 function Fpstat(path: PAnsiChar; var buf: stat):cint; [public, alias : 'FPC_SYSC_STAT'];
 
 begin
-{ standard stat call is 32 bit on sparc64, so explicitly force a stat64 call }
-{$if defined(cpu64) and not(defined(cpusparc64))}
+{$if defined(cpu64)}
   {$if defined(generic_linux_syscalls)}
     Fpstat:=do_syscall(syscall_nr_fstatat,AT_FDCWD,TSysParam(path),TSysParam(@buf),0);
   {$else}
@@ -264,17 +263,6 @@ end;
 }
 
 
-{$if defined(cpusparc) or defined(cpusparc64)}
-procedure Fprt_sigreturn_stub;assembler;nostackframe;
-asm
-  mov syscall_nr_rt_sigreturn,%g1
-  {$ifdef cpusparc}
-  ta  0x10
-  {$else}
-  ta 0x6d
-  {$endif}
-end;
-{$endif cpusparc or cpusparc64}
 
 {$if defined(android)}
 
@@ -364,17 +352,6 @@ function Fpsigaction(sig: cint; new_action, old_action: psigactionrec): cint; [p
   If OldAct is non-nil the previous action is saved there.
 }
 begin
-{$if defined(cpusparc) or defined(cpusparc64)}
-  { Sparc has an extra stub parameter }
-{$ifdef cpusparc}
-  { it seems that rt_sigreturn only works correctly for 32-bit if SA_SIGINFO is set }
-  if new_action <> nil then
-    new_action^.sa_flags:=new_action^.sa_flags or SA_SIGINFO;
-{$endif}
-  { the -8 stems from the fact that the adress is supposed to be a value from a sub-routine
-    call stored into register %i7 to which +8 is added upon return }
-  Fpsigaction:=do_syscall(syscall_nr_rt_sigaction,TSysParam(sig),TSysParam(new_action),TSysParam(old_action),TSysParam(ptruint(@Fprt_sigreturn_stub)-8),TSysParam(8));
-{$else not (defined(cpusparc) or defined(cpusparc64))}
 {$ifdef NEED_USER_TRAMPOLINE}
   if new_action <> nil then
   begin
@@ -393,18 +370,13 @@ begin
 {$endif}
   Fpsigaction:=do_syscall(syscall_nr_rt_sigaction,TSysParam(sig),
                           TSysParam(new_action),TSysParam(old_action),
-  {$ifdef cpumips}
-                          TSysParam(16{should be wordsinsigset})
-  {$else not cpumips}
                           TSysParam(8)
-  {$endif not cpumips}
                           );
-{$endif cpusparc}
 end;
 
 { this is used by the FpFtruncate below. for more information,
   check the syscall() Linux man page (KB) }
-{$if defined(FPC_ABI_EABI) or defined(CPUMIPS32) or defined(CPUMIPSEL32) or defined(CPUPOWERPC32)}
+{$if defined(FPC_ABI_EABI)}
 {$define FPC_ALIGN_DUMMY}
 {$endif}
 
@@ -443,7 +415,7 @@ end;
 function Fpfstat(fd : cint; var sb : stat): cint;  [public, alias : 'FPC_SYSC_FSTAT'];
 
 begin
-{$if defined(cpu64) and not(defined(cpusparc64))}
+{$if defined(cpu64)}
   {$if defined(generic_linux_syscalls)}
     FpFStat:=do_SysCall(syscall_nr_fstat,TSysParam(fd),TSysParam(@sb));
   {$else}
@@ -711,11 +683,7 @@ function FPSigProcMask(how:cint;nset : psigset;oset : psigset):cint; [public, al
 begin
   FPsigprocmask:=do_syscall(syscall_nr_rt_sigprocmask,TSysParam(how),
 		                    TSysParam(nset),TSysParam(oset),
-{$ifdef CPUMIPS}
-							TSysParam(16)
-{$else not CPUMIPS}
 							TSysParam(8)
-{$endif not CPUMIPS}
 					);
 end;
 
@@ -769,13 +737,6 @@ begin
 end;
 {$endif}
 
-{$if defined(cpupowerpc)}
-{ fpprctl() call }
-function fpprctl(option : cint; const arg : ptruint) : cint;
-begin
-  fpprctl := do_syscall(syscall_nr_prctl, option, arg);
-end;
-{$endif}
 
 function FpSetRLimit(Resource:cint;rlim:PRLimit):cint; [public, alias : 'FPC_SYSC_SETRLIMIT'];
 begin

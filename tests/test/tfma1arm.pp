@@ -1,4 +1,4 @@
-{ %CPU=arm }
+{ %CPU=arm}
 { %OPT=-Cfvfpv4 }
 uses
   cpu;

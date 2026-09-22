@@ -1,4 +1,4 @@
-{ %CPU=i8086 }
+{ %CPU=i8086}
 program tasm17;
 
 { This test is TP7 compatible }

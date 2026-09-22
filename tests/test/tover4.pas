@@ -1,4 +1,4 @@
-{ %cpu=i386,x86_64 }
+{ %cpu=x86_64}
 { %skiptarget=win64,android }
 { Target must actually support Extended type }
 

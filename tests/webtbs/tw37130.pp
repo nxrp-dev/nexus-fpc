@@ -1,4 +1,4 @@
-{ %cpu=xtensa }
+{ %cpu=xtensa}
 { %norun }
 unit mac16test;
 

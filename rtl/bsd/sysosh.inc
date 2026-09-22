@@ -36,9 +36,3 @@ type
     stklen: sizeuint;
   end;
 {$endif}
-
-{$if defined(darwin) and defined(powerpc)}
-  { for profiling support }
-  procedure mcount(p: pointer); compilerproc; cdecl; external;
-{$endif}
-

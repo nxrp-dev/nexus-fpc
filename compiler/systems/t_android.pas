@@ -497,20 +497,10 @@ initialization
   RegisterExport(system_aarch64_android,texportlibandroid);
   RegisterTarget(system_aarch64_android_info);
 {$endif AARCH64}
-{$ifdef I386}
-  RegisterImport(system_i386_android,timportlibandroid);
-  RegisterExport(system_i386_android,texportlibandroid);
-  RegisterTarget(system_i386_android_info);
-{$endif I386}
 {$ifdef X86_64}
   RegisterImport(system_x86_64_android,timportlibandroid);
   RegisterExport(system_x86_64_android,texportlibandroid);
   RegisterTarget(system_x86_64_android_info);
 {$endif X86_64}
-{$ifdef MIPSEL}
-  RegisterImport(system_mipsel_android,timportlibandroid);
-  RegisterExport(system_mipsel_android,texportlibandroid);
-  RegisterTarget(system_mipsel_android_info);
-{$endif MIPSEL}
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.

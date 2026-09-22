@@ -1,4 +1,4 @@
-{ %CPU=i386,powerpc,arm,sparc,mips }
+{ %CPU=arm}
 { %fail }
 
 { test should fail on 32 bit targets but not crash }

@@ -1,4 +1,4 @@
-{ %CPU=i8086,i386,x86_64 }
+{ %CPU=i8086,x86_64}
 
 program tasm16;
 

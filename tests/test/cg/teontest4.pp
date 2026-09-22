@@ -1,4 +1,4 @@
-{ %CPU=AARCH64 }
+{ %CPU=AARCH64}
 { %OPT=-O2 }
 program teontest4;
 

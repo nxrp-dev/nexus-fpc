@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %interactive }
 
 { check the assembler file for superfluous register moves from/to the

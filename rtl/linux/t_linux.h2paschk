@@ -88,17 +88,6 @@
 .st_mtime_nsec,st_mtim.tv_nsec
 .st_ctime,st_ctim.tv_sec
 .st_ctime_nsec,st_ctim.tv_nsec
-@Pascal {$if defined (CPUPOWERPC) or defined(CPUPOWERPC64)}
-@C #ifdef __powerpc__
-.__unused4
-.__unused5
-@Pascal {$ifdef CPU64}
-@C #ifdef __LP64__
-.__unused6
-@C #endif
-@Pascal {$endif CPU64}
-@C #endif
-@Pascal {$endif powerpc}
 #.st_flags
 #.st_gen
 

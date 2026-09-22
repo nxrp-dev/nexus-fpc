@@ -66,12 +66,6 @@ type
       OPR_REGSET    : (regsetdata,regsetaddr,regsetfpu : tcpuregisterset);
       OPR_REGPAIR   : (reghi,reglo: tregister);
 {$endif m68k}
-{$ifdef powerpc}
-      OPR_COND      : (cond : tasmcond);
-{$endif powerpc}
-{$ifdef POWERPC64}
-      OPR_COND      : (cond : tasmcond);
-{$endif POWERPC64}
 {$ifdef arm}
       OPR_REGSET    : (regset : tcpuregisterset; regtype: tregistertype; subreg: tsubregister; usermode: boolean);
       OPR_SHIFTEROP : (shifterop : tshifterop);

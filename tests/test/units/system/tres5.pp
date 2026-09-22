@@ -1,6 +1,6 @@
 { Test for resources support from .rc files. }
 
-{%TARGET=win32,win64}
+{%TARGET=win64}
 
 {$mode objfpc}
 

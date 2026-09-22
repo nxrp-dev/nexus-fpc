@@ -45,9 +45,6 @@
 {$endif CPUI386 or CPUI8086}
 
 { the assembler helpers need this}
-{$ifdef CPUPOWERPC}
-  {$goto+}
-{$endif CPUPOWERPC}
 
 
 
@@ -227,42 +224,8 @@ Type
   {$endif}
 {$endif CPUM68K}
 
-{$ifdef CPUPOWERPC}
-  {$define DEFAULT_DOUBLE}
 
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
 
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPUPOWERPC}
-
-{$ifdef CPUSPARC}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPUSPARC}
-
-{$ifdef CPUSPARC64}
-  {$define DEFAULT_DOUBLE}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPUSPARC64}
 
 {$if defined(CPUMIPS32) or defined(CPUMIPSEL32)}
   {$define DEFAULT_DOUBLE}
@@ -279,18 +242,6 @@ Type
   {$endif}
 {$endif CPUMIPS32}
 
-{$if defined(CPUMIPS64) or defined(CPUMIPS64EL)}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$define SUPPORT_SINGLE}
-  {$define SUPPORT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-  ValReal = Double;
-{$endif CPUMIPS64}
 
 
 {$ifdef CPUARM}

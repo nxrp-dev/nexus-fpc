@@ -1739,19 +1739,12 @@ implementation
          semicoloneaten,
          removeclassoption: boolean;
          dummyattrelementcount : integer;
-{$if defined(powerpc) or defined(powerpc64)}
-         tempdef: tdef;
-         is_first_type: boolean;
-{$endif powerpc or powerpc64}
          old_block_type: tblock_type;
          typepos : tfileposinfo;
       begin
          old_block_type:=block_type;
          block_type:=bt_var;
          recst:=tabstractrecordsymtable(symtablestack.top);
-{$if defined(powerpc) or defined(powerpc64)}
-         is_first_type:=true;
-{$endif powerpc or powerpc64}
          { Force an expected ID error message }
          if not (current_scanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
@@ -1852,37 +1845,6 @@ implementation
              if maybe_parse_proc_directives(hdef) then
                semicoloneaten:=true;
 
-{$if defined(powerpc) or defined(powerpc64)}
-             { from gcc/gcc/config/rs6000/rs6000.h:
-              /* APPLE LOCAL begin Macintosh alignment 2002-1-22 ff */
-              /* Return the alignment of a struct based on the Macintosh PowerPC
-                 alignment rules.  In general the alignment of a struct is
-                 determined by the greatest alignment of its elements.  However, the
-                 PowerPC rules cause the alignment of a struct to peg at word
-                 alignment except when the first field has greater than word
-                 (32-bit) alignment, in which case the alignment is determined by
-                 the alignment of the first field.  */
-             }
-             { TODO: check whether this is also for AIX }
-             if (target_info.abi in [abi_powerpc_aix,abi_powerpc_darwin]) and
-                is_first_type and
-                (symtablestack.top.symtabletype=recordsymtable) and
-                (trecordsymtable(symtablestack.top).usefieldalignment=C_alignment) then
-               begin
-                 tempdef:=hdef;
-                 while tempdef.typ=arraydef do
-                   tempdef:=tarraydef(tempdef).elementdef;
-                 if tempdef.typ<>recorddef then
-                   maxpadalign:=tempdef.alignment
-                 else
-                   maxpadalign:=trecorddef(tempdef).padalignment;
-
-                 if (maxpadalign>4) and
-                    (maxpadalign>trecordsymtable(symtablestack.top).padalignment) then
-                   trecordsymtable(symtablestack.top).padalignment:=maxpadalign;
-                 is_first_type:=false;
-               end;
-{$endif powerpc or powerpc64}
 
              { types that use init/final are not allowed in variant parts, but
                classes are allowed }
@@ -2131,14 +2093,6 @@ implementation
               unionsymtable.datasize:=maxsize;
               unionsymtable.fieldalignment:=maxalignment;
               unionsymtable.addalignmentpadding;
-{$if defined(powerpc) or defined(powerpc64)}
-              { parent inherits the alignment padding if the variant is the first "field" of the parent record/variant }
-              if (target_info.system in [system_powerpc_darwin, system_powerpc_macosclassic, system_powerpc64_darwin]) and
-                 is_first_type and
-                 (recst.usefieldalignment=C_alignment) and
-                 (maxpadalign>recst.padalignment) then
-                recst.padalignment:=maxpadalign;
-{$endif powerpc or powerpc64}
               { Align the offset where the union symtable is added }
               case recst.usefieldalignment of
                 { allow the unionsymtable to be aligned however it wants }
@@ -2171,9 +2125,6 @@ implementation
          { free the list }
          sc.free;
          sc := nil;
-{$ifdef powerpc}
-         is_first_type := false;
-{$endif powerpc}
          block_type:=old_block_type;
       end;
 

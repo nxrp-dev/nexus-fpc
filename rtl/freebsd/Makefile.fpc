@@ -89,9 +89,6 @@ ifeq ($(ARCH),aarch64)
 CPU_UNITS=$(INTRINSICSUNIT)
 endif
 
-ifeq ($(ARCH),powerpc64)
-CPU_UNITS=$(INTRINSICSUNIT)
-endif
 
 # Paths
 OBJPASDIR=$(RTL)/objpas

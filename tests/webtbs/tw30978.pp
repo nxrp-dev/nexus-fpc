@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 
 procedure p1;assembler;nostackframe;
   asm

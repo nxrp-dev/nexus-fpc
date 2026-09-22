@@ -1,5 +1,5 @@
 { %target=win64 }
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %fail }
 
 {$asmmode intel}

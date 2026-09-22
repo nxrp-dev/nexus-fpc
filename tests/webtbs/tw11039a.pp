@@ -1,5 +1,5 @@
 { %opt=-Xe }
-{ %target=win32,win64 }
+{ %target=win64}
 
 {$packrecords 16}
 {$codealign varmin=16}

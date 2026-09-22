@@ -1,5 +1,5 @@
 { %FILES=cpptcl1.o }
-{%TARGET=linux,darwin,go32v2}
+{%TARGET=linux,darwin}
 { Test the C++ name mangling for different parameter combinations }
 program tcppclass1;
 

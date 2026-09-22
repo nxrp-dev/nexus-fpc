@@ -1,4 +1,4 @@
-{ %TARGET=win32,win64,wince }
+{ %TARGET=win64,wince}
 { %OPT=-Fccp1252 }
 
 program tw35060a;

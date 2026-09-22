@@ -69,9 +69,6 @@ uses
 {$ifdef android}
   ,i_android
 {$endif android}
-{$ifdef beos}
-  ,i_beos
-{$endif beos}
 {$ifdef bsd}
 {$ifdef darwin}
   ,i_darwin
@@ -82,9 +79,6 @@ uses
 {$ifdef gba}
   ,i_gba
 {$endif gba}
-{$ifdef go32v2}
-  ,i_go32v2
-{$endif go32v2}
 {$ifdef haiku}
   ,i_haiku
 {$endif haiku}
@@ -100,9 +94,6 @@ uses
 {$ifdef solaris}
   ,i_sunos
 {$endif solaris}
-{$ifdef wdosx}
-  ,i_wdosx
-{$endif wdosx}
 {$ifdef wii}
   ,i_wii
 {$endif wii}
@@ -112,9 +103,6 @@ uses
 {$ifdef symbian}
   ,i_symbian
 {$endif symbian}
-{$ifdef nativent}
-  ,i_nativent
-{$endif nativent}
 {$ifdef aix}
   ,i_aix
 {$endif aix}

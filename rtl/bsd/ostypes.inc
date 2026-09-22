@@ -24,11 +24,6 @@
   {$i ptypes.inc}
 {$ENDIF}
 
-{$ifdef cpupowerpc}
-  {$ifdef netbsd}
-    {$define netbsdpowerpc}
-  {$endif}
-{$endif}
 
 {$if defined(darwin) and (defined(cpuarm) or defined(cpuaarch64) or defined(iphonesim) or (defined(MAC_OS_X_VERSION_MIN_REQUIRED) and (MAC_OS_X_VERSION_MIN_REQUIRED >= 1060))) }
   {$define darwin_new_iostructs}
@@ -197,17 +192,11 @@ TYPE
         st_mtimensec  : clong;             // nsec of last data modification
         st_ctime      : time_t;            // time of last file status change
         st_ctimensec  : clong;             // nsec of last file status change
-{$ifdef netbsdPowerpc}
-        st_padd1              : cint;
-{$endif}
         st_size       : off_t;             // file size, in bytes
         st_blocks     : cint64;            // blocks allocated for file
         st_blksize    : cuint32;           // optimal blocksize for I/O
         st_flags      : cuint32;           // user defined flags for file
         st_gen        : cuint32;           // file generation number
-{$ifdef netbsdPowerpc}
-        st_padd2              : cint;
-{$endif}
 {$ifndef NetBSD}
         st_lspare     : cint32;
 {$endif}
@@ -283,12 +272,7 @@ TYPE
         dd_lock   : pointer;
         dd_rewind : clong;
 {$else not openbsd}
-{$ifdef netbsdpowerpc}
-        dd_pad1   : cint;
-        dd_seek   : cint64;        // magic cookie returned by getdirentries
-{$else}
         dd_seek   : clong;        // magic cookie returned by getdirentries
-{$endif}
         dd_rewind : clong;        // magic cookie for rewinding
         dd_flags  : cint;         // flags for readdir
 {$ifdef darwin}

@@ -20,16 +20,6 @@
   {$IFDEF CPUX86_64}
   fMachineType:=emtx86_64;
   {$ENDIF}
-  {$IFDEF CPUPOWERPC32}
-  fMachineType:=emtppc;;
-  {$ENDIF}
-  {$IFDEF CPUPOWERPC64}
-  {$ifdef FPC_BIG_ENDIAN}
-  fMachineType:=emtppc64;
-  {$else FPC_BIG_ENDIAN}
-  fMachineType:=emtppc64le;
-  {$endif FPC_BIG_ENDIAN}
-  {$ENDIF}
   {$IFDEF CPUARM}
     {$IFDEF ENDIAN_LITTLE}
     fMachineType:=emtarm;
@@ -43,24 +33,11 @@
   {$IFDEF CPU68K}
   fMachineType:=emtm68k;
   {$ENDIF}
-  {$IFDEF CPUSPARC}
-  fMachineType:=emtsparc;
-  {$ENDIF}
-  {$IFDEF CPUSPARC64}
-  fMachineType:=emtsparc64;
-  {$ENDIF}
   {$IFDEF CPUALPHA}
   fMachineType:=emtalpha;
   {$ENDIF}
   {$IFDEF CPUIA64}
   fMachineType:=emtia64;
-  {$ENDIF}
-  {$IFDEF CPUMIPS}
-    {$IFDEF ENDIAN_LITTLE}
-    fMachineType:=emtmipsel;
-    {$ELSE}
-    fMachineType:=emtmips;
-    {$ENDIF}
   {$ENDIF}
 
   fBits:=ELFCLASSNONE;

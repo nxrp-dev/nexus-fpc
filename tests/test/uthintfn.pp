@@ -1,4 +1,4 @@
-{ %CPU=wasm32 }
+{ %CPU=wasm32}
 Unit uthintfn;
 
 {$mode objfpc}

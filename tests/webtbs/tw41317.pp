@@ -1,4 +1,4 @@
-{ %CPU=X86_64 }
+{ %CPU=X86_64}
 { %OPT=-O2 }
 program tw41317;
 

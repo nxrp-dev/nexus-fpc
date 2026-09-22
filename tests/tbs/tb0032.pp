@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 { Old file: tbs0037.pp }
 {  tests missing graph.setgraphmode                    OK RTL (FK) }

@@ -1,4 +1,4 @@
-{ %TARGET=go32v2,linux,haiku }
+{ %TARGET=linux,haiku}
 { %SKIPEMU=qemu-arm }
 
 { Old file: tbs0105.pp }

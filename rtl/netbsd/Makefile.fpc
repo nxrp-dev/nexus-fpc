@@ -86,9 +86,6 @@ endif
 ifeq ($(ARCH),arm)
 CPU_UNITS=$(INTRINSICSUNIT)
 endif
-ifeq ($(ARCH),powerpc)
-CPU_UNITS=$(INTRINSICSUNIT)
-endif
 
 [rules]
 .NOTPARALLEL:

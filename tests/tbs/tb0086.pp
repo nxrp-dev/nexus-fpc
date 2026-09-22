@@ -1,4 +1,4 @@
-{ %CPU=m68k }
+{ %CPU=m68k}
 
 { Old file: tbs0102.pp }
 { page fault when trying to compile under ppcm68k       OK 0.99.1 }

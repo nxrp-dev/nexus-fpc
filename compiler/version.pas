@@ -44,33 +44,15 @@ interface
 {$ifdef cpui386}
         source_cpu_string = 'i386';
 {$endif cpui386}
-{$ifdef cpupowerpc32}
-        source_cpu_string = 'powerpc';
-{$endif cpupowerpc32}
-{$ifdef cpupowerpc64}
-        source_cpu_string = 'powerpc64';
-{$endif cpupowerpc64}
 {$ifdef cpum68k}
         source_cpu_string = 'm68k';
 {$endif cpum68k}
 {$ifdef cpux86_64}
         source_cpu_string = 'x86_64';
 {$endif cpux86_64}
-{$ifdef cpusparc}
-        source_cpu_string = 'sparc';
-{$endif cpusparc}
-{$ifdef cpusparc64}
-        source_cpu_string = 'sparc64';
-{$endif cpusparc64}
 {$ifdef cpuarm}
         source_cpu_string = 'arm';
 {$endif cpuarm}
-{$ifdef cpumipseb}
-        source_cpu_string = 'mips'{'mipseb'};
-{$endif cpumipseb}
-{$ifdef cpumipsel}
-        source_cpu_string = 'mipsel';
-{$endif cpumipsel}
 {$ifdef cpuaarch64}
         source_cpu_string = 'aarch64';
 {$endif cpuaarch64}

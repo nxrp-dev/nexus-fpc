@@ -1,5 +1,5 @@
 { %NORUN }
-{ %CPU=i8086 }
+{ %CPU=i8086}
 
 {$IFDEF FPC}
 {$MODE TP}

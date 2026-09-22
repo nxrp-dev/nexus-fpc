@@ -1,4 +1,4 @@
-{ %target=linux,darwin,freebsd,netbsd,openbsd,sunos,beos,haiku,aix }
+{ %target=linux,darwin,freebsd,netbsd,openbsd,sunos,haiku,aix}
 Program Example59;
 
 { Program to demonstrate the Alarm function. }

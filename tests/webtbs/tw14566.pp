@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 { %norun }
 procedure p(xmm0 : double);assembler;
 asm

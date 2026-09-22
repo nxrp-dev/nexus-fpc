@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 { Old file: tbs0048.pp }
 {  shows a problem with putimage on some computers       OK 0.99.13 (JM) }

@@ -1,4 +1,4 @@
-{ %cpu=avr }
+{ %cpu=avr}
 const
   cFE = $FE;
   c102 = $102;

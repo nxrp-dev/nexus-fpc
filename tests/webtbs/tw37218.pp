@@ -1,4 +1,4 @@
-{ %CPU=aarch64 }
+{ %CPU=aarch64}
 program project1;
 uses crt;
 procedure test;

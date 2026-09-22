@@ -1,4 +1,4 @@
-{ %cpu=aarch64 }
+{ %cpu=aarch64}
 { %target=win64 }
 { %opt=-O2 }
 

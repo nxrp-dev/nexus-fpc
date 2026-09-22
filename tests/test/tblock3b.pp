@@ -1,6 +1,5 @@
 { %FAIL }
 { %target=darwin,iphonesim}
-{ %skipcpu=powerpc,powerpc64 }
 
 program tblock3b;
 

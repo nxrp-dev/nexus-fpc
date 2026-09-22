@@ -123,62 +123,9 @@
   {$define support_rodata}
 {$endif x86_64}
 
-{$ifdef sparc}
-  {$define cpu32bit}
-  {$define cpu32bitaddr}
-  {$define cpu32bitalu}
-  {$define cpuflags}
-  {$define cputargethasfixedstack}
-  {$define cpurefshaveindexreg}
-  {$define cpudelayslot}
-  {$define SUPPORT_SAFECALL}
-  {$define sparcgen}
 
-  { the official name of the 32 Bit SPARC port is still "sparc" but
-    using the sparc32 define makes things more clear }
-  {$define sparc32}
-{$endif sparc}
 
-{$ifdef sparc64}
-  {$define cpu64bit}
-  {$define cpu64bitaddr}
-  {$define cpu64bitalu}
-  {$define cpuflags}
-  {$define cputargethasfixedstack}
-  {$define cpurefshaveindexreg}
-  {$define cpudelayslot}
-  {$define SUPPORT_SAFECALL}
-  {$define sparcgen}
-{$endif sparc64}
 
-{$ifdef powerpc}
-  {$define cpu32bit}
-  {$define cpu32bitaddr}
-  {$define cpu32bitalu}
-  {$define cpuflags}
-  {$define cputargethasfixedstack}
-  {$define cpumm}
-  {$define cpurox}
-  {$define cpurefshaveindexreg}
-  {$define SUPPORT_SAFECALL}
-  {$define SUPPORT_GET_FRAME}
-  {$define CPU_BC_HAS_SIZE_LIMIT}
-  {$define support_rodata}
-{$endif powerpc}
-
-{$ifdef powerpc64}
-  {$define cpu64bit}
-  {$define cpu64bitalu}
-  {$define cpu64bitaddr}
-  {$define cpuflags}
-  {$define cputargethasfixedstack}
-  {$define cpumm}
-  {$define cpurox}
-  {$define cpurefshaveindexreg}
-  {$define cpuno32bitops}
-  {$define SUPPORT_SAFECALL}
-  {$define CPU_BC_HAS_SIZE_LIMIT}
-{$endif powerpc64}
 
 {$ifdef arm}
   {$define cpu32bit}
@@ -219,60 +166,8 @@
 
 
 
-{$ifdef mipsel}
-  {$define mips}
-  {$define mips32}
-{$else not mipsel}
-  { Define both mips and mipseb if mipsel is not defined
-    but mips cpu is wanted. }
-  {$ifdef mipseb}
-    {$define mips}
-    {$define mips32}
-  {$endif mipseb}
-  {$ifdef mips}
-    {$define mipseb}
-    {$define mips32}
-  {$endif mips}
-{$endif mipsel}
 
-{$ifdef mips64eb}
-  {$define mips}
-  {$define mips64}
-{$endif mips64eb}
 
-{ Also accept mips64 for big endian 64-bit mips, but only if mips64 el is not set }
-{$ifdef mips64}
-  {$define mips}
-  {$ifndef mips64el}
-    {$define mips64eb}
-  {$endif not mips64el}
-{$endif mips64}
-
-{$ifdef mips64el}
-  {$define mips}
-  {$define mips64}
-{$endif mips64el}
-
-{$ifdef mips}
-  {$ifndef mips64}
-    {$define cpu32bit}
-    {$define cpu32bitalu}
-    {$define cpu32bitaddr}
-  {$else}
-    {$define cpu64bit}
-    {$define cpu64bitalu}
-    {$define cpu64bitaddr}
-  {$endif}
-  {$define cpufpemu}
-  {$define cpuflags} { Flags are emulated }
-  {$define cputargethasfixedstack}
-  {$define cpurequiresproperalignment}
-  { define cpumm}
-  {$define cpurefshaveindexreg}
-  {$define cpudelayslot}
-  {$define SUPPORT_GET_FRAME}
-  {$define SUPPORT_SAFECALL}
-{$endif mips}
 
 {$ifdef aarch64}
   {$define cpu64bit}

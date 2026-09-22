@@ -24,13 +24,6 @@ asm
   move.l  y,d1
 end;
 {$endif CPU68K}
-{$ifdef CPUPOWERPC}
-{$define SUPPORTED}
-asm
-  mr r5,x
-  mr r6,y
-end;
-{$endif CPUPOWERPC}
 {$ifdef CPUARM}
 {$define SUPPORTED}
 asm
@@ -45,20 +38,6 @@ asm
   movl y,%ecx
 end;
 {$endif CPUX86_64}
-{$ifdef CPUSPARC}
-{$define SUPPORTED}
-asm
-  mov x,%i0
-  mov y,%i1
-end;
-{$endif CPUSPARC}
-{$ifdef CPUMIPS}
-{$define SUPPORTED}
-asm
-  move $t1,x
-  move $t2,y
-end;
-{$endif CPUMIPS}
 {$ifdef CPUAARCH64}
 {$define SUPPORTED}
 asm

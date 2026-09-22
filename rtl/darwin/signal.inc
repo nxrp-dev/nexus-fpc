@@ -181,9 +181,6 @@
         ss_flags : cint;         { SA_DISABLE and/or SA_ONSTACK }
     end;
 
-{$if defined(cpupowerpc) or defined(cpupowerpc64)}
-    {$include ppcgen/sig_ppc.inc}    { SigContextRec }
-{$else cpupowerpc or cpupowerpc64}
 {$ifdef cpui386}
     {$include i386/sig_cpu.inc}       { SigContextRec }
 {$else cpui386}
@@ -201,7 +198,6 @@
 {$endif cpuarm}
 {$endif cpux86_64}
 {$endif cpui386}
-{$endif cpupowerpc or cpupowerpc64}
 
      psigcontext = ^sigcontextrec;
      psigcontextrec = ^sigcontextrec;

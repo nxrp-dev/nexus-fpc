@@ -313,15 +313,11 @@ struct savefpu {
 
 
 
-{$ifdef powerpc}
-  TSigaction=  procedure(Sig: Longint); cdecl;
-{$else}
 {$define BSDHandler}
 {$ifdef BSDHandler}
   TSigAction = procedure(Sig: Longint; code:longint;var SigContext: SigContextRec);cdecl;
 {$else}
   TSigAction = procedure(Sig: Longint; var sininfo:tsiginfo_t;var SigContext: SigContextRec);cdecl;
-{$endif}
 {$endif}
 
   Sigset=sigset_t;

@@ -34,10 +34,6 @@ const
     '.i386';
     {$elseif defined(cpux86_64)}
     '.x86_64';
-    {$elseif defined(cpupowerpc32)}
-    '.powerpc';
-    {$elseif defined(cpupowerpc64)}
-    '.powerpc64';
     {$elseif defined(cpuarm)}
     '.arm';
     {$elseif defined(cpuaarch64)}

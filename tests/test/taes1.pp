@@ -1,4 +1,4 @@
-{ %CPU=x86_64 }
+{ %CPU=x86_64}
 Program AESTest;
 {$INLINE ON}
 {$ASMMODE INTEL}

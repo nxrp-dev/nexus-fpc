@@ -51,9 +51,6 @@ begin
 end;
 
 {$ifdef netbsd}
-  {$ifdef cpupowerpc}
-    {$define netbsdmacppc}
-  {$endif}
 {$endif}
 
 {$ifdef netbsdmacppc}

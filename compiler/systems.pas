@@ -258,40 +258,34 @@ interface
        { alias for supported_target field in tasminfo }
        system_any = system_none;
 
-       systems_wince = [system_arm_wince,system_i386_wince];
-       systems_android = [system_arm_android, system_aarch64_android, system_i386_android, system_x86_64_android, system_mipsel_android];
-       systems_linux = [system_i386_linux,system_x86_64_linux,system_powerpc_linux,system_powerpc64_linux,
-                       system_arm_linux,system_sparc_linux,system_sparc64_linux,system_m68k_linux,
-                       system_x86_6432_linux,system_mipseb_linux,system_mipsel_linux,system_aarch64_linux];
+       systems_wince = [system_arm_wince];
+       systems_android = [system_arm_android, system_aarch64_android, system_x86_64_android];
+       systems_linux = [system_x86_64_linux,
+                       system_arm_linux,system_m68k_linux,
+                       system_x86_6432_linux,system_aarch64_linux];
        systems_dragonfly = [system_x86_64_dragonfly];
        systems_freebsd = [system_aarch64_freebsd,
-                          system_powerpc64_freebsd,
-                          system_i386_freebsd,
                           system_x86_64_freebsd];
-       systems_netbsd  = [system_i386_netbsd,
-                          system_m68k_netbsd,
-                          system_powerpc_netbsd,
+       systems_netbsd  = [system_m68k_netbsd,
                           system_x86_64_netbsd,
                           system_arm_netbsd];
-       systems_openbsd = [system_i386_openbsd,
-                          system_x86_64_openbsd];
+       systems_openbsd = [system_x86_64_openbsd];
 
        systems_bsd = systems_freebsd + systems_netbsd + systems_openbsd + systems_dragonfly;
 
        systems_aix = [system_powerpc_aix,system_powerpc64_aix];
 
        { all real windows systems, no cripple ones like wince, wdosx et. al. }
-       systems_windows = [system_i386_win32,system_x86_64_win64,system_aarch64_win64];
+       systems_windows = [system_x86_64_win64,system_aarch64_win64];
 
        { all windows systems }
        systems_all_windows = systems_windows+
-                             [system_arm_wince,system_i386_wince];
+                             [system_arm_wince];
 
        { all darwin systems }
        systems_ios = [system_arm_ios,system_aarch64_ios];
-       systems_iphonesim = [system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim];
-       systems_macosx = [system_powerpc_darwin,system_i386_darwin,
-                         system_powerpc64_darwin,system_x86_64_darwin,
+       systems_iphonesim = [system_x86_64_iphonesim,system_aarch64_iphonesim];
+       systems_macosx = [system_x86_64_darwin,
                          system_aarch64_darwin];
        systems_darwin = systems_ios + systems_iphonesim + systems_macosx;
 
@@ -300,17 +294,14 @@ interface
                        system_wasm32_wasip2];
 
        {all solaris systems }
-       systems_solaris = [system_sparc_solaris, system_i386_solaris,
-                          system_x86_64_solaris];
+       systems_solaris = [system_x86_64_solaris];
 
        { all embedded systems }
-       systems_embedded = [system_i386_embedded,system_m68k_embedded,
-                           system_powerpc_embedded,
-                           system_sparc_embedded,obsolete_system_vm_embedded,
+       systems_embedded = [system_m68k_embedded,
+                           obsolete_system_vm_embedded,
                            obsolete_system_ia64_embedded,system_x86_64_embedded,
-                           obsolete_system_mips_embedded,system_arm_embedded,
-                           system_powerpc64_embedded,
-                           system_jvm_java32,system_mipseb_embedded,system_mipsel_embedded,
+                           system_arm_embedded,
+                           system_jvm_java32,
                            system_i8086_embedded,
                            system_wasm32_embedded,
                            system_aarch64_embedded];
@@ -334,10 +325,10 @@ interface
        systems_allow_external_far_var = [system_i8086_msdos,system_i8086_embedded];
 
        { all symbian systems }
-       systems_symbian = [system_i386_symbian,system_arm_symbian];
+       systems_symbian = [system_arm_symbian];
 
        { all classic Mac OS targets }
-       systems_macos = [system_m68k_macosclassic,system_powerpc_macosclassic];
+       systems_macos = [system_m68k_macosclassic];
 
        { all native nt systems }
        systems_nativent = [system_i386_nativent];
@@ -345,47 +336,41 @@ interface
        { Default to i80846 instead of pentium2 for all old i386 systems for which
          some newer instructions (like CMOVcc or PREFECTXXX) lead to troubles,
          related to OS or emulator lack of support. }
-       systems_i386_default_486 = [system_i386_go32v2, system_i386_watcom,
-                                   system_i386_wdosx,
-                                   system_i386_beos, system_i386_symbian];
+       systems_i386_default_486 = [];
 
        { systems supporting Objective-C }
        systems_objc_supported = systems_darwin;
 
        { systems using the non-fragile Objective-C ABI }
-       systems_objc_nfabi = [system_powerpc64_darwin,system_x86_64_darwin,system_arm_ios,system_i386_iphonesim,system_aarch64_ios,system_aarch64_darwin,system_x86_64_iphonesim,system_aarch64_iphonesim];
+       systems_objc_nfabi = [system_x86_64_darwin,system_arm_ios,system_aarch64_ios,system_aarch64_darwin,system_x86_64_iphonesim,system_aarch64_iphonesim];
 
        { systems supporting "blocks" }
        systems_blocks_supported = systems_darwin;
 
        { all systems supporting exports from programs or units }
-       systems_unit_program_exports = [system_i386_win32,
-                                         system_i386_wdosx,
-                                         system_arm_wince,
+       systems_unit_program_exports = [system_arm_wince,
                                          system_x86_64_win64,
                                          system_aarch64_win64]+systems_linux+systems_android+systems_wasm;
 
        { all systems that reference symbols in other binaries using indirect imports }
-       systems_indirect_var_imports = systems_all_windows+[system_i386_nativent];
+       systems_indirect_var_imports = systems_all_windows;
 
        { all systems that support indirect entry information }
        systems_indirect_entry_information = systems_darwin+
-                                            [system_i386_win32,system_x86_64_win64,system_x86_64_linux,
+                                            [system_x86_64_win64,system_x86_64_linux,
                                             system_aarch64_win64];
 
        { all systems for which weak linking has been tested/is supported }
        systems_weak_linking = systems_darwin + systems_solaris + systems_linux + systems_android + systems_bsd +
                               [system_m68k_sinclairql];
 
-       systems_internal_sysinit = [system_i386_win32,system_x86_64_win64,
-                                   system_i386_linux,system_powerpc64_linux,system_sparc64_linux,system_x86_64_linux,
-                                   system_mips64_linux,system_mips64el_linux,
+       systems_internal_sysinit = [system_x86_64_win64,
+                                   system_x86_64_linux,
                                    system_m68k_atari,system_m68k_palmos,system_m68k_sinclairql,system_m68k_human68k,
-                                   system_i386_haiku,system_x86_64_haiku,
-                                   system_i386_openbsd,system_x86_64_openbsd,
+                                   system_x86_64_haiku,
+                                   system_x86_64_openbsd,
                                    system_aarch64_win64,
-                                   system_wasm32_wasip1,system_wasm32_wasip1threads,system_wasm32_wasip2,
-                                   system_mipsel_ps1
+                                   system_wasm32_wasip1,system_wasm32_wasip1threads,system_wasm32_wasip2
                                   ]+systems_darwin;
 
        { all systems that use the PE+ header in the PE/COFF file
@@ -447,28 +432,22 @@ interface
          and can never work for libc-based targets or any other program
          linking to an external library)
        }
-       systems_support_checkpointer = systems_linux
-                             + [system_i386_win32]
-                             + [system_i386_GO32V2]
-                             + [system_i386_beos,system_i386_haiku]
-                             ;
+       systems_support_checkpointer = systems_linux;
 
-       systems_support_uf2 = [system_arm_embedded,system_mipsel_embedded];
+       systems_support_uf2 = [system_arm_embedded];
 
        { x86_64 systems that use the Win64 ABI instead of the SysV one }
        systems_win64_abi = [system_x86_64_win64];
 
        { all internal COFF writers }
-       asms_int_coff = [as_arm_pecoffwince,as_x86_64_pecoff,as_i386_pecoffwince,
-                        as_i386_pecoffwdosx,as_i386_pecoff,as_i386_coff];
+       asms_int_coff = [as_arm_pecoffwince,as_x86_64_pecoff];
 
        { all internal ELF writers }
-       asms_int_elf = [as_arm_elf32,as_x86_64_elf64,as_m68k_elf32,
-                       as_sparc_elf32,as_i386_elf32];
+       asms_int_elf = [as_arm_elf32,as_x86_64_elf64,as_m68k_elf32];
 
        { all internal writers }
        asms_internals = asms_int_coff + asms_int_elf
-                        + [as_i8086_omf, as_wasm32_wasm, as_i386_macho];
+                        + [as_i8086_omf, as_wasm32_wasm];
 
        cpu2str : array[TSystemCpu] of string[12] =
             ('','i386','m68k','alpha','powerpc','sparc','vm','ia64','x86_64',
@@ -478,11 +457,11 @@ interface
 
        abiinfo : array[tabi] of tabiinfo = (
          (name: 'DEFAULT'; supported: true),
-         (name: 'SYSV'   ; supported:{$if defined(powerpc) or defined(powerpc64)}true{$else}false{$endif}),
-         (name: 'AIX'    ; supported:{$if defined(powerpc) or defined(powerpc64)}true{$else}false{$endif}),
-         (name: 'DARWIN'    ; supported:{$if defined(powerpc) or defined(powerpc64)}true{$else}false{$endif}),
-         (name: 'ELFV2'  ; supported:{$if defined(powerpc64)}true{$else}false{$endif}),
-         (name: 'EABI'   ; supported:{$if defined(arm) or defined(mips)}true{$else}false{$endif}),
+         (name: 'SYSV'   ; supported:false),
+         (name: 'AIX'    ; supported:false),
+         (name: 'DARWIN'    ; supported:false),
+         (name: 'ELFV2'  ; supported:false),
+         (name: 'EABI'   ; supported:{$if defined(arm)}true{$else}false{$endif}),
          (name: 'ARMEB'  ; supported:{$ifdef FPC_ARMEB}true{$else}false{$endif}),
          (name: 'EABIHF' ; supported:{$if defined(arm)}true{$else}false{$endif}),
          (name: 'OLDWIN32GNU'; supported:{$ifdef I386}true{$else}false{$endif}),
@@ -498,10 +477,10 @@ interface
          (name: 'LINUX386_SYSV'; supported:{$if defined(i386)}true{$else}false{$endif}),
          (name: 'WINDOWED'; supported:false),
          (name: 'CALL0'; supported:false),
-         (name: 'O32'; supported:{$if defined(mips)}true{$else}false{$endif}),
-         (name: 'N32'; supported:{$if defined(mips)}true{$else}false{$endif}),
-         (name: 'O64'; supported:{$if defined(mips)}true{$else}false{$endif}),
-         (name: 'N64'; supported:{$if defined(mips)}true{$else}false{$endif}),
+         (name: 'O32'; supported:false),
+         (name: 'N32'; supported:false),
+         (name: 'O64'; supported:false),
+         (name: 'N64'; supported:false),
          (name: 'LP64S'; supported:false),
          (name: 'LP64F'; supported:false),
          (name: 'LP64D'; supported:false),
@@ -912,49 +891,7 @@ begin
 { Now default target, this is dependent on the target cpu define,
   when the define is the same as the source cpu then we use the source
   os, else we pick a default }
-{$ifdef i386}
-  {$ifdef cpui386}
-    default_target(source_info.system);
-    {$define default_target_set}
-  {$else cpui386}
-   {$ifdef linux}
-    default_target(system_i386_linux);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef MSWindows}
-    default_target(system_i386_win32);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef freebsd}
-    default_target(system_i386_freebsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef openbsd}
-    default_target(system_i386_openbsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef netbsd}
-    default_target(system_i386_netbsd);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef darwin}
-    default_target(system_i386_darwin);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef android}
-    {$define default_target_set}
-    default_target(system_i386_android);
-   {$endif}
-   {$ifdef solaris}
-    {$define default_target_set}
-    default_target(system_i386_solaris);
-   {$endif}
-  {$endif cpui386}
-  { default is linux }
-  {$ifndef default_target_set}
-   default_target(system_i386_linux);
-  {$endif default_target_set}
-{$endif i386}
+
 
 {$ifdef x86_64}
   {$ifdef cpux86_64}
@@ -1001,88 +938,9 @@ begin
 {$endif x86_64}
 
 
-{$ifdef powerpc}
-  {$ifdef cpupowerpc32}
-    default_target(source_info.system);
-    {$define default_target_set}
-  {$else cpupowerpc}
-   {$ifdef linux}
-    default_target(system_powerpc_linux);
-    {$define default_target_set}
-   {$endif}
-   {$ifdef darwin}
-    default_target(system_powerpc_darwin);
-    {$define default_target_set}
-   {$endif}
-  {$endif cpupowerpc}
-  {$ifdef aix}
-   default_target(system_powerpc_aix);
-   {$define default_target_set}
-  {$endif}
-  {$ifdef android}
-   {$define default_target_set}
-   default_target(system_x86_64_android);
-  {$endif}
-  {$ifndef default_target_set}
-    default_target(system_powerpc_linux);
-  {$endif default_target_set}
-{$endif powerpc}
 
-{$ifdef POWERPC64}
-  {$ifdef cpupowerpc64}
-    default_target(source_info.system);
-    {$define default_target_set}
-  {$else cpupowerpc64}
-    {$ifdef darwin}
-     default_target(system_powerpc64_darwin);
-     {$define default_target_set}
-    {$endif}
-    {$ifdef linux}
-     default_target(system_powerpc64_linux);
-     {$define default_target_set}
-    {$endif}
-    {$ifdef aix}
-     default_target(system_powerpc64_aix);
-     {$define default_target_set}
-    {$endif}
-    {$ifdef freebsd}
-     default_target(system_powerpc64_freebsd);
-     {$define default_target_set}
-    {$endif}
-  {$endif cpupowerpc64}
-  {$ifndef default_target_set}
-    default_target(system_powerpc64_linux);
-    {$define default_target_set}
-  {$endif}
-{$endif POWERPC64}
 
-{$ifdef sparc}
-  {$ifdef cpusparc}
-    default_target(source_info.system);
-  {$else cpusparc}
-   {$ifdef solaris}
-    {$define default_target_set}
-    default_target(system_sparc_solaris);
-   {$endif}
-    {$ifndef default_target_set}
-    default_target(system_sparc_linux);
-    {$endif ndef default_target_set}
-  {$endif cpusparc}
-{$endif sparc}
 
-{$ifdef sparc64}
-  {$ifdef cpusparc64}
-    default_target(source_info.system);
-  {$else cpusparc64}
-   // {$ifdef solaris}
-   // {$define default_target_set}
-   // default_target(system_sparc64_solaris);
-   // {$endif}
-    {$ifndef default_target_set}
-    default_target(system_sparc64_linux);
-    {$endif ndef default_target_set}
-  {$endif cpusparc64}
-{$endif sparc64}
 
 {$ifdef arm}
   {$ifdef cpuarm}
@@ -1116,17 +974,6 @@ begin
 {$endif arm}
 
 
-{$ifdef mips32}
-{$ifdef mipsel}
-  {$ifdef cpumipsel}
-    default_target(source_info.system);
-  {$else cpumipsel}
-    default_target(system_mipsel_linux);
-  {$endif cpumipsel}
-{$else mipsel}
-  default_target(system_mipseb_linux);
-{$endif mipsel}
-{$endif mips32}
 
 {$ifdef jvm}
   default_target(system_jvm_java32);
@@ -1172,13 +1019,7 @@ begin
 
 
 
-{$ifdef mips64eb}
-  default_target(system_mips64_linux);
-{$endif mips64eb}
 
-{$ifdef mips64el}
-  default_target(system_mips64el_linux);
-{$endif mips64el}
 
 end;
 

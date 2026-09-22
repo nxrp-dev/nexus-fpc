@@ -1,4 +1,4 @@
-{ %cpu=x86_64 }
+{ %cpu=x86_64}
 function test : int64;assembler;
   {$ASMMODE INTEL}
   asm

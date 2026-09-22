@@ -1,4 +1,4 @@
-{ %CPU=x86_64,i386 }
+{ %CPU=x86_64}
 {$mode objfpc}{$H+}
 {$asmmode INTEL}
 

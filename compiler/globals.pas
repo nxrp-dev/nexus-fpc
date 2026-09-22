@@ -244,13 +244,6 @@ Const
     const
       LinkMapWeightDefault = 1000;
 {$ifdef CPU_BC_HAS_SIZE_LIMIT}
-    {$if defined(POWERPC) or defined(POWERPC64)}
-      { instructions are 4-byte long and relative jump distance
-        a signed 16-bit signed integer, code as
-        reduced by a small amount to avoid troubles
-        as distance can be modified by optimizations. }
-      BC_max_distance = ($8000 div 4) - $100;
-    {$endif}
 {$endif CPU_BC_HAS_SIZE_LIMIT}
 
     type
@@ -568,30 +561,6 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_soft;
   {$endif m68k}
-  {$ifdef powerpc}
-        cputype : cpu_PPC604;
-        optimizecputype : cpu_ppc7400;
-        asmcputype : cpu_none;
-        fputype : fpu_standard;
-  {$endif powerpc}
-  {$ifdef POWERPC64}
-        cputype : cpu_PPC970;
-        optimizecputype : cpu_ppc970;
-        asmcputype : cpu_none;
-        fputype : fpu_standard;
-  {$endif POWERPC64}
-  {$ifdef sparc}
-        cputype : cpu_SPARC_V9;
-        optimizecputype : cpu_SPARC_V9;
-        asmcputype : cpu_none;
-        fputype : fpu_hard;
-  {$endif sparc}
-  {$ifdef sparc64}
-        cputype : cpu_SPARC_V9;
-        optimizecputype : cpu_SPARC_V9;
-        asmcputype : cpu_none;
-        fputype : fpu_hard;
-  {$endif sparc64}
   {$ifdef arm}
         cputype : cpu_armv4;
         optimizecputype : cpu_armv4;
@@ -604,19 +573,6 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_sse64;
   {$endif x86_64}
-  {$ifdef mips}
-  {$ifdef mips64}
-        cputype : cpu_mips3;
-        optimizecputype : cpu_mips3;
-        asmcputype : cpu_none;
-        fputype : fpu_mips3;
-  {$else mips64}
-        cputype : cpu_mips2;
-        optimizecputype : cpu_mips2;
-        asmcputype : cpu_none;
-        fputype : fpu_mips2;
-  {$endif mips64}
-  {$endif mips}
   {$ifdef jvm}
         cputype : cpu_none;
         optimizecputype : cpu_none;

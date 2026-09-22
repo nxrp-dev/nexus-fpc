@@ -408,10 +408,7 @@ end;
 
 { on 32 bit systems, we should use the 64 bit time calls }
 {$if (sizeof(time_t)<=4)}
-  { mipsel-android doesn't have them as it is not part of newer android versions anymode }
-  {$if not(defined(ANDROID) and defined(CPUMIPSEL))}
     {$define USE_TIME64}
-  {$endif  not(defined(ANDROID) and defined(CPUMIPSEL))}
 {$endif (sizeof(clong)<=4)}
 
 Function  FpFUtimens   (handle: cint;constref times: TTimespecArr):cint;
@@ -649,7 +646,7 @@ end;
 
 { this is used by the Fppread/Fppwrite below. for more information,
   check the syscall() Linux man page (KB) }
-{$if defined(FPC_ABI_EABI) or defined(CPUMIPS32) or defined(CPUMIPSEL32) or defined(CPUPOWERPC32)}
+{$if defined(FPC_ABI_EABI)}
 {$define FPC_ALIGN_DUMMY}
 {$endif}
 

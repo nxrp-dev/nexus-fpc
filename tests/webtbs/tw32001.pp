@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 
 {$asmmode intel}
 procedure test;assembler;

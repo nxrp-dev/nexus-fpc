@@ -1,4 +1,4 @@
-{ %cpu=aarch64 }
+{ %cpu=aarch64}
 { %norun }
 
 {$mode delphi}

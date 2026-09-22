@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 { Old file: tbs0051.pp }
 {  Graph, shows a problem with putpixel                 OK 0.99.9 (PM) }

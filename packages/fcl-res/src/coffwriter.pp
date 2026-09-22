@@ -205,14 +205,6 @@ begin
   fMachineType:=cmtarm;
   fSymStorageClass:=IMAGE_SYM_CLASS_STATIC;
   {$ENDIF}
-  {$IFDEF CPUPOWERPC32}
-  fMachineType:=cmtppc32aix;
-  fSymStorageClass:=IMAGE_SYM_CLASS_HIDEXT;
-  {$ENDIF}
-  {$IFDEF CPUPOWERPC64}
-  fMachineType:=cmtppc64aix;
-  fSymStorageClass:=IMAGE_SYM_CLASS_HIDEXT;
-  {$ENDIF}
 
   fOppositeEndianess:=false;
 end;

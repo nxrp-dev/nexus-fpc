@@ -1,4 +1,4 @@
-{ %cpu=arm }
+{ %cpu=arm}
 { %norun }
 { Source provided for Free Pascal Bug Report 4722 }
 { Submitted by "Francesco Lombardi" on  2006-01-21 }

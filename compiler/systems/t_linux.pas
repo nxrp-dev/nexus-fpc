@@ -138,19 +138,7 @@ begin
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib64',true);
 {$else}
-{$ifdef powerpc64}
-      if target_info.abi<>abi_powerpc_elfv2 then
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/X11R6/lib64',true)
-      else
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/powerpc64le-linux-gnu;=/usr/X11R6/powerpc64le-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib64',true);
-      { /lib64 should be the really first, so add it before everything else }
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib64',true);
-{$else powerpc64}
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib;=/usr/lib;=/usr/X11R6/lib',true);
-{$endif powerpc64}
 {$endif x86_64}
 
 {$ifdef arm}
@@ -180,28 +168,10 @@ begin
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/aarch64-linux-gnu',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/aarch64-linux-gnu',true);
 {$endif aarch64}
-{$ifdef powerpc}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/powerpc-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/powerpc-linux-gnu',true);
-{$endif powerpc}
 {$ifdef m68k}
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/m68k-linux-gnu',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/m68k-linux-gnu',true);
 {$endif m68k}
-{$ifdef mipsel}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/mipsel-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/mipsel-linux-gnu',true);
-{$endif mipsel}
-{$ifdef mips}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/mips-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/mips-linux-gnu',true);
-{$endif mips}
-{$ifdef sparc64}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/sparc64-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/sparc64-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib64',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib64',true);
-{$endif sparc64}
     end;
 end;
 
@@ -217,19 +187,8 @@ end;
   const defdynlinker='/lib64/ld-linux-x86-64.so.2';
 {$endif x86_64}
 
-{$ifdef sparc}
-  const defdynlinker='/lib/ld-linux.so.2';
-{$endif sparc}
 
-{$ifdef powerpc}
-  const defdynlinker='/lib/ld.so.1';
-{$endif powerpc}
 
-{$ifdef powerpc64}
-  const defdynlinkerv1='/lib64/ld64.so.1';
-  const defdynlinkerv2='/lib64/ld64.so.2';
-  var defdynlinker: string;
-{$endif powerpc64}
 
 {$ifdef arm}
 {$ifdef FPC_ARMHF}
@@ -247,26 +206,13 @@ end;
 const defdynlinker='/lib/ld-linux-aarch64.so.1';
 {$endif aarch64}
 
-{$ifdef mips}
-  const defdynlinker='/lib/ld.so.1';
-{$endif mips}
 
-{$ifdef sparc64}
-  const defdynlinker='/lib64/ld-linux.so.2';
-{$endif sparc64}
 
 
 
 
 procedure SetupDynlinker(out DynamicLinker:string;out libctype:TLibcType);
 begin
-{$ifdef powerpc64}
-  if defdynlinker='' then
-    if target_info.abi=abi_powerpc_sysv then
-      defdynlinker:=defdynlinkerv1
-    else
-      defdynlinker:=defdynlinkerv2;
-{$endif powerpc64}
   {
     Search order:
     glibc 2.1+
@@ -362,53 +308,10 @@ begin
   target_opt:=' -b elf64-x86-64';
   emulation_opt:=' -m elf_x86_64';
 {$endif}
-{$ifdef powerpc}
-  target_opt:=' -b elf32-powerpc';
-  emulation_opt:=' -m elf32ppclinux';
-{$endif}
-{$ifdef sparc}
-  target_opt:=' -b elf32-sparc';
-  emulation_opt:=' -m elf32_sparc';
-{$endif}
-{$ifdef sparc64}
-  target_opt:=' -b elf64-sparc';
-  emulation_opt:=' -m elf64_sparc';
-{$endif}
 {$ifdef arm}       target_opt:='';{$endif} {unknown :( }
 {$ifdef aarch64}   target_opt:='';{$endif} {unknown :( }
 {$ifdef m68k}      target_opt:='';{$endif} {unknown :( }
-{$ifdef mips32}
-  {$ifdef mipsel}
-  platformopt:=' -EL';
-  emulation_opt:=' -m elf32ltsmip';
-  {$else}
-  platformopt:=' -EB';
-  emulation_opt:=' -m elf32btsmip';
-  {$endif}
-{$endif}
-{$ifdef mips64}
-  {$ifdef mips64el}
-  platformopt:=' -EL';
-  emulation_opt:=' -m elf64ltsmip';
-  {$else}
-  platformopt:=' -EB';
-  emulation_opt:=' -m elf64btsmip';
-  {$endif}
-{$endif}
 
-{$ifdef powerpc64}
-  if (target_info.abi=abi_powerpc_elfv2) and
-     (target_info.endian=endian_little) then
-    begin
-      target_opt:=' -b elf64-powerpcle';
-      emulation_opt:=' -m elf64lppc';
-    end
-  else
-    begin
-      target_opt:=' -b elf64-powerpc';
-      emulation_opt:=' -m elf64ppc';
-    end;
-{$endif powerpc64}
 {$ifdef arm}
   platformopt:=' -z noexecstack';
 {$endif arm}
@@ -1245,14 +1148,12 @@ begin
       Concat('EXESECTION .dynamic');
       Concat('  OBJSECTION .dynamic');
       Concat('ENDEXESECTION');
-{$ifndef mips}
       Concat('EXESECTION .got');
 {$ifdef arm}
       Concat('  OBJSECTION .got.plt');
 {$endif arm}
       Concat('  OBJSECTION .got');
       Concat('ENDEXESECTION');
-{$endif mips}
 {$ifndef arm}
       Concat('EXESECTION .got.plt');
       Concat('  OBJSECTION .got.plt');
@@ -1265,11 +1166,6 @@ begin
       Concat('  PROVIDE _edata');
       Concat('  PROVIDE edata');
       Concat('ENDEXESECTION');
-{$ifdef mips}
-      Concat('EXESECTION .got');
-      Concat('  OBJSECTION .got');
-      Concat('ENDEXESECTION');
-{$endif mips}
       Concat('EXESECTION .bss');
       Concat('  OBJSECTION .dynbss');
       Concat('  OBJSECTION .bss*');
@@ -1297,37 +1193,12 @@ end;
 initialization
   RegisterLinker(ld_linux,TLinkerLinux);
   RegisterLinker(ld_int_linux,TInternalLinkerLinux);
-{$ifdef i386}
-  RegisterImport(system_i386_linux,timportliblinux);
-  RegisterExport(system_i386_linux,texportliblinux);
-  RegisterTarget(system_i386_linux_info);
-{$endif i386}
-{$ifdef powerpc}
-  RegisterImport(system_powerpc_linux,timportliblinux);
-  RegisterExport(system_powerpc_linux,texportliblinux);
-  RegisterTarget(system_powerpc_linux_info);
-{$endif powerpc}
-{$ifdef powerpc64}
-  RegisterImport(system_powerpc64_linux,timportliblinux);
-  RegisterExport(system_powerpc64_linux,texportliblinux);
-  RegisterTarget(system_powerpc64_linux_info);
-{$endif powerpc64}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_linux,timportliblinux);
   RegisterExport(system_x86_64_linux,texportliblinux);
   RegisterTarget(system_x86_64_linux_info);
   RegisterTarget(system_x86_6432_linux_info);
 {$endif x86_64}
-{$ifdef SPARC}
-  RegisterImport(system_SPARC_linux,timportliblinux);
-  RegisterExport(system_SPARC_linux,texportliblinux);
-  RegisterTarget(system_SPARC_linux_info);
-{$endif SPARC}
-{$ifdef SPARC64}
-  RegisterImport(system_SPARC64_linux,timportliblinux);
-  RegisterExport(system_SPARC64_linux,texportliblinux);
-  RegisterTarget(system_SPARC64_linux_info);
-{$endif SPARC64}
 {$ifdef ARM}
   RegisterImport(system_arm_linux,timportliblinux);
   RegisterExport(system_arm_linux,texportliblinux);
@@ -1338,27 +1209,6 @@ initialization
   RegisterExport(system_aarch64_linux,texportliblinux);
   RegisterTarget(system_aarch64_linux_info);
 {$endif aarch64}
-{$ifdef MIPS32}
-{$ifdef MIPSEL}
-  RegisterImport(system_mipsel_linux,timportliblinux);
-  RegisterExport(system_mipsel_linux,texportliblinux);
-  RegisterTarget(system_mipsel_linux_info);
-{$else MIPSEL}
-  RegisterImport(system_mipseb_linux,timportliblinux);
-  RegisterExport(system_mipseb_linux,texportliblinux);
-  RegisterTarget(system_mipseb_linux_info);
-{$endif MIPSEL}
-{$endif MIPS32}
-{$ifdef MIPS64EB}
-  RegisterImport(system_mips64_linux,timportliblinux);
-  RegisterExport(system_mips64_linux,texportliblinux);
-  RegisterTarget(system_mips64_linux_info);
-{$endif MIPS64EB}
-{$ifdef MIPS64EL}
-  RegisterImport(system_mips64el_linux,timportliblinux);
-  RegisterExport(system_mips64el_linux,texportliblinux);
-  RegisterTarget(system_mips64el_linux_info);
-{$endif MIPS64EL}
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.
 

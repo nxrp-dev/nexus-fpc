@@ -1,4 +1,4 @@
-{ %cpu=arm }
+{ %cpu=arm}
 
 procedure p;assembler;
 asm

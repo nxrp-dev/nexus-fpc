@@ -1,4 +1,4 @@
-{ %cpu=i386,powerpc,powerpc64,x86_64 }
+{ %cpu=x86_64}
 {%SKIPTARGET=wince}
 // Title: bad construction status of object.
 {$C+}

@@ -1,4 +1,4 @@
-{ %CPU=avr }
+{ %CPU=avr}
 {$mode objfpc}
 program intmathtest;
 

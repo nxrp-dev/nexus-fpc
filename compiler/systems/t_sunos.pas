@@ -89,18 +89,6 @@ implementation
 const
   gnu_emul = '-m elf_x86_64_sol2';
 {$endif}
-{$ifdef i386}
-const
-  gnu_emul = '-m elf_i386_sol2';
-{$endif }
-{$ifdef sparc}
-const
-  gnu_emul = '-m elf32_sparc_sol2';
-{$endif}
-{$ifdef sparc64}
-const
-  gnu_emul = '-m elf64_sparc_sol2';
-{$endif}
 
 Constructor TLinkersolaris.Create;
 begin
@@ -131,21 +119,6 @@ procedure TLinkersolaris.SetDefaultInfo;
 const
   gld = 'gld $EMUL ';
   solaris_ld = 'ld -64 ';
-{$endif}
-{$ifdef i386}
-const
-  gld = 'gld $EMUL';
-  solaris_ld = 'ld ';
-{$endif }
-{$ifdef sparc}
-const
-  gld = 'gld $EMUL';
-  solaris_ld = 'ld -m32';
-{$endif}
-{$ifdef sparc64}
-const
-  gld = 'gld $EMUL';
-  solaris_ld = 'ld -m64';
 {$endif}
 begin
   Glibc2:=false;
@@ -668,11 +641,6 @@ end;
 
 initialization
   RegisterLinker(ld_solaris,TLinkerSolaris);
-{$ifdef i386}
-  RegisterImport(system_i386_solaris,TImportLibsolaris);
-  RegisterExport(system_i386_solaris,TExportLibsolaris);
-  RegisterTarget(system_i386_solaris_info);
-{$endif i386}
 
 {$ifdef x86_64}
   RegisterImport(system_x86_64_solaris,TImportLibsolaris);
@@ -680,11 +648,6 @@ initialization
   RegisterTarget(system_x86_64_solaris_info);
 {$endif x86_64}
 
-{$ifdef sparc}
-  RegisterImport(system_sparc_solaris,TImportLibsolaris);
-  RegisterExport(system_sparc_solaris,TExportLibsolaris);
-  RegisterTarget(system_sparc_solaris_info);
-{$endif sparc}
 
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.

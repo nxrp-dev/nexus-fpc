@@ -29,9 +29,6 @@ and all three 32-bit systems returned completely identical types too
 (everything 32-bit except dev_t, which is assumed to be a result of devfs
 introduction)
 }
-{$ifdef CPUSPARC}
-  { define __USE_LARGEFILE64}
-{$endif}
 
 {$if defined(cpuaarch64)}
 const
@@ -166,11 +163,7 @@ Type
 
   timeval     = record
                  tv_sec:time_t;
-{$ifdef CPUSPARC64}
-                 tv_usec:cint;
-{$else CPUSPARC64}
                  tv_usec:clong;
-{$endif CPUSPARC64}
                 end;
   ptimeval    = ^timeval;
   TTimeVal    = timeval;
@@ -347,11 +340,7 @@ CONST
 {$ifdef FPC_USE_LIBC}
    SIG_MAXSIG      = 1024;      // highest signal version
 {$else}
-  {$ifdef cpumips}
-   SIG_MAXSIG      = 1024;      // highest signal version
-  {$else not cupmips}
    SIG_MAXSIG      = 128;       // highest signal version
-  {$endif not cpumips}
 {$endif}
 
  { For getting/setting priority }

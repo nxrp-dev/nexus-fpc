@@ -1,4 +1,4 @@
-{ %target=linux,freebsd,openbsd,netbsd,win32,win64,darwin,haiku,wasip1,wasip1threads }
+{ %target=linux,freebsd,openbsd,netbsd,win64,darwin,haiku,wasip1,wasip1threads}
 
 {$codepage utf8}
 

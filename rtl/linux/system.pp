@@ -643,11 +643,7 @@ function FpUGetRLimit(resource : cInt; rlim : PRLimit) : cInt; cdecl; external c
 {$endif}
 {$endif}
 
-{$if defined(CPUPOWERPC) or defined(CPUPOWERPC64)}
-const
-  page_size = $10000;
-  {$define LAST_PAGE_GENERATES_SIGNAL}
-{$elseif defined(CPULOONGARCH)}
+{$if defined(CPULOONGARCH)}
 const
   page_size = $4000;
 {$else}
@@ -687,11 +683,6 @@ begin
 {$endif}
 
 {$ifndef FPUNONE}
-{$if defined(cpupowerpc)}
-  // some PPC kernels set the exception bits FE0/FE1 in the MSR to zero,
-  // disabling all FPU exceptions. Enable them again.
-  fpprctl(PR_SET_FPEXC, PR_FP_EXC_PRECISE);
-{$endif}
 {$endif}
   IsConsole := TRUE;
   StackLength := CheckInitialStkLen(initialStkLen);

@@ -1,4 +1,4 @@
-{ %CPU=aarch64 }
+{ %CPU=aarch64}
 
 {$i tfma1.inc}
 

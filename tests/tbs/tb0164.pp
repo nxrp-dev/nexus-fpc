@@ -1,5 +1,5 @@
 { %GRAPH }
-{ %TARGET=go32v2,win32,linux }
+{ %TARGET=linux}
 
 { Old file: tbs0195.pp }
 { Problem with Getimage, crash of DOS box, even with dpmiexcp!! (PFV) Not a bugs, you must use p^. }

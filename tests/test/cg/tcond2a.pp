@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 { %OPT=-a -O2 -CpCOREI }
 
 { This test evaluates IsRefSafe returning false but still permitting CMOV

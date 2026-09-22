@@ -274,19 +274,6 @@ unit raatt;
               firsttoken:=true;
               exit;
             end;
-{$if defined(POWERPC) or defined(POWERPC64)}
-           { some PowerPC instructions can have the postfix -, + or .
-             this code could be moved to is_asmopcode but I think
-             it's better to ifdef it here (FK)
-           }
-           case c of
-             '.', '-', '+':
-               begin
-                 actasmpattern:=actasmpattern+c;
-                 c:=current_scanner.asmgetchar;
-               end
-           end;
-{$endif POWERPC}
 {$if defined(ARM)}
            {
              Thumb-2 instructions can have a .W postfix to indicate 32bit instructions,

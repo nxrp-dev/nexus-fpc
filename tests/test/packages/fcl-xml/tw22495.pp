@@ -1,5 +1,5 @@
 { %norun }
-{ %cpu=i386,powerpc,arm,sparc,mips }
+{ %cpu=arm}
 { %opt=-gs }
 
 { Stabs is only supported for 32 bit targets }

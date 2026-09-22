@@ -1,4 +1,4 @@
-{ %CPU=arm }
+{ %CPU=arm}
 procedure p; assembler;
   var
     i : longint;

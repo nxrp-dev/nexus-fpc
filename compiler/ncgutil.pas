@@ -109,12 +109,6 @@ implementation
     dbgbase,
     nadd,nbas,ncon,nld,nmem,nutils,
     tgobj,cgobj,hlcgobj,hlcgcpu
-{$ifdef powerpc}
-    , cpupi
-{$endif}
-{$ifdef powerpc64}
-    , cpupi
-{$endif}
 {$ifdef SUPPORT_MMX}
     , cgx86
 {$endif SUPPORT_MMX}

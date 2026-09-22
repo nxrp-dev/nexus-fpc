@@ -1,4 +1,4 @@
-{ %CPU=ARM }
+{ %CPU=ARM}
 program tw40472;
 
 function AddrCheck(): LongInt; assembler; nostackframe;

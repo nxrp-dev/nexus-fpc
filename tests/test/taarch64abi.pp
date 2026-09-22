@@ -1,4 +1,4 @@
-{ %CPU=aarch64 }
+{ %CPU=aarch64}
 { %skiptarget=darwin }
 
 {

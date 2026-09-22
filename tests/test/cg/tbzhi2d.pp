@@ -1,4 +1,4 @@
-{ %CPU=i386,x86_64 }
+{ %CPU=x86_64}
 { %OPT=-O3 -CpCOREAVX2 -OpCOREAVX2 }
 {$R-}
 
