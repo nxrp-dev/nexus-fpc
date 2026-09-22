@@ -1137,9 +1137,6 @@ begin
   default_target(system_jvm_java32);
 {$endif jvm}
 
-{$ifdef i8086}
-  default_target(system_i8086_msdos);
-{$endif i8086}
 
 {$ifdef aarch64}
   {$ifdef cpuaarch64}
@@ -1175,9 +1172,6 @@ begin
   {$endif cpuaarch64}
 {$endif aarch64}
 
-{$ifdef wasm32}
-  default_target(system_wasm32_wasip1);
-{$endif wasm32}
 
 
 {$ifdef riscv32}

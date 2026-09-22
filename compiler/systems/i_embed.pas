@@ -437,85 +437,6 @@ unit i_embed;
             llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128';
          );
 
-       system_i8086_embedded_info : tsysteminfo =
-          (
-            system       : system_i8086_embedded;
-            name         : 'Embedded';
-            shortname    : 'Embedded';
-            flags        : [tf_use_8_3,
-{$ifdef I8086_SMARTLINK_SECTIONS}
-                            tf_smartlink_sections,
-{$else I8086_SMARTLINK_SECTIONS}
-                            tf_smartlink_library,
-                            tf_no_objectfiles_when_smartlinking,
-{$endif I8086_SMARTLINK_SECTIONS}
-                            tf_cld,
-                            tf_no_generic_stackcheck,tf_emit_stklen];
-            cpu          : cpu_i8086;
-            unit_env     : '';
-            extradefines : '';
-            exeext       : '.exe';
-            defext       : '.def';
-            scriptext    : '.bat';
-            smartext     : '.sl';
-            unitext      : '.ppu';
-            unitlibext   : '.ppl';
-            asmext       : '.s';
-            objext       : '.o';
-            resext       : '.res';
-            resobjext    : '.or';
-            sharedlibext : '.dll';
-            staticlibext : '.a';
-            staticlibprefix : '';
-            sharedlibprefix : '';
-            sharedClibext : '.dll';
-            staticClibext : '.a';
-            staticClibprefix : 'lib';
-            sharedClibprefix : '';
-            importlibprefix : '';
-            importlibext : '.al';
-            Cprefix      : '_';
-            newline      : #13#10;
-            dirsep       : '\';
-            assem        : as_i8086_omf;
-            assemextern  : as_i8086_nasmobj;
-            link         : ld_int_msdos;
-            linkextern   : ld_msdos;
-{$ifdef USE_SCRIPTED_WLIB}
-            ar           : ar_watcom_wlib_omf_scripted;
-{$else}
-            ar           : ar_watcom_wlib_omf;
-{$endif}
-            res          : res_none;
-            dbg          : dbg_dwarf2;
-            script       : script_dos;
-            endian       : endian_little;
-            alignment    :
-              (
-                procalign       : 1;
-                loopalign       : 1;
-                jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 0;
-                constalignmax   : 2;
-                varalignmin     : 0;
-                varalignmax     : 2;
-                localalignmin   : 0;
-                localalignmax   : 2;
-                recordalignmin  : 0;
-                recordalignmax  : 2;
-                maxCrecordalign : 2
-              );
-            first_parm_offset : 4;
-            stacksize    : 0;
-            stackalign   : 2;
-            abi          : abi_default;
-            llvmdatalayout : 'todo';
-          );
-
-
        system_riscv32_embedded_info : tsysteminfo =
           (
             system       : system_riscv32_embedded;
@@ -717,77 +638,6 @@ unit i_embed;
             llvmdatalayout : 'e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:64:128-a0:0:64-n32-S32';
           );
 
-       system_wasm32_embedded_info : tsysteminfo =
-          (
-            system       : system_wasm32_embedded;
-            name         : 'Embedded';
-            shortname    : 'Embedded';
-            flags        : [tf_under_development,tf_needs_symbol_size,tf_needs_symbol_type,
-                            tf_files_case_sensitive,tf_no_generic_stackcheck,
-                            tf_smartlink_sections,
-                            { avoid the creation of threadvar tables }
-                            tf_section_threadvars];
-            cpu          : cpu_wasm32;
-            unit_env     : '';
-            extradefines : '';
-            exeext       : '.wasm';
-            defext       : '.def';
-            scriptext    : '.sh';
-            smartext     : '.sl';
-            unitext      : '.ppu';
-            unitlibext   : '.ppl';
-            asmext       : '.wat';
-            objext       : '.o';
-            resext       : '';
-            resobjext    : '.o';
-            sharedlibext : ''; // keep it empty! The sharedlibext drives the export module name
-                               // if this is populated, then the name should be cleared when generating import
-            staticlibext : '.a';
-            staticlibprefix : '';
-            sharedlibprefix : '';
-            sharedClibext : '.wasm';
-            staticClibext : '.wasm';
-            staticClibprefix : '';
-            sharedClibprefix : '';
-            importlibprefix : '';
-            importlibext : '.wasm';
-            Cprefix      : '';
-            newline      : #10;
-            dirsep       : '/';
-            assem        : as_wasm32_wasm;
-            assemextern  : as_wasm32_llvm_mc;
-            link         : ld_none;
-            linkextern   : ld_embedded;
-            ar           : ar_none;
-            res          : res_none;
-            dbg          : dbg_dwarf2;
-            script       : script_unix;
-            endian       : endian_little;
-            alignment    :
-              (
-                procalign       : 0;
-                loopalign       : 0;
-                jumpalign       : 0;
-                jumpalignskipmax    : 0;
-                coalescealign   : 0;
-                coalescealignskipmax: 0;
-                constalignmin   : 4;
-                constalignmax   : 16;
-                varalignmin     : 4;
-                varalignmax     : 16;
-                localalignmin   : 4;
-                localalignmax   : 16;
-                recordalignmin  : 0;
-                recordalignmax  : 16;
-                maxCrecordalign : 16
-              );
-            first_parm_offset : 0;
-            stacksize   : 65536;
-            stackalign   : 16;
-            abi          : abi_default;
-            llvmdatalayout : 'todo';
-          );
-
  implementation
 
 initialization
@@ -821,11 +671,6 @@ initialization
     set_source_info(system_x86_64_embedded_info);
   {$endif embedded}
 {$endif CPUX86_64}
-{$ifdef cpu8086}
-  {$ifdef embedded}
-    set_source_info(system_i8086_embedded_info);
-  {$endif embedded}
-{$endif cpu8086}
 {$ifdef cpuriscv32}
   {$ifdef embedded}
     set_source_info(system_riscv32_embedded_info);

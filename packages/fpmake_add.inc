@@ -28,5 +28,5 @@
   add_sqlite(ADirectory+IncludeTrailingPathDelimiter('sqlite'));
   add_tplylib(ADirectory+IncludeTrailingPathDelimiter('tplylib'));
   add_univint(ADirectory+IncludeTrailingPathDelimiter('univint'));
-  add_x11(ADirectory+IncludeTrailingPathDelimiter('x11'));
   add_winunits_base(ADirectory+IncludeTrailingPathDelimiter('winunits-base'));
+  add_x11(ADirectory+IncludeTrailingPathDelimiter('x11'));

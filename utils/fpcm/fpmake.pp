@@ -197,8 +197,6 @@ begin
     P:=AddPackage('utils-fpcm');
     P.ShortName:='fpcm';
     P.OSes:=AllOSes-[embedded,msdos,nativent,macosclassic,atari,palmos,sinclairql,human68k,ps1,wasip2];
-    if Defaults.CPU=jvm then
-      P.OSes := P.OSes - [java,android];
 
     P.Author := '<various>';
     P.License := 'LGPL with modification';

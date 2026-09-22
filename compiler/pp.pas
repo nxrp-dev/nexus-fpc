@@ -30,8 +30,6 @@ program pp;
   ARM                 generate a compiler for the ARM
   AVR                 generate a compiler for the AVR
   I386                generate a compiler for the Intel i386+
-  I8086               generate a compiler for the Intel 8086+
-  JVM                 generate a compiler for the JVM (Java Virtual Machine)
   LOONGARCH64         generate a compiler for the LoongArch64 architecture
   MIPS                generate a compiler for the MIPS (Big Endian)
   MIPSEL              generate a compiler for the MIPSEL (Little Endian)
@@ -41,7 +39,6 @@ program pp;
   RISCV64             generate a compiler for the RiscV64 architecture
   SPARC               generate a compiler for SPARC
   SPARC64             generate a compiler for SPARC64
-  WASM32              generate a compiler for WebAssembly 32-bit
   X86_64              generate a compiler for the AMD x86-64 architecture
   XTENSA              generate a compiler for XTENSA
 
@@ -92,12 +89,6 @@ program pp;
 {$endif}
 
 { exactly one target CPU must be defined }
-{$ifdef I8086}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif I8086}
 {$ifdef I386}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}
@@ -152,12 +143,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif AVR}
-{$ifdef JVM}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif}
 {$ifdef AARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}
@@ -182,12 +167,6 @@ program pp;
   {$endif CPUDEFINED}
   {$define CPUDEFINED}
 {$endif XTENSA}
-{$ifdef WASM32}
-  {$ifdef CPUDEFINED}
-    {$fatal ONLY one of the switches for the CPU type must be defined}
-  {$endif CPUDEFINED}
-  {$define CPUDEFINED}
-{$endif WASM32}
 {$ifdef LOONGARCH64}
   {$ifdef CPUDEFINED}
     {$fatal ONLY one of the switches for the CPU type must be defined}

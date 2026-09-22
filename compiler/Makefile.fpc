@@ -32,7 +32,7 @@ fpcdir=..
 unexport FPC_VERSION FPC_COMPILERINFO
 
 # Which platforms are ready for inclusion in the cycle
-CYCLETARGETS=i386 powerpc sparc arm x86_64 powerpc64 armeb mipsel mips avr jvm i8086 aarch64 sparc64 riscv32 riscv64 xtensa wasm32 loongarch64
+CYCLETARGETS=i386 powerpc sparc arm x86_64 powerpc64 armeb mipsel mips avr aarch64 sparc64 riscv32 riscv64 xtensa loongarch64
 
 # Platforms not yet ready
 BETATARGETS=mips64 mips64el
@@ -41,9 +41,9 @@ BETATARGETS=mips64 mips64el
 ALLTARGETS=$(CYCLETARGETS)
 
 # All OS targets that do not support native compiler
-NO_NATIVE_COMPILER_OS_LIST=embedded freertos gba macosclassic msdos nds sinclairql symbian watcom wii ps1 wasip2
+NO_NATIVE_COMPILER_OS_LIST=embedded freertos gba macosclassic nds sinclairql symbian watcom wii ps1
 # All CPU targets that do not support native compiler
-NO_NATIVE_COMPILER_CPU_LIST=avr i8086 jvm
+NO_NATIVE_COMPILER_CPU_LIST=avr
 
 # Don't compile a native compiler & utilities for targets
 # which do not support it
@@ -67,7 +67,7 @@ CROSSINSTALL=1
 endif
 endif
 
-# Allow POWERPC, POWERPC64, I386, jvm defines for target cpu
+# Allow POWERPC, POWERPC64, I386 defines for target cpu
 ifdef POWERPC
 PPC_TARGET=powerpc
 endif
@@ -106,12 +106,6 @@ PPC_TARGET=mips64el
 endif
 ifdef AVR
 PPC_TARGET=avr
-endif
-ifdef JVM
-PPC_TARGET=jvm
-endif
-ifdef I8086
-PPC_TARGET=i8086
 endif
 ifdef AARCH64
 PPC_TARGET=aarch64
@@ -281,12 +275,6 @@ ifeq ($(CPC_TARGET),avr)
 CPUSUF=avr
 ALLOW_WARNINGS=1
 endif
-ifeq ($(CPC_TARGET),jvm)
-CPUSUF=jvm
-endif
-ifeq ($(CPC_TARGET),i8086)
-CPUSUF=8086
-endif
 ifeq ($(CPC_TARGET),aarch64)
 CPUSUF=a64
 endif
@@ -298,9 +286,6 @@ CPUSUF=rv64
 endif
 ifeq ($(CPC_TARGET),xtensa)
 CPUSUF=xtensa
-endif
-ifeq ($(CPC_TARGET),wasm32)
-CPUSUF=wasm32
 endif
 ifeq ($(CPC_TARGET),loongarch64)
 CPUSUF=loongarch64
@@ -443,19 +428,9 @@ ifeq ($(PPC_TARGET),mips64el)
 override LOCALOPT+=-Fumips
 endif
 
-# jvm specific
-ifeq ($(PPC_TARGET),jvm)
-override LOCALOPT+=-Fujvm
-endif
-
 # AArch64 specific
 ifeq ($(PPC_TARGET),aarch64)
 override LOCALOPT+=-Fuarmgen
-endif
-
-# i8086 specific
-ifeq ($(PPC_TARGET),i8086)
-override LOCALOPT+=-Fux86
 endif
 
 # RiscV32 specific
@@ -466,11 +441,6 @@ endif
 # RiscV64 specific
 ifeq ($(PPC_TARGET),riscv64)
 override LOCALOPT+=-Furiscv
-endif
-
-# WASM32 specific
-ifeq ($(PPC_TARGET),wasm32)
-override LOCALOPT+=-Fuwasm32
 endif
 
 # LoongArch64 specific
@@ -546,11 +516,7 @@ EXENAME=ppc$(CPUSUF)$(EXEEXT)
 endif
 PPEXENAME=pp$(EXEEXT)
 TEMPNAME=ppc$(SRCEXEEXT)
-ifneq ($(CPUSUF),jvm)
 PPCROSSNAME=ppcross$(CPUSUF)$(SRCEXEEXT)
-else
-PPCROSSNAME=ppc$(CPUSUF)$(SRCEXEEXT)
-endif
 TEMPNAME1=ppc1$(EXEEXT)
 TEMPNAME2=ppc2$(EXEEXT)
 TEMPNAME3=ppc3$(EXEEXT)
@@ -681,8 +647,8 @@ endif
 # cpu targets
 #####################################################################
 
-PPC_TARGETS=i386 powerpc sparc arm armeb x86_64 powerpc64 mips mipsel mips64 mips64el avr jvm i8086 aarch64 sparc64 riscv32 riscv64 xtensa wasm32 loongarch64
-PPC_SUFFIXES=386 ppc sparc arm armeb x64 ppc64 mips mipsel mips64 mips64el avr jvm 8086 a64 sparc64 rv32 rv64 xtensa wasm32 loongarch64
+PPC_TARGETS=i386 powerpc sparc arm armeb x86_64 powerpc64 mips mipsel mips64 mips64el avr aarch64 sparc64 riscv32 riscv64 xtensa loongarch64
+PPC_SUFFIXES=386 ppc sparc arm armeb x64 ppc64 mips mipsel mips64 mips64el avr 8086 a64 sparc64 rv32 rv64 xtensa loongarch64
 INSTALL_TARGETS=$(addsuffix _exe_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 CLEAN_TARGETS=$(addsuffix _clean,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
 SYMLINKINSTALL_TARGETS=$(addsuffix _symlink_install,$(sort $(CYCLETARGETS) $(PPC_TARGETS)))
@@ -779,7 +745,6 @@ msg: msgtxt.inc
 
 insdatx86 : $(COMPILER_UNITTARGETDIR) x86/x86ins.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86ins.pp
-        cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) i8086 && mv -f i8086tab.inc i8086op.inc i8086nop.inc i8086att.inc i8086atts.inc i8086int.inc i8086prop.inc ../i8086
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) && mv -f i386tab.inc i386op.inc i386nop.inc i386att.inc i386atts.inc i386int.inc i386prop.inc ../i386
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86ins$(SRCEXEEXT) x86_64 && mv -f x8664tab.inc x8664op.inc x8664nop.inc x8664att.inc x8664ats.inc x8664int.inc x8664pro.inc ../x86_64
 
@@ -800,8 +765,6 @@ insdat: insdatx86 insdatarm insdataarch64 insdatloongarch64
 
 regdatx86 : x86/x86reg.dat
 	$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86reg.pp
-        cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT) i8086
-        mv -f x86/r8086*.inc i8086
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT)
         mv -f x86/r386*.inc i386
         cd x86 && ..$(PATHSEP)utils$(PATHSEP)mkx86reg$(SRCEXEEXT) x86_64
@@ -834,10 +797,6 @@ regdatmips : mips/mipsreg.dat
         cd mips && ..$(PATHSEP)utils$(PATHSEP)mkmpsreg$(SRCEXEEXT)
 
 
-regdatwasm : wasm32/wasmreg.dat
-	    $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkwasmreg.pp
-        cd wasm32 && ..$(PATHSEP)utils$(PATHSEP)mkwasmreg$(SRCEXEEXT)
-
 regdatrv32 : riscv/rvreg.dat
             $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkrvreg.pp
         cd riscv && ..$(PATHSEP)utils$(PATHSEP)mkrvreg$(SRCEXEEXT) riscv32
@@ -852,7 +811,7 @@ regdatloongarch64 : loongarch64/loongarchreg.dat
             $(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkloongarch64reg.pp
         cd loongarch64 && ..$(PATHSEP)utils$(PATHSEP)mkloongarch64reg$(SRCEXEEXT)
 
-regdat : regdatx86 regdatarm regdatsp regdatavr regdataarch64 regdatmips regdatsp64 regdatwasm regdatrv32 regdatrv64 regdatloongarch64
+regdat : regdatx86 regdatarm regdatsp regdatavr regdataarch64 regdatmips regdatsp64 regdatrv32 regdatrv64 regdatloongarch64
 
 intrdatx86 : x86/x86intr.dat
 		$(COMPILER) -FE$(COMPILERUTILSDIR) $(COMPILERUTILSDIR)/mkx86inl.pp
@@ -1127,7 +1086,7 @@ cvstest:
 # 4. build all supported cross compilers except the
 #    current PPC_TARGET which was already build
 # unless FPC_SUPPORT_X87_TYPES_ON_WIN64 is set,
-# win64 cannot compile i386 or i8086 compiler
+# win64 cannot compile i386 compiler
 # This is also the case for other CPUs that don't support
 # 80bit real type, unless -dFPC_SOFT_FPUX80
 # option is used.
@@ -1137,7 +1096,7 @@ ifeq ($(OS_SOURCE),win64)
   EXCLUDE_80BIT_TARGETS=1
 endif
 
-ifneq ($(findstring $(CPU_SOURCE),aarch64 arm avr jvm mips mipsel mips64 mips64el powerpc powerpc64 sparc sparc64 riscv32 riscv64 xtensa loongarch64),)
+ifneq ($(findstring $(CPU_SOURCE),aarch64 arm avr mips mipsel mips64 mips64el powerpc powerpc64 sparc sparc64 riscv32 riscv64 xtensa loongarch64),)
   EXCLUDE_80BIT_TARGETS=1
 endif
 endif
@@ -1145,7 +1104,7 @@ endif
 ifndef EXCLUDE_80BIT_TARGETS
 FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
 else
-FULL_TARGETS=$(filter-out x86_64,$(filter-out i8086,$(filter-out i386,$(filter-out $(PPC_TARGET),$(CYCLETARGETS)))))
+FULL_TARGETS=$(filter-out x86_64,$(filter-out i386,$(filter-out $(PPC_TARGET),$(CYCLETARGETS))))
 endif
 
 full: fullcycle

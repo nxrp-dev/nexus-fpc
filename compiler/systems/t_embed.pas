@@ -33,9 +33,6 @@ implementation
        SysUtils,
        cutils,cfileutl,cclasses,
        globtype,globals,systems,verbose,comphook,cscript,fmodule,i_embed,link,
-{$ifdef wasm32}
-       t_wasi,import,export,
-{$endif wasm32}
        cpuinfo,aasmbase;
 
     type
@@ -48,17 +45,6 @@ implementation
           procedure SetDefaultInfo; override;
           function  MakeExecutable:boolean; override;
           function postprocessexecutable(const fn : string;isdll:boolean):boolean;
-       end;
-
-       { TLinkerEmbedded_Wasm }
-
-       TLinkerEmbedded_Wasm=class(texternallinker)
-       public
-         constructor Create;override;
-         procedure SetDefaultInfo;override;
-
-         //function  MakeExecutable:boolean;override;
-         function  MakeSharedLibrary:boolean;override;
        end;
 
 
@@ -1974,88 +1960,6 @@ begin
 end;
 
 {*****************************************************************************
-                              TlinkerEmbedded_Wasm
-*****************************************************************************}
-
-constructor TLinkerEmbedded_Wasm.Create;
-  begin
-    inherited Create;
-  end;
-
-procedure TLinkerEmbedded_Wasm.SetDefaultInfo;
-  begin
-    Info.DllCmd[1] := 'wasm-ld -m wasm32 $SONAME $GCSECTIONS $MAP -z stack-size=$STACKSIZE $OPT -o $EXE';
-    //Info.DllCmd[2] := 'wasmtool --exportrename $INPUT $EXE';
-  end;
-
-function TLinkerEmbedded_Wasm.MakeSharedLibrary: boolean;
-  var
-    GCSectionsStr  : ansistring;
-    binstr, cmdstr : Tcmdstr;
-    InitStr,
-    FiniStr,
-    SoNameStr      : string[80];
-    mapstr,ltostr  : TCmdStr;
-    success        : Boolean;
-
-    tmp : TCmdStrListItem;
-    tempFileName : ansistring;
-  begin
-    Result:=false;
-    if not(cs_link_nolink in current_settings.globalswitches) then
-      Message1(exec_i_linking,current_module.sharedlibfilename);
-
-    mapstr:='';
-    if (cs_link_map in current_settings.globalswitches) then
-      mapstr:='-Map '+maybequoted(ChangeFileExt(current_module.sharedlibfilename,'.map'));
-    if (cs_link_smart in current_settings.globalswitches) and
-       create_smartlink_sections then
-     GCSectionsStr:='--gc-sections'
-    else
-      GCSectionsStr:='';
-
-    SoNameStr:='';
-    SplitBinCmd(Info.DllCmd[1],binstr,cmdstr);
-    Replace(cmdstr,'$EXE',maybequoted(current_module.sharedlibfilename));
-
-    tmp := TCmdStrListItem(ObjectFiles.First);
-    while Assigned(tmp) do begin
-      cmdstr := tmp.Str+ ' ' + cmdstr;
-      tmp := TCmdStrListItem(tmp.Next);
-    end;
-
-    if HasExports then
-      cmdstr := cmdstr + ' --export-dynamic'; //' --export-dynamic';
-
-    cmdstr := cmdstr + ' --no-entry --allow-undefined';
-
-    if (cs_link_strip in current_settings.globalswitches) then
-     begin
-       { only remove non global symbols and debugging info for a library }
-       cmdstr := cmdstr + ' --strip-all';
-     end;
-
-    Replace(cmdstr,'$OPT',Info.ExtraOptions);
-    //Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
-    //Replace(cmdstr,'$INIT',InitStr);
-    //Replace(cmdstr,'$FINI',FiniStr);
-    Replace(cmdstr,'$STACKSIZE',tostr(stacksize));
-    Replace(cmdstr,'$SONAME',SoNameStr);
-    Replace(cmdstr,'$MAP',mapstr);
-    //Replace(cmdstr,'$LTO',ltostr);
-    Replace(cmdstr,'$GCSECTIONS',GCSectionsStr);
-    success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,false);
-
-    //SplitBinCmd(Info.DllCmd[2],binstr,cmdstr);
-    //Replace(cmdstr,'$INPUT',current_module.objfilename );
-    //Replace(cmdstr,'$EXE',maybequoted(current_module.exefilename));
-    //DoExec(FindUtil(utilsprefix+binstr),cmdstr,false,false);
-
-    MakeSharedLibrary:=success;
-  end;
-
-
-{*****************************************************************************
                                      Initialize
 *****************************************************************************}
 
@@ -2085,14 +1989,6 @@ initialization
   RegisterTarget(system_x86_64_embedded_info);
 {$endif x86_64}
 
-{$ifdef i8086}
-  { no need to register linker ld_embedded, because i8086_embedded uses the
-    regular msdos linker. In case a flat binary, relocated for a specific
-    segment address is needed (e.g. for a BIOS or a real mode bootloader), it
-    can be produced post-compilation with exe2bin or a similar tool. }
-  RegisterTarget(system_i8086_embedded_info);
-{$endif i8086}
-
 {$ifdef mipsel}
   RegisterLinker(ld_embedded,TLinkerEmbedded);
   RegisterTarget(system_mipsel_embedded_info);
@@ -2115,10 +2011,4 @@ initialization
 {$endif xtensa}
 
 
-{$ifdef wasm32}
-  RegisterTarget(system_wasm32_embedded_info);
-  RegisterImport(system_wasm32_embedded, timportlibwasi);
-  RegisterExport(system_wasm32_embedded, texportlibwasi);
-  RegisterLinker(ld_embedded, TLinkerEmbedded_Wasm);
-{$endif wasm32}
 end.

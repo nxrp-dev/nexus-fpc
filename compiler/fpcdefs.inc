@@ -84,33 +84,6 @@
   {$packrecords c}
 {$endif cpuarm}
 
-{$ifdef i8086}
-  {$define cpu16bit}
-  {$define cpu16bitaddr}
-  {$define cpu16bitalu}
-  {$define x86}
-  {$define cpuflags}
-  {$define cpuextended}
-  {//$define SUPPORT_MMX}
-  {$define cpumm}
-  {$define fewintregisters}
-  {$define cpurox}
-  {$define cpurefshaveindexreg}
-  {$define SUPPORT_SAFECALL}
-  {$define cpuneedsmulhelper}
-  { TODO: add another define in order to disable the div helper for 16-bit divs? }
-  {$define cpuneedsdivhelper}
-  {$define VOLATILE_ES}
-  {$define SUPPORT_GET_FRAME}
-  {$define cpucg64shiftsupport}
-  {$define OMFOBJSUPPORT}
-  {$ifdef go32v2}
-    { go32v2 uses cwsdpmi extender which is incompatible with watcom extender
-      thus we use the internal smartlink sections by default in that case. }
-    {$define I8086_SMARTLINK_SECTIONS}
-    {$define i8086_link_intern_debuginfo}
-  {$endif go32v2}
-{$endif i8086}
 
 {$ifdef i386}
   {$define cpu32bit}
@@ -313,15 +286,6 @@
   {$define SUPPORT_SAFECALL}
 {$endif mips}
 
-{$ifdef jvm}
-  {$define cpu32bit}
-  {$define cpu64bitalu}
-  {$define cpu32bitaddr}
-  {$define cpuhighleveltarget}
-  {$define symansistr}
-  {$define SUPPORT_GET_FRAME}
-{$endif}
-
 {$ifdef aarch64}
   {$define cpu64bit}
   {$define cpu64bitaddr}
@@ -423,16 +387,5 @@
   {$define cpuhighleveltarget}
   {$define cpucg64shiftsupport}
   {$define symansistr}
-{$endif}
-
-{$ifdef wasm32}
-  {$define wasm}
-  {$define cpu32bit}
-  {$define cpu64bitalu}
-  {$define cpu32bitaddr}
-  {$define cpuhighleveltarget}
-  {$define cpurox}
-  {$define symansistr}
-  {$define SUPPORT_GET_FRAME}
 {$endif}
 

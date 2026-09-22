@@ -317,7 +317,6 @@ ifndef CROSSBINDIR
 ifdef CROSSCOMPILE
 ifneq ($(OS_TARGET),msdos)
 ifndef DARWIN2DARWIN
-ifneq ($(CPU_TARGET),jvm)
 BINUTILSPREFIX=$(CPU_TARGET)-$(OS_TARGET)-
 ifeq ($(OS_TARGET),android)
 ifeq ($(CPU_TARGET),arm)
@@ -327,7 +326,6 @@ ifeq ($(CPU_TARGET),i386)
 BINUTILSPREFIX=i686-linux-android-
 else
 BINUTILSPREFIX=$(CPU_TARGET)-linux-android-
-endif
 endif
 endif
 endif
@@ -371,7 +369,6 @@ override PACKAGE_NAME=rtl
 PACKAGEDIR_MAIN:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /rtl/Makefile.fpc,$(PACKAGESDIR))))))
 ifdef FPC_DOTTEDUNITS
 ALLWINNER_A20UNIT=Embedded.Allwinner_a20
-ANDROIDR14UNIT=AndroidAPI.AndroidR14
 ATHREADSUNIT=AmigaApi.AThreads
 BASEUNIXUNIT=UnixApi.Base
 BETHREADSUNIT=BeosApi.Bethreads
@@ -488,7 +485,6 @@ HEAPTRCUNIT=heaptrc
 INITCUNIT=System.InitC
 INTRINSICSUNIT=System.Intrinsics
 ISO7185UNIT=iso7185
-JDK15UNIT=JavaApi.JDK15
 KBDCALLSUNIT=OS2Api.kbdcalls
 LINEINFOUNIT=lineinfo
 LINUXUNIT=LinuxApi
@@ -607,11 +603,7 @@ UNIXTYPEUNIT=UnixApi.Types
 UNIXUTILUNIT=UnixApi.Utils
 UUCHARUNIT=uuchar
 VIOCALLSUNIT=OS2Api.viocalls
-WASIAPIUNIT=WASIApi.WASIApi
-WASIUTILUNIT=WASIApi.WASIUtil
 WATCOMUNIT=WatcomApi.WatCom
-WEBASSEMBLYUNIT=Wasm.Api
-WASMSEMUNIT=Wasm.Semaphore
 WINDIRSUNIT=WinApi.WinDirs
 WINDOWSUNIT=WinApi.Windows
 WINSYSUTUNIT=WinApi.WinSysUt
@@ -620,7 +612,6 @@ XMC4500UNIT=EmbeddedApi.xmc4500
 NOTHREADSUNIT=System.NoThreads
 else
 ALLWINNER_A20UNIT=allwinner_a20
-ANDROIDR14UNIT=androidr14
 ATHREADSUNIT=athreads
 BASEUNIXUNIT=baseunix
 BETHREADSUNIT=bethreads
@@ -738,7 +729,6 @@ HEAPTRCUNIT=heaptrc
 INITCUNIT=initc
 INTRINSICSUNIT=intrinsics
 ISO7185UNIT=iso7185
-JDK15UNIT=jdk15
 KBDCALLSUNIT=kbdcalls
 LINEINFOUNIT=lineinfo
 LINUXUNIT=linux
@@ -857,11 +847,7 @@ UNIXTYPEUNIT=unixtype
 UNIXUTILUNIT=unixutil
 UUCHARUNIT=uuchar
 VIOCALLSUNIT=viocalls
-WASIAPIUNIT=wasiapi
-WASIUTILUNIT=wasiutil
 WATCOMUNIT=watcom
-WEBASSEMBLYUNIT=webassembly
-WASMSEMUNIT=wasmsem
 WINDIRSUNIT=windirs
 WINDOWSUNIT=windows
 WINSYSUTUNIT=winsysut
@@ -1249,13 +1235,11 @@ SHAREDLIBEXT=.dll
 SHORTSUFFIX=wat
 IMPORTLIBPREFIX=
 endif
-ifneq ($(CPU_TARGET),jvm)
 ifeq ($(OS_TARGET),android)
 BATCHEXT=.sh
 EXEEXT=
 HASSHAREDLIB=1
 SHORTSUFFIX=lnx
-endif
 endif
 ifeq ($(OS_TARGET),linux)
 BATCHEXT=.sh
@@ -1356,20 +1340,6 @@ EXEEXT=
 SHAREDLIBEXT=.a
 SHORTSUFFIX=aix
 endif
-ifeq ($(OS_TARGET),java)
-OEXT=.class
-ASMEXT=.j
-SHAREDLIBEXT=.jar
-SHORTSUFFIX=java
-endif
-ifeq ($(CPU_TARGET),jvm)
-ifeq ($(OS_TARGET),android)
-OEXT=.class
-ASMEXT=.j
-SHAREDLIBEXT=.jar
-SHORTSUFFIX=android
-endif
-endif
 ifeq ($(OS_TARGET),msdos)
 STATICLIBPREFIX=
 STATICLIBEXT=.a
@@ -1385,16 +1355,6 @@ endif
 SHORTSUFFIX=emb
 endif
 ALL_EXEEXT+=.bin
-ifeq ($(OS_TARGET),wasip1)
-EXEEXT=.wasm
-endif
-ALL_EXEEXT+=.wasm
-ifeq ($(OS_TARGET),wasip1threads)
-EXEEXT=.wasm
-endif
-ifeq ($(OS_TARGET),wasip2)
-EXEEXT=.wasm
-endif
 ifneq ($(filter $(OS_SOURCE),$(LIMIT83fs)),)
 FPCMADE=fpcmade.$(SHORTSUFFIX)
 ZIPSUFFIX=$(SHORTSUFFIX)

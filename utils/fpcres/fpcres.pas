@@ -25,7 +25,7 @@ uses
   resreader, coffreader, winpeimagereader, elfreader, machoreader,
   externalreader, dfmreader, tlbreader, rcreader,
 //writers
-  reswriter, coffwriter, xcoffwriter, elfwriter, machowriter, wasmwriter,
+  reswriter, coffwriter, xcoffwriter, elfwriter, machowriter,
   externalwriter,
 //misc
   elfconsts, cofftypes, machotypes, externaltypes;
@@ -72,14 +72,13 @@ begin
   writeln('  --undefine, -U <sym> RC files: undefine a symbol');
   writeln('  --output, -o <x>     Set the output file name.');
   writeln('  -of <format>         Set the output file format. Supported formats:');
-  writeln('                         res, elf, coff, mach-o, wasm, external');
+  writeln('                         res, elf, coff, mach-o, external');
   writeln('  --arch, -a <name>    Set object file architecture. Supported architectures:');
   writeln('                         i386, x86_64, arm (coff)');
   writeln('                         i386, x86_64, powerpc, powerpc64, arm, armeb, m68k,');
   writeln('                         riscv32, riscv64,');
   writeln('                         sparc, sparc64, alpha, ia64, mips, mipsel (elf)');
   writeln('                         i386, x86_64, powerpc, powerpc64, arm, aarch64 (mach-o)');
-  writeln('                         wasm32 (wasm)');
   writeln('                         bigendian, littleendian (external)');
   writeln('  --subarch, -s <name> Set object file sub-architecture. Supported values:');
   writeln('                         arm: all, v4t, v6, v5tej, xscale, v7');
@@ -337,12 +336,6 @@ begin
   Result.SubMachineType:=MachOSubMachineType;
 end;
 
-function SetUpWasmWriter : TWasmResourceWriter;
-begin
-  Result:=TWasmResourceWriter.Create;
-end;
-
-
 function SetUpExternalWriter : TExternalResourceWriter;
 begin
   Result:=TExternalResourceWriter.Create;
@@ -373,7 +366,6 @@ begin
       ofCoff  : aWriter:=SetUpCoffWriter;
       ofXCoff : aWriter:=SetUpXCoffWriter;
       ofMachO : aWriter:=SetUpMachOWriter;
-      ofWasm  : aWriter:=SetUpWasmWriter;
       ofExt   : aWriter:=SetUpExternalWriter;
     end;
     try

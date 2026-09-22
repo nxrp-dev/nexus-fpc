@@ -61,9 +61,6 @@ endif
 ifeq ($(CPU_TARGET),armeb)
 PPSUF=arm
 endif
-ifeq ($(CPU_TARGET),jvm)
-PPSUF=jvm
-endif
 ifeq ($(CPU_TARGET),mips)
 PPSUF=mips
 endif
@@ -72,9 +69,6 @@ PPSUF=mipsel
 endif
 ifeq ($(CPU_TARGET),mips64el)
 PPSUF=mips64el
-endif
-ifeq ($(CPU_TARGET),i8086)
-PPSUF=8086
 endif
 ifeq ($(CPU_TARGET),avr)
 PPSUF=avr
@@ -91,9 +85,6 @@ endif
 ifeq ($(CPU_TARGET),xtensa)
 PPSUF=xtensa
 endif
-ifeq ($(CPU_TARGET),wasm32)
-PPSUF=wasm32
-endif
 ifeq ($(CPU_TARGET),loongarch64)
 PPSUF=loongarch64
 endif
@@ -101,11 +92,7 @@ endif
 # cross compilers uses full cpu_target, not just ppc-suffix
 # (except if the target cannot run a native compiler)
 ifdef CROSSCOMPILE
-ifneq ($(CPU_TARGET),jvm)
 PPPRE=ppcross
-else
-PPPRE=ppc
-endif
 else
 PPPRE=ppc
 endif
@@ -225,10 +212,10 @@ endif
 INSTALLOPTS=FPC=$(PPNEW) ZIPDESTDIR=$(BASEDIR) FPCMAKE=$(FPCMAKENEW)
 
 # CPU targets for which we only build the compiler/rtl
-BuildOnlyBaseCPUs=jvm
+BuildOnlyBaseCPUs=
 
 ifneq ($(wildcard utils),)
-NOUTILSTARGETS=embedded gba nds msdos macosclassic $(BuildOnlyBaseCPUs) freertos
+NOUTILSTARGETS=embedded gba nds macosclassic $(BuildOnlyBaseCPUs) freertos
 ifeq ($(findstring $(OS_TARGET),$(NOUTILSTARGETS)),)
 ifdef BUILDFULLNATIVE
 UTILS=1

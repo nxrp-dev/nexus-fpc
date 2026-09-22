@@ -64,8 +64,6 @@ Const
       'arm': Result := 'arm';
       'avr': Result := 'avr';
       'i386': Result := '386';
-      'i8086': Result := '8086';
-      'jvm': Result := 'jvm';
       'loongarch64': Result:='loongarch64';
       'mips': Result := 'mips';
       'mipsel': Result := 'mipsel';
@@ -79,8 +77,7 @@ Const
       'sparc': Result := 'sparc';
       'sparc64': Result := 'sparc64';
       'x86_64': Result := 'x64';
-      'xtensa': Result := 'xtensa';
-      'wasm32': Result := 'wasm32'
+      'xtensa': Result := 'xtensa'
       else
         error('Illegal processor type "'+processorstr+'"');
     end;
@@ -156,10 +153,6 @@ Const
          ppcbin:='ppcxtensa';
          processorname:='xtensa';
     {$endif xtensa}
-    {$ifdef wasm32}
-         ppcbin:='ppcwasm32';
-         processorname:='wasm32';
-    {$endif wasm32}
     {$ifdef loongarch64}
          ppcbin:='ppcloongarch64';
          processorname:='loongarch64';

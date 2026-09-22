@@ -29,8 +29,6 @@ begin
     P.NeedLibC:= false;
 
     P.OSes:=AllOSes-[embedded,msdos,go32v2,nativent,macosclassic,palmos,atari,sinclairql,wasip1,wasip1threads,wasip2,human68k,ps1];
-    if Defaults.CPU=jvm then
-      P.OSes := P.OSes - [java,android];
 
     P.Directory:=ADirectory;
     P.Version:='3.3.1';

@@ -14,9 +14,6 @@ amicommon/sysutils.pp=amicommon/System.SysUtils.pp
 android/cwstring.pp=namespaced/android/UnixApi.CWString.pp
 {s*:android/}=namespaced/android/
 {i+:android/}
-android/jvm/androidr14.pas=namespaced/android/jvm/AndroidAPI.AndroidR14.pas
-{s*:android/jvm/}=namespaced/android/jvm/
-{i+:android/jvm/}
 arm/cpu.pp=arm/System.CPU.pp
 {s*:arm/}=arm/
 {i+:arm/}
@@ -275,9 +272,6 @@ inc/sortbase.pp=namespaced/common/System.SortBase.pp
 inc/strings.pp=namespaced/common/System.Strings.pp
 inc/ufloat128.pp=namespaced/common/System.UFloat128.pp
 inc/ufloatx80.pp=namespaced/common/System.UFloatX80.pp
-java/jdk15.pas=namespaced/java/JavaApi.JDK15.pas
-{s*:java/}=namespaced/java/
-{i+:java/}
 linux/fpcylix.pp=linux/System.FPCylix.pp
 {s*:linux/}=namespaced/common/
 {i+:linux/}
@@ -428,17 +422,6 @@ unix/unixcp.pp=namespaced/common/UnixApi.CP.pp
 unix/unixtype.pp=namespaced/common/UnixApi.Types.pp
 unix/unixutil.pp=namespaced/common/UnixApi.Utils.pp
 unix/x86.pp=unix/System.X86.pp
-wasicommon/classes.pp=namespaced/common/System.Classes.pp
-{s*:wasicommon/}=namespaced/wasi/
-{i+:wasicommon/}
-wasicommon/dos.pp=namespaced/common/TP.DOS.pp
-wasicommon/sysutils.pp=namespaced/common/System.SysUtils.pp
-wasicommon/wasiapi.pp=namespaced/wasi/WASIApi.WASIApi.pp
-wasicommon/wasiutil.pp=namespaced/wasi/WASIApi.WASIUtil.pp
-wasm32/wasmsem.pas=namespaced/wasm32/Wasm.Semaphore.pp
-{s*:wasm32/}=namespaced/wasm32/
-{i+:wasm32/}
-wasm32/webassembly.pp=namespaced/wasm32/Wasm.Api.pp
 watcom/classes.pp=watcom/System.Classes.pp
 {s*:watcom/}=namespaced/watcom/
 {i+:watcom/}

@@ -271,9 +271,6 @@ Implementation
       sfpux80,
 {$endif FPC_SOFT_FPUX80}
 {$endif}
-{$ifdef WASM}
-      ogwasm,
-{$endif WASM}
       cscript,fmodule,verbose,
       cpubase,cpuinfo,triplet,
       aasmcpu;
