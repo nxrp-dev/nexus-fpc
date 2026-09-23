@@ -1905,26 +1905,6 @@ type
          if not RelocSectionSetExplicitly then
            RelocSection:=true;
 
-         { Relocation works only without stabs under Windows when }
-         { external linker (LD) is used.  LD generates relocs for }
-         { stab sections which is not loaded in memory. It causes }
-         { AV error when DLL is loaded and relocation is needed.  }
-         { Internal linker does not have this problem.            }
-         if RelocSection and
-            (target_info.system in systems_all_windows+[system_i386_wdosx]) and
-            (cs_link_extern in current_settings.globalswitches) and
-            (target_info.linkextern=ld_windows) then
-           begin
-              include(current_settings.globalswitches,cs_link_strip);
-              { Warning stabs info does not work with reloc section !! }
-              if (cs_debuginfo in current_settings.moduleswitches) and
-                 (target_dbg.id=dbg_stabs) then
-                begin
-                  Message1(parser_w_parser_reloc_no_debug,curr.mainsource);
-                  Message(parser_w_parser_win32_debug_needs_WN);
-                  exclude(current_settings.moduleswitches,cs_debuginfo);
-                end;
-           end;
          { get correct output names }
          main_file := current_scanner.inputfile;
          while assigned(main_file.next) do
@@ -2896,26 +2876,6 @@ type
                RelocSection:=true;
            end;
 
-         { Relocation works only without stabs under Windows when }
-         { external linker (LD) is used.  LD generates relocs for }
-         { stab sections which is not loaded in memory. It causes }
-         { AV error when DLL is loaded and relocation is needed.  }
-         { Internal linker does not have this problem.            }
-         if RelocSection and
-            (target_info.system in systems_all_windows+[system_i386_wdosx]) and
-            (cs_link_extern in current_settings.globalswitches) and
-            (target_info.linkextern=ld_windows) then
-           begin
-              include(current_settings.globalswitches,cs_link_strip);
-              { Warning stabs info does not work with reloc section !! }
-              if (cs_debuginfo in current_settings.moduleswitches) and
-                 (target_dbg.id=dbg_stabs) then
-                begin
-                  Message1(parser_w_parser_reloc_no_debug,curr.mainsource);
-                  Message(parser_w_parser_win32_debug_needs_WN);
-                  exclude(current_settings.moduleswitches,cs_debuginfo);
-                end;
-           end;
          { get correct output names }
          main_file := current_scanner.inputfile;
          while assigned(main_file.next) do

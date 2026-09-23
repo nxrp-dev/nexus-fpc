@@ -298,41 +298,11 @@
        );
 
        tlink = (ld_none,
-             ld_aix,           { external linkers (one per OS, handles all CPUs) }
-             ld_atari,
              ld_android,
-             ld_beos,
-             ld_bsd,
              ld_darwin,
-             ld_embedded,
-             ld_emx,
-             ld_gba,
-             ld_go32v2,
-             ld_haiku,
-             ld_jvm,
              ld_linux,
-             ld_mpw,
-             ld_msdos,
-             ld_nds,
-             ld_palmos,
-             ld_solaris,
-             ld_watcom,
-             ld_wdosx,
-             ld_wii,
-             ld_windows,
-             ld_lld_windows,
-             ld_int_go32v2,    { implemented internal linkers }
-             ld_int_linux,
-             ld_int_nativent,
-             ld_int_windows,
-             ld_int_msdos,
-             ld_int_wasi,
-             ld_freertos,
-             ld_sinclairql,
-             ld_wasi,
-             ld_human68k,
-             ld_ps1
-       );
+             ld_lld_windows
+        );
 
        tar = (ar_none
             ,ar_gnu_ar
