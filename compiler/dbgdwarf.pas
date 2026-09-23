@@ -104,6 +104,10 @@ interface
         loclist: tdynamicarray;
         asmline: TAsmList;
 
+        FWin64CUSectionKey: string;
+        FWin64RangesStart: tasmsymbol;
+        FWin64RangeIndex: longint;
+
         { lookup table for def -> DWARF-labels }
         dwarflabels: TDwarfLabHashSet;
 
@@ -126,6 +130,9 @@ interface
         function def_dwarf_class_struct_lab(def:tobjectdef) : tasmsymbol;
         function get_file_index(afile: tinputfile): Integer;
         function relative_dwarf_path(const s:tcmdstr):tcmdstr;
+        function win64_proc_section(def:tprocdef):tai_section;
+        procedure append_win64_proc_range(procsection:tai_section;procentrysym,procendlabel:tasmsymbol;const sectionsuffix:string);
+        procedure append_win64_proc_arange(procsection:tai_section;procentrysym,procendlabel:tasmsymbol;const sectionsuffix:string);
       protected
         // set if we should use 64bit headers (dwarf3 and up)
         _use_64bit_headers: Boolean;
@@ -217,9 +224,10 @@ interface
         function  dwarf_version: Word; virtual; abstract;
       end;
 
-      { TDebugInfoDwarf2 }
+      { Shared implementation inherited by the supported DWARF generators.
+        The historical class name is kept to minimize divergence from upstream. }
 
-      TDebugInfoDwarf2 = class(TDebugInfoDwarf)
+      TDebugInfoDwarf2 = class abstract(TDebugInfoDwarf)
       private
       protected
         procedure appenddef_set_intern(list:TAsmList;def:tsetdef; force_tag_set: boolean);
@@ -231,8 +239,6 @@ interface
         procedure appenddef_set(list:TAsmList;def:tsetdef); override;
         procedure appenddef_undefined(list:TAsmList;def:tundefineddef); override;
         procedure appenddef_variant(list:TAsmList;def:tvariantdef); override;
-      public
-        function  dwarf_version: Word; override;
       end;
 
       { TDebugInfoDwarf3 }
@@ -770,6 +776,9 @@ implementation
         AbbrevSearchTree:=AllocateNewAiSearchItem;
 
         vardatadef := nil;
+        FWin64CUSectionKey:='';
+        FWin64RangesStart:=nil;
+        FWin64RangeIndex:=0;
       end;
 
 
@@ -799,6 +808,81 @@ implementation
           else
             ;
         end;
+      end;
+
+
+    function TDebugInfoDwarf.win64_proc_section(def:tprocdef):tai_section;
+      var
+        hp : tai;
+      begin
+        hp:=def.procstarttai;
+        while assigned(hp) do
+          begin
+            if hp.typ=ait_section then
+              exit(tai_section(hp));
+            hp:=tai(hp.previous);
+          end;
+        internalerror(2026092302);
+        result:=nil;
+      end;
+
+
+    procedure TDebugInfoDwarf.append_win64_proc_range(procsection:tai_section;
+      procentrysym,procendlabel:tasmsymbol;const sectionsuffix:string);
+      var
+        rangesection : tai_section;
+      begin
+        rangesection:=new_section(current_asmdata.asmlists[al_dwarf_ranges],
+          sec_debug_ranges,FWin64CUSectionKey+'$'+sectionsuffix,0);
+        rangesection.AssociativeSection:=procsection;
+        current_asmdata.asmlists[al_dwarf_ranges].concat(
+          tai_const.create_type_sym(aitconst_ptr_unaligned,procentrysym));
+        current_asmdata.asmlists[al_dwarf_ranges].concat(
+          tai_const.create_type_sym(aitconst_ptr_unaligned,procendlabel));
+      end;
+
+
+    procedure TDebugInfoDwarf.append_win64_proc_arange(procsection:tai_section;
+      procentrysym,procendlabel:tasmsymbol;const sectionsuffix:string);
+      var
+        arangelenstart,
+        arangeend : tasmlabel;
+        arangesection : tai_section;
+      begin
+        arangesection:=new_section(current_asmdata.asmlists[al_dwarf_aranges],
+          sec_debug_aranges,FWin64CUSectionKey+'$'+sectionsuffix,0);
+        arangesection.AssociativeSection:=procsection;
+
+        current_asmdata.getlabel(arangelenstart,alt_dbgfile);
+        current_asmdata.getlabel(arangeend,alt_dbgfile);
+        if use_64bit_headers then
+          current_asmdata.asmlists[al_dwarf_aranges].concat(
+            tai_const.create_32bit_unaligned(longint($FFFFFFFF)));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(
+          tai_const.create_rel_sym(offsetreltype,arangelenstart,arangeend));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_label.create(arangelenstart));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.create_16bit_unaligned(2));
+
+        if not(tf_dwarf_relative_addresses in target_info.flags) then
+          current_asmdata.asmlists[al_dwarf_aranges].concat(
+            tai_const.create_type_sym(offsetabstype,
+              current_asmdata.DefineAsmSymbol(target_asm.labelprefix+'debug_info0',AB_LOCAL,AT_METADATA,voidpointertype)))
+        else
+          current_asmdata.asmlists[al_dwarf_aranges].concat(
+            tai_const.create_rel_sym(offsetreltype,
+              current_asmdata.DefineAsmSymbol(target_asm.labelprefix+'debug_infosection0',AB_LOCAL,AT_METADATA,voidpointertype),
+              current_asmdata.DefineAsmSymbol(target_asm.labelprefix+'debug_info0',AB_LOCAL,AT_METADATA,voidpointertype)));
+
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.create_8bit(sizeof(pint)));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.create_8bit(0));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.create_32bit_unaligned(0));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(
+          tai_const.create_type_sym(aitconst_ptr_unaligned,procentrysym));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(
+          tai_const.create_rel_sym(aitconst_ptr_unaligned,procentrysym,procendlabel));
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.Create_nil_codeptr_unaligned);
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.Create_nil_codeptr_unaligned);
+        current_asmdata.asmlists[al_dwarf_aranges].concat(tai_label.create(arangeend));
       end;
 
 
@@ -1511,7 +1595,8 @@ implementation
       var
         hp : tenumsym;
         i  : integer;
-        entryform : Tdwarf_form;
+        entryform,
+        valueform : Tdwarf_form;
       begin
         if assigned(def.typesym) then
           append_entry(DW_TAG_enumeration_type,true,[
@@ -1524,7 +1609,7 @@ implementation
             ]);
         if assigned(def.basedef) then
           append_labelentry_ref(DW_AT_type,def_dwarf_lab(def.basedef))
-        else if dwarf_version>=3 then
+        else
           case def.size of
             1:
                if def.min<0 then
@@ -1574,9 +1659,13 @@ implementation
             else
             if hp.value>def.maxval then
               break;
+            if hp.value<0 then
+              valueform:=DW_FORM_sdata
+            else
+              valueform:=entryform;
             append_entry(DW_TAG_enumerator,false,[
               DW_AT_name,DW_FORM_string,symname(hp, false)+#0,
-              DW_AT_const_value,entryform,hp.value
+              DW_AT_const_value,valueform,hp.value
             ]);
             finish_entry;
           end;
@@ -2031,7 +2120,10 @@ implementation
 
       var
         procendlabel   : tasmlabel;
+        procentrysym   : tasmsymbol;
+        procsection    : tai_section;
         procentry,s    : string;
+        sectionsuffix  : string;
         cc             : Tdwarf_calling_convention;
         st             : tsymtable;
         vmtoffset      : pint;
@@ -2166,13 +2258,22 @@ implementation
 {$ifdef i8086}
             append_seg_name(procentry);
 {$endif i8086}
-            append_labelentry(DW_AT_low_pc,current_asmdata.RefAsmSymbol(procentry,AT_FUNCTION));
+            procentrysym:=current_asmdata.RefAsmSymbol(procentry,AT_FUNCTION);
+            append_labelentry(DW_AT_low_pc,procentrysym);
             append_labelentry(DW_AT_high_pc,procendlabel);
 
-            if not(target_info.system in systems_darwin) then
+            if target_info.system in systems_windows then
+              begin
+                procsection:=win64_proc_section(def);
+                inc(FWin64RangeIndex);
+                sectionsuffix:='M_'+hexstr(FWin64RangeIndex,8);
+                append_win64_proc_range(procsection,procentrysym,procendlabel,sectionsuffix);
+                append_win64_proc_arange(procsection,procentrysym,procendlabel,sectionsuffix);
+              end
+            else if not(target_info.system in systems_darwin) then
               begin
                 current_asmdata.asmlists[al_dwarf_aranges].Concat(
-                  tai_const.create_type_sym(aitconst_ptr_unaligned,current_asmdata.RefAsmSymbol(procentry,AT_FUNCTION)));
+                  tai_const.create_type_sym(aitconst_ptr_unaligned,procentrysym));
 {$ifdef i8086}
                 { bits 16..31 of the offset }
                 current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.Create_16bit_unaligned(0));
@@ -2180,7 +2281,7 @@ implementation
                 current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.Create_seg_name(procentry));
 {$endif i8086}
                 current_asmdata.asmlists[al_dwarf_aranges].Concat(
-                  tai_const.Create_rel_sym(aitconst_ptr_unaligned,current_asmdata.RefAsmSymbol(procentry,AT_FUNCTION),procendlabel));
+                  tai_const.Create_rel_sym(aitconst_ptr_unaligned,procentrysym,procendlabel));
 {$ifdef i8086}
                 { bits 16..31 of length }
                 current_asmdata.asmlists[al_dwarf_aranges].concat(tai_const.Create_16bit_unaligned(0));
@@ -3063,7 +3164,7 @@ implementation
         flist : TFPList;
         dbgname : TSymStr;
       begin
-        if not (target_info.system in systems_wasm) then
+        if not (target_info.system in (systems_wasm+systems_windows)) then
           begin
             { insert DEBUGSTART and DEBUGEND labels }
             dbgname:=make_mangledname('DEBUGSTART',current_module.localsymtable,'');
@@ -3328,6 +3429,13 @@ implementation
         if assigned(vardatatype) then
           vardatadef:=trecorddef(vardatatype.typedef);
 
+        if target_info.system in systems_windows then
+          begin
+            FWin64CUSectionKey:=lower(make_mangledname('DWARFCU',current_module.localsymtable,''));
+            FWin64RangesStart:=nil;
+            FWin64RangeIndex:=0;
+          end;
+
         { write start labels }
         new_section(current_asmdata.asmlists[al_dwarf_info],sec_debug_info,'',0);
         current_asmdata.asmlists[al_dwarf_info].concat(tai_symbol.createname(target_asm.labelprefix+'debug_info0',AT_METADATA,0,voidpointertype));
@@ -3335,7 +3443,21 @@ implementation
         { start abbrev section }
         new_section(current_asmdata.asmlists[al_dwarf_abbrev],sec_debug_abbrev,'',0);
 
-        if not(target_info.system in systems_darwin) then
+        if target_info.system in systems_windows then
+          begin
+            { Keep the CU framing alive while each function range follows its
+              associated function COMDAT. }
+            new_section(current_asmdata.asmlists[al_dwarf_ranges],
+              sec_debug_ranges,FWin64CUSectionKey+'$A',0);
+            FWin64RangesStart:=current_asmdata.DefineAsmSymbol(
+              target_asm.labelprefix+'debug_ranges0',AB_LOCAL,AT_METADATA,voidpointertype);
+            current_asmdata.asmlists[al_dwarf_ranges].concat(tai_symbol.create(FWin64RangesStart,0));
+            { Base-address selection entry with an explicit zero base. }
+            current_asmdata.asmlists[al_dwarf_ranges].concat(tai_const.Create_int_codeptr_unaligned(-1));
+            current_asmdata.asmlists[al_dwarf_ranges].concat(tai_const.Create_nil_codeptr_unaligned);
+          end;
+
+        if not(target_info.system in (systems_darwin+systems_windows)) then
           begin
             { start aranges section }
             new_section(current_asmdata.asmlists[al_dwarf_aranges],sec_debug_aranges,'',0);
@@ -3435,6 +3557,10 @@ implementation
             append_attribute(DW_AT_low_pc,DW_FORM_data4,[0]);
             { todo: append DW_AT_ranges }
           end
+        else if target_info.system in systems_windows then
+          begin
+            append_labelentry_dataptr_abs(DW_AT_ranges,FWin64RangesStart);
+          end
         else
           begin
             dbgname:=make_mangledname('DEBUGSTART',current_module.localsymtable,'');
@@ -3484,13 +3610,21 @@ implementation
         { close compilation unit entry }
         finish_children;
 
+        if target_info.system in systems_windows then
+          begin
+            new_section(current_asmdata.asmlists[al_dwarf_ranges],
+              sec_debug_ranges,FWin64CUSectionKey+'$Z',0);
+            current_asmdata.asmlists[al_dwarf_ranges].concat(tai_const.Create_nil_codeptr_unaligned);
+            current_asmdata.asmlists[al_dwarf_ranges].concat(tai_const.Create_nil_codeptr_unaligned);
+          end;
+
         { end of debug info table }
         current_asmdata.asmlists[al_dwarf_info].concat(tai_symbol.createname(target_asm.labelprefix+'edebug_info0',AT_METADATA,0,voidpointertype));
 
         { end of abbrev table }
         current_asmdata.asmlists[al_dwarf_abbrev].concat(tai_const.create_8bit(0));
 
-        if not(target_info.system in systems_darwin) then
+        if not(target_info.system in (systems_darwin+systems_windows)) then
           begin
             { end of aranges table }
 {$ifdef i8086}
@@ -3534,7 +3668,7 @@ implementation
       begin
         { Reference all DEBUGINFO sections from the main .fpc section }
         { to prevent eliminating them by smartlinking                 }
-        if (target_info.system in (systems_darwin+systems_wasm)) then
+        if (target_info.system in (systems_darwin+systems_wasm+systems_windows)) then
           exit;
         new_section(list,sec_fpc,'links',0);
 
@@ -4092,14 +4226,9 @@ implementation
 
     procedure TDebugInfoDwarf2.appenddef_variant(list:TAsmList;def: tvariantdef);
       begin
-        { variants aren't known to dwarf2 but writting tvardata should be enough }
+        { Variants are not represented here, but writing tvardata should be enough. }
         if assigned(vardatadef) then
           appenddef_record_named(list,trecorddef(vardatadef),'Variant');
-      end;
-
-    function TDebugInfoDwarf2.dwarf_version: Word;
-      begin
-        Result:=2;
       end;
 
 {****************************************************************************
@@ -4280,7 +4409,7 @@ implementation
         if (ds_dwarf_cpp in current_settings.debugswitches) then
           begin
             // At least LLDB 6.0.0 does not like this implementation of string types.
-            // Call the inherited DWARF 2 implementation, which works fine.
+            // Call the inherited base implementation, which works fine.
             inherited;
             exit;
           end;
@@ -4334,7 +4463,7 @@ implementation
           begin
             // Do not use DW_TAG_unspecified_type for C++ simulation.
             // At least LLDB 3.9.0 crashes in such case.
-            // Call the inherited DWARF 2 implementation, which works fine.
+            // Call the inherited base implementation, which works fine.
             inherited;
             exit;
           end;
@@ -4632,12 +4761,6 @@ implementation
 {****************************************************************************
 ****************************************************************************}
     const
-      dbg_dwarf2_info : tdbginfo =
-         (
-           id     : dbg_dwarf2;
-           idtxt  : 'DWARF2';
-         );
-
       dbg_dwarf3_info : tdbginfo =
          (
            id     : dbg_dwarf3;
@@ -4658,7 +4781,6 @@ implementation
 
 
 initialization
-  RegisterDebugInfo(dbg_dwarf2_info,TDebugInfoDwarf2);
   RegisterDebugInfo(dbg_dwarf3_info,TDebugInfoDwarf3);
   RegisterDebugInfo(dbg_dwarf4_info,TDebugInfoDwarf4);
   RegisterDebugInfo(dbg_dwarf5_info,TDebugInfoDwarf5);

@@ -4249,8 +4249,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 *g2gs_Erzeuge Stabs-Debug-Informationen
 *g2gt_Lösche lokale Variablen (um eine Verwendung ohne Initialisierung zu finden; mehrere 't' ändern den Wert, mit dem überschrieben wird)
 *g2gv_Erzeuge ein mit Valgrind verfolgbares (traceable) Programm
-*g2gw_Erzeuge DWARFv2-Debug-Informationen (wie -gw2)
-*g2gw2_Erzeuge DWARFv2-Debug-Informationen
 *g2gw3_Erzeuge DWARFv3-Debug-Informationen
 *g2gw4_Erzeuge DWARFv4-Debug-Informationen (experimentell)
 **1i_Zeige alle Informationen über den Compiler

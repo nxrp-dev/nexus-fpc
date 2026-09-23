@@ -1,4 +1,4 @@
-{ %opt=-gw}
+{ %opt=-gw3}
 { %interactive }
 {$mode objfpc}
 

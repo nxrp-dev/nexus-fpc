@@ -2243,7 +2243,7 @@ S*2Aas_asemblacja przy u¾yciu GNU AS
 *g2gh_u¾ycie moduˆu ˜ledzenia sterty(do wykrywania wyciek¢w pami©ci)
 *g2gl_u¾ycie moduˆu z informacjami o numerach linii programu
 *g2gv_generacja kodu mo¾liwego do ˜ledzenia przy pomocy valgrind
-*g2gw_generacja informacji debuggera dwarf
+*g2gw3_generacja informacji debuggera dwarf
 **1i_informacje
 **2iD_zwraca dat© kompilatora
 **2iV_zwraca wersj© kompilatora

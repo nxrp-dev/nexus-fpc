@@ -40,6 +40,15 @@ interface
 
     type
       TCPUInstrWriter = class;
+
+      TGNUWin64ComdatInfo=class
+        SectionName,
+        Key : string;
+        Associative,
+        KeyDefined : boolean;
+        Next : TGNUWin64ComdatInfo;
+      end;
+
       {# This is a derived class which is used to write
          GAS styled assembler.
       }
@@ -48,11 +57,20 @@ interface
 
       TGNUAssembler=class(texternalassembler)
       protected
+        FWin64ComdatSections : TGNUWin64ComdatInfo;
+        FWin64ComdatKeyToDefine : string;
+        FWin64ComdatKeyIndex : longint;
+        function UseWin64Comdat:boolean;
+        function FindWin64ComdatInfo(const ASectionName:string):TGNUWin64ComdatInfo;
+        function EnsureWin64ComdatLeader(const ASectionName:string):TGNUWin64ComdatInfo;
+        procedure RegisterWin64AssociativeComdat(const ASectionName,LeaderKey:string);
+        function IsWin64SmartSection(atype:TAsmSectiontype;const aname:string):boolean;
         function sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;virtual;
         function sectionattrs(atype:TAsmSectiontype):string;virtual;
         function sectionattrs_coff(atype:TAsmSectiontype):string;virtual;
         function sectionalignment_aix(atype:TAsmSectiontype;secalign: longint):string;
         function sectionflags(secflags:TSectionFlags):string;virtual;
+        procedure WriteSectionComdat(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder);virtual;
         procedure WriteSection(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder;secalign:longint;
           secflags:TSectionFlags=[];secprogbits:TSectionProgbits=SPB_None);virtual;
         procedure WriteExtraHeader;virtual;
@@ -174,8 +192,81 @@ implementation
 {                          GNU Assembler writer                              }
 {****************************************************************************}
 
-    destructor TGNUAssembler.Destroy;
+    function TGNUAssembler.UseWin64Comdat:boolean;
       begin
+        result:=(target_info.system in [system_x86_64_win64,system_aarch64_win64]) and
+          (asminfo^.id=as_clang_gas) and
+          (af_llvm in asminfo^.flags);
+      end;
+
+
+    function TGNUAssembler.FindWin64ComdatInfo(const ASectionName:string):TGNUWin64ComdatInfo;
+      begin
+        result:=FWin64ComdatSections;
+        while assigned(result) and (result.SectionName<>ASectionName) do
+          result:=result.Next;
+      end;
+
+
+    function TGNUAssembler.EnsureWin64ComdatLeader(const ASectionName:string):TGNUWin64ComdatInfo;
+      begin
+        result:=FindWin64ComdatInfo(ASectionName);
+        if assigned(result) then
+          begin
+            if result.Associative then
+              internalerror(2026092203);
+            exit;
+          end;
+        result:=TGNUWin64ComdatInfo.Create;
+        result.SectionName:=ASectionName;
+        inc(FWin64ComdatKeyIndex);
+        result.Key:='$fpc$comdat$'+lower(current_module.modulename^)+'$'+tostr(FWin64ComdatKeyIndex);
+        result.Next:=FWin64ComdatSections;
+        FWin64ComdatSections:=result;
+      end;
+
+
+    procedure TGNUAssembler.RegisterWin64AssociativeComdat(const ASectionName,LeaderKey:string);
+      var
+        info : TGNUWin64ComdatInfo;
+      begin
+        info:=FindWin64ComdatInfo(ASectionName);
+        if assigned(info) then
+          begin
+            if not info.Associative or (info.Key<>LeaderKey) then
+              internalerror(2026092204);
+            exit;
+          end;
+        info:=TGNUWin64ComdatInfo.Create;
+        info.SectionName:=ASectionName;
+        info.Key:=LeaderKey;
+        info.Associative:=true;
+        info.KeyDefined:=true;
+        info.Next:=FWin64ComdatSections;
+        FWin64ComdatSections:=info;
+      end;
+
+
+    function TGNUAssembler.IsWin64SmartSection(atype:TAsmSectiontype;const aname:string):boolean;
+      begin
+        result:=UseWin64Comdat and
+          create_smartlink_sections and
+          (aname<>'') and
+          not (atype in [sec_bss,sec_toc,sec_user,sec_note,sec_fpc,sec_pdata]) and
+          not (atype in [sec_debug_frame..sec_debug_loclists]);
+      end;
+
+
+    destructor TGNUAssembler.Destroy;
+      var
+        info : TGNUWin64ComdatInfo;
+      begin
+        while assigned(FWin64ComdatSections) do
+          begin
+            info:=FWin64ComdatSections;
+            FWin64ComdatSections:=info.Next;
+            info.Free;
+          end;
         InstrWriter.free;
         InstrWriter := nil;
         inherited destroy;
@@ -350,8 +441,10 @@ implementation
           '.note'
         );
       var
-        sep     : string[3];
+        sep,
+        coffseparator : string[3];
         secname : string;
+        separatorpos : sizeint;
       begin
         if (cs_create_pic in current_settings.moduleswitches) and
            not(target_info.system in systems_darwin) then
@@ -419,6 +512,27 @@ implementation
           end
         else
           result:=secname;
+
+        if UseWin64Comdat and
+           create_smartlink_sections and
+           (aname<>'') and
+           not (atype in [sec_bss,sec_toc,sec_user,sec_note]) then
+          begin
+            case aorder of
+              secorder_begin:
+                coffseparator:='$B_';
+              secorder_end:
+                coffseparator:='$Y_';
+              else
+                coffseparator:='$N_';
+            end;
+            separatorpos:=Pos(sep,result);
+            if separatorpos<>0 then
+              begin
+                Delete(result,separatorpos,Length(sep));
+                Insert(coffseparator,result,separatorpos);
+              end;
+          end;
       end;
 
     function TGNUAssembler.sectionattrs(atype:TAsmSectiontype):string;
@@ -464,8 +578,12 @@ implementation
             result:='r';
 
           sec_stab,sec_stabstr,
-          sec_debug_frame,sec_debug_info,sec_debug_line,sec_debug_abbrev,sec_debug_aranges,sec_debug_ranges:
-            result:='n';
+          sec_debug_frame,sec_debug_info,sec_debug_line,sec_debug_abbrev,
+          sec_debug_aranges,sec_debug_ranges,sec_debug_loc,sec_debug_loclists:
+            if UseWin64Comdat then
+              result:='rD'
+            else
+              result:='n';
         else
           result:='';  { defaults to data+load }
         end;
@@ -487,6 +605,34 @@ implementation
               result:=result+'x';
           end;
         end;
+      end;
+
+
+    procedure TGNUAssembler.WriteSectionComdat(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder);
+      var
+        info : TGNUWin64ComdatInfo;
+        finalsectionname : string;
+      begin
+        if not UseWin64Comdat or
+           not create_smartlink_sections then
+          exit;
+        finalsectionname:=sectionname(atype,aname,aorder);
+        info:=FindWin64ComdatInfo(finalsectionname);
+        if not assigned(info) and IsWin64SmartSection(atype,aname) then
+          info:=EnsureWin64ComdatLeader(finalsectionname);
+        if not assigned(info) then
+          exit;
+        if info.Associative then
+          writer.AsmWrite(',associative,'+info.Key)
+        else
+          begin
+            writer.AsmWrite(',one_only,'+info.Key);
+            if not info.KeyDefined then
+              begin
+                FWin64ComdatKeyToDefine:=info.Key;
+                info.KeyDefined:=true;
+              end;
+          end;
       end;
 
 
@@ -512,6 +658,7 @@ implementation
         usesectionprogbits,
         usesectionflags: boolean;
       begin
+        FWin64ComdatKeyToDefine:='';
         writer.AsmLn;
         usesectionflags:=false;
         usesectionprogbits:=false;
@@ -670,8 +817,15 @@ implementation
                 end;
             end;
           end;
+        WriteSectionComdat(atype,aname,aorder);
         writer.AsmLn;
         LastSecType:=atype;
+        if FWin64ComdatKeyToDefine<>'' then
+          begin
+            writer.AsmWriteLn('.globl '+FWin64ComdatKeyToDefine);
+            writer.AsmWriteLn(FWin64ComdatKeyToDefine+':');
+            FWin64ComdatKeyToDefine:='';
+          end;
       end;
 
 
@@ -880,6 +1034,9 @@ implementation
       do_line  : boolean;
       sepChar : char;
       replaceforbidden: boolean;
+      cursec,
+      leadersec : tai_section;
+      leaderinfo : TGNUWin64ComdatInfo;
     begin
       if not assigned(p) then
        exit;
@@ -914,6 +1071,19 @@ implementation
            ait_section :
              begin
                ResetSourceLines;
+
+               cursec:=tai_section(hp);
+               leadersec:=cursec.AssociativeSection;
+               if UseWin64Comdat and
+                  create_smartlink_sections and
+                  assigned(leadersec) and
+                  IsWin64SmartSection(leadersec.sectype,leadersec.name^) then
+                 begin
+                   leaderinfo:=FindWin64ComdatInfo(sectionname(leadersec.sectype,leadersec.name^,leadersec.secorder));
+                   if not assigned(leaderinfo) or leaderinfo.Associative then
+                     internalerror(2026092301);
+                   RegisterWin64AssociativeComdat(sectionname(cursec.sectype,cursec.name^,cursec.secorder),leaderinfo.Key);
+                 end;
 
                if tai_section(hp).sectype<>sec_none then
                  if replaceforbidden then

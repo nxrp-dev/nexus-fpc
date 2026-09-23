@@ -637,7 +637,7 @@ implementation
 {$else}
         { we can't override the assignment of target_dbg with the LLVM class,
           because we still need to know whether to tell LLVM to generate
-          DWARFv2/3/4/5/... }
+          DWARFv3/4/5/... }
         hp.DebugInfo:=CDebugInfo[dbg_llvm].Create;
 {$endif}
         if restore_current_debuginfo then

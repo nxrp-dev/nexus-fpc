@@ -231,7 +231,7 @@ const DefaultConfig : array[0..28,1..240] of char=(
   '#      -gh        use heap trace unit (for memory leak debugging)'#010+
   '#      -gl        use line info unit to show more info for backtraces'#010+
   '#      -gv        generates programs tracable with valgrind'#010+
-  '#      -gw        ','generate dwarf debugging info'#010+
+  '#      -gw3       ','generate DWARF 3 debugging info'#010+
   '#'#010+
   '# Enable debuginfo and use the line info unit by default'#010+
   '#-gl'#010+
@@ -242,7 +242,7 @@ const DefaultConfig : array[0..28,1..240] of char=(
   '# Always use smartlinking on i8086, because the system unit exceeds th'+
   'e 64kb'#010+
   '# code limit'#010+
-  '#ifdef cpu','i8086'#010+
+  '#ifdef c','pui8086'#010+
   '-CX'#010+
   '-XX'#010+
   '#endif'#010+
@@ -257,18 +257,18 @@ const DefaultConfig : array[0..28,1..240] of char=(
   #010+
   '# Verbosity'#010+
   '#      e : Show errors (default)       d : Show debug info'#010+
-  '#      w : Show warnings               u : Show unit info'#010+
-  '#','      n : Show notes                  t : Show tried/used files'#010+
+  '#      w : Show warnings               u : Show unit info',#010+
+  '#      n : Show notes                  t : Show tried/used files'#010+
   '#      h : Show hints                  s : Show time stamps'#010+
   '#      i : Show general info           q : Show message numbers'#010+
-  '#      l : Show linenumbers            c : Show cond','itionals'#010+
+  '#      l : Show linenumbers            c : Show co','nditionals'#010+
   '#      a : Show everything             0 : Show nothing (except errors'+
   ')'#010+
   '#      b : Write file names messages   r : Rhide/GCC compatibility mod'+
   'e'#010+
   '#          with full path              x : Executable info (Win32 only'+
   ')'#010+
-  '#      v : writ','e fpcdebug.txt with     p : Write tree.log with parse'+
+  '#      v : wr','ite fpcdebug.txt with     p : Write tree.log with parse'+
   ' tree'#010+
   '#          lots of debugging info'#010+
   '#'#010+

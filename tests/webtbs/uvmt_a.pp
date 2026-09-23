@@ -1,4 +1,4 @@
-{ OPT=-gw }
+{ OPT=-gw3 }
 
 unit uvmt_a;
 

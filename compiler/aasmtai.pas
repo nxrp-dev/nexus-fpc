@@ -676,6 +676,8 @@ interface
           name     : pshortstring;
           { used in binary writer }
           sec      : TObjSection;
+          { transient association used by external object writers }
+          AssociativeSection : tai_section;
           { used only by ELF so far }
           secflags : TSectionFlags;
           secprogbits : TSectionProgbits;
@@ -1333,6 +1335,7 @@ implementation
         TObjData.sectiontype2progbitsandflags(sectype,secprogbits,secflags);
         name:=stringdup(Aname);
         sec:=nil;
+        AssociativeSection:=nil;
         // .noinit section should be marked with the nobits flag
         if (sectype=sec_user) and (Aname='.noinit') then
           secprogbits:=SPB_NOBITS;
@@ -1357,6 +1360,7 @@ implementation
         ppufile.getset(tppuset1(secflags));
         secprogbits:=TSectionProgbits(ppufile.getbyte);
         sec:=nil;
+        AssociativeSection:=nil;
       end;
 
 

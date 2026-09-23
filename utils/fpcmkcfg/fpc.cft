@@ -209,7 +209,7 @@
 #      -gh        use heap trace unit (for memory leak debugging)
 #      -gl        use line info unit to show more info for backtraces
 #      -gv        generates programs tracable with valgrind
-#      -gw        generate dwarf debugging info
+#      -gw3       generate DWARF 3 debugging info
 #
 # Enable debuginfo and use the line info unit by default
 #-gl

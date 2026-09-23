@@ -3685,7 +3685,7 @@ S*2Aas_assembler avec GNU AS
 *g2gh_use l'unité de tracage du tas
 *g2gl_utiliser l'unité line info pour montrer plus de détails dans les traces
 *g2gv_générer des programmes traçables avec valgrind
-*g2gw_générer des infos de débogage au format dwarf
+*g2gw3_générer des infos de débogage au format dwarf
 **1i_information
 **2iD_donne la date du compilateur
 **2iV_donne la version du compilateur

@@ -3604,8 +3604,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 *g2gs_生成 Stabs 调试信息
 *g2gt_破坏局部变量(用于检测未初始化的使用；多个 't' 改变破坏值)
 *g2gv_生成可用 Valgrind 跟踪的程序
-*g2gw_生成 DWARFv2 调试信息(与 -gw2 相同)
-*g2gw2_生成 DWARFv2 调试信息
 *g2gw3_生成 DWARFv3 调试信息
 *g2gw4_生成 DWARFv4 调试信息(实验性)
 **1i_信息

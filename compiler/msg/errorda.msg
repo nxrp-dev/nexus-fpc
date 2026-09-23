@@ -3627,7 +3627,7 @@ option_help_pages=11025_[
 *g2gl_brug line-infounit for at vise backtraces
 *g2gc_generér checks for pointere
 *g2gv_generér programmer der kan spores med valgrind
-*g2gw_generér dwarf debug-information
+*g2gw3_generér dwarf debug-information
 **1i_information:
 **2iD_returnerer compilerdato
 **2iV_returnerer compilerversion

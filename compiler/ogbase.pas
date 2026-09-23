@@ -124,7 +124,7 @@ interface
          RELOC_RELATIVE,
          { PECoff (Windows) RVA relocation }
          RELOC_RVA,
-         { PECoff (Windows) section relocation, required by DWARF2 debug info }
+         { PECoff (Windows) section relocation, required by DWARF debug info }
          RELOC_SECREL32,
          { Generate a 0 value at the place of the relocation,
            this is used to remove unused vtable entries }

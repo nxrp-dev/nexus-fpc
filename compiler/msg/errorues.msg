@@ -3595,7 +3595,7 @@ S*2Aas_ensamblar usando GNU AS
 *g2gh_usar unidad de trazado de memoria (para depurar pérdidas de memoria)
 *g2gl_usar informacion de líneas de las unidades para la traza de ejecución (backtrace)
 *g2gv_genera programas trazables con valgrind
-*g2gw_generar información de depurado dwarf
+*g2gw3_generar información de depurado dwarf
 **1i_información
 **2iD_devuelve la fecha del compilador
 **2iV_devuelve la versión del compilador

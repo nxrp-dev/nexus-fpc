@@ -94,7 +94,7 @@ const
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
-        dbg          : dbg_dwarf2;
+        dbg          : dbg_dwarf3;
         script       : script_unix;
         endian       : endian_little;
         alignment    :
@@ -163,7 +163,7 @@ const
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
-        dbg          : dbg_dwarf2;
+        dbg          : dbg_dwarf3;
         script       : script_unix;
         endian       : endian_little;
         alignment    :
@@ -234,7 +234,7 @@ const
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
-        dbg          : dbg_dwarf2;
+        dbg          : dbg_dwarf3;
         script       : script_unix;
         endian       : endian_little;
         alignment    :
@@ -302,7 +302,7 @@ const
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
-        dbg          : dbg_dwarf2;
+        dbg          : dbg_dwarf3;
         script       : script_unix;
         endian       : endian_little;
         alignment    :
@@ -371,7 +371,7 @@ const
         linkextern   : ld_darwin;
         ar           : ar_gnu_ar;
         res          : res_macho;
-        dbg          : dbg_dwarf2;
+        dbg          : dbg_dwarf3;
         script       : script_unix;
         endian       : endian_little;
         alignment    :
@@ -418,4 +418,3 @@ initialization
   {$endif cpuaarch64}
 
 end.
-

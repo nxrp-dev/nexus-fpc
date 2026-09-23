@@ -4234,8 +4234,6 @@ A*2CV<x>_Set section threadvar model to <x>
 *g2gs_Generate Stabs debug information
 *g2gt_Trash local variables (to detect uninitialized uses; multiple 't' changes the trashing value)
 *g2gv_Generates programs traceable with Valgrind
-*g2gw_Generate DWARFv2 debug information (same as -gw2)
-*g2gw2_Generate DWARFv2 debug information
 *g2gw3_Generate DWARFv3 debug information
 *g2gw4_Generate DWARFv4 debug information (experimental)
 **1i_Information

@@ -85,7 +85,7 @@ interface
       end;
 {$endif aarch64}
 
-{$ifdef x86_64}
+{$if defined(x86_64) or defined(aarch64)}
       TExternalLinkerWin64LLD=class(TExternalLinker)
       private
          function WriteLLDResponseFile(const OutputFile:string;IsDLL:boolean):boolean;
@@ -96,7 +96,7 @@ interface
          function MakeSharedLibrary:boolean;override;
          procedure InitSysInitUnitName;override;
       end;
-{$endif x86_64}
+{$endif x86_64 or aarch64}
 
       TDLLScannerWin=class(tDLLScanner)
       private
@@ -1612,7 +1612,7 @@ implementation
 {$endif aarch64}
 
 
-{$ifdef x86_64}
+{$if defined(x86_64) or defined(aarch64)}
 {****************************************************************************
                             TExternalLinkerWin64LLD
 ****************************************************************************}
@@ -1638,7 +1638,14 @@ implementation
         LinkRes:=TLinkRes.Create(outputexedir+Info.ResName,true);
         with LinkRes do
           begin
-            Add('/machine:x64');
+            case target_info.system of
+              system_x86_64_win64:
+                Add('/machine:x64');
+              system_aarch64_win64:
+                Add('/machine:arm64');
+              else
+                internalerror(2026092202);
+            end;
             Add('/nodefaultlib');
             Add('/out:'+MaybeQuoted(OutputFile));
             if Info.ExtraOptions<>'' then
@@ -1789,7 +1796,7 @@ implementation
       begin
         GlobalInitSysInitUnitName(self);
       end;
-{$endif x86_64}
+{$endif x86_64 or aarch64}
 
 
 {$ifdef aarch64}
@@ -2046,8 +2053,10 @@ initialization
   RegisterLinker(ld_int_windows,TInternalLinkerWin);
   RegisterLinker(ld_windows,TExternalLinkerWin);
 {$endif aarch64}
-{$ifdef x86_64}
+{$if defined(x86_64) or defined(aarch64)}
   RegisterLinker(ld_lld_windows,TExternalLinkerWin64LLD);
+{$endif x86_64 or aarch64}
+{$ifdef x86_64}
   RegisterImport(system_x86_64_win64,TImportLibWin);
   RegisterExport(system_x86_64_win64,TExportLibWin);
   RegisterDLLScanner(system_x86_64_win64,TDLLScannerWin);

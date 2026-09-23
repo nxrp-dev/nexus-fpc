@@ -1,4 +1,4 @@
-{ %opt=-gw }
+{ %opt=-gw3 }
 { %norun }
 unit tw40462;
 {$mode objfpc}

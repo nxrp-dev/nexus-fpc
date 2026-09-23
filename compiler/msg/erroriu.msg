@@ -2858,8 +2858,6 @@ S*2Aas_Assembla con GNU AS
 *g2gt_Scarta variabili locali 
 *g3*_        (rileva il loro uso non inizializzato)
 *g2gv_Genera programmi tracciabili con Valgrind
-*g2gw_Genera info di debug DWARFv2 (come -gw2)
-*g2gw2_Genera info di debug DWARFv2 
 *g2gw3_Genera info di debug DWARFv3 
 **1i_Informazioni
 **2iD_Ritorna la data del compilatore

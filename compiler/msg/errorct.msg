@@ -2220,7 +2220,7 @@ S*2Aas_assemblar utilitzant GNU AS
 *g2gh_Utilitza l'unitat de traçat de la pila (depura pèrdua de memòria)
 *g2gl_Utilitza l'unitat d'info. per mostrar +info per seguiments inversos
 *g2gv_Genera programes traçables amb valgrind
-*g2gw_Genera informació de depuració dwarf
+*g2gw3_Genera informació de depuració dwarf
 **1i_Informació:
 **2iD_Retorna la data del compilador
 **2iV_Retorna la versió del compilador

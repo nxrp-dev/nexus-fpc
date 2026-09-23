@@ -71,7 +71,7 @@ unit i_android;
              linkextern   : ld_android;
              ar           : ar_gnu_ar;
              res          : res_elf;
-             dbg          : dbg_dwarf2;
+             dbg          : dbg_dwarf3;
              script       : script_unix;
              endian       : endian_little;
              alignment    :
@@ -140,7 +140,7 @@ unit i_android;
              linkextern   : ld_android;
              ar           : ar_gnu_ar;
              res          : res_elf;
-             dbg          : dbg_dwarf2;
+             dbg          : dbg_dwarf3;
              script       : script_unix;
              endian       : endian_little;
              alignment    :

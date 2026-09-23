@@ -2467,7 +2467,7 @@ Implementation
                      end;
                    aitconst_secrel32_symbol :
                      begin
-                       { Required for DWARF2 support under Windows }
+                       { Required for DWARF debug information under Windows }
                        ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_SECREL32);
                      end;
 {$ifdef i8086}

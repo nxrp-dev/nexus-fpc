@@ -3642,8 +3642,6 @@ S*2Aas_Rangkai menggunakan GNU AS
 *g2gs_Hasilkan informasi debug stabs
 *g2gt_Bersihkan variabel lokal (untuk mendeteksi uses tak terinisialisasi)
 *g2gv_Hasilkan program yang bisa dilacak oleh valgrind
-*g2gw_Hasilkan informasi debug dwarf-2 (sama seperti -gw2)
-*g2gw2_Hasilkan informasi debug dwarf-2
 *g2gw3_Hasilkan informasi debug dwarf-3
 **1i_Informasi
 **2iD_Kembalikan tanggal kompilator

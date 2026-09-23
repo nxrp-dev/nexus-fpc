@@ -2136,7 +2136,31 @@ begin
 end;
 
 procedure TOption.CheckOptionsCompatibility;
+var
+  requestedwin64clang,
+  win64clanglld : boolean;
 begin
+  if (target_info.system in systems_windows) and
+     (paratargetdbg=dbg_dwarf5) then
+    UnsupportedPara('-gw5');
+
+  requestedwin64clang:=false;
+  if (paratargetasm=as_clang_gas) and
+     assigned(asminfos[as_clang_gas]) then
+    requestedwin64clang:=
+      ((target_info.system in asminfos[as_clang_gas]^.supported_targets) or
+       (system_any in asminfos[as_clang_gas]^.supported_targets)) and
+      (af_llvm in asminfos[as_clang_gas]^.flags);
+  win64clanglld:=
+    (target_info.system in [system_x86_64_win64,system_aarch64_win64]) and
+    (((target_asm.id=as_clang_gas) and
+      (af_llvm in target_asm.flags)) or
+     requestedwin64clang) and
+    (((cs_link_extern in init_settings.globalswitches) and
+      (target_info.linkextern=ld_lld_windows)) or
+     (not(cs_link_extern in init_settings.globalswitches) and
+      (target_info.link=ld_lld_windows)));
+
 {$ifdef wasm}
   if (Ord(ts_wasm_no_exceptions in init_settings.targetswitches)+
       Ord(ts_wasm_native_exnref_exceptions in init_settings.targetswitches)+
@@ -2167,8 +2191,9 @@ begin
     end;
 {$endif i8086_link_intern_debuginfo}
 
-  if (paratargetdbg in [dbg_dwarf2,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
-     not(target_info.system in (systems_darwin+[system_i8086_msdos,system_i8086_embedded])) then
+  if (paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
+     not(target_info.system in (systems_darwin+[system_i8086_msdos,system_i8086_embedded])) and
+     not win64clanglld then
     begin
       { smartlink creation does not yet work with DWARF
         debug info on most targets, but it works in internal assembler }
@@ -2190,7 +2215,7 @@ begin
   { external debug info is only supported for DWARF on darwin }
   if (target_info.system in systems_darwin) and
      (cs_link_separate_dbg_file in init_settings.globalswitches) and
-     not(paratargetdbg in [dbg_dwarf2,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) then
+     not(paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) then
     begin
       Message(option_debug_external_unsupported);
       exclude(init_settings.globalswitches,cs_link_separate_dbg_file);
@@ -3200,18 +3225,20 @@ begin
           end;
         'w' :
           begin
-            if (j<length(more)) and (more[j+1] in ['2','3','4','5']) then
+            if (j<length(more)) and (more[j+1] in ['3','4','5']) then
               begin
                 case more[j+1] of
-                  '2': paratargetdbg:=dbg_dwarf2;
                   '3': paratargetdbg:=dbg_dwarf3;
                   '4': paratargetdbg:=dbg_dwarf4;
                   '5': paratargetdbg:=dbg_dwarf5;
                 end;
                 inc(j);
               end
+            else if (j=length(more)) or
+                    ((j<length(more)) and (more[j+1]='2')) then
+              UnsupportedPara(opt)
             else
-              paratargetdbg:=dbg_dwarf2;
+              IllegalPara(opt);
           end;
         else
           IllegalPara(opt);
@@ -4965,11 +4992,11 @@ begin
           exclude(init_settings.moduleswitches,cs_debuginfo);
         end;
       { Some assemblers, like clang, do not support
-        stabs debugging format, switch to dwordé in that case }
+        stabs debugging format, switch to DWARF 3 in that case }
       if (af_no_stabs in asminfos[option.paratargetasm]^.flags) and
          (option.paratargetdbg=dbg_stabs) then
         begin
-          option.paratargetdbg:=dbg_dwarf2;
+          option.paratargetdbg:=dbg_dwarf3;
         end;
     end;
 

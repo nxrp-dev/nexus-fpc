@@ -159,7 +159,7 @@ implementation
         if not(target_info.system in systems_darwin) and
            (
             (tf_needs_dwarf_cfi in target_info.flags) or
-            (target_dbg.id in [dbg_dwarf2, dbg_dwarf3, dbg_dwarf4, dbg_dwarf5])
+            (target_dbg.id in [dbg_dwarf3, dbg_dwarf4, dbg_dwarf5])
            ) then
           begin
             current_asmdata.asmlists[al_dwarf_frame].Free;
@@ -605,7 +605,7 @@ implementation
           if s='LINEINFO' then
             begin
               Message(parser_w_no_lineinfo_use_switch);
-              if (target_dbg.id in [dbg_dwarf2, dbg_dwarf3]) then
+              if (target_dbg.id=dbg_dwarf3) then
                s := 'LNFODWRF';
              sorg := s;
             end;
@@ -1912,7 +1912,8 @@ type
          { Internal linker does not have this problem.            }
          if RelocSection and
             (target_info.system in systems_all_windows+[system_i386_wdosx]) and
-            (cs_link_extern in current_settings.globalswitches) then
+            (cs_link_extern in current_settings.globalswitches) and
+            (target_info.linkextern=ld_windows) then
            begin
               include(current_settings.globalswitches,cs_link_strip);
               { Warning stabs info does not work with reloc section !! }
@@ -2902,7 +2903,8 @@ type
          { Internal linker does not have this problem.            }
          if RelocSection and
             (target_info.system in systems_all_windows+[system_i386_wdosx]) and
-            (cs_link_extern in current_settings.globalswitches) then
+            (cs_link_extern in current_settings.globalswitches) and
+            (target_info.linkextern=ld_windows) then
            begin
               include(current_settings.globalswitches,cs_link_strip);
               { Warning stabs info does not work with reloc section !! }

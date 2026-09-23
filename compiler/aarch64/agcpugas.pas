@@ -343,6 +343,7 @@ unit agcpugas;
         lastsym : tai_symbol;
         lastsec : tai_section;
         inprologue,
+        smartunwind,
         deleteai : boolean;
         totalcount,
         instrcount,
@@ -354,7 +355,10 @@ unit agcpugas;
         handlerdatacount : tai;
         sehlist,
         tmplist : TAsmList;
+        pdatasection,
+        xdatasection : tai_section;
         xdatasym : tasmsymbol;
+        leaderinfo : TGNUWin64ComdatInfo;
         unwindrec : longword;
       begin
         if not assigned(list) then
@@ -468,12 +472,25 @@ unit agcpugas;
                             xdatasym:=current_asmdata.DefineAsmSymbol('xdata_'+lastsym.sym.name,AB_LOCAL,AT_DATA,nil);
 
                             tmplist:=tasmlist.create;
-                            new_section(tmplist,sec_pdata,lastsec.name^,0);
+                            pdatasection:=new_section(tmplist,sec_pdata,lastsec.name^,0);
                             tmplist.concat(tai_const.Create_rva_sym(lastsym.sym));
                             tmplist.concat(tai_const.Create_rva_sym(xdatasym));
 
-                            new_section(tmplist,sec_rodata,xdatasym.name,sizeof(int32));
+                            smartunwind:=IsWin64SmartSection(lastsec.sectype,lastsec.name^);
+                            if create_smartlink_sections then
+                              xdatasection:=new_section(tmplist,sec_user,'.xdata$N_'+lower(lastsym.sym.name),sizeof(int32))
+                            else
+                              xdatasection:=new_section(tmplist,sec_user,'.xdata',sizeof(int32));
+                            xdatasection.secflags:=[SF_A];
+                            xdatasection.secprogbits:=SPB_None;
                             tmplist.concat(tai_symbol.Create(xdatasym,0));
+
+                            if smartunwind then
+                              begin
+                                leaderinfo:=EnsureWin64ComdatLeader(sectionname(lastsec.sectype,lastsec.name^,lastsec.secorder));
+                                RegisterWin64AssociativeComdat(sectionname(pdatasection.sectype,pdatasection.name^,pdatasection.secorder),leaderinfo.Key);
+                                RegisterWin64AssociativeComdat(sectionname(xdatasection.sectype,xdatasection.name^,xdatasection.secorder),leaderinfo.Key);
+                              end;
 
                             tmplist.concat(tai_comment.Create(strpnew('instr: '+tostr(instrcount)+', data: '+tostr(datacount)+', unwind: '+tostr(unwinddata.size))));
 

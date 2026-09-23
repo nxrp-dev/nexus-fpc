@@ -1,4 +1,4 @@
-{ %OPT=-gw }
+{ %OPT=-gw3 }
 program Project1;
 
 {$mode objfpc}{$H+}

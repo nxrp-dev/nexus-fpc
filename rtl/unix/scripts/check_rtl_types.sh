@@ -98,8 +98,8 @@ if [ $res -ne 0 ] ; then
   exit
 fi
 
-echo "Calling $MAKE -C .. all OPT=\"-n -gwl $FPC_OPTS\" FPC=$FPC"
-$MAKE -C .. all OPT="-n -gwl $FPC_OPTS" FPC=$FPC > ${filebase}${VERSION}_make_all.log 2>&1
+echo "Calling $MAKE -C .. all OPT=\"-n -gw3 -gl $FPC_OPTS\" FPC=$FPC"
+$MAKE -C .. all OPT="-n -gw3 -gl $FPC_OPTS" FPC=$FPC > ${filebase}${VERSION}_make_all.log 2>&1
 res=$?
 if [ $res -ne 0 ] ; then
   echo "$MAKE call failed in $VERSION, res=$res"
@@ -109,8 +109,8 @@ fi
 
 OS_TARGET=`$FPC $FPC_OPTS  -iTO`
 CPU_TARGET=`$FPC $FPC_OPTS -iTP`
-echo "Calling $MAKE -C .. ${TMP_DIR}/${filebaseonly} FPC=$FPC OPT=\"-n -gwl $FPC_OPTS\" -Fu../units/$CPU_TARGET-$OS_TARGET"
-$MAKE -C .. ${TMP_DIR}/${filebaseonly} FPC=$FPC OPT="-n -gwl $FPC_OPTS -Fu../units/$CPU_TARGET-$OS_TARGET" > ${filebase}_${VERSION}_pas.comp.log 2>&1
+echo "Calling $MAKE -C .. ${TMP_DIR}/${filebaseonly} FPC=$FPC OPT=\"-n -gw3 -gl $FPC_OPTS\" -Fu../units/$CPU_TARGET-$OS_TARGET"
+$MAKE -C .. ${TMP_DIR}/${filebaseonly} FPC=$FPC OPT="-n -gw3 -gl $FPC_OPTS -Fu../units/$CPU_TARGET-$OS_TARGET" > ${filebase}_${VERSION}_pas.comp.log 2>&1
 res=$?
 if [ $res -ne 0 ] ; then
   echo "$FPC call failed in $VERSION, res=$res"

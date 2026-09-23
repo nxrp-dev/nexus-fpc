@@ -230,7 +230,7 @@ unit i_linux;
             linkextern   : ld_linux;
             ar           : ar_gnu_ar;
             res          : res_elf;
-            dbg          : dbg_dwarf2;
+            dbg          : dbg_dwarf3;
             script       : script_unix;
             endian       : endian_little;
             alignment    :
@@ -279,4 +279,3 @@ initialization
   {$endif linux}
 {$endif cpuaarch64}
 end.
-

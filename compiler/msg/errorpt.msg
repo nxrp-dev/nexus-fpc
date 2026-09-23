@@ -3251,8 +3251,6 @@ S*2Aas_Monta usando o GNU AS
 *g2gs_Gera informaá‰es depuraá∆o 'Stabs'
 *g2gt_Inutiliza vari†veis locais (para detetar utilizaá∆o de n∆o-inicilizadas)
 *g2gv_Gera programas rastre†veis com 'Valgrind'
-*g2gw_Gera informaá‰es depuraá∆o DWARFv2 (mesmo que -gw2)
-*g2gw2_Gera informaá‰es depuraá∆o DWARFv2
 *g2gw3_Gera informaá‰es depuraá∆o DWARFv3
 *g2gw4_Gera informaá‰es depuraá∆o DWARFv4 (experimental)
 **1i_Informaá‰es
