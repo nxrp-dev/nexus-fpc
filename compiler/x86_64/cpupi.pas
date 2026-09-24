@@ -72,6 +72,10 @@ implementation
       begin
         if target_info.system=system_x86_64_win64 then
           begin
+            { Compiler-injected profiler hooks are physical calls and need the
+              normal Win64 shadow space and unwind description. }
+            if nexus_profile_proc_eligible(self) then
+              include(flags,pi_do_call);
             { Fixes the case when there are calls done by low-level means
               (cg.a_call_name) but no child callnode }
             if (pi_do_call in flags) and
@@ -147,18 +151,40 @@ implementation
     procedure tcpuprocinfo.dump_scopes(list: TAsmList);
       var
         hdir: tai_seh_directive;
+        profiled: boolean;
       begin
-        if (scopecount=0) then
+        profiled:=nexus_profile_proc_eligible(self);
+        if (scopecount=0) and not profiled then
           exit;
-        hdir:=cai_seh_directive.create_name(ash_handler,'__FPC_specific_handler');
-        if not systemunit.iscurrentunit then
-          current_module.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
-        hdir.data.flags:=unwindflags;
+        if profiled then
+          begin
+            hdir:=cai_seh_directive.create_name(ash_handler,'__NXP_specific_handler');
+            current_module.add_extern_asmsym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+            current_module.add_extern_asmsym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
+            hdir.data.flags:=unwindflags or 2;
+          end
+        else
+          begin
+            hdir:=cai_seh_directive.create_name(ash_handler,'__FPC_specific_handler');
+            if not systemunit.iscurrentunit then
+              current_module.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+            hdir.data.flags:=unwindflags;
+          end;
         list.concat(hdir);
         list.concat(cai_seh_directive.create(ash_handlerdata));
         inc(list.section_count);
         list.concat(tai_const.create_32bit(scopecount));
-        list.concatlist(scopes);
+        if assigned(scopes) then
+          list.concatlist(scopes);
+        if profiled then
+          begin
+            { Versioned trailer following the untouched FPC scope table. }
+            list.concat(tai_const.create_32bit($4850584E)); { NXPH }
+            list.concat(tai_const.create_32bit(1));
+            list.concat(tai_const.create_sym(nexus_profile_descsym));
+            list.concat(tai_const.create_sym(
+              current_asmdata.RefAsmSymbol('nxp_unwind',AT_FUNCTION)));
+          end;
         { return to text, required for GAS compatibility }
         { This creates a tai_align which is redundant here (although harmless) }
         new_section(list,sec_code,lower(procdef.mangledname),0);

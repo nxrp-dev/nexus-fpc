@@ -2345,6 +2345,7 @@ const
         'CheckPointer used', {cs_checkpointer_called}
         'Supports LLVM Link-Time Optimization' {cs_lto}
         ,'Enable LLVM Address Sanitizer'
+        ,'Nexus procedure profiling'
        );
     globalswitchname : array[tglobalswitch] of string[73] =
        ('Global None',{cs_globalnone}
@@ -5188,6 +5189,8 @@ begin
   Writeln(['LongVersion: ',CurUnit.LongVersion]);
   Writeln(['Byte size of PPU real: ',CurUnit.ByteSizeOfPpuReal]);
   ppufile.getset(tppuset4(CurUnit.ModuleFlags));
+  if mf_nexus_profile in CurUnit.ModuleFlags then
+    Writeln('Module flag: Nexus procedure profiling');
   result:=ppufile.EndOfEntry and (CurUnit.LongVersion=CurrentPPULongVersion);
   if mf_symansistr in CurUnit.ModuleFlags then
     SymAnsiStr:=true;

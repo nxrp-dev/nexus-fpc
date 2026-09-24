@@ -1499,6 +1499,15 @@ begin
   if opt='' then
    exit;
 
+  { Nexus procedure profiling is a whole-invocation option. Handle it before
+    the normal first-pass filter so PPUs are evaluated with the correct state. }
+  if CompareText(opt,'-profile')=0 then
+   begin
+    include(init_settings.moduleswitches,cs_nexus_profile);
+    include(current_settings.moduleswitches,cs_nexus_profile);
+    exit;
+   end;
+
   { only parse define,undef,target,verbosity,link etc options the firsttime
     -Us must now also be first-passed to avoid rejection of -Sf options
     earlier in command line }

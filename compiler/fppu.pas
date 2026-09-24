@@ -442,6 +442,19 @@ var
               Message(unit_u_ppu_llvm_mismatch,@queuecomment);
               exit;
             end;
+          { Immutable/system PPUs are deliberately uninstrumented. All
+            ordinary project PPUs must match the profiling state. }
+          if (modulename^<>'SYSINIT') and
+             (modulename^<>'OBJPAS') and
+             not(mf_release in moduleflags) and
+             not(mf_system_unit in moduleflags) and
+             ((mf_nexus_profile in moduleflags) <>
+              (cs_nexus_profile in current_settings.moduleswitches)) then
+            begin
+              Comment(V_Normal,
+                'PPU profiling state does not match the current Nexus profiling build');
+              exit;
+            end;
           result:=true;
         end;
 
@@ -1148,6 +1161,8 @@ var
           include(moduleflags,mf_checkpointer_called);
         if cs_compilesystem in current_settings.moduleswitches then
           include(moduleflags,mf_system_unit);
+        if cs_nexus_profile in current_settings.moduleswitches then
+          include(moduleflags,mf_nexus_profile);
 {$ifdef i8086}
         if current_settings.x86memorymodel in [mm_medium,mm_large,mm_huge] then
           include(moduleflags,mf_i8086_far_code);

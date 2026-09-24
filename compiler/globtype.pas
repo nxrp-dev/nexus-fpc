@@ -207,7 +207,9 @@ interface
          { enable link time optimisation (both unit code generation and optimising the whole program/library) }
          cs_lto,
          { LLVM sanitizers }
-         cs_sanitize_address
+         cs_sanitize_address,
+         { Nexus procedure profiling for the current compiler session/module }
+         cs_nexus_profile
        );
        tmoduleswitches = set of tmoduleswitch;
 
@@ -431,7 +433,8 @@ interface
          mf_wasm_exnref_exceptions,   { unit was compiled in WebAssembly exceptions with exnref mode }
          mf_wasm_native_exceptions,   { unit was compiled in WebAssembly native legacy exceptions mode }
          mf_wasm_threads,             { unit was compiled with WebAssembly multithreading support turned on }
-         mf_system_unit               { unit was compiled as a System unit }
+         mf_system_unit,              { unit was compiled as a System unit }
+         mf_nexus_profile             { unit contains Nexus procedure profiling instrumentation }
        );
        tmoduleflags = set of tmoduleflag;
 

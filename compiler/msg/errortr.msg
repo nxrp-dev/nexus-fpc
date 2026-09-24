@@ -3545,6 +3545,7 @@ J*2Cv_Var/out parameter copy-out checking
 **2Ow<x>_Perform whole-program optimization <x>; see fpc -i or fpc -iw for possible values
 **2Os_Optimize for size rather than speed
 **1pg_Generate profile code for gprof (defines FPC_PROFILE)
+**1profile_Enable Nexus procedure trace profiling
 F*1P<x>_Target CPU / compiler related options:
 F*2PB_Show default compiler binary
 F*2PP_Show default target cpu

@@ -438,6 +438,13 @@ implementation
         if m_objpas in current_settings.modeswitches then
           CheckAddUnit('objpas');
 
+        { The profiling trace runtime is compiler-owned and linked into the
+          profiled executable. }
+        if not curr.is_unit and not curr.islibrary and
+           (target_info.system=system_x86_64_win64) and
+           (cs_nexus_profile in current_settings.moduleswitches) then
+          CheckAddUnit('nxprofilerruntime');
+
         { Macpas unit? }
         if m_mac in current_settings.modeswitches then
           CheckAddUnit('macpas');

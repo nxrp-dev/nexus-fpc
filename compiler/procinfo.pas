@@ -35,7 +35,7 @@ unit procinfo;
       node,
       { aasm }
       cpubase,cgbase,cgutils,
-      aasmbase,aasmdata;
+      aasmbase,aasmtai,aasmdata;
 
     const
       inherited_inlining_flags : tprocinfoflags =
@@ -122,6 +122,13 @@ unit procinfo;
           aktproccode : TAsmList;
           { Data (like jump tables) that belongs to this routine }
           aktlocaldata : TAsmList;
+
+          { Nexus profiler object metadata for this physical procedure. The
+            section is made associative with the procedure's COMDAT leader
+            when the generated procedure lists are committed. }
+          nexus_profile_descsym : TAsmSymbol;
+          nexus_profile_endlabel : TAsmLabel;
+          nexus_profile_section : tai_section;
 
           { max. of space need for parameters }
           maxpushedparasize : SizeInt;
@@ -222,11 +229,29 @@ unit procinfo;
        { information about the current sub routine being parsed (@var(pprocinfo))}
        current_procinfo : tprocinfo;
 
+    function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
+
 implementation
 
     uses
-      globals,cutils,systems,verbose,
+      globals,cutils,systems,verbose,fmodule,
       procdefutil;
+
+    function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
+      begin
+        result:=assigned(pi) and assigned(pi.procdef) and
+          (target_info.system=system_x86_64_win64) and
+          (cs_nexus_profile in current_settings.moduleswitches) and
+          assigned(current_module) and
+          assigned(main_module) and
+          not main_module.islibrary and
+          (current_module.modulename^<>'NXPROFILE') and
+          (current_module.modulename^<>'NXPROFILERRUNTIME') and
+          not(po_assembler in pi.procdef.procoptions) and
+          not(po_nostackframe in pi.procdef.procoptions) and
+          not(po_interrupt in pi.procdef.procoptions) and
+          (pi.procdef.proctypeoption<>potype_exceptfilter);
+      end;
 
 {****************************************************************************
                                  TProcInfo
@@ -245,6 +270,9 @@ implementation
         { asmlists }
         aktproccode:=TAsmList.Create;
         aktlocaldata:=TAsmList.Create;
+        nexus_profile_descsym:=nil;
+        nexus_profile_endlabel:=nil;
+        nexus_profile_section:=nil;
         reference_reset(save_regs_ref,sizeof(aint),[]);
         { labels }
         current_asmdata.getjumplabel(CurrExitLabel);

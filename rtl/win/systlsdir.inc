@@ -59,7 +59,14 @@ procedure SetupEntryInformation(constref info: TEntryInformation); external name
 
 procedure Exec_Tls_callback(Handle : pointer; reason : Dword; Reserved : pointer);
   stdcall; [public,alias:'_FPC_Tls_Callback'];
+  var
+    nt_header : PByte;
   begin
+     { TLS callbacks run before a DLL's entry point sets IsLibrary. Determine
+       the image kind directly so DLL thread setup remains owned by DLL_Entry. }
+     nt_header:=PByte(Handle)+PLongInt(PByte(Handle)+$3c)^;
+     if (PWord(nt_header+22)^ and $2000)<>0 then { IMAGE_FILE_DLL }
+       Exit;
      if IsLibrary then
        Exit;
      case reason of

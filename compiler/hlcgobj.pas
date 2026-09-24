@@ -657,6 +657,11 @@ unit hlcgobj;
 
           procedure gen_entry_code(list:TAsmList);virtual;
           procedure gen_exit_code(list:TAsmList);virtual;
+          procedure gen_nexus_profile_call(list:TAsmList; const hookname:TIDString);
+          procedure emit_nexus_profile_descriptor;
+          procedure gen_nexus_profile_module_call(list:TAsmList;
+            const hookname:TIDString);
+          procedure emit_nexus_profile_module_data;
 
          protected
           { helpers called by gen_initialize_code/gen_finalize_code }
@@ -741,12 +746,12 @@ implementation
 
     uses
        globals,systems,
-       fmodule,
+       finput,fmodule,
        verbose,defutil,paramgr,
        symtable,
        nbas,ncon,nld,nmem,
        ncgrtti,pass_2,
-       cgobj,cutils,procinfo,
+       cgobj,cutils,procinfo,aasmcnst,
        ngenutil,
 {$ifdef x86}
        cgx86,
@@ -810,7 +815,9 @@ implementation
     class procedure thlcgobjhelpers.record_generated_code_for_procdef(pd: tprocdef; code, data: TAsmList);
       var
         alt: TAsmListType;
+        procsection: tai_section;
       begin
+        procsection:=nil;
         if not(po_assembler in pd.procoptions) then
           alt:=al_procedures
         else
@@ -819,13 +826,20 @@ implementation
         maybe_new_object_file(current_asmdata.asmlists[alt]);
   {$ifdef symansistr}
         if pd.section<>'' then
-          new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section),getprocalign)
+          procsection:=new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section),getprocalign)
   {$else symansistr}
         if assigned(pd.section) then
-          new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
+          procsection:=new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
   {$endif symansistr}
         else
-          new_section(current_asmdata.asmlists[alt],sec_code,lower(pd.mangledname),getprocalign);
+          procsection:=new_section(current_asmdata.asmlists[alt],sec_code,lower(pd.mangledname),getprocalign);
+        if assigned(current_procinfo) and (current_procinfo.procdef=pd) then
+          begin
+            if not assigned(procsection) then
+              procsection:=tai_section(current_asmdata.asmlists[alt].last);
+            if assigned(current_procinfo.nexus_profile_section) then
+              current_procinfo.nexus_profile_section.AssociativeSection:=procsection;
+          end;
         current_asmdata.asmlists[alt].concatlist(code);
         { save local data (castable) also in the same file }
         if assigned(data) and
@@ -5045,6 +5059,18 @@ implementation
 
   procedure thlcgobj.gen_proc_symbol_end(list: TAsmList);
     begin
+      if nexus_profile_proc_eligible(current_procinfo) then
+        begin
+          if not assigned(current_procinfo.nexus_profile_endlabel) then
+            current_asmdata.getjumplabel(current_procinfo.nexus_profile_endlabel);
+          list.concat(tai_label.create(current_procinfo.nexus_profile_endlabel));
+          emit_nexus_profile_descriptor;
+        end;
+      if (current_procinfo.procdef.proctypeoption=potype_proginit) and
+         (cs_nexus_profile in current_settings.moduleswitches) and
+         (target_info.system=system_x86_64_win64) and
+         not current_module.islibrary then
+        emit_nexus_profile_module_data;
       list.concat(Tai_symbol_end.Createname(current_procinfo.procdef.mangledname));
       current_procinfo.procdef.procendtai:=tai(list.last);
     end;
@@ -5165,6 +5191,8 @@ implementation
       { call startup helpers from main program }
       if (current_procinfo.procdef.proctypeoption=potype_proginit) then
        begin
+         if cs_nexus_profile in current_settings.moduleswitches then
+           gen_nexus_profile_module_call(list,'nxp_module_register');
          { initialize units }
          if not(current_module.islibrary) then
            begin
@@ -5181,6 +5209,11 @@ implementation
            g_call_system_proc(list,'fpc_libinitializeunits',[],nil).resetiftemp;
        end;
 
+      { The program body starts after its units. The image was already
+        registered before unit initialization. }
+      if nexus_profile_proc_eligible(current_procinfo) then
+        gen_nexus_profile_call(list,'nxp_enter');
+
       list.concat(Tai_force_line.Create);
     end;
 
@@ -5189,10 +5222,222 @@ implementation
       { TODO: create high level version (create compilerproc in system unit,
           look up procdef, use hlcgobj.a_call_name()) }
 
+      if nexus_profile_proc_eligible(current_procinfo) then
+        gen_nexus_profile_call(list,'nxp_leave');
+
       { call __EXIT for main program }
       if (not current_module.islibrary) and
          (current_procinfo.procdef.proctypeoption=potype_proginit) then
         g_call_system_proc(list,'fpc_do_exit',[],nil).resetiftemp;
+    end;
+
+{$push}{$Q-}
+  function nexus_profile_hash64(const s: ansistring): qword;
+    var
+      i: SizeInt;
+    begin
+      result:=qword($CBF29CE484222325);
+      for i:=1 to length(s) do
+        begin
+          result:=result xor byte(s[i]);
+          result:=result*qword($100000001B3);
+        end;
+    end;
+{$pop}
+
+  procedure ensure_nexus_profile_descriptor_symbol;
+    var
+      symname: string;
+    begin
+      if assigned(current_procinfo.nexus_profile_descsym) then
+        exit;
+      symname:='NXP_DESC_'+current_module.modulename^+'_'+
+        current_procinfo.procdef.unique_id_str;
+      current_procinfo.nexus_profile_descsym:=current_asmdata.DefineAsmSymbol(
+        symname,AB_LOCAL,AT_DATA,voidpointertype);
+    end;
+
+  procedure thlcgobj.gen_nexus_profile_call(list:TAsmList; const hookname:TIDString);
+    var
+      para: tcgpara;
+      paraloc: pcgparalocation;
+      href: treference;
+    begin
+      ensure_nexus_profile_descriptor_symbol;
+{$ifdef x86_64}
+      current_module.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      para.init;
+      para.def:=voidpointertype;
+      para.size:=OS_ADDR;
+      para.intsize:=sizeof(pint);
+      paraloc:=para.add_location;
+      paraloc^.def:=voidpointertype;
+      paraloc^.size:=OS_ADDR;
+      paraloc^.loc:=LOC_REGISTER;
+      paraloc^.register:=NR_RCX;
+      reference_reset_symbol(href,current_procinfo.nexus_profile_descsym,0,
+        sizeof(pint),[]);
+      a_loadaddr_ref_cgpara(list,voidpointertype,href,para);
+      allocallcpuregisters(list);
+      cg.a_call_name(list,hookname,false);
+      deallocallcpuregisters(list);
+      para.done;
+{$else x86_64}
+      internalerror(2026092301);
+{$endif x86_64}
+    end;
+
+  procedure thlcgobj.gen_nexus_profile_module_call(list:TAsmList;
+    const hookname:TIDString);
+    var
+      para: tcgpara;
+      paraloc: pcgparalocation;
+      href: treference;
+      modulesym: TAsmSymbol;
+    begin
+{$ifdef x86_64}
+      current_module.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      modulesym:=current_asmdata.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
+      para.init;
+      para.def:=voidpointertype;
+      para.size:=OS_ADDR;
+      para.intsize:=sizeof(pint);
+      paraloc:=para.add_location;
+      paraloc^.def:=voidpointertype;
+      paraloc^.size:=OS_ADDR;
+      paraloc^.loc:=LOC_REGISTER;
+      paraloc^.register:=NR_RCX;
+      reference_reset_symbol(href,modulesym,0,sizeof(pint),[]);
+      a_loadaddr_ref_cgpara(list,voidpointertype,href,para);
+      allocallcpuregisters(list);
+      cg.a_call_name(list,hookname,false);
+      deallocallcpuregisters(list);
+      para.done;
+{$else x86_64}
+      internalerror(2026092302);
+{$endif x86_64}
+    end;
+
+  procedure thlcgobj.emit_nexus_profile_descriptor;
+    const
+      NXP_DESC_MAGIC = $4450584E; { NXPD }
+      NXP_DESC_ABI = 1;
+      NXP_DESC_SIZE = 72;
+    var
+      pd: tprocdef;
+      key,name,profunitname,source: ansistring;
+      stableid: qword;
+      namelabel,unitlabel,sourcelabel: tasmlabofs;
+      sourcefile: tinputfile;
+      section: tai_section;
+      tcb: ttai_typedconstbuilder;
+    begin
+      ensure_nexus_profile_descriptor_symbol;
+      pd:=current_procinfo.procdef;
+      name:=pd.fullprocname(true);
+      profunitname:=current_module.realmodulename^;
+      sourcefile:=get_source_file(current_procinfo.entrypos.moduleindex,
+        current_procinfo.entrypos.fileindex);
+      if assigned(sourcefile) then
+        source:=sourcefile.path+sourcefile.name
+      else
+        source:='';
+      key:=profunitname+'|'+name+'|'+pd.mangledname+'|'+pd.unique_id_str;
+      stableid:=nexus_profile_hash64(key);
+      tcb:=ctai_typedconstbuilder.create([]);
+      if name='' then
+        namelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          nil,0,getansistringcodepage)
+      else
+        namelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          @name[1],length(name),getansistringcodepage);
+      if profunitname='' then
+        unitlabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          nil,0,getansistringcodepage)
+      else
+        unitlabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          @profunitname[1],length(profunitname),getansistringcodepage);
+      if source='' then
+        sourcelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          nil,0,getansistringcodepage)
+      else
+        sourcelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+          @source[1],length(source),getansistringcodepage);
+      tcb.free;
+      section:=new_section(current_procinfo.aktlocaldata,sec_user,
+        '.nxprof$M_'+hexstr(int64(stableid),16),3);
+      current_procinfo.nexus_profile_section:=section;
+      current_procinfo.aktlocaldata.concat(tai_symbol.create(
+        current_procinfo.nexus_profile_descsym,NXP_DESC_SIZE));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(NXP_DESC_MAGIC));
+      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(NXP_DESC_ABI));
+      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(int64(stableid)));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym(
+        current_asmdata.RefAsmSymbol(pd.mangledname,AT_FUNCTION)));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym(
+        current_procinfo.nexus_profile_endlabel));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+        namelabel.lab,namelabel.ofs));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+        unitlabel.lab,unitlabel.ofs));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+        sourcelabel.lab,sourcelabel.ofs));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
+        current_procinfo.entrypos.line));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
+        current_procinfo.entrypos.column));
+    end;
+
+  procedure thlcgobj.emit_nexus_profile_module_data;
+    const
+      NXP_MODULE_MAGIC = $4D50584E; { NXPM }
+      NXP_MODULE_ABI = 1;
+      NXP_MODULE_SIZE = 32;
+    var
+      startsection,endsection,modulesection: tai_section;
+      startsym,endsym,modulesym: TAsmSymbol;
+    begin
+      startsym:=current_asmdata.DefineAsmSymbol('__NXP_descriptor_start',
+        AB_GLOBAL,AT_DATA,voidpointertype);
+      endsym:=current_asmdata.DefineAsmSymbol('__NXP_descriptor_end',
+        AB_GLOBAL,AT_DATA,voidpointertype);
+      modulesym:=current_asmdata.DefineAsmSymbol('__NXP_module_descriptor',
+        AB_GLOBAL,AT_DATA,voidpointertype);
+
+      modulesection:=new_section(current_procinfo.aktlocaldata,sec_user,
+        '.nxprof$0',3);
+      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(modulesym,
+        NXP_MODULE_SIZE));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
+        NXP_MODULE_MAGIC));
+      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(
+        NXP_MODULE_ABI));
+      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+        startsym,sizeof(QWord)));
+      current_procinfo.aktlocaldata.concat(tai_const.create_sym(endsym));
+
+      startsection:=new_section(current_procinfo.aktlocaldata,sec_user,
+        '.nxprof$A',3);
+      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(startsym,
+        sizeof(QWord)));
+      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(0));
+
+      endsection:=new_section(current_procinfo.aktlocaldata,sec_user,
+        '.nxprof$Z',3);
+      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(endsym,
+        sizeof(QWord)));
+      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(0));
+      { Keep the locals assigned so builds with internal consistency checks can
+        verify all three explicit sections were created. }
+      if not assigned(modulesection) or not assigned(startsection) or
+         not assigned(endsection) then
+        internalerror(2026092303);
     end;
 
   procedure thlcgobj.inittempvariables(list: TAsmList);

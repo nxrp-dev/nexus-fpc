@@ -659,5 +659,44 @@ begin
     end;
   end;
 end;
+
+{$ifdef CPUX86_64}
+type
+  TNXPUnwindHook = procedure(ProcedureDescriptor: Pointer;
+    EstablisherFrame: PtrUInt; ExceptionFlags: DWord); cdecl;
+  PNXPHandlerTrailer = ^TNXPHandlerTrailer;
+  TNXPHandlerTrailer = packed record
+    Magic: DWord;
+    Version: DWord;
+    ProcedureDescriptor: Pointer;
+    UnwindHook: TNXPUnwindHook;
+  end;
+
+function __NXP_specific_handler(
+  var rec: TExceptionRecord;
+  frame: Pointer;
+  var context: TCONTEXT;
+  var dispatch: TDispatcherContext): EXCEPTION_DISPOSITION;
+  [public,alias:'__NXP_specific_handler'];
+var
+  ScopeCount: DWord;
+  Trailer: PNXPHandlerTrailer;
+begin
+  { Process the Pascal scopes first, then record a physical frame abandoned by
+    a non-target unwind. }
+  Result := __FPC_specific_handler(rec, frame, context, dispatch);
+  if ((rec.ExceptionFlags and EXCEPTION_UNWIND) = 0) or
+     ((rec.ExceptionFlags and EXCEPTION_TARGET_UNWIND) <> 0) or
+     (dispatch.HandlerData = nil) then
+    Exit;
+  ScopeCount := PDWord(dispatch.HandlerData)^;
+  Trailer := PNXPHandlerTrailer(PByte(dispatch.HandlerData) + SizeOf(DWord) +
+    ScopeCount * SizeOf(TScopeRec));
+  if (Trailer^.Magic = $4850584E) and (Trailer^.Version = 1) and
+     Assigned(Trailer^.UnwindHook) then
+    Trailer^.UnwindHook(Trailer^.ProcedureDescriptor, PtrUInt(frame),
+      rec.ExceptionFlags);
+end;
+{$endif CPUX86_64}
 {$endif SYSTEM_USE_WIN_SEH}
 
