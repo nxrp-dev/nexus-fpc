@@ -3671,7 +3671,6 @@ S*2Aas_Rangkai menggunakan GNU AS
 **2Oo[NO]<x>_Hidupkan atau matikan optimasi, lihat fpc -i untuk nilai yang mungkin
 **2Op<x>_Setel cpu target untuk optimasi, lihat fpc -i untuk nilai yang mungkin
 **2Os_Optimasi untuk ukuran daripada kecepatan
-**1pg_Hasilkan kode profil untuk gprof (definisikan FPC_PROFILE)
 **1R<x>_Gaya pembacaan assembler:
 **2Rdefault_Gunakan assembler standar untuk target
 3*2Ratt_Baca gaya assembler AT&T

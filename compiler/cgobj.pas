@@ -405,11 +405,6 @@ unit cgobj;
           procedure g_overflowcheck(list: TAsmList; const Loc:tlocation; def:tdef); virtual;abstract;
           procedure g_overflowCheck_loc(List:TAsmList;const Loc:TLocation;def:TDef;ovloc : tlocation);virtual;
 
-          {# Emits instructions when compilation is done in profile
-             mode (this is set as a command line option). The default
-             behavior does nothing, should be overridden as required.
-          }
-          procedure g_profilecode(list : TAsmList);virtual;
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
 
              @param(size Number of bytes to allocate)
@@ -2862,11 +2857,6 @@ implementation
               end;
           end;
         tg.UnGetTemp(list,current_procinfo.save_regs_ref);
-      end;
-
-
-    procedure tcg.g_profilecode(list : TAsmList);
-      begin
       end;
 
 

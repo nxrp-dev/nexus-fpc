@@ -171,9 +171,7 @@ implementation
       begin
         if not isdll then
           begin
-            if not(cs_profile in current_settings.moduleswitches) then
-              begin
-                case target_info.system of
+            case target_info.system of
                   system_i386_darwin,
                   system_x86_64_darwin:
                     begin
@@ -217,18 +215,9 @@ implementation
                     exit('');
                   else
                     Internalerror(2019050709);
-                end;
-                { nothing special -> default }
-                result:='crt1.o';
-              end
-            else
-              begin
-                result:='gcrt1.o';
-                { 10.8 and later: tell the linker to use 'start' instead of "_main"
-                  as entry point }
-                if MacOSXVersionMin.relationto(10,8,0)>=0 then
-                  Info.ExeCmd[1]:=Info.ExeCmd[1]+' -no_new_main';
-              end;
+            end;
+            { nothing special -> default }
+            result:='crt1.o';
           end
         else
           begin

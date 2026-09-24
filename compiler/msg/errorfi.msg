@@ -3726,7 +3726,6 @@ S*2Aas_assembler avec GNU AS
 6*2Ox_optimiser au maximum (encore BOGUÉ !!!)
 6*2O0_définir le processeur cible MC68000
 6*2O2_définir le processeur cible MC68020+
-**1pg_génère du code pour profiler avec gprof (définit FPC_PROFILE)
 3*1R<x>_type lecture assembleur :
 3*2Ratt_lit l'assembleur AT&T
 3*2Rintel_lit l'assembleur Intel

@@ -538,11 +538,6 @@ unit hlcgobj;
           procedure g_copyvaluepara_openarray(list : TAsmList;const ref:treference;const lenloc:tlocation;arrdef: tarraydef;destreg:tregister);virtual;
           procedure g_releasevaluepara_openarray(list : TAsmList;arrdef: tarraydef;const l:tlocation);virtual;
 
-          {# Emits instructions when compilation is done in profile
-             mode (this is set as a command line option). The default
-             behavior does nothing, should be overridden as required.
-          }
-          procedure g_profilecode(list : TAsmList);virtual;
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
 
              @param(size Number of bytes to allocate)
@@ -4339,10 +4334,6 @@ implementation
       cgpara1.done;
     end;
 
-  procedure thlcgobj.g_profilecode(list: TAsmList);
-    begin
-    end;
-
   procedure thlcgobj.a_jmp_external_name(list: TAsmList; const externalname: TSymStr);
     begin
       cg.a_jmp_name(list,externalname);
@@ -5173,21 +5164,6 @@ implementation
 
   procedure thlcgobj.gen_entry_code(list: TAsmList);
     begin
-      { the actual profile code can clobber some registers,
-        therefore if the context must be saved, do it before
-        the actual call to the profile code
-      }
-      if (cs_profile in current_settings.moduleswitches) and
-         not(po_assembler in current_procinfo.procdef.procoptions) then
-        begin
-          { non-win32 can call mcout even in main }
-          if not (target_info.system in [system_i386_win32,system_i386_wdosx]) or
-             not (current_procinfo.procdef.proctypeoption=potype_proginit) then
-            begin
-              g_profilecode(list);
-            end;
-        end;
-
       { call startup helpers from main program }
       if (current_procinfo.procdef.proctypeoption=potype_proginit) then
        begin

@@ -80,11 +80,11 @@ UNIX_DEPS_OS=$(SYSCALLUNIT)$(PPUEXT)
 CPU_UNITS=
 SYSINIT_UNITS=
 
-LOADERS=prt0 dllprt0 cprt0 gprt0
+LOADERS=prt0 dllprt0 cprt0
 
 ifeq ($(ARCH),x86_64)
 CPU_UNITS=$(X86UNIT) $(PORTSUNIT) $(CPUUNIT) $(INTRINSICSUNIT)
-SYSINIT_UNITS=si_prc si_c si_g si_dll
+SYSINIT_UNITS=si_prc si_c si_dll
 override LOADERS=abitag
 endif
 
@@ -170,12 +170,6 @@ ifndef ARMTHUMB
 	$(AS) $(ASTARGET) $(ASSHAREDOPT) -o $(UNITTARGETDIRPREFIX)dllprt0$(OEXT) $(ARCH)/dllprt0.as
 endif
 
-gprt0$(OEXT) : $(ARCH)/gprt0.as
-ifndef ARMTHUMB
-	$(MAKE) $(COMPILER_UNITTARGETDIR)
-	$(AS) $(ASTARGET) -o $(UNITTARGETDIRPREFIX)gprt0$(OEXT) $(ARCH)/gprt0.as
-endif
-
 cprt0$(OEXT) : $(ARCH)/cprt0.as
 ifndef ARMTHUMB
 	$(MAKE) $(COMPILER_UNITTARGETDIR)
@@ -186,12 +180,6 @@ cprt21$(OEXT) : $(ARCH)/cprt21.as
 ifndef ARMTHUMB
 	$(MAKE) $(COMPILER_UNITTARGETDIR)
 	$(AS) $(ASTARGET) -o $(UNITTARGETDIRPREFIX)cprt21$(OEXT) $(ARCH)/cprt21.as
-endif
-
-gprt21$(OEXT) : $(ARCH)/gprt21.as
-ifndef ARMTHUMB
-	$(MAKE) $(COMPILER_UNITTARGETDIR)
-	$(AS) $(ASTARGET) -o $(UNITTARGETDIRPREFIX)gprt21$(OEXT) $(ARCH)/gprt21.as
 endif
 
 ucprt0$(OEXT) : $(ARCH)/ucprt0.as
@@ -209,13 +197,6 @@ SI_PRC_DEPS=si_prc.pp si_intf.inc $(SYSNRINC) $(ARCH)/si_prc.inc $(SYSTEMUNIT)$(
             $(SI_PRC_DEPS_OS) $(SI_PRC_DEPS_CPU)
 
 si_prc$(PPUEXT) : $(SI_PRC_DEPS)
-	$(COMPILER) $<
-
-
-SI_C21G_DEPS=si_c21g.pp si_intf.inc $(SYSNRINC) $(ARCH)/si_c21.inc $(SYSTEMUNIT)$(PPUEXT) \
-             $(SI_C21G_DEPS_OS) $(SI_C21G_DEPS_CPU)
-
-si_c21g$(PPUEXT) : $(SI_C21G_DEPS)
 	$(COMPILER) $<
 
 
@@ -245,14 +226,6 @@ SI_UC_DEPS=si_uc.pp si_intf.inc $(SYSNRINC)  $(ARCH)/si_uc.inc $(SYSTEMUNIT)$(PP
 
 si_uc$(PPUEXT) : $(SI_UC_DEPS)
 	$(COMPILER) $<
-
-
-SI_G_DEPS=si_g.pp si_intf.inc $(SYSNRINC) $(ARCH)/si_g.inc $(SYSTEMUNIT)$(PPUEXT) \
-          $(SI_G_DEPS_OS) $(SI_G_DEPS_CPU)
-
-si_g$(PPUEXT) : $(SI_G_DEPS)
-	$(COMPILER) $<
-
 
 
 buildrtl$(PPUEXT): buildrtl.pp $(SYSTEMUNIT)$(PPUEXT) $(OBJPASUNIT)$(PPUEXT) $(HEAPTRCUNIT)$(PPUEXT)

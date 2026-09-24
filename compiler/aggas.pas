@@ -1537,11 +1537,6 @@ implementation
 
            ait_symbol :
              begin
-               if (target_info.system=system_powerpc64_linux) and
-                  (tai_symbol(hp).sym.typ=AT_FUNCTION) and
-                  (cs_profile in current_settings.moduleswitches) then
-                 writer.AsmWriteLn('.globl _mcount');
-
                if tai_symbol(hp).is_global then
                 begin
                   writer.AsmWrite('.globl'#9);

@@ -2280,7 +2280,6 @@ S*2Aas_asemblacja przy u¿yciu GNU AS
 6*2Ox_maksymalne optymalizacje (ci±gle zawieraj± B£ÊDY!!!)
 6*2O0_ustawia docelowy procesor na MC68000
 6*2O2_ustawia docelowy procesor na MC68020+ (domy¶lne)
-**1pg_generacja kodu do profilowania przy pomocy gprof (definiuje FPC_PROFILE)
 **1R<x>_styl asemblera u¿ywanego w ¼ród³ach:
 **2Rdefault_u¿ycie domy¶lnego asemblera
 3*2Ratt_styl AT&T

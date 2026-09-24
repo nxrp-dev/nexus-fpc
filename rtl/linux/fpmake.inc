@@ -27,13 +27,9 @@ begin
     begin
     AddLoader('cprt0');
     AddLoader('dllprt0');
-    AddLoader('gprt0');
     end
   else
     AddLoader('prt1');
   If (Defaults.CPU=i386) Then
-    begin
     AddLoader('cprt21');
-    AddLoader('gprt21');
-    end;
-end;    
+end;

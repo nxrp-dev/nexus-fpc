@@ -1792,7 +1792,6 @@ option_help_pages=11025_[
 **1l_‚crit le logo
 **1n_ne pas lire le fichier de configuration par d‚faut
 **1o<x>_change le nom de l'executable en <x>
-**1pg_g‚nŠre du code pour profiler avec gprof
 *L1P_utilise des pipes au lieu de cr‚er des fichiers temporaires
 **1S<x>_options de syntaxe :
 **2S2_autorise quelques extensions Delphi 2

@@ -63,8 +63,8 @@ The initial implementation includes:
 
 It does not include ARM64, other operating systems, annotations, online
 aggregation, higher-level trace analysis, live UI
-integration, compression, lossless blocking capture, changes to gprof, or
-changes to the FPC LLVM code-generation backend.
+integration, compression, lossless blocking capture, or changes to the FPC
+LLVM code-generation backend.
 
 ## 4. Architecture
 
@@ -102,8 +102,6 @@ or PPU. Use the existing dedicated state:
 ```text
 cs_nexus_profile
 ```
-
-Do not reuse `cs_profile`; it belongs to gprof.
 
 The option applies to the current top-level compiler invocation, its dependency
 compilations, and its automatic PPU rebuilds. Configuration-file processing
@@ -413,7 +411,6 @@ the exact scenario and evidence before expanding the design.
 - Project PPUs rebuild across incompatible profile state.
 - Immutable release/system PPUs remain usable uninstrumented.
 - `ppudump` identifies profiling PPUs.
-- `-pg` behavior remains unchanged.
 
 ### 14.2 Object and linking
 
@@ -463,7 +460,6 @@ exceptions, FPC-created threads, and foreign-created threads.
 - TLS/threadvars;
 - exception/unwind;
 - normal nonprofiled build;
-- Win64 gprof behavior unchanged;
 - no new bootstrap warning class.
 
 ### 14.7 Performance
@@ -486,7 +482,6 @@ Do not optimize without a measured problem.
 - The reader handles complete and partial evidence.
 - Smartlinking removes unused code and metadata.
 - Ordinary builds contain no profiling residue.
-- gprof remains unchanged.
 - A clean make bootstrap and the complete corpus pass.
 
 ## 16. Settled Decisions
@@ -495,7 +490,6 @@ Do not optimize without a measured problem.
 |---|---|
 | Activation | `-profile` before unit loading |
 | Developer source changes | None |
-| gprof | Independent and unchanged |
 | Runtime | Raw capture without online aggregation |
 | Analysis | Deferred consumer design |
 | Buffering | Reusable fixed-capacity `TNXEventMemory` blocks |

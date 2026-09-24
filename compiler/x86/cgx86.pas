@@ -123,7 +123,6 @@ unit cgx86;
         procedure g_concatcopy(list : TAsmList;const source,dest : treference;len : tcgint);override;
 
         { entry/exit code helpers }
-        procedure g_profilecode(list : TAsmList);override;
         procedure g_stackpointer_alloc(list : TAsmList;localsize : longint);override;
         procedure g_proc_entry(list : TAsmList;localsize : longint;nostackframe:boolean);override;
         procedure g_save_registers(list: TAsmList); override;
@@ -3235,62 +3234,6 @@ unit cgx86;
 {****************************************************************************
                               Entry/Exit Code Helpers
 ****************************************************************************}
-
-    procedure tcgx86.g_profilecode(list : TAsmList);
-
-      var
-        pl           : tasmlabel;
-        mcountprefix : String[4];
-
-      begin
-        case target_info.system of
-        {$ifndef NOTARGETWIN}
-           system_i386_win32,
-        {$endif}
-           system_i386_freebsd,
-           system_i386_netbsd,
-           system_i386_wdosx :
-             begin
-                Case target_info.system Of
-                 system_i386_freebsd : mcountprefix:='.';
-                 system_i386_netbsd : mcountprefix:='__';
-                else
-                 mcountPrefix:='';
-                end;
-                current_asmdata.getaddrlabel(pl);
-                new_section(list,sec_data,lower(current_procinfo.procdef.mangledname),sizeof(pint));
-                list.concat(Tai_label.Create(pl));
-                list.concat(Tai_const.Create_32bit(0));
-                new_section(list,sec_code,lower(current_procinfo.procdef.mangledname),0);
-                list.concat(Taicpu.Op_reg(A_PUSH,S_L,NR_EDX));
-                list.concat(Taicpu.Op_sym_ofs_reg(A_MOV,S_L,pl,0,NR_EDX));
-                a_call_name(list,target_info.Cprefix+mcountprefix+'mcount',false);
-                list.concat(Taicpu.Op_reg(A_POP,S_L,NR_EDX));
-             end;
-
-           system_i386_linux:
-             a_call_name(list,target_info.Cprefix+'mcount',false);
-
-           system_i386_go32v2,system_i386_watcom:
-             begin
-               a_call_name(list,'MCOUNT',false);
-             end;
-           system_x86_64_linux,
-           system_x86_64_darwin,
-           system_x86_64_iphonesim:
-             begin
-               a_call_name(list,'mcount',false);
-             end;
-           system_i386_openbsd,
-           system_x86_64_openbsd:
-             begin
-               a_call_name(list,'__mcount',false);
-             end;
-           else
-             internalerror(2019050701);
-        end;
-      end;
-
 
     procedure tcgx86.g_stackpointer_alloc(list : TAsmList;localsize : longint);
 

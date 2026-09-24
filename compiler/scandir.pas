@@ -1332,16 +1332,6 @@ unit scandir;
         do_localswitch(cs_pointermath);
       end;
 
-    procedure dir_profile;
-      begin
-        do_moduleswitch(cs_profile);
-        { defined/undefine FPC_PROFILE }
-        if cs_profile in current_settings.moduleswitches then
-          def_system_macro('FPC_PROFILE')
-        else
-          undef_system_macro('FPC_PROFILE');
-      end;
-
     procedure dir_push;
 
     begin
@@ -2227,7 +2217,6 @@ unit scandir;
         AddDirective('POINTERMATH',directive_all, @dir_pointermath);
         AddDirective('POP',directive_all, @dir_pop);
         AddDirective('POPOPT',directive_all, @dir_pop);
-        AddDirective('PROFILE',directive_all, @dir_profile);
         AddDirective('PUSH',directive_all, @dir_push);
         AddDirective('PUSHOPT',directive_all, @dir_push);
         AddDirective('R',directive_all, @dir_resource);

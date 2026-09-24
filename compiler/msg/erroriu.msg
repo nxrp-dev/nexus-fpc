@@ -2892,7 +2892,6 @@ S*2Aas_Assembla con GNU AS
 **2OW<x>_Genera feedback per l'ottimizz. globale <x> (vedi fpc -i)
 **2Ow<x>_Esegue ottimizzazione globale <x> (vedi fpc -i)
 **2Os_Ottimizza per la dimensione e non per la velocità
-**1pg_Genera codici di profiling per gprof (FPC_PROFILE: on)
 **1R<x>_Stile di lettura assembler:
 **2Rdefault_Usa assembler di default per la destinazione
 3*2Ratt_Leggi assembler stile AT&T

@@ -5,7 +5,7 @@ ppudump=ppudump
 for f in $*; do
   $ppudump -vim $f | awk "
 BEGIN { first=1;
- rtlunits=\" baseunix buildrtl charset classes cmem convutils cpu crt cthreads ctypes cwstring dateutils dl dos dynlibs errors exeinfo fgl fmtbcd fpcylix getopts gpm heaptrc initc ipc keyboard lineinfo linux linuxvcs lnfodwrf macpas math matrix messages mmx mouse objects objpas ports printer rtlconsts serial sharemem si_c si_c21 si_c21g si_dll signals si_prc si_uc sockets stdconvs strings strutils syscall sysconst sysinitcyg sysinitgprof sysinitpas system sysutils terminfo termio types typinfo ucomplex unix unixtype unixutil variants varutils video windows winevent winsock winsock2 winsysut x86 \"
+ rtlunits=\" baseunix buildrtl charset classes cmem convutils cpu crt cthreads ctypes cwstring dateutils dl dos dynlibs errors exeinfo fgl fmtbcd fpcylix getopts gpm heaptrc initc ipc keyboard lineinfo linux linuxvcs lnfodwrf macpas math matrix messages mmx mouse objects objpas ports printer rtlconsts serial sharemem si_c si_c21 si_dll signals si_prc si_uc sockets stdconvs strings strutils syscall sysconst sysinitcyg sysinitpas system sysutils terminfo termio types typinfo ucomplex unix unixtype unixutil variants varutils video windows winevent winsock winsock2 winsysut x86 \"
 }
 /^Source/ {
   if (first==1)

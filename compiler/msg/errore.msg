@@ -4285,7 +4285,6 @@ L*2il_Return list of supported LLVM/Xcode versions by the LLVM backend
 **2Os_Optimize for size rather than speed
 **2Ow<x>_Perform whole-program optimization <x>; see fpc -i or fpc -iw for possible values
 **2OW<x>_Generate whole-program optimization feedback for optimization <x>; see fpc -i or fpc -iw for possible values
-**1pg_Generate profile code for gprof (defines FPC_PROFILE)
 **1profile_Enable Nexus procedure trace profiling
 F*1P<x>_Target CPU / compiler related options:
 F*2PB_Show default compiler binary

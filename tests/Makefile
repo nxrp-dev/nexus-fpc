@@ -1908,7 +1908,7 @@ clean_sources:
 	-$(DEL) $(wildcard $(patsubst %.pp,%$(PPUEXT),$(wildcard $(addsuffix /*.pp,$(DIRS)))))
 clean_test:
 	-$(DELTREE) $(TEST_OUTPUTDIR)
-	-$(DEL) core gmon.out testprep-stamp.$(TEST_FULL_TARGET) dotgz$(SRCBATCHEXT)
+	-$(DEL) core testprep-stamp.$(TEST_FULL_TARGET) dotgz$(SRCBATCHEXT)
 clean: clean_sources fpc_clean
 	$(MAKE) clean_test CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)
 	$(MAKE) -C tstunits clean CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)

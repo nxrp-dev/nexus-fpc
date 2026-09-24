@@ -105,7 +105,6 @@ Type
     procedure Interpret_N_l(opt, more: TCmdStr);
     procedure Interpret_O_l(opt, more: TCmdStr);
     procedure Interpret_O_U(opt, more: TCmdStr);
-    procedure Interpret_P_l(opt, more: TCmdStr);
     procedure Interpret_P_U(opt, more: TCmdStr);
     procedure Interpret_R_U(opt, more: TCmdStr);
     procedure Interpret_S_l(opt, more: TCmdStr);
@@ -181,17 +180,6 @@ var
 ****************************************************************************}
 
 const
-  { gprof (requires implementation of g_profilecode in the code generator) }
-  supported_targets_pg = [system_i386_linux,system_x86_64_linux,system_arm_linux]
-                        + [system_i386_win32]
-                        + [system_x86_64_darwin]
-                        + [system_i386_GO32V2]
-                        + [system_i386_freebsd]
-                        + [system_i386_netbsd]
-                        + [system_i386_wdosx]
-                        + [system_aarch64_linux];
-
-
   suppported_targets_x_smallr = systems_linux + systems_solaris + systems_android
                              + systems_openbsd
                              + [system_i386_haiku,system_x86_64_haiku]
@@ -1556,7 +1544,7 @@ begin
            'n' : Interpret_N_l(opt,more);
            'o' : Interpret_O_l(opt,more);
            'O' : Interpret_O_U(opt,more);
-           'p' : Interpret_P_l(opt,more);
+           'p' : IllegalPara(opt);
            'P' : Interpret_P_U(opt,more);
            'R' : Interpret_R_U(opt,more);
            's' : Interpret_S_l(opt,more);
@@ -3450,37 +3438,6 @@ begin
 end;
 
 
-procedure TOption.Interpret_P_l(opt, more: TCmdStr);
-
-begin
-  if UnsetBool(More, 0, opt, false) then
-    begin
-      init_settings.moduleswitches:=init_settings.moduleswitches-[cs_profile];
-      undef_system_macro('FPC_PROFILE');
-    end
-  else
-    if Length(More)=0 then
-      IllegalPara(opt)
-    else
-    case more[1] of
-     'g' : if UnsetBool(more, 1, opt, false) then
-            begin
-              exclude(init_settings.moduleswitches,cs_profile);
-              undef_system_macro('FPC_PROFILE');
-            end
-           else if (target_info.system in supported_targets_pg) then
-            begin
-              include(init_settings.moduleswitches,cs_profile);
-              def_system_macro('FPC_PROFILE');
-            end
-           else
-             UnsupportedPara('-pg');
-    else
-      IllegalPara(opt);
-    end;
-end;
-
-
 procedure TOption.Interpret_P_U(opt, more: TCmdStr);
 
 begin
@@ -5053,11 +5010,8 @@ begin
       include(init_settings.globalswitches,cs_link_extern);
     end;
 
-  { turn off stripping if compiling with debuginfo or profile }
-  if (
-      (cs_debuginfo in init_settings.moduleswitches) or
-      (cs_profile in init_settings.moduleswitches)
-     ) and
+  { turn off stripping if compiling with debuginfo }
+  if (cs_debuginfo in init_settings.moduleswitches) and
      not(cs_link_separate_dbg_file in init_settings.globalswitches) then
     exclude(init_settings.globalswitches,cs_link_strip);
 

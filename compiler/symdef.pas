@@ -7660,7 +7660,6 @@ implementation
     function tprocdef.needsglobalasmsym: boolean;
       begin
         result:=
-          (cs_profile in current_settings.moduleswitches) or
           { smart linking using a library requires to promote
             all non-nested procedures to AB_GLOBAL
             otherwise you get undefined symbol error at linking

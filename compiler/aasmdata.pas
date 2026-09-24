@@ -610,8 +610,7 @@ implementation
           the code written in hlcg.gen_proc_symbol to
           avoid change from AB_LOCAL to AB_GLOBAL, which generates
           erroneous code (at least for targets using GOT) }
-        if global or
-           (cs_profile in current_settings.moduleswitches) then
+        if global then
           result:=DefineAsmSymbol(s,AB_GLOBAL,AT_FUNCTION,pd)
         else if tf_supports_hidden_symbols in target_info.flags then
           result:=DefineAsmSymbol(s,AB_PRIVATE_EXTERN,AT_FUNCTION,pd)

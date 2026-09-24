@@ -186,7 +186,7 @@ $threadTrace = Invoke-ProfiledExe $threadOutput 'profiler_threads'
 Assert-True ($threadTrace.threads -ge 3) `
     'Main, FPC, and foreign threads were not recorded'
 
-Write-Host 'Release and gprof regression'
+Write-Host 'Release validation'
 $releaseOutput = Join-Path $OutputRoot 'release'
 Invoke-Compile (Join-Path $testSource 'profiler_smoke.pas') $releaseOutput `
     -Profile -Build -Release
@@ -232,14 +232,5 @@ Assert-True (($unhandledTrace.modules -ge 1) -and `
     ($unhandledTrace.unwinds -ge 1) -and `
     ($unhandledTrace.trace_end -eq 1)) `
     'Unhandled exception trace is not complete unwind evidence'
-
-$gprofOutput = Join-Path $OutputRoot 'gprof'
-New-Item -ItemType Directory -Force -Path $gprofOutput | Out-Null
-$gprofText = & $Compiler -n "-Fu$RtlUnits" "-FE$gprofOutput" `
-    "-FU$gprofOutput" -pg -Aas-clang -XLL `
-    (Join-Path $activationSource 'activation.pas') 2>&1 | Out-String
-Assert-True ($LASTEXITCODE -ne 0) 'Win64 gprof unexpectedly became supported'
-Assert-True ($gprofText -match 'not, or not yet, supported') `
-    "Win64 gprof diagnostic changed: $gprofText"
 
 Write-Host "Nexus profiler validation passed. Artifacts: $OutputRoot"

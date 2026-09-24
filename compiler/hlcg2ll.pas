@@ -276,11 +276,6 @@ unit hlcg2ll;
           procedure g_overflowcheck(list: TAsmList; const Loc:tlocation; def:tdef); override;
           procedure g_overflowCheck_loc(List:TAsmList;const Loc:TLocation;def:TDef;var ovloc : tlocation);override;
 
-          {# Emits instructions when compilation is done in profile
-             mode (this is set as a command line option). The default
-             behavior does nothing, should be overridden as required.
-          }
-          procedure g_profilecode(list : TAsmList);override;
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
 
              @param(size Number of bytes to allocate)
@@ -987,11 +982,6 @@ implementation
   procedure thlcg2ll.g_overflowCheck_loc(List: TAsmList; const Loc: TLocation; def: TDef; var ovloc: tlocation);
     begin
       cg.g_overflowCheck_loc(list,loc,def,ovloc);
-    end;
-
-  procedure thlcg2ll.g_profilecode(list: TAsmList);
-    begin
-      cg.g_profilecode(list);
     end;
 
   procedure thlcg2ll.g_stackpointer_alloc(list: TAsmList; size: longint);

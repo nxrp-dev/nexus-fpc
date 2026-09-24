@@ -214,14 +214,6 @@ begin
       T.Dependencies.AddUnit('ctypes');
 
     // Linux units
-    T:=P.Targets.AddUnit('si_c21g.pp',[i386],[Linux]);
-      With T.Dependencies do
-        begin
-          AddUnit('system');
-          AddInclude('si_intf.inc');
-          AddInclude('sysnr.inc');
-          AddInclude('si_c21g.inc');
-        end;
     T:=P.Targets.AddUnit('si_c21.pp',[i386],[Linux]);
       With T.Dependencies do
         begin
@@ -293,8 +285,6 @@ begin
 
     // Windows units
     T:=P.Targets.AddUnit('sysinitcyg.pp',AllWindowsOSes-[WinCE]);
-      T.Dependencies.AddUnit('system');
-    T:=P.Targets.AddUnit('sysinitgprof.pp',AllWindowsOSes-[WinCE]);
       T.Dependencies.AddUnit('system');
     T:=P.Targets.AddUnit('sysinitpas.pp',AllWindowsOSes-[WinCE]);
       T.Dependencies.AddUnit('system');

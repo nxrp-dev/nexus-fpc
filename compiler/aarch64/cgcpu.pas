@@ -106,7 +106,6 @@ interface
         procedure g_check_for_fpu_exception(list: TAsmList; force, clear: boolean);override;
         procedure g_local_unwind(list: TAsmList; l: TAsmLabel);override;
         procedure adjust_exceptfilter_ref(var ref: treference; for_finalization: boolean);override;
-        procedure g_profilecode(list: TAsmList);override;
        private
         function save_regs(list: TAsmList; rt: tregistertype; lowsr, highsr: tsuperregister; sub: tsubregister): longint;
         procedure load_regs(list: TAsmList; rt: tregistertype; lowsr, highsr: tsuperregister; sub: tsubregister);
@@ -2721,18 +2720,6 @@ implementation
             if clear then
               current_procinfo.FPUExceptionCheckNeeded:=false;
           end;
-      end;
-
-
-    procedure tcgaarch64.g_profilecode(list : TAsmList);
-      begin
-        if target_info.system = system_aarch64_linux then
-          begin
-            list.concat(taicpu.op_reg_reg(A_MOV,NR_X0,NR_X30));
-            a_call_name(list,'_mcount',false);
-          end
-        else
-          internalerror(2020021901);
       end;
 
 

@@ -4301,7 +4301,6 @@ L*2il_Zeige Liste der untersttzten LLVM/Xcode Versionen des LLVM-Backend
 **2Os_Erzeuge krzeren Code
 **2Ow<x>_Fhre die Gesamtprogramm-Optimierung durch <x>; fpc -i oder fpc -iw  geben die m”glichen Werte aus
 **2OW<x>_Erzeuge Feedback fr die Gesamtprogramm-Optimierung fr Optimierung <x>; fpc -i oder fpc -iw geben die m”glichen Werte aus
-**1pg_Erzeuge Profiler-Code fr gprof
 F*1P<x>_Zielprozessor / Compiler bezogene Optionen:
 F*2PB_Zeige die voreingestellte Compilerbin„rdatei
 F*2PP_Zeige den voreingestellten Zielprozessor

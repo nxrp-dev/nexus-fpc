@@ -3574,7 +3574,6 @@ option_help_pages=11025_[
 **1l_Druk logo af
 **1n_Standaard configuratie bestand niet lezen
 **1o<x>_Stel de naam van het applicatiebestand in op <x>
-**1pg_genereer profile code voor gprof
 *L1P_Gebruik pipes in plaats van tijdelijke assembler bestanden
 **1S_Syntaxisinstellingen
 **2S2_Schakel Delphi-2-uitbreidingen in

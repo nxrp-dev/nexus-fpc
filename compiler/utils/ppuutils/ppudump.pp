@@ -2322,7 +2322,7 @@ const
         'Macro support', {cs_support_macro}
         'C operator support', {cs_support_c_operators}
          { generation }
-        'Profile', {cs_profile}
+        'Reserved', {cs_reserved_generation_1}
         'Debug information', {cs_debuginfo}
         'Compilation of System unit', {cs_compilesystem}
         'Line information', {cs_lineinfo}

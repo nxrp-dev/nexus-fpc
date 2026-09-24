@@ -2257,7 +2257,6 @@ S*2Aas_assemblar utilitzant GNU AS
 6*2Ox_optimitza al màxim (Encara no és segur !!!)
 6*2O0_posa el processador de destí a MC68000
 6*2O2_posa el processador de destí a MC68020+ (predeterminat)
-**1pg_genera codi de perfil per gprof (defineix FPC_PROFILE)
 **1R<x>_Estil de lectura de l'assemblador:
 **2Rdefault_utilitza l'assemblador predeterminat
 3*2Ratt_llegeix assemblador d'estil AT&T

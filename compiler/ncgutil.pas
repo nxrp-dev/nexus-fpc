@@ -1323,11 +1323,7 @@ implementation
 
     function getprocalign : shortint;
       begin
-        { gprof uses 16 byte granularity }
-        if (cs_profile in current_settings.moduleswitches) then
-          result:=16
-        else
-         result:=current_settings.alignment.procalign;
+        result:=current_settings.alignment.procalign;
       end;
 
 

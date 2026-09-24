@@ -61,7 +61,7 @@
         <ShowHints Value="False"/>
       </Verbosity>
       <ExecuteBefore>
-        <Command Value="make RELEASE=1 clean system.ppu uuchar.ppu objpas.ppu lineinfo.ppu lnfodwrf.ppu prt0.o cprt0.o gprt0.o dllprt0.o"/>
+        <Command Value="make RELEASE=1 clean system.ppu uuchar.ppu objpas.ppu lineinfo.ppu lnfodwrf.ppu prt0.o cprt0.o dllprt0.o"/>
         <ScanForMakeMsgs Value="True"/>
         <ShowAllMessages Value="True"/>
       </ExecuteBefore>

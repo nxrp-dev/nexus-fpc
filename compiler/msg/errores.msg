@@ -3638,7 +3638,6 @@ S*2Aas_ensamblar usando GNU AS
 6*2Ox_optimizar al máximo (AUN CON ERRORES!!!)
 6*2O0_establecer procesador de destino a MC68000
 6*2O2_establecer procesador de destino a MC68020+ (defecto)
-**1pg_generar código de perfilado gprof (define FPC_PROFILE)
 **1R<x>_estilo de lectura de ensamblador:
 **2Rdefault_usar ensamblador por defecto
 3*2Ratt_leer ensamblador estilo AT&T

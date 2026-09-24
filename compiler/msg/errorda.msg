@@ -3647,7 +3647,6 @@ option_help_pages=11025_[
 **2Mmacpas_forsøg at være kompatibel med pascal-dialekter fra macintosh 
 **1n_spring læsning af standardkonfigurationsfil over
 **1o<x>_ændr navnet af det producerede program til <x>
-**1pg_generér profileringskode til gprof (definerer FPC_PROFILE)
 *L1P_brug pipes i stedet for midlertidige assembler-filer
 **1S<x>_Syntaxindstillinger:
 **2S2_samme som -Mobjfpc

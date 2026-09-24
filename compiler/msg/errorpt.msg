@@ -3283,7 +3283,6 @@ S*2Aas_Monta usando o GNU AS
 **2OW<x>_Gera retorno otimiza‡Æo completa programa para otimiza‡äes <x>, veja fpc -i para poss¡veis valores
 **2Ow<x>_Realiza otimiza‡Æo completa programa <x>, veja fpc -i para poss¡veis valores
 **2Os_Otimiza tamanho ao inv‚s de velocidade
-**1pg_Gera perfil c¢digo para 'gprof' (define FPC_PROFILE)
 **1R<x>_Estilo leitura Assembler:
 **2Rdefault_Use assembler padrÆo para alvo
 3*2Ratt_Leia assembler estilo AT&T

@@ -3655,7 +3655,6 @@ L*2il_返回 LLVM 后端支持的 LLVM/Xcode 版本列表
 **2Os_优化大小而不是速度
 **2Ow<x>_执行整体程序优化 <x>；可能的值请参见 fpc -i 或 fpc -iw
 **2OW<x>_为优化 <x> 生成整体程序优化反馈；可能的值请参见 fpc -i 或 fpc -iw
-**1pg_生成用于 gprof 的配置代码(定义 FPC_PROFILE)
 F*1P<x>_目标 CPU / 编译器相关选项：
 F*2PB_显示默认编译器二进制文件
 F*2PP_显示默认目标 CPU

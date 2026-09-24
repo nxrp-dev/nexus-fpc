@@ -140,9 +140,7 @@ implementation
                break;
              hp:=tmodule(hp.next);
            end;
-          if cs_profile in current_settings.moduleswitches then
-            linker.sysinitunit:='sysinitgprof'
-          else if linkcygwin or (Linker.SharedLibFiles.Find('cygwin')<>nil) or (Linker.StaticLibFiles.Find('cygwin')<>nil) then
+          if linkcygwin or (Linker.SharedLibFiles.Find('cygwin')<>nil) or (Linker.StaticLibFiles.Find('cygwin')<>nil) then
             linker.sysinitunit:='sysinitcyg'
           else
             linker.sysinitunit:='sysinitpas';

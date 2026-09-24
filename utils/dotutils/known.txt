@@ -1785,7 +1785,6 @@ PageMem=System
 pilot=PalmApi
 Ports=System
 Posix=QNXApi
-profile=DOSApi
 raspi2=EmbeddedApi
 raspi3=EmbeddedApi
 raspiuart=EmbeddedApi

@@ -345,7 +345,6 @@ Begin
         Begin
           LinkLibraryOrder.add('gcc','',15);
           LinkLibraryOrder.add('c','',100);
-          LinkLibraryOrder.add('gmon','',120);
           LinkLibraryOrder.add('dl','',140);
           LinkLibraryOrder.add('pthread','',160);
          end;
@@ -357,13 +356,10 @@ type
 const                     { libc5    glibc2   glibc21   uclibc }
   cprtnames: tlibcnames = ('cprt0', 'cprt0', 'cprt21', 'ucprt0');
   csinames: tlibcnames  = ('si_c',  'si_c',  'si_c21', 'si_uc');
-  gprtnames: tlibcnames = ('gprt0', 'gprt0', 'gprt21', 'ugprt0');
-  gsinames: tlibcnames  = ('si_g',  'si_g',  'si_c21g','si_ucg');
 
   defprtnames: array[boolean] of string[8] = ('prt0',  'dllprt0');
   defsinames: array[boolean] of string[8]  = ('si_prc','si_dll');
 
-{ uclibc and glibc21 are not available on x86_64! si_g is also absent. }
 Procedure TLinkerLinux.InitSysInitUnitName;
 begin
   linklibc:=ModulesLinkToLibc;
@@ -373,13 +369,7 @@ begin
 
   if current_module.islibrary then
     exit;
-  if cs_profile in current_settings.moduleswitches then
-    begin
-      prtobj:=gprtnames[libctype];
-      sysinitunit:=gsinames[libctype];
-      linklibc:=true;
-    end
-  else if linklibc then
+  if linklibc then
     begin
       prtobj:=cprtnames[libctype];
       sysinitunit:=csinames[libctype];
@@ -397,14 +387,6 @@ Var
   linksToSharedLibFiles, libraryadded: boolean;
 begin
   result:=False;
-{ set special options for some targets }
-  if cs_profile in current_settings.moduleswitches then
-   begin
-     if not(libctype in [glibc2,glibc21]) then
-       AddSharedLibrary('gmon');
-     AddSharedLibrary('c');
-   end;
-
   { Open link.res file }
   LinkRes:=TLinkRes.Create(outputexedir+Info.ResName,true);
   with linkres do
@@ -676,8 +658,7 @@ begin
   if (cs_link_smart in current_settings.globalswitches) and
      create_smartlink_sections then
    GCSectionsStr:='--gc-sections';
-  If (cs_profile in current_settings.moduleswitches) or
-     ((Info.DynamicLinker<>'') and (not SharedLibFiles.Empty)) then
+  If (Info.DynamicLinker<>'') and (not SharedLibFiles.Empty) then
    begin
      DynLinkStr:='--dynamic-linker='+Info.DynamicLinker;
      if cshared then
@@ -874,4 +855,3 @@ initialization
 {$endif aarch64}
   RegisterRes(res_elf_info,TWinLikeResourceFile);
 end.
-

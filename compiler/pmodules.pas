@@ -490,10 +490,6 @@ implementation
                (curr.modulename^<>'OBJCBASE') then
               CheckAddUnit('objcbase');
           end;
-        { Profile unit? Needed for go32v2 only }
-        if (cs_profile in current_settings.moduleswitches) and
-           (target_info.system in [system_i386_go32v2,system_i386_watcom]) then
-          CheckAddUnit('profile');
         if (cs_load_fpcylix_unit in current_settings.globalswitches) then
           begin
             CheckAddUnit('fpcylix');

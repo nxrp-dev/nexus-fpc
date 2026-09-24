@@ -9,7 +9,7 @@ unit buildrtl;
       }
       macpas, iso7185,
       fpintres, // $(SYSINIT_UNITS) \
-      si_prc, si_c, si_g, si_dll,
+      si_prc, si_c, si_dll,
       unixtype, ctypes, baseunix, strings, extpas, syscall, unixutil,
       heaptrc,
       termio, unix, initc, cmem,
