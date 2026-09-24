@@ -1,6 +1,7 @@
 unit NXProfilerRuntime;
 
 {$mode objfpc}{$H+}
+{$pointermath on}
 {$R-}{$Q-}
 
 interface
@@ -26,7 +27,12 @@ const
   NXP_MODULE_MAGIC = $4D50584E;
   NXP_MODULE_ABI = 1;
   NXP_THREAD_BUFFER_COUNT = 4096;
+  NXP_WORKER_BLOCK_BATCH = 64;
   FLS_OUT_OF_INDEXES = DWORD($FFFFFFFF);
+  NXP_CONTROL_CLASS: PAnsiChar = 'NexusFPCProfilerControl';
+  NXP_CONTROL_TITLE_PREFIX: PAnsiChar = 'NexusFPCProfiler-';
+  NXP_START_MESSAGE_NAME: PAnsiChar = 'NexusFPCProfiler.Start';
+  NXP_STOP_MESSAGE_NAME: PAnsiChar = 'NexusFPCProfiler.Stop';
 
 type
   TFlsCallback = procedure(Data: Pointer); stdcall;
@@ -78,6 +84,13 @@ type
     Defined: Boolean;
   end;
 
+  PNXPCallFrame = ^TNXPCallFrame;
+  TNXPCallFrame = record
+    ProcedureId: DWord;
+    EnterTimestamp: QWord;
+    ChildTicks: QWord;
+  end;
+
   PNXPThreadState = ^TNXPThreadState;
   TNXPThreadState = record
     Next: PNXPThreadState;
@@ -86,8 +99,13 @@ type
     Defined: Boolean;
     Sequence: QWord;
     StartTimestamp: QWord;
-    Count: DWord;
-    Events: array[0..NXP_THREAD_BUFFER_COUNT - 1] of TNXProfileEvent;
+    CallCount: DWord;
+    FirstCompletionTimestamp: QWord;
+    LastCompletionTimestamp: QWord;
+    Frames: PNXPCallFrame;
+    FrameCount: DWord;
+    FrameCapacity: DWord;
+    Calls: array[0..NXP_THREAD_BUFFER_COUNT - 1] of TNXProfileCall;
   end;
 
 function FlsAlloc(Callback: TFlsCallback): DWORD; stdcall;
@@ -106,9 +124,15 @@ var
   EventMemory: TNXEventMemory;
   Writer: TNXProfileWriter;
   WorkerWakeEvent: PRTLEvent;
+  WorkerControlReadyEvent: PRTLEvent;
   WorkerThread: TThreadID;
   WorkerStarted: Boolean;
   WorkerStop: LongInt;
+  ControlWindow: HWND;
+  StartControlMessage: UINT;
+  StopControlMessage: UINT;
+  CaptureEnabled: LongInt;
+  ActiveHooks: LongInt;
   CounterFrequency: TLargeInteger;
   Modules: array of TNXPRuntimeModule;
   Procedures: array of TNXPRuntimeProcedure;
@@ -234,6 +258,41 @@ begin
   Result := Position;
 end;
 
+function BuildControlWindowTitle(var Buffer: array of AnsiChar;
+  ProcessId: DWord): SizeInt;
+var
+  Index, Position: SizeInt;
+begin
+  Position := 0;
+  Index := 0;
+  while NXP_CONTROL_TITLE_PREFIX[Index] <> #0 do
+  begin
+    Buffer[Position] := NXP_CONTROL_TITLE_PREFIX[Index];
+    Inc(Position);
+    Inc(Index);
+  end;
+  AppendDecimal(Buffer, Position, ProcessId);
+  Buffer[Position] := #0;
+  Result := Position;
+end;
+
+function StartsPaused: Boolean;
+var
+  Buffer: array[0..15] of AnsiChar;
+  Count: DWord;
+begin
+  FillChar(Buffer, SizeOf(Buffer), 0);
+  Count := GetEnvironmentVariableA('NEXUS_PROFILE_START',
+    @Buffer[0], Length(Buffer));
+  Result := (Count = 6) and
+    ((Buffer[0] = 'p') or (Buffer[0] = 'P')) and
+    ((Buffer[1] = 'a') or (Buffer[1] = 'A')) and
+    ((Buffer[2] = 'u') or (Buffer[2] = 'U')) and
+    ((Buffer[3] = 's') or (Buffer[3] = 'S')) and
+    ((Buffer[4] = 'e') or (Buffer[4] = 'E')) and
+    ((Buffer[5] = 'd') or (Buffer[5] = 'D'));
+end;
+
 procedure WriteModuleLocked(AModule: PNXPRuntimeModule);
 var
   Info: TNXProfileModuleInfo;
@@ -268,6 +327,23 @@ begin
     WriteProcedureLocked(@Procedures[Index]);
 end;
 
+procedure ResetMetadataDefinitionsLocked;
+var
+  Index: SizeInt;
+  State: PNXPThreadState;
+begin
+  for Index := 0 to High(Modules) do
+    Modules[Index].Defined := False;
+  for Index := 0 to High(Procedures) do
+    Procedures[Index].Defined := False;
+  State := PNXPThreadState(ThreadRoot);
+  while State <> nil do
+  begin
+    State^.Defined := False;
+    State := State^.Next;
+  end;
+end;
+
 procedure StartWriterLocked;
 var
   FileNameBuffer: array[0..63] of AnsiChar;
@@ -286,6 +362,7 @@ begin
   SetString(FileName, PAnsiChar(@FileNameBuffer[0]), FileNameLength);
   Writer.StartTrace(FileName, GetCurrentProcessId, SessionId,
     QWord(CounterFrequency), StartStamp);
+  ResetMetadataDefinitionsLocked;
   WriteMetadataLocked;
 end;
 
@@ -304,13 +381,16 @@ end;
 
 procedure FlushStateLocked(State: PNXPThreadState);
 begin
-  if (Writer = nil) or (State = nil) or (State^.Count = 0) then
+  if (Writer = nil) or (State = nil) or (State^.CallCount = 0) then
     Exit;
   DefineThreadLocked(State);
-  Writer.WriteEventBlock(State^.ThreadId, State^.Sequence, 0,
-    Slice(State^.Events, State^.Count));
+  Writer.WriteCallBlock(State^.ThreadId, State^.Sequence, 0,
+    State^.FirstCompletionTimestamp, State^.LastCompletionTimestamp,
+    Slice(State^.Calls, State^.CallCount));
   Inc(State^.Sequence);
-  State^.Count := 0;
+  State^.CallCount := 0;
+  State^.FirstCompletionTimestamp := 0;
+  State^.LastCompletionTimestamp := 0;
 end;
 
 procedure FlushAllStatesLocked;
@@ -323,6 +403,93 @@ begin
     FlushStateLocked(State);
     State := State^.Next;
   end;
+end;
+
+function GrowFrameStack(State: PNXPThreadState): Boolean;
+var
+  NewCapacity: DWord;
+  NewFrames: Pointer;
+begin
+  if State^.FrameCapacity = 0 then
+    NewCapacity := 64
+  else
+    NewCapacity := State^.FrameCapacity * 2;
+  if State^.Frames = nil then
+    NewFrames := HeapAlloc(ProcessHeap, 0,
+      SizeUInt(NewCapacity) * SizeOf(TNXPCallFrame))
+  else
+    NewFrames := HeapReAlloc(ProcessHeap, 0, State^.Frames,
+      SizeUInt(NewCapacity) * SizeOf(TNXPCallFrame));
+  Result := NewFrames <> nil;
+  if Result then
+  begin
+    State^.Frames := PNXPCallFrame(NewFrames);
+    State^.FrameCapacity := NewCapacity;
+  end;
+end;
+
+procedure AppendCallLocked(State: PNXPThreadState;
+  const Call: TNXProfileCall; CompletionTimestamp: QWord);
+begin
+  DefineThreadLocked(State);
+  if State^.CallCount = 0 then
+    State^.FirstCompletionTimestamp := CompletionTimestamp;
+  State^.LastCompletionTimestamp := CompletionTimestamp;
+  State^.Calls[State^.CallCount] := Call;
+  Inc(State^.CallCount);
+  if State^.CallCount = NXP_THREAD_BUFFER_COUNT then
+    FlushStateLocked(State);
+end;
+
+procedure ProcessEventLocked(State: PNXPThreadState;
+  const Event: TNXProfileEvent);
+var
+  Frame, ParentFrame: PNXPCallFrame;
+  Call: TNXProfileCall;
+begin
+  if Event.Kind = nxpeEnter then
+  begin
+    if (State^.FrameCount = State^.FrameCapacity) and
+       (not GrowFrameStack(State)) then
+      Exit;
+    Frame := State^.Frames + State^.FrameCount;
+    Frame^.ProcedureId := Event.ProcedureId;
+    Frame^.EnterTimestamp := Event.Timestamp;
+    Frame^.ChildTicks := 0;
+    Inc(State^.FrameCount);
+    Exit;
+  end;
+
+  Call := Default(TNXProfileCall);
+  Call.ProcedureId := Event.ProcedureId;
+  if Event.Kind = nxpeUnwind then
+    Call.Flags := nxpcfUnwind;
+  if (State^.FrameCount = 0) then
+  begin
+    Call.Flags := Call.Flags or nxpcfUnmatched;
+    AppendCallLocked(State, Call, Event.Timestamp);
+    Exit;
+  end;
+  Frame := State^.Frames + State^.FrameCount - 1;
+  if (Frame^.ProcedureId <> Event.ProcedureId) or
+     (Event.Timestamp < Frame^.EnterTimestamp) or
+     (Frame^.ChildTicks > Event.Timestamp - Frame^.EnterTimestamp) then
+  begin
+    Call.Flags := Call.Flags or nxpcfUnmatched;
+    AppendCallLocked(State, Call, Event.Timestamp);
+    Exit;
+  end;
+
+  Call.InclusiveTicks := Event.Timestamp - Frame^.EnterTimestamp;
+  Call.SelfTicks := Call.InclusiveTicks - Frame^.ChildTicks;
+  Dec(State^.FrameCount);
+  if State^.FrameCount <> 0 then
+  begin
+    ParentFrame := State^.Frames + State^.FrameCount - 1;
+    Call.CallerProcedureId := ParentFrame^.ProcedureId;
+    Inc(ParentFrame^.ChildTicks, Call.InclusiveTicks);
+  end;
+  AppendCallLocked(State, Call, Event.Timestamp);
 end;
 
 procedure ProcessCompletedBlock(Block: Pointer);
@@ -338,11 +505,7 @@ begin
     begin
       Capture := EventMemory.CompletedRecord(Block, Index);
       State := PNXPThreadState(Capture^.Context);
-      DefineThreadLocked(State);
-      State^.Events[State^.Count] := Capture^.Event;
-      Inc(State^.Count);
-      if State^.Count = NXP_THREAD_BUFFER_COUNT then
-        FlushStateLocked(State);
+      ProcessEventLocked(State, Capture^.Event);
     end;
   finally
     LeaveCriticalSection(WriterLock);
@@ -350,19 +513,160 @@ begin
   EventMemory.RecycleCompletedBlock(Block);
 end;
 
-function WriterThreadMain(Parameter: Pointer): PtrInt;
+procedure ResetThreadCaptureLocked;
+var
+  State: PNXPThreadState;
+begin
+  State := PNXPThreadState(ThreadRoot);
+  while State <> nil do
+  begin
+    State^.Defined := False;
+    State^.Sequence := 0;
+    State^.CallCount := 0;
+    State^.FirstCompletionTimestamp := 0;
+    State^.LastCompletionTimestamp := 0;
+    State^.FrameCount := 0;
+    State := State^.Next;
+  end;
+end;
+
+procedure DiscardOutstandingCapture;
 var
   Block: Pointer;
 begin
+  while InterlockedCompareExchange(ActiveHooks, 0, 0) <> 0 do
+    ThreadSwitch;
+  EventMemory.SealCurrentBlock(True);
   repeat
-    repeat
+    Block := EventMemory.TakeCompletedBlock;
+    if Block <> nil then
+      EventMemory.RecycleCompletedBlock(Block)
+    else if EventMemory.SealedBlockCount <> 0 then
+      RTLEventWaitFor(WorkerWakeEvent);
+  until (Block = nil) and (EventMemory.SealedBlockCount = 0);
+end;
+
+procedure StopCapture;
+var
+  StopTimestamp: QWord;
+begin
+  if InterlockedExchange(CaptureEnabled, 0) = 0 then
+    Exit;
+  StopTimestamp := Timestamp;
+  DiscardOutstandingCapture;
+  EnterCriticalSection(WriterLock);
+  try
+    ResetThreadCaptureLocked;
+    if Writer <> nil then
+      Writer.Finish(StopTimestamp, 0);
+    Writer.Free;
+    Writer := TNXProfileWriter.Create(EventMemory);
+  finally
+    LeaveCriticalSection(WriterLock);
+  end;
+end;
+
+procedure StartCapture;
+begin
+  if (CaptureEnabled <> 0) or (ShuttingDown <> 0) then
+    Exit;
+  EnterCriticalSection(WriterLock);
+  try
+    StartWriterLocked;
+    InterlockedExchange(CaptureEnabled, 1);
+  finally
+    LeaveCriticalSection(WriterLock);
+  end;
+end;
+
+function ControlWindowProc(AWindow: HWND; AMessage: UINT;
+  AWParam: WPARAM; ALParam: LPARAM): LRESULT; stdcall;
+begin
+  if AMessage = StartControlMessage then
+  begin
+    StartCapture;
+    Exit(1);
+  end;
+  if AMessage = StopControlMessage then
+  begin
+    StopCapture;
+    Exit(1);
+  end;
+  Result := DefWindowProcA(AWindow, AMessage, AWParam, ALParam);
+end;
+
+function CreateControlWindow: HWND;
+var
+  WindowClass: WNDCLASSA;
+  Instance: HINST;
+  Title: array[0..63] of AnsiChar;
+begin
+  Result := 0;
+  Instance := GetModuleHandleA(nil);
+  FillChar(WindowClass, SizeOf(WindowClass), 0);
+  WindowClass.lpfnWndProc := @ControlWindowProc;
+  WindowClass.hInstance := Instance;
+  WindowClass.lpszClassName := NXP_CONTROL_CLASS;
+  if RegisterClassA(@WindowClass) = 0 then
+    Exit;
+  BuildControlWindowTitle(Title, GetCurrentProcessId);
+  Result := CreateWindowExA(0, NXP_CONTROL_CLASS, @Title[0], 0,
+    0, 0, 0, 0, 0, 0, Instance, nil);
+  if Result = 0 then
+    UnregisterClassA(NXP_CONTROL_CLASS, Instance);
+end;
+
+procedure DestroyControlWindow;
+var
+  Instance: HINST;
+begin
+  Instance := GetModuleHandleA(nil);
+  if ControlWindow <> 0 then
+  begin
+    DestroyWindow(ControlWindow);
+    ControlWindow := 0;
+  end;
+  UnregisterClassA(NXP_CONTROL_CLASS, Instance);
+end;
+
+procedure PumpControlMessages;
+var
+  MessageData: TMsg;
+begin
+  while PeekMessageA(MessageData, ControlWindow, 0, 0, PM_REMOVE) do
+  begin
+    TranslateMessage(MessageData);
+    DispatchMessageA(MessageData);
+  end;
+end;
+
+function WriterThreadMain(Parameter: Pointer): PtrInt;
+var
+  Block: Pointer;
+  BlocksProcessed: LongInt;
+  WakeHandle: THandle;
+begin
+  ControlWindow := CreateControlWindow;
+  RTLEventSetEvent(WorkerControlReadyEvent);
+  WakeHandle := THandle(PtrUInt(WorkerWakeEvent));
+  repeat
+    PumpControlMessages;
+    BlocksProcessed := 0;
+    while BlocksProcessed < NXP_WORKER_BLOCK_BATCH do
+    begin
       Block := EventMemory.TakeCompletedBlock;
-      if Block <> nil then
-        ProcessCompletedBlock(Block);
-    until Block = nil;
+      if Block = nil then
+        Break;
+      ProcessCompletedBlock(Block);
+      Inc(BlocksProcessed);
+    end;
     if (WorkerStop <> 0) and (EventMemory.SealedBlockCount = 0) then
       Break;
-    RTLEventWaitFor(WorkerWakeEvent);
+    if BlocksProcessed = NXP_WORKER_BLOCK_BATCH then
+      ThreadSwitch
+    else
+      MsgWaitForMultipleObjects(1, WakeHandle, False, DWord(-1),
+        QS_ALLINPUT);
   until False;
   EnterCriticalSection(WriterLock);
   try
@@ -370,6 +674,7 @@ begin
   finally
     LeaveCriticalSection(WriterLock);
   end;
+  DestroyControlWindow;
   Result := 0;
 end;
 
@@ -381,8 +686,12 @@ begin
   InitCriticalSection(WriterLock);
   EventMemory := TNXEventMemory.Create;
   Writer := TNXProfileWriter.Create(EventMemory);
+  StartControlMessage := RegisterWindowMessageA(NXP_START_MESSAGE_NAME);
+  StopControlMessage := RegisterWindowMessageA(NXP_STOP_MESSAGE_NAME);
   QueryPerformanceFrequency(CounterFrequency);
   RuntimeHealthy := 1;
+  if (StartControlMessage = 0) or (StopControlMessage = 0) then
+    RuntimeHealthy := 0;
   FlsIndex := FlsAlloc(nil);
   if FlsIndex = FLS_OUT_OF_INDEXES then
     RuntimeHealthy := 0;
@@ -390,18 +699,16 @@ begin
 end;
 
 procedure StartRuntime;
+var
+  InitialPause: Boolean;
 begin
   EnsureRuntime;
   if RuntimeHealthy = 0 then
     Exit;
+  InitialPause := StartsPaused;
   WorkerWakeEvent := RTLEventCreate;
+  WorkerControlReadyEvent := RTLEventCreate;
   EventMemory.SetCompletionEvent(WorkerWakeEvent);
-  EnterCriticalSection(WriterLock);
-  try
-    StartWriterLocked;
-  finally
-    LeaveCriticalSection(WriterLock);
-  end;
   WorkerThread := BeginThread(@WriterThreadMain, nil);
   if WorkerThread = 0 then
   begin
@@ -409,6 +716,14 @@ begin
     Exit;
   end;
   WorkerStarted := True;
+  RTLEventWaitFor(WorkerControlReadyEvent);
+  if ControlWindow = 0 then
+  begin
+    RuntimeHealthy := 0;
+    Exit;
+  end;
+  if not InitialPause then
+    StartCapture;
   RTLEventSetEvent(WorkerWakeEvent);
 end;
 
@@ -448,16 +763,27 @@ var
   Capture: PNXProfileCaptureRecord;
 begin
   if (RuntimeHealthy = 0) or (ShuttingDown <> 0) or
+     (CaptureEnabled = 0) or
      (Descriptor = nil) or (Descriptor^.RuntimeId = 0) then
     Exit;
+  InterlockedIncrement(ActiveHooks);
+  if (CaptureEnabled = 0) or (ShuttingDown <> 0) then
+  begin
+    InterlockedDecrement(ActiveHooks);
+    Exit;
+  end;
   State := ThreadState;
   if (State = nil) or (State^.Guard <> 0) then
+  begin
+    InterlockedDecrement(ActiveHooks);
     Exit;
+  end;
   State^.Guard := 1;
   Capture := Writer.AcquireRecord;
   if Capture = nil then
   begin
     State^.Guard := 0;
+    InterlockedDecrement(ActiveHooks);
     Exit;
   end;
   Capture^.Context := State;
@@ -467,6 +793,7 @@ begin
   Capture^.Event.Timestamp := Timestamp;
   Writer.FinalizeRecord(Capture);
   State^.Guard := 0;
+  InterlockedDecrement(ActiveHooks);
 end;
 
 procedure nxp_enter(ProcedureDescriptor: Pointer); cdecl;
@@ -611,6 +938,8 @@ begin
   while State <> nil do
   begin
     Next := State^.Next;
+    if State^.Frames <> nil then
+      HeapFree(ProcessHeap, 0, State^.Frames);
     HeapFree(ProcessHeap, 0, State);
     State := Next;
   end;
@@ -623,6 +952,9 @@ var
 begin
   if InterlockedExchange(ShuttingDown, 1) <> 0 then
     Exit;
+  InterlockedExchange(CaptureEnabled, 0);
+  while InterlockedCompareExchange(ActiveHooks, 0, 0) <> 0 do
+    ThreadSwitch;
   if EventMemory <> nil then
     EventMemory.SealCurrentBlock(False);
   InterlockedExchange(WorkerStop, 1);
@@ -649,6 +981,11 @@ begin
   begin
     RTLEventDestroy(WorkerWakeEvent);
     WorkerWakeEvent := nil;
+  end;
+  if WorkerControlReadyEvent <> nil then
+  begin
+    RTLEventDestroy(WorkerControlReadyEvent);
+    WorkerControlReadyEvent := nil;
   end;
   OldFlsIndex := FlsIndex;
   FlsIndex := FLS_OUT_OF_INDEXES;

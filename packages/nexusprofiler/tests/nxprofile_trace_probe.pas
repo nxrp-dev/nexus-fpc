@@ -10,8 +10,8 @@ var
   Reader: TNXProfileReader;
   Rec: TNXProfileRecord;
   I: SizeInt;
-  Modules, Unloads, Procedures, Threads, Blocks, Events: QWord;
-  Enters, Leaves, Unwinds, Gaps, Ends, Lost: QWord;
+  Modules, Unloads, Procedures, Threads, Blocks, Calls: QWord;
+  NormalReturns, Unwinds, Unmatched, Gaps, Ends, Lost: QWord;
 begin
   if ParamCount <> 1 then
     Halt(2);
@@ -23,19 +23,20 @@ begin
         nxprModuleUnload: Inc(Unloads);
         nxprProcedureDefine: Inc(Procedures);
         nxprThreadDefine: Inc(Threads);
-        nxprEventBlock:
+        nxprCallBlock:
           begin
             Inc(Blocks);
-            Inc(Lost, Rec.EventBlock.LostEventCount);
-            for I := 0 to High(Rec.EventBlock.Events) do
-              begin
-                Inc(Events);
-                case Rec.EventBlock.Events[I].Kind of
-                  nxpeEnter: Inc(Enters);
-                  nxpeLeave: Inc(Leaves);
-                  nxpeUnwind: Inc(Unwinds);
-                end;
-              end;
+            Inc(Lost, Rec.CallBlock.LostEventCount);
+            for I := 0 to High(Rec.CallBlock.Calls) do
+            begin
+              Inc(Calls);
+              if (Rec.CallBlock.Calls[I].Flags and nxpcfUnmatched) <> 0 then
+                Inc(Unmatched)
+              else if (Rec.CallBlock.Calls[I].Flags and nxpcfUnwind) <> 0 then
+                Inc(Unwinds)
+              else
+                Inc(NormalReturns);
+            end;
           end;
         nxprTraceGap:
           begin
@@ -49,10 +50,10 @@ begin
     WriteLn('procedures=', Procedures);
     WriteLn('threads=', Threads);
     WriteLn('blocks=', Blocks);
-    WriteLn('events=', Events);
-    WriteLn('enters=', Enters);
-    WriteLn('leaves=', Leaves);
+    WriteLn('calls=', Calls);
+    WriteLn('normal_returns=', NormalReturns);
     WriteLn('unwinds=', Unwinds);
+    WriteLn('unmatched=', Unmatched);
     WriteLn('gaps=', Gaps);
     WriteLn('lost=', Lost);
     WriteLn('trace_end=', Ends);

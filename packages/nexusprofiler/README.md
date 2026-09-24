@@ -23,6 +23,32 @@ No profiling unit, source annotation, or external profiler DLL is required. The 
 
 Removing `-profile` and rebuilding produces an ordinary binary without profiling imports or `.nxprof` metadata.
 
+## Start and stop capture
+
+Profiling starts active by default. Set the environment variable below before
+launching an instrumented process to start it paused:
+
+```text
+NEXUS_PROFILE_START=paused
+```
+
+The runtime creates a hidden top-level window with class
+`NexusFPCProfilerControl` and title `NexusFPCProfiler-<process-id>`. A controller
+uses `RegisterWindowMessage` for these names and sends the resulting messages to
+that window:
+
+```text
+NexusFPCProfiler.Start
+NexusFPCProfiler.Stop
+```
+
+`Stop` immediately disables new capture, discards events and completed calls
+that have not yet reached disk, resets the worker's call stacks, writes
+`TRACE_END`, and closes the current trace. `Start` opens a fresh trace, writes
+its metadata, and then enables capture. Each active interval therefore produces
+one independent `.nxp` file. While capture is paused, generated hook calls
+return before timestamp, thread-state, and event-memory work.
+
 ## Trace output
 
 A profiled executable writes this file in its current directory:
@@ -31,9 +57,21 @@ A profiled executable writes this file in its current directory:
 nexus-profile-<process-id>-<startup-counter>.nxp
 ```
 
-The runtime records module, procedure, thread, entry, normal leave, and unwind records. Metadata strings are copied into runtime-owned `AnsiString` values at module registration and serialized as null-terminated bytes inside bounded binary records.
+The runtime records module, procedure, and thread metadata. Hooks capture entry,
+normal leave, and unwind events in memory. The worker pairs those events and
+writes one completed-call record containing caller, inclusive time, self time,
+and return kind. Metadata strings are copied into runtime-owned `AnsiString`
+values at module registration and serialized as null-terminated bytes inside
+bounded binary records.
 
-Profiling hooks acquire and finalize fixed records only through `TNXProfileWriter`, which delegates record storage to `TNXEventMemory`. Full blocks move to a completed queue only after every issued record is finalized and no record acquisition against that block remains in flight. Publication is a single atomic sealed-to-completed state transition. One background worker writes completed blocks and returns their memory for reuse. Hook execution performs no file I/O.
+Profiling hooks acquire and finalize fixed records only through
+`TNXProfileWriter`, which delegates record storage to `TNXEventMemory`. Full
+blocks move to a completed queue only after every issued record is finalized
+and no record acquisition against that block remains in flight. Publication is
+a single atomic sealed-to-completed state transition. One background worker
+collapses events, writes completed calls, and returns capture memory for reuse.
+After a backlog drains, no more than 64 available capture blocks remain in the
+warm pool. Hook execution performs no file I/O.
 
 The writer facade exists during compiler-generated startup so early events can enter memory without initializing file classes. Normal unit initialization attaches the trace stream and starts the worker.
 

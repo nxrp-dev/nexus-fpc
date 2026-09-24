@@ -116,9 +116,10 @@ type
 
   tunitasmlisttype=(ualt_public,ualt_extern);
 
-  { tppufile }
+  { Public PPU file contract.  Concrete implementations own the storage and
+    checksum mechanics; compiler PPU consumers depend on this common shape. }
 
-  tppufile=class(tentryfile)
+  tppufilecontract=class(tentryfile)
 {$ifdef Test_Double_checksum}
   public
     interface_read_crc_index,
@@ -134,16 +135,6 @@ type
   private
 {$endif def Test_Double_checksum}
   protected
-    procedure newheader;override;
-    function readheader: longint;override;
-    function outputallowed: boolean;override;
-    //procedure doputdata(const b;len:integer);override;
-    function getheadersize:longint;override;
-    function getheaderaddr:pentryheader;override;
-    procedure resetfile;override;
-{$ifdef DEBUG_PPU}
-    procedure ppu_log(st :string);override;
-{$endif}
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
   public
     writing_interface_ppu : boolean;
@@ -162,17 +153,35 @@ type
     do_interface_crc,
     do_indirect_crc  : boolean;
     crc_only         : boolean;    { used to calculate interface_crc before implementation }
+    function  CheckPPUId:boolean;
+    procedure putdata(const b;len:integer);override;
+    procedure putdata(b : tbytedynarray);
+    procedure putdata(b : tansichardynarray);
+  end;
+
+  { Existing PPU implementation.  Keep the compiler and utilities on this
+    backend until a replacement has independently reached parity. }
+
+  tppufile=class(tppufilecontract)
+  protected
+    procedure newheader;override;
+    function readheader: longint;override;
+    function outputallowed: boolean;override;
+    //procedure doputdata(const b;len:integer);override;
+    function getheadersize:longint;override;
+    function getheaderaddr:pentryheader;override;
+    procedure resetfile;override;
+{$ifdef DEBUG_PPU}
+    procedure ppu_log(st :string);override;
+{$endif}
+  public
     constructor Create(const fn:string);
     destructor destroy;override;
-    function  CheckPPUId:boolean;
   {read}
   { nothing special currently }
   {write}
     function  createfile:boolean;override;
     procedure writeheader;override;
-    procedure putdata(const b;len:integer);override;
-    procedure putdata(b : tbytedynarray);
-    procedure putdata(b : tansichardynarray);
   end;
 
 implementation
@@ -254,7 +263,7 @@ begin
   inherited destroy;
 end;
 
-function tppufile.CheckPPUId:boolean;
+function tppufilecontract.CheckPPUId:boolean;
 begin
   CheckPPUId:=((Header.common.Id[1]='P') and
                 (Header.common.Id[2]='P') and
@@ -429,7 +438,7 @@ begin
 end;
 
 
-procedure tppufile.putdata(const b;len:integer);
+procedure tppufilecontract.putdata(const b;len:integer);
 {$ifdef Test_Double_checksum}
   var
     pb : pbyte;
@@ -601,12 +610,12 @@ begin
   inc(entryidx,len);*)
 end;
 
-procedure tppufile.putdata(b: tbytedynarray);
+procedure tppufilecontract.putdata(b: tbytedynarray);
 begin
   putdata(b[0],length(b));
 end;
 
-procedure tppufile.putdata(b: tansichardynarray);
+procedure tppufilecontract.putdata(b: tansichardynarray);
 begin
   putdata(b[0],length(b));
 end;

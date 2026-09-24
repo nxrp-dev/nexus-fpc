@@ -188,9 +188,45 @@ begin
   StressMemory := nil;
 end;
 
+procedure TestAvailableBlockLimit;
+const
+  RecordCount = 70;
+var
+  Memory: TNXEventMemory;
+  RecordData: PNXProfileCaptureRecord;
+  Blocks: array[0..RecordCount - 1] of Pointer;
+  Index: LongInt;
+begin
+  Memory := TNXEventMemory.Create(1);
+  try
+    for Index := 0 to RecordCount - 1 do
+    begin
+      RecordData := Memory.AcquireRecord;
+      RecordData^.Event := Default(TNXProfileEvent);
+      Memory.FinalizeRecord(RecordData);
+    end;
+    Check(Memory.AllocatedBlockCount = RecordCount + 1,
+      'Block growth count is wrong');
+    for Index := 0 to RecordCount - 1 do
+    begin
+      Blocks[Index] := Memory.TakeCompletedBlock;
+      Check(Blocks[Index] <> nil, 'Completed block is missing');
+    end;
+    for Index := 0 to RecordCount - 1 do
+      Memory.RecycleCompletedBlock(Blocks[Index]);
+    Check(Memory.AvailableBlockCount = 64,
+      'Available block pool did not stop at its warm limit');
+    Check(Memory.AllocatedBlockCount = 65,
+      'Surplus blocks were not released');
+  finally
+    Memory.Free;
+  end;
+end;
+
 begin
   TestPartialBlock;
   TestIssuedFinishedAndReuse;
+  TestAvailableBlockLimit;
   TestConcurrentProducers;
   WriteLn('NXEventMemory tests passed');
 end.

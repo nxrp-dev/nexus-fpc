@@ -33,7 +33,7 @@ var
   ModuleInfo: TNXProfileModuleInfo;
   ProcedureInfo: TNXProfileProcedureInfo;
   ThreadInfo: TNXProfileThreadInfo;
-  Events: array[0..2] of TNXProfileEvent;
+  Calls: array[0..2] of TNXProfileCall;
   UnknownHeader: TTestRecordHeader;
   UnknownPayload: DWord;
 begin
@@ -78,18 +78,19 @@ begin
     ThreadInfo.Name := 'worker';
     Writer.WriteThreadDefine(ThreadInfo);
 
-    FillChar(Events, SizeOf(Events), 0);
-    Events[0].Kind := nxpeEnter;
-    Events[0].ProcedureId := 91;
-    Events[0].Timestamp := 530;
-    Events[1].Kind := nxpeUnwind;
-    Events[1].ProcedureId := 91;
-    Events[1].Timestamp := 540;
-    Events[2].Kind := nxpeLeave;
-    Events[2].ProcedureId := 999;
-    Events[2].Timestamp := 550;
-    Writer.WriteEventBlock(17, 1, 0, Events);
-    Writer.WriteEventBlock(17, 2, 0, []);
+    FillChar(Calls, SizeOf(Calls), 0);
+    Calls[0].ProcedureId := 91;
+    Calls[0].InclusiveTicks := 10;
+    Calls[0].SelfTicks := 10;
+    Calls[1].Flags := nxpcfUnwind;
+    Calls[1].ProcedureId := 92;
+    Calls[1].CallerProcedureId := 91;
+    Calls[1].InclusiveTicks := 20;
+    Calls[1].SelfTicks := 15;
+    Calls[2].Flags := nxpcfUnmatched;
+    Calls[2].ProcedureId := 999;
+    Writer.WriteCallBlock(17, 1, 0, 530, 550, Calls);
+    Writer.WriteCallBlock(17, 2, 0, 0, 0, []);
     Writer.WriteTraceGap(17, 2, 3, 27, 560);
     Writer.WriteModuleUnload(7, 4, 570);
     Writer.Finish(580, 27);
@@ -108,8 +109,8 @@ begin
   Expected[0] := nxprModuleDefine;
   Expected[1] := nxprProcedureDefine;
   Expected[2] := nxprThreadDefine;
-  Expected[3] := nxprEventBlock;
-  Expected[4] := nxprEventBlock;
+  Expected[3] := nxprCallBlock;
+  Expected[4] := nxprCallBlock;
   Expected[5] := nxprTraceGap;
   Expected[6] := nxprModuleUnload;
   Expected[7] := nxprTraceEnd;
@@ -146,19 +147,23 @@ begin
             Check(Rec.ProcedureInfo.SourceLine = 42,
               'procedure source line mismatch');
           end;
-        nxprEventBlock:
-          if Rec.EventBlock.Sequence = 1 then
+        nxprCallBlock:
+          if Rec.CallBlock.Sequence = 1 then
           begin
-            Check(Length(Rec.EventBlock.Events) = 3,
-              'event count mismatch');
-            Check(Rec.EventBlock.Events[1].Kind = nxpeUnwind,
-              'unwind event mismatch');
-            Check(Rec.EventBlock.Events[2].ProcedureId = 999,
-              'orphan leave evidence was not preserved');
+            Check(Length(Rec.CallBlock.Calls) = 3,
+              'call count mismatch');
+            Check((Rec.CallBlock.Calls[1].Flags and nxpcfUnwind) <> 0,
+              'unwind call mismatch');
+            Check(Rec.CallBlock.Calls[1].CallerProcedureId = 91,
+              'caller ID mismatch');
+            Check(Rec.CallBlock.Calls[1].SelfTicks = 15,
+              'self time mismatch');
+            Check((Rec.CallBlock.Calls[2].Flags and nxpcfUnmatched) <> 0,
+              'orphan terminal evidence was not preserved');
           end
           else
-            Check(Length(Rec.EventBlock.Events) = 0,
-              'empty event block did not round trip');
+            Check(Length(Rec.CallBlock.Calls) = 0,
+              'empty call block did not round trip');
         nxprTraceGap:
           Check(Rec.LostEventCount = 27, 'gap loss count mismatch');
         nxprTraceEnd:

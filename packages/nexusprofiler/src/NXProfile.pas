@@ -14,7 +14,7 @@ uses
   SysUtils;
 
 const
-  NXPROFILE_FORMAT_VERSION = 1;
+  NXPROFILE_FORMAT_VERSION = 2;
   NXPROFILE_ABI_VERSION = 1;
   NXPROFILE_BYTE_ORDER_LE = $04030201;
 
@@ -23,13 +23,16 @@ const
   nxprModuleUnload = 3;
   nxprProcedureDefine = 4;
   nxprThreadDefine = 5;
-  nxprEventBlock = 6;
+  nxprCallBlock = 6;
   nxprTraceGap = 7;
   nxprTraceEnd = 8;
 
   nxpeEnter = 1;
   nxpeLeave = 2;
   nxpeUnwind = 3;
+
+  nxpcfUnwind = $01;
+  nxpcfUnmatched = $02;
 
 type
   ENXProfileFormatError = class(Exception);
@@ -51,6 +54,15 @@ type
     Event: TNXProfileEvent;
   end;
   TNXProfileEvents = array of TNXProfileEvent;
+
+  TNXProfileCall = record
+    Flags: Byte;
+    ProcedureId: DWord;
+    CallerProcedureId: DWord;
+    InclusiveTicks: QWord;
+    SelfTicks: QWord;
+  end;
+  TNXProfileCalls = array of TNXProfileCall;
 
   TNXProfileModuleInfo = record
     ModuleId: DWord;
@@ -82,13 +94,13 @@ type
     Name: AnsiString;
   end;
 
-  TNXProfileEventBlock = record
+  TNXProfileCallBlock = record
     ThreadId: DWord;
     Sequence: QWord;
     LostEventCount: QWord;
     FirstTimestamp: QWord;
     LastTimestamp: QWord;
-    Events: TNXProfileEvents;
+    Calls: TNXProfileCalls;
   end;
 
   TNXProfileRecord = record
@@ -103,7 +115,7 @@ type
     Sequence: QWord;
     Timestamp: QWord;
     LostEventCount: QWord;
-    EventBlock: TNXProfileEventBlock;
+    CallBlock: TNXProfileCallBlock;
   end;
 
   TNXEventMemory = class
@@ -152,6 +164,7 @@ type
     FOwnsStream: Boolean;
     FFinished: Boolean;
     FEventMemory: TNXEventMemory;
+    FCallBuffer: TBytes;
     procedure WriteRecordHeader(AKind, AFlags: Word; APayloadSize: DWord);
     procedure WriteByte(AValue: Byte);
     procedure WriteWord(AValue: Word);
@@ -178,8 +191,9 @@ type
       ATimestamp: QWord);
     function WriteProcedureDefine(const AInfo: TNXProfileProcedureInfo): Boolean;
     procedure WriteThreadDefine(const AInfo: TNXProfileThreadInfo);
-    procedure WriteEventBlock(AThreadId: DWord; ASequence,
-      ALostEventCount: QWord; const AEvents: array of TNXProfileEvent);
+    procedure WriteCallBlock(AThreadId: DWord; ASequence,
+      ALostEventCount, AFirstTimestamp, ALastTimestamp: QWord;
+      const ACalls: array of TNXProfileCall);
     procedure WriteTraceGap(AThreadId, AFlags: DWord; ASequence,
       ALostEventCount, ATimestamp: QWord);
     procedure Finish(ATimestamp, ATotalLostEventCount: QWord);
@@ -229,6 +243,8 @@ const
   NXPROFILE_RECORD_HEADER_SIZE = 8;
   NXPROFILE_FILE_HEADER_PAYLOAD_SIZE = 44;
   NXPROFILE_EVENT_SIZE = 16;
+  NXPROFILE_CALL_SIZE = 25;
+  NXPROFILE_AVAILABLE_BLOCK_LIMIT = 64;
   nxebAvailable = 0;
   nxebActive = 1;
   nxebSealed = 2;
@@ -240,6 +256,7 @@ type
   TNXEventMemoryBlock = record
     QueueNext: PNXEventMemoryBlock;
     AllNext: PNXEventMemoryBlock;
+    AllPrevious: PNXEventMemoryBlock;
     Issued: LongInt;
     Finished: LongInt;
     Acquirers: LongInt;
@@ -286,6 +303,13 @@ function BufferReadWord(var AReader: TNXProfileBufferReader): Word;
 begin
   BufferRequire(AReader, SizeOf(Result));
   Move((PByte(AReader.Data) + AReader.Position)^, Result, SizeOf(Result));
+  Inc(AReader.Position, SizeOf(Result));
+end;
+
+function BufferReadByte(var AReader: TNXProfileBufferReader): Byte;
+begin
+  BufferRequire(AReader, SizeOf(Result));
+  Result := (PByte(AReader.Data) + AReader.Position)^;
   Inc(AReader.Position, SizeOf(Result));
 end;
 
@@ -380,11 +404,18 @@ begin
     SizeUInt(FBlockCapacity) * SizeOf(TNXProfileCaptureRecord);
   GetMem(Block, AllocationSize);
   FillChar(Block^, AllocationSize, 0);
-  Block^.AllNext := PNXEventMemoryBlock(FAllBlocks);
-  FAllBlocks := Block;
+  EnterCriticalSection(FQueueLock);
+  try
+    Block^.AllNext := PNXEventMemoryBlock(FAllBlocks);
+    if Block^.AllNext <> nil then
+      Block^.AllNext^.AllPrevious := Block;
+    FAllBlocks := Block;
+    InterlockedIncrement(FAllocatedBlockCount);
+  finally
+    LeaveCriticalSection(FQueueLock);
+  end;
   for Index := 0 to FBlockCapacity - 1 do
     EventMemoryBlockRecord(Block, Index)^.OwnerBlock := Block;
-  InterlockedIncrement(FAllocatedBlockCount);
   Result := Block;
 end;
 
@@ -427,20 +458,38 @@ end;
 procedure TNXEventMemory.EnqueueAvailable(ABlock: Pointer);
 var
   Block: PNXEventMemoryBlock;
+  FreeBlock: Boolean;
 begin
   Block := PNXEventMemoryBlock(ABlock);
   Block^.QueueNext := nil;
+  FreeBlock := False;
   EnterCriticalSection(FQueueLock);
   try
-    if FAvailableTail = nil then
-      FAvailableHead := Block
+    if FAvailableBlockCount >= NXPROFILE_AVAILABLE_BLOCK_LIMIT then
+    begin
+      if Block^.AllPrevious = nil then
+        FAllBlocks := Block^.AllNext
+      else
+        Block^.AllPrevious^.AllNext := Block^.AllNext;
+      if Block^.AllNext <> nil then
+        Block^.AllNext^.AllPrevious := Block^.AllPrevious;
+      InterlockedDecrement(FAllocatedBlockCount);
+      FreeBlock := True;
+    end
     else
-      PNXEventMemoryBlock(FAvailableTail)^.QueueNext := Block;
-    FAvailableTail := Block;
-    InterlockedIncrement(FAvailableBlockCount);
+    begin
+      if FAvailableTail = nil then
+        FAvailableHead := Block
+      else
+        PNXEventMemoryBlock(FAvailableTail)^.QueueNext := Block;
+      FAvailableTail := Block;
+      InterlockedIncrement(FAvailableBlockCount);
+    end;
   finally
     LeaveCriticalSection(FQueueLock);
   end;
+  if FreeBlock then
+    FreeMem(Block);
 end;
 
 procedure TNXEventMemory.EnqueueCompleted(ABlock: Pointer);
@@ -823,36 +872,59 @@ begin
   WriteCString(AInfo.Name);
 end;
 
-procedure TNXProfileWriter.WriteEventBlock(AThreadId: DWord; ASequence,
-  ALostEventCount: QWord; const AEvents: array of TNXProfileEvent);
+procedure TNXProfileWriter.WriteCallBlock(AThreadId: DWord; ASequence,
+  ALostEventCount, AFirstTimestamp, ALastTimestamp: QWord;
+  const ACalls: array of TNXProfileCall);
 var
   PayloadSize: DWord;
-  FirstTimestamp, LastTimestamp: QWord;
+  EncodedSize: SizeInt;
+  CallIndex: SizeInt;
+  Position: SizeInt;
+
+  procedure PutByte(AValue: Byte); inline;
+  begin
+    FCallBuffer[Position] := AValue;
+    Inc(Position);
+  end;
+
+  procedure PutDWord(AValue: DWord); inline;
+  begin
+    Move(AValue, FCallBuffer[Position], SizeOf(AValue));
+    Inc(Position, SizeOf(AValue));
+  end;
+
+  procedure PutQWord(AValue: QWord); inline;
+  begin
+    Move(AValue, FCallBuffer[Position], SizeOf(AValue));
+    Inc(Position, SizeOf(AValue));
+  end;
 begin
   if FStream = nil then
     Exit;
-  PayloadSize := CheckedPayloadSize(40 + QWord(Length(AEvents)) *
-    NXPROFILE_EVENT_SIZE);
-  if Length(AEvents) = 0 then
-  begin
-    FirstTimestamp := 0;
-    LastTimestamp := 0;
-  end
-  else
-  begin
-    FirstTimestamp := AEvents[0].Timestamp;
-    LastTimestamp := AEvents[High(AEvents)].Timestamp;
-  end;
-  WriteRecordHeader(nxprEventBlock, 0, PayloadSize);
+  PayloadSize := CheckedPayloadSize(40 + QWord(Length(ACalls)) *
+    NXPROFILE_CALL_SIZE);
+  WriteRecordHeader(nxprCallBlock, 0, PayloadSize);
   WriteDWord(AThreadId);
-  WriteDWord(Length(AEvents));
+  WriteDWord(Length(ACalls));
   WriteQWord(ASequence);
   WriteQWord(ALostEventCount);
-  WriteQWord(FirstTimestamp);
-  WriteQWord(LastTimestamp);
-  if Length(AEvents) <> 0 then
-    FStream.WriteBuffer(AEvents[0],
-      Length(AEvents) * SizeOf(TNXProfileEvent));
+  WriteQWord(AFirstTimestamp);
+  WriteQWord(ALastTimestamp);
+  if Length(ACalls) = 0 then
+    Exit;
+  EncodedSize := Length(ACalls) * NXPROFILE_CALL_SIZE;
+  if Length(FCallBuffer) < EncodedSize then
+    SetLength(FCallBuffer, EncodedSize);
+  Position := 0;
+  for CallIndex := 0 to High(ACalls) do
+  begin
+    PutByte(ACalls[CallIndex].Flags);
+    PutDWord(ACalls[CallIndex].ProcedureId);
+    PutDWord(ACalls[CallIndex].CallerProcedureId);
+    PutQWord(ACalls[CallIndex].InclusiveTicks);
+    PutQWord(ACalls[CallIndex].SelfTicks);
+  end;
+  FStream.WriteBuffer(FCallBuffer[0], EncodedSize);
 end;
 
 procedure TNXProfileWriter.WriteTraceGap(AThreadId, AFlags: DWord;
@@ -1076,25 +1148,28 @@ begin
         ARecord.ThreadInfo.Timestamp := BufferReadQWord(Reader);
         ARecord.ThreadInfo.Name := BufferReadCString(Reader);
       end;
-    nxprEventBlock:
+    nxprCallBlock:
       begin
-        ARecord.EventBlock.ThreadId := BufferReadDWord(Reader);
+        ARecord.CallBlock.ThreadId := BufferReadDWord(Reader);
         Count := BufferReadDWord(Reader);
-        ARecord.EventBlock.Sequence := BufferReadQWord(Reader);
-        ARecord.EventBlock.LostEventCount := BufferReadQWord(Reader);
-        ARecord.EventBlock.FirstTimestamp := BufferReadQWord(Reader);
-        ARecord.EventBlock.LastTimestamp := BufferReadQWord(Reader);
-        if QWord(Count) * NXPROFILE_EVENT_SIZE >
+        ARecord.CallBlock.Sequence := BufferReadQWord(Reader);
+        ARecord.CallBlock.LostEventCount := BufferReadQWord(Reader);
+        ARecord.CallBlock.FirstTimestamp := BufferReadQWord(Reader);
+        ARecord.CallBlock.LastTimestamp := BufferReadQWord(Reader);
+        if QWord(Count) * NXPROFILE_CALL_SIZE >
            QWord(Reader.Size - Reader.Position) then
-          RaiseFormatError('NXProfile event count exceeds its record');
-        SetLength(ARecord.EventBlock.Events, Count);
+          RaiseFormatError('NXProfile call count exceeds its record');
+        SetLength(ARecord.CallBlock.Calls, Count);
         if Count > 0 then
           for I := 0 to Count - 1 do
           begin
-            BufferRequire(Reader, NXPROFILE_EVENT_SIZE);
-            Move((PByte(Reader.Data) + Reader.Position)^,
-              ARecord.EventBlock.Events[I], NXPROFILE_EVENT_SIZE);
-            Inc(Reader.Position, NXPROFILE_EVENT_SIZE);
+            ARecord.CallBlock.Calls[I].Flags := BufferReadByte(Reader);
+            ARecord.CallBlock.Calls[I].ProcedureId := BufferReadDWord(Reader);
+            ARecord.CallBlock.Calls[I].CallerProcedureId :=
+              BufferReadDWord(Reader);
+            ARecord.CallBlock.Calls[I].InclusiveTicks :=
+              BufferReadQWord(Reader);
+            ARecord.CallBlock.Calls[I].SelfTicks := BufferReadQWord(Reader);
           end;
       end;
     nxprTraceGap:
@@ -1132,7 +1207,7 @@ begin
     end;
     FLastCompleteOffset := FStream.Position;
     if Kind in [nxprModuleDefine, nxprModuleUnload, nxprProcedureDefine,
-      nxprThreadDefine, nxprEventBlock, nxprTraceGap, nxprTraceEnd] then
+      nxprThreadDefine, nxprCallBlock, nxprTraceGap, nxprTraceEnd] then
     begin
       ParseRecord(Kind, Flags, Data, ARecord);
       Exit(True);

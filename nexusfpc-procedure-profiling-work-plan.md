@@ -1,8 +1,8 @@
 # NexusFPC Procedure Trace Profiling Work Plan
 
-**Status:** Approved; threaded event-memory implementation validated  
-**Revision:** 9
-**Date:** 2026-09-23  
+**Status:** Implemented and validated
+**Revision:** 10
+**Date:** 2026-09-24
 **Initial target:** Windows x86-64  
 **Canonical document:** This file
 
@@ -10,11 +10,12 @@
 
 Add compiler-directed physical procedure tracing to NexusFPC.
 
-The compiler instruments a profiling build. A small runtime records timestamped
-execution events in a versioned binary trace. A separate consumer can read that
-trace and derive call counts, timing, abnormal exits, per-thread call trees, and
-aggregate statistics. The initial reader is deliberately minimal; higher-level
-analysis is deferred to its own design.
+The compiler instruments a profiling build. Hooks record timestamped entry,
+normal-leave, and unwind events into memory. A background worker pairs them and
+writes completed calls to a versioned binary trace. A separate consumer can
+derive call counts, timing, abnormal exits, per-thread call trees, and aggregate
+statistics. The initial reader is deliberately minimal; higher-level analysis
+is deferred to its own design.
 
 The durable product is the trace format. Analysis policy belongs to the
 consumer and can evolve without recompiling or rerunning the traced program.
@@ -54,17 +55,17 @@ The initial implementation includes:
 - FPC-created and foreign-created threads;
 - a statically linked trace runtime;
 - reusable fixed-capacity event-memory blocks;
-- one background trace writer;
+- one background event-pairing and trace-writing worker;
 - module and procedure metadata;
 - versioned binary trace output;
 - a minimal sequential trace reader;
 - profiling-specific PPU compatibility;
-- smartlink-compatible native COFF metadata.
+- smartlink-compatible native COFF metadata;
+- on-demand capture start and stop with one trace per active interval.
 
-It does not include ARM64, other operating systems, annotations, online
-aggregation, higher-level trace analysis, live UI
-integration, compression, lossless blocking capture, or changes to the FPC
-LLVM code-generation backend.
+It does not include ARM64, other operating systems, annotations, aggregate
+analysis, a controller UI, compression, lossless blocking capture, or changes
+to the FPC LLVM code-generation backend.
 
 ## 4. Architecture
 
@@ -83,8 +84,9 @@ Instrumented process
 
 Background worker
     -> consume completed blocks
-    -> stage events by originating thread
-    -> write .nxp trace
+    -> pair events by originating thread
+    -> calculate inclusive and self ticks
+    -> write completed calls to the .nxp trace
 
 TNXProfileReader
     -> validate and enumerate length-bounded trace records
@@ -118,10 +120,9 @@ mf_nexus_profile
 | Current build | Project PPU | Result |
 |---|---|---|
 | Profiled | Profiled | Reuse |
-| Profiled | Ordinary | Rebuild from source |
+| Profiled | Ordinary | Reuse uninstrumented; coverage is deliberately gapped |
 | Ordinary | Profiled | Rebuild from source |
 | Ordinary | Ordinary | Reuse |
-| Profiled | Immutable release/system PPU | Reuse uninstrumented |
 
 `ppudump` must identify the flag. There is no support-unit exemption because
 activation no longer uses a unit.
@@ -140,8 +141,8 @@ Normal Pascal `Exit` statements use the existing compiler exit convergence.
 Inlining does not create a separate event when no physical call remains.
 
 Exclude assembler, naked/nostackframe, interrupt, exception-filter, and profiler
-support procedures. Immutable RTL, FCL, and package PPUs accepted under the
-release/system policy remain uninstrumented.
+support procedures. Any ordinary PPU reused by a profiling build remains
+uninstrumented.
 
 Program bodies must place hooks around the physical body while the runtime is
 active. Project unit initialization and finalization remain eligible.
@@ -220,25 +221,28 @@ The compiler-linked runtime owns:
 - FLS thread state;
 - `TNXEventMemory` block allocation, rotation, completion, and reuse;
 - one completed-block worker;
-- per-thread output staging owned by the worker;
+- per-thread call stacks and completed-call staging owned by the worker;
 - trace creation and serialization;
+- capture start/stop control;
 - trace drain and shutdown.
 
-It does not own aggregates, call trees, duration statistics, exception
-interpretation, JSON generation, pause/reset generations, or analysis snapshots.
+It does not own cross-call aggregates, reports, JSON generation, or analysis
+snapshots.
 
 ### 9.2 Hot path
 
 An ordinary hook performs:
 
-1. recursion-guard check;
-2. FLS state lookup;
-3. `TNXProfileWriter.AcquireRecord`;
-4. fixed event fill using `QueryPerformanceCounter`;
-5. `TNXProfileWriter.FinalizeRecord`.
+1. capture-enabled check;
+2. recursion-guard check;
+3. FLS state lookup;
+4. `TNXProfileWriter.AcquireRecord`;
+5. fixed event fill using `QueryPerformanceCounter`;
+6. `TNXProfileWriter.FinalizeRecord`.
 
-Hooks perform no file I/O, writer locking, online aggregation, or call-tree
-maintenance.
+Hooks perform no file I/O, writer locking, event pairing, or call-tree
+maintenance. While capture is paused, the hook returns before timestamp, FLS,
+or event-memory work.
 
 ### 9.3 Buffering and overflow
 
@@ -255,8 +259,10 @@ The worker consumes complete blocks and returns them to the available queue.
 Rotation reuses an available block or allocates another when none is available.
 Queue locks occur only at block transitions.
 
-The runtime does not repair event pairing. Orphaned `ENTER`, `LEAVE`, and
-`UNWIND` events remain valid evidence for the consumer to interpret.
+The worker pairs terminal events with the corresponding `ENTER`. An unmatched
+`LEAVE` or `UNWIND` becomes a completed call marked unmatched with zero timing.
+An `ENTER` still outstanding when capture stops is discarded with the rest of
+that in-memory interval tail.
 
 ### 9.4 Thread lifecycle
 
@@ -282,6 +288,20 @@ writes `TRACE_END`, and closes the file.
 
 Abrupt termination may leave a truncated trace. Every complete record before
 the truncated tail remains readable.
+
+### 9.7 On-demand capture control
+
+Profiling starts active unless `NEXUS_PROFILE_START=paused` is present in the
+process environment. The runtime exposes a hidden window with class
+`NexusFPCProfilerControl` and title `NexusFPCProfiler-<process-id>`. A controller
+sends the registered messages `NexusFPCProfiler.Start` and
+`NexusFPCProfiler.Stop`.
+
+`Stop` disables capture first, waits for hooks already inside the capture path,
+discards all in-memory event blocks and worker staging, resets worker call
+stacks, writes `TRACE_END`, and closes the trace. `Start` creates a fresh trace,
+writes its metadata, and enables capture last. Each active interval is an
+independent trace file.
 
 ## 10. Binary Trace Format
 
@@ -310,7 +330,7 @@ MODULE_DEFINE
 MODULE_UNLOAD
 PROCEDURE_DEFINE
 THREAD_DEFINE
-EVENT_BLOCK
+CALL_BLOCK
 TRACE_GAP
 TRACE_END
 ```
@@ -319,23 +339,24 @@ TRACE_END
 and flags. `PROCEDURE_DEFINE` maps a compact ID to module ID, stable ID, code
 range, source position, name, unit, and source file.
 
-### 10.4 Event blocks
+### 10.4 Completed-call blocks
 
-Each block contains thread ID, per-thread sequence, event count, lost-event
-count, first and last timestamps, and fixed events.
+Each block contains thread ID, per-thread sequence, call count, lost-event
+count, and first and last completion timestamps.
 
-The common event is 16 bytes:
+Each call is serialized explicitly as 25 bytes:
 
 ```text
-kind          uint8
-flags         uint8
-reserved      uint16
-procedure_id  uint32
-timestamp     uint64
+flags                uint8
+procedure_id         uint32
+caller_procedure_id  uint32
+inclusive_ticks      uint64
+self_ticks           uint64
 ```
 
-Initial kinds are `ENTER`, `LEAVE`, and `UNWIND`. Per-thread sequence and
-timestamps define thread order. QPC timestamps permit later global merging.
+Flags identify unwind and unmatched terminal events. Per-thread sequence and
+completion timestamps define thread order. The worker performs no aggregation
+beyond collapsing one entry/terminal pair into one completed call.
 
 ## 11. Reader and Deferred Analysis
 
@@ -357,8 +378,7 @@ Remove:
 - the `NexusProfiler` activation contract and support unit;
 - hook-procdef lookup through that unit;
 - its special PPU handling;
-- online runtime stacks and aggregates;
-- pause/start/reset generations;
+- online aggregate and report generation;
 - target-process JSON reporting;
 - analysis snapshot and merge machinery;
 - variable-length `.nxprof` descriptors;
@@ -381,7 +401,8 @@ Do not retain compatibility code solely for the superseded architecture.
 This is one continuous pass. These are dependency steps, not approval gates.
 
 1. Replace first-unit activation with `-profile` processing.
-2. Simplify PPU policy and remove the support-unit exemption.
+2. Make PPU compatibility asymmetric: profiling builds may reuse ordinary PPUs,
+   while ordinary builds cannot reuse profiled PPUs.
 3. Define the compiler-owned hook ABI and automatic support object.
 4. Replace variable descriptors with fixed descriptors containing managed
    metadata fields and a runtime ID slot.
@@ -389,15 +410,16 @@ This is one continuous pass. These are dependency steps, not approval gates.
 6. Adapt entry, leave, program body, and unwind calls.
 7. Replace aggregation with registration, metadata copying, FLS state, and
    `TNXEventMemory` event capture.
-8. Implement the completed-block worker, executable startup, drain, and
-   shutdown.
-9. Implement the versioned binary writer.
-10. Implement the minimal sequential reader.
-11. Remove superseded unit, aggregation, snapshot, and runtime JSON code.
-12. Adapt and complete the validation corpus.
-13. Perform a clean make-based compiler and RTL bootstrap.
-14. Run the complete corpus against the clean compiler.
-15. Remove generated build/test artifacts.
+8. Implement worker-side event pairing and completed-call output.
+9. Implement the completed-block worker, executable startup, capture control,
+   drain, and shutdown.
+10. Implement the versioned binary writer.
+11. Implement the minimal sequential reader.
+12. Remove superseded unit, aggregation, snapshot, and runtime JSON code.
+13. Adapt and complete the validation corpus.
+14. Perform a clean make-based compiler and RTL bootstrap.
+15. Run the complete corpus against the clean compiler.
+16. Remove generated build/test artifacts.
 
 At the first major semantic blocker not answered by this plan, pause and report
 the exact scenario and evidence before expanding the design.
@@ -408,8 +430,8 @@ the exact scenario and evidence before expanding the design.
 
 - `-profile` takes effect before unit loading.
 - Builds without it remain ordinary.
-- Project PPUs rebuild across incompatible profile state.
-- Immutable release/system PPUs remain usable uninstrumented.
+- Profiling builds reuse ordinary PPUs as deliberately uninstrumented gaps.
+- Ordinary builds rebuild profiled PPUs.
 - `ppudump` identifies profiling PPUs.
 
 ### 14.2 Object and linking
@@ -433,16 +455,20 @@ exceptions, FPC-created threads, and foreign-created threads.
 
 ### 14.4 Runtime and trace
 
-- no online aggregation;
+- no cross-call aggregation;
 - sealed blocks publish only after every issued record is finalized;
 - a block cannot publish while record acquisition against it is in flight;
 - sealed-to-completed publication occurs exactly once across block reuse;
 - completed blocks are consumed exactly once and returned for reuse;
 - concurrent producers preserve every finalized event;
-- the worker serializes per-thread output blocks correctly;
-- orphaned records remain readable;
+- the worker pairs entry/terminal events and serializes completed calls;
+- unmatched terminal events remain readable and marked unmatched;
 - per-thread block sequence is monotonic;
 - metadata resolves regardless of record arrival order;
+- paused hooks do no timestamp, FLS, or event-memory work;
+- STOP discards outstanding in-memory work and closes a complete trace;
+- START creates a fresh trace and emits fresh metadata;
+- separate active intervals contain no calls from paused or other intervals;
 - normal executable shutdown drains and closes the trace;
 - a truncated final record remains readable;
 
@@ -474,9 +500,12 @@ Do not optimize without a measured problem.
 ## 15. Completion Criteria
 
 - `-profile` deterministically controls compilation.
-- Incompatible project PPUs cannot be silently reused.
+- Profiling builds may reuse ordinary PPUs as explicit coverage gaps; ordinary
+  builds do not reuse profiled PPUs.
 - Entry, leave, and unwind events match physical calls.
 - Event capture uses reusable fixed-capacity blocks and one background writer.
+- The worker writes one completed-call record per paired invocation.
+- Capture can be started and stopped on demand with one trace per interval.
 - The runtime writes a versioned self-describing trace.
 - Metadata remains usable for the complete trace.
 - The reader handles complete and partial evidence.
@@ -490,17 +519,18 @@ Do not optimize without a measured problem.
 |---|---|
 | Activation | `-profile` before unit loading |
 | Developer source changes | None |
-| Runtime | Raw capture without online aggregation |
+| Runtime | Raw hook capture with worker-side entry/terminal collapse |
 | Analysis | Deferred consumer design |
 | Buffering | Reusable fixed-capacity `TNXEventMemory` blocks |
 | Writer | One background worker consuming completed blocks |
 | Producer access | Hooks acquire and finalize only through `TNXProfileWriter` |
 | Block lifecycle | Available -> active -> sealed -> completed -> processing -> available |
-| Orphaned events | Partial evidence interpreted by consumer |
+| Orphaned terminals | Completed calls marked unmatched with zero timing |
 | Metadata strings | Runtime-owned `AnsiString` values |
 | Disk strings | Null-terminated UTF-8 in bounded records |
 | Descriptors | Fixed-size associative COMDAT |
-| Events | Fixed 16-byte records |
+| In-memory events | Fixed 16-byte records |
+| Disk calls | Explicit 25-byte completed-call records |
 | Timing | Producer-side QPC |
 | Ordering | Per-thread sequence and timestamps |
 | Unwind | One event per abandoned physical frame |
@@ -516,3 +546,4 @@ Do not optimize without a measured problem.
 | 7 | 2026-09-23 | Static runtime, simple synchronous writer, and minimal reader; threading and higher-level analysis deferred |
 | 8 | 2026-09-23 | `TNXEventMemory` issued/finished blocks, reusable queues, and one background trace writer |
 | 9 | 2026-09-23 | Atomic acquisition lifetime, single state-transition publication, and writer-only producer access |
+| 10 | 2026-09-24 | Asymmetric PPU reuse, worker-side completed-call collapse, bounded warm-block reuse, resumable import format, and on-demand interval capture |

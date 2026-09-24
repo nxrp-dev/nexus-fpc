@@ -34,6 +34,11 @@ New-Item -ItemType Directory -Force -Path $probeOutput | Out-Null
     (Join-Path $testSource 'nxprofile_trace_probe.pas') | Out-Host
 if ($LASTEXITCODE -ne 0) { throw 'Trace probe compilation failed' }
 $traceProbe = Join-Path $probeOutput 'nxprofile_trace_probe.exe'
+& $Compiler -n "-Fu$RtlUnits" "-Fu$profileSource" "-FE$probeOutput" `
+    "-FU$probeOutput" -B -O2 -Aas-clang -XLL `
+    (Join-Path $testSource 'nxprofile_control_probe.pas') | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'Control probe compilation failed' }
+$controlProbe = Join-Path $probeOutput 'nxprofile_control_probe.exe'
 
 function Invoke-Compile {
     param(
@@ -87,7 +92,7 @@ function Invoke-ProfiledExe([string]$Output, [string]$Name) {
     Assert-True ($values.trace_end -eq 1) "$Name trace has no TRACE_END"
     Assert-True ($values.modules -ge 1) "$Name trace has no module metadata"
     Assert-True ($values.procedures -ge 1) "$Name trace has no procedure metadata"
-    Assert-True ($values.events -ge 2) "$Name trace has no procedure events"
+    Assert-True ($values.calls -ge 1) "$Name trace has no completed calls"
     return $values
 }
 
@@ -136,12 +141,19 @@ Assert-True ($normalExeDump -notmatch `
 $normalTime = (Get-Item -LiteralPath $unitObject).LastWriteTimeUtc
 Start-Sleep -Milliseconds 1100
 Invoke-Compile (Join-Path $activationSource 'activation.pas') $activationOutput -Profile
+$gappedDump = & $llvmReadObj --sections --symbols $unitObject | Out-String
+Assert-True ($gappedDump -notmatch 'nxp_enter|\.nxprof') `
+    'Profiling build did not preserve deliberate gapped unit coverage'
+Assert-True ((Get-Item -LiteralPath $unitObject).LastWriteTimeUtc -eq $normalTime) `
+    'Profiling build unnecessarily rebuilt an ordinary PPU'
+Invoke-Compile (Join-Path $activationSource 'activation.pas') $activationOutput `
+    -Profile -Build
 $profileDump = & $llvmReadObj --sections --symbols --relocations $unitObject |
     Out-String
 Assert-True ($profileDump -match 'nxp_enter') `
-    'Ordinary PPU was reused by a profiling build'
+    'Explicit profiling rebuild produced no hooks'
 Assert-True ((Get-Item -LiteralPath $unitObject).LastWriteTimeUtc -gt $normalTime) `
-    'Ordinary PPU timestamp did not change for profiling'
+    'Explicit profiling rebuild did not refresh the ordinary PPU'
 Assert-True ($profileDump -match 'Selection: Associative') `
     'Procedure descriptor is not an associative COMDAT'
 Assert-True ($profileDump -notmatch 'IMAGE_REL_AMD64_ABSOLUTE') `
@@ -151,8 +163,8 @@ $profileExeDump = & $llvmReadObj --coff-imports `
 Assert-True ($profileExeDump -notmatch '(?i)nexusprofiler.*\.dll') `
     'Profiled executable imports a profiler runtime DLL'
 $activationTrace = Invoke-ProfiledExe $activationOutput 'activation'
-Assert-True ($activationTrace.enters -eq $activationTrace.leaves) `
-    'Activation trace entry/leave counts differ'
+Assert-True ($activationTrace.unmatched -eq 0) `
+    'Activation trace contains an unmatched terminal event'
 
 Write-Host 'Core procedures, smartlinking, exceptions, and threads'
 $smokeOutput = Join-Path $OutputRoot 'smoke'
@@ -186,6 +198,41 @@ $threadTrace = Invoke-ProfiledExe $threadOutput 'profiler_threads'
 Assert-True ($threadTrace.threads -ge 3) `
     'Main, FPC, and foreign threads were not recorded'
 
+Write-Host 'Runtime start and stop control'
+$controlOutput = Join-Path $OutputRoot 'control'
+Invoke-Compile (Join-Path $testSource 'profiler_control.pas') $controlOutput `
+    -Profile -Build -Release
+Get-ChildItem -LiteralPath $controlOutput -Filter 'nexus-profile-*.nxp' |
+    Remove-Item -Force
+$savedStartMode = $env:NEXUS_PROFILE_START
+$env:NEXUS_PROFILE_START = 'paused'
+Push-Location $controlOutput
+try {
+    & (Join-Path $controlOutput 'profiler_control.exe') | Out-Host
+    $controlExitCode = $LASTEXITCODE
+}
+finally {
+    Pop-Location
+    if ($null -eq $savedStartMode) {
+        Remove-Item Env:NEXUS_PROFILE_START -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:NEXUS_PROFILE_START = $savedStartMode
+    }
+}
+Assert-True ($controlExitCode -eq 0) `
+    "Profiler control test exited with code $controlExitCode"
+$controlTraces = @(Get-ChildItem -LiteralPath $controlOutput `
+    -Filter 'nexus-profile-*.nxp' | Sort-Object Name)
+Assert-True ($controlTraces.Count -eq 2) `
+    'Profiler control did not create one trace per active interval'
+& $controlProbe $controlTraces[0].FullName 'FIRSTINTERVALLEAF' `
+    'PAUSEDLEAF' 'SECONDINTERVALLEAF' | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'First controlled interval is invalid' }
+& $controlProbe $controlTraces[1].FullName 'SECONDINTERVALLEAF' `
+    'PAUSEDLEAF' 'FIRSTINTERVALLEAF' | Out-Host
+if ($LASTEXITCODE -ne 0) { throw 'Second controlled interval is invalid' }
+
 Write-Host 'Release validation'
 $releaseOutput = Join-Path $OutputRoot 'release'
 Invoke-Compile (Join-Path $testSource 'profiler_smoke.pas') $releaseOutput `
@@ -201,8 +248,8 @@ Invoke-Compile (Join-Path $testSource 'profiler_optimized_params.pas') `
     $optimizedOutput -Profile -Build -Release
 $optimizedTrace = Invoke-ProfiledExe $optimizedOutput `
     'profiler_optimized_params'
-Assert-True ($optimizedTrace.enters -eq $optimizedTrace.leaves) `
-    'Optimized parameter trace entry/leave counts differ'
+Assert-True ($optimizedTrace.unmatched -eq 0) `
+    'Optimized parameter trace contains an unmatched terminal event'
 
 Write-Host 'Unhandled exception behavior'
 $unhandledOutput = Join-Path $OutputRoot 'unhandled'

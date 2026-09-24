@@ -442,14 +442,15 @@ var
               Message(unit_u_ppu_llvm_mismatch,@queuecomment);
               exit;
             end;
-          { Immutable/system PPUs are deliberately uninstrumented. All
-            ordinary project PPUs must match the profiling state. }
+          { A profiling build may use an ordinary PPU, producing deliberately
+            gapped coverage. An ordinary build must never reuse an instrumented
+            PPU because that would retain profiler hooks. }
           if (modulename^<>'SYSINIT') and
              (modulename^<>'OBJPAS') and
              not(mf_release in moduleflags) and
              not(mf_system_unit in moduleflags) and
-             ((mf_nexus_profile in moduleflags) <>
-              (cs_nexus_profile in current_settings.moduleswitches)) then
+             (mf_nexus_profile in moduleflags) and
+             not(cs_nexus_profile in current_settings.moduleswitches) then
             begin
               Comment(V_Normal,
                 'PPU profiling state does not match the current Nexus profiling build');
