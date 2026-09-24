@@ -158,7 +158,7 @@ var
 begin
   ConsumedRecords := 0;
   StopConsumer := 0;
-  StressMemory := TNXEventMemory.Create(256);
+  StressMemory := TNXEventMemory.Create(8);
   StressEvent := RTLEventCreate;
   StressMemory.SetCompletionEvent(StressEvent);
   ConsumerThread := BeginThread(@Consumer, nil);

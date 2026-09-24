@@ -161,6 +161,7 @@ type
     procedure WriteFileHeader(AProcessId: DWord; ASessionId,
       AClockFrequency, AStartTimestamp: QWord);
   public
+    constructor Create(AEventMemory: TNXEventMemory); overload;
     constructor Create(AStream: TStream; AOwnsStream: Boolean;
       AProcessId: DWord; ASessionId, AClockFrequency,
       AStartTimestamp: QWord); overload;
@@ -170,10 +171,12 @@ type
       ASessionId, AClockFrequency, AStartTimestamp: QWord;
       AEventMemory: TNXEventMemory); overload;
     destructor Destroy; override;
-    procedure WriteModuleDefine(const AInfo: TNXProfileModuleInfo);
+    procedure StartTrace(const AFileName: AnsiString; AProcessId: DWord;
+      ASessionId, AClockFrequency, AStartTimestamp: QWord);
+    function WriteModuleDefine(const AInfo: TNXProfileModuleInfo): Boolean;
     procedure WriteModuleUnload(AModuleId, AFlags: DWord;
       ATimestamp: QWord);
-    procedure WriteProcedureDefine(const AInfo: TNXProfileProcedureInfo);
+    function WriteProcedureDefine(const AInfo: TNXProfileProcedureInfo): Boolean;
     procedure WriteThreadDefine(const AInfo: TNXProfileThreadInfo);
     procedure WriteEventBlock(AThreadId: DWord; ASequence,
       ALostEventCount: QWord; const AEvents: array of TNXProfileEvent);
@@ -183,7 +186,6 @@ type
     procedure Flush;
     function AcquireRecord: PNXProfileCaptureRecord;
     procedure FinalizeRecord(ARecord: PNXProfileCaptureRecord);
-    property Stream: TStream read FStream;
     property Finished: Boolean read FFinished;
   end;
 
@@ -240,8 +242,8 @@ type
     AllNext: PNXEventMemoryBlock;
     Issued: LongInt;
     Finished: LongInt;
+    Acquirers: LongInt;
     State: LongInt;
-    Published: LongInt;
   end;
 
   TNXProfileRecordHeader = packed record
@@ -394,7 +396,6 @@ begin
   Block^.QueueNext := nil;
   Block^.Issued := 0;
   Block^.Finished := 0;
-  Block^.Published := 0;
   Block^.State := nxebAvailable;
 end;
 
@@ -470,11 +471,11 @@ var
   Block: PNXEventMemoryBlock;
 begin
   Block := PNXEventMemoryBlock(ABlock);
-  if (AtomicRead(Block^.State) = nxebSealed) and
+  if (AtomicRead(Block^.Acquirers) = 0) and
      (AtomicRead(Block^.Finished) = AtomicRead(Block^.Issued)) and
-     (InterlockedCompareExchange(Block^.Published, 1, 0) = 0) then
+     (InterlockedCompareExchange(Block^.State, nxebCompleted,
+       nxebSealed) = nxebSealed) then
   begin
-    InterlockedExchange(Block^.State, nxebCompleted);
     EnqueueCompleted(Block);
   end;
 end;
@@ -511,20 +512,34 @@ begin
       InterlockedCompareExchangePointer(FActiveBlock, nil, nil));
     if Block = nil then
       Exit;
+    InterlockedIncrement(Block^.Acquirers);
+    if (InterlockedCompareExchangePointer(FActiveBlock, nil, nil) <> Block) or
+       (AtomicRead(Block^.State) <> nxebActive) then
+    begin
+      InterlockedDecrement(Block^.Acquirers);
+      PublishIfComplete(Block);
+      Continue;
+    end;
     Issued := AtomicRead(Block^.Issued);
     if Issued >= FBlockCapacity then
     begin
+      InterlockedDecrement(Block^.Acquirers);
+      PublishIfComplete(Block);
       RotateFullBlock(Block);
       Continue;
     end;
     if InterlockedCompareExchange(Block^.Issued, Issued + 1, Issued) =
        Issued then
     begin
+      InterlockedDecrement(Block^.Acquirers);
+      PublishIfComplete(Block);
       if Issued + 1 = FBlockCapacity then
         RotateFullBlock(Block);
       Result := EventMemoryBlockRecord(Block, Issued);
       Exit;
     end;
+    InterlockedDecrement(Block^.Acquirers);
+    PublishIfComplete(Block);
   until False;
 end;
 
@@ -624,6 +639,12 @@ end;
 
 { TNXProfileWriter }
 
+constructor TNXProfileWriter.Create(AEventMemory: TNXEventMemory);
+begin
+  inherited Create;
+  FEventMemory := AEventMemory;
+end;
+
 constructor TNXProfileWriter.Create(AStream: TStream; AOwnsStream: Boolean;
   AProcessId: DWord; ASessionId, AClockFrequency,
   AStartTimestamp: QWord);
@@ -650,9 +671,9 @@ constructor TNXProfileWriter.Create(const AFileName: AnsiString;
   AProcessId: DWord; ASessionId, AClockFrequency,
   AStartTimestamp: QWord; AEventMemory: TNXEventMemory);
 begin
-  FEventMemory := AEventMemory;
-  Create(TFileStream.Create(AFileName, fmCreate or fmShareDenyWrite), True,
-    AProcessId, ASessionId, AClockFrequency, AStartTimestamp);
+  Create(AEventMemory);
+  StartTrace(AFileName, AProcessId, ASessionId, AClockFrequency,
+    AStartTimestamp);
 end;
 
 destructor TNXProfileWriter.Destroy;
@@ -660,6 +681,17 @@ begin
   if FOwnsStream then
     FStream.Free;
   inherited Destroy;
+end;
+
+procedure TNXProfileWriter.StartTrace(const AFileName: AnsiString;
+  AProcessId: DWord; ASessionId, AClockFrequency,
+  AStartTimestamp: QWord);
+begin
+  if FStream <> nil then
+    Exit;
+  FStream := TFileStream.Create(AFileName, fmCreate or fmShareDenyWrite);
+  FOwnsStream := True;
+  WriteFileHeader(AProcessId, ASessionId, AClockFrequency, AStartTimestamp);
 end;
 
 procedure TNXProfileWriter.WriteRecordHeader(AKind, AFlags: Word;
@@ -720,11 +752,14 @@ begin
   WriteQWord(AStartTimestamp);
 end;
 
-procedure TNXProfileWriter.WriteModuleDefine(
-  const AInfo: TNXProfileModuleInfo);
+function TNXProfileWriter.WriteModuleDefine(
+  const AInfo: TNXProfileModuleInfo): Boolean;
 var
   PayloadSize: DWord;
 begin
+  Result := False;
+  if FStream = nil then
+    Exit;
   PayloadSize := CheckedPayloadSize(32 + CStringSize(AInfo.ImagePath));
   WriteRecordHeader(nxprModuleDefine, 0, PayloadSize);
   WriteDWord(AInfo.ModuleId);
@@ -733,22 +768,28 @@ begin
   WriteQWord(AInfo.LoadAddress);
   WriteQWord(AInfo.Timestamp);
   WriteCString(AInfo.ImagePath);
+  Result := True;
 end;
 
 procedure TNXProfileWriter.WriteModuleUnload(AModuleId, AFlags: DWord;
   ATimestamp: QWord);
 begin
+  if FStream = nil then
+    Exit;
   WriteRecordHeader(nxprModuleUnload, 0, 16);
   WriteDWord(AModuleId);
   WriteDWord(AFlags);
   WriteQWord(ATimestamp);
 end;
 
-procedure TNXProfileWriter.WriteProcedureDefine(
-  const AInfo: TNXProfileProcedureInfo);
+function TNXProfileWriter.WriteProcedureDefine(
+  const AInfo: TNXProfileProcedureInfo): Boolean;
 var
   PayloadSize: DWord;
 begin
+  Result := False;
+  if FStream = nil then
+    Exit;
   PayloadSize := CheckedPayloadSize(48 + CStringSize(AInfo.Name) +
     CStringSize(AInfo.UnitName) + CStringSize(AInfo.SourceFile));
   WriteRecordHeader(nxprProcedureDefine, 0, PayloadSize);
@@ -764,6 +805,7 @@ begin
   WriteCString(AInfo.Name);
   WriteCString(AInfo.UnitName);
   WriteCString(AInfo.SourceFile);
+  Result := True;
 end;
 
 procedure TNXProfileWriter.WriteThreadDefine(
@@ -771,6 +813,8 @@ procedure TNXProfileWriter.WriteThreadDefine(
 var
   PayloadSize: DWord;
 begin
+  if FStream = nil then
+    Exit;
   PayloadSize := CheckedPayloadSize(16 + CStringSize(AInfo.Name));
   WriteRecordHeader(nxprThreadDefine, 0, PayloadSize);
   WriteDWord(AInfo.ThreadId);
@@ -785,6 +829,8 @@ var
   PayloadSize: DWord;
   FirstTimestamp, LastTimestamp: QWord;
 begin
+  if FStream = nil then
+    Exit;
   PayloadSize := CheckedPayloadSize(40 + QWord(Length(AEvents)) *
     NXPROFILE_EVENT_SIZE);
   if Length(AEvents) = 0 then
@@ -812,6 +858,8 @@ end;
 procedure TNXProfileWriter.WriteTraceGap(AThreadId, AFlags: DWord;
   ASequence, ALostEventCount, ATimestamp: QWord);
 begin
+  if FStream = nil then
+    Exit;
   WriteRecordHeader(nxprTraceGap, 0, 32);
   WriteDWord(AThreadId);
   WriteDWord(AFlags);
@@ -823,7 +871,7 @@ end;
 procedure TNXProfileWriter.Finish(ATimestamp,
   ATotalLostEventCount: QWord);
 begin
-  if FFinished then
+  if (FStream = nil) or FFinished then
     Exit;
   WriteRecordHeader(nxprTraceEnd, 0, 16);
   WriteQWord(ATimestamp);

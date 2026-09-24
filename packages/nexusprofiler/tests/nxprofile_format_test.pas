@@ -47,14 +47,15 @@ begin
     ModuleInfo.LoadAddress := $0000000140000000;
     ModuleInfo.Timestamp := 510;
     ModuleInfo.ImagePath := 'C:\test\profiled.exe';
-    Writer.WriteModuleDefine(ModuleInfo);
+    Check(Writer.WriteModuleDefine(ModuleInfo),
+      'module definition was not written');
 
     UnknownHeader.Kind := $8000;
     UnknownHeader.Flags := $55AA;
     UnknownHeader.Size := SizeOf(UnknownHeader) + SizeOf(UnknownPayload);
     UnknownPayload := $AABBCCDD;
-    Writer.Stream.WriteBuffer(UnknownHeader, SizeOf(UnknownHeader));
-    Writer.Stream.WriteBuffer(UnknownPayload, SizeOf(UnknownPayload));
+    AStream.WriteBuffer(UnknownHeader, SizeOf(UnknownHeader));
+    AStream.WriteBuffer(UnknownPayload, SizeOf(UnknownPayload));
 
     ProcedureInfo := Default(TNXProfileProcedureInfo);
     ProcedureInfo.ProcedureId := 91;
@@ -68,7 +69,8 @@ begin
     ProcedureInfo.Name := RepeatedString('N', 400);
     ProcedureInfo.UnitName := 'profile_unit';
     ProcedureInfo.SourceFile := 'C:\source\profile_unit.pas';
-    Writer.WriteProcedureDefine(ProcedureInfo);
+    Check(Writer.WriteProcedureDefine(ProcedureInfo),
+      'procedure definition was not written');
 
     ThreadInfo := Default(TNXProfileThreadInfo);
     ThreadInfo.ThreadId := 17;

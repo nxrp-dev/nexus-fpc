@@ -1,7 +1,7 @@
 # NexusFPC Procedure Trace Profiling Work Plan
 
 **Status:** Approved; threaded event-memory implementation validated  
-**Revision:** 8  
+**Revision:** 9
 **Date:** 2026-09-23  
 **Initial target:** Windows x86-64  
 **Canonical document:** This file
@@ -76,8 +76,9 @@ NexusFPC -profile
 
 Instrumented process
     -> timestamp event
-    -> acquire and fill one record in the active memory block
-    -> finalize the record
+    -> acquire one record through TNXProfileWriter
+    -> TNXProfileWriter delegates to TNXEventMemory
+    -> fill and finalize the record through TNXProfileWriter
     -> rotate a full block to the completed queue
 
 Background worker
@@ -234,9 +235,9 @@ An ordinary hook performs:
 
 1. recursion-guard check;
 2. FLS state lookup;
-3. `AcquireRecord`;
+3. `TNXProfileWriter.AcquireRecord`;
 4. fixed event fill using `QueryPerformanceCounter`;
-5. `FinalizeRecord`.
+5. `TNXProfileWriter.FinalizeRecord`.
 
 Hooks perform no file I/O, writer locking, online aggregation, or call-tree
 maintenance.
@@ -249,10 +250,12 @@ one record. `FinalizeRecord` marks that record finished after the hook has
 populated it.
 
 A block is sealed when its `Issued` count reaches capacity. It becomes complete
-when sealed and `Finished = Issued`. The worker consumes complete blocks and
-returns them to the available queue. Rotation reuses an available block or
-allocates another when none is available. Queue locks occur only at block
-transitions.
+when sealed, `Finished = Issued`, and no acquisition is between selecting that
+block and reserving its record. The sealed-to-completed state transition is one
+atomic compare-exchange, so a stale publisher cannot enqueue a reset block.
+The worker consumes complete blocks and returns them to the available queue.
+Rotation reuses an available block or allocates another when none is available.
+Queue locks occur only at block transitions.
 
 The runtime does not repair event pairing. Orphaned `ENTER`, `LEAVE`, and
 `UNWIND` events remain valid evidence for the consumer to interpret.
@@ -269,6 +272,9 @@ The runtime does not repair event pairing. Orphaned `ENTER`, `LEAVE`, and
 
 A profiled executable starts the statically linked runtime from
 compiler-generated executable startup before project unit initialization.
+The writer exists at that point as the sole producer-facing facade over event
+memory. Its file stream is attached during normal runtime unit initialization,
+after stream support is available.
 
 ### 9.6 Shutdown
 
@@ -432,6 +438,8 @@ exceptions, FPC-created threads, and foreign-created threads.
 
 - no online aggregation;
 - sealed blocks publish only after every issued record is finalized;
+- a block cannot publish while record acquisition against it is in flight;
+- sealed-to-completed publication occurs exactly once across block reuse;
 - completed blocks are consumed exactly once and returned for reuse;
 - concurrent producers preserve every finalized event;
 - the worker serializes per-thread output blocks correctly;
@@ -492,6 +500,7 @@ Do not optimize without a measured problem.
 | Analysis | Deferred consumer design |
 | Buffering | Reusable fixed-capacity `TNXEventMemory` blocks |
 | Writer | One background worker consuming completed blocks |
+| Producer access | Hooks acquire and finalize only through `TNXProfileWriter` |
 | Block lifecycle | Available -> active -> sealed -> completed -> processing -> available |
 | Orphaned events | Partial evidence interpreted by consumer |
 | Metadata strings | Runtime-owned `AnsiString` values |
@@ -512,3 +521,4 @@ Do not optimize without a measured problem.
 | 6 | 2026-09-23 | Compiler-option activation, buffered binary tracing, runtime-owned `AnsiString` metadata, null-terminated disk strings, and offline analysis |
 | 7 | 2026-09-23 | Static runtime, simple synchronous writer, and minimal reader; threading and higher-level analysis deferred |
 | 8 | 2026-09-23 | `TNXEventMemory` issued/finished blocks, reusable queues, and one background trace writer |
+| 9 | 2026-09-23 | Atomic acquisition lifetime, single state-transition publication, and writer-only producer access |

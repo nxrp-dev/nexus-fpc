@@ -33,7 +33,9 @@ nexus-profile-<process-id>-<startup-counter>.nxp
 
 The runtime records module, procedure, thread, entry, normal leave, and unwind records. Metadata strings are copied into runtime-owned `AnsiString` values at module registration and serialized as null-terminated bytes inside bounded binary records.
 
-Profiling hooks acquire one fixed record from `TNXEventMemory`, populate it, and finalize it. Full blocks move to a completed queue only after every issued record is finalized. One background worker writes completed blocks and returns their memory for reuse. Hook execution performs no file I/O.
+Profiling hooks acquire and finalize fixed records only through `TNXProfileWriter`, which delegates record storage to `TNXEventMemory`. Full blocks move to a completed queue only after every issued record is finalized and no record acquisition against that block remains in flight. Publication is a single atomic sealed-to-completed state transition. One background worker writes completed blocks and returns their memory for reuse. Hook execution performs no file I/O.
+
+The writer facade exists during compiler-generated startup so early events can enter memory without initializing file classes. Normal unit initialization attaches the trace stream and starts the worker.
 
 `NXProfile.pas` contains the binary writer and a small sequential reader. The reader validates record bounds, skips unknown record kinds, and preserves complete records before a truncated final record. Trace interpretation and reporting are intentionally outside that unit.
 

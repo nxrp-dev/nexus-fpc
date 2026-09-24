@@ -59,6 +59,7 @@ type
     DescriptorEnd: Pointer;
   end;
 
+  PNXPRuntimeModule = ^TNXPRuntimeModule;
   TNXPRuntimeModule = record
     Descriptor: PNXPModuleDescriptor;
     ModuleId: DWord;
@@ -70,6 +71,7 @@ type
     LoadTimestamp: QWord;
   end;
 
+  PNXPRuntimeProcedure = ^TNXPRuntimeProcedure;
   TNXPRuntimeProcedure = record
     Descriptor: PNXPProcedureDescriptor;
     Info: TNXProfileProcedureInfo;
@@ -170,15 +172,15 @@ begin
     SetString(Result, PAnsiChar(@Buffer[0]), Count);
 end;
 
-function FindModule(Descriptor: PNXPModuleDescriptor): LongInt;
+function FindModule(Descriptor: PNXPModuleDescriptor): PNXPRuntimeModule;
 var
   Index: SizeInt;
 begin
   for Index := High(Modules) downto 0 do
     if Modules[Index].Active and
        (Modules[Index].Descriptor = Descriptor) then
-      Exit(Index);
-  Result := -1;
+      Exit(@Modules[Index]);
+  Result := nil;
 end;
 
 procedure AppendDecimal(var Buffer: array of AnsiChar; var Position: SizeInt;
@@ -232,28 +234,28 @@ begin
   Result := Position;
 end;
 
-procedure WriteModuleLocked(AIndex: SizeInt);
+procedure WriteModuleLocked(AModule: PNXPRuntimeModule);
 var
   Info: TNXProfileModuleInfo;
 begin
-  if (Writer = nil) or Modules[AIndex].Defined then
+  if (Writer = nil) or AModule^.Defined then
     Exit;
   Info := Default(TNXProfileModuleInfo);
-  Info.ModuleId := Modules[AIndex].ModuleId;
-  Info.BuildId := Modules[AIndex].BuildId;
-  Info.LoadAddress := PtrUInt(Modules[AIndex].ImageBase);
-  Info.Timestamp := Modules[AIndex].LoadTimestamp;
-  Info.ImagePath := Modules[AIndex].ImagePath;
-  Writer.WriteModuleDefine(Info);
-  Modules[AIndex].Defined := True;
+  Info.ModuleId := AModule^.ModuleId;
+  Info.BuildId := AModule^.BuildId;
+  Info.LoadAddress := PtrUInt(AModule^.ImageBase);
+  Info.Timestamp := AModule^.LoadTimestamp;
+  Info.ImagePath := AModule^.ImagePath;
+  if Writer.WriteModuleDefine(Info) then
+    AModule^.Defined := True;
 end;
 
-procedure WriteProcedureLocked(AIndex: SizeInt);
+procedure WriteProcedureLocked(AProcedure: PNXPRuntimeProcedure);
 begin
-  if (Writer = nil) or Procedures[AIndex].Defined then
+  if (Writer = nil) or AProcedure^.Defined then
     Exit;
-  Writer.WriteProcedureDefine(Procedures[AIndex].Info);
-  Procedures[AIndex].Defined := True;
+  if Writer.WriteProcedureDefine(AProcedure^.Info) then
+    AProcedure^.Defined := True;
 end;
 
 procedure WriteMetadataLocked;
@@ -261,9 +263,9 @@ var
   Index: SizeInt;
 begin
   for Index := 0 to High(Modules) do
-    WriteModuleLocked(Index);
+    WriteModuleLocked(@Modules[Index]);
   for Index := 0 to High(Procedures) do
-    WriteProcedureLocked(Index);
+    WriteProcedureLocked(@Procedures[Index]);
 end;
 
 procedure StartWriterLocked;
@@ -273,7 +275,7 @@ var
   FileNameLength: SizeInt;
   StartStamp, SessionId: QWord;
 begin
-  if (Writer <> nil) or (RuntimeHealthy = 0) or
+  if (Writer = nil) or (RuntimeHealthy = 0) or
      (ShuttingDown <> 0) then
     Exit;
   StartStamp := Timestamp;
@@ -282,8 +284,8 @@ begin
   FileNameLength := BuildTraceFileName(FileNameBuffer,
     GetCurrentProcessId, StartupCounter);
   SetString(FileName, PAnsiChar(@FileNameBuffer[0]), FileNameLength);
-  Writer := TNXProfileWriter.Create(FileName, GetCurrentProcessId, SessionId,
-    QWord(CounterFrequency), StartStamp, EventMemory);
+  Writer.StartTrace(FileName, GetCurrentProcessId, SessionId,
+    QWord(CounterFrequency), StartStamp);
   WriteMetadataLocked;
 end;
 
@@ -378,6 +380,7 @@ begin
   ProcessHeap := GetProcessHeap;
   InitCriticalSection(WriterLock);
   EventMemory := TNXEventMemory.Create;
+  Writer := TNXProfileWriter.Create(EventMemory);
   QueryPerformanceFrequency(CounterFrequency);
   RuntimeHealthy := 1;
   FlsIndex := FlsAlloc(nil);
@@ -398,11 +401,6 @@ begin
     StartWriterLocked;
   finally
     LeaveCriticalSection(WriterLock);
-  end;
-  if Writer = nil then
-  begin
-    RuntimeHealthy := 0;
-    Exit;
   end;
   WorkerThread := BeginThread(@WriterThreadMain, nil);
   if WorkerThread = 0 then
@@ -456,10 +454,7 @@ begin
   if (State = nil) or (State^.Guard <> 0) then
     Exit;
   State^.Guard := 1;
-  if Writer <> nil then
-    Capture := Writer.AcquireRecord
-  else
-    Capture := EventMemory.AcquireRecord;
+  Capture := Writer.AcquireRecord;
   if Capture = nil then
   begin
     State^.Guard := 0;
@@ -470,10 +465,7 @@ begin
   Capture^.Event.Kind := Kind;
   Capture^.Event.ProcedureId := Descriptor^.RuntimeId;
   Capture^.Event.Timestamp := Timestamp;
-  if Writer <> nil then
-    Writer.FinalizeRecord(Capture)
-  else
-    EventMemory.FinalizeRecord(Capture);
+  Writer.FinalizeRecord(Capture);
   State^.Guard := 0;
 end;
 
@@ -495,12 +487,12 @@ begin
   RecordEvent(PNXPProcedureDescriptor(ProcedureDescriptor), nxpeUnwind);
 end;
 
-procedure RegisterProceduresLocked(ModuleIndex: SizeInt;
+procedure RegisterProceduresLocked(AModule: PNXPRuntimeModule;
   Descriptor: PNXPModuleDescriptor);
 var
   Cursor, Limit: PByte;
   ProcDescriptor: PNXPProcedureDescriptor;
-  ProcedureIndex: SizeInt;
+  RuntimeProcedure: PNXPRuntimeProcedure;
 begin
   Cursor := Descriptor^.DescriptorStart;
   Limit := Descriptor^.DescriptorEnd;
@@ -511,28 +503,28 @@ begin
     if (ProcDescriptor^.Magic <> NXP_DESC_MAGIC) or
        (ProcDescriptor^.AbiVersion <> NXP_DESC_ABI) then
       Break;
-    ProcedureIndex := Length(Procedures);
-    SetLength(Procedures, ProcedureIndex + 1);
-    Procedures[ProcedureIndex] := Default(TNXPRuntimeProcedure);
-    Procedures[ProcedureIndex].Descriptor := ProcDescriptor;
+    SetLength(Procedures, Length(Procedures) + 1);
+    RuntimeProcedure := @Procedures[High(Procedures)];
+    RuntimeProcedure^ := Default(TNXPRuntimeProcedure);
+    RuntimeProcedure^.Descriptor := ProcDescriptor;
     Inc(NextProcedureId);
     ProcDescriptor^.RuntimeId := NextProcedureId;
-    Procedures[ProcedureIndex].Info.ProcedureId := NextProcedureId;
-    Procedures[ProcedureIndex].Info.ModuleId := Modules[ModuleIndex].ModuleId;
-    Procedures[ProcedureIndex].Info.Flags := ProcDescriptor^.Flags;
-    Procedures[ProcedureIndex].Info.StableId := ProcDescriptor^.StableId;
-    Procedures[ProcedureIndex].Info.CodeStart := PtrUInt(
+    RuntimeProcedure^.Info.ProcedureId := NextProcedureId;
+    RuntimeProcedure^.Info.ModuleId := AModule^.ModuleId;
+    RuntimeProcedure^.Info.Flags := ProcDescriptor^.Flags;
+    RuntimeProcedure^.Info.StableId := ProcDescriptor^.StableId;
+    RuntimeProcedure^.Info.CodeStart := PtrUInt(
       ProcDescriptor^.CodeStart);
-    Procedures[ProcedureIndex].Info.CodeEnd := PtrUInt(ProcDescriptor^.CodeEnd);
-    Procedures[ProcedureIndex].Info.SourceLine := ProcDescriptor^.SourceLine;
-    Procedures[ProcedureIndex].Info.SourceColumn := ProcDescriptor^.SourceColumn;
-    Procedures[ProcedureIndex].Info.Name := OwnString(ProcDescriptor^.Name);
-    Procedures[ProcedureIndex].Info.UnitName := OwnString(
+    RuntimeProcedure^.Info.CodeEnd := PtrUInt(ProcDescriptor^.CodeEnd);
+    RuntimeProcedure^.Info.SourceLine := ProcDescriptor^.SourceLine;
+    RuntimeProcedure^.Info.SourceColumn := ProcDescriptor^.SourceColumn;
+    RuntimeProcedure^.Info.Name := OwnString(ProcDescriptor^.Name);
+    RuntimeProcedure^.Info.UnitName := OwnString(
       ProcDescriptor^.UnitName);
-    Procedures[ProcedureIndex].Info.SourceFile := OwnString(
+    RuntimeProcedure^.Info.SourceFile := OwnString(
       ProcDescriptor^.SourceFile);
     if Writer <> nil then
-      WriteProcedureLocked(ProcedureIndex);
+      WriteProcedureLocked(RuntimeProcedure);
     Inc(Cursor, SizeOf(TNXPProcedureDescriptor));
   end;
 end;
@@ -541,7 +533,7 @@ procedure nxp_module_register(ModuleDescriptor: Pointer); cdecl;
   [public,alias:'nxp_module_register'];
 var
   Descriptor: PNXPModuleDescriptor;
-  ModuleIndex: SizeInt;
+  RuntimeModule: PNXPRuntimeModule;
 begin
   EnsureRuntime;
   if RuntimeHealthy = 0 then
@@ -552,23 +544,21 @@ begin
     Exit;
   EnterCriticalSection(WriterLock);
   try
-    if FindModule(Descriptor) >= 0 then
+    if FindModule(Descriptor) <> nil then
       Exit;
-    ModuleIndex := Length(Modules);
-    SetLength(Modules, ModuleIndex + 1);
-    Modules[ModuleIndex] := Default(TNXPRuntimeModule);
-    Modules[ModuleIndex].Descriptor := Descriptor;
+    SetLength(Modules, Length(Modules) + 1);
+    RuntimeModule := @Modules[High(Modules)];
+    RuntimeModule^ := Default(TNXPRuntimeModule);
+    RuntimeModule^.Descriptor := Descriptor;
     Inc(NextModuleId);
-    Modules[ModuleIndex].ModuleId := NextModuleId;
-    Modules[ModuleIndex].ImageBase := ModuleBaseFor(Descriptor);
-    Modules[ModuleIndex].BuildId := ModuleBuildId(
-      Modules[ModuleIndex].ImageBase);
-    Modules[ModuleIndex].ImagePath := OwnString(ModulePath(
-      Modules[ModuleIndex].ImageBase));
-    Modules[ModuleIndex].Active := True;
-    Modules[ModuleIndex].LoadTimestamp := Timestamp;
-    WriteModuleLocked(ModuleIndex);
-    RegisterProceduresLocked(ModuleIndex, Descriptor);
+    RuntimeModule^.ModuleId := NextModuleId;
+    RuntimeModule^.ImageBase := ModuleBaseFor(Descriptor);
+    RuntimeModule^.BuildId := ModuleBuildId(RuntimeModule^.ImageBase);
+    RuntimeModule^.ImagePath := OwnString(ModulePath(RuntimeModule^.ImageBase));
+    RuntimeModule^.Active := True;
+    RuntimeModule^.LoadTimestamp := Timestamp;
+    WriteModuleLocked(RuntimeModule);
+    RegisterProceduresLocked(RuntimeModule, Descriptor);
     RegisteredDescriptor := Descriptor;
   finally
     LeaveCriticalSection(WriterLock);
@@ -578,16 +568,16 @@ end;
 procedure nxp_module_unregister(ModuleDescriptor: Pointer); cdecl;
   [public,alias:'nxp_module_unregister'];
 var
-  ModuleIndex: LongInt;
+  RuntimeModule: PNXPRuntimeModule;
 begin
   EnterCriticalSection(WriterLock);
   try
-    ModuleIndex := FindModule(PNXPModuleDescriptor(ModuleDescriptor));
-    if (ModuleIndex >= 0) and Modules[ModuleIndex].Active then
+    RuntimeModule := FindModule(PNXPModuleDescriptor(ModuleDescriptor));
+    if (RuntimeModule <> nil) and RuntimeModule^.Active then
     begin
-      Modules[ModuleIndex].Active := False;
+      RuntimeModule^.Active := False;
       if Writer <> nil then
-        Writer.WriteModuleUnload(Modules[ModuleIndex].ModuleId, 0, Timestamp);
+        Writer.WriteModuleUnload(RuntimeModule^.ModuleId, 0, Timestamp);
     end;
   finally
     LeaveCriticalSection(WriterLock);
@@ -647,11 +637,9 @@ begin
   EnterCriticalSection(WriterLock);
   try
     if Writer <> nil then
-    begin
       Writer.Finish(Timestamp, 0);
-      Writer.Free;
-      Writer := nil;
-    end;
+    Writer.Free;
+    Writer := nil;
   finally
     LeaveCriticalSection(WriterLock);
   end;
