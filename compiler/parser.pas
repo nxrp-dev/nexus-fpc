@@ -52,7 +52,7 @@ implementation
       comphook,
       scanner,scandir,
       pbase,psystem,pmodules,psub,ncgrtti,
-      cpuinfo,procinfo;
+      cpuinfo,procinfo,assemble;
 
     procedure parsing_done(module: tmodule);
 
@@ -60,6 +60,9 @@ implementation
        hp,hp2 :  tmodule;
 
     begin
+       if module.is_initial then
+         DrainClangAssemblerQueue;
+
        if (module.is_initial) and
           (status.errorcount=0) then
          { Write Browser Collections }

@@ -248,6 +248,8 @@ interface
       target to write inline assembler }
     function GetExternalGnuAssemblerWithAsmInfoWriter(info: pasminfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
 
+    function DrainClangAssemblerQueue: Boolean;
+
     procedure RegisterAssembler(const r:tasminfo;c:TAssemblerClass);
 
 
@@ -257,7 +259,7 @@ Implementation
 {$ifdef hasunix}
       unix,
 {$endif}
-      cutils,cfileutl,
+      cutils,cfileutl,comphook,nxclangassembler,
 {$ifdef memdebug}
       cclasses,
 {$endif memdebug}
@@ -277,6 +279,7 @@ Implementation
 
     var
       CAssembler : array[tasm] of TAssemblerClass;
+      ClangAssemblerFailureReported: Boolean;
 
     function fixline(const s:string):string;
      {
@@ -925,6 +928,9 @@ Implementation
 
 
     Function TExternalAssembler.DoAssemble:boolean;
+      var
+        command: TCmdStr;
+        para: TCmdStr;
       begin
         result:=true;
         if DoPipe then
@@ -940,6 +946,37 @@ Implementation
            Message1(exec_i_assembling,name);
          end;
 
+        if (asminfo^.id in [as_clang_gas,as_clang_asdarwin]) and
+           not(cs_asm_extern in current_settings.globalswitches) and
+           not(cs_assemble_on_target in current_settings.globalswitches) then
+          begin
+            command:=FindAssembler;
+            para:=MakeCmdLine;
+            if do_checkverbosity(V_Executable) then
+              do_comment(V_Executable,'Executing "'+command+
+                '" with command line "'+para+'"');
+            FlushOutput;
+            try
+              result:=NXQueueClangAssembly(command,para,AsmFileName,
+                not(cs_asm_leave in current_settings.globalswitches));
+              if not result and not ClangAssemblerFailureReported then
+                Message1(exec_e_error_while_assembling,
+                  tostr(NXClangAssemblyExitCode));
+            except
+              on E:EOSError do
+                begin
+                  Message1(exec_e_cant_call_assembler,tostr(E.ErrorCode));
+                  result:=false;
+                end;
+            end;
+            if not result and not ClangAssemblerFailureReported then
+              begin
+                ClangAssemblerFailureReported:=true;
+                GenerateError;
+              end;
+            exit;
+          end;
+
         repeat
           result:=CallAssembler(FindAssembler,MakeCmdLine)
         until not(result) or not RerunAssembler;
@@ -947,6 +984,19 @@ Implementation
           writer.RemoveAsm
         else
           GenerateError;
+      end;
+
+
+    function DrainClangAssemblerQueue: Boolean;
+      begin
+        result:=NXDrainClangAssemblies;
+        if not result and not ClangAssemblerFailureReported then
+          begin
+            ClangAssemblerFailureReported:=true;
+            Message1(exec_e_error_while_assembling,
+              tostr(NXClangAssemblyExitCode));
+            GenerateError;
+          end;
       end;
 
 

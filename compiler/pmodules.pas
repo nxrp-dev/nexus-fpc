@@ -119,7 +119,8 @@ implementation
         if create_smartlink_library then
          begin
            GenerateAsm(true);
-           if (af_needar in target_asm.flags) then
+           if (af_needar in target_asm.flags) and
+              DrainClangAssemblerQueue then
              Linker.MakeStaticLibrary;
          end;
 
@@ -2271,30 +2272,33 @@ type
                  { generate the pcp file }
                  pkg.savepcp;
 
-                 { insert all .o files from all loaded units and
-                   unload the units, we don't need them anymore.
-                   Keep the curr because that is still needed }
-                 hp:=tmodule(loaded_units.first);
-                 while assigned(hp) do
-                  begin
-                    { only link in those units which should become part of this
-                      package }
-                    if not assigned(hp.package) then
-                      linker.AddModuleFiles(hp);
-                    hp2:=tmodule(hp.next);
-                    if (hp<>curr) and
-                       (not needsymbolinfo) then
+                 if DrainClangAssemblerQueue then
+                   begin
+                     { insert all .o files from all loaded units and
+                       unload the units, we don't need them anymore.
+                       Keep the curr because that is still needed }
+                     hp:=tmodule(loaded_units.first);
+                     while assigned(hp) do
                       begin
-                        loaded_units.remove(hp);
-                        hp.free;
-                        hp := nil;
+                        { only link in those units which should become part of this
+                          package }
+                        if not assigned(hp.package) then
+                          linker.AddModuleFiles(hp);
+                        hp2:=tmodule(hp.next);
+                        if (hp<>curr) and
+                           (not needsymbolinfo) then
+                          begin
+                            loaded_units.remove(hp);
+                            hp.free;
+                            hp := nil;
+                          end;
+                        hp:=hp2;
                       end;
-                    hp:=hp2;
-                  end;
-                 { add the library of directly used packages }
-                 add_package_libs(linker);
-                 { and now link the package library }
-                 linker.MakeSharedLibrary
+                     { add the library of directly used packages }
+                     add_package_libs(linker);
+                     { and now link the package library }
+                     linker.MakeSharedLibrary
+                   end
                end;
 
              { Give Fatal with error count for linker errors }
@@ -2323,6 +2327,8 @@ type
             { write .def file }
             if (cs_link_deffile in current_settings.globalswitches) then
              deffile.writefile;
+            if not DrainClangAssemblerQueue then
+              exit;
             { link SysInit (if any) first, to have behavior consistent with
               assembler startup files }
             if assigned(sysinitmod) then
