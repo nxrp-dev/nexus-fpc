@@ -446,12 +446,15 @@ procedure flushpendingswitchesstate;
         setverbosity(pendingstate.nextverbositystr);
         pendingstate.nextverbositystr:='';
       end;
-    msgset:=thashset.create(10,false,false);
     { we need to start from a clean slate }
     if not assigned(current_settings.pmessage) then
       RestoreLocalVerbosity(nil);
     fstate:=pendingstate.nextmessagerecord;
     pstate:=pendingstate.nextmessagerecord;
+    if assigned(pstate) then
+      msgset:=thashset.create(10,false,false)
+    else
+      msgset:=nil;
     while assigned(pstate) do
       begin
         {$IFDEF DEBUG_MESSAGESTATE}

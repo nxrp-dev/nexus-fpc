@@ -253,6 +253,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function Add(const AName:TSymStr;Item: Pointer): SizeInt;
+    function AddWithHash(const AName: TSymStr; AHash: LongWord; Item: Pointer): SizeInt;
     procedure Clear;
     function NameOfIndex(Index: SizeInt): TSymStr;
     function HashOfIndex(Index: SizeInt): LongWord;
@@ -296,6 +297,8 @@ type
     FStr       : {$ifdef symansistr} TSymStr {$else} PSymStr {$endif};
     FHash      : LongWord;
     procedure InternalChangeOwner(HashObjectList:TFPHashObjectList;const s:TSymStr);
+    procedure InternalChangeOwnerWithHash(HashObjectList: TFPHashObjectList;
+      const S: TSymStr; AHash: LongWord);
   protected
     function GetName:TSymStr;virtual;
     function GetHash:Longword;virtual;
@@ -304,6 +307,8 @@ type
     constructor Create(HashObjectList:TFPHashObjectList;const s:TSymStr);
     procedure ChangeOwner(HashObjectList:TFPHashObjectList);
     procedure ChangeOwnerAndName(HashObjectList:TFPHashObjectList;const s:TSymStr); {$ifdef CCLASSESINLINE}inline;{$endif}
+    procedure ChangeOwnerAndNameWithHash(HashObjectList: TFPHashObjectList;
+      const S: TSymStr; AHash: LongWord); {$ifdef CCLASSESINLINE}inline;{$endif}
     procedure Rename(const ANewName:TSymStr);
     property Name:TSymStr read GetName;
     property Hash:Longword read GetHash;
@@ -325,6 +330,7 @@ type
     destructor Destroy; override;
     procedure Clear;
     function Add(const AName:TSymStr;AObject: TObject): Integer; {$ifdef CCLASSESINLINE}inline;{$endif}
+    function AddWithHash(const AName: TSymStr; AHash: LongWord; AObject: TObject): Integer; {$ifdef CCLASSESINLINE}inline;{$endif}
     function NameOfIndex(Index: Integer): TSymStr; {$ifdef CCLASSESINLINE}inline;{$endif}
     function HashOfIndex(Index: Integer): LongWord; {$ifdef CCLASSESINLINE}inline;{$endif}
     function GetNextCollision(Index: Integer): Integer; {$ifdef CCLASSESINLINE}inline;{$endif}
@@ -1697,6 +1703,13 @@ end;
 
 
 function TViHashList.Add(const AName:TSymStr;Item: Pointer): SizeInt;
+begin
+  Result:=AddWithHash(AName, FPHash(AName), Item);
+end;
+
+
+function TViHashList.AddWithHash(const AName: TSymStr; AHash: LongWord;
+  Item: Pointer): SizeInt;
 var
   it: PViHashListItem;
 begin
@@ -1706,7 +1719,7 @@ begin
 
   it:=FItems+result;
   Initialize(it^);
-  it^.HashValue:=FPHash(AName);
+  it^.HashValue:=AHash;
   it^.Data:=Item;
 {$ifdef symansistr}
   it^.Str:=AName;
@@ -2034,6 +2047,13 @@ begin
   Result := FHashList.Add(AName,AObject);
 end;
 
+
+function TFPHashObjectList.AddWithHash(const AName: TSymStr; AHash: LongWord;
+  AObject: TObject): Integer;
+begin
+  Result:=FHashList.AddWithHash(AName, AHash, AObject);
+end;
+
 function TFPHashObjectList.NameOfIndex(Index: Integer): TSymStr;
 begin
   Result := FHashList.NameOfIndex(Index);
@@ -2146,15 +2166,22 @@ end;
 *****************************************************************************}
 
 procedure TFPHashObject.InternalChangeOwner(HashObjectList:TFPHashObjectList;const s:TSymStr);
+begin
+  InternalChangeOwnerWithHash(HashObjectList, S, FPHash(S));
+end;
+
+
+procedure TFPHashObject.InternalChangeOwnerWithHash(
+  HashObjectList: TFPHashObjectList; const S: TSymStr; AHash: LongWord);
 var
   Index : SizeInt;
   it : PViHashListItem;
 begin
   FOwner:=HashObjectList;
-  Index:=HashObjectList.Add(s,Self);
+  Index:=HashObjectList.AddWithHash(S, AHash, Self);
   it:=HashObjectList.List.List+Index;
 {$ifdef symansistr}
-  FStr:=s;
+  FStr:=S;
 {$else}
   FStr:=it^.Str;
 {$endif}
@@ -2192,6 +2219,13 @@ end;
 procedure TFPHashObject.ChangeOwnerAndName(HashObjectList:TFPHashObjectList;const s:TSymStr);
 begin
   InternalChangeOwner(HashObjectList,s);
+end;
+
+
+procedure TFPHashObject.ChangeOwnerAndNameWithHash(
+  HashObjectList: TFPHashObjectList; const S: TSymStr; AHash: LongWord);
+begin
+  InternalChangeOwnerWithHash(HashObjectList, S, AHash);
 end;
 
 

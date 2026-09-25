@@ -369,7 +369,14 @@ implementation
            end;
          { Now we can insert the symbol, any duplicate entries
            are renamed to an unique (and for users inaccessible) name }
-         sym.ChangeOwnerAndName(SymList,s);
+         if checkdup then
+           begin
+             if hashedid.id<>s then
+               hashedid.id:=s;
+             sym.ChangeOwnerAndNameWithHash(SymList,s,hashedid.hash);
+           end
+         else
+           sym.ChangeOwnerAndName(SymList,s);
          sym.Owner:=self;
       end;
 

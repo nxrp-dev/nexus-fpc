@@ -52,17 +52,6 @@ interface
           sourcefn   : TPathStr; { Source specified with "uses .. in '..'" }
           comments   : TCmdStrList;
           nsprefix   : TCmdStr; { Namespace prefix the unit was found with }
-{$ifdef Test_Double_checksum}
-          interface_read_crc_index,
-          interface_write_crc_index,
-          indirect_read_crc_index,
-          indirect_write_crc_index,
-          implementation_read_crc_index,
-          implementation_write_crc_index : cardinal;
-          interface_crc_array,
-          indirect_crc_array,
-          implementation_crc_array  : pointer;
-{$endif def Test_Double_checksum}
           constructor create(LoadedFrom:TModule;const amodulename: string; const afilename:TPathStr;_is_unit:boolean);
           destructor destroy;override;
           function statestr: string; override;
@@ -1710,35 +1699,6 @@ var
          if not ppufile.createfile then
           Message(unit_f_ppu_cannot_write);
 
-{$ifdef Test_Double_checksum_write}
-         { Re-use the values collected in .INT part }
-         if assigned(interface_crc_array) then
-           begin
-             ppufile.implementation_write_crc_index:=implementation_write_crc_index;
-             ppufile.interface_write_crc_index:=interface_write_crc_index;
-             ppufile.indirect_write_crc_index:=indirect_write_crc_index;
-             if assigned(ppufile.interface_crc_array) then
-               begin
-                 dispose(ppufile.interface_crc_array);
-                 ppufile.interface_crc_array:=interface_crc_array;
-               end;
-             if assigned(ppufile.implementation_crc_array) then
-               begin
-                 dispose(ppufile.implementation_crc_array);
-                 ppufile.implementation_crc_array:=implementation_crc_array;
-               end;
-             if assigned(ppufile.indirect_crc_array) then
-               begin
-                 dispose(ppufile.indirect_crc_array);
-                 ppufile.indirect_crc_array:=indirect_crc_array;
-               end;
-           end;
-         if FileExists(ppufilename+'.IMP',false) then
-           RenameFile(ppufilename+'.IMP',ppufilename+'.IMP-old');
-         Assign(ppufile.CRCFile,ppufilename+'.IMP');
-         Rewrite(ppufile.CRCFile);
-         Writeln(ppufile.CRCFile,'CRC in writeppu method of implementation of ',ppufilename,' defsgeneration=',defsgeneration);
-{$endif def Test_Double_checksum_write}
 
          { extra header (sub version, module flags) }
          writeextraheader;
@@ -1907,17 +1867,6 @@ var
          ppufile.header.symlistsize:=current_module.symlist.count;
          ppufile.writeheader;
 
-{$ifdef Test_Double_checksum_write}
-         Writeln(ppufile.CRCFile,'End of implementation CRC in writeppu method of ',ppufilename,
-                 ' implementation_crc=$',hexstr(ppufile.crc,8),
-                 ' interface_crc=$',hexstr(ppufile.interface_crc,8),
-                 ' indirect_crc=$',hexstr(ppufile.indirect_crc,8),
-                 ' implementation_crc_size=',ppufile.implementation_read_crc_index,
-                 ' interface_crc_size=',ppufile.interface_read_crc_index,
-                 ' indirect_crc_size=',ppufile.indirect_read_crc_index,
-                 ' defsgeneration=',defsgeneration);
-         close(ppufile.CRCFile);
-{$endif Test_Double_checksum_write}
 
          discardppu;
       end;
@@ -1935,14 +1884,6 @@ var
         if ppufile.writing_interface_ppu then
           ppufile.crc_only:=false;
 {$endif DEBUG_GENERATE_INTERFACE_PPU}
-{$ifdef Test_Double_checksum_write}
-         if FileExists(ppufilename+'.INT',false) then
-           RenameFile(ppufilename+'.INT',ppufilename+'.INT-old');
-         Assign(ppufile.CRCFile,ppufilename+'.INT');
-         Rewrite(ppufile.CRCFile);
-         Writeln(ppufile.CRCFile,'CRC of getppucrc of ',ppufilename,
-                 ' defsgeneration=',defsgeneration);
-{$endif def Test_Double_checksum_write}
          { extra header (sub version, module flags) }
          writeextraheader;
 
@@ -2005,27 +1946,6 @@ var
            for ppudump when using DEBUG_GENERATE_INTERFACE_PPU define }
          ppufile.writeentry(ibendimplementation);
 
-{$ifdef Test_Double_checksum_write}
-         Writeln(ppufile.CRCFile,'End of CRC of getppucrc of ',ppufilename,
-                 ' implementation_crc=$',hexstr(ppufile.crc,8),
-                 ' interface_crc=$',hexstr(ppufile.interface_crc,8),
-                 ' indirect_crc=$',hexstr(ppufile.indirect_crc,8),
-                 ' implementation_crc_size=',ppufile.implementation_write_crc_index,
-                 ' interface_crc_size=',ppufile.interface_write_crc_index,
-                 ' indirect_crc_size=',ppufile.indirect_write_crc_index,
-                 ' defsgeneration=',defsgeneration);
-         close(ppufile.CRCFile);
-         { Remember the values generated in .INT part }
-          implementation_write_crc_index:=ppufile.implementation_write_crc_index;
-          interface_write_crc_index:=ppufile.interface_write_crc_index;
-          indirect_write_crc_index:=ppufile.indirect_write_crc_index;
-          interface_crc_array:=ppufile.interface_crc_array;
-          ppufile.interface_crc_array:=nil;
-          implementation_crc_array:=ppufile.implementation_crc_array;
-          ppufile.implementation_crc_array:=nil;
-          indirect_crc_array:=ppufile.indirect_crc_array;
-          ppufile.indirect_crc_array:=nil;
-{$endif Test_Double_checksum_write}
 
          { create and write header, this will only be used
            for debugging purposes }

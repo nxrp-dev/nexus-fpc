@@ -26,7 +26,7 @@ unit entfile;
 interface
 
   uses
-    systems,globtype,constexp,cstreams;
+    systems,globtype,constexp,cstreams,nxentrybuffer;
 
 const
 { buffer sizes }
@@ -225,13 +225,11 @@ type
 
   tentryfile=class
   private
+    FBuffer: TNXEntryBuffer;
     function getposition:longint;
     procedure setposition(value:longint);
   protected
-    buf      : pchar;
-    bufstart,
-    bufsize,
-    bufidx   : integer;
+    bufstart : integer;
     entrybufstart,
     entrystart,
     entryidx : integer;
@@ -261,6 +259,7 @@ type
     function getheadersize:longint;virtual;abstract;
     function getheaderaddr:pentryheader;virtual;abstract;
     procedure RaiseAssertion(Code: Longint); virtual;
+    function BufferedPosition:longint;inline;
   public
     entrytyp : byte;
     size             : integer;
@@ -386,6 +385,12 @@ begin
 end;
 
 
+function tentryfile.BufferedPosition: longint;
+begin
+  result:=bufstart+FBuffer.Position;
+end;
+
+
 constructor tentryfile.create(const fn:string
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
         ;aentryfilebufsize : longint = default_entryfilebufsize
@@ -403,7 +408,7 @@ begin
 {$ifdef CHECK_INPUTPOINTER_LIMITS}
   entryfilebufsize:=aentryfilebufsize;
 {$endif CHECK_INPUTPOINTER_LIMITS}
-  getmem(buf,entryfilebufsize);
+  FBuffer:=TNXEntryBuffer.Create(entryfilebufsize);
 {$ifdef DEBUG_PPU}
   assign(flog,fn+'.debug-log');
   flog_open:=false;
@@ -419,8 +424,7 @@ begin
     close(flog);
   flog_open:=false;
 {$endif DEBUG_PPU}
-  if assigned(buf) then
-    freemem(buf,entryfilebufsize);
+  FBuffer.Free;
 end;
 
 {$ifdef DEBUG_PPU}
@@ -542,10 +546,10 @@ procedure tentryfile.ppu_log(st :string);
 begin
   if flog_open then
     begin
-      writeln(flog,bufstart+bufidx,': ',st);
+      writeln(flog,BufferedPosition,': ',st);
     end;
 {$ifdef IN_PPUDUMP}
-  writeln(bufstart+bufidx,': ',st);
+  writeln(BufferedPosition,': ',st);
 {$endif}
 end;
 
@@ -688,8 +692,7 @@ begin
     exit;
 {reset buffer}
   bufstart:=i;
-  bufsize:=0;
-  bufidx:=0;
+  FBuffer.Reset;
   mode:=1;
   FillChar(entry,sizeof(tentry),0);
   entryidx:=0;
@@ -701,45 +704,50 @@ end;
 
 
 procedure tentryfile.reloadbuf;
+var
+  RemainingSize: LongInt;
 begin
-  inc(bufstart,bufsize);
-  bufsize:=f.Read(buf^,entryfilebufsize);
-  bufidx:=0;
+  inc(bufstart,FBuffer.Size);
+  RemainingSize:=fsize-bufstart;
+  if RemainingSize<0 then
+    RemainingSize:=0;
+  FBuffer.LoadFromStream(f,RemainingSize);
 end;
 
 
 procedure tentryfile.readdata(out b;len:integer);
 var
-  p,pbuf : pchar;
-  left : integer;
+  p : pchar;
+  ReadCount : integer;
 {$ifdef DEBUG_PPU}
-  i : integer;
+  i, StartLength : integer;
+  StartPointer : pchar;
 {$endif DEBUG_PPU}
 begin
   p:=pchar(@b);
-  pbuf:=@buf[bufidx];
-  repeat
-    left:=bufsize-bufidx;
-    if len<left then
-      break;
-    move(pbuf^,p^,left);
-    dec(len,left);
-    inc(p,left);
-    reloadbuf;
-    pbuf:=@buf[bufidx];
-    if bufsize=0 then
-      exit;
-  until false;
-  move(pbuf^,p^,len);
+{$ifdef DEBUG_PPU}
+  StartPointer:=p;
+  StartLength:=len;
+{$endif DEBUG_PPU}
+  while len>0 do
+    begin
+      ReadCount:=FBuffer.Read(p^,len);
+      Dec(len,ReadCount);
+      Inc(p,ReadCount);
+      if len=0 then
+        Break;
+      ReloadBuf;
+      if FBuffer.Size=0 then
+        Exit;
+    end;
 {$ifdef DEBUG_PPU}
   if ppu_log_level <= 0 then
     begin
-      ppu_log('writedata, length='+tostr(len)+' level='+tostr(ppu_log_level));
-      for i:=0 to len-1 do
-        ppu_log_val('p['+tostr(i)+']=$'+hexstr(byte(p[i]),2));
+      ppu_log('readdata, length='+tostr(StartLength)+' level='+tostr(ppu_log_level));
+      for i:=0 to StartLength-1 do
+        ppu_log_val('p['+tostr(i)+']=$'+hexstr(byte(StartPointer[i]),2));
     end;
 {$endif DEBUG_PPU}
-  inc(bufidx,len);
 end;
 
 procedure tentryfile.readdata(const b: TByteDynArray);
@@ -763,17 +771,17 @@ begin
 {$endif}
   while len>0 do
    begin
-     left:=bufsize-bufidx;
+     left:=FBuffer.Remaining;
      if len>left then
       begin
         dec(len,left);
         reloadbuf;
-        if bufsize=0 then
+        if FBuffer.Size=0 then
          exit;
       end
      else
       begin
-        inc(bufidx,len);
+        FBuffer.Advance(len);
         exit;
       end;
    end;
@@ -801,7 +809,7 @@ begin
   readdata(entry,sizeof(tentry));
   if change_endian then
     entry.size:=swapendian(entry.size);
-  entrystart:=bufstart+bufidx;
+  entrystart:=BufferedPosition;
   entryidx:=0;
 {$ifdef generic_cpu}
   has_more:=false;
@@ -894,10 +902,10 @@ begin
   ppu_log('putbyte');
   inc_log_level;
 {$endif}
-  if bufidx<bufsize then
+  if FBuffer.Remaining>0 then
     begin
-      result:=pbyte(@buf[bufidx])^;
-      inc(bufidx);
+      result:=PByte(FBuffer.Current)^;
+      FBuffer.Advance(1);
     end
   else
     readdata(result,1);
@@ -921,10 +929,10 @@ begin
   ppu_log('putword');
   inc_log_level;
 {$endif}
-  if bufsize-bufidx>=sizeof(word) then
+  if FBuffer.Remaining>=sizeof(word) then
     begin
-      result:=Unaligned(pword(@buf[bufidx])^);
-      inc(bufidx,sizeof(word));
+      result:=Unaligned(PWord(FBuffer.Current)^);
+      FBuffer.Advance(sizeof(word));
     end
   else
     readdata(result,sizeof(word));
@@ -950,10 +958,10 @@ begin
   ppu_log('putlongint');
   inc_log_level;
 {$endif}
-  if bufsize-bufidx>=sizeof(longint) then
+  if FBuffer.Remaining>=sizeof(longint) then
     begin
-      result:=Unaligned(plongint(@buf[bufidx])^);
-      inc(bufidx,sizeof(longint));
+      result:=Unaligned(PLongInt(FBuffer.Current)^);
+      FBuffer.Advance(sizeof(longint));
     end
   else
     readdata(result,sizeof(longint));
@@ -979,10 +987,10 @@ begin
   ppu_log('putdword');
   inc_log_level;
 {$endif}
-  if bufsize-bufidx>=sizeof(dword) then
+  if FBuffer.Remaining>=sizeof(dword) then
     begin
-      result:=Unaligned(pdword(@buf[bufidx])^);
-      inc(bufidx,sizeof(longint));
+      result:=Unaligned(PDWord(FBuffer.Current)^);
+      FBuffer.Advance(sizeof(dword));
     end
   else
     readdata(result,sizeof(dword));
@@ -1008,10 +1016,10 @@ begin
   ppu_log('putint64');
   inc_log_level;
 {$endif}
-  if bufsize-bufidx>=sizeof(int64) then
+  if FBuffer.Remaining>=sizeof(int64) then
     begin
-      result:=Unaligned(pint64(@buf[bufidx])^);
-      inc(bufidx,sizeof(int64));
+      result:=Unaligned(PInt64(FBuffer.Current)^);
+      FBuffer.Advance(sizeof(int64));
     end
   else
     readdata(result,sizeof(int64));
@@ -1037,10 +1045,10 @@ begin
   ppu_log('putqword');
   inc_log_level;
 {$endif}
-  if bufsize-bufidx>=sizeof(qword) then
+  if FBuffer.Remaining>=sizeof(qword) then
     begin
-      result:=Unaligned(pqword(@buf[bufidx])^);
-      inc(bufidx,sizeof(qword));
+      result:=Unaligned(PQWord(FBuffer.Current)^);
+      FBuffer.Advance(sizeof(qword));
     end
   else
     readdata(result,sizeof(qword));
@@ -1639,9 +1647,8 @@ begin
       {write header for sure}
       f.Write(getheaderaddr^,getheadersize);
     end;
-  bufsize:=entryfilebufsize;
   bufstart:=getheadersize;
-  bufidx:=0;
+  FBuffer.Reset;
 {reset}
   resetfile;
   error:=false;
@@ -1665,57 +1672,28 @@ end;
 procedure tentryfile.writebuf;
 begin
   if outputallowed and
-     (bufidx <> 0) then
-    f.Write(buf^,bufidx);
-  inc(bufstart,bufidx);
-  bufidx:=0;
+     (FBuffer.Size <> 0) then
+    FBuffer.SaveToStream(f);
+  inc(bufstart,FBuffer.Size);
+  FBuffer.Reset;
 end;
 
 
 procedure tentryfile.writedata(const b;len:integer);
-var
-  p   : pchar;
-  left,
-  idx : integer;
 {$ifdef DEBUG_PPU}
-  start_len : integer;
+var
+  idx : integer;
 {$endif}
 begin
   if not outputallowed then
     exit;
+  FBuffer.Write(b,len);
 {$ifdef DEBUG_PPU}
-  start_len:=len;
-{$endif}
-  p:=pchar(@b);
-  idx:=0;
-  while len>0 do
-   begin
-     left:=bufsize-bufidx;
-     if len>left then
-      begin
-        move(p[idx],buf[bufidx],left);
-        dec(len,left);
-        inc(idx,left);
-        inc(bufidx,left);
-        writebuf;
-      end
-     else
-      begin
-        move(p[idx],buf[bufidx],len);
-        inc(bufidx,len);
-{$ifdef DEBUG_PPU}
-        len:=0;
-{$else}
-        exit;
-{$endif}
-      end;
-   end;
-{$ifdef DEBUG_PPU}
-  if (start_len > 0) and (ppu_log_level <= 0) then
+  if (len > 0) and (ppu_log_level <= 0) then
     begin
-      ppu_log('writedata, length='+tostr(start_len)+' level='+tostr(ppu_log_level));
-      for idx:=0 to start_len-1 do
-        ppu_log_val('p['+tostr(idx)+']=$'+hexstr(byte(p[idx]),2));
+      ppu_log('writedata, length='+tostr(len)+' level='+tostr(ppu_log_level));
+      for idx:=0 to len-1 do
+        ppu_log_val('p['+tostr(idx)+']=$'+hexstr(PByte(PtrUInt(@b)+PtrUInt(idx))^,2));
     end;
 {$endif DEBUG_PPU}
 end;
@@ -1732,7 +1710,7 @@ begin
 {Reset Entry State}
   entryidx:=0;
   entrybufstart:=bufstart;
-  entrystart:=bufstart+bufidx;
+  entrystart:=BufferedPosition;
 {$ifdef DEBUG_PPU}
   ppu_log('entrystart');
 {$endif}
@@ -1765,12 +1743,12 @@ begin
      entrybufstart:=bufstart;
    end
   else
-   move(entry,buf[entrystart-bufstart],sizeof(entry));
+   FBuffer.Patch(entrystart-bufstart,entry,sizeof(entry));
 {$ifdef DEBUG_PPU}
   ppu_log('writeentry, id='+entryid_name(entry.id)+' nr='+entry_name(entry.nr)+' size='+tostr(entry.size));
 {$endif}
 {Add New Entry, which is ibend by default}
-  entrystart:=bufstart+bufidx; {next entry position}
+  entrystart:=BufferedPosition; {next entry position}
   newentry;
 end;
 
@@ -1778,7 +1756,7 @@ end;
 procedure tentryfile.putdata(const b;len:integer);
 begin
   if outputallowed then
-    writedata(b,len);
+    FBuffer.Write(b,len);
   inc(entryidx,len);
 end;
 
@@ -2034,9 +2012,9 @@ begin
   { The reading method uses getbyte, so fake it here }
   ppu_log('putbyte');
   inc_log_level;
-  inc(bufidx);
+  FBuffer.Advance(1);
   ppu_log('putstring,size='+tostr(length(s)+1));
-  dec(bufidx);
+  FBuffer.Retreat(1);
   ppu_log_val(s);
 {$endif}
   putdata(s,length(s)+1);

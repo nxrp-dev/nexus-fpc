@@ -180,6 +180,8 @@ implementation
         msgfound : boolean;
       begin
         msg^.ResetStates;
+        if not assigned(pstate) then
+          exit;
         msgset:=thashset.create(10,false,false);
         while assigned(pstate) do
           begin
