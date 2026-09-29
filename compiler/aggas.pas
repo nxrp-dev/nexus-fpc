@@ -26,7 +26,6 @@ unit aggas;
 
 {$i fpcdefs.inc}
 
-{ $define DEBUG_AGGAS}
 
 interface
 
@@ -1501,12 +1500,6 @@ implementation
 
            ait_label :
              begin
-{$ifdef DEBUG_LABEL}
-                  writer.AsmWrite(asminfo^.comment);
-                  writer.AsmWriteLn('References = ' + tostr(tai_label(hp).labsym.getrefs));
-                  if tai_label(hp).labsym.getrefs=0 then
-                    writer.AsmWriteln(asminfo^.comment+'Optimized out label '+tai_label(hp).labsym.name);
-{$endif DEBUG_LABEL}
                if (tai_label(hp).labsym.is_used) then
                 begin
                   if tai_label(hp).labsym.bind in [AB_GLOBAL,AB_PRIVATE_EXTERN] then
@@ -1719,17 +1712,10 @@ implementation
            ait_force_line,
            ait_function_name :
              begin
-{$ifdef DEBUG_AGGAS}
-               WriteStr(s,hp.typ);
-               writer.AsmWriteLn('# '+s);
-{$endif DEBUG_AGGAS}
              end;
 
            ait_cutobject :
              begin
-{$ifdef DEBUG_AGGAS}
-               writer.AsmWriteLn('# ait_cutobject');
-{$endif DEBUG_AGGAS}
                if SmartAsm then
                 begin
                 { only reset buffer if nothing has changed }
@@ -1754,10 +1740,6 @@ implementation
 
            ait_marker :
              begin
-{$ifdef DEBUG_AGGAS}
-               WriteStr(s,tai_marker(hp).Kind);
-               writer.AsmWriteLn('# ait_marker, kind: '+s);
-{$endif DEBUG_AGGAS}
                if tai_marker(hp).kind=mark_NoLineInfoStart then
                  inc(InlineLevel)
                else if tai_marker(hp).kind=mark_NoLineInfoEnd then

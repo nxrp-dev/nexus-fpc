@@ -8150,9 +8150,6 @@ implementation
            indirect crc keeps track of such changes. }
          old_do_indirect_crc:=ppufile.do_indirect_crc;
          ppufile.do_indirect_crc:=true;
-         {$IFDEF Debug_IndirectCRC}
-         writeln('INDIRECT_CRC tobjectdef.ppuwrite START ',hexstr(ppufile.indirect_crc,8));
-         {$ENDIF}
          inherited ppuwrite(ppufile);
          ppufile.putbyte(byte(objecttype));
          ppufile.putbyte(byte(helpertype));
@@ -8208,9 +8205,6 @@ implementation
          if not(df_copied_def in defoptions) then
            tObjectSymtable(symtable).ppuwrite(ppufile);
 
-         {$IFDEF Debug_IndirectCRC}
-         writeln('INDIRECT_CRC tobjectdef.ppuwrite END ',hexstr(ppufile.indirect_crc,8));
-         {$ENDIF}
          ppufile.do_indirect_crc:=old_do_indirect_crc;
       end;
 

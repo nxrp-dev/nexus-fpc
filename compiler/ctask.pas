@@ -712,14 +712,6 @@ begin
                       {$IFDEF DEBUG_CTASK}
                       writeln('PPUALGO ttask_handler.check_crc_mismatches recompile ',m.modulename^,' ',m.statestr,' ',BoolToStr(pu.in_interface,'interface','implementation'),' uses ',pu.u.modulename^,' ...');
                       {$ENDIF}
-                      {$ifdef DEBUG_UNIT_CRC_CHANGES}
-                      if (pu.u.interface_crc<>pu.interface_checksum) then
-                        writeln('  intfcrc change: '+hexstr(pu.u.interface_crc,8)+' for '+pu.u.modulename^+' <> '+hexstr(pu.interface_checksum,8)+' in unit '+m.modulename^)
-                      else if (pu.u.indirect_crc<>pu.indirect_checksum) then
-                        writeln(V_Normal,'  indcrc change: '+hexstr(pu.u.indirect_crc,8)+' for '+pu.u.modulename^+' <> '+hexstr(pu.indirect_checksum,8)+' in unit '+m.modulename^)
-                      else
-                        writeln(V_Normal,'  implcrc change: '+hexstr(pu.u.crc,8)+' for '+pu.u.modulename^+' <> '+hexstr(pu.checksum,8)+' in unit '+m.modulename^);
-                      {$endif DEBUG_UNIT_CRC_CHANGES}
                       recompile_module(m);
                       Result:=true;
                       break;
@@ -981,10 +973,6 @@ begin
 end;
 
 function ttask_handler.reload_module(m: tmodule): ttask;
-{$IFDEF Debug41677}
-var
-  cm: tmodule;
-{$ENDIF}
 begin
   if m.state in [ms_compiled,ms_processed] then
     begin
@@ -999,15 +987,6 @@ begin
       Internalerror(2026022411);
     end;
 
-  {$IFDEF Debug41677}
-  cm:=check_compiled_uses(m);
-  if cm<>nil then
-    begin
-      write_scc;
-      writeln('INVALID RELOAD ',m.modulename^,' ',m.statestr,' is used by ',cm.modulename^,' ',cm.statestr);
-      Internalerror(2026022412);
-    end;
-  {$ENDIF}
 
   Result:=restore_state(m);
   tppumodule(m).reload;
@@ -1016,10 +995,6 @@ begin
 end;
 
 function ttask_handler.recompile_module(m: tmodule): ttask;
-{$IFDEF Debug41677}
-var
-  cm: tmodule;
-{$ENDIF}
 begin
   if m.state in [ms_compiled,ms_processed] then
     begin
@@ -1040,15 +1015,6 @@ begin
   end;
   {$ENDIF}
 
-  {$IFDEF Debug41677}
-  cm:=check_compiled_uses(m);
-  if cm<>nil then
-    begin
-      write_scc;
-      writeln('INVALID RECOMPILE ',m.modulename^,' ',m.statestr,' is used by ',cm.modulename^,' ',cm.statestr);
-      Internalerror(2026022415);
-    end;
-  {$ENDIF}
 
   Result:=restore_state(m);
   if m.recompile_reason=rr_unknown then
@@ -1218,9 +1184,6 @@ begin
     writeln('ttask_handler.processqueue scc_root: ',scc_root.modulename^,' ',scc_root.statestr);
     {$ENDIF}
 
-    {$IFDEF Debug41677}
-    check_scc_tree(scc_root);
-    {$ENDIF}
 
     { recompile marked modules }
     if recompile_pending(scc_root) then

@@ -1106,8 +1106,8 @@ implementation
 
 type
     tfinishstate=record
-      init_procinfo:tcgprocinfo;
-      finalize_procinfo:tcgprocinfo;
+      InitializationProcedure:tcgprocinfo;
+      FinalizationProcedure:tcgprocinfo;
     end;
     pfinishstate=^tfinishstate;
 
@@ -1116,18 +1116,15 @@ type
     function proc_unit_implementation(curr: tmodule):boolean;
 
       var
-        init_procinfo,
-        finalize_procinfo : tcgprocinfo;
-        {$ifdef DEBUG_UNITWAITING}
-        i: integer;
-        {$ENDIF}
+        InitializationProcedure,
+        FinalizationProcedure : tcgprocinfo;
         finishstate:pfinishstate;
 
 
       begin
         result:=true;
-        init_procinfo:=nil;
-        finalize_procinfo:=nil;
+        InitializationProcedure:=nil;
+        FinalizationProcedure:=nil;
         finishstate:=nil;
 
         set_current_module(curr);
@@ -1159,19 +1156,19 @@ type
               internalerror(200212285);
 
             { Compile the unit }
-            init_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,'init$'),potype_unitinit,curr.localsymtable);
-            init_procinfo.procdef.aliasnames.concat(make_mangledname('INIT$',curr.localsymtable,''));
-            init_procinfo.parse_body;
+            InitializationProcedure:=create_main_proc(make_mangledname('',curr.localsymtable,'init$'),potype_unitinit,curr.localsymtable);
+            InitializationProcedure.procdef.aliasnames.concat(make_mangledname('INIT$',curr.localsymtable,''));
+            InitializationProcedure.parse_body;
             { save file pos for debuginfo }
-            curr.mainfilepos:=init_procinfo.entrypos;
+            curr.mainfilepos:=InitializationProcedure.entrypos;
 
             { parse finalization section }
             if current_scanner.token=_FINALIZATION then
               begin
                 { Compile the finalize }
-                finalize_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,'finalize$'),potype_unitfinalize,curr.localsymtable);
-                finalize_procinfo.procdef.aliasnames.concat(make_mangledname('FINALIZE$',curr.localsymtable,''));
-                finalize_procinfo.parse_body;
+                FinalizationProcedure:=create_main_proc(make_mangledname('',curr.localsymtable,'finalize$'),potype_unitfinalize,curr.localsymtable);
+                FinalizationProcedure.procdef.aliasnames.concat(make_mangledname('FINALIZE$',curr.localsymtable,''));
+                FinalizationProcedure.parse_body;
               end
           end;
 
@@ -1179,17 +1176,12 @@ type
           us => breaking up cycles }
         curr.remove_waitforunit_cycles;
 
-    {$ifdef DEBUG_UNITWAITING}
-        Writeln('Unit ', curr.modulename^, ' is waiting for units: ');
-        for i:=curr.waitingforunit.count-1 downto 0 do
-          writeln('  ',i,'/',curr.waitingforunit.count,' ',tmodule(curr.waitingforunit[i]).realmodulename^);
-    {$endif}
         result:=curr.waitingforunit.count=0;
 
         { save all information that is needed for finishing the unit }
         New(finishstate);
-        finishstate^.init_procinfo:=init_procinfo;
-        finishstate^.finalize_procinfo:=finalize_procinfo;
+        finishstate^.InitializationProcedure:=InitializationProcedure;
+        finishstate^.FinalizationProcedure:=FinalizationProcedure;
         curr.finishstate:=finishstate;
 
         if result then
@@ -1264,9 +1256,6 @@ type
           add_synthetic_interface_classes_for_st(curr.globalsymtable,true,false);
 
         { Our interface is compiled, generate interface CRC and switch to implementation }
-        {$IFDEF Debug_WaitCRC}
-        writeln('parse_unit_interface_declarations ',curr.realmodulename^);
-        {$ENDIF}
         if Errorcount=0 then
           tppumodule(curr).getppucrc;
         curr.in_interface:=false;
@@ -1513,8 +1502,8 @@ type
         store_crc,
 {$endif EXTDEBUG}
         force_init_final : boolean;
-        init_procinfo,
-        finalize_procinfo : tcgprocinfo;
+        InitializationProcedure,
+        FinalizationProcedure : tcgprocinfo;
         ag , wait_dep: boolean;
         finishstate : tfinishstate;
         old_module, wait_m: tmodule;
@@ -1529,8 +1518,8 @@ type
            internalerror(2012091801);
          finishstate:=pfinishstate(module.finishstate)^;
 
-         finalize_procinfo:=finishstate.finalize_procinfo;
-         init_procinfo:=finishstate.init_procinfo;
+         FinalizationProcedure:=finishstate.FinalizationProcedure;
+         InitializationProcedure:=finishstate.InitializationProcedure;
 
          { Generate specializations of objectdefs methods }
          generate_specialization_procs;
@@ -1572,65 +1561,65 @@ type
          { it's needed in case cnodeutils.force_init = true }
          if (force_init_final or cnodeutils.force_init) and
             (
-              not assigned(init_procinfo) or
-              has_no_code(init_procinfo.code)
+              not assigned(InitializationProcedure) or
+              has_no_code(InitializationProcedure.code)
             ) then
            begin
              { first release the not used init procinfo }
-             if assigned(init_procinfo) then
+             if assigned(InitializationProcedure) then
                begin
-                 release_proc_symbol(init_procinfo.procdef);
-                 release_main_proc(module,init_procinfo);
+                 release_proc_symbol(InitializationProcedure.procdef);
+                 release_main_proc(module,InitializationProcedure);
                end;
-             init_procinfo:=gen_implicit_initfinal(module,mf_init,module.localsymtable);
+             InitializationProcedure:=gen_implicit_initfinal(module,mf_init,module.localsymtable);
            end;
          if (force_init_final or cnodeutils.force_final) and
             (
-              not assigned(finalize_procinfo) or
-              has_no_code(finalize_procinfo.code)
+              not assigned(FinalizationProcedure) or
+              has_no_code(FinalizationProcedure.code)
             ) then
            begin
              { first release the not used finalize procinfo }
-             if assigned(finalize_procinfo) then
+             if assigned(FinalizationProcedure) then
                begin
-                 release_proc_symbol(finalize_procinfo.procdef);
-                 release_main_proc(module,finalize_procinfo);
+                 release_proc_symbol(FinalizationProcedure.procdef);
+                 release_main_proc(module,FinalizationProcedure);
                end;
-             finalize_procinfo:=gen_implicit_initfinal(module,mf_finalize,module.localsymtable);
+             FinalizationProcedure:=gen_implicit_initfinal(module,mf_finalize,module.localsymtable);
            end;
 
          { Now both init and finalize bodies are read and it is known
            which variables are used in both init and finalize we can now
            generate the code. This is required to prevent putting a variable in
            a register that is also used in the finalize body (PFV) }
-         if assigned(init_procinfo) then
+         if assigned(InitializationProcedure) then
            begin
              if (force_init_final or cnodeutils.force_init) or
-                not(has_no_code(init_procinfo.code)) then
+                not(has_no_code(InitializationProcedure.code)) then
                begin
-                 init_procinfo.code:=cnodeutils.wrap_proc_body(init_procinfo.procdef,init_procinfo.code);
-                 init_procinfo.generate_code_tree;
+                 InitializationProcedure.code:=cnodeutils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
+                 InitializationProcedure.generate_code_tree;
                  include(module.moduleflags,mf_init);
                end
              else
-               release_proc_symbol(init_procinfo.procdef);
-             init_procinfo.resetprocdef;
-             release_main_proc(module,init_procinfo);
+               release_proc_symbol(InitializationProcedure.procdef);
+             InitializationProcedure.resetprocdef;
+             release_main_proc(module,InitializationProcedure);
            end;
-         if assigned(finalize_procinfo) then
+         if assigned(FinalizationProcedure) then
            begin
              if force_init_final or
                 cnodeutils.force_init or
-                not(has_no_code(finalize_procinfo.code)) then
+                not(has_no_code(FinalizationProcedure.code)) then
                begin
-                 finalize_procinfo.code:=cnodeutils.wrap_proc_body(finalize_procinfo.procdef,finalize_procinfo.code);
-                 finalize_procinfo.generate_code_tree;
+                 FinalizationProcedure.code:=cnodeutils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                 FinalizationProcedure.generate_code_tree;
                  include(module.moduleflags,mf_finalize);
                end
              else
-               release_proc_symbol(finalize_procinfo.procdef);
-             finalize_procinfo.resetprocdef;
-             release_main_proc(module,finalize_procinfo);
+               release_proc_symbol(FinalizationProcedure.procdef);
+             FinalizationProcedure.resetprocdef;
+             release_main_proc(module,FinalizationProcedure);
            end;
 
          symtablestack.pop(module.localsymtable);
@@ -1740,7 +1729,7 @@ type
                    (e.g. this module was recompiled and a ppu is waiting).
                 Compute the final CRC of this module and wait.
                 Needed for compiling circular dependent units. }
-              {$IF defined(Debug_WaitCRC) or defined(Debug_FreeParseMem)}
+              {$IFDEF Debug_FreeParseMem}
               writeln('finish_compile_unit ',module.realmodulename^,' waiting for used unit CRCs...');
               {$ENDIF}
               tppumodule(module).getppucrc;
@@ -1770,7 +1759,7 @@ type
         old_module: tmodule;
 
       begin
-        {$IF defined(Debug_WaitCRC) or defined(Debug_FreeParseMem)}
+        {$IFDEF Debug_FreeParseMem}
         writeln('finish_unit ',module.realmodulename^,' write ppu and free mem...');
         {$ENDIF}
         result:=ErrorCount=0;
@@ -1900,8 +1889,8 @@ type
          Status.IsExe:=true;
          parse_only:=false;
          main_procinfo:=nil;
-         {init_procinfo:=nil;
-         finalize_procinfo:=nil;}
+         {InitializationProcedure:=nil;
+         FinalizationProcedure:=nil;}
 
          if not (tf_supports_packages in target_info.flags) then
            message1(parser_e_packages_not_supported,target_info.name);
@@ -2097,7 +2086,7 @@ type
          { should we force unit initialization? }
          force_init_final:=tstaticsymtable(curr.localsymtable).needs_init_final;
          if force_init_final or cnodeutils.force_init then
-           {init_procinfo:=gen_implicit_initfinal(mf_init,curr.localsymtable)};
+           {InitializationProcedure:=gen_implicit_initfinal(mf_init,curr.localsymtable)};
 
          { Add symbol to the exports section for win32 so smartlinking a
            DLL will include the edata section }
@@ -2557,16 +2546,16 @@ type
 
       var
         initpd    : tprocdef;
-        finalize_procinfo,
-        init_procinfo,
+        FinalizationProcedure,
+        InitializationProcedure,
         main_procinfo : tcgprocinfo;
         force_init_final : boolean;
 
       begin
         result:=true;
         main_procinfo:=nil;
-        init_procinfo:=nil;
-        finalize_procinfo:=nil;
+        InitializationProcedure:=nil;
+        FinalizationProcedure:=nil;
 
         set_current_module(curr);
 
@@ -2658,10 +2647,10 @@ type
         if current_scanner.token=_FINALIZATION then
           begin
              { Parse the finalize }
-             finalize_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,'finalize$'),potype_unitfinalize,curr.localsymtable);
-             finalize_procinfo.procdef.aliasnames.insert(make_mangledname('FINALIZE$',curr.localsymtable,''));
-             finalize_procinfo.procdef.aliasnames.concat('PASCALFINALIZE');
-             finalize_procinfo.parse_body;
+             FinalizationProcedure:=create_main_proc(make_mangledname('',curr.localsymtable,'finalize$'),potype_unitfinalize,curr.localsymtable);
+             FinalizationProcedure.procdef.aliasnames.insert(make_mangledname('FINALIZE$',curr.localsymtable,''));
+             FinalizationProcedure.procdef.aliasnames.concat('PASCALFINALIZE');
+             FinalizationProcedure.parse_body;
           end;
 
         { Generate specializations of objectdefs methods }
@@ -2687,7 +2676,7 @@ type
         { should we force unit initialization? }
         force_init_final:=tstaticsymtable(curr.localsymtable).needs_init_final;
         if force_init_final or cnodeutils.force_init then
-          init_procinfo:=gen_implicit_initfinal(curr,mf_init,curr.localsymtable);
+          InitializationProcedure:=gen_implicit_initfinal(curr,mf_init,curr.localsymtable);
 
         { Add symbol to the exports section for win32 so smartlinking a
           DLL will include the edata section }
@@ -2698,17 +2687,17 @@ type
 
         if (force_init_final or cnodeutils.force_final) and
            (
-             not assigned(finalize_procinfo)
-             or has_no_code(finalize_procinfo.code)
+             not assigned(FinalizationProcedure)
+             or has_no_code(FinalizationProcedure.code)
            ) then
           begin
             { first release the not used finalize procinfo }
-            if assigned(finalize_procinfo) then
+            if assigned(FinalizationProcedure) then
               begin
-                release_proc_symbol(finalize_procinfo.procdef);
-                release_main_proc(curr,finalize_procinfo);
+                release_proc_symbol(FinalizationProcedure.procdef);
+                release_main_proc(curr,FinalizationProcedure);
               end;
-            finalize_procinfo:=gen_implicit_initfinal(curr,mf_finalize,curr.localsymtable);
+            FinalizationProcedure:=gen_implicit_initfinal(curr,mf_finalize,curr.localsymtable);
           end;
 
          { the finalization routine of libraries is generic (and all libraries need to }
@@ -2726,27 +2715,27 @@ type
         main_procinfo.generate_code_tree;
         main_procinfo.resetprocdef;
         release_main_proc(curr,main_procinfo);
-        if assigned(init_procinfo) then
+        if assigned(InitializationProcedure) then
           begin
             { initialization can be implicit only }
             include(curr.moduleflags,mf_init);
-            init_procinfo.code:=cnodeutils.wrap_proc_body(init_procinfo.procdef,init_procinfo.code);
-            init_procinfo.generate_code;
-            init_procinfo.resetprocdef;
-            release_main_proc(curr,init_procinfo);
+            InitializationProcedure.code:=cnodeutils.wrap_proc_body(InitializationProcedure.procdef,InitializationProcedure.code);
+            InitializationProcedure.generate_code;
+            InitializationProcedure.resetprocdef;
+            release_main_proc(curr,InitializationProcedure);
           end;
-        if assigned(finalize_procinfo) then
+        if assigned(FinalizationProcedure) then
           begin
             if force_init_final or
                cnodeutils.force_init or
-               not(has_no_code(finalize_procinfo.code)) then
+               not(has_no_code(FinalizationProcedure.code)) then
               begin
-                finalize_procinfo.code:=cnodeutils.wrap_proc_body(finalize_procinfo.procdef,finalize_procinfo.code);
-                finalize_procinfo.generate_code_tree;
+                FinalizationProcedure.code:=cnodeutils.wrap_proc_body(FinalizationProcedure.procdef,FinalizationProcedure.code);
+                FinalizationProcedure.generate_code_tree;
                 include(curr.moduleflags,mf_finalize);
               end;
-            finalize_procinfo.resetprocdef;
-            release_main_proc(curr,finalize_procinfo);
+            FinalizationProcedure.resetprocdef;
+            release_main_proc(curr,FinalizationProcedure);
           end;
 
         symtablestack.pop(curr.localsymtable);

@@ -212,9 +212,6 @@ var
       m: tmodule;
       id: LongInt;
     begin
-      {$IFDEF DEBUG_SAVESYMSTACK}
-      writeln('DEBUG_SAVESYMSTACK: tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' ',kind,' Stack=',hexstr(ptruint(stack),16),' self=',hexstr(ptruint(self),16));
-      {$ENDIF}
       if stack=nil then exit;
 
       item:=stack.stack;
@@ -225,9 +222,6 @@ var
           if (id<>current_module.moduleid) and (id>0) then
             begin
               m:=get_module(id);
-              {$IFDEF DEBUG_SAVESYMSTACK}
-              writeln('   ',m.modulename^,' ',m.statestr);
-              {$ENDIF}
               if m=nil then
                 begin
                   writeln('tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' ',kind,' unknown moduleid: ',id);
@@ -250,9 +244,6 @@ var
             end;
           item:=item^.next;
         end;
-      {$IFDEF DEBUG_SAVESYMSTACK}
-      writeln('DEBUG_SAVESYMSTACK: END tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' ',kind,' Stack=',hexstr(ptruint(stack),16),' self=',hexstr(ptruint(self),16));
-      {$ENDIF}
     end;
 
   procedure tglobalstate.restore;
@@ -295,9 +286,6 @@ var
       m: tmodule;
       id: LongInt;
     begin
-      {$IFDEF DEBUG_SAVESYMSTACK}
-      writeln('DEBUG_SAVESYMSTACK: tglobalstate.reload_symtable_stack ',old_current_module.modulename^,' ',old_current_module.statestr,' ',kind,' Stack=',hexstr(ptruint(stack),16),' self=',hexstr(ptruint(self),16));
-      {$ENDIF}
       if stack=nil then exit;
       if old_current_module.fromppu then
         begin
@@ -312,9 +300,6 @@ var
           if (id<>old_current_module.moduleid) and (id>0) then
             begin
               m:=get_module(id);
-              {$IFDEF DEBUG_SAVESYMSTACK}
-              writeln('  ',m.modulename^,' ',m.statestr,' HasGlobalSymTable=',m.globalsymtable<>nil);
-              {$ENDIF}
               case kind of
                 stsk_global: item^.symtable:=m.globalsymtable;
                 stsk_macro:  item^.symtable:=m.globalmacrosymtable;
@@ -355,9 +340,6 @@ var
   destructor tglobalstate.destroy;
 
     begin
-      {$IFDEF DEBUG_SAVESYMSTACK}
-      writeln('DEBUG_SAVESYMSTACK: tglobalstate.destroy Stack=',hexstr(ptruint(symtablestack),16),' self=',hexstr(ptruint(self),16),' reload=',reload);
-      {$ENDIF}
       removestate(self);
       inherited destroy;
     end;

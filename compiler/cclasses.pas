@@ -80,8 +80,8 @@ type
     FCount: Integer;
     FCapacity: Integer;
   protected
-    function Get(Index: Integer): Pointer;
-    procedure Put(Index: Integer; Item: Pointer);
+    function Get(Index: Integer): Pointer; inline;
+    procedure Put(Index: Integer; Item: Pointer); inline;
     procedure SetCapacity(NewCapacity: Integer);
     procedure SetCount(NewCount: Integer);
     Procedure RaiseIndexError(Index : Integer);

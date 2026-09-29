@@ -24,7 +24,6 @@ unit link;
 
 {$i fpcdefs.inc}
 
-{ $define DEBUG_MACHO_INFO}
 
 interface
 
@@ -1471,17 +1470,10 @@ Implementation
         if ioresult<>0 then
           Message1(execinfo_f_cant_open_executable,fn);
 
-{$ifdef DEBUG_MACHO_INFO}
-        writeln('Start reading Mach-O file');
-{$endif DEBUG_MACHO_INFO}
         blockread(f,machheader,sizeof(TMachHeader));
         if machheader.magic<>$feedfacf then
           Exit;
 
-{$ifdef DEBUG_MACHO_INFO}
-        writeln('Magic header recognized (64 Bit, Little Endian)');
-        writeln('Reading ',machheader.ncmds,' commands');
-{$endif DEBUG_MACHO_INFO}
 
         for i:=1 to machheader.ncmds do
           begin
@@ -1490,11 +1482,6 @@ Implementation
               $19:
                 begin
                   blockread(f,machsegmentcommand64,sizeof(machsegmentcommand64));
-{$ifdef DEBUG_MACHO_INFO}
-                  writeln('Found SegmentCommand64: Name = ',StrPas(@machsegmentcommand64.segname),
-                    '; VMSize = $',hexstr(machsegmentcommand64.vmsize,8),
-                    '; FileSize = $',hexstr(machsegmentcommand64.filesize,8));
-{$endif DEBUG_MACHO_INFO}
                   case StrPas(@machsegmentcommand64.segname) of
                     '__TEXT':
                       begin
@@ -1516,9 +1503,6 @@ Implementation
                 end;
               else
                 begin
-{$ifdef DEBUG_MACHO_INFO}
-                  writeln('Found Load Command: $',hexstr(machloadcmd.cmd,4),', skipping');
-{$endif DEBUG_MACHO_INFO}
                   Seek(f,FilePos(f)+machloadcmd.cmdsize-sizeof(machloadcmd));
                 end;
             end;

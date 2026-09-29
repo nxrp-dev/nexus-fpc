@@ -20,7 +20,6 @@
  ****************************************************************************
 }
 
-{ $define DEBUG_NORMALIZE}
 
 { this unit implements routines to perform all-purpose tree transformations }
 unit opttree;
@@ -275,22 +274,9 @@ unit opttree;
         success : Boolean;
       begin
         success:=true;
-{$ifdef DEBUG_NORMALIZE}
-        writeln('******************************************** Before ********************************************');
-        printnode(output,n);
-{$endif DEBUG_NORMALIZE}
         searchstatementsproc:=@searchstatements;
         normalize_success:=@success;
         foreachnodestatic(n,@searchstatements,@success);
-{$ifdef DEBUG_NORMALIZE}
-        if success then
-          begin
-            writeln('******************************************** After ********************************************');
-            printnode(output,n);
-          end
-        else
-          writeln('************************* Normalization not possible ********************************');
-{$endif DEBUG_NORMALIZE}
         Result:=success;
       end;
 

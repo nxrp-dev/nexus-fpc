@@ -291,10 +291,6 @@ uses
         if hmodule.state<ms_compiling_waitfinish then
           begin
             tmodule.ctask_fast_backtrack:=true;
-{$ifdef DEBUG_UNITWAITING}
-            Writeln('Unit ', current_module.modulename^,
-              ' waiting for ', hmodule.modulename^);
-{$endif DEBUG_UNITWAITING}
             if current_module.waitingforunit.indexof(hmodule)<0 then
               current_module.waitingforunit.add(hmodule);
             if hmodule.waitingunits.indexof(current_module)<0 then

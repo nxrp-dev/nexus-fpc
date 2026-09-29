@@ -21,7 +21,6 @@
 }
 
 { $define DEBUG_DFA}
-{ $define EXTDEBUG_DFA}
 
 { this unit implements routines to perform dfa }
 unit optdfa;
@@ -244,9 +243,6 @@ unit optdfa;
           if assigned(node.successor) then
             CreateInfo(node.successor);
 
-{$ifdef EXTDEBUG_DFA}
-          writeln('Handling: ',nodetype2str[node.nodetype],'(',node.fileinfo.line,',',node.fileinfo.column,')');
-{$endif EXTDEBUG_DFA}
           { life:=succesorlive-definition+use }
 
           case node.nodetype of

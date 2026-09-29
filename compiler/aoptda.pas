@@ -136,10 +136,6 @@ Unit aoptda;
                                 NrOfMods := 1;
                               End
                         End;
-      {$ifdef StateDebug}
-                        hp := new(pai_asm_comment,init(strpnew(std_reg2str[TmpReg]+': '+tostr(CurProp^.Regs[TmpReg].WState))));
-                        InsertLLItem(AsmL, p, p^.next, hp);
-      {$endif StateDebug}
 
                     End
                   Else if IsLoadConstReg(p) Then

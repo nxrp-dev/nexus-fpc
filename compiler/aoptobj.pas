@@ -24,7 +24,6 @@
 }
 Unit AoptObj;
 
-{ $define DEBUG_AOPTOBJ}
 { $define DEBUG_JUMP}
 
 {$i fpcdefs.inc}
@@ -481,15 +480,10 @@ Unit AoptObj;
       procinfo;
 
 
-{$ifdef DEBUG_AOPTOBJ}
-    const
-      SPeepholeOptimization: shortstring = 'Peephole Optimization: ';
-{$else DEBUG_AOPTOBJ}
     { Empty strings help the optimizer to remove string concatenations that won't
       ever appear to the user on release builds. [Kit] }
     const
       SPeepholeOptimization = '';
-{$endif DEBUG_AOPTOBJ}
 
 
     function JumpTargetOp(ai: taicpu): poper; {$IFDEF USEINLINE}inline;{$ENDIF}
@@ -990,16 +984,9 @@ Unit AoptObj;
           inherited Destroy;
         end;
 
-{$ifdef DEBUG_AOPTOBJ}
-      procedure TAOptObj.DebugMsg(const s: string;p : tai);
-        begin
-          asml.insertbefore(tai_comment.Create(strpnew(s)), p);
-        end;
-{$else DEBUG_AOPTOBJ}
       procedure TAOptObj.DebugMsg(const s: string;p : tai);inline;
         begin
         end;
-{$endif DEBUG_AOPTOBJ}
 
       procedure TAOptObj.CreateUsedRegs(var regs: TAllUsedRegs);
         var
@@ -2565,10 +2552,6 @@ Unit AoptObj;
                     begin
                       if not FindLiveLabel(p1,l) then
                         begin
-{$ifdef finaldestdebug}
-                          insertllitem(asml,p1,p1.next,tai_comment.Create(
-                            strpnew('previous label inserted'))));
-{$endif finaldestdebug}
                           current_asmdata.getjumplabel(l);
                           insertllitem(p1,p1.next,tai_label.Create(l));
 
@@ -2583,10 +2566,6 @@ Unit AoptObj;
                         end
                       else
                         begin
-{$ifdef finaldestdebug}
-                          insertllitem(asml,p1,p1.next,tai_comment.Create(
-                            strpnew('next label reused'))));
-{$endif finaldestdebug}
                           l.increfs;
                           ThisLabel.decrefs;
                           JumpTargetOp(hp)^.ref^.symbol := l;

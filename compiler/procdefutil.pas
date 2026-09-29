@@ -354,7 +354,6 @@ implementation
     end;
 
 
-  {.$define DEBUG_CAPTURER}
 
   function acceptable_typ(sym:tabstractvarsym;typ :tsymtyp) : boolean;
     begin
@@ -609,7 +608,6 @@ implementation
               if (sym.owner=curpd.localst) or
                   (sym.owner=curpd.parast) then
                 begin
-                  {$ifdef DEBUG_CAPTURER}writeln('Symbol ',sym.name,' captured from ',curpd.procsym.name);{$endif}
                   { the symbol belongs to the current procdef, so add a field to
                     the capturer if it doesn't already exist }
                   if vo_is_self in tabstractnormalvarsym(sym).varoptions then
@@ -619,7 +617,6 @@ implementation
                   fieldsym:=tfieldvarsym(subcapturer.symtable.find(fieldname));
                   if not assigned(fieldsym) then
                     begin
-                      {$ifdef DEBUG_CAPTURER}writeln('Adding field ',fieldname,' to ',subcapturer.typesym.name);{$endif}
                       fielddef:=tabstractvarsym(sym).vardef;
                       if vo_is_self in tabstractnormalvarsym(sym).varoptions then
                         begin
@@ -651,7 +648,6 @@ implementation
               { there are still symbols left, so before we move to the parent
                 procdef we add the OuterSelf field to set up the chain of
                 capturers }
-              {$ifdef DEBUG_CAPTURER}writeln('Initialize capturer for ',curpd.procsym.name);{$endif}
               { we no longer need the curpd, but we need the parent, so change
                 curpd here }
                 curpd:=tprocdef(curpd.owner.defowner);
@@ -659,7 +655,6 @@ implementation
                   internalerror(2022011002);
               if not assigned(subcapturer.symtable.find(outer_self_field_name)) then
                 begin
-                  {$ifdef DEBUG_CAPTURER}writeln('Adding field OuterSelf to ',subcapturer.typesym.name);{$endif}
                   if subcapturer.owner.symtablelevel>normal_function_level then
                     begin
                       { the outer self is the capturer of the outer procdef }
@@ -1347,7 +1342,6 @@ implementation
           psym:=tparavarsym(pd.paras[i]);
           if not psym.is_captured then
             continue;
-          {$ifdef DEBUG_CAPTURER}writeln(#9'initialize captured parameter ',psym.RealName);{$endif}
           n:=cloadnode.create(psym,psym.owner);
           if psym.capture_sym.owner.defowner<>capturer.vardef then
             internalerror(2022010903);
@@ -1428,7 +1422,6 @@ implementation
       if ctx.procdef.has_capturer then
         begin
           capturer_sym:=get_capturer(ctx.procdef);
-          {$ifdef DEBUG_CAPTURER}writeln('initialize_capturer @ ',ctx.procdef.procsym.RealName);{$endif}
 
           addstatement(stmt,instantiate_capturer(capturer_sym));
           attach_outer_capturer(ctx,capturer_sym,stmt);
@@ -1450,7 +1443,6 @@ implementation
         exit;
 
       def:=tobjectdef(get_capturer(ctx.procdef).vardef);
-      {$ifdef DEBUG_CAPTURER}writeln('process capturer ',def.typesym.Name);{$endif}
       { These two are delayed until this point because
         ... we have been adding fields on-the-fly }
       tabstractrecordsymtable(def.symtable).addalignmentpadding;
@@ -1583,7 +1575,6 @@ implementation
       selfsym,
       sym : tsym;
     begin
-      {$ifdef DEBUG_CAPTURER}writeln('Converting captured symbols of ',pd.procsym.name);{$endif}
 
       convertarg.mappings:=tfplist.create;
 
@@ -1593,7 +1584,6 @@ implementation
           assigned(pd.capturedsyms) and
           (pd.capturedsyms.count>0) then
         begin
-          {$ifdef DEBUG_CAPTURER}writeln('Converting symbols of converted anonymous function ',pd.procsym.name);{$endif}
 
           { this is a converted anonymous function, so rework all symbols that
             now belong to the new Self }
@@ -1612,7 +1602,6 @@ implementation
                     (pd.copied_from.procsym=sym)
                   ) then
                 continue;
-              {$ifdef DEBUG_CAPTURER}writeln('Replacing symbol ',sym.Name);{$endif}
               new(mapping);
               mapping^.oldsym:=sym;
               if sym.typ=procsym then
@@ -1640,7 +1629,6 @@ implementation
           if pd.was_anonymous then
             internalerror(2022081201);
 
-          {$ifdef DEBUG_CAPTURER}writeln('Converting symbols of nested function ',pd.procsym.name);{$endif}
 
           { this is a nested function, so rework all symbols that are used from
             a parent function, but that might have been captured }
@@ -1652,7 +1640,6 @@ implementation
                   (sym.typ=procsym) or
                   not assigned(tabstractnormalvarsym(sym).capture_sym) then
                 continue;
-              {$ifdef DEBUG_CAPTURER}writeln('Replacing symbol ',sym.Name);{$endif}
               new(mapping);
               mapping^.oldsym:=sym;
               mapping^.newsym:=tabstractnormalvarsym(sym).capture_sym;
@@ -1673,7 +1660,6 @@ implementation
 
       if pd.has_capturer then
         begin
-          {$ifdef DEBUG_CAPTURER}writeln('Converting symbols of function ',pd.procsym.name,' with capturer');{$endif}
           { this procedure has a capturer, so rework all symbols that are
             captured in that capturer }
 
@@ -1711,7 +1697,6 @@ implementation
             begin
               new(mapping);
               mapping^.oldsym:=tsym(tocapture[i]);
-              {$ifdef DEBUG_CAPTURER}writeln('Replacing symbol ',mapping^.oldsym.Name);{$endif}
               mapping^.newsym:=tabstractnormalvarsym(mapping^.oldsym).capture_sym;
               if not assigned(mapping^.newsym) then
                 internalerror(2022010805);

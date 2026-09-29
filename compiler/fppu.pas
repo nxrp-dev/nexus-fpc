@@ -23,7 +23,6 @@ unit fppu;
 
 {$i fpcdefs.inc}
 
-{ $define DEBUG_UNIT_CRC_CHANGES}
 
 { close ppufiles on system that are
   short on file handles like DOS system PM }
@@ -930,13 +929,6 @@ var
         u: tmodule;
       begin
         { write a reference for each used unit }
-        {$IFDEF Debug_WaitCRC}
-        writeln('tppumodule.writeusedunit START ',realmodulename^,' intf=',intf);
-        {$ENDIF}
-        {$IFDEF Debug_IndirectCRC}
-        if intf then
-          writeln('INDIRECT_CRC tppumodule.writeusedunit ',hexstr(ppufile.indirect_crc,8));
-        {$ENDIF}
         hp:=tused_unit(used_units.first);
         while assigned(hp) do
          begin
@@ -947,9 +939,6 @@ var
                { the checksum should not affect the crc of this unit ! (PFV) }
                oldcrc:=ppufile.do_crc;
                ppufile.do_crc:=false;
-               {$IFDEF Debug_WaitCRC}
-               writeln('tppumodule.writeusedunit ',u.realmodulename^,' crc=',hexstr(u.crc,8),' interface_crc=',hexstr(u.interface_crc,8),' indirect_crc=',hexstr(u.indirect_crc,8));
-               {$ENDIF}
                hp.checksum:=u.crc;
                hp.interface_checksum:=u.interface_crc;
                hp.indirect_checksum:=u.indirect_crc;
@@ -961,10 +950,6 @@ var
                  The indirect_crc contains the classes+records of this unit as well. }
                if intf then
                  ppufile.indirect_crc:=UpdateCrc32(ppufile.indirect_crc,u.indirect_crc,sizeof(u.indirect_crc));
-               {$IFDEF Debug_IndirectCRC}
-               if intf then
-                 writeln('INDIRECT_CRC tppumodule.writeusedunit ',hexstr(ppufile.indirect_crc,8),' ',u.modulename^,' ',hexstr(u.indirect_crc,8),' ');
-               {$ENDIF}
              end;
            hp:=tused_unit(hp.next);
          end;
@@ -1848,10 +1833,6 @@ var
              crc_final:=true;
              crc:=ppufile.crc;
            end;
-         {$IFDEF Debug_WaitCRC}
-         writeln('tppumodule.writeppu ',modulename^,' crc=',hexstr(crc,8));
-         {$ENDIF}
-
          { create and write header }
          { Note: the interface_crc and indirect_crc were computed in getppucrc
                  after the interface was compiled. The implementation must *not* effect them. }
@@ -1938,10 +1919,6 @@ var
              interface_crc:=ppufile.interface_crc;
              indirect_crc:=ppufile.indirect_crc;
            end;
-         {$IFDEF Debug_WaitCRC}
-         writeln('tppumodule.getppucrc ',realmodulename^,' in_interface=',in_interface,' crc=',hexstr(crc,8),' interface_crc=',hexstr(interface_crc,8),' indirect_crc=',hexstr(indirect_crc,8));
-         {$ENDIF}
-
          { end of implementation, to generate a correct ppufile
            for ppudump when using DEBUG_GENERATE_INTERFACE_PPU define }
          ppufile.writeentry(ibendimplementation);
@@ -2028,14 +2005,6 @@ var
                         or (check_crc and (crc<>uu.checksum) ) ) then
                   begin
                     Result:=true;
-                    {$ifdef DEBUG_UNIT_CRC_CHANGES}
-                    if (interface_crc<>uu.interface_checksum) then
-                      Comment(V_Normal,'  intfcrc change: '+hexstr(interface_crc,8)+' of '+ppufilename+' <> '+hexstr(uu.interface_checksum,8)+' in unit '+m.realmodulename^)
-                    else if (indirect_crc<>uu.indirect_checksum) then
-                      Comment(V_Normal,'  indcrc change: '+hexstr(indirect_crc,8)+' of '+ppufilename+' <> '+hexstr(uu.indirect_checksum,8)+' in unit '+m.realmodulename^)
-                    else
-                      Comment(V_Normal,'  implcrc change: '+hexstr(crc,8)+' for '+ppufilename+' <> '+hexstr(uu.checksum,8)+' in unit '+m.realmodulename^);
-                    {$endif DEBUG_UNIT_CRC_CHANGES}
                     {$IFDEF DEBUG_PPU_CYCLES}
                     writeln('PPUALGO tppumodule.dependent_module_crc_mismatch ',modulename^,' used by ',BoolToStr(uu.in_interface,'interface','implementation'),' of "',m.modulename^,'" old=',m.statestr,' new=',ms_compile);
                     {$ENDIF}
@@ -2192,14 +2161,6 @@ var
                  ) then
             begin
               Message2(unit_u_recompile_crc_change,realmodulename^,pu.u.ppufilename,@queuecomment);
-  {$ifdef DEBUG_UNIT_CRC_CHANGES}
-              if (pu.u.interface_crc<>pu.interface_checksum) then
-                Comment(V_Normal,'  intfcrc change: '+hexstr(pu.u.interface_crc,8)+' for '+pu.u.ppufilename+' <> '+hexstr(pu.interface_checksum,8)+' in unit '+realmodulename^)
-              else if (pu.u.indirect_crc<>pu.indirect_checksum) then
-                Comment(V_Normal,'  indcrc change: '+hexstr(pu.u.indirect_crc,8)+' for '+pu.u.ppufilename+' <> '+hexstr(pu.indirect_checksum,8)+' in unit '+realmodulename^)
-              else
-                Comment(V_Normal,'  implcrc change: '+hexstr(pu.u.crc,8)+' for '+pu.u.ppufilename+' <> '+hexstr(pu.checksum,8)+' in unit '+realmodulename^);
-  {$endif DEBUG_UNIT_CRC_CHANGES}
               {$IFDEF DEBUG_PPU_CYCLES}
               writeln('PPUALGO tppumodule.load_usedunits_section ',modulename^,' ',BoolToStr(in_interface,'interface','implementation'),' uses "',pu.u.modulename^,'" old=',statestr,' new=',ms_compile);
               {$ENDIF}
@@ -2240,9 +2201,6 @@ var
               or (pu.u.indirect_crc<>pu.indirect_checksum)
               or (pu.u.crc<>pu.checksum) then
           begin
-            {$ifdef DEBUG_UNIT_CRC_CHANGES}
-            Comment(V_Normal,'  implcrc change: '+hexstr(pu.u.crc,8)+' for '+pu.u.ppufilename+' <> '+hexstr(pu.checksum,8)+' in unit '+realmodulename^);
-            {$endif DEBUG_UNIT_CRC_CHANGES}
             {$IFDEF DEBUG_PPU_CYCLES}
             writeln('PPUALGO tppumodule.ppu_check_used_crcs ',modulename^,' interface uses "',pu.u.modulename^,'" old=',statestr,' new=',ms_compile);
             {$ENDIF}
@@ -2705,10 +2663,6 @@ var
         ups   : TIDString;
         hp    : tppumodule;
         cycle : TFPList;
-{$IFDEF DEBUGCYCLE}
-        cyclepath : ansistring;
-        hp2   : tmodule;
-{$ENDIF}
 
       begin
         { Info }
@@ -2736,16 +2690,6 @@ var
             tmodule.increase_cycle_stamp;
             if FindCycle(tppumodule(CallerModule),hp,Cycle) then
             begin
-              {$IFDEF DEBUGCYCLE}
-              Writeln('Done cycle check');
-              CyclePath:='';
-              hp2:=TModule(Cycle[Cycle.Count-1]);
-              for i:=0 to Cycle.Count-1 do begin
-                if i>0 then CyclePath:=CyclePath+',';
-                CyclePath:=CyclePath+TModule(Cycle[i]).realmodulename^;
-              end;
-              Writeln('Unit cycle detected: ',CyclePath);
-              {$ENDIF}
               Message2(unit_f_circular_unit_reference,callermodule.realmodulename^,hp.realmodulename^);
             end;
           finally

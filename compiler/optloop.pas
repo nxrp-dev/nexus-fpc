@@ -23,8 +23,6 @@ unit optloop;
 
 {$i fpcdefs.inc}
 
-{ $define DEBUG_OPTSTRENGTH}
-{ $define DEBUG_OPTFORLOOP}
 
   interface
 
@@ -408,12 +406,6 @@ unit optloop;
                   { did we use the same expression before already? }
                   if not(findpreviousstrengthreduction(n)) then
                     begin
-{$ifdef DEBUG_OPTSTRENGTH}
-                      writeln('**********************************************************************************');
-                      writeln(parser_current_file, ': Found expression for strength reduction (MUL): ');
-                      printnode(output,n);
-                      writeln('**********************************************************************************');
-{$endif DEBUG_OPTSTRENGTH}
                       tempnode:=ctempcreatenode.create(n.resultdef,n.resultdef.size,tt_persistent,
                         tstoreddef(n.resultdef).is_intregable or tstoreddef(n.resultdef).is_fpuregable);
                       addinduction(tempnode,n);
@@ -486,12 +478,6 @@ unit optloop;
                   { did we use the same expression before already? }
                   if not(findpreviousstrengthreduction(n)) then
                     begin
-{$ifdef DEBUG_OPTSTRENGTH}
-                      writeln('**********************************************************************************');
-                      writeln(parser_current_file,': Found expression for strength reduction (VEC): ');
-                      printnode(output,n);
-                      writeln('**********************************************************************************');
-{$endif DEBUG_OPTSTRENGTH}
                       tempnode:=ctempcreatenode.create(voidpointertype,voidpointertype.size,tt_persistent,true);
                       addinduction(tempnode,n);
 
@@ -1103,12 +1089,6 @@ unit optloop;
               begin
                 { convert the loop from i:=a to b into i:=b-a+1 to 1 as this simplifies the
                   abort condition }
-{$ifdef DEBUG_OPTFORLOOP}
-                writeln('**********************************************************************************');
-                writeln('Found loop for reverting: ');
-                printnode(output,n);
-                writeln('**********************************************************************************');
-{$endif DEBUG_OPTFORLOOP}
                 include(tfornode(n).loopflags,lnf_backward);
                 tfornode(n).right:=ctypeconvnode.create_internal(
                   caddnode.create_internal(addn,caddnode.create_internal(subn,
@@ -1119,11 +1099,6 @@ unit optloop;
                 include(tfornode(n).loopflags,lnf_counter_not_used);
                 exclude(n.transientflags,tnf_pass1_done);
                 do_firstpass(n);
-{$ifdef DEBUG_OPTFORLOOP}
-                writeln('Loop reverted: ');
-                printnode(output,n);
-                writeln('**********************************************************************************');
-{$endif DEBUG_OPTFORLOOP}
                 toptimizeforloopcontext(arg^).changedforloop:=true;
               end;
           end;

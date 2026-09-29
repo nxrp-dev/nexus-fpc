@@ -211,16 +211,6 @@ Unit racpugas;
             do_error
           else
             begin
-{$IFDEF debugasmreader}
-              writeln('TEST_end_FINAL_OK. Created the following ref:');
-              writeln('oper.opr.ref.shiftimm=',oper.opr.ref.shiftimm);
-              writeln('oper.opr.ref.shiftmode=',ord(oper.opr.ref.shiftmode));
-              writeln('oper.opr.ref.index=',ord(oper.opr.ref.index));
-              writeln('oper.opr.ref.base=',ord(oper.opr.ref.base));
-              writeln('oper.opr.ref.signindex=',ord(oper.opr.ref.signindex));
-              writeln('oper.opr.ref.addressmode=',ord(oper.opr.ref.addressmode));
-              writeln;
-{$endIF debugasmreader}
             end;
         end;
 

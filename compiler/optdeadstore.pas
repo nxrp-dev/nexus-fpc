@@ -24,7 +24,6 @@ unit optdeadstore;
 {$i fpcdefs.inc}
 
 { $define DEBUG_DEADSTORE}
-{ $define EXTDEBUG_DEADSTORE}
 
   interface
 
@@ -108,11 +107,6 @@ unit optdeadstore;
     function do_optdeadstoreelim(var rootnode: tnode;out changed: boolean): tnode;
       begin
         changed:=false;
-{$ifdef EXTDEBUG_DEADSTORE}
-        writeln('******************* Tree before deadstore elimination **********************');
-        printnode(output,rootnode);
-        writeln('****************************************************************************');
-{$endif EXTDEBUG_DEADSTORE}
         if not(pi_dfaavailable in current_procinfo.flags) then
           internalerror(2013110201);
         if not current_procinfo.has_nestedprocs then

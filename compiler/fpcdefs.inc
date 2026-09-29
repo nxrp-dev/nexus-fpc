@@ -48,7 +48,6 @@
   {$define DEBUG_AOPTCPU}
   {$define DEBUG_PREREGSCHEDULER (arm specific) }
   { for aoptobj unit }
-  {$define DEBUG_AOPTOBJ}
   {$define DEBUG_JUMP}
   {$define ALLOCREGDEBUG}
   { for optconstprop unit }
@@ -60,8 +59,6 @@
   { for optdfa unit }
   {$define DEBUG_DFA}
   { for optloop unit }
-  {$define DEBUG_OPTFORLOOP}
-  {$define DEBUG_OPTSTRENGTH}
   { for opttail unit }
   {$define DEBUG_OPTTAIL}
   { for optvirt unit }
