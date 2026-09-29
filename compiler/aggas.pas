@@ -298,8 +298,7 @@ implementation
            (atype<>sec_toc) and
            (atype<>sec_user) and
            (atype<>sec_note) and
-           { on embedded systems every byte counts, so smartlink bss too }
-           ((atype<>sec_bss) or (target_info.system in (systems_embedded+systems_freertos)));
+           (atype<>sec_bss);
       end;
 
     function TGNUAssembler.sectionname(atype:TAsmSectiontype;const aname:string;aorder:TAsmSectionOrder):string;
@@ -459,9 +458,9 @@ implementation
 
         if atype=sec_threadvar then
           begin
-            if (target_info.system in (systems_windows+systems_wince)) then
+            if (target_info.system in systems_windows) then
               secname:='.tls'
-            else if (target_info.system in (systems_linux+systems_wasm)) then
+            else if (target_info.system in systems_linux) then
               secname:='.tbss';
           end;
 
@@ -474,7 +473,7 @@ implementation
 
         { Windows correctly handles reallocations in readonly sections }
         if (atype=sec_rodata) and
-          (target_info.system in systems_all_windows+systems_nativent) then
+          (target_info.system in systems_all_windows) then
           secname:='.rodata';
 
         { Use .rodata and .data.rel.ro for Android with PIC }
@@ -725,8 +724,7 @@ implementation
              if not(atype in [sec_data,sec_rodata,sec_rodata_norel]) and
                 not(asminfo^.id=as_solaris_as) and
                 not(atype=sec_fpc) and
-                not(atype=sec_note) and
-                not(target_info.system in (systems_embedded+systems_freertos)) then
+                not(atype=sec_note) then
                begin
                  usesectionflags:=true;
                  usesectionprogbits:=true;
@@ -807,12 +805,6 @@ implementation
                   s:=sectionattrs(atype);
                   if (s<>'') then
                     writer.AsmWrite(',"'+s+'"');
-                end;
-              if target_info.system in systems_aix then
-                begin
-                  s:=sectionalignment_aix(atype,secalign);
-                  if s<>'' then
-                    writer.AsmWrite(','+s);
                 end;
             end;
           end;
@@ -917,7 +909,7 @@ implementation
           last_align:=alignment;
           if alignment>1 then
             begin
-              if not(target_info.system in (systems_darwin+systems_aix)) then
+              if not(target_info.system in systems_darwin) then
                 begin
 {$ifdef m68k}
                   if not use_op and (lastsectype=sec_code) then
@@ -1133,29 +1125,6 @@ implementation
                        writer.AsmLn;
                      end;
                  end
-               else if target_info.system in systems_aix then
-                 begin
-                   if tai_datablock(hp).is_global then
-                     begin
-                       writer.AsmWrite(#9'.globl ');
-                       writer.AsmWriteln(ApplyAsmSymbolRestrictions(tai_datablock(hp).sym.name));
-                       writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_datablock(hp).sym.name));
-                       writer.AsmWriteln(':');
-                       writer.AsmWrite(#9'.space ');
-                       writer.AsmWriteln(tostr(tai_datablock(hp).size));
-                       if not(LastSecType in [sec_data,sec_none]) then
-                         writesection(LastSecType,'',secorder_default,1 shl last_align);
-                     end
-                   else
-                     begin
-                       writer.AsmWrite(#9'.lcomm ');
-                       writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_datablock(hp).sym.name));
-                       writer.AsmWrite(',');
-                       writer.AsmWrite(tostr(tai_datablock(hp).size)+',');
-                       writer.AsmWrite('_data.bss_,');
-                       writer.AsmWriteln(tostr(last_align));
-                     end;
-                 end
                else
                  begin
 {$ifdef USE_COMM_IN_BSS}
@@ -1241,8 +1210,7 @@ implementation
                     begin
                       if assigned(tai_const(hp).sym) then
                         internalerror(200404292);
-                      if not(target_info.system in systems_aix) then
-                        begin
+                      begin
                           if (target_info.system in use_ua_elf_systems) then
                             writer.AsmWrite(ait_ua_elf_const2str[aitconst_32bit])
                           else
@@ -1259,9 +1227,7 @@ implementation
                               writer.AsmWrite(',');
                               writer.AsmWrite(tostr(longint(lo(tai_const(hp).value))));
                             end;
-                        end
-                      else
-                        WriteAixIntConst(tai_const(hp));
+                        end;
                       writer.AsmLn;
                     end;
                  aitconst_gottpoff:
@@ -1354,19 +1320,7 @@ implementation
                  aitconst_32bit_unaligned,
                  aitconst_64bit_unaligned:
                    begin
-                     { the AIX assembler (and for compatibility, the GNU
-                       assembler when targeting AIX) automatically aligns
-                       .short/.long/.llong to a multiple of 2/4/8 bytes. We
-                       don't want that, since this may be data inside a packed
-                       record -> use .vbyte instead (byte stream of fixed
-                       length) }
-                     if (target_info.system in systems_aix) and
-                        (constdef in [aitconst_128bit,aitconst_64bit,aitconst_32bit,aitconst_16bit]) and
-                        not assigned(tai_const(hp).sym) then
-                       begin
-                         WriteAixIntConst(tai_const(hp));
-                       end
-                     else if (target_info.system in systems_darwin) and
+                     if (target_info.system in systems_darwin) and
                         (constdef in [aitconst_uleb128bit,aitconst_sleb128bit]) then
                        begin
                          writer.AsmWrite(ait_const2str[aitconst_8bit]);
@@ -1386,11 +1340,6 @@ implementation
                            writer.AsmWrite(ait_ua_sparc_const2str[constdef])
                          else if (target_info.system in use_ua_elf_systems) then
                            writer.AsmWrite(ait_ua_elf_const2str[constdef])
-                         { we can also have unaligned pointers in packed record
-                           constants, which don't get translated into
-                           unaligned tai -> always use vbyte }
-                         else if target_info.system in systems_aix then
-                            writer.AsmWrite(#9'.vbyte'#9+tostr(tai_const(hp).size)+',')
                          else if (asminfo^.id=as_solaris_as) then
                            writer.AsmWrite(ait_solaris_const2str[constdef])
                          else
@@ -1465,8 +1414,7 @@ implementation
            ait_string :
              begin
                pos:=0;
-               if not(target_info.system in systems_aix) then
-                 begin
+               begin
                    for i:=1 to tai_string(hp).len do
                     begin
                       if pos=0 then
@@ -1493,9 +1441,7 @@ implementation
                          pos:=0;
                        end;
                     end;
-                 end
-               else
-                 WriteAixStringConst(tai_string(hp));
+                 end;
              end;
 
            ait_label :
@@ -1540,47 +1486,7 @@ implementation
                   if (tai_symbol(hp).sym.bind=AB_PRIVATE_EXTERN) then
                     WriteHiddenSymbol(tai_symbol(hp).sym);
                 end;
-               if (target_info.system=system_powerpc64_linux) and
-                  use_dotted_functions and
-                 (tai_symbol(hp).sym.typ=AT_FUNCTION) then
-                 begin
-                   writer.AsmWriteLn('.section ".opd", "aw"');
-                   writer.AsmWriteLn('.align 3');
-                   writer.AsmWriteLn(tai_symbol(hp).sym.name + ':');
-                   writer.AsmWriteLn('.quad .' + tai_symbol(hp).sym.name + ', .TOC.@tocbase, 0');
-                   writer.AsmWriteLn('.previous');
-                   writer.AsmWriteLn('.size ' + tai_symbol(hp).sym.name + ', 24');
-                   if (tai_symbol(hp).is_global) then
-                     writer.AsmWriteLn('.globl .' + tai_symbol(hp).sym.name);
-                   writer.AsmWriteLn('.type .' + tai_symbol(hp).sym.name + ', @function');
-                   { the dotted name is the name of the actual function entry }
-                   writer.AsmWrite('.');
-                 end
-               else if (target_info.system in systems_aix) and
-                  (tai_symbol(hp).sym.typ = AT_FUNCTION) then
-                 begin
-                   if target_info.system=system_powerpc_aix then
-                     begin
-                       s:=#9'.long .';
-                       ch:='2';
-                     end
-                   else
-                     begin
-                       s:=#9'.llong .';
-                       ch:='3';
-                     end;
-                   writer.AsmWriteLn(#9'.csect '+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name)+'[DS],'+ch);
-                   writer.AsmWriteLn(ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name)+':');
-                   writer.AsmWriteln(s+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name)+', TOC[tc0], 0');
-                   writer.AsmWriteln(#9'.csect .text[PR]');
-                   if (tai_symbol(hp).is_global) then
-                     writer.AsmWriteLn('.globl .'+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name))
-                   else
-                     writer.AsmWriteLn('.lglobl .'+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name));
-                   { the dotted name is the name of the actual function entry }
-                   writer.AsmWrite('.');
-                 end
-               else if tai_symbol(hp).sym.typ=AT_WASM_EXCEPTION_TAG then
+               if tai_symbol(hp).sym.typ=AT_WASM_EXCEPTION_TAG then
                  begin
                    { nothing here, to ensure we don' write the .type directive for exception tags }
                  end
@@ -1663,30 +1569,17 @@ implementation
            ait_symbol_end :
              begin
                if (tf_needs_symbol_size in target_info.flags) and
-                  (tai_symbol_end(hp).sym.is_used) and
-                 { On WebAssembly, the .size directive shouldn't be generated for
-                   function symbols, otherwise LLVM-MC v16 and above produce the
-                   'warning: .size directive ignored for function symbols' message. }
-                  (not (target_info.system in systems_wasm) or
-                   (tai_symbol_end(hp).sym.typ<>AT_FUNCTION)) then
+                  (tai_symbol_end(hp).sym.is_used) then
                 begin
                   s:=asminfo^.labelprefix+'e'+tostr(symendcount);
                   inc(symendcount);
                   writer.AsmWriteLn(s+':');
                   writer.AsmWrite(#9'.size'#9);
-                  if (target_info.system=system_powerpc64_linux) and
-                     use_dotted_functions and
-                     (tai_symbol_end(hp).sym.typ=AT_FUNCTION) then
-                    writer.AsmWrite('.');
                   if replaceforbidden then
                     writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_symbol_end(hp).sym.name))
                   else
                     writer.AsmWrite(tai_symbol_end(hp).sym.name);
                   writer.AsmWrite(', '+s+' - ');
-                  if (target_info.system=system_powerpc64_linux) and
-                     use_dotted_functions and
-                     (tai_symbol_end(hp).sym.typ=AT_FUNCTION) then
-                    writer.AsmWrite('.');
                   if replaceforbidden then
                     writer.AsmWriteLn(ApplyAsmSymbolRestrictions(tai_symbol_end(hp).sym.name))
                   else
@@ -1971,7 +1864,7 @@ implementation
         { on Windows/(PE)COFF, global symbols are hidden by default: global
           symbols that are not explicitly exported from an executable/library,
           become hidden }
-        if (target_info.system in (systems_windows+systems_wince+systems_nativent+[system_i386_go32v2])) then
+        if (target_info.system in systems_windows) then
           exit;
         if target_info.system in systems_darwin then
           writer.AsmWrite(#9'.private_extern ')
@@ -2188,7 +2081,7 @@ implementation
 
       { "no executable stack" marker }
       { TODO: used by OpenBSD/NetBSD as well? }
-      if (target_info.system in (systems_linux + systems_android + systems_freebsd + systems_dragonfly)) and
+      if (target_info.system in (systems_linux + systems_android)) and
          not(cs_executable_stack in current_settings.moduleswitches) then
         begin
           writer.AsmWriteLn('.section .note.GNU-stack,"",%progbits');

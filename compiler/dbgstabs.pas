@@ -1385,8 +1385,6 @@ implementation
               info := ','+GetSymName(def.procsym)+','+GetSymName(tprocdef(def.owner.defowner).procsym);
           end;
         mangledname:=ApplyAsmSymbolRestrictions(def.mangledname);
-        if target_info.system in systems_dotted_function_names then
-          mangledname:='.'+mangledname;
         result.concat(Tai_stab.Create_ansistr(stabsdir,'"'+obj+':'+RType+def_stab_number(def.returndef)+info+'",'+
           base_stabs_str(procdef_stab,'0',tostr(def.fileinfo.line),mangledname)));
       end;
@@ -1405,8 +1403,6 @@ implementation
         if dbgtype<>dbg_stabx then
           begin
             mangledname:=def.mangledname;
-            if target_info.system in systems_dotted_function_names then
-              mangledname:='.'+mangledname;
             // LBRAC
             if af_stabs_use_function_absolute_addresses in target_asm.flags then
               ss:=tostr(STABS_N_LBRAC)+',0,0,'+mangledname

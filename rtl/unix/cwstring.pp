@@ -272,7 +272,7 @@ var
   iconvname, toencoding: shortstring;
 begin
   current_DefaultSystemCodePage:=DefaultSystemCodePage;
-{$if declared(iconvindex)}
+{$if not(defined(darwin) and (defined(cpuarm) or defined(cpuaarch64))) and not defined(iphonesim)}
   iconvindex:=GetCodepageData(DefaultSystemCodePage);
   if iconvindex<>-1 then
     iconvname:=UnixCpMap[iconvindex].name
@@ -282,7 +282,7 @@ begin
 {$else}
   { Unix locale settings are ignored on iPhoneOS/iPhoneSimulator }
   iconvname:='UTF-8';
-{$endif}
+{$endif darwin arm/aarch64 or iphonesim}
   toencoding:=iconvname;
   if not assigned(iconvctl) then
     toencoding:=toencoding+TransLitName+#0

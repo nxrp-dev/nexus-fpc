@@ -355,7 +355,6 @@ implementation
                    if not skip_initialiser then
                     begin
                       consume(_EQ);
-                      maybe_guarantee_record_typesym(tstaticvarsym(sym).vardef,tstaticvarsym(sym).vardef.owner);
                       read_typed_const(current_asmdata.asmlists[asmtype],tstaticvarsym(sym),in_structure);
                     end;
                 end;
@@ -1318,8 +1317,6 @@ implementation
          pw : tcompilerwidestring;
 
       begin
-         if target_info.system in systems_managed_vm then
-           message(parser_e_feature_unsupported_for_vm);
          consume(_RESOURCESTRING);
          if not(symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) then
            message(parser_e_resourcestring_only_sg);

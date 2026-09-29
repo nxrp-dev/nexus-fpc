@@ -2475,7 +2475,7 @@ function SysAllocMem(size: ptruint): pointer;
 begin
   result := SysGetMem(size);
   if Assigned(result)
-{$if defined(HAS_SYSOSFREE) and declared(SysOSAllocZeroesIfAtLeast)}
+{$ifdef HAS_SYSOSFREE}
     and not
     (
       not HeapInc.IsFixedHeader(HeapInc.pCommonHeader(result)[-1].h) and
@@ -2484,7 +2484,7 @@ begin
       and (HeapInc.pHugeChunk(result - HeapInc.HugeChunkDataOffset)^.size >= SysOSAllocZeroesIfAtLeast) { SysOSAlloc that large claims to return zeroed memory. }
     {$endif}
     )
-{$endif HAS_SYSOSFREE and SysOSAllocZeroesIfAtLeast}
+{$endif HAS_SYSOSFREE}
   then
     FillChar(result^, SysMemSize(result), 0);
 end;

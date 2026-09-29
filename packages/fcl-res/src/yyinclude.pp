@@ -66,9 +66,7 @@ begin
   yyline:= '';
   yylineno:= 0;
   yycolno:= 0;
-  {$if declared(ypreproc)}
   ypreproc.newfile(yyfilename);
-  {$endif}
   Result:= true;
 end;
 
@@ -84,9 +82,7 @@ begin
     yycolno:= stack[level].yycolno;
     yywrap:= stack[level].prev_wrap;
     yyfilename:= stack[level].fn;
-    {$if declared(ypreproc)}
     ypreproc.newfile(yyfilename);
-    {$endif}
   end;
 end;
 

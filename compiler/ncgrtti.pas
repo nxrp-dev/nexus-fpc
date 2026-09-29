@@ -162,9 +162,6 @@ implementation
         i : longint;
         def : tdef;
       begin
-        { no Delphi-style RTTI for managed platforms }
-        if target_info.system in systems_managed_vm then
-          exit;
         for i:=0 to st.DefList.Count-1 do
           begin
             def:=tdef(st.DefList[i]);

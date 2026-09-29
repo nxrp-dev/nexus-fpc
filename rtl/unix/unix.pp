@@ -222,18 +222,18 @@ var
 
 procedure LockTZInfo;
 begin
-  {$if declared(UseTZThreading)}
+  {$ifdef FPC_HAS_FEATURE_THREADING}
   if UseTZThreading then
     EnterCriticalSection(TZInfoCS);
-  {$endif}
+  {$endif FPC_HAS_FEATURE_THREADING}
 end;
 
 procedure UnlockTZInfo;
 begin
-  {$if declared(UseTZThreading)}
+  {$ifdef FPC_HAS_FEATURE_THREADING}
   if UseTZThreading then
     LeaveCriticalSection(TZInfoCS);
-  {$endif}
+  {$endif FPC_HAS_FEATURE_THREADING}
 end;
 
 Function GetTzseconds : Longint;
@@ -324,11 +324,11 @@ Procedure EpochToLocal(epoch:Int64;var year,month,day,hour,minute,second:Word);
 Var
   lTZInfo: TTZInfo;
 Begin
-  {$if declared(GetLocalTimezone)}
+  {$ifndef DONT_READ_TIMEZONE}
   if GetLocalTimezone(epoch,true,lTZInfo) then
     inc(Epoch,lTZInfo.seconds)
   else { fallback }
-  {$endif}
+  {$endif DONT_READ_TIMEZONE}
     inc(Epoch,TZInfo.seconds);
 
   EpochToUniversal(epoch,year,month,day,hour,minute,second);
@@ -361,11 +361,11 @@ Var
 Begin
   LocalEpoch:=UniversalToEpoch(year,month,day,hour,minute,second);
 
-  {$if declared(GetLocalTimezone)}
+  {$ifndef DONT_READ_TIMEZONE}
   if GetLocalTimezone(LocalEpoch,false,lTZInfo) then
     LocalToEpoch:=LocalEpoch-lTZInfo.seconds
   else { fallback }
-  {$endif}
+  {$endif DONT_READ_TIMEZONE}
     LocalToEpoch:=LocalEpoch-TZInfo.seconds;
 End;
 
@@ -1470,18 +1470,18 @@ end;
   {$I unixandroid.inc}
 {$endif android}
 
-{$if declared(UseTZThreading)}
+{$ifdef FPC_HAS_FEATURE_THREADING}
 procedure InitTZThreading;
 begin
   UseTZThreading:=True;
   InitCriticalSection(TZInfoCS);
 end;
-{$endif}
+{$endif FPC_HAS_FEATURE_THREADING}
 
 Initialization
-{$if declared(UseTZThreading)}
+{$ifdef FPC_HAS_FEATURE_THREADING}
   RegisterLazyInitThreadingProc(@InitTZThreading);
-{$endif}
+{$endif FPC_HAS_FEATURE_THREADING}
 {$IFNDEF DONT_READ_TIMEZONE}
   InitLocalTime;
 {$endif}
@@ -1493,8 +1493,8 @@ finalization
 {$IFNDEF DONT_READ_TIMEZONE}
   DoneLocalTime;
 {$endif}
-{$if declared(UseTZThreading)}
+{$ifdef FPC_HAS_FEATURE_THREADING}
   if UseTZThreading then
     DoneCriticalSection(TZInfoCS);
-{$endif}
+{$endif FPC_HAS_FEATURE_THREADING}
 End.

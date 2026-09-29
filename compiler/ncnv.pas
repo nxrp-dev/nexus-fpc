@@ -1343,8 +1343,7 @@ implementation
          else
            { shortstrings are handled 'inline' (except for widechars) }
            if (tstringdef(resultdef).stringtype<>st_shortstring) or
-              (torddef(left.resultdef).ordtype=uwidechar) or
-              (target_info.system in systems_managed_vm) then
+              (torddef(left.resultdef).ordtype=uwidechar) then
              begin
                { parameter }
                para:=ccallparanode.create(left,nil);
@@ -3796,9 +3795,6 @@ implementation
               if (resultdef.typ=pointerdef) and
                  (convtype<>tc_cchar_2_pchar) then
                 begin
-                   if (target_info.system in systems_managed_vm) and
-                      (tordconstnode(left).value<>0) then
-                     message(parser_e_feature_unsupported_for_vm);
                    hp:=cpointerconstnode.create(TConstPtrUInt(tordconstnode(left).value.uvalue),resultdef);
                    if ([nf_explicit,nf_internal] * flags <> []) then
                      include(hp.flags, nf_explicit);
@@ -4082,42 +4078,7 @@ implementation
       var
         fname: string[32];
       begin
-        if target_info.system in systems_wince then
-          begin
-            { converting a 64bit integer to a float requires a helper }
-            if is_64bitint(left.resultdef) or
-              is_currency(left.resultdef) then
-              begin
-                { hack to avoid double division by 10000, as it's
-                  already done by typecheckpass.resultdef_int_to_real }
-                if is_currency(left.resultdef) then
-                  left.resultdef := s64inttype;
-                if is_signed(left.resultdef) then
-                  fname:='i64to'
-                else
-                  fname:='ui64to';
-              end
-            else
-              { other integers are supposed to be 32 bit }
-              begin
-                if is_signed(left.resultdef) then
-                  fname:='ito'
-                else
-                  fname:='uto';
-                firstpass(left);
-              end;
-            if tfloatdef(resultdef).floattype=s64real then
-              fname:=fname+'d'
-            else
-              fname:=fname+'s';
-            result:=ccallnode.createintern(fname,ccallparanode.create(
-              left,nil));
-            left:=nil;
-            firstpass(result);
-            exit;
-          end
-        else
-          begin
+        begin
             { converting a 64bit integer to a float requires a helper }
             if is_64bitint(left.resultdef) or
               is_currency(left.resultdef) then
@@ -4159,42 +4120,7 @@ implementation
 {$ifdef cpufpemu}
         if cs_fp_emulation in current_settings.moduleswitches then
           begin
-            if target_info.system in systems_wince then
-              begin
-                case tfloatdef(left.resultdef).floattype of
-                  s32real:
-                    case tfloatdef(resultdef).floattype of
-                      s64real:
-                        result:=ccallnode.createintern('stod',ccallparanode.create(left,nil));
-                      s32real:
-                        begin
-                          result:=left;
-                          left:=nil;
-                        end;
-                      else
-                        internalerror(2005082704);
-                    end;
-                  s64real:
-                    case tfloatdef(resultdef).floattype of
-                      s32real:
-                        result:=ccallnode.createintern('dtos',ccallparanode.create(left,nil));
-                      s64real:
-                        begin
-                          result:=left;
-                          left:=nil;
-                        end;
-                      else
-                        internalerror(2005082703);
-                    end;
-                  else
-                    internalerror(2005082702);
-                end;
-                left:=nil;
-                firstpass(result);
-                exit;
-              end
-            else
-              begin
+            begin
                 case tfloatdef(left.resultdef).floattype of
                   s32real:
                     case tfloatdef(resultdef).floattype of
@@ -4792,8 +4718,7 @@ implementation
                  (resultdef.size=left.resultdef.size)) or
                 { on managed platforms, converting an element to an open array
                   involves creating an actual array -> value location changes }
-                ((convtype=tc_elem_2_openarray) and
-                 not(target_info.system in systems_managed_vm))
+                (convtype=tc_elem_2_openarray)
                 );
       end;
 

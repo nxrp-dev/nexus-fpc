@@ -82,12 +82,10 @@
 {$if defined(LINUX) or defined(BSD) or defined(AIX) or defined(SOLARIS)}
 const
   mathlibname = 'm';
-{$endif}
-{$ifdef HAIKU}
+{$elseif defined(HAIKU)}
 const
   mathlibname = 'root';
-{$endif}
-{$if not declared(mathlibname)}
+{$else}
 const
   mathlibname = 'c';
 {$endif}

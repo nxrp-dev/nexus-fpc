@@ -2339,9 +2339,6 @@ begin
             hs:=ChangeFileExt(hs,target_info.sharedlibext);
           if Copy(hs,1,length(target_info.sharedlibprefix))<>target_info.sharedlibprefix then
             hs:=target_info.sharedlibprefix+hs;
-          { the JVM expects java/lang/Object rather than java.lang.Object }
-          if target_info.system in systems_jvm then
-            Replace(hs,'.','/');
           import_dll:=stringdup(hs);
           include(procoptions,po_has_importdll);
           if (current_scanner.idtoken=_NAME) then
@@ -2364,28 +2361,12 @@ begin
            end;
           if (current_scanner.idtoken=_SUSPENDING) then
            begin
-             if (target_info.system in systems_wasm) then
-              begin
-                consume(_SUSPENDING);
-                include(procoptions,po_wasm_suspending);
-                synthetickind:=tsk_wasm_suspending_first;
-                if current_scanner.idtoken=_FIRST then
-                  consume(_FIRST)
-                else if current_scanner.idtoken=_LAST then
-                  begin
-                    consume(_LAST);
-                    synthetickind:=tsk_wasm_suspending_last;
-                  end;
-              end
-             else
-              begin
-                message(parser_e_suspending_externals_not_supported_on_current_platform);
-                consume(_SUSPENDING);
-                if current_scanner.idtoken=_FIRST then
-                  consume(_FIRST)
-                else if current_scanner.idtoken=_LAST then
-                  consume(_LAST);
-              end;
+             message(parser_e_suspending_externals_not_supported_on_current_platform);
+             consume(_SUSPENDING);
+             if current_scanner.idtoken=_FIRST then
+               consume(_FIRST)
+             else if current_scanner.idtoken=_LAST then
+               consume(_LAST);
            end;
           { default is to used the realname of the procedure }
           if (import_nr=0) and not assigned(import_name) then
@@ -2443,8 +2424,7 @@ procedure pd_section(pd:tabstractprocdef);
 begin
   if pd.typ<>procdef then
     internalerror(2021032801);
-  if not (target_info.system in systems_allow_section) then
-    Message(parser_e_section_directive_not_allowed_for_target);
+  Message(parser_e_section_directive_not_allowed_for_target);
 {$ifdef symansistr}
   tprocdef(pd).section:=get_stringconst;
 {$else symansistr}

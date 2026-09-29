@@ -198,11 +198,11 @@ type
     result := (VirtualQuery(p, mi, sizeof(mi)) <> 0) and (SizeUint(p - mi.BaseAddress) + n <= mi.RegionSize) and
       (mi.State = MEM_COMMIT) and (mi.Protect and (PAGE_READONLY or PAGE_READWRITE or PAGE_WRITECOPY) <> 0);
   end;
-{$endif SystemRealloc}
+{$endif win32 or win64}
 
   function InternalRealloc(p: pointer; oldSize, newSize: SizeUint): pointer; forward;
 
-{$if declared(Readable)}
+{$if defined(win32) or defined(win64)}
   function LooksLikeClassInstance(p: pointer; n: SizeUint; out name: shortstring): boolean;
   var
     v: PVmt;
@@ -218,7 +218,7 @@ type
     result := true;
     name := v^.vClassName^;
   end;
-{$endif Readable}
+{$endif win32 or win64}
 
 type
   MemoryRegion = record
@@ -1191,9 +1191,9 @@ type
     prevMgr: TMemoryManager;
     getMemCount, getMemSize, freeMemCount, freeMemSize: int64;
 
-  {$if declared(SystemRealloc)}
+  {$if defined(win32) or defined(win64)}
     usedByInternalAllocations,
-  {$endif SystemRealloc}
+  {$endif win32 or win64}
     usedAtStartup: SizeUint;
     outfp, mainThreadStderr: pText;
     ownOutfp: text;
@@ -1828,31 +1828,31 @@ type
   class function HeapTracer.TraceGetHeapStatus: THeapStatus;
   begin
     result := ht.prevMgr.GetHeapStatus();
-  {$if declared(SystemRealloc)} // Otherwise allocated in prevMgr so it should already count them.
+  {$if defined(win32) or defined(win64)} // Otherwise allocated in prevMgr so it should already count them.
     if IncludeInternalAllocationsInStatistics then
     begin
       inc(result.TotalAllocated, ht.usedByInternalAllocations);
       inc(result.TotalAddrSpace, ht.usedByInternalAllocations);
     end;
-  {$else SystemRealloc}
+  {$else win32 or win64}
     if not IncludeInternalAllocationsInStatistics then // For tests.
       result.TotalAllocated := ht.getMemSize - ht.freeMemSize;
-  {$endif SystemRealloc}
+  {$endif win32 or win64}
   end;
 
   class function HeapTracer.TraceGetFPCHeapStatus: TFPCHeapStatus;
   begin
     result := ht.prevMgr.GetFPCHeapStatus();
-  {$if declared(SystemRealloc)}
+  {$if defined(win32) or defined(win64)}
     if IncludeInternalAllocationsInStatistics then
     begin
       inc(result.CurrHeapSize, ht.usedByInternalAllocations);
       inc(result.CurrHeapUsed, ht.usedByInternalAllocations);
     end;
-  {$else SystemRealloc}
+  {$else win32 or win64}
     if not IncludeInternalAllocationsInStatistics then // For tests.
       result.CurrHeapUsed := ht.getMemSize - ht.freeMemSize;
-  {$endif SystemRealloc}
+  {$endif win32 or win64}
   end;
 
   procedure HeapTracer.CheckHeap(max: SizeUint; cf: CheckFlags);
@@ -1956,9 +1956,9 @@ type
     i, sumSize: SizeInt;
     something: boolean;
   begin
-  {$if declared(SystemRealloc)}
+  {$if defined(win32) or defined(win64)}
     writeln(f, 'usedByInternalAllocations = ', usedByInternalAllocations, LineEnding);
-  {$endif SystemRealloc}
+  {$endif win32 or win64}
     if kr.maxKeep <> 0 then
       writeln(f, 'KeepReleased: ', kr.bytes, ' + ', kr.percents, '% (256s: ', kr.percentsMul256Div100, '), usedMemory = ', kr.usedMemory, ' / max ', kr.maxUsedMemory, ', maxKeep = ', kr.maxKeep);
     write(f, 'ht.h: ');
@@ -2324,7 +2324,7 @@ end;
     ctx: ^ReportContext absolute param;
     n: pNode;
     display: TDisplayExtraInfoProc;
-  {$if declared(LooksLikeClassInstance)}
+  {$if defined(win32) or defined(win64)}
     name: shortstring;
   {$endif}
   begin
@@ -2334,10 +2334,10 @@ end;
       writeln(ctx^.f^);
     ctx^.emptyCluster := not Assigned(n^.trace) and not printleakedblock;
     write(ctx^.f^, 'Call trace for block $', HexStr(bi.ptr), ' size ', bi.size);
-  {$if declared(LooksLikeClassInstance)}
+  {$if defined(win32) or defined(win64)}
     if LooksLikeClassInstance(bi.ptr, bi.size, name) then
       write(ctx^.f^, ' (', name, ')');
-  {$endif LooksLikeClassInstance}
+  {$endif win32 or win64}
     if Assigned(n^.trace) then writeln(ctx^.f^) else writeln(ctx^.f^, ': N/A.');
     if n^.info and (ExtraInfoIndexMask shl ExtraInfoIndexShift) <> 0 then
     begin
@@ -2422,13 +2422,13 @@ end;
 
   function InternalRealloc(p: pointer; oldSize, newSize: SizeUint): pointer;
   begin
-  {$if declared(SystemRealloc)}
+  {$if defined(win32) or defined(win64)}
     result := SystemRealloc(p, oldSize, newSize);
     dec(ht.usedByInternalAllocations, oldSize);
     inc(ht.usedByInternalAllocations, newSize);
-  {$else SystemRealloc}
+  {$else win32 or win64}
     result := ht.prevMgr.ReallocMem(p, newSize);
-  {$endif SystemRealloc}
+  {$endif win32 or win64}
   end;
 
   procedure DumpHeap;
@@ -3062,9 +3062,7 @@ initialization
   ht.oldExitProc := ExitProc;
   ExitProc := @FinalizeBeforeUnits;
 {$endif FPC_HAS_FEATURE_THREADING}
-{$if declared(LoadEnvironment)}
   LoadEnvironment;
-{$endif LoadEnvironment}
   if UseHeapTrace then ht.Install;
 
 finalization

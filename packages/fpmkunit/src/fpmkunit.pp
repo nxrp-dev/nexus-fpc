@@ -111,15 +111,9 @@ uses
   ;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$IF DECLARED(VOLATILE)}
 {$DEFINE HAVE_VOLATILE}
-{$ENDIF}
 
 Type
-{$IF NOT DECLARED(RTLString)}
-  RTLString = AnsiString;
-{$ENDIF}
-
 {$IF SIZEOF(CHAR)=1}
   TRTLStringDynArray = TStringDynArray;
 {$ENDIF}

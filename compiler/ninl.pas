@@ -3474,8 +3474,6 @@ implementation
 
               in_typeof_x:
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                   typecheckpass(left);
                   set_varstate(left,vs_read,[]);
                   if (left.resultdef.typ=objectdef) and
@@ -3607,8 +3605,6 @@ implementation
 
               in_typeinfo_x:
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                    if (left.resultdef.typ=enumdef) and
                       (tenumdef(left.resultdef).has_jumps) and
                       (
@@ -3622,16 +3618,12 @@ implementation
 
               in_gettypekind_x:
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
                   resultdef:=typekindtype;
                 end;
 
               in_ismanagedtype_x:
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
                   resultdef:=pasbool1type;
                 end;
@@ -3868,8 +3860,6 @@ implementation
 
               in_settextbuf_file_x :
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                   resultdef:=voidtype;
                   { now we know the type of buffer }
                   hp:=ccallparanode.create(cordconstnode.create(
@@ -3926,8 +3916,6 @@ implementation
 
               in_slice_x:
                 begin
-                  if target_info.system in systems_managed_vm then
-                    message(parser_e_feature_unsupported_for_vm);
                   result:=nil;
                   resultdef:=tcallparanode(left).left.resultdef;
                   if (resultdef.typ <> arraydef) then
@@ -4882,7 +4870,7 @@ implementation
 {$ifdef cpufpemu}
             or (current_settings.fputype=fpu_soft)
 {$endif cpufpemu}
-            ) and not (target_info.system in systems_wince) then
+            ) then
           begin
             case tfloatdef(temp_pnode^.resultdef).floattype of
               s32real:
@@ -5540,8 +5528,6 @@ implementation
 
      function tinlinenode.typecheck_seg: tnode;
        begin
-         if target_info.system in systems_managed_vm then
-           message(parser_e_feature_unsupported_for_vm);
          set_varstate(left,vs_read,[]);
          result:=cordconstnode.create(0,s32inttype,false);
        end;
@@ -5924,16 +5910,6 @@ implementation
                  { based on the code from nopt.genmultistringadd() }
                  tempnode:=ctempcreatenode.create(arrn.resultdef,arrn.resultdef.size,tt_persistent,true);
                  addstatement(newstatement,tempnode);
-                 { initialize the temp, since it will be passed to a
-                   var-parameter (and finalization, which is performed by the
-                   ttempcreate node and which takes care of the initialization
-                   on native targets, is a noop on managed VM targets) }
-                 if (target_info.system in systems_managed_vm) and
-                    is_managed_type(arrn.resultdef) then
-                   addstatement(newstatement,cinlinenode.create(in_setlength_x,
-                     false,
-                     ccallparanode.create(genintconstnode(0),
-                       ccallparanode.create(ctemprefnode.create(tempnode),nil))));
 
                  cpn:=ccallparanode.create(
                          arrconstr,

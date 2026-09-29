@@ -355,9 +355,7 @@ unit scandir;
       var
          hs : string;
       begin
-        if not (target_info.system in systems_all_windows + [system_i8086_msdos,
-                                       system_i8086_embedded, system_m68k_atari] +
-                                       systems_nativent) then
+        if not (target_info.system in systems_all_windows) then
           begin
             if m_delphi in current_settings.modeswitches then
               Message(scan_n_app_type_not_support)
@@ -372,16 +370,12 @@ unit scandir;
               begin
                  current_scanner.skipspace;
                  hs:=current_scanner.readid;
-                 if (hs='GUI') and not (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
+                 if hs='GUI' then
                    SetApptype(app_gui)
-                 else if (hs='CONSOLE') and not (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
+                 else if hs='CONSOLE' then
                    SetApptype(app_cui)
-                 else if (hs='NATIVE') and (target_info.system in systems_windows + systems_nativent) then
+                 else if (hs='NATIVE') and (target_info.system in systems_windows) then
                    SetApptype(app_native)
-                 else if (hs='COM') and (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-                   SetApptype(app_com)
-                 else if (hs='EXE') and (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-                   SetApptype(app_cui)
                  else
                    Message1(scan_w_unsupported_app_type,hs);
               end;
@@ -567,7 +561,7 @@ unit scandir;
 
     procedure dir_imagebase;
       begin
-        if not (target_info.system in (systems_windows+systems_wince)) then
+        if not (target_info.system in systems_windows) then
           Message(scan_w_imagebase_not_support);
         current_scanner.skipspace;
         imagebase:=current_scanner.readval;
@@ -824,7 +818,7 @@ unit scandir;
 
     procedure dir_maxstacksize;
       begin
-        if not (target_info.system in (systems_windows+systems_wince)) then
+        if not (target_info.system in systems_windows) then
           Message(scan_w_maxstacksize_not_support);
         current_scanner.skipspace;
         maxstacksize:=current_scanner.readval;
@@ -926,7 +920,7 @@ unit scandir;
 
     procedure dir_minstacksize;
       begin
-        if not (target_info.system in (systems_windows+systems_wince)) then
+        if not (target_info.system in systems_windows) then
           Message(scan_w_minstacksize_not_support);
         current_scanner.skipspace;
         minstacksize:=current_scanner.readval;
@@ -1218,9 +1212,6 @@ unit scandir;
         hs : string;
         v : longint;
       begin
-        { can't change packrecords setting on managed vm targets }
-        if target_info.system in systems_managed_vm then
-          Message1(scanner_w_directive_ignored_on_target, 'PACKRECORDS');
         current_scanner.skipspace;
         if not(current_scanner.c in ['0'..'9']) then
          begin
@@ -1721,12 +1712,7 @@ unit scandir;
 
     procedure dir_varparacopyoutcheck;
       begin
-        if not(target_info.system in systems_jvm) then
-          begin
-            Message1(scan_w_illegal_switch,current_scanner.pattern);
-            exit;
-          end;
-        do_localswitch(cs_check_var_copyout);
+        Message1(scan_w_illegal_switch,current_scanner.pattern);
       end;
 
     procedure dir_varpropsetter;

@@ -377,16 +377,6 @@ begin
       result:=internalstatements(newstatement);
       tempnode:=ctempcreatenode.create(p.resultdef,p.resultdef.size,tt_persistent ,true);
       addstatement(newstatement,tempnode);
-      { initialize the temp, since it will be passed to a
-        var-parameter (and finalization, which is performed by the
-        ttempcreate node and which takes care of the initialization
-        on native targets, is a noop on managed VM targets) }
-      if (target_info.system in systems_managed_vm) and
-         is_managed_type(p.resultdef) then
-        addstatement(newstatement,cinlinenode.create(in_setlength_x,
-          false,
-          ccallparanode.create(genintconstnode(0),
-            ccallparanode.create(ctemprefnode.create(tempnode),nil))));
       para:=ccallparanode.create(
               arrp,
               ccallparanode.create(ctemprefnode.create(tempnode),nil)
@@ -506,16 +496,6 @@ begin
     begin
       tempnode:=ctempcreatenode.create(p.resultdef,p.resultdef.size,tt_persistent ,true);
       addstatement(newstatement,tempnode);
-      { initialize the temp, since it will be passed to a
-        var-parameter (and finalization, which is performed by the
-        ttempcreate node and which takes care of the initialization
-        on native targets, is a noop on managed VM targets) }
-      if (target_info.system in systems_managed_vm) and
-         is_managed_type(p.resultdef) then
-        addstatement(newstatement,cinlinenode.create(in_setlength_x,
-          false,
-          ccallparanode.create(genintconstnode(0),
-            ccallparanode.create(ctemprefnode.create(tempnode),nil))));
       para:=ccallparanode.create(
               arrp,
             ccallparanode.create(

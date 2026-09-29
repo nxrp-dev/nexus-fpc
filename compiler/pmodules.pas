@@ -496,15 +496,6 @@ implementation
             CheckAddUnit('fpcylix');
             CheckAddUnit('dynlibs');
           end;
-{$push}
-{$warn 6018 off} { Unreachable code due to compile time evaluation }
-        { CPU targets with microcontroller support can add a controller specific unit }
-        if ControllerSupport and (target_info.system in (systems_embedded+systems_freertos)) and
-          (current_settings.controllertype<>ct_none) and
-          (embedded_controllers[current_settings.controllertype].controllerunitstr<>'') and
-          (embedded_controllers[current_settings.controllertype].controllerunitstr<>curr.modulename^) then
-          CheckAddUnit(embedded_controllers[current_settings.controllertype].controllerunitstr);
-{$pop}
 {$ifdef XTENSA}
         if not(curr.is_unit) and (target_info.system=system_xtensa_freertos) then
           if (current_settings.controllertype=ct_esp32) then
@@ -948,7 +939,7 @@ implementation
             pd.localst:=st;
           end
         else if (potype=potype_pkgstub) and
-            (target_info.system in systems_all_windows+systems_nativent) then
+            (target_info.system in systems_all_windows) then
           pd.proccalloption:=pocall_stdcall
         else
           pd.proccalloption:=pocall_cdecl;
@@ -2115,7 +2106,7 @@ type
              { Note: all contained units are considered as used }
            end;
 
-         if target_info.system in systems_all_windows+systems_nativent then
+         if target_info.system in systems_all_windows then
            begin
              main_procinfo:=create_main_proc('_PkgEntryPoint',potype_pkgstub,curr.localsymtable);
              main_procinfo.procdef.aliasnames.concat('_DLLMainCRTStartup');
@@ -2609,7 +2600,7 @@ type
 
            main_procinfo:=create_main_proc(make_mangledname('',curr.localsymtable,mainaliasname),potype_proginit,curr.localsymtable);
            { Win32 startup code needs a single name }
-           if not(target_info.system in (systems_darwin+systems_aix)) then
+           if not(target_info.system in systems_darwin) then
              main_procinfo.procdef.aliasnames.concat('PASCALMAIN')
            else
              main_procinfo.procdef.aliasnames.concat(target_info.Cprefix+'PASCALMAIN');
@@ -2619,7 +2610,7 @@ type
 
            cnodeutils.RegisterModuleInitFunction(initpd);
          end
-        else if (target_info.system in (systems_darwin+systems_aix)) then
+        else if (target_info.system in systems_darwin) then
           begin
             { create a stub with the name of the desired main routine, with
               the same signature as the C "main" function, and call through to

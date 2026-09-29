@@ -967,11 +967,8 @@ implementation
                   since otherwise a deep copy is made and changes are made to
                   this copy rather than to the original one }
                 hasimplicitderef:=
-                  (is_implicit_pointer_object_type(p.resultdef) or
-                   (p.resultdef.typ=classrefdef)) and
-                  not((target_info.system in systems_jvm) and
-                      ((p.resultdef.typ=recorddef) or
-                       is_object(p.resultdef)));
+                  is_implicit_pointer_object_type(p.resultdef) or
+                  (p.resultdef.typ=classrefdef);
                 if hasimplicitderef then
                   hdef:=p.resultdef
                 else

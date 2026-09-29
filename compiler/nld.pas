@@ -757,19 +757,7 @@ implementation
             exit;
           end
         else if (left.resultdef.typ=formaldef) then
-          if not(target_info.system in systems_managed_vm) then
-            CGMessage(type_e_assignment_not_allowed)
-          else
-            begin
-              { on managed platforms, assigning to formaldefs is allowed (but
-                typecasting them on the left hand side isn't), but primitive
-                values need to be boxed first }
-              if (right.resultdef.typ in [orddef,floatdef]) then
-                begin
-                  right:=cinlinenode.create(in_box_x,false,ccallparanode.create(right,nil));
-                  typecheckpass(right);
-                end;
-            end;
+          CGMessage(type_e_assignment_not_allowed);
 
 
         { test if node can be assigned, properties are allowed }
@@ -1036,8 +1024,7 @@ implementation
             (left.resultdef.typ in [arraydef,objectdef,recorddef]) and
             not is_interfacecom_or_dispinterface(left.resultdef) and
             not is_dynamic_array(left.resultdef) and
-            not is_const(left) and
-            not(target_info.system in systems_garbage_collected_managed_types) then
+            not is_const(left) then
          begin
            hp:=ccallparanode.create(caddrnode.create_internal(
                   crttinode.create(tstoreddef(left.resultdef),initrtti,rdt_normal)),
@@ -1058,8 +1045,7 @@ implementation
         { call helpers for variant, they can contain non ref. counted types like
           vararrays which must be really copied }
         else if (left.resultdef.typ=variantdef) and
-            not(is_const(left)) and
-            not(target_info.system in systems_garbage_collected_managed_types)  then
+            not(is_const(left)) then
          begin
            { remove property flag to avoid errors, see comments for }
            { tf_winlikewidestring assignments below                 }
@@ -1076,8 +1062,7 @@ implementation
            right:=nil;
            exit;
          end
-        else if not(target_info.system in systems_garbage_collected_managed_types) and
-          not(is_const(left)) then
+        else if not(is_const(left)) then
           begin
             { call helpers for pointer-sized managed types }
             if is_widestring(left.resultdef) then
@@ -1425,13 +1410,9 @@ implementation
     function tarrayconstructornode.pass_1 : tnode;
       var
         hp : tarrayconstructornode;
-        do_variant,
-        do_managed_variant:boolean;
+        do_variant:boolean;
       begin
         do_variant:=(acnf_forcevaria in arrayconstructornodeflags) or (ado_isvariant in tarraydef(resultdef).arrayoptions);
-        do_managed_variant:=
-          do_variant and
-          (target_info.system in systems_managed_vm);
         result:=nil;
         { Insert required type convs, this must be
           done in pass 1, because the call must be
@@ -1451,8 +1432,6 @@ implementation
                     if not do_variant then
                       include(current_procinfo.flags,pi_do_call);
                     firstpass(hp.left);
-                    if do_managed_variant then
-                      wrapmanagedvarrec(hp.left);
                   end;
                 hp:=tarrayconstructornode(hp.right);
               end;

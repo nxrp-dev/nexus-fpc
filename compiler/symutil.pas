@@ -34,8 +34,6 @@ interface
 
     function get_first_proc_str(Options: TProcOptions): ShortString;
 
-    procedure maybe_guarantee_record_typesym(def: tdef; st: tsymtable);
-
     function is_normal_fieldvarsym(sym: tsym): boolean; inline;
 
 
@@ -120,26 +118,6 @@ implementation
           begin
             get_first_proc_str := ProcOptionKeywords[X];
             Exit;
-          end;
-      end;
-
-
-    procedure maybe_guarantee_record_typesym(def: tdef; st: tsymtable);
-      var
-        ts: ttypesym;
-      begin
-        { create a dummy typesym for the JVM target, because the record
-          has to be wrapped by a class }
-        if (target_info.system in systems_jvm) and
-           (def.typ=recorddef) and
-           not assigned(def.typesym) then
-          begin
-            ts:=ctypesym.create(trecorddef(def).symtable.realname^,def);
-            st.insertsym(ts);
-            ts.visibility:=vis_strictprivate;
-            { this typesym can't be used by any Pascal code, so make sure we don't
-              print a hint about it being unused }
-            include(ts.symoptions,sp_internal);
           end;
       end;
 

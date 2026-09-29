@@ -865,13 +865,13 @@ implementation
               inn:
                 begin
                   inc(cv,node_complexity(tinnode(p).left));
-{$if declared(in_const_set_complexity)}
+{$ifdef x86}
                   if tinnode(p).right.nodetype=setconstn then
                     begin
                       inc(cv,in_const_set_complexity(tsetconstnode(tinnode(p).right)));
                       break;
                     end;
-{$endif in_const_set_complexity}
+{$endif x86}
                   inc(cv,3);
                   p:=tbinarynode(p).right;
                 end;

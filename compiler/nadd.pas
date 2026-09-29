@@ -3925,16 +3925,6 @@ const
                   result:=internalstatements(newstatement);
                   tempnode:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
-                  { initialize the temp, since it will be passed to a
-                    var-parameter (and finalization, which is performed by the
-                    ttempcreate node and which takes care of the initialization
-                    on native targets, is a noop on managed VM targets) }
-                  if (target_info.system in systems_managed_vm) and
-                     is_managed_type(resultdef) then
-                    addstatement(newstatement,cinlinenode.create(in_setlength_x,
-                      false,
-                      ccallparanode.create(genintconstnode(0),
-                        ccallparanode.create(ctemprefnode.create(tempnode),nil))));
                   para:=ccallparanode.create(
                           right,
                           ccallparanode.create(
@@ -3984,8 +3974,7 @@ const
                       nodetype:=swap_relation[nodetype];
                     end;
                   if is_shortstring(left.resultdef) or
-                     (nodetype in [gtn,gten,ltn,lten]) or
-                     (target_info.system in systems_managed_vm) then
+                     (nodetype in [gtn,gten,ltn,lten]) then
                     { compare the length with 0 }
                     result := caddnode.create(nodetype,
                       cinlinenode.create(in_length_x,false,left),
@@ -4348,16 +4337,6 @@ const
                   result:=internalstatements(newstatement);
                   tempnode:=ctempcreatenode.create(resultdef,resultdef.size,tt_persistent,true);
                   addstatement(newstatement,tempnode);
-                  { initialize the temp, since it will be passed to a
-                    var-parameter (and finalization, which is performed by the
-                    ttempcreate node and which takes care of the initialization
-                    on native targets, is a noop on managed VM targets) }
-                  if (target_info.system in systems_managed_vm) and
-                     is_managed_type(resultdef) then
-                    addstatement(newstatement,cinlinenode.create(in_setlength_x,
-                      false,
-                      ccallparanode.create(genintconstnode(0),
-                        ccallparanode.create(ctemprefnode.create(tempnode),nil))));
                   para:=ccallparanode.create(
                           ctypeconvnode.create_internal(right,voidcodepointertype),
                         ccallparanode.create(
@@ -4715,7 +4694,6 @@ const
         notnode:=false;
         result:=nil;
         fdef:=nil;
-        if not(target_info.system in systems_wince) then
           begin
             case tfloatdef(left.resultdef).floattype of
               s32real:
@@ -4768,54 +4746,8 @@ const
               else
                 CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.typename,right.resultdef.typename);
             end;
-          end
-        else
-          begin
-            case nodetype of
-              addn:
-                procname:='add';
-              muln:
-                procname:='mul';
-              subn:
-                procname:='sub';
-              slashn:
-                procname:='div';
-              ltn:
-                procname:='lt';
-              lten:
-                procname:='le';
-              gtn:
-                procname:='gt';
-              gten:
-                procname:='ge';
-              equaln:
-                procname:='eq';
-              unequaln:
-                procname:='ne';
-              else
-                begin
-                  CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.typename,right.resultdef.typename);
-                  exit;
-                end;
-            end;
-            case tfloatdef(left.resultdef).floattype of
-              s32real:
-                begin
-                  procname:=procname+'s';
-                  if nodetype in [addn,muln,subn,slashn] then
-                    procname:=lower(procname);
-                end;
-              s64real:
-                procname:=procname+'d';
-              {!!! not yet implemented
-              s128real:
-              }
-              else
-                internalerror(2005082602);
-            end;
           end;
         { cast softfpu result? }
-        if not(target_info.system in systems_wince) then
           begin
             if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
               resultdef:=pasbool1type;
@@ -4823,10 +4755,7 @@ const
                 ctypeconvnode.create_internal(right,fdef),
                 ccallparanode.create(
                   ctypeconvnode.create_internal(left,fdef),nil))),resultdef);
-          end
-        else
-          result:=ccallnode.createintern(procname,ccallparanode.create(right,
-             ccallparanode.create(left,nil)));
+          end;
         left:=nil;
         right:=nil;
 

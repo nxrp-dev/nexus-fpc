@@ -448,9 +448,6 @@ implementation
               end;
             if hs<>'' then
               begin
-                { the JVM expects java/lang/Object rather than java.lang.Object }
-                if target_info.system in systems_jvm then
-                  Replace(hs,'.','/');
                 stringdispose(od.import_lib);
                 od.import_lib:=stringdup(hs);
               end;
@@ -1755,10 +1752,6 @@ implementation
                   jvm_wrap_virtual_class_methods(tobjectdef(current_structdef));
 {$endif}
                 end;
-              { need method to hold the initialization code for typed constants? }
-              if (target_info.system in systems_typed_constants_node_init) and
-                 not is_any_interface_kind(current_structdef) then
-                add_typedconst_init_routine(current_structdef);
             end;
 
             symtablestack.pop(current_structdef.symtable);

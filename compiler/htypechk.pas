@@ -1328,7 +1328,7 @@ implementation
                                      UninitializedVariableMessage(p.fileinfo,
                                        { on the JVM, an uninitialized var-parameter
                                          is just as fatal as a nil pointer dereference }
-                                       not((vsf_use_hints in varstateflags) and not(target_info.system in systems_jvm)),
+                                       not(vsf_use_hints in varstateflags),
                                        tloadnode(p).symtable.symtabletype=localsymtable,
                                        is_managed_type(tloadnode(p).resultdef),
                                        hsym.realname);
@@ -1549,25 +1549,11 @@ implementation
                  todef:=hp.resultdef;
                  { typeconversions on the assignment side must keep
                    left.location the same }
-                 if not((target_info.system in systems_jvm) and
-                        (gotsubscript or gotvec)) then
-                   begin
-                     ttypeconvnode(hp).assignment_side:=true;
-                     if not assigned(typeconvs) then
-                       typeconvs:=tfpobjectlist.create(false);
-                     typeconvs.add(hp);
-                   end;
-                 { in managed VMs, you cannot typecast formaldef when assigning
-                   to it, see http://hallvards.blogspot.com/2007/10/dn4dp24-net-vs-win32-untyped-parameters.html }
-                 if (target_info.system in systems_managed_vm) and
-                    (fromdef.typ=formaldef) then
-                   begin
-                     if report_errors then
-                       CGMessagePos(hp.fileinfo,type_e_no_managed_formal_assign_typecast);
-                     mayberesettypeconvs;
-                     exit;
-                   end
-                 else if not((nf_absolute in ttypeconvnode(hp).flags) or
+                 ttypeconvnode(hp).assignment_side:=true;
+                 if not assigned(typeconvs) then
+                   typeconvs:=tfpobjectlist.create(false);
+                 typeconvs.add(hp);
+                 if not((nf_absolute in ttypeconvnode(hp).flags) or
                         ttypeconvnode(hp).target_specific_general_typeconv or
                         ((nf_explicit in hp.flags) and
                          ttypeconvnode(hp).target_specific_explicit_typeconv) or

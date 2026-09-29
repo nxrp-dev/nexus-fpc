@@ -55,11 +55,6 @@ interface
     procedure parse_nested_types(var def: tdef; isforwarddef,allowspecialization: boolean; currentstructstack: tfpobjectlist);
 
 
-    { add a definition for a method to a record/objectdef that will contain
-      all code for initialising typed constants (only for targets in
-      systems.systems_typed_constants_node_init) }
-    procedure add_typedconst_init_routine(def: tabstractrecorddef);
-
     { parse hint directives (platform, deprecated, ...) for a procdef }
     procedure maybe_parse_hint_directives(pd:tprocdef);
 
@@ -1027,8 +1022,6 @@ implementation
 {$ifdef jvm}
                 add_java_default_record_methods_intf(trecorddef(current_structdef));
 {$endif}
-                if target_info.system in systems_typed_constants_node_init then
-                  add_typedconst_init_routine(current_structdef);
                 consume(_END);
                 break;
               end;
@@ -1081,22 +1074,10 @@ implementation
          current_genericdef:=nil;
          current_specializedef:=nil;
          { create recdef }
-         if (n<>'') or
-            not(target_info.system in systems_jvm) then
-           begin
-             recst:=trecordsymtable.create(n,current_settings.packrecords,current_settings.alignment.recordalignmin);
-             { can't use recst.realname^ instead of n, because recst.realname is
-               nil in case of an empty name }
-             current_structdef:=crecorddef.create(n,recst);
-           end
-         else
-           begin
-             { for the JVM target records always need a name, because they are
-               represented by a class }
-             recst:=trecordsymtable.create(current_module.realmodulename^+'__fpc_intern_recname_'+tostr(current_module.deflist.count),
-               current_settings.packrecords,current_settings.alignment.recordalignmin);
-             current_structdef:=crecorddef.create(recst.name^,recst);
-           end;
+         recst:=trecordsymtable.create(n,current_settings.packrecords,current_settings.alignment.recordalignmin);
+         { can't use recst.realname^ instead of n, because recst.realname is
+           nil in case of an empty name }
+         current_structdef:=crecorddef.create(n,recst);
          result:=current_structdef;
          { insert in symtablestack }
          symtablestack.push(recst);
@@ -1151,8 +1132,6 @@ implementation
              { we need a constructor to create temps, a deep copy helper, ... }
              add_java_default_record_methods_intf(trecorddef(current_structdef));
 {$endif}
-             if target_info.system in systems_typed_constants_node_init then
-               add_typedconst_init_routine(current_structdef);
              consume(_END);
             end;
 
@@ -2177,39 +2156,6 @@ implementation
       end;
 
 
-
-
-    procedure add_typedconst_init_routine(def: tabstractrecorddef);
-      var
-        sstate: tscannerstate;
-        pd: tprocdef;
-      begin
-        replace_scanner('tcinit_routine',sstate);
-        { the typed constant initialization code is called from the class
-          constructor by tnodeutils.wrap_proc_body; at this point, we don't
-          know yet whether that will be necessary, because there may be
-          typed constants inside method bodies -> always force the addition
-          of a class constructor.
-
-          We cannot directly add the typed constant initializations to the
-          class constructor, because when it's parsed not all method bodies
-          are necessarily already parsed }
-        pd:=def.find_procdef_bytype(potype_class_constructor);
-        { the class constructor }
-        if not assigned(pd) then
-          begin
-            if str_parse_method_dec('constructor fpc_init_typed_consts_class_constructor;',potype_class_constructor,true,def,pd) then
-              pd.synthetickind:=tsk_empty
-            else
-              internalerror(2011040206);
-          end;
-        { the initialisation helper }
-        if str_parse_method_dec('procedure fpc_init_typed_consts_helper; static;',potype_procedure,true,def,pd) then
-          pd.synthetickind:=tsk_tcinit
-        else
-          internalerror(2011040207);
-        restore_scanner(sstate);
-      end;
 
 
 end.

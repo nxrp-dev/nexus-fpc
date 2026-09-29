@@ -639,7 +639,7 @@ implementation
          _use_64bit_headers:=state;
          if not(state) then
            begin
-             if (target_info.system in systems_windows+systems_wince) then
+             if (target_info.system in systems_windows) then
                offsetabstype:=aitconst_secrel32_symbol
              else
                offsetabstype:=aitconst_32bit_unaligned;
@@ -2166,10 +2166,7 @@ implementation
             current_asmdata.getlabel(procendlabel,alt_dbgtype);
             current_asmdata.asmlists[al_procedures].insertbefore(tai_label.create(procendlabel),def.procendtai);
 
-            if use_dotted_functions then
-              procentry := '.' + def.mangledname
-            else
-              procentry := def.mangledname;
+            procentry := def.mangledname;
 
 
             procentrysym:=current_asmdata.RefAsmSymbol(procentry,AT_FUNCTION);
@@ -2442,9 +2439,7 @@ implementation
               case sym.typ of
                 staticvarsym:
                   begin
-                    if (vo_is_thread_var in sym.varoptions) and
-                       (not (target_info.system in systems_wasm) or
-                            (ts_wasm_threads in current_settings.targetswitches)) then
+                    if (vo_is_thread_var in sym.varoptions) then
                       begin
 {$ifdef wasm}
                         templist.concat(tai_const.create_8bit(ord(DW_OP_WASM_location)));
@@ -3056,7 +3051,7 @@ implementation
         flist : TFPList;
         dbgname : TSymStr;
       begin
-        if not (target_info.system in (systems_wasm+systems_windows)) then
+        if not (target_info.system in systems_windows) then
           begin
             { insert DEBUGSTART and DEBUGEND labels }
             dbgname:=make_mangledname('DEBUGSTART',current_module.localsymtable,'');
@@ -3424,12 +3419,7 @@ implementation
         if (m_objectivec1 in current_settings.modeswitches) then
           append_attribute(DW_AT_APPLE_major_runtime_vers,DW_FORM_data1,[1]);
 
-        if target_info.system in systems_wasm then
-          begin
-            append_attribute(DW_AT_low_pc,DW_FORM_data4,[0]);
-            { todo: append DW_AT_ranges }
-          end
-        else if target_info.system in systems_windows then
+        if target_info.system in systems_windows then
           begin
             append_labelentry_dataptr_abs(DW_AT_ranges,FWin64RangesStart);
           end
@@ -3533,7 +3523,7 @@ implementation
       begin
         { Reference all DEBUGINFO sections from the main .fpc section }
         { to prevent eliminating them by smartlinking                 }
-        if (target_info.system in (systems_darwin+systems_wasm+systems_windows)) then
+        if (target_info.system in (systems_darwin+systems_windows)) then
           exit;
         new_section(list,sec_fpc,'links',0);
 
@@ -3624,7 +3614,6 @@ implementation
         nolineinfolevel : Integer;
         prevlabel,
         currlabel     : tasmlabel;
-        haslineinfo: Boolean = false;
       begin
 {$ifdef OMFOBJSUPPORT}
         if ds_dwarf_omf_linnum in current_settings.debugswitches then
@@ -3717,7 +3706,6 @@ implementation
                 { line changed ? }
                 if (lastfileinfo.line<>currfileinfo.line) and ((currfileinfo.line<>0) or (nolineinfolevel>0)) then
                   begin
-                    haslineinfo:=true;
                     { set address }
                     current_asmdata.getlabel(currlabel, alt_dbgline);
                     list.insertbefore(tai_label.create(currlabel), hp);
@@ -3806,15 +3794,10 @@ implementation
           end;
 
         { end sequence }
-        if haslineinfo or
-           { WasmTime doesn't like it when we emit an end sequence without any previous lines }
-           not (target_info.system in systems_wasm) then
-          begin
-            asmline.concat(tai_const.Create_8bit(DW_LNS_extended_op));
-            asmline.concat(tai_const.Create_8bit(1));
-            asmline.concat(tai_const.Create_8bit(DW_LNE_end_sequence));
-            asmline.concat(tai_comment.Create(strpnew('###################')));
-          end;
+        asmline.concat(tai_const.Create_8bit(DW_LNS_extended_op));
+        asmline.concat(tai_const.Create_8bit(1));
+        asmline.concat(tai_const.Create_8bit(DW_LNE_end_sequence));
+        asmline.concat(tai_comment.Create(strpnew('###################')));
       end;
 
 

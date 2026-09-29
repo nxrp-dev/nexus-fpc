@@ -529,9 +529,7 @@ implementation
                           ccallnode.createintern('fpc_help_constructor',para)));
                     end
                 else
-                  if is_javaclass(current_structdef) or
-                     ((target_info.system in systems_jvm) and
-                      is_record(current_structdef)) then
+                  if is_javaclass(current_structdef) then
                     begin
                       if (current_procinfo.procdef.proctypeoption=potype_constructor) and
                          not current_procinfo.ConstructorCallingConstructor then
@@ -743,9 +741,6 @@ implementation
         if assigned(procdef.struct) and
            (procdef.proctypeoption=potype_constructor) then
           begin
-            withexceptblock:=
-              withexceptblock and
-              not(target_info.system in systems_garbage_collected_managed_types);
             { Don't test self and the vmt here. See generate_bodyexit_block }
             { why (JM)                                                      }
             oldlocalswitches:=current_settings.localswitches;
@@ -938,7 +933,6 @@ implementation
            (pi_needs_implicit_finally in flags) and
            { but it's useless in init/final code of units }
            not(procdef.proctypeoption in [potype_unitfinalize,potype_unitinit]) and
-           not(target_info.system in systems_garbage_collected_managed_types) and
            (f_exceptions in features) then
           begin
             { Any result of managed type must be returned in parameter }
@@ -2289,8 +2283,7 @@ implementation
             if (cs_implicit_exceptions in current_settings.moduleswitches) and
                not(procdef.proctypeoption in [potype_unitfinalize,potype_unitinit]) and
                (pi_needs_implicit_finally in flags) and
-               not(pi_has_implicit_finally in flags) and
-               not(target_info.system in systems_garbage_collected_managed_types) then
+               not(pi_has_implicit_finally in flags) then
              internalerror(200405231);
 
              { sanity check }

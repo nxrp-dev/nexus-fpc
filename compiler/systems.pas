@@ -258,28 +258,15 @@ interface
        { alias for supported_target field in tasminfo }
        system_any = system_none;
 
-       systems_wince = [system_arm_wince];
        systems_android = [system_aarch64_android, system_x86_64_android];
        systems_linux = [system_x86_64_linux,
-                       system_m68k_linux,
                        system_x86_6432_linux,system_aarch64_linux];
-       systems_dragonfly = [system_x86_64_dragonfly];
-       systems_freebsd = [system_aarch64_freebsd,
-                          system_x86_64_freebsd];
-       systems_netbsd  = [system_m68k_netbsd,
-                          system_x86_64_netbsd];
-       systems_openbsd = [system_x86_64_openbsd];
 
-       systems_bsd = systems_freebsd + systems_netbsd + systems_openbsd + systems_dragonfly;
-
-       systems_aix = [system_powerpc_aix,system_powerpc64_aix];
-
-       { all real windows systems, no cripple ones like wince, wdosx et. al. }
+       { all supported Windows systems }
        systems_windows = [system_x86_64_win64,system_aarch64_win64];
 
        { all windows systems }
-       systems_all_windows = systems_windows+
-                             [system_arm_wince];
+       systems_all_windows = systems_windows;
 
        { all darwin systems }
        systems_ios = [system_aarch64_ios];
@@ -287,51 +274,6 @@ interface
        systems_macosx = [system_x86_64_darwin,
                          system_aarch64_darwin];
        systems_darwin = systems_ios + systems_iphonesim + systems_macosx;
-
-       { all WebAssembly systems }
-       systems_wasm = [system_wasm32_embedded,system_wasm32_wasip1,system_wasm32_wasip1threads,
-                       system_wasm32_wasip2];
-
-       {all solaris systems }
-       systems_solaris = [system_x86_64_solaris];
-
-       { all embedded systems }
-       systems_embedded = [system_m68k_embedded,
-                           obsolete_system_vm_embedded,
-                           obsolete_system_ia64_embedded,system_x86_64_embedded,
-                           system_jvm_java32,
-                           system_i8086_embedded,
-                           system_wasm32_embedded,
-                           system_aarch64_embedded];
-
-       { all FreeRTOS systems }
-       systems_freertos = [system_arm_freertos];
-
-       { all systems that allow section directive }
-       systems_allow_section = systems_embedded+systems_freertos+systems_wasm;
-
-       { systems that uses dotted function names as descriptors }
-       systems_dotted_function_names = [system_powerpc64_linux]+systems_aix;
-
-       systems_allow_section_no_semicolon = systems_allow_section
-{$ifndef DISABLE_TLS_DIRECTORY}
-       + systems_windows
-{$endif not DISABLE_TLS_DIRECTORY}
-       ;
-
-       { systems that allow external far variables }
-       systems_allow_external_far_var = [system_i8086_msdos,system_i8086_embedded];
-
-       { all symbian systems }
-       systems_symbian = [system_arm_symbian];
-
-       { all native nt systems }
-       systems_nativent = [system_i386_nativent];
-
-       { Default to i80846 instead of pentium2 for all old i386 systems for which
-         some newer instructions (like CMOVcc or PREFECTXXX) lead to troubles,
-         related to OS or emulator lack of support. }
-       systems_i386_default_486 = [];
 
        { systems supporting Objective-C }
        systems_objc_supported = systems_darwin;
@@ -344,7 +286,7 @@ interface
 
        { all systems supporting exports from programs or units }
        systems_unit_program_exports = [system_x86_64_win64,
-                                         system_aarch64_win64]+systems_linux+systems_android+systems_wasm;
+                                         system_aarch64_win64]+systems_linux+systems_android;
 
        { all systems that reference symbols in other binaries using indirect imports }
        systems_indirect_var_imports = systems_all_windows;
@@ -355,16 +297,11 @@ interface
                                             system_aarch64_win64];
 
        { all systems for which weak linking has been tested/is supported }
-       systems_weak_linking = systems_darwin + systems_solaris + systems_linux + systems_android + systems_bsd +
-                              [system_m68k_sinclairql];
+       systems_weak_linking = systems_darwin + systems_linux + systems_android;
 
        systems_internal_sysinit = [system_x86_64_win64,
                                    system_x86_64_linux,
-                                   system_m68k_atari,system_m68k_palmos,system_m68k_sinclairql,system_m68k_human68k,
-                                   system_x86_64_haiku,
-                                   system_x86_64_openbsd,
-                                   system_aarch64_win64,
-                                   system_wasm32_wasip1,system_wasm32_wasip1threads,system_wasm32_wasip2
+                                   system_aarch64_win64
                                   ]+systems_darwin;
 
        { all systems that use the PE+ header in the PE/COFF file
@@ -372,47 +309,9 @@ interface
                units as well }
        systems_peoptplus = [system_x86_64_win64,system_aarch64_win64];
 
-       { all systems that use garbage collection for reference-counted types }
-       systems_garbage_collected_managed_types = [
-         system_jvm_java32,
-         system_jvm_android32
-       ];
-
-       { all systems that use a managed vm (-> no real pointers, internal VMT
-         format, ...) }
-       systems_managed_vm = [
-         system_jvm_java32,
-         system_jvm_android32
-       ];
-
-       { all systems based on the JVM }
-       systems_jvm = [
-         system_jvm_java32,
-         system_jvm_android32
-       ];
-
-       { all systems where typed constants have to be translated into node
-         trees that initialise the data instead of into data sections }
-       systems_typed_constants_node_init = [
-         system_jvm_java32,
-         system_jvm_android32
-       ];
-
-       { all systems that don't use a built-in framepointer for accessing nested
-         variables, but emulate it by wrapping nested variables in records
-         whose address is passed around }
-       systems_fpnestedstruct = [
-{$ifndef llvm}
-         system_jvm_java32,
-         system_jvm_android32
-{$else not llvm}
-         low(tsystem)..high(tsystem)
-{$endif not llvm}
-       ];
-
        { all systems where a value parameter passed by reference must be copied
          on the caller side rather than on the callee side }
-       systems_caller_copy_addr_value_para = [system_aarch64_ios,system_aarch64_iphonesim,system_aarch64_darwin,system_aarch64_linux,system_aarch64_win64,system_aarch64_freebsd];
+       systems_caller_copy_addr_value_para = [system_aarch64_ios,system_aarch64_iphonesim,system_aarch64_darwin,system_aarch64_linux,system_aarch64_win64];
 
        { all PPC ABIs that use a TOC register to address globals }
        abis_ppc_toc = [
@@ -424,8 +323,6 @@ interface
          linking to an external library)
        }
        systems_support_checkpointer = systems_linux;
-
-       systems_support_uf2 = [system_arm_embedded];
 
        { x86_64 systems that use the Win64 ABI instead of the SysV one }
        systems_win64_abi = [system_x86_64_win64];

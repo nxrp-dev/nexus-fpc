@@ -27,9 +27,9 @@ const
   OS - Independent declarations.
   ---------------------------------------------------------------------}
 type
-{$if not declared(TOrdinalEntry)}
+{$ifndef WINDOWS}
   TOrdinalEntry = SizeUInt;
-{$endif not declared(TOrdinalEntry)}
+{$endif WINDOWS}
 
   TLoadLibraryUHandler = function(const Name: UnicodeString): TLibHandle;
   TLoadLibraryAHandler = function(const Name: RawByteString): TLibHandle;

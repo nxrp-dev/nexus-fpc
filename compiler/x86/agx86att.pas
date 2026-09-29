@@ -437,11 +437,8 @@ interface
             idtxt  : 'AS';
             asmbin : 'as';
             asmcmd : '--64 -o $OBJ $BIGOBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_linux,system_x86_64_freebsd,
-                                 system_x86_64_win64,system_x86_64_embedded,
-                                 system_x86_64_openbsd,system_x86_64_netbsd,
-                                 system_x86_64_dragonfly,
-                                 system_x86_64_android,system_x86_64_haiku];
+            supported_targets : [system_x86_64_linux,system_x86_64_win64,
+                                 system_x86_64_android];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
             labelprefix : '.L';
             labelmaxlen : -1;
@@ -455,44 +452,13 @@ interface
             idtxt  : 'YASM';
             asmbin : 'yasm';
             asmcmd : '-a x86 -p gas -f $FORMAT -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_linux,system_x86_64_freebsd,system_x86_64_win64,system_x86_64_embedded];
+            supported_targets : [system_x86_64_linux,system_x86_64_win64];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
             labelprefix : '.L';
             labelmaxlen : -1;
             comment : '# ';
             dollarsign: '$';
           );
-
-       as_x86_64_gas_info : tasminfo =
-          (
-            id     : as_ggas;
-            idtxt  : 'GAS';
-            asmbin : 'gas';
-            asmcmd : '--64 -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_solaris];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-
-       as_x86_64_solaris_info : tasminfo =
-          (
-            id     : as_solaris_as;
-            idtxt  : 'AS-SOL';
-            asmbin : 'as';
-            asmcmd : ' -m64 -o $OBJ $PIC $EXTRAOPT $ASM';
-            supported_targets : [system_x86_64_solaris];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-
 
        as_x86_64_gas_darwin_info : tasminfo =
           (
@@ -528,7 +494,7 @@ interface
             idtxt  : 'AS-CLANG';
             asmbin : 'clang';
             asmcmd : '-x assembler -c -target $TRIPLET -o $OBJ $EXTRAOPT -x assembler $ASM';
-            supported_targets : [system_x86_64_linux, system_x86_64_freebsd, system_x86_64_netbsd, system_x86_64_openbsd, system_x86_64_dragonfly, system_x86_64_win64];
+            supported_targets : [system_x86_64_linux,system_x86_64_win64];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_llvm,af_supports_hlcfi];
             labelprefix : '.L';
             labelmaxlen : -1;
@@ -543,10 +509,7 @@ interface
             idtxt  : 'AS';
             asmbin : 'as';
             asmcmd : '--32 -o $OBJ $BIGOBJ $EXTRAOPT $ASM';
-            supported_targets : [system_i386_GO32V2,system_i386_linux,system_i386_Win32,system_i386_freebsd,system_i386_solaris,system_i386_beos,
-                                system_i386_netbsd,system_i386_wdosx,system_i386_openbsd,
-                                system_i386_wince,system_i386_embedded,system_i386_symbian,system_i386_haiku,system_x86_6432_linux,
-                                system_i386_nativent,system_i386_android];
+            supported_targets : [system_x86_6432_linux];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
             labelprefix : '.L';
             labelmaxlen : -1;
@@ -560,10 +523,7 @@ interface
             idtxt  : 'YASM';
             asmbin : 'yasm';
             asmcmd : '-a x86 -p gas -f $FORMAT -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_i386_GO32V2,system_i386_linux,system_i386_Win32,system_i386_freebsd,system_i386_solaris,system_i386_beos,
-                                system_i386_netbsd,system_i386_wdosx,system_i386_openbsd,
-                                system_i386_wince,system_i386_embedded,system_i386_symbian,system_i386_haiku,system_x86_6432_linux,
-                                system_i386_nativent];
+            supported_targets : [system_x86_6432_linux];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
             labelprefix : '.L';
             labelmaxlen : -1;
@@ -571,63 +531,6 @@ interface
             dollarsign: '$';
           );
 
-
-       as_i386_as_aout_info : tasminfo =
-          (
-            id           : as_i386_as_aout;
-            idtxt  : 'AS_AOUT';
-            asmbin : 'as';
-            asmcmd : '-o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_i386_linux,system_i386_freebsd,system_i386_netbsd,system_i386_openbsd,system_i386_embedded];
-            flags : [af_needar,af_stabs_use_function_absolute_addresses];
-            labelprefix : 'L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-
-       as_i386_gas_darwin_info : tasminfo =
-          (
-            id     : as_darwin;
-            idtxt  : 'AS-DARWIN';
-            asmbin : 'as';
-            asmcmd : '-o $OBJ $EXTRAOPT $ASM -arch i386';
-            supported_targets : [system_i386_darwin,system_i386_iphonesim];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_stabs_use_function_absolute_addresses];
-            labelprefix : 'L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-       as_i386_clang_darwin_info : tasminfo =
-          (
-            id     : as_clang_asdarwin;
-            idtxt  : 'CLANG';
-            asmbin : 'clang';
-            asmcmd : '-x assembler -c -target $TRIPLET -o $OBJ $EXTRAOPT -x assembler $ASM';
-            supported_targets : [system_i386_darwin,system_i386_iphonesim];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_no_stabs,af_llvm,af_supports_hlcfi];
-            labelprefix : 'L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-       as_i386_clang_gas_info : tasminfo =
-          (
-            id     : as_clang_gas;
-            idtxt  : 'AS-CLANG';
-            asmbin : 'clang';
-            asmcmd : '-x assembler -c -target $TRIPLET -o $OBJ $EXTRAOPT -x assembler $ASM';
-            supported_targets : [system_i386_linux, system_i386_freebsd, system_i386_netbsd, system_i386_openbsd];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_llvm,af_supports_hlcfi];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '// ';
-            dollarsign: '$';
-          );
 
        as_i386_gas_info : tasminfo =
           (
@@ -635,31 +538,13 @@ interface
             idtxt  : 'GAS';
             asmbin : 'gas';
             asmcmd : '--32 -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_i386_GO32V2,system_i386_linux,system_i386_Win32,system_i386_freebsd,system_i386_solaris,system_i386_beos,
-                                system_i386_netbsd,system_i386_wdosx,system_i386_openbsd,
-                                system_i386_wince,system_i386_embedded,system_i386_symbian,system_i386_haiku,
-                                system_x86_6432_linux,system_i386_android];
+            supported_targets : [system_x86_6432_linux];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
             labelprefix : '.L';
             labelmaxlen : -1;
             comment : '# ';
             dollarsign: '$';
           );
-
-       as_i386_solaris_info : tasminfo =
-          (
-            id     : as_solaris_as;
-            idtxt  : 'AS-SOL';
-            asmbin : 'as';
-            asmcmd : ' -m32 -o $OBJ $PIC $EXTRAOPT $ASM';
-            supported_targets : [system_i386_solaris];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
 
 {$endif x86_64}
 
@@ -667,19 +552,12 @@ initialization
 {$ifdef x86_64}
   RegisterAssembler(as_x86_64_as_info,Tx86ATTAssembler);
   RegisterAssembler(as_x86_64_yasm_info,Tx86ATTAssembler);
-  RegisterAssembler(as_x86_64_gas_info,Tx86ATTAssembler);
   RegisterAssembler(as_x86_64_gas_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_gas_info,Tx86ATTAssembler);
-  RegisterAssembler(as_x86_64_solaris_info,Tx86ATTAssembler);
 {$else x86_64}
   RegisterAssembler(as_i386_as_info,Tx86ATTAssembler);
   RegisterAssembler(as_i386_gas_info,Tx86ATTAssembler);
   RegisterAssembler(as_i386_yasm_info,Tx86ATTAssembler);
-  RegisterAssembler(as_i386_gas_darwin_info,Tx86AppleGNUAssembler);
-  RegisterAssembler(as_i386_clang_darwin_info,Tx86AppleGNUAssembler);
-  RegisterAssembler(as_i386_clang_gas_info,Tx86ATTAssembler);
-  RegisterAssembler(as_i386_as_aout_info,Tx86AoutGNUAssembler);
-  RegisterAssembler(as_i386_solaris_info,Tx86ATTAssembler);
 {$endif x86_64}
 end.

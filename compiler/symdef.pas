@@ -1745,7 +1745,7 @@ implementation
          use_crc : boolean;
          dllprefix : TSymStr;
       begin
-        if (target_info.system in (systems_all_windows + systems_nativent))
+        if (target_info.system in systems_all_windows)
             and (dllname <> '') then
           begin
             dllprefix:=lower(ExtractFileName(dllname));
@@ -3693,14 +3693,7 @@ implementation
 
     function tfloatdef.structalignment: shortint;
       begin
-        { aix is really annoying: the recommended scalar alignment for both
-          int64 and double is 64 bits, but in structs int64 has to be aligned
-          to 8 bytes and double to 4 bytes }
-        if (target_info.system in systems_aix) and
-           (floattype=s64real) then
-          result:=4
-        else
-          result:=alignment;
+        result:=alignment;
       end;
 
 
@@ -9553,10 +9546,8 @@ implementation
       begin
         result:=
           assigned(def) and
-          (((def.typ=objectdef) and
-            (tobjectdef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava])) or
-           ((target_info.system in systems_jvm) and
-            (def.typ=recorddef)));
+          (def.typ=objectdef) and
+          (tobjectdef(def).objecttype in [odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface,odt_objcclass,odt_objcprotocol,odt_helper,odt_javaclass,odt_interfacejava]);
       end;
 
     function is_implicit_array_pointer(def: tdef): boolean;

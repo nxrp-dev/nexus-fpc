@@ -1924,14 +1924,14 @@ begin
   DecodeDate(DateTime, Year, Month, Day);
   DecodeTime(DateTime, Hour, Minute, Second, MilliSecond);
   UnixTime:=UniversalToEpoch(Year, Month, Day, Hour, Minute, Second);
-  {$if declared(GetLocalTimezone)}
+  {$if not defined(DONT_READ_TIMEZONE) and not defined(ANDROID)}
   GetLocalTimeOffset:=GetLocalTimezone(UnixTime,InputIsUTC,lTZInfo);
   isDST:=lTZInfo.daylight;
   if GetLocalTimeOffset then
     Offset:=-lTZInfo.seconds div 60;
-  {$else}
+  {$else DONT_READ_TIMEZONE or ANDROID}
   GetLocalTimeOffset:=False;
-  {$endif}
+  {$endif DONT_READ_TIMEZONE or ANDROID}
 end;
 
 {$ifdef android}

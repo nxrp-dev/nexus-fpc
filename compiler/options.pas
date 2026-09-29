@@ -180,10 +180,7 @@ var
 ****************************************************************************}
 
 const
-  suppported_targets_x_smallr = systems_linux + systems_solaris + systems_android
-                             + systems_openbsd
-                             + [system_i386_haiku,system_x86_64_haiku]
-                             + [system_i386_beos];
+  suppported_targets_x_smallr = systems_linux + systems_android;
 
 {****************************************************************************
                                  Defines
@@ -2085,35 +2082,7 @@ begin
     else
       undef_system_macro('FPC_HAS_WINLIKERESOURCES');
 
-  { Features }
-  case target_info.system of
-    system_i386_nativent:
-      // until these features are implemented, they are disabled in the compiler
-      target_unsup_features:=[f_stackcheck];
-    system_i8086_msdos:
-      target_unsup_features:=[f_threading,f_dynlibs];
-    system_jvm_java32,
-    system_jvm_android32:
-      target_unsup_features:=[f_heap,f_textio,f_consoleio,f_fileio,
-         f_variants,f_objects,f_commandargs,
-         f_processes,f_stackcheck,f_dynlibs,f_softfpu,f_objectivec1,f_resources];
-    system_arm_palmos,
-    system_m68k_palmos:
-      target_unsup_features:=[f_threading];
-    system_m68k_atari:
-      target_unsup_features:=[f_threading];
-    system_m68k_human68k:
-      target_unsup_features:=[f_threading,f_dynlibs];
-    system_m68k_sinclairql:
-      target_unsup_features:=[f_threading,f_dynlibs];
-    else
-      target_unsup_features:=[];
-  end;
-
-  { monitor support? }
-  if not(target_info.system in systems_aix+systems_bsd+systems_linux+systems_android+
-    systems_nativent+systems_solaris+systems_wasm+systems_all_windows+systems_darwin) then
-    Include(target_unsup_features,f_monitor);
+  target_unsup_features:=[];
 
   if def then
     features:=features-target_unsup_features
@@ -2168,18 +2137,8 @@ begin
 
 
 
-{$ifndef i8086_link_intern_debuginfo}
-  if (cs_debuginfo in init_settings.moduleswitches) and
-     (target_info.system in [system_i8086_msdos,system_i8086_embedded]) and
-     not (cs_link_extern in init_settings.globalswitches) then
-    begin
-      Message(option_debug_info_requires_external_linker);
-      include(init_settings.globalswitches,cs_link_extern);
-    end;
-{$endif i8086_link_intern_debuginfo}
-
   if (paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
-     not(target_info.system in (systems_darwin+[system_i8086_msdos,system_i8086_embedded])) and
+     not(target_info.system in systems_darwin) and
      not win64clanglld then
     begin
       { smartlink creation does not yet work with DWARF
@@ -2289,7 +2248,7 @@ begin
    begin
      case more[j] of
        '5' :
-         if (target_info.system in systems_all_windows+systems_nativent)
+         if (target_info.system in systems_all_windows)
             or (target_info.cpu in [cpu_mipseb, cpu_mipsel]) then
            begin
              if UnsetBool(More, j, opt, false) then
@@ -2770,13 +2729,7 @@ begin
            break;
          end;
        'v' :
-          If target_info.system in systems_jvm then
-            If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_check_var_copyout)
-            Else
-              include(init_settings.localswitches,cs_check_var_copyout)
-          else
-            IllegalPara(opt);
+          IllegalPara(opt);
        'V':
          begin
            s:=upper(copy(more,j+1));
@@ -3163,10 +3116,7 @@ begin
               exclude(init_settings.globalswitches,cs_use_lineinfo)
             else
               begin
-                if target_info.system in (systems_wasm+systems_embedded) then
-                  IgnoredPara('-gl')
-                else
-                  include(init_settings.globalswitches,cs_use_lineinfo);
+                include(init_settings.globalswitches,cs_use_lineinfo);
               end;
           end;
         'm' :
@@ -3779,7 +3729,7 @@ begin
          end;
        'B':
          begin
-           if target_info.system in systems_all_windows+systems_symbian then
+           if target_info.system in systems_all_windows then
              begin
                {  -WB200000 means set trefered base address
                  to $200000, but does not change relocsection boolean
@@ -3913,31 +3863,11 @@ begin
          end;
        'p':
          begin
-{$push}
-{$warn 6018 off} { Unreachable code due to compile time evaluation }
-           if ((target_info.system in systems_embedded) or (target_info.system in systems_freertos)) and
-             ControllerSupport then
-             begin
-               s:=upper(copy(more,j+1));
-               if not(SetControllerType(s,init_settings.controllertype)) then
-                 IllegalPara(opt)
-               else
-                 begin
-                   if init_settings.cputype<>embedded_controllers[init_settings.controllertype].cputype then
-                   begin
-                     Message(scan_n_changecputype);
-                     init_settings.cputype:=embedded_controllers[init_settings.controllertype].cputype;
-                   end;
-                 end;
-               break;
-             end
-           else
-             IllegalPara(opt);
-{$pop}
+           IllegalPara(opt);
          end;
        'P':
          begin
-           if (target_info.system in [system_i386_iphonesim,system_arm_ios,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) and
+           if (target_info.system in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) and
               ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',copy(More,2),true) then
              begin
                break;
@@ -4154,15 +4084,7 @@ begin
          include(init_settings.globalswitches,cs_link_staticflag);
        'u' :
          begin
-           if target_info.system in systems_support_uf2 then
-             begin
-               if UnsetBool(More, j, opt, false) then
-                 exclude(init_settings.globalswitches,cs_generate_uf2)
-               else
-                 include(init_settings.globalswitches,cs_generate_uf2);
-             end
-           else
-             IgnoredPara('-Xu');
+           IgnoredPara('-Xu');
          end;
        'v' :
          begin
@@ -4582,11 +4504,7 @@ begin
   { redefine target options so all defines are written even if no -Txxx is passed on the command line }
   Option.TargetOptions(true);
 
-{ target is set here, for wince the default app type is gui }
-  if target_info.system in systems_wince then
-    SetApptype(app_gui)
-  else
-    SetApptype(apptype);
+  SetApptype(apptype);
 
 { default defines }
   def_system_macro(target_info.shortname);
@@ -4634,26 +4552,7 @@ begin
 
   { Use standard Android NDK prefixes when cross-compiling }
   if (source_info.system<>target_info.system) and (target_info.system in systems_android) then
-    case target_info.system of
-      system_arm_android:
-        utilsprefix:='arm-linux-androideabi-';
-      system_i386_android:
-        utilsprefix:='i686-linux-android-';
-      else
-        utilsprefix:=target_cpu_string + '-linux-android-';
-    end;
-
-  if target_info.system in (systems_embedded+systems_freertos) then
-    begin
-      case target_info.system of
-        system_arm_freertos:
-          heapsize:=8192;
-        system_arm_embedded:
-          heapsize:=256;
-        else
-          heapsize:=256;
-      end;
-    end;
+    utilsprefix:=target_cpu_string + '-linux-android-';
 
   { read configuration file }
   if (not disable_configfile) and
@@ -4970,14 +4869,6 @@ begin
 {$endif cpufpemu}
 
 {$ifdef i386}
-  if target_info.system in systems_i386_default_486 then
-    begin
-      { Avoid use of MMX/CMOVcc instructions on older systems.
-        Some systems might not handle these instructions correctly,
-        Used emulators might also be problematic. PM }
-      if not option.CPUSetExplicitly then
-        init_settings.cputype:=cpu_486;
-    end;
   case target_info.system of
     system_i386_android:
       begin
@@ -5387,24 +5278,6 @@ begin
       if i in features then
         def_system_macro('FPC_HAS_FEATURE_'+featurestr[i]);
 
-{$push}
-{$warn 6018 off} { Unreachable code due to compile time evaluation }
-  if ControllerSupport and (target_info.system in (systems_embedded+systems_freertos)) and
-    (init_settings.controllertype<>ct_none) then
-    begin
-      with embedded_controllers[init_settings.controllertype] do
-        begin
-          set_system_macro('FPC_FLASHBASE',tostr(flashbase));
-          set_system_macro('FPC_FLASHSIZE',tostr(flashsize));
-          set_system_macro('FPC_SRAMBASE',tostr(srambase));
-          set_system_macro('FPC_SRAMSIZE',tostr(sramsize));
-          set_system_macro('FPC_EEPROMBASE',tostr(eeprombase));
-          set_system_macro('FPC_EEPROMSIZE',tostr(eepromsize));
-          set_system_macro('FPC_BOOTBASE',tostr(bootbase));
-          set_system_macro('FPC_BOOTSIZE',tostr(bootsize));
-        end;
-    end;
-{$pop}
   { as stackalign is not part of the alignment record, we do not need to define the others alignments for symmetry yet }
   set_system_macro('FPC_STACKALIGNMENT',tostr(target_info.stackalign));
 

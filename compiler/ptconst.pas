@@ -44,12 +44,9 @@ implementation
     procedure read_typed_const(list:tasmlist;sym:tstaticvarsym;in_structure:boolean);
       var
         storefilepos : tfileposinfo;
-        section      : ansistring;
         tcbuilder    : ttypedconstbuilder;
         reslist,
         datalist     : tasmlist;
-        restree,
-        previnit     : tnode;
       begin
         { mark the staticvarsym as typedconst }
         include(sym.varoptions,vo_is_typed_const);
@@ -62,25 +59,9 @@ implementation
         storefilepos:=current_filepos;
         current_filepos:=sym.fileinfo;
 
-        if not(target_info.system in systems_typed_constants_node_init) then
-          begin
-            maybe_new_object_file(list);
-            tcbuilder:=tasmlisttypedconstbuilderclass(ctypedconstbuilder).create(sym);
-            tasmlisttypedconstbuilder(tcbuilder).parse_into_asmlist;
-          end
-        else
-          begin
-            if assigned(current_structdef) then
-              previnit:=current_structdef.tcinitcode
-            else
-              previnit:=tnode(current_module.tcinitcode);
-            tcbuilder:=tnodetreetypedconstbuilderclass(ctypedconstbuilder).create(sym,previnit);
-            restree:=tnodetreetypedconstbuilder(tcbuilder).parse_into_nodetree;
-            if assigned(current_structdef) then
-              current_structdef.tcinitcode:=restree
-            else
-              current_module.tcinitcode:=restree;
-          end;
+        maybe_new_object_file(list);
+        tcbuilder:=tasmlisttypedconstbuilderclass(ctypedconstbuilder).create(sym);
+        tasmlisttypedconstbuilder(tcbuilder).parse_into_asmlist;
 
         { Parse hints }
         try_consume_hintdirective(sym.symoptions,sym.deprecatedmsg);
@@ -106,43 +87,19 @@ implementation
           read_public_and_external(sym);
 
 
-        { try to parse a section directive }
-        if not in_structure and (target_info.system in systems_allow_section) and
-           (symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) and
-           (current_scanner.idtoken=_SECTION) then
-          begin
-            try_consume_sectiondirective(section);
-            if section<>'' then
-              begin
-                if (sym.varoptions *[vo_is_external,vo_is_weak_external])<>[] then
-                  Message(parser_e_externals_no_section);
-                if sym.typ<>staticvarsym then
-                  Message(parser_e_section_no_locals);
-                tstaticvarsym(sym).section:=section;
-                include(sym.varoptions, vo_has_section);
-              end;
-          end;
-
         if not parse_generic then
           begin
             if vo_is_public in sym.varoptions then
               current_module.add_public_asmsym(sym.mangledname,AB_GLOBAL,AT_DATA);
 
-            if not(target_info.system in systems_typed_constants_node_init) then
-              begin
-                { only now get the final asmlist, because inserting the symbol
-                  information depends on potential section information set above }
-                tasmlisttypedconstbuilder(tcbuilder).get_final_asmlists(reslist,datalist);
-                 { add the parsed value }
-                list.concatlist(reslist);
-                { and pointed data, if any }
-                current_asmdata.asmlists[al_const].concatlist(datalist);
-                { the (empty) lists themselves are freed by tcbuilder }
-              end
-            else
-              begin
-                { nothing to do }
-              end;
+            { only now get the final asmlist, because inserting the symbol
+              information depends on potential section information set above }
+            tasmlisttypedconstbuilder(tcbuilder).get_final_asmlists(reslist,datalist);
+            { add the parsed value }
+            list.concatlist(reslist);
+            { and pointed data, if any }
+            current_asmdata.asmlists[al_const].concatlist(datalist);
+            { the (empty) lists themselves are freed by tcbuilder }
           end;
 
         tcbuilder.free;

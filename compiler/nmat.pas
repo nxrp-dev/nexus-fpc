@@ -1199,8 +1199,6 @@ implementation
     { overridden by:   }
     {   i386           }
     function tunaryminusnode.pass_1 : tnode;
-      var
-        procname: string[31];
       begin
         result:=nil;
         firstpass(left);
@@ -1209,28 +1207,8 @@ implementation
 
         if (cs_fp_emulation in current_settings.moduleswitches) and (left.resultdef.typ=floatdef) then
           begin
-            if not(target_info.system in systems_wince) then
-              begin
-                expectloc:=LOC_REGISTER;
-                exit;
-              end
-            else
-              begin
-                case tfloatdef(resultdef).floattype of
-                  s32real:
-                    procname:='negs';
-                  s64real:
-                    procname:='negd';
-                  {!!! not yet implemented
-                  s128real:
-                  }
-                  else
-                    internalerror(2005082802);
-                end;
-                result:=ccallnode.createintern(procname,ccallparanode.create(left,nil));
-              end;
-
-            left:=nil;
+            expectloc:=LOC_REGISTER;
+            exit;
           end
         else
           begin

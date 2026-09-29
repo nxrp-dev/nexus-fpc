@@ -2993,10 +2993,7 @@ const pemagic : array[0..3] of byte = (
         if target_info.system in [system_x86_64_win64,system_aarch64_win64] then
           MaxMemPos:=$FFFFFFFF
         else
-          if target_info.system in systems_wince then
-            MaxMemPos:=$1FFFFFF
-          else
-            MaxMemPos:=$7FFFFFFF;
+          MaxMemPos:=$7FFFFFFF;
       end;
 
 
@@ -3105,11 +3102,7 @@ const pemagic : array[0..3] of byte = (
             sechdr.relocpos:=0;
             if win32 then
               begin
-                if (target_info.system in systems_nativent) and
-                   (apptype = app_native) then
-                  sechdr.flags:=peencodesechdrflags(SecOptions,SecAlign) or PE_SCN_MEM_NOT_PAGED
-                else
-                  sechdr.flags:=peencodesechdrflags(SecOptions,SecAlign);
+                sechdr.flags:=peencodesechdrflags(SecOptions,SecAlign);
                 { some flags are invalid in executables, reset them }
                 sechdr.flags:=sechdr.flags and
                   not(PE_SCN_LNK_INFO or PE_SCN_LNK_REMOVE or
@@ -3191,8 +3184,7 @@ const pemagic : array[0..3] of byte = (
         peoptheader : tcoffpeoptheader;
         textExeSec,
         dataExeSec,
-        bssExeSec,
-        idataExeSec : TExeSection;
+        bssExeSec : TExeSection;
         hassymbols,
         writeDbgStrings : boolean;
 
@@ -3397,28 +3389,17 @@ const pemagic : array[0..3] of byte = (
               end
             else
               begin
-                if target_info.system in systems_wince then
-                  peoptheader.MajorSubsystemVersion:=3
-                else
-                  peoptheader.MajorSubsystemVersion:=4;
+                peoptheader.MajorSubsystemVersion:=4;
                 peoptheader.MinorSubsystemVersion:=0;
               end;
             peoptheader.Win32Version:=0;
             peoptheader.SizeOfImage:=Align(CurrMemPos,SectionMemAlign);
             peoptheader.SizeOfHeaders:=textExeSec.DataPos;
             peoptheader.CheckSum:=0;
-            if (target_info.system in systems_nativent) and (not IsSharedLibrary or (apptype = app_native)) then
-              { Although I did not really test this, it seems that Subsystem is
-                not checked in DLLs except for maybe drivers}
-              peoptheader.Subsystem:=PE_SUBSYSTEM_NATIVE
+            if apptype=app_gui then
+              peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_GUI
             else
-              if target_info.system in systems_wince then
-                peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_CE_GUI
-              else
-                if apptype=app_gui then
-                  peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_GUI
-                else
-                  peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_CUI;
+              peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_CUI;
 
             if target_info.system in [system_aarch64_win64] then
               peoptheader.DllCharacteristics:=PE_DLLCHARACTERISTICS_DYNAMIC_BASE or
@@ -3461,16 +3442,6 @@ const pemagic : array[0..3] of byte = (
             djoptheader.entry:=EntrySym.Address;
 	    MaybeSwap(djoptheader);
             FWriter.write(djoptheader,sizeof(djoptheader));
-          end;
-
-        { For some unknown reason WM 6.1 requires .idata section to be read only.
-          Otherwise it refuses to load DLLs greater than 64KB.
-          Earlier versions of WinCE load DLLs regardless of .idata flags. }
-        if target_info.system in systems_wince then
-          begin
-            idataExeSec:=FindExeSection('.idata');
-            if idataExeSec<>nil then
-              idataExeSec.SecOptions:=idataExeSec.SecOptions - [oso_write];
           end;
 
         { Section headers }

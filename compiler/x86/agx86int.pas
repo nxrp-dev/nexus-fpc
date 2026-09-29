@@ -1132,49 +1132,6 @@ implementation
 *****************************************************************************}
 
     const
-{$ifdef i386}
-       as_i386_tasm_info : tasminfo =
-          (
-            id           : as_i386_tasm;
-            idtxt  : 'TASM';
-            asmbin : 'tasm';
-            asmcmd : '/m2 /ml $EXTRAOPT $ASM $OBJ';
-            supported_targets : [system_i386_GO32V2,system_i386_Win32,system_i386_wdosx,system_i386_watcom,system_i386_wince];
-            flags : [af_needar,af_labelprefix_only_inside_procedure];
-            labelprefix : '@@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_masm_info : tasminfo =
-          (
-            id           : as_i386_masm;
-            idtxt  : 'MASM';
-            asmbin : 'masm';
-            asmcmd : '/c /Cp $EXTRAOPT $ASM /Fo$OBJ';
-            supported_targets : [system_i386_GO32V2,system_i386_Win32,system_i386_wdosx,system_i386_watcom,system_i386_wince];
-            flags : [af_needar];
-            labelprefix : '@@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_wasm_info : tasminfo =
-          (
-            id     : as_i386_wasm;
-            idtxt  : 'WASM';
-            asmbin : 'wasm';
-            asmcmd : '$ASM $EXTRAOPT -6s -fp6 -ms -zq -Fo=$OBJ';
-            supported_targets : [system_i386_watcom];
-            flags : [af_needar];
-            labelprefix : '@@';
-            labelmaxlen : 247;
-            comment : '; ';
-            dollarsign: '$';
-          );
-{$endif i386}
 {$ifdef x86_64}
        as_x86_64_masm_info : tasminfo =
           (
@@ -1195,9 +1152,4 @@ initialization
 {$ifdef x86_64}
   RegisterAssembler(as_x86_64_masm_info,tx86IntelAssembler);
 {$endif x86_64}
-{$ifdef i386}
-  RegisterAssembler(as_i386_tasm_info,tx86IntelAssembler);
-  RegisterAssembler(as_i386_masm_info,tx86IntelAssembler);
-  RegisterAssembler(as_i386_wasm_info,tx86IntelAssembler);
-{$endif i386}
 end.

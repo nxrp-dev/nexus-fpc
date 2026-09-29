@@ -239,8 +239,8 @@ implementation
         in parentfpstruct will be initialised when that struct gets initialised,
         and references to it will actually be translated into references to the
         field in the parentfpstruct (so we'll initialise it twice) }
-      if (target_info.system in systems_fpnestedstruct) and
-         (p.nodetype=loadn) and
+{$ifdef llvm}
+      if (p.nodetype=loadn) and
          (tloadnode(p).symtableentry.typ=localvarsym) and
          tlocalvarsym(tloadnode(p).symtableentry).inparentfpstruct then
         begin
@@ -249,6 +249,7 @@ implementation
           result:=cnothingnode.create;
         end
       else
+{$endif llvm}
         begin
           if not assigned(p.resultdef) then
             typecheckpass(p);
@@ -289,8 +290,8 @@ implementation
       hs : string;
     begin
       { see comment in initialize_data_node above }
-      if (target_info.system in systems_fpnestedstruct) and
-         (p.nodetype=loadn) and
+{$ifdef llvm}
+      if (p.nodetype=loadn) and
          (tloadnode(p).symtableentry.typ=localvarsym) and
          tlocalvarsym(tloadnode(p).symtableentry).inparentfpstruct then
         begin
@@ -299,6 +300,7 @@ implementation
           result:=cnothingnode.create;
         end
       else
+{$endif llvm}
         begin
           if not assigned(p.resultdef) then
             typecheckpass(p);
@@ -560,9 +562,7 @@ implementation
 
   class function tnodeutils.force_init: boolean;
     begin
-      result:=
-        (target_info.system in systems_typed_constants_node_init) and
-        assigned(current_module.tcinitcode);
+      result:=false;
     end;
 
 
@@ -683,8 +683,7 @@ implementation
     var
       stat: tstatementnode;
       block: tnode;
-      ressym,
-      psym: tsym;
+      ressym: tsym;
       resdef: tdef;
     begin
       result:=maybe_insert_trashing(pd,n);
@@ -714,66 +713,8 @@ implementation
           result:=block;
         end;
 
-      if target_info.system in systems_typed_constants_node_init then
-        begin
-          case pd.proctypeoption of
-            potype_class_constructor:
-              begin
-                { even though the initialisation code for typed constants may
-                  not yet be complete at this point (there may be more inside
-                  method definitions coming after this class constructor), the
-                  ones from inside the class definition have already been parsed.
-                  in case of $j-, these are marked "final" in Java and such
-                  static fields must be initialized in the class constructor
-                  itself -> add them here }
-                block:=internalstatements(stat);
-                if assigned(pd.struct.tcinitcode) then
-                  begin
-                    addstatement(stat,pd.struct.tcinitcode);
-                    pd.struct.tcinitcode:=nil;
-                  end;
-                psym:=tsym(pd.struct.symtable.find('FPC_INIT_TYPED_CONSTS_HELPER'));
-                if assigned(psym) then
-                  begin
-                    if (psym.typ<>procsym) or
-                       (tprocsym(psym).procdeflist.count<>1) then
-                      internalerror(2011040301);
-                    addstatement(stat,ccallnode.create(nil,tprocsym(psym),
-                      pd.struct.symtable,nil,[],nil));
-                  end;
-                addstatement(stat,result);
-                result:=block
-              end;
-            potype_unitinit:
-              begin
-                if assigned(current_module.tcinitcode) then
-                  begin
-                    block:=internalstatements(stat);
-                    addstatement(stat,tnode(current_module.tcinitcode));
-                    current_module.tcinitcode:=nil;
-                    addstatement(stat,result);
-                    result:=block;
-                  end;
-              end;
-            else case pd.synthetickind of
-              tsk_tcinit:
-                begin
-                  if assigned(pd.struct.tcinitcode) then
-                    begin
-                      block:=internalstatements(stat);
-                      addstatement(stat,pd.struct.tcinitcode);
-                      pd.struct.tcinitcode:=nil;
-                      addstatement(stat,result);
-                      result:=block
-                    end
-                end;
-              else
-                ;
-            end;
-          end;
-        end;
-      if (target_info.system in systems_fpnestedstruct) and
-         pd.get_funcretsym_info(ressym,resdef) and
+{$ifdef llvm}
+      if pd.get_funcretsym_info(ressym,resdef) and
          (tabstractnormalvarsym(ressym).inparentfpstruct) then
         begin
           block:=internalstatements(stat);
@@ -781,6 +722,7 @@ implementation
           load_parentfpstruct_nested_funcret(ressym,resdef,stat);
           result:=block;
         end;
+{$endif llvm}
     end;
 
 
@@ -1679,17 +1621,6 @@ implementation
       tcb.free;
       tcb := nil;
 
-      { allocate an initial heap on embedded systems }
-      if target_info.system in (systems_embedded+systems_freertos) then
-        begin
-          { tai_datablock cannot yet be handled via the high level typed const
-            builder, because it implies the generation of a symbol, while this
-            is separate in the builder }
-          maybe_new_object_file(current_asmdata.asmlists[al_globals]);
-          new_section(current_asmdata.asmlists[al_globals],sec_bss,'__fpc_initialheap',current_settings.alignment.varalignmax);
-          current_asmdata.asmlists[al_globals].concat(tai_datablock.Create_global('__fpc_initialheap',heapsize,carraydef.getreusable(u8inttype,heapsize),AT_DATA));
-        end;
-
       { Valgrind usage }
       tcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
       tcb.emit_ord_const(byte(cs_gdb_valgrind in current_settings.globalswitches),u8inttype);
@@ -1752,7 +1683,7 @@ implementation
      begin
        { stub for calling FPC_SYSTEMMAIN from the C main -> add argc/argv/argp }
        if (tprocdef(pd).proctypeoption=potype_mainstub) and
-          (target_info.system in (systems_darwin+systems_aix)) then
+          (target_info.system in systems_darwin) then
          begin
            pvs:=cparavarsym.create('ARGC',1,vs_const,s32inttype,[]);
            tprocdef(pd).parast.insertsym(pvs);
@@ -1764,7 +1695,7 @@ implementation
          end
        { package stub for Windows is a DLLMain }
        else if (tprocdef(pd).proctypeoption=potype_pkgstub) and
-           (target_info.system in systems_all_windows+systems_nativent) then
+           (target_info.system in systems_all_windows) then
          begin
            pvs:=cparavarsym.create('HINSTANCE',1,vs_const,uinttype,[]);
            tprocdef(pd).parast.insertsym(pvs);

@@ -591,7 +591,7 @@ implementation
 
             if atype=sec_threadvar then
               begin
-                if (target_info.system in (systems_windows+systems_wince)) then
+                if (target_info.system in systems_windows) then
                   secname:='.tls'
                 else if (target_info.system in systems_linux) then
                   secname:='.tbss';
@@ -1066,7 +1066,7 @@ implementation
            shstrtabsect:=TElfObjSection.create_ext(data,'.shstrtab',SHT_STRTAB,0,1,0);
            { "no executable stack" marker }
            { TODO: used by OpenBSD/NetBSD as well? }
-           if (target_info.system in (systems_linux + systems_android + systems_freebsd + systems_dragonfly)) and
+           if (target_info.system in (systems_linux + systems_android)) and
               not(cs_executable_stack in current_settings.moduleswitches) then
              TElfObjSection.create_ext(data,'.note.GNU-stack',SHT_PROGBITS,0,1,0);
            { symbol for filename }
@@ -1107,12 +1107,6 @@ implementation
              header.e_ident[EI_DATA]:=ELFDATA2LSB;
 
            header.e_ident[EI_VERSION]:=1;
-           if target_info.system in systems_openbsd then
-             header.e_ident[EI_OSABI]:=ELFOSABI_OPENBSD
-           else if target_info.system in systems_freebsd then
-             header.e_ident[EI_OSABI]:=ELFOSABI_FREEBSD
-           else if target_info.system in systems_dragonfly then
-             header.e_ident[EI_OSABI]:=ELFOSABI_NONE;
            header.e_type:=ET_REL;
            header.e_machine:=ElfTarget.machine_code;
            header.e_version:=1;
@@ -1884,12 +1878,6 @@ implementation
           header.e_ident[EI_DATA]:=ELFDATA2LSB;
 
         header.e_ident[EI_VERSION]:=1;
-        if target_info.system in systems_openbsd then
-          header.e_ident[EI_OSABI]:=ELFOSABI_OPENBSD
-        else if target_info.system in systems_freebsd then
-          header.e_ident[EI_OSABI]:=ELFOSABI_FREEBSD
-        else if target_info.system in systems_dragonfly then
-          header.e_ident[EI_OSABI]:=ELFOSABI_NONE;
         if IsSharedLibrary then
           header.e_type:=ET_DYN
         else

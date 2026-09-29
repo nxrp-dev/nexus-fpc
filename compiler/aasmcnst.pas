@@ -1194,7 +1194,7 @@ implementation
    class function ttai_typedconstbuilder.get_string_symofs(typ: tstringtype; winlikewidestring: boolean): pint;
      begin
        { darwin's linker does not support negative offsets }
-       if not(target_info.system in systems_darwin+systems_wasm) and
+       if not(target_info.system in systems_darwin) and
           { it seems that clang's assembler has a bug with the ADRP instruction... }
           (target_info.system<>system_aarch64_win64) then
          result:=0
@@ -2345,7 +2345,7 @@ implementation
        { relocated before all other data, so make this data relocatable,  }
        { otherwise the end label won't be moved with the rest             }
        if (tcalo_vectorized_dead_strip_end in options) and
-          (target_info.system in (systems_darwin+systems_aix)) then
+          (target_info.system in systems_darwin) then
          fasmlist.concat(Tai_const.create_sym(asmsym));
      end;
 

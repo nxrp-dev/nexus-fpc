@@ -952,7 +952,6 @@ implementation
     procedure read_public_and_external(vs: tabstractvarsym);
     var
       is_dll,
-      is_far,
       is_cdecl,
       is_external_var,
       is_weak_external,
@@ -969,7 +968,6 @@ implementation
         end;
       { defaults }
       is_dll:=false;
-      is_far:=false;
       is_cdecl:=false;
       is_external_var:=false;
       is_public_var:=false;
@@ -1005,14 +1003,6 @@ implementation
          try_to_consume(_EXTERNAL) then
         begin
           is_external_var:=true;
-          { near/far? }
-          if target_info.system in systems_allow_external_far_var then
-            begin
-              if try_to_consume(_FAR) then
-                is_far:=true
-              else if try_to_consume(_NEAR) then
-                is_far:=false;
-            end;
           if (current_scanner.idtoken<>_NAME) and (current_scanner.token<>_SEMICOLON) then
             begin
               is_dll:=true;
@@ -1035,10 +1025,12 @@ implementation
             is_public_var:=true;
           if try_to_consume(_NAME) then
             C_name:=get_stringconst;
-          if (target_info.system in systems_allow_section_no_semicolon) and
+{$ifndef DISABLE_TLS_DIRECTORY}
+          if (target_info.system in systems_windows) and
              (vs.typ=staticvarsym) and
              try_to_consume (_SECTION) then
             section_name:=get_stringconst;
+{$endif not DISABLE_TLS_DIRECTORY}
           consume(_SEMICOLON);
         end;
 
@@ -1079,8 +1071,6 @@ implementation
           if vo_is_typed_const in vs.varoptions then
             Message(parser_e_initialized_not_for_external);
           include(vs.varoptions,vo_is_external);
-          if is_far then
-            include(vs.varoptions,vo_is_far);
           if (is_weak_external) then
             begin
               if not(target_info.system in systems_weak_linking) then
@@ -1090,7 +1080,7 @@ implementation
           vs.varregable := vr_none;
           if is_dll then
             begin
-              if target_info.system in (systems_all_windows + systems_nativent) then
+              if target_info.system in systems_all_windows then
                 mangledname:=make_dllmangledname(dll_name,C_name,0,pocall_none);
 
               current_module.AddExternalImport(dll_name,C_Name,mangledname,0,true,false);
@@ -1179,7 +1169,6 @@ implementation
               end;
             staticvarsym :
               begin
-                maybe_guarantee_record_typesym(vs.vardef,vs.vardef.owner);
                 read_typed_const(current_asmdata.asmlists[al_typedconsts],tstaticvarsym(vs),false);
               end;
             else
@@ -1379,7 +1368,6 @@ implementation
          hintsymoptions  : tsymoptions;
          deprecatedmsg   : pshortstring;
          old_block_type  : tblock_type;
-         sectionname : ansistring;
          typepos,
          tmp_filepos,
          old_current_filepos     : tfileposinfo;
@@ -1473,7 +1461,6 @@ implementation
 {$endif}
 
              read_anon_type(hdef,false,nil);
-             maybe_guarantee_record_typesym(hdef,symtablestack.top);
              for i:=0 to sc.count-1 do
                begin
                  vs:=tabstractvarsym(sc[i]);
@@ -1614,27 +1601,6 @@ implementation
                  )
                 ) then
                read_public_and_external_sc(sc);
-
-             { try to parse a section directive }
-             if (target_info.system in systems_allow_section) and
-                (symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) and
-                (current_scanner.idtoken=_SECTION) then
-               begin
-                 try_consume_sectiondirective(sectionname);
-                 if sectionname<>'' then
-                   begin
-                     for i:=0 to sc.count-1 do
-                       begin
-                         vs:=tabstractvarsym(sc[i]);
-                         if (vs.varoptions *[vo_is_external,vo_is_weak_external])<>[] then
-                           Message(parser_e_externals_no_section);
-                         if vs.typ<>staticvarsym then
-                           Message(parser_e_section_no_locals);
-                         tstaticvarsym(vs).section:=sectionname;
-                         include(vs.varoptions, vo_has_section);
-                       end;
-                   end;
-               end;
 
              { allocate normal variable (non-external and non-typed-const) staticvarsyms }
              for i:=0 to sc.count-1 do
@@ -1811,7 +1777,6 @@ implementation
                end;
 
              read_anon_type(hdef,false,tstoreddef(gendef));
-             maybe_guarantee_record_typesym(hdef,symtablestack.top);
 {$ifdef wasm}
              if is_wasm_reference_type(hdef) then
                messagepos(typepos,sym_e_wasm_ref_types_cannot_be_used_in_records);

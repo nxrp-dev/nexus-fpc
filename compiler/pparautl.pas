@@ -157,22 +157,26 @@ implementation
               paranr:=paranr_parentfp_delphi_cc;
             { Generate frame pointer. It can't be put in a register since it
               must be accessible from nested routines }
-            if not(target_info.system in systems_fpnestedstruct) or
-               { in case of errors or declared procvardef types, prevent invalid
-                 type cast and possible nil pointer dereference }
-               not assigned(pd.owner.defowner) or
+{$ifdef llvm}
+            { in case of errors or declared procvardef types, prevent invalid
+              type cast and possible nil pointer dereference }
+            if not assigned(pd.owner.defowner) or
                (pd.owner.defowner.typ<>procdef) then
+{$endif llvm}
               begin
                 vs:=cparavarsym.create('$'+name_parentfp,paranr,vs_value
                       ,parentfpvoidpointertype,[vo_is_parentfp,vo_is_hidden_para]);
               end
+{$ifdef llvm}
             else
               begin
                 if not assigned(tprocdef(pd.owner.defowner).parentfpstruct) then
                   build_parentfpstruct(tprocdef(pd.owner.defowner));
                 vs:=cparavarsym.create('$'+name_parentfp,paranr,vs_value,
                       tprocdef(pd.owner.defowner).parentfpstructptrtype,[vo_is_parentfp,vo_is_hidden_para]);
-              end;
+              end
+{$endif llvm}
+            ;
             pd.parast.insertsym(vs);
 
             current_tokenpos:=storepos;
@@ -1274,7 +1278,6 @@ implementation
           current_settings.alignment.localalignmax,current_settings.alignment.localalignmin);
         nestedvarsdef:=crecorddef.create(nestedvarsst.name^,nestedvarsst);
   {$ifdef jvm}
-        maybe_guarantee_record_typesym(nestedvarsdef,nestedvarsdef.owner);
         { don't add clone/FpcDeepCopy, because the field names are not all
           representable in source form and we don't need them anyway }
         symtablestack.push(trecorddef(nestedvarsdef).symtable);

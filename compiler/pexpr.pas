@@ -681,8 +681,6 @@ implementation
 
           in_ofs_x :
             begin
-              if target_info.system in systems_managed_vm then
-                message(parser_e_feature_unsupported_for_vm);
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
@@ -3951,9 +3949,7 @@ implementation
                  consume(_INHERITED);
                  if assigned(current_procinfo) and
                     assigned(current_structdef) and
-                    ((current_structdef.typ=objectdef) or
-                     ((target_info.system in systems_jvm) and
-                      (current_structdef.typ=recorddef)))then
+                    (current_structdef.typ=objectdef) then
                   begin
                     { for record helpers in mode Delphi "inherited" is not
                       allowed }
@@ -3961,20 +3957,13 @@ implementation
                         (m_delphi in current_settings.modeswitches) and
                         (tobjectdef(current_structdef).helpertype=ht_record) then
                       Message(parser_e_inherited_not_in_record);
-                    if (current_structdef.typ=objectdef) then
-                      begin
-                        hclassdef:=tobjectdef(current_structdef).childof;
-                        { Objective-C categories *replace* methods in the class
-                          they extend, or add methods to it. So calling an
-                          inherited method always calls the method inherited from
-                          the parent of the extended class }
-                        if is_objccategory(current_structdef) then
-                          hclassdef:=hclassdef.childof;
-                      end
-                    else if target_info.system in systems_jvm then
-                      hclassdef:=java_fpcbaserecordtype
-                    else
-                      internalerror(2012012401);
+                    hclassdef:=tobjectdef(current_structdef).childof;
+                    { Objective-C categories *replace* methods in the class
+                      they extend, or add methods to it. So calling an
+                      inherited method always calls the method inherited from
+                      the parent of the extended class }
+                    if is_objccategory(current_structdef) then
+                      hclassdef:=hclassdef.childof;
                     spezcontext:=nil;
                     { if inherited; only then we need the method with
                       the same name }

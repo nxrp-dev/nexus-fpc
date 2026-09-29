@@ -702,8 +702,7 @@ implementation
         if (parasym.varspez=vs_out) and
            is_managed_type(orgparadef) and
            (not is_open_array(resultdef) or
-            is_managed_type(tarraydef(resultdef).elementdef)) and
-           not(target_info.system in systems_garbage_collected_managed_types) then
+            is_managed_type(tarraydef(resultdef).elementdef)) then
           begin
             { after converting a parameter to an open array, its resultdef is
               set back to its original resultdef so we can get the value of the
@@ -1388,12 +1387,6 @@ implementation
                          begin
                            if not valid_for_formal_const(left,true) then
                             CGMessagePos(left.fileinfo,parser_e_illegal_parameter_list)
-                           else if (target_info.system in systems_managed_vm) and
-                              (left.resultdef.typ in [orddef,floatdef]) then
-                             begin
-                               left:=cinlinenode.create(in_box_x,false,ccallparanode.create(left,nil));
-                               typecheckpass(left);
-                             end;
                          end;
                        else
                          ;
@@ -2655,21 +2648,12 @@ implementation
                   if methodpointer.nodetype=typen then
                     if (methodpointer.resultdef.typ<>objectdef) then
                       begin
-                        if not(target_info.system in systems_jvm) then
-                          begin
-                            { TSomeRecord.Constructor call. We need to allocate }
-                            { self node as a temp node of the result type       }
-                            temp:=ctempcreatenode.create(methodpointer.resultdef,methodpointer.resultdef.size,tt_persistent,false);
-                            add_init_statement(temp);
-                            add_done_statement(ctempdeletenode.create_normal_temp(temp));
-                            selftree:=ctemprefnode.create(temp);
-                          end
-                        else
-                          begin
-                            { special handling for Java constructors, handled in
-                              tjvmcallnode.extra_pre_call_code }
-                            selftree:=cnothingnode.create
-                          end;
+                        { TSomeRecord.Constructor call. We need to allocate }
+                        { self node as a temp node of the result type       }
+                        temp:=ctempcreatenode.create(methodpointer.resultdef,methodpointer.resultdef.size,tt_persistent,false);
+                        add_init_statement(temp);
+                        add_done_statement(ctempdeletenode.create_normal_temp(temp));
+                        selftree:=ctemprefnode.create(temp);
                       end
                     else
                       selftree:=safe_call_self_node.getcopy
@@ -2690,10 +2674,8 @@ implementation
                 selfdef:=tobjectdef(tprocdef(procdefinition).struct).extendeddef
               else
                 selfdef:=tprocdef(procdefinition).struct;
-              if ((selfdef.typ in [recorddef,objectdef]) and
-                  (oo_has_vmt in tabstractrecorddef(selfdef).objectoptions)) or
-                 { all Java classes have a "VMT" }
-                 (target_info.system in systems_jvm) then
+              if (selfdef.typ in [recorddef,objectdef]) and
+                 (oo_has_vmt in tabstractrecorddef(selfdef).objectoptions) then
                 begin
                   { we only need the vmt, loading self is not required and there is no
                     need to check for typen, because that will always get the

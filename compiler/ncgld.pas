@@ -1278,8 +1278,7 @@ implementation
         if is_packed_array(resultdef) then
           internalerror(200608042);
         dovariant:=
-          ((acnf_forcevaria in arrayconstructornodeflags) or is_variant_array(resultdef)) and
-          not(target_info.system in systems_managed_vm);
+          (acnf_forcevaria in arrayconstructornodeflags) or is_variant_array(resultdef);
         eledef:=tarraydef(resultdef).elementdef;
         elesize:=eledef.size;
         if dovariant then

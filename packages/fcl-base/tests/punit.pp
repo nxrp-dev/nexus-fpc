@@ -28,10 +28,6 @@ Type
    TTestString = AnsiString;
 {$ENDIF}
 
-{$IF NOT DECLARED(RTLString)}
-  RTLString = TTestString;
-{$endif}
-
 { ---------------------------------------------------------------------
   Some configuration
   ---------------------------------------------------------------------}

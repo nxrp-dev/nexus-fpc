@@ -1036,12 +1036,7 @@ implementation
                      { ugly, but delphi allows it }
                      if cdo_explicit in cdoptions then
                        begin
-                         if target_info.system in systems_jvm then
-                           begin
-                             doconv:=tc_equal;
-                             eq:=te_convert_l1;
-                           end
-                         else if m_delphi in current_settings.modeswitches then
+                         if m_delphi in current_settings.modeswitches then
                            begin
                              doconv:=tc_int_2_int;
                              eq:=te_convert_l1;
@@ -1058,12 +1053,7 @@ implementation
                            typecasts must not be treated as integer-like
                            conversions
                          }
-                         if target_info.system in systems_jvm then
-                           begin
-                             doconv:=tc_equal;
-                             eq:=te_convert_l1;
-                           end
-                         else if m_delphi in current_settings.modeswitches then
+                         if m_delphi in current_settings.modeswitches then
                            begin
                              doconv:=tc_int_2_int;
                              eq:=te_convert_l1;
@@ -1513,9 +1503,7 @@ implementation
                        typecasts must not be treated as integer-like conversions
                      }
                      if (((cdo_explicit in cdoptions) and
-                          ((m_delphi in current_settings.modeswitches) or
-                           (target_info.system in systems_jvm)
-                          )
+                          (m_delphi in current_settings.modeswitches)
                          ) or
                          (cdo_internal in cdoptions)
                         ) then
@@ -1524,12 +1512,7 @@ implementation
                            typecasts must not be treated as integer-like
                            conversions
                          }
-                         if target_info.system in systems_jvm then
-                           begin
-                             doconv:=tc_equal;
-                             eq:=te_convert_l1;
-                           end
-                         else if m_delphi in current_settings.modeswitches then
+                         if m_delphi in current_settings.modeswitches then
                            begin
                              doconv:=tc_int_2_int;
                              eq:=te_convert_l1;
@@ -1989,12 +1972,9 @@ implementation
                      false and let it be handled by the regular explicit type
                      casting code
                    }
-                   else if (not(target_info.system in systems_jvm) and
-                       ((def_from.typ=enumdef) or
-                        (
-                          (def_from.typ=orddef) and
-                          not is_void(def_from)
-                        ))) and
+                   else if ((def_from.typ=enumdef) or
+                            ((def_from.typ=orddef) and
+                             not is_void(def_from))) and
                       (m_delphi in current_settings.modeswitches) and
                       (cdo_explicit in cdoptions) then
                      begin
@@ -2805,37 +2785,6 @@ implementation
       end;
 
 
-    function stringdef_is_related(curdef:tstringdef;otherdef:tdef):boolean;
-      begin
-        result:=
-          (target_info.system in systems_jvm) and
-          (((curdef.stringtype in [st_unicodestring,st_widestring]) and
-            ((otherdef=java_jlobject) or
-             (otherdef=java_jlstring))) or
-           ((curdef.stringtype=st_ansistring) and
-            ((otherdef=java_jlobject) or
-             (otherdef=java_ansistring))));
-      end;
-
-
-    function recorddef_is_related(curdef:trecorddef;otherdef:tdef):boolean;
-      begin
-        { records are implemented via classes in the JVM target, and are
-          all descendents of the java_fpcbaserecordtype class }
-        result:=false;
-        if (target_info.system in systems_jvm) then
-          begin
-            if otherdef.typ=objectdef then
-              begin
-                otherdef:=find_real_class_definition(tobjectdef(otherdef),false);
-                if (otherdef=java_jlobject) or
-                   (otherdef=java_fpcbaserecordtype) then
-                  result:=true
-              end;
-          end;
-      end;
-
-
     { true if prot implements d (or if they are equal) }
     function is_related_interface_multiple(prot:tobjectdef;d:tdef):boolean;
       var
@@ -2942,10 +2891,6 @@ implementation
         if not assigned(curdef) then
           internalerror(2013102303);
         case curdef.typ of
-          stringdef:
-            result:=stringdef_is_related(tstringdef(curdef),otherdef);
-          recorddef:
-            result:=recorddef_is_related(trecorddef(curdef),otherdef);
           objectdef:
             result:=objectdef_is_related(tobjectdef(curdef),otherdef);
           else

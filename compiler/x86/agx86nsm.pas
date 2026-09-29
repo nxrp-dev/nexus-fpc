@@ -567,7 +567,7 @@ interface
           (target_info.system=system_i386_go32v2) then
           writer.AsmWrite('.data')
         else if (atype=sec_threadvar) and
-          (target_info.system in (systems_windows+systems_wince)) then
+          (target_info.system in systems_windows) then
           writer.AsmWrite('.tls'#9'bss')
         else if target_info.system in [system_i8086_msdos,system_i8086_embedded] then
           begin
@@ -754,7 +754,7 @@ interface
                  begin
                    if (LastSecType=sec_bss) or (
                       (LastSecType=sec_threadvar) and
-                      (target_info.system in (systems_windows+systems_wince))
+                      (target_info.system in systems_windows)
                      ) then
                       writer.AsmWriteLn(#9'ALIGNB '+tostr(tai_align(hp).aligntype))
                     else if tai_align_abstract(hp).use_op then
@@ -1384,118 +1384,6 @@ interface
 
 {$ifdef i386}
     const
-        as_i386_nasmcoff_info : tasminfo =
-          (
-            id           : as_i386_nasmcoff;
-            idtxt  : 'NASMCOFF';
-            asmbin : 'nasm';
-            asmcmd : '-f coff -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_go32v2];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_nasmwin32_info : tasminfo =
-          (
-            id           : as_i386_nasmwin32;
-            idtxt  : 'NASMWIN32';
-            asmbin : 'nasm';
-            asmcmd : '-f win32 -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_win32];
-            flags : [af_needar,af_no_debug,af_smartlink_sections];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_nasmobj_info : tasminfo =
-          (
-            id           : as_i386_nasmobj;
-            idtxt  : 'NASMOBJ';
-            asmbin : 'nasm';
-            asmcmd : '-f obj -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_embedded, system_i8086_msdos];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_nasmwdosx_info : tasminfo =
-          (
-            id           : as_i386_nasmwdosx;
-            idtxt  : 'NASMWDOSX';
-            asmbin : 'nasm';
-            asmcmd : '-f win32 -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_wdosx];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-
-       as_i386_nasmelf_info : tasminfo =
-          (
-            id           : as_i386_nasmelf;
-            idtxt  : 'NASMELF';
-            asmbin : 'nasm';
-            asmcmd : '-f elf -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_linux];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-{
-       as_i386_nasmdarwin_info : tasminfo =
-          (
-            id           : as_i386_nasmdarwin;
-            idtxt  : 'NASMDARWIN';
-            asmbin : 'nasm';
-            asmcmd : '-f macho32 -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_darwin];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-}
-       as_i386_nasmbeos_info : tasminfo =
-          (
-            id           : as_i386_nasmbeos;
-            idtxt  : 'NASMELF';
-            asmbin : 'nasm';
-            asmcmd : '-f elf -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_beos];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-
-       as_i386_nasmhaiku_info : tasminfo =
-          (
-            id           : as_i386_nasmhaiku;
-            idtxt  : 'NASMELF';
-            asmbin : 'nasm';
-            asmcmd : '-f elf -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i386_haiku];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
        as_i386_nasm_info : tasminfo =
           (
             id           : as_i386_nasm;
@@ -1576,13 +1464,6 @@ interface
 initialization
 
 {$ifdef i386}
-  RegisterAssembler(as_i386_nasmcoff_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmwin32_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmwdosx_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmobj_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmbeos_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmhaiku_info,TX86NasmAssembler);
-  RegisterAssembler(as_i386_nasmelf_info,TX86NasmAssembler);
   RegisterAssembler(as_i386_nasm_info,TX86NasmAssembler);
 {$endif i386}
 {$ifdef x86_64}

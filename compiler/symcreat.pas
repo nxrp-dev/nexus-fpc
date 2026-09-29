@@ -2196,7 +2196,7 @@ implementation
 
   function generate_pkg_stub(pd:tprocdef):tnode;
     begin
-      if target_info.system in systems_all_windows+systems_nativent then
+      if target_info.system in systems_all_windows then
         begin
           insert_funcret_local(pd);
           result:=cassignmentnode.create(

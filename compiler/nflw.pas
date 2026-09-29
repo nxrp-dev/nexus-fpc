@@ -2284,8 +2284,8 @@ implementation
           code generator will load it into the function result location),
           because the code to this that we add in tnodeutils.wrap_proc_body()
           gets inserted before the exit label to which this node will jump }
-        if (target_info.system in systems_fpnestedstruct) and
-           not(nf_internal in flags) and
+{$ifdef llvm}
+        if not(nf_internal in flags) and
            current_procinfo.procdef.get_funcretsym_info(ressym,resdef) and
            (tabstractnormalvarsym(ressym).inparentfpstruct) then
           begin
@@ -2293,6 +2293,7 @@ implementation
               result:=internalstatements(newstatement);
             cnodeutils.load_parentfpstruct_nested_funcret(ressym,resdef,newstatement);
           end;
+{$endif llvm}
         if assigned(result) then
           begin
             addstatement(newstatement,self.getcopy);

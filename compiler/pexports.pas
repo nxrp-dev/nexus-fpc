@@ -180,21 +180,9 @@ implementation
                      end;
                     if try_to_consume(_PROMISING) then
                      begin
-                       if target_info.system in systems_wasm then
-                         begin
-                           if try_to_consume(_FIRST) then
-                             include(options,eo_promising_first)
-                           else if try_to_consume(_LAST) then
-                             include(options,eo_promising_last)
-                           else
-                             include(options,eo_promising_first);
-                         end
-                       else
-                         begin
-                           Message(parser_e_promising_exports_not_supported_on_current_platform);
-                           if not try_to_consume(_FIRST) then
-                             try_to_consume(_LAST);
-                         end;
+                       Message(parser_e_promising_exports_not_supported_on_current_platform);
+                       if not try_to_consume(_FIRST) then
+                         try_to_consume(_LAST);
                      end;
                     if (DefString<>'') and
                         (

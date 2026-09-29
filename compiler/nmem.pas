@@ -220,9 +220,7 @@ implementation
           recorddef,
           objectdef:
             begin
-              if (left.resultdef.typ=objectdef) or
-                 ((target_info.system in systems_jvm) and
-                  (left.resultdef.typ=recorddef)) then
+              if left.resultdef.typ=objectdef then
                 begin
                   { access to the classtype while specializing? }
                   if tstoreddef(left.resultdef).is_generic then

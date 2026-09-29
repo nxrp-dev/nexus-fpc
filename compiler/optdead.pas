@@ -240,9 +240,7 @@ const
               result:=false;
               exit;
             end;
-          if (line[fsymtypepos] in ['T','t']) and
-             (not use_dotted_functions or
-              (line[fsymnamepos-1]='.')) then
+          if line[fsymtypepos] in ['T','t'] then
             fsymbols.add(copy(line,fsymnamepos,length(line)),pointer(1));
         end;
       result:=true;
@@ -319,28 +317,8 @@ const
             ...
         }
         result:=false;
-        if (source_info.system in systems_aix) and
-           (target_info.system in systems_aix) then
-          begin
-            { check for native aix nm:
-              .__start             t   268435792         213
-              .__start             T   268435792
-            }
-            if not(line[1] in ['0'..'9','a'..'f','A'..'F']) then
-              begin
-                fuseaixextractstrings:=true;
-                setlength(aixstrings,0);
-                result:=true;
-                exit;
-              end;
-          end;
         fsymtypepos:=pos(' ',line)+1;
         fsymnamepos:=fsymtypepos+2;
-        { on Linux/ppc64, there is an extra '.' at the start
-          of public function names
-        }
-        if use_dotted_functions then
-          inc(fsymnamepos);
         if failiferror(fsymtypepos<=0) then
           exit;
         { make sure there's room for the name }

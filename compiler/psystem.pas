@@ -563,7 +563,6 @@ implementation
             addtype('$sc80real',sc80floattype);
           end;
         addtype('$s64currency',s64currencytype);
-        if not(target_info.system in systems_managed_vm) then
           begin
             { Add a type for virtual method tables }
             hrecst:=trecordsymtable.create('',current_settings.packrecords,current_settings.alignment.recordalignmin);
@@ -711,12 +710,9 @@ implementation
           pvmt_name:='lower__pvmt'
         else
           pvmt_name:='pvmt';
-        if not(target_info.system in systems_managed_vm) then
-          begin
-            loadtype(pvmt_name,pvmttype);
-            loadtype('vtblarray',vmtarraytype);
-            loadtype('__vtbl_ptr_type',vmttype);
-          end;
+        loadtype(pvmt_name,pvmttype);
+        loadtype('vtblarray',vmtarraytype);
+        loadtype('__vtbl_ptr_type',vmttype);
         if f_variants in features then
           begin
             loadtype('variant',cvarianttype);

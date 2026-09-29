@@ -109,8 +109,4 @@ end;
 
 initialization
   InitDynLibs;
-finalization
-{$if declared(DoneDynLibs)}
-  DoneDynLibs;
-{$endif}
 end.

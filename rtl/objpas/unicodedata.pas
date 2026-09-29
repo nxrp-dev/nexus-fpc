@@ -119,18 +119,17 @@ interface
     PtrUInt = NativeUInt;
 {$ENDIF !FPC}
 
-{$IF not Declared(reCodesetConversion)}
+{$IFNDEF FPC}
   const reCodesetConversion = reRangeError;
-{$IFEND reCodesetConversion}
+{$ENDIF FPC}
 
-{$IF not Declared(DirectorySeparator)}
+{$IFNDEF FPC}
   {$IFDEF MSWINDOWS}
     const DirectorySeparator = '\';
   {$ELSE}
     const DirectorySeparator = '/';
   {$ENDIF MSWINDOWS}
-
-{$IFEND DirectorySeparator}
+{$ENDIF FPC}
 
 const
   MAX_WORD = High(Word);

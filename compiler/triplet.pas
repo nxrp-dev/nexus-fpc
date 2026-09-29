@@ -55,14 +55,9 @@ uses
         result:=result+'-unknown-linux'
       else if target_info.system in systems_all_windows then
         begin
-          { WinCE isn't supported (yet) by llvm, but if/when added this is
-            presumably how they will differentiate it }
-          if target_info.system in systems_windows then
-            result:=result+'-pc';
+          result:=result+'-pc';
           result:=result+'-windows-msvc19'
         end
-      else if target_info.system in systems_embedded then
-        result:=result+'-none'
       else
         result:=result+'-unknown';
 
@@ -73,15 +68,11 @@ uses
 {$ifdef arm}
       if target_info.abi=abi_eabihf then
         result:=result+'-gnueabihf'
-      else if target_info.system in systems_embedded then
-        result:=result+'-eabi'
       else if target_info.abi=abi_eabi then
         result:=result+'-gnueabi'
       else
 {$endif}
-      if target_info.system in systems_embedded then
-        result:=result+'-elf'
-      else if target_info.system in systems_linux then
+      if target_info.system in systems_linux then
         result:=result+'-gnu';
     end;
 
