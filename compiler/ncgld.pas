@@ -551,10 +551,7 @@ implementation
                     not tabstractprocdef(resultdef).is_addressonly then
                    begin
                      location_reset(location,LOC_CREGISTER,int_cgsize(voidpointertype.size*2));
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                     { cpus with 16 bit address registers don't use registerhi here, so allocate already here a register for all purposes }
-                     location.register:=hlcg.getintregister(current_asmdata.CurrAsmList,s32inttype);
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                      secondpass(left);
 
                      { load class instance/classrefdef address }
@@ -572,11 +569,9 @@ implementation
                              { this is not possible for objects }
                              if is_object(left.resultdef) then
                                internalerror(200304234);
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                             hlcg.a_load_reg_reg(current_asmdata.CurrAsmList,left.resultdef,left.resultdef,left.location.register,cg.GetNextReg(cg.GetNextReg(location.register)));
-{$else defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                              location.registerhi:=left.location.register;
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                              vd:=left.resultdef;
                           end;
                         LOC_CREFERENCE,
@@ -587,22 +582,18 @@ implementation
                                 is_nested_pd(procdef) then
                                begin
                                  vd:=left.resultdef;
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                                 hlcg.a_load_ref_reg(current_asmdata.CurrAsmList,left.resultdef,left.resultdef,left.location.reference,cg.GetNextReg(cg.GetNextReg(location.register)))
-{$else defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                                  location.registerhi:=hlcg.getaddressregister(current_asmdata.CurrAsmList,left.resultdef);
                                  hlcg.a_load_ref_reg(current_asmdata.CurrAsmList,left.resultdef,left.resultdef,left.location.reference,location.registerhi)
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                                end
                              else
                                begin
                                  vd:=cpointerdef.getreusable(left.resultdef);
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                                 hlcg.a_loadaddr_ref_reg(current_asmdata.CurrAsmList,left.resultdef,vd,left.location.reference,cg.GetNextReg(cg.GetNextReg(location.register)));
-{$else defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                                  location.registerhi:=hlcg.getaddressregister(current_asmdata.CurrAsmList,vd);
                                  hlcg.a_loadaddr_ref_reg(current_asmdata.CurrAsmList,left.resultdef,vd,left.location.reference,location.registerhi);
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                                end;
                              location_freetemp(current_asmdata.CurrAsmList,left.location);
                           end;
@@ -639,13 +630,10 @@ implementation
                            begin
                              vmtdef:=cpointerdef.getreusable(tobjectdef(tclassrefdef(left.resultdef).pointeddef).vmt_def);
                              { classrefdef is a pointer to the vmt already }
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                             hregister:=hlcg.getaddressregister(current_asmdata.CurrAsmList,vmtdef);
-                             hlcg.a_load_reg_reg(current_asmdata.CurrAsmList,left.resultdef,left.resultdef,cg.GetNextReg(cg.GetNextReg(location.register)),hregister);
-{$else defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                              { targets with 32 bit method pointers got already a register assigned }
                              hregister:=location.registerhi;
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                              hlcg.g_ptrtypecast_reg(current_asmdata.CurrAsmList,left.resultdef,vmtdef,hregister);
                            end
                          else if is_any_interface_kind(left.resultdef) then
@@ -663,9 +651,9 @@ implementation
                            tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber));
                          hlcg.reference_reset_base(href,vmtdef,hregister,0,ctempposinvalid,vmtdef.alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
-{$if not(defined(CPU8BITALU) and defined(CPU16BITADDR))}
+
                          location.register:=hlcg.getaddressregister(current_asmdata.CurrAsmList,vmtentry.vardef);
-{$endif not(defined(CPU8BITALU) and defined(CPU16BITADDR))}
+
                          hlcg.g_set_addr_nonbitpacked_field_ref(current_asmdata.CurrAsmList,tabstractrecorddef(vmtdef.pointeddef),vmtentry,href);
                          hlcg.a_load_ref_reg(current_asmdata.CurrAsmList,vmtentry.vardef,vmtentry.vardef,href,location.register);
                        end
@@ -674,9 +662,9 @@ implementation
                          { load address of the function }
                          reference_reset_symbol(href,current_asmdata.RefAsmSymbol(procdef.mangledname,AT_FUNCTION),0,procdef.address_type.alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
-{$if not(defined(CPU8BITALU) and defined(CPU16BITADDR))}
+
                          location.register:=hlcg.getaddressregister(current_asmdata.CurrAsmList,cprocvardef.getreusableprocaddr(procdef,pc_address_only));
-{$endif not(defined(CPU8BITALU) and defined(CPU16BITADDR))}
+
                          hlcg.a_loadaddr_ref_reg(current_asmdata.CurrAsmList,procdef,cprocvardef.getreusableprocaddr(procdef,pc_address_only),href,location.register);
                        end;
 
@@ -685,9 +673,7 @@ implementation
                      if target_info.endian=endian_big then
                        begin
                          { cpus with 16 bit address registers don't use registerhi here }
-{$if defined(CPU8BITALU) and defined(CPU16BITADDR)}
-                         Internalerror(2022091201);
-{$endif defined(CPU8BITALU) and defined(CPU16BITADDR)}
+
                          hregister:=location.register;
                          location.register:=location.registerhi;
                          location.registerhi:=hregister;
@@ -1049,7 +1035,7 @@ implementation
                   else
 {$endif cpu64bitalu}
 {$endif not cpuhighleveltarget}
-{$if defined(i8086) or defined(wasm32)}
+{$if defined(wasm32)}
                   { prefer a_load_loc_ref, because it supports i8086-specific types
                     that use registerhi (like 6-byte method pointers). The same
                     applies to WebAssembly, which has a 64-bit ALU, but keeps

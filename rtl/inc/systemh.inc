@@ -40,9 +40,9 @@
 {$endif}
 
 { don't use FPU registervariables on the i386 and i8086 }
-{$if defined(CPUI386) or defined(CPUI8086)}
+{$if defined(CPUI386)}
   {$maxfpuregisters 0}
-{$endif CPUI386 or CPUI8086}
+{$endif CPUI386}
 
 { the assembler helpers need this}
 
@@ -145,45 +145,7 @@ Type
   FarPointer = NearFsPointer;
 {$endif CPUI386}
 
-{$ifdef CPUI8086}
-  {$define CPU16}
 
-  {$define DEFAULT_EXTENDED}
-
-  {$define SUPPORT_SINGLE}
-  {$define SUPPORT_DOUBLE}
-  {$define SUPPORT_EXTENDED}
-  {$define SUPPORT_COMP}
-
-  {$ifndef FPUNONE}
-    ValReal = Extended;
-  {$endif}
-
-  {$define MOVE_HAS_SIZEUINT_COUNT}
-  {$define FILLCHAR_HAS_SIZEUINT_COUNT}
-
-  {$if defined(FPC_MM_TINY)}
-    {$define FPC_X86_CODE_NEAR}
-    {$define FPC_X86_DATA_NEAR}
-  {$elseif defined(FPC_MM_SMALL)}
-    {$define FPC_X86_CODE_NEAR}
-    {$define FPC_X86_DATA_NEAR}
-  {$elseif defined(FPC_MM_MEDIUM)}
-    {$define FPC_X86_CODE_FAR}
-    {$define FPC_X86_DATA_NEAR}
-  {$elseif defined(FPC_MM_COMPACT)}
-    {$define FPC_X86_CODE_NEAR}
-    {$define FPC_X86_DATA_FAR}
-  {$elseif defined(FPC_MM_LARGE)}
-    {$define FPC_X86_CODE_FAR}
-    {$define FPC_X86_DATA_FAR}
-  {$elseif defined(FPC_MM_HUGE)}
-    {$define FPC_X86_CODE_FAR}
-    {$define FPC_X86_DATA_HUGE}
-  {$else}
-    {$fatal No memory model defined}
-  {$endif}
-{$endif CPUI8086}
 
 {$ifdef CPUX86_64}
 {$ifdef FPC_HAS_TYPE_EXTENDED}
@@ -273,24 +235,7 @@ Type
 
 
 
-{$ifdef CPUZ80}
-  {$define DEFAULT_SINGLE}
 
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Real;
-  {$endif}
-
-  FarPointer = Pointer;
-{$endif CPUZ80}
 
 {$ifdef CPUWASM32}
   {$define DEFAULT_DOUBLE}
@@ -308,12 +253,10 @@ Type
 
 
 { By default enable a simple implementation of Random for 8/16 bit CPUs }
-{$if (defined(CPU16) or defined(CPU8)) and not defined(FPC_NO_SIMPLE_RANDOM)}
-  {$define FPC_USE_SIMPLE_RANDOM}
-{$endif}
 
 
-{$if not declared(FarPointer)}
+
+{$if not defined(CPUI386) and not defined(CPUWASM32)}
   FarPointer = Pointer;
 {$endif}
 
@@ -344,46 +287,9 @@ Type
   TExitCode = Longint;
 {$endif CPU32}
 
-{$ifdef CPU16}
-  SizeInt = Integer;
-  SizeUInt = Word;
-  {$if defined(FPC_X86_DATA_FAR) or defined(FPC_X86_DATA_HUGE)}
-    PtrInt = Longint;
-    PtrUInt = DWord;
-  {$else}
-    PtrInt = Integer;
-    PtrUInt = Word;
-  {$endif}
-  {$if defined(FPC_X86_CODE_FAR)}
-    CodePointer = FarPointer;
-    CodePtrInt = Longint;
-    CodePtrUInt = DWord;
-  {$elseif defined(FPC_MM_TINY)}
-    CodePointer = NearPointer;
-    CodePtrInt = Integer;
-    CodePtrUInt = Word;
-  {$elseif defined(FPC_X86_CODE_NEAR)}
-    CodePointer = NearCsPointer;
-    CodePtrInt = Integer;
-    CodePtrUInt = Word;
-  {$else}
-    CodePointer = Pointer;
-    CodePtrInt = PtrInt;
-    CodePtrUInt = PtrUInt;
-  {$endif}
-  ValSInt = Integer;
-  ValUInt = Word;
-  { this is TP compatible }
-  TExitCode = Word;
-{$endif CPU16}
 
-{$if defined(CPUINT8)}
-  ALUSInt = ShortInt;
-  ALUUInt = Byte;
-{$elseif defined(CPUINT16)}
-  ALUSInt = SmallInt;
-  ALUUInt = Word;
-{$elseif defined(CPUINT32)}
+
+{$if defined(CPUINT32)}
   ALUSInt = Longint;
   ALUUInt = DWord;
 {$elseif defined(CPUINT64)}
@@ -410,7 +316,7 @@ Type
   UInt32  = Cardinal;
   UIntPtr = PtrUInt;
 
-{$if not declared(Comp)}
+{$ifndef SUPPORT_COMP}
   { map comp to int64, but this doesn't mean we compile the comp support in! }
   Comp = type Int64;
 {$endif}
@@ -444,11 +350,9 @@ Type
 
   UCS4Char            = 0..$10ffff;
   PUCS4Char           = ^UCS4Char;
-{$ifdef CPU16}
-  TUCS4CharArray      = array[0..32767 div sizeof(UCS4Char)-1] of UCS4Char;
-{$else CPU16}
+
   TUCS4CharArray      = array[0..$effffff] of UCS4Char;
-{$endif CPU16}
+
   PUCS4CharArray      = ^TUCS4CharArray;
 {$ifdef FPC_HAS_FEATURE_DYNARRAYS}
   UCS4String          = array of UCS4Char;
@@ -474,9 +378,7 @@ Type
   PPDouble            = ^PDouble;
 {$endif}
   PCurrency           = ^Currency;
-{$if declared(Comp)}
   PComp               = ^Comp;
-{$endif declared(Comp)}
 
   PSmallInt           = ^Smallint;
   PShortInt           = ^Shortint;
@@ -622,26 +524,20 @@ const
   MaxInt   = maxsmallint;
 
 type
-{$ifdef CPU16}
-  IntegerArray  = array[0..maxSmallint div sizeof(Integer)-1] of Integer;
-{$else CPU16}
+
   IntegerArray  = array[0..$effffff] of Integer;
-{$endif CPU16}
+
   PIntegerArray = ^IntegerArray;
-{$ifdef CPU16}
-  PointerArray = array [0..32767 div sizeof(Pointer)-1] of Pointer;
-{$else CPU16}
+
   PointerArray = array [0..512*1024*1024-2] of Pointer;
-{$endif CPU16}
+
   PPointerArray = ^PointerArray;
 
   TBoundArray = array of SizeInt;
 
-{$ifdef CPU16}
-  TPCharArray = packed array[0..(MaxSmallint div SizeOf(PAnsiChar))-1] of PAnsiChar;
-{$else CPU16}
+
   TPCharArray = packed array[0..(MaxLongint div SizeOf(PAnsiChar))-1] of PAnsiChar;
-{$endif CPU16}
+
   PPCharArray = ^TPCharArray;
 
 (* CtrlBreak set to true signalizes Ctrl-Break signal, otherwise Ctrl-C. *)
@@ -807,9 +703,7 @@ procedure ReadBarrier; {$ifdef SYSTEMINLINE}inline;{$endif}
 procedure ReadDependencyBarrier; {$ifdef SYSTEMINLINE}inline;{$endif}
 procedure ReadWriteBarrier; {$ifdef SYSTEMINLINE}inline;{$endif}
 procedure WriteBarrier; {$ifdef SYSTEMINLINE}inline;{$endif}
-{$ifdef cpui8086}
-procedure MoveData(srcseg,srcoff,destseg,destoff:Word;n:Word);
-{$endif cpui8086}
+
 
 {****************************************************************************
                           Math Routines
@@ -852,22 +746,8 @@ Function  Random: extended;
 Procedure Randomize;
 {$endif FPC_HAS_FEATURE_RANDOM}
 
-{$if defined(CPUINT8)}
-  {$ifdef FPC_HAS_INTERNAL_ABS_SHORTINT}
-  {$define FPC_SYSTEM_HAS_ABS_SHORTINT}
-  Function Abs(l:shortint):shortint;[internproc:fpc_in_abs_long];
-  {$else FPC_SYSTEM_HAS_ABS_SHORTINT}
-  Function Abs(l:shortint):shortint;[internconst:fpc_in_const_abs];{$ifdef SYSTEMINLINE}inline;{$endif}
-  {$endif FPC_SYSTEM_HAS_ABS_SHORTINT}
-{$endif CPUINT8}
-{$if defined(CPUINT16) or defined(CPUINT8)}
-  {$ifdef FPC_HAS_INTERNAL_ABS_SMALLINT}
-  {$define FPC_SYSTEM_HAS_ABS_SMALLINT}
-  Function Abs(l:smallint):smallint;[internproc:fpc_in_abs_long];
-  {$else FPC_HAS_INTERNAL_ABS_LONG}
-  Function Abs(l:smallint):smallint;[internconst:fpc_in_const_abs];{$ifdef SYSTEMINLINE}inline;{$endif}
-  {$endif FPC_HAS_INTERNAL_ABS_LONG}
-{$endif CPUINT16 or CPUINT8}
+
+
 {$ifdef FPC_HAS_INTERNAL_ABS_LONG}
 {$define FPC_SYSTEM_HAS_ABS_LONGINT}
 Function Abs(l:longint):longint;[internproc:fpc_in_abs_long];
@@ -880,23 +760,13 @@ Function Abs(l:Int64):Int64;[internproc:fpc_in_abs_long];
 {$else FPC_HAS_INTERNAL_ABS_INT64}
 Function Abs(l:Int64):Int64;[internconst:fpc_in_const_abs];{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_ABS_INT64}
-{$if defined(CPUINT8)}
-Function Sqr(l:shortint):shortint;[internconst:fpc_in_const_sqr];{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif CPUINT8}
-{$if defined(CPUINT16) or defined(CPUINT8)}
-Function Sqr(l:smallint):smallint;[internconst:fpc_in_const_sqr];{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif CPUINT16 or CPUINT8}
+
+
 Function Sqr(l:Longint):Longint;[internconst:fpc_in_const_sqr];{$ifdef SYSTEMINLINE}inline;{$endif}
 Function Sqr(l:Int64):Int64;[internconst:fpc_in_const_sqr];{$ifdef SYSTEMINLINE}inline;{$endif}
 Function Sqr(l:QWord):QWord;[internconst:fpc_in_const_sqr];{$ifdef SYSTEMINLINE}inline;{$endif}
-{$if defined(CPUINT8)}
-Function Odd(l:shortint):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
-Function Odd(l:byte):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif CPUINT8}
-{$if defined(CPUINT16) or defined(CPUINT8)}
-Function Odd(l:smallint):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
-Function Odd(l:word):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
-{$endif CPUINT16 or CPUINT8}
+
+
 Function Odd(l:Longint):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
 Function Odd(l:Longword):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
 Function Odd(l:Int64):Boolean;[internconst:fpc_in_const_odd];{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -941,10 +811,10 @@ function UMul64x64_128(a,b: uint64; out rHi: uint64): uint64;
 
 {$ifdef FPC_HAS_INTERNAL_ROX}
 
-{$if defined(cpux86_64) or defined(cpui386) or defined(cpui8086)}
+{$if defined(cpux86_64) or defined(cpui386)}
 {$define FPC_HAS_INTERNAL_ROX_BYTE}
 {$define FPC_HAS_INTERNAL_ROX_WORD}
-{$endif defined(cpux86_64) or defined(cpui386) or defined(cpui8086)}
+{$endif defined(cpux86_64) or defined(cpui386)}
 
 {$if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
 {$define FPC_HAS_INTERNAL_ROX_DWORD}
@@ -1018,10 +888,10 @@ function RolQWord(Const AValue : QWord;const Dist : Byte): QWord;{$ifdef SYSTEMI
 
 {$ifdef FPC_HAS_INTERNAL_SAR}
 
-{$if defined(cpux86_64) or defined(cpui386) or defined(cpui8086) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
+{$if defined(cpux86_64) or defined(cpui386) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
 {$define FPC_HAS_INTERNAL_SAR_BYTE}
 {$define FPC_HAS_INTERNAL_SAR_WORD}
-{$endif defined(cpux86_64) or defined(cpui386) or defined(cpui8086) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
+{$endif defined(cpux86_64) or defined(cpui386) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
 
 { currently, all supported CPUs have an internal 32 bit sar implementation }
 { $if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel)}
@@ -1099,34 +969,34 @@ function BsrByte(Const AValue: Byte): Byte;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$ifdef FPC_HAS_INTERNAL_BSF_WORD}
 function BsfWord(Const AValue: Word): cardinal;[internproc:fpc_in_bsf_x];
 {$else}
-function BsfWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsfWord(Const AValue: Word): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSF_WORD}
 {$ifdef FPC_HAS_INTERNAL_BSR_WORD}
 function BsrWord(Const AValue: Word): cardinal;[internproc:fpc_in_bsr_x];
 {$else}
-function BsrWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsrWord(Const AValue: Word): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSR_WORD}
 
 {$ifdef FPC_HAS_INTERNAL_BSF_DWORD}
 function BsfDWord(Const AValue : DWord): cardinal;[internproc:fpc_in_bsf_x];
 {$else}
-function BsfDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsfDWord(Const AValue : DWord): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSF_DWORD}
 {$ifdef FPC_HAS_INTERNAL_BSR_DWORD}
 function BsrDWord(Const AValue : DWord): cardinal;[internproc:fpc_in_bsr_x];
 {$else}
-function BsrDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsrDWord(Const AValue : DWord): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSR_DWORD}
 
 {$ifdef FPC_HAS_INTERNAL_BSF_QWORD}
 function BsfQWord(Const AValue : QWord): cardinal;[internproc:fpc_in_bsf_x];
 {$else}
-function BsfQWord(Const AValue : QWord): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsfQWord(Const AValue : QWord): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSF_QWORD}
 {$ifdef FPC_HAS_INTERNAL_BSR_QWORD}
 function BsrQWord(Const AValue : QWord): cardinal;[internproc:fpc_in_bsr_x];
 {$else}
-function BsrQWord(Const AValue : QWord): {$ifdef CPU16}byte{$else}cardinal{$endif};{$ifdef SYSTEMINLINE}inline;{$endif}
+function BsrQWord(Const AValue : QWord): cardinal;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_INTERNAL_BSR_QWORD}
 
 function PopCnt(Const AValue: Byte): Byte;[internproc:fpc_in_popcnt_x];
@@ -1145,7 +1015,7 @@ function PopCnt(Const AValue : QWord): QWord;[internproc:fpc_in_popcnt_x];
                          Addr/Pointer Handling
 ****************************************************************************}
 
-Function  Ptr(sel,off:{$ifdef CPU16}Word{$else}Longint{$endif}):farpointer;[internconst:fpc_in_const_ptr];{$ifdef SYSTEMINLINE}inline;{$endif}
+Function  Ptr(sel,off:Longint):farpointer;[internconst:fpc_in_const_ptr];{$ifdef SYSTEMINLINE}inline;{$endif}
 Function  CSeg:Word;{$ifdef SYSTEMINLINE}inline;{$endif}
 Function  DSeg:Word;{$ifdef SYSTEMINLINE}inline;{$endif}
 Function  SSeg:Word;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -1188,19 +1058,9 @@ Function  BinStr(Val:int64;cnt:byte):shortstring;
 Function  HexStr(Val:qword;cnt:byte):shortstring;
 Function  OctStr(Val:qword;cnt:byte):shortstring;
 Function  BinStr(Val:qword;cnt:byte):shortstring;
-{$ifdef CPUI8086}
-Function  HexStr(Val:NearPointer):shortstring;
-function  HexStr(Val:NearCsPointer):shortstring;
-function  HexStr(Val:NearDsPointer):shortstring;
-function  HexStr(Val:NearEsPointer):shortstring;
-function  HexStr(Val:NearSsPointer):shortstring;
-function  HexStr(Val:NearFsPointer):shortstring;
-function  HexStr(Val:NearGsPointer):shortstring;
-Function  HexStr(Val:FarPointer):shortstring;
-Function  HexStr(Val:HugePointer):shortstring;{$ifdef SYSTEMINLINE}inline;{$endif}
-{$else CPUI8086}
+
 Function  HexStr(Val:Pointer):shortstring;
-{$endif CPUI8086}
+
 
 { AnsiChar functions }
 {$if defined(VER3_2)}
@@ -1443,17 +1303,9 @@ Function GetThreadID:TThreadID;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$define FPC_HAS_EXPLICIT_INTERLOCKED_POINTER}
 {$endif}
 
-{$ifdef CPUI8086}
-   {$define FPC_SYSTEM_DISABLE_INTERLOCK_POINTER_OVERLOAD}
-{$endif CPUI806}
 
-{$ifdef cpu16}
-function InterlockedIncrement (var Target: smallint) : smallint; public name 'FPC_INTERLOCKEDINCREMENT16';
-function InterlockedDecrement (var Target: smallint) : smallint; public name 'FPC_INTERLOCKEDDECREMENT16';
-function InterlockedExchange (var Target: smallint;Source : smallint) : smallint; public name 'FPC_INTERLOCKEDEXCHANGE16';
-function InterlockedExchangeAdd (var Target: smallint;Source : smallint) : smallint; public name 'FPC_INTERLOCKEDEXCHANGEADD16';
-function InterlockedCompareExchange(var Target: smallint; NewValue: smallint; Comperand: smallint): smallint; public name 'FPC_INTERLOCKEDCOMPAREEXCHANGE16';
-{$endif cpu16}
+
+
 function InterlockedIncrement (var Target: longint) : longint; public name 'FPC_INTERLOCKEDINCREMENT';
 function InterlockedDecrement (var Target: longint) : longint; public name 'FPC_INTERLOCKEDDECREMENT';
 function InterlockedExchange (var Target: longint;Source : longint) : longint; public name 'FPC_INTERLOCKEDEXCHANGE';
@@ -1501,13 +1353,7 @@ function InterlockedCompareExchangePointer(var Target: Pointer; NewValue: Pointe
 {$endif FPC_SYSTEM_DISABLE_INTERLOCK_POINTER_OVERLOAD}
 
 { unsigned overloads }
-{$ifdef cpu16}
-function InterlockedIncrement (var Target: word) : word; external name 'FPC_INTERLOCKEDINCREMENT16';
-function InterlockedDecrement (var Target: word) : word; external name 'FPC_INTERLOCKEDDECREMENT16';
-function InterlockedExchange (var Target: word;Source : word) : word; external name 'FPC_INTERLOCKEDEXCHANGE16';
-function InterlockedExchangeAdd (var Target: word;Source : word) : word; external name 'FPC_INTERLOCKEDEXCHANGEADD16';
-function InterlockedCompareExchange(var Target: word; NewValue: word; Comperand: word): word; external name 'FPC_INTERLOCKEDCOMPAREEXCHANGE16';
-{$endif cpu16}
+
 function InterlockedIncrement (var Target: cardinal) : cardinal; external name 'FPC_INTERLOCKEDINCREMENT';
 function InterlockedDecrement (var Target: cardinal) : cardinal; external name 'FPC_INTERLOCKEDDECREMENT';
 function InterlockedExchange (var Target: cardinal;Source : cardinal) : cardinal; external name 'FPC_INTERLOCKEDEXCHANGE';

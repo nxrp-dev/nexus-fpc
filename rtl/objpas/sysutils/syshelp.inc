@@ -363,10 +363,7 @@ end;
 {$define TORDINALNIBBLEINDEX:=TIntegerNibbleIndex}
 {$define TORDINALBYTEINDEX:=TIntegerByteIndex}
 {$define TORDINALWORDINDEX:=TIntegerWordIndex}
-{$if sizeof(Integer)=2}
-  {$define TORDINALOVERLAY:=TWordOverlay}
-  {$define TORDINALTYPESIZE2}
-{$elseif sizeof(Integer)=4}
+{$if sizeof(Integer)=4}
   {$define TORDINALOVERLAY:=TDwordOverlay}
   {$define TORDINALTYPESIZE4}
 {$else}
@@ -430,12 +427,7 @@ end;
 {$define TORDINALHELPER:=TNativeIntHelper}
 {$define TORDINALTYPE:=NativeInt}
 {$define TORDINALBITINDEX:=TNativeIntBitIndex}
-{$if sizeof(NativeInt)=2}
-  {$define TORDINALNIBBLEINDEX:=TSmallIntNibbleIndex}
-  {$define TORDINALBYTEINDEX:=TSmallIntByteIndex}
-  {$define TORDINALOVERLAY:=TSmallIntOverlay}
-  {$define TORDINALTYPESIZE2}
-{$elseif sizeof(NativeInt)=4}
+{$if sizeof(NativeInt)=4}
   {$define TORDINALNIBBLEINDEX:=TLongIntNibbleIndex}
   {$define TORDINALBYTEINDEX:=TLongIntByteIndex}
   {$define TORDINALWORDINDEX:=TLongIntWordIndex}
@@ -463,12 +455,7 @@ end;
 {$define TORDINALHELPER:=TNativeUIntHelper}
 {$define TORDINALTYPE:=NativeUInt}
 {$define TORDINALBITINDEX:=TNativeUIntBitIndex}
-{$if sizeof(NativeUInt)=2}
-  {$define TORDINALNIBBLEINDEX:=TWordNibbleIndex}
-  {$define TORDINALBYTEINDEX:=TWordByteIndex}
-  {$define TORDINALOVERLAY:=TWordOverlay}
-  {$define TORDINALTYPESIZE2}
-{$elseif sizeof(NativeUInt)=4}
+{$if sizeof(NativeUInt)=4}
   {$define TORDINALNIBBLEINDEX:=TDwordNibbleIndex}
   {$define TORDINALBYTEINDEX:=TDwordByteIndex}
   {$define TORDINALWORDINDEX:=TDwordWordIndex}

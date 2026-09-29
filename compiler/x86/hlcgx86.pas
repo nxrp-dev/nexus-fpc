@@ -52,9 +52,7 @@ implementation
     globals,systems,
     aasmbase,
     cgutils,
-{$ifdef I8086}
-    cpuinfo,
-{$endif I8086}
+
     cpubase,aasmcpu;
 
 { thlcgx86 }
@@ -107,12 +105,7 @@ implementation
     const
       bit_set_clr_instr: array[boolean] of tasmop = (A_BTR,A_BTS);
     begin
-{$ifdef I8086}
-      { BTR/BTS is only supported by 80386 CPU or later }
-      if not(CPUX86_HAS_BTX in cpu_capabilities[current_settings.optimizecputype]) then
-	inherited
-      else
-{$endif I8086}
+
         list.concat(taicpu.op_reg_reg(bit_set_clr_instr[doset],S_NO,bitnumber,dest));
     end;
 

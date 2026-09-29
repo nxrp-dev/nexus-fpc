@@ -984,9 +984,7 @@ begin
 {$ifdef m68k}
       '6',
 {$endif}
-{$ifdef i8086}
-      '8',
-{$endif}
+
 {$ifdef aarch64}
       'a',
 {$endif}
@@ -1002,9 +1000,7 @@ begin
 {$ifdef xtensa}
       'x',
 {$endif}
-{$ifdef z80}
-      'Z',
-{$endif}
+
 {$ifdef wasm32}
       'W',
 {$endif}
@@ -2169,13 +2165,7 @@ begin
     end;
 {$endif}
 
-{$ifdef i8086}
-  if (apptype=app_com) and (init_settings.x86memorymodel<>mm_tiny) then
-    begin
-      Message(option_com_files_require_tiny_model);
-      StopOptions(1);
-    end;
-{$endif i8086}
+
 
 
 {$ifndef i8086_link_intern_debuginfo}
@@ -2751,11 +2741,9 @@ begin
          begin
             val(copy(more,j+1),stacksize,code);
             if (code<>0)
-{$ifdef cpu16bitaddr}
-               or (stacksize>=65521)
-{$else cpu16bitaddr}
+
                or (stacksize>=67107840)
-{$endif cpu16bitaddr}
+
                or (stacksize<1024) then
              IllegalPara(opt);
             break;
@@ -3876,15 +3864,7 @@ begin
            else
              IllegalPara(opt);
          end;
-{$if defined(i8086)}
-       'h':
-         begin
-           if UnsetBool(More, j, opt, false) then
-             exclude(init_settings.moduleswitches,cs_huge_code)
-            else
-             include(init_settings.moduleswitches,cs_huge_code);
-         end;
-{$endif defined(i8086)}
+
        'I':
          begin
            if target_info.system in systems_all_windows then
@@ -3908,24 +3888,7 @@ begin
          end;
        'm':
          begin
-{$if defined(i8086)}
-           if (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-             begin
-               case Upper(Copy(More,j+1)) of
-                 'TINY':    init_settings.x86memorymodel:=mm_tiny;
-                 'SMALL':   init_settings.x86memorymodel:=mm_small;
-                 'MEDIUM':  init_settings.x86memorymodel:=mm_medium;
-                 'COMPACT': init_settings.x86memorymodel:=mm_compact;
-                 'LARGE':   init_settings.x86memorymodel:=mm_large;
-                 'HUGE':    init_settings.x86memorymodel:=mm_huge;
-                 else
-                   IllegalPara(opt);
-               end;
-               MemoryModelSetExplicitly:=true;
-               break;
-             end
-           else
-{$endif defined(i8086)}
+
              IllegalPara(opt);
          end;
        'M':
@@ -4026,19 +3989,7 @@ begin
          end;
        't':
          begin
-{$if defined(i8086)}
-           if (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-             begin
-               case Upper(Copy(More,j+1)) of
-                 'EXE': SetAppType(app_cui);
-                 'COM': SetAppType(app_com);
-                 else
-                   IllegalPara(opt);
-               end;
-               break;
-             end
-           else
-{$endif defined(i8086)}
+
 {$if defined(m68k)}
            if (target_info.system in [system_m68k_atari]) then
              begin
@@ -4502,31 +4453,7 @@ procedure read_arguments(cmd:TCmdStr);
 
 
 
-      {$ifdef i8086}
-        def_system_macro('CPU86');  { Borland compatibility }
-        def_system_macro('CPU87');  { Borland compatibility }
-        def_system_macro('CPUI8086');
-        def_system_macro('CPU16');
-        def_system_macro('FPC_HAS_TYPE_EXTENDED');
-        def_system_macro('FPC_HAS_TYPE_DOUBLE');
-        def_system_macro('FPC_HAS_TYPE_SINGLE');
-        { Clear memory model defines so we don't end up with two of them defined at the same time. 
-          That could have happen if configuration file would set differnet memory model from default. }
-        undef_system_macro('FPC_MM_TINY');
-        undef_system_macro('FPC_MM_SMALL');
-        undef_system_macro('FPC_MM_MEDIUM');
-        undef_system_macro('FPC_MM_COMPACT');
-        undef_system_macro('FPC_MM_LARGE');
-        undef_system_macro('FPC_MM_TINY');
-        case init_settings.x86memorymodel of
-          mm_tiny:    def_system_macro('FPC_MM_TINY');
-          mm_small:   def_system_macro('FPC_MM_SMALL');
-          mm_medium:  def_system_macro('FPC_MM_MEDIUM');
-          mm_compact: def_system_macro('FPC_MM_COMPACT');
-          mm_large:   def_system_macro('FPC_MM_LARGE');
-          mm_huge:    def_system_macro('FPC_MM_HUGE');
-        end;
-      {$endif i8086}
+
 
       {$ifdef aarch64}
         def_system_macro('CPUAARCH64');
@@ -4546,12 +4473,7 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
       {$endif xtensa}
 
-      {$ifdef z80}
-        def_system_macro('CPUZ80');
-        def_system_macro('CPU16');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif z80}
+
 
       {$ifdef wasm32}
         def_system_macro('CPUWASM');
@@ -4562,19 +4484,13 @@ procedure read_arguments(cmd:TCmdStr);
       {$endif wasm32}
 
 
-      {$if defined(cpu8bitalu)}
-        def_system_macro('CPUINT8');
-      {$elseif defined(cpu16bitalu)}
-        def_system_macro('CPUINT16');
-      {$elseif defined(cpu32bitalu)}
+      {$if defined(cpu32bitalu)}
         def_system_macro('CPUINT32');
       {$elseif defined(cpu64bitalu)}
         def_system_macro('CPUINT64');
       {$endif defined(cpu64bitalu)}
 
-      {$if defined(i8086)}
-        def_system_macro('FPC_HAS_INTERNAL_ABS_SMALLINT');
-      {$endif i8086}
+
       { abs(long) is handled internally on all CPUs }
         def_system_macro('FPC_HAS_INTERNAL_ABS_LONG');
       { abs(int64) is handled internally on all CPUs }
@@ -5313,12 +5229,12 @@ begin
 
   if init_settings.fputype<>fpu_none then
     begin
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
       def_system_macro('FPC_HAS_TYPE_EXTENDED');
 {$endif}
       def_system_macro('FPC_HAS_TYPE_SINGLE');
       def_system_macro('FPC_HAS_TYPE_DOUBLE');
-{$if not defined(i386) and not defined(x86_64) and not defined(i8086) and not defined(aarch64)}
+{$if not defined(i386) and not defined(x86_64) and not defined(aarch64)}
       def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
 {$endif}
 {$if defined(m68k)}
@@ -5495,7 +5411,7 @@ begin
   option.free;
   Option:=nil;
 
-  clearstack_pocalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl{$ifdef z80},pocall_stdcall{$endif}];
+  clearstack_pocalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
   cdecl_pocalls := [pocall_cdecl, pocall_cppdecl, pocall_mwpascal, pocall_sysv_abi_cdecl, pocall_ms_abi_cdecl];
   if (tf_safecall_clearstack in target_info.flags) then
     begin

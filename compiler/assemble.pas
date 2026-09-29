@@ -2520,25 +2520,7 @@ Implementation
                        { Required for DWARF debug information under Windows }
                        ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_SECREL32);
                      end;
-{$ifdef i8086}
-                   aitconst_farptr :
-                     if assigned(tai_const(hp).sym) and
-                        not assigned(tai_const(hp).endsym) then
-                       ObjData.writereloc(Tai_const(hp).symofs,tai_const(hp).size,Objdata.SymbolRef(tai_const(hp).sym),RELOC_FARPTR)
-                     else if relative_reloc then
-                       internalerror(2015040601)
-                     else
-                       ObjData.writebytes(Tai_const(hp).value,tai_const(hp).size);
-                   aitconst_seg:
-                     if assigned(tai_const(hp).sym) and (tai_const(hp).size=2) then
-                       ObjData.writereloc(0,2,Objdata.SymbolRef(tai_const(hp).sym),RELOC_SEG)
-                     else
-                       internalerror(2015110502);
-                   aitconst_dgroup:
-                     ObjData.writereloc(0,2,nil,RELOC_DGROUP);
-                   aitconst_fardataseg:
-                     ObjData.writereloc(0,2,nil,RELOC_FARDATASEG);
-{$endif i8086}
+
 {$ifdef arm}
                    aitconst_got:
                      ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_GOT32);

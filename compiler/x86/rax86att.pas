@@ -486,9 +486,7 @@ Implementation
 {$ifdef i386}
                   if actasmpattern='GOT' then
 {$endif i386}
-{$ifdef i8086}
-                  if actasmpattern='GOT' then
-{$endif i8086}
+
                     begin
                       case oper.opr.typ of
                         OPR_SYMBOL:
@@ -1068,9 +1066,7 @@ Implementation
                                (opr.ref.refaddr=addr_no) and
                                (opr.ref.symbol=nil) and
                                (opr.ref.relsymbol=nil)) then
-{$if defined(i8086)}
-                          Message1(asmr_w_invalid_reference,'(%si)');
-{$elseif defined(i386)}
+{$if defined(i386)}
                           Message1(asmr_w_invalid_reference,'(%esi)');
 {$elseif defined(x86_64)}
                           Message1(asmr_w_invalid_reference,'(%rsi)');
@@ -1101,9 +1097,7 @@ Implementation
                                (opr.ref.refaddr=addr_no) and
                                (opr.ref.symbol=nil) and
                                (opr.ref.relsymbol=nil)) then
-{$if defined(i8086)}
-                          Message1(asmr_w_invalid_reference,'(%di)');
-{$elseif defined(i386)}
+{$if defined(i386)}
                           Message1(asmr_w_invalid_reference,'(%edi)');
 {$elseif defined(x86_64)}
                           Message1(asmr_w_invalid_reference,'(%rdi)');

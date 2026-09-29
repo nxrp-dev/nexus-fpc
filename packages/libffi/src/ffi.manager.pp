@@ -463,7 +463,7 @@ end;
 
 { on X86 platforms Currency and Comp results are passed by the X87 if the
   Extended type is available }
-{$if (defined(CPUI8086) or defined(CPUI386) or defined(CPUX86_64)) and defined(FPC_HAS_TYPE_EXTENDED) and (not defined(FPC_COMP_IS_INT64) or not defined(FPC_CURRENCY_IS_INT64))}
+{$if (defined(CPUI386) or defined(CPUX86_64)) and defined(FPC_HAS_TYPE_EXTENDED) and (not defined(FPC_COMP_IS_INT64) or not defined(FPC_CURRENCY_IS_INT64))}
 {$define USE_EXTENDED_AS_COMP_CURRENCY_RES}
 {$endif}
 

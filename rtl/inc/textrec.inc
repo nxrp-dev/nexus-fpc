@@ -31,11 +31,9 @@ type
     using packed causes the compiler to handle arrays of text wrongly, see  see tw0754 e.g. on arm  }
   TextRec = Record
     Handle    : THandle;
-{$if defined(CPU8) or defined(CPU16)}
-    Mode      : Word;
-{$else}
+
     Mode      : longint;
-{$endif}
+
     bufsize   : SizeInt;
     _private  : SizeInt;
     bufpos,

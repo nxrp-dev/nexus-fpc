@@ -191,15 +191,11 @@ Type
   ---------------------------------------------------------------------}
 
 const
-{$ifdef CPU16}
-  MaxHashListSize = maxsmallint div 16;
-  MaxHashStrSize  = maxsmallint;
-  MaxHashTableSize = maxsmallint div 4;
-{$else CPU16}
+
   MaxHashListSize = Maxint div 16;
   MaxHashStrSize  = Maxint;
   MaxHashTableSize = Maxint div 4;
-{$endif CPU16}
+
   MaxItemsPerHash = 3;
 
 

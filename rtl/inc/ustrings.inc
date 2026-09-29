@@ -1481,66 +1481,7 @@ end;
 {$endif CPU64}
 
 
-{$if defined(CPU16) or defined(CPU8)}
-Function fpc_Val_longword_UnicodeStr (Const S : UnicodeString; out Code : ValSInt): longword; [public, alias:'FPC_VAL_LONGWORD_UNICODESTR']; compilerproc;
-Var
-  SS: ShortString;
-begin
-  fpc_Val_longword_UnicodeStr:=0;
-  if length(S)>255 then
-    code:=256
-  else
-    begin
-       SS:=ShortString(S);
-       Val(SS,fpc_Val_longword_UnicodeStr,Code);
-    end;
-end;
 
-
-Function fpc_Val_longint_UnicodeStr (Const S : UnicodeString; out Code : ValSInt): LongInt; [public, alias:'FPC_VAL_LONGINT_UNICODESTR']; compilerproc;
-Var
-  SS: ShortString;
-begin
-  fpc_Val_longint_UnicodeStr:=0;
-  if length(S)>255 then
-    code:=256
-  else
-    begin
-       SS:=ShortString(S);
-       Val(SS,fpc_Val_longint_UnicodeStr,Code);
-    end;
-end;
-
-
-Function fpc_Val_word_UnicodeStr (Const S : UnicodeString; out Code : ValSInt): word; [public, alias:'FPC_VAL_WORD_UNICODESTR']; compilerproc;
-Var
-  SS: ShortString;
-begin
-  fpc_Val_word_UnicodeStr:=0;
-  if length(S)>255 then
-    code:=256
-  else
-    begin
-       SS:=ShortString(S);
-       Val(SS,fpc_Val_word_UnicodeStr,Code);
-    end;
-end;
-
-
-Function fpc_Val_smallint_UnicodeStr (Const S : UnicodeString; out Code : ValSInt): SmallInt; [public, alias:'FPC_VAL_SMALLINT_UNICODESTR']; compilerproc;
-Var
-  SS: ShortString;
-begin
-  fpc_Val_smallint_UnicodeStr:=0;
-  if length(S)>255 then
-    code:=256
-  else
-    begin
-       SS:=ShortString(S);
-       Val(SS,fpc_Val_smallint_UnicodeStr,Code);
-    end;
-end;
-{$endif CPU16 or CPU8}
 
 
 {$ifndef FPUNONE}
@@ -1620,44 +1561,7 @@ end;
 {$endif CPU64}
 
 
-{$if defined(CPU16) or defined(CPU8)}
 
-Procedure fpc_UnicodeStr_LongInt(v : LongInt; Len : SizeInt; out S : UnicodeString);compilerproc;
-Var
-  SS: ShortString;
-begin
-  Str (v:Len,SS);
-  S:=UnicodeString(SS);
-end;
-
-
-Procedure fpc_UnicodeStr_LongWord(v : LongWord;Len : SizeInt; out S : UnicodeString);compilerproc;
-Var
-  SS: ShortString;
-begin
-  str(v:Len,SS);
-  S:=UnicodeString(SS);
-end;
-
-
-Procedure fpc_UnicodeStr_SmallInt(v : SmallInt; Len : SizeInt; out S : UnicodeString);compilerproc;
-Var
-  SS: ShortString;
-begin
-  Str (v:Len,SS);
-  S:=UnicodeString(SS);
-end;
-
-
-Procedure fpc_UnicodeStr_Word(v : Word;Len : SizeInt; out S : UnicodeString);compilerproc;
-Var
-  SS: ShortString;
-begin
-  str(v:Len,SS);
-  S:=UnicodeString(SS);
-end;
-
-{$endif CPU16 or CPU8}
 
 
 function UnicodeToUtf8(Dest: PAnsiChar; Source: PUnicodeChar; MaxBytes: SizeInt): SizeInt;{$ifdef SYSTEMINLINE}inline;{$endif}

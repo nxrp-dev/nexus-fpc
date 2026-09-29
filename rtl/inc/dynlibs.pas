@@ -34,15 +34,15 @@ Function LoadLibrary(const Name : RawByteString) : TLibHandle; inline;
 Function SafeLoadLibrary(const Name : UnicodeString) : TLibHandle; inline;
 Function LoadLibrary(const Name : UnicodeString) : TLibHandle; inline;
 
-Function GetProcedureAddress(Lib : TlibHandle; const ProcName : AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif}; inline;
-Function GetProcedureAddress(Lib : TLibHandle; Ordinal: TOrdinalEntry) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif}; inline;
+Function GetProcedureAddress(Lib : TlibHandle; const ProcName : AnsiString) : Pointer; inline;
+Function GetProcedureAddress(Lib : TLibHandle; Ordinal: TOrdinalEntry) : Pointer; inline;
 Function UnloadLibrary(Lib : TLibHandle) : Boolean; inline;
 Function GetLoadErrorStr: ansistring; inline;
 
 // Kylix/Delphi compatibility
 
 Function FreeLibrary(Lib : TLibHandle) : Boolean; inline;
-Function GetProcAddress(Lib : TlibHandle; const ProcName : AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif}; inline;
+Function GetProcAddress(Lib : TlibHandle; const ProcName : AnsiString) : Pointer; inline;
 
 Type
   HModule = TLibHandle;
@@ -75,12 +75,12 @@ begin
 end;
 
 
-Function GetProcedureAddress(Lib : TLibHandle; const ProcName: AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcedureAddress(Lib : TLibHandle; const ProcName: AnsiString) : Pointer;
 begin
   Result:=System.GetProcedureAddress(Lib, ProcName);
 end;
 
-Function GetProcedureAddress(Lib : TLibHandle; Ordinal : TOrdinalEntry) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcedureAddress(Lib : TLibHandle; Ordinal : TOrdinalEntry) : Pointer;
 begin
   Result:=System.GetProcedureAddress(Lib, Ordinal);
 end;
@@ -101,7 +101,7 @@ begin
   Result:=System.FreeLibrary(lib);
 end;
 
-Function GetProcAddress(Lib : TlibHandle; const ProcName : AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcAddress(Lib : TlibHandle; const ProcName : AnsiString) : Pointer;
 
 begin
   Result:=System.GetProcedureAddress(Lib,Procname);

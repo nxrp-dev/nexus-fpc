@@ -261,7 +261,7 @@ unit optcse;
               more than one instruction to load this particular value
             }
             (not(is_constnode(n)) or (node_complexity(n)>1)))
-{$if not(defined(i386)) and not(defined(i8086))}
+{$if not(defined(i386))}
             or
             { store reference of expression? }
 
@@ -273,7 +273,7 @@ unit optcse;
              (n.nodetype=loadn) and
              (tloadnode(n).symtableentry.typ=staticvarsym)
             )
-{$endif not(defined(i386)) and not(defined(i8086))}
+{$endif not(defined(i386))}
           ) then
           begin
             plists(arg)^.nodelist.Add(n);

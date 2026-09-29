@@ -156,9 +156,7 @@ type
       constructor Create;
    end;
 
-{$IFDEF CPU16}
-{$DEFINE NOPOINTER}
-{$ENDIF}
+
 
   TBitOffset = 0 .. 31;
 

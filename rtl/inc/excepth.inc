@@ -29,11 +29,9 @@ Type
   TExceptAddr = record
     buf       : pjmp_buf;
     next      : PExceptAddr;
-{$ifdef CPU16}
-    frametype : Smallint;
-{$else CPU16}
+
     frametype : Longint;
-{$endif CPU16}
+
   end;
 
 Const

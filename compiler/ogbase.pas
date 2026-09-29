@@ -73,20 +73,7 @@ interface
          RELOC_TLSGD,
          RELOC_NTPOFF,
 {$endif i386}
-{$ifdef i8086}
-         RELOC_ABSOLUTE32,
-         RELOC_RELATIVE32,
-         RELOC_FARPTR,
-         RELOC_FARPTR_RELATIVEOFFSET,
-         RELOC_FARPTR48,
-         RELOC_FARPTR48_RELATIVEOFFSET,
-         RELOC_SEG,
-         RELOC_SEGREL,
-         RELOC_DGROUP,
-         RELOC_DGROUPREL,
-         RELOC_FARDATASEG,
-         RELOC_FARDATASEGREL,
-{$endif i8086}
+
 {$ifdef arm}
          RELOC_RELATIVE_24,
          RELOC_RELATIVE_CALL,
@@ -108,10 +95,7 @@ interface
          RELOC_ADD_ABS_LO12,
          RELOC_LDST8_ABS_LO12,
 {$endif aarch64}
-{$ifdef z80}
-         RELOC_ABSOLUTE_HI8,
-         RELOC_ABSOLUTE_LO8,
-{$endif z80}
+
 {$ifdef WASM32}
          RELOC_FUNCTION_INDEX_LEB,
          RELOC_MEMORY_ADDR_LEB,
@@ -145,10 +129,6 @@ interface
 
 {$if defined(x86_64) or defined(aarch64)}
     { no special aliases for x86_64 }
-{$elseif defined(i8086)}
-    const
-      RELOC_ABSOLUTE16 = RELOC_ABSOLUTE;
-      RELOC_RELATIVE16 = RELOC_RELATIVE;
 {$else}
     const
       RELOC_ABSOLUTE32 = RELOC_ABSOLUTE;
@@ -236,13 +216,9 @@ interface
        oscs_largest
      );
 
-{$ifdef i8086}
-     { allow 32-bit sections on i8086. Useful for the dwarf debug info, as well
-       as to allow linking 32-bit obj modules. }
-     TObjSectionOfs = LongWord;
-{$else i8086}
+
      TObjSectionOfs = PUInt;
-{$endif i8086}
+
 
      TObjSectionGroup = class;
 
@@ -397,15 +373,9 @@ interface
        Owner: TObjData;
      end;
 
-{$if defined(i8086)}
-     { on i8086 we use a longint, to support 32-bit relocations as well (e.g.
-       for allowing 386+ instructions with 32-bit addresses in inline asm code) }
-     TRelocDataInt = longint;
-{$elseif defined(cpu16bitaddr)}
-     TRelocDataInt = asizeint;
-{$else}
+
      TRelocDataInt = aint;
-{$endif}
+
 
      TObjData = class(TLinkedListItem)
      private
@@ -1052,11 +1022,9 @@ implementation
         Datapos:=0;
         mempos:=0;
         FData:=Nil;
-{$ifdef i8086}
-        FSizeLimit:=high(word);
-{$else i8086}
+
         FSizeLimit:=high(TObjSectionOfs);
-{$endif i8086}
+
         { Setting the secoptions allocates Data if needed }
         secoptions:=Aoptions;
         if (Aalign and (Aalign-1))<>0 then
@@ -2390,13 +2358,10 @@ implementation
         { sections }
         FExeSectionList:=TFPHashObjectList.Create(true);
         FImageBase:=0;
-{$ifdef cpu16bitaddr}
-        SectionMemAlign:=$10;
-        SectionDataAlign:=$10;
-{$else cpu16bitaddr}
+
         SectionMemAlign:=$1000;
         SectionDataAlign:=$200;
-{$endif cpu16bitaddr}
+
         FixedSectionAlign:=True;
         FCExeSection:=TExeSection;
         FCObjData:=TObjData;
@@ -3902,9 +3867,7 @@ implementation
             begin
               objsec:=TObjSection(ObjSectionWorkList.Last);
               if not assigned(objsec.exesection) then
-{$ifdef i8086}
-                if current_settings.x86memorymodel <> mm_tiny then
-{$endif}
+
                 internalerror(202102001);
               if assigned(exemap) then
                 exemap.Add('Keeping '+objsec.FullName+' '+ToStr(objsec.ObjRelocations.Count)+' references');

@@ -191,9 +191,7 @@ implementation
       symconst,defutil,defcmp,
       nadd,nbas,nflw,nutils,objcutil,
       wpobase,
-{$ifdef i8086}
-      cpuinfo,
-{$endif i8086}
+
       htypechk,pass_1,ncal,nld,ncon,ncnv,cgbase,procinfo,widestr
       ;
 

@@ -118,11 +118,9 @@ CONST
 {                            MAXIUM DATA SIZES                              }
 {---------------------------------------------------------------------------}
 {$IFDEF FPC}
-  {$IFDEF CPU16}
-   MaxBytes = 16384;
-  {$ELSE CPU16}
+
    MaxBytes = 128*1024*128;                               { Maximum data size }
-  {$ENDIF CPU16}
+
 {$ELSE}
    MaxBytes = 16384;
 {$ENDIF}
@@ -201,13 +199,10 @@ TYPE
 {                        BIT SWITCHED TYPE CONSTANTS                        }
 {---------------------------------------------------------------------------}
 TYPE
-{$ifdef CPU16}
-   Sw_Word    = Word;
-   Sw_Integer = SmallInt;
-{$else CPU16}
+
    Sw_Word    = Cardinal;                             { Long Word now }
    Sw_Integer = LongInt;                              { Long integer now }
-{$endif CPU16}
+
 
 {***************************************************************************}
 {                        PUBLIC RECORD DEFINITIONS                          }
@@ -600,7 +595,7 @@ TYPE
       Count, Offset: Word;
    END;
 
-   TStrIndex = Array [0..{$ifdef CPU16}MaxBytes div SizeOf(TStrIndexRec){$else}9999{$endif}] Of TStrIndexRec;
+   TStrIndex = Array [0..9999] Of TStrIndexRec;
    PStrIndex = ^TStrIndex;
 
 {---------------------------------------------------------------------------}
@@ -826,17 +821,12 @@ CONST
 {***************************************************************************}
 
 type
-{$ifdef cpui8086}
-  VoidLocal = function(_BP: Word): pointer;
-  PointerLocal = function(_BP: Word; Param1: pointer): pointer;
-  VoidMethodLocal = function(_BP: Word): pointer;
-  PointerMethodLocal = function(_BP: Word; Param1: pointer): pointer;
-{$else cpui8086}
+
   VoidLocal = function(_EBP: Pointer): pointer;
   PointerLocal = function(_EBP: Pointer; Param1: pointer): pointer;
   VoidMethodLocal = function(_EBP: Pointer): pointer;
   PointerMethodLocal = function(_EBP: Pointer; Param1: pointer): pointer;
-{$endif cpui8086}
+
   VoidConstructor = function(VMT: pointer; Obj: pointer): pointer;
   PointerConstructor = function(VMT: pointer; Obj: pointer; Param1: pointer): pointer;
   VoidMethod = function(Obj: pointer): pointer;
@@ -879,41 +869,33 @@ end;
 {$ifndef TYPED_LOCAL_CALLBACKS}
 function CallVoidLocal(Func: codepointer; Frame: Pointer): pointer;inline;
 begin
-{$ifdef cpui8086}
-  CallVoidLocal := VoidLocal(Func)(Ofs(Frame^))
-{$else cpui8086}
+
   CallVoidLocal := VoidLocal(Func)(Frame)
-{$endif cpui8086}
+
 end;
 
 
 function CallPointerLocal(Func: codepointer; Frame: Pointer; Param1: pointer): pointer;inline;
 begin
-{$ifdef cpui8086}
-  CallPointerLocal := PointerLocal(Func)(Ofs(Frame^), Param1)
-{$else cpui8086}
+
   CallPointerLocal := PointerLocal(Func)(Frame, Param1)
-{$endif cpui8086}
+
 end;
 
 
 function CallVoidMethodLocal(Func: codepointer; Frame: Pointer; Obj: pointer): pointer;inline;
 begin
-{$ifdef cpui8086}
-  CallVoidMethodLocal := VoidMethodLocal(Func)(Ofs(Frame^))
-{$else cpui8086}
+
   CallVoidMethodLocal := VoidMethodLocal(Func)(Frame)
-{$endif cpui8086}
+
 end;
 
 
 function CallPointerMethodLocal(Func: codepointer; Frame: Pointer; Obj: pointer; Param1: pointer): pointer;inline;
 begin
-{$ifdef cpui8086}
-  CallPointerMethodLocal := PointerMethodLocal(Func)(Ofs(Frame^), Param1)
-{$else cpui8086}
+
   CallPointerMethodLocal := PointerMethodLocal(Func)(Frame, Param1)
-{$endif cpui8086}
+
 end;
 
 {$else}

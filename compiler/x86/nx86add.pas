@@ -51,10 +51,10 @@ unit nx86add;
         function simplify(forinline : boolean) : tnode; override;
         function use_fma : boolean;override;
         procedure second_addfloat;override;
-{$ifndef i8086}
+
         procedure second_addsmallset;override;
         procedure second_addsmallsetelement;override;
-{$endif not i8086}
+
         procedure second_add64bit;override;
         procedure second_cmpfloat;override;
         procedure second_cmpsmallset;override;
@@ -505,7 +505,7 @@ unit nx86add;
                                 AddSmallSet
 *****************************************************************************}
 
-{$ifndef i8086}
+
     procedure tx86addnode.second_addsmallset;
       var
         setbase : aint;
@@ -682,7 +682,7 @@ unit nx86add;
               end;
           end;
       end;
-{$endif not i8086}
+
 
 
     procedure tx86addnode.second_cmpsmallset;
@@ -1279,7 +1279,7 @@ unit nx86add;
 
         DoOptimisation:=False;
 
-{$if defined(cpu64bitalu) or defined(cpu32bitalu) or defined(cpu16bitalu)}
+{$if defined(cpu64bitalu) or defined(cpu32bitalu)}
         if (cs_opt_level1 in current_settings.optimizerswitches) and
           { The presence of overflow checks tends to cause internal errors with the multiplication nodes }
           not (cs_check_overflow in current_settings.localswitches) and
@@ -1583,20 +1583,18 @@ unit nx86add;
                   end;
               end;
           end;
-{$ifend defined(cpu64bitalu) or defined(cpu32bitalu) or defined(cpu16bitalu)}
+{$ifend defined(cpu64bitalu) or defined(cpu32bitalu)}
         Result:=inherited simplify(forinline);
       end;
 
 
     function tx86addnode.use_fma : boolean;
       begin
-{$ifndef i8086}
+
         { test if the result stays in an xmm register, fiddeling with fpu registers and fma makes no sense }
         Result:=use_vectorfpu(resultdef) and
           ((fpu_capabilities[current_settings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
-{$else i8086}
-        Result:=inherited use_fma;
-{$endif i8086}
+
       end;
 
 
@@ -1809,10 +1807,7 @@ unit nx86add;
 
 
     procedure tx86addnode.second_cmpfloat;
-{$ifdef i8086}
-      var
-        tmpref: treference;
-{$endif i8086}
+
       begin
         if use_vectorfpu(left.resultdef) or use_vectorfpu(right.resultdef) then
           begin
@@ -1831,21 +1826,7 @@ unit nx86add;
             tcgx86(cg).dec_fpu_stack;
 
             { load fpu flags }
-{$ifdef i8086}
-            if current_settings.cputype < cpu_286 then
-              begin
-                tg.gettemp(current_asmdata.CurrAsmList,2,2,tt_normal,tmpref);
-                emit_ref(A_FSTSW,S_NO,tmpref);
-                cg.getcpuregister(current_asmdata.CurrAsmList,NR_AX);
-                inc(tmpref.offset);
-                emit_ref_reg(A_MOV,S_B,tmpref,NR_AH);
-                dec(tmpref.offset);
-                emit_none(A_SAHF,S_NO);
-                cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_AX);
-                tg.ungettemp(current_asmdata.CurrAsmList,tmpref);
-              end
-            else
-{$endif i8086}
+
               begin
                 cg.getcpuregister(current_asmdata.CurrAsmList,NR_AX);
                 emit_reg(A_FNSTSW,S_NO,NR_AX);
@@ -1990,7 +1971,7 @@ unit nx86add;
 
        opsize:=def_cgsize(left.resultdef);
 
-{$ifndef i8086}
+
        if (cs_opt_level2 in current_settings.optimizerswitches) then
          begin
            { BMI1 optimisations }
@@ -2170,7 +2151,7 @@ unit nx86add;
                end;
              end;
          end;
-{$endif not i8086}
+
 
        pass_left_right;
 
@@ -2180,10 +2161,10 @@ unit nx86add;
            ((nodetype<>subn) or not(right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE])) and
            { 3 op mul makes only sense if a constant is involved }
            ((nodetype<>muln) or (left.location.loc=LOC_CONSTANT) or (right.location.loc=LOC_CONSTANT)
-{$ifndef i8086}
+
             or ((CPUX86_HAS_BMI2 in cpu_capabilities[current_settings.cputype]) and (not(needoverflowcheck))
                )
-{$endif i8086}
+
            ) and
            (not(nodetype in [orn,andn,xorn]))) or
          ((nodetype=addn) and (left.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT]) and (right.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_CONSTANT])) then

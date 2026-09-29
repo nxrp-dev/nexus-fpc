@@ -193,21 +193,12 @@ interface
        aitconst_ptr_unaligned = aitconst_32bit_unaligned;
        aitconst_sizeint = aitconst_32bit;
        aitconst_sizeint_unaligned = aitconst_32bit_unaligned;
-{$elseif defined(cpu16bitaddr)}
-       aitconst_ptr = aitconst_16bit;
-       aitconst_ptr_unaligned = aitconst_16bit_unaligned;
-       aitconst_sizeint = aitconst_16bit;
-       aitconst_sizeint_unaligned = aitconst_16bit_unaligned;
 {$endif}
 
 {$if defined(cpu64bitalu)}
        aitconst_aint = aitconst_64bit;
 {$elseif defined(cpu32bitalu)}
        aitconst_aint = aitconst_32bit;
-{$elseif defined(cpu16bitalu)}
-       aitconst_aint = aitconst_16bit;
-{$elseif defined(cpu8bitalu)}
-       aitconst_aint = aitconst_8bit;
 {$endif}
 
        taitypestr : array[taitype] of string[24] = (
@@ -741,14 +732,7 @@ interface
           constructor Create_sizeint(_value : asizeint);
           constructor Create_sizeint_unaligned(_value : asizeint);
           constructor Create_sym(_sym:tasmsymbol);
-{$ifdef i8086}
-          constructor Create_sym_near(_sym:tasmsymbol);
-          constructor Create_sym_far(_sym:tasmsymbol);
-          constructor Createname_near(const name:string;ofs:asizeint);
-          constructor Createname_far(const name:string;ofs:asizeint);
-          constructor Createname_near(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-          constructor Createname_far(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-{$endif i8086}
+
           constructor Create_type_sym(_typ:taiconst_type;_sym:tasmsymbol);
           constructor Create_sym_offset(_sym:tasmsymbol;ofs:asizeint);
           constructor Create_type_sym_offset(_typ:taiconst_type;_sym:tasmsymbol;ofs:asizeint);
@@ -769,11 +753,7 @@ interface
           constructor Create_int_codeptr_unaligned(_value: int64);
           constructor Create_int_dataptr(_value: int64);
           constructor Create_int_dataptr_unaligned(_value: int64);
-{$ifdef i8086}
-          constructor Create_seg_name(const name:string);
-          constructor Create_dgroup;
-          constructor Create_fardataseg;
-{$endif i8086}
+
           constructor ppuload(t:taitype;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure derefimpl;override;
@@ -1830,72 +1810,16 @@ implementation
       end;
 
 
-{$ifdef i8086}
-    constructor tai_const.Create_sym_near(_sym: tasmsymbol);
-      begin
-         self.create_sym(_sym);
-         consttype:=aitconst_ptr;
-      end;
 
-
-    constructor tai_const.Create_sym_far(_sym: tasmsymbol);
-      begin
-        self.create_sym(_sym);
-        consttype:=aitconst_farptr;
-      end;
-
-
-    constructor tai_const.Createname_near(const name:string;ofs:asizeint);
-      begin
-        self.Createname(name,ofs);
-        consttype:=aitconst_ptr;
-      end;
-
-
-    constructor tai_const.Createname_far(const name:string;ofs:asizeint);
-      begin
-        self.Createname(name,ofs);
-        consttype:=aitconst_farptr;
-      end;
-
-
-    constructor tai_const.Createname_near(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-      begin
-        self.Createname(name,_symtyp,ofs);
-        consttype:=aitconst_ptr;
-      end;
-
-
-    constructor tai_const.Createname_far(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
-      begin
-        self.Createname(name,_symtyp,ofs);
-        consttype:=aitconst_farptr;
-      end;
-{$endif i8086}
 
 
     constructor tai_const.Create_sym_offset(_sym:tasmsymbol;ofs:asizeint);
       begin
          inherited Create;
          typ:=ait_const;
-{$ifdef i8086}
-         if assigned(_sym) and (_sym.typ=AT_DATA) then
-           begin
-             if current_settings.x86memorymodel in x86_far_data_models then
-               consttype:=aitconst_farptr
-             else
-               consttype:=aitconst_ptr;
-           end
-         else
-           begin
-             if current_settings.x86memorymodel in x86_far_code_models then
-               consttype:=aitconst_farptr
-             else
-               consttype:=aitconst_ptr;
-           end;
-{$else i8086}
+
          consttype:=aitconst_ptr;
-{$endif i8086}
+
          { sym is allowed to be nil, this is used to write nil pointers }
          sym:=_sym;
          endsym:=nil;
@@ -2019,11 +1943,7 @@ implementation
       begin
         inherited Create;
         typ:=ait_const;
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_code_models then
-          consttype:=aitconst_farptr
-        else
-{$endif i8086}
+
           consttype:=aitconst_ptr;
         sym:=nil;
         endsym:=nil;
@@ -2036,11 +1956,7 @@ implementation
       begin
         inherited Create;
         typ:=ait_const;
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_code_models then
-          consttype:=aitconst_farptr
-        else
-{$endif i8086}
+
           consttype:=aitconst_ptr_unaligned;
         sym:=nil;
         endsym:=nil;
@@ -2053,11 +1969,7 @@ implementation
       begin
         inherited Create;
         typ:=ait_const;
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_data_models then
-          consttype:=aitconst_farptr
-        else
-{$endif i8086}
+
           consttype:=aitconst_ptr;
         sym:=nil;
         endsym:=nil;
@@ -2070,11 +1982,7 @@ implementation
       begin
         inherited Create;
         typ:=ait_const;
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_data_models then
-          consttype:=aitconst_farptr
-        else
-{$endif i8086}
+
           consttype:=aitconst_ptr_unaligned;
         sym:=nil;
         endsym:=nil;
@@ -2084,27 +1992,7 @@ implementation
 
 
 
-{$ifdef i8086}
-    constructor tai_const.Create_seg_name(const name:string);
-      begin
-        self.Createname(name,0);
-        self.consttype:=aitconst_seg;
-      end;
 
-
-    constructor tai_const.Create_dgroup;
-      begin
-        self.Create_16bit(0);
-        self.consttype:=aitconst_dgroup;
-      end;
-
-
-    constructor tai_const.Create_fardataseg;
-      begin
-        self.Create_16bit(0);
-        self.consttype:=aitconst_fardataseg;
-      end;
-{$endif i8086}
 
 
     constructor tai_const.ppuload(t:taitype;ppufile:tcompilerppufile);

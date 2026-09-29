@@ -1709,14 +1709,12 @@ Unit AoptObj;
     { Returns True if hp is an unconditional jump to a label }
     function IsJumpToLabelUncond(hp: taicpu): boolean;
       begin
-{$if defined(z80)}
-        result:=(hp.opcode in aopt_uncondjmp) and
-{$else}
+
         result:=(hp.opcode=aopt_uncondjmp) and
-{$endif}
-{$if defined(arm) or defined(aarch64) or defined(z80)}
+
+{$if defined(arm) or defined(aarch64)}
           (hp.condition=c_None) and
-{$endif arm or aarch64 or z80}
+{$endif arm or aarch64}
           (hp.ops>0) and
           (JumpTargetOp(hp)^.typ = top_ref) and
           (JumpTargetOp(hp)^.ref^.symbol is TAsmLabel);
@@ -1768,9 +1766,9 @@ Unit AoptObj;
     procedure TAOptObj.MakeUnconditional(p: taicpu);
       begin
         p.condition := C_None;
-{$ifndef z80}
+
         p.opcode := aopt_uncondjmp;
-{$endif not z80}
+
 {$ifdef xtensa}
         p.opcode := aopt_uncondjmp;
         p.loadoper(0, p.oper[p.ops-1]^);
@@ -2413,7 +2411,7 @@ Unit AoptObj;
                         stoploop := False;
                     end
 {$ifdef CPU_SUPPORTS_OPT_COND_JUMP}
-                  else if (taicpu(p).opcode {$ifdef z80}in{$else}={$endif} aopt_condjmp) then
+                  else if (taicpu(p).opcode = aopt_condjmp) then
                     ThisPassResult := OptimizeConditionalJump(ThisLabel, p, hp1, stoploop)
 {$endif CPU_SUPPORTS_OPT_COND_JUMP}
                     ;

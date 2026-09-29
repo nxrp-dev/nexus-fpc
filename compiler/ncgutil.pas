@@ -640,11 +640,7 @@ implementation
                 loc.reference.offset:=paraloc^.reference.offset
               else
                 inc(loc.reference.offset,regsize);
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-              if cg.has_next_reg[getsupreg(reg)] then
-                reg:=cg.GetNextReg(reg)
-              else
-{$endif}
+
                 begin
                   if reg=reg2 then
                     internalerror(2020090502);
@@ -681,48 +677,6 @@ implementation
               begin
                 cg.a_reg_sync(list,sym.initialloc.register64.reglo);
                 cg.a_reg_sync(list,sym.initialloc.register64.reghi);
-              end
-            else
-{$elseif defined(cpu16bitalu) and not defined(cpuhighleveltarget)}
-            if sym.initialloc.size in [OS_64,OS_S64] then
-              begin
-                cg.a_reg_sync(list,sym.initialloc.register64.reglo);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register64.reglo));
-                cg.a_reg_sync(list,sym.initialloc.register64.reghi);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register64.reghi));
-              end
-            else
-            if sym.initialloc.size in [OS_32,OS_S32] then
-              begin
-                cg.a_reg_sync(list,sym.initialloc.register);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register));
-              end
-            else
-{$elseif defined(cpu8bitalu) and not defined(cpuhighleveltarget)}
-            if sym.initialloc.size in [OS_64,OS_S64] then
-              begin
-                cg.a_reg_sync(list,sym.initialloc.register64.reglo);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register64.reglo));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(sym.initialloc.register64.reglo)));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(sym.initialloc.register64.reglo))));
-                cg.a_reg_sync(list,sym.initialloc.register64.reghi);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register64.reghi));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(sym.initialloc.register64.reghi)));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(sym.initialloc.register64.reghi))));
-              end
-            else
-            if sym.initialloc.size in [OS_32,OS_S32] then
-              begin
-                cg.a_reg_sync(list,sym.initialloc.register);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(sym.initialloc.register)));
-                cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(sym.initialloc.register))));
-              end
-            else
-            if sym.initialloc.size in [OS_16,OS_S16] then
-              begin
-                cg.a_reg_sync(list,sym.initialloc.register);
-                cg.a_reg_sync(list,cg.GetNextReg(sym.initialloc.register));
               end
             else
 {$endif}
@@ -1052,48 +1006,6 @@ implementation
                 rv.intregvars.addnodup(getsupreg(location.register64.reghi));
               end
             else
-{$elseif defined(cpu16bitalu)}
-            if location.size in [OS_64,OS_S64] then
-              begin
-                rv.intregvars.addnodup(getsupreg(location.register64.reglo));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register64.reglo)));
-                rv.intregvars.addnodup(getsupreg(location.register64.reghi));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register64.reghi)));
-              end
-            else
-            if location.size in [OS_32,OS_S32] then
-              begin
-                rv.intregvars.addnodup(getsupreg(location.register));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register)));
-              end
-            else
-{$elseif defined(cpu8bitalu)}
-            if location.size in [OS_64,OS_S64] then
-              begin
-                rv.intregvars.addnodup(getsupreg(location.register64.reglo));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register64.reglo)));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(location.register64.reglo))));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(location.register64.reglo)))));
-                rv.intregvars.addnodup(getsupreg(location.register64.reghi));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register64.reghi)));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(location.register64.reghi))));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(location.register64.reghi)))));
-              end
-            else
-            if location.size in [OS_32,OS_S32] then
-              begin
-                rv.intregvars.addnodup(getsupreg(location.register));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register)));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(location.register))));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(location.register)))));
-              end
-            else
-            if location.size in [OS_16,OS_S16] then
-              begin
-                rv.intregvars.addnodup(getsupreg(location.register));
-                rv.intregvars.addnodup(getsupreg(cg.GetNextReg(location.register)));
-              end
-            else
 {$endif}
               if getregtype(location.register)=R_INTREGISTER then
                 rv.intregvars.addnodup(getsupreg(location.register))
@@ -1240,48 +1152,6 @@ implementation
                             begin
                               cg.a_reg_sync(list,localloc.register64.reglo);
                               cg.a_reg_sync(list,localloc.register64.reghi);
-                            end
-                          else
-{$elseif defined(cpu16bitalu)}
-                          if localloc.size in [OS_64,OS_S64] then
-                            begin
-                              cg.a_reg_sync(list,localloc.register64.reglo);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register64.reglo));
-                              cg.a_reg_sync(list,localloc.register64.reghi);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register64.reghi));
-                            end
-                          else
-                          if localloc.size in [OS_32,OS_S32] then
-                            begin
-                              cg.a_reg_sync(list,localloc.register);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register));
-                            end
-                          else
-{$elseif defined(cpu8bitalu)}
-                          if localloc.size in [OS_64,OS_S64] then
-                            begin
-                              cg.a_reg_sync(list,localloc.register64.reglo);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register64.reglo));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(localloc.register64.reglo)));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(localloc.register64.reglo))));
-                              cg.a_reg_sync(list,localloc.register64.reghi);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register64.reghi));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(localloc.register64.reghi)));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(localloc.register64.reghi))));
-                            end
-                          else
-                          if localloc.size in [OS_32,OS_S32] then
-                            begin
-                              cg.a_reg_sync(list,localloc.register);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(localloc.register)));
-                              cg.a_reg_sync(list,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(localloc.register))));
-                            end
-                          else
-                          if localloc.size in [OS_16,OS_S16] then
-                            begin
-                              cg.a_reg_sync(list,localloc.register);
-                              cg.a_reg_sync(list,cg.GetNextReg(localloc.register));
                             end
                           else
 {$endif}

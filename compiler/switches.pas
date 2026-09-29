@@ -74,11 +74,9 @@ const
    {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
    {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
    {E} (typesw:modulesw; setsw:ord(cs_fp_emulation)),
-{$ifdef i8086}
-   {F} (typesw:localsw; setsw:ord(cs_force_far_calls)),
-{$else i8086}
+
    {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
-{$endif i8086}
+
    {G} (typesw:localsw; setsw:ord(cs_imported_data)),
    {H} (typesw:localsw; setsw:ord(cs_refcountedstrings)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
@@ -95,11 +93,9 @@ const
    {T} (typesw:localsw; setsw:ord(cs_typed_addresses)),
    {U} (typesw:pentiumfdivsw; setsw:ord(cs_localnone)),
    {V} (typesw:localsw; setsw:ord(cs_strict_var_strings)),
-{$ifdef i8086}
-   {W} (typesw:targetsw; setsw:ord(ts_x86_far_procs_push_odd_bp)),
-{$else i8086}
+
    {W} (typesw:localsw; setsw:ord(cs_generate_stackframes)),
-{$endif i8086}
+
    {X} (typesw:modulesw; setsw:ord(cs_extsyntax)),
    {Y} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {Z} (typesw:packenumsw; setsw:ord(cs_localnone))
@@ -112,11 +108,9 @@ const
    {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
    {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
    {E} (typesw:modulesw; setsw:ord(cs_fp_emulation)),
-{$ifdef i8086}
-   {F} (typesw:localsw; setsw:ord(cs_force_far_calls)),
-{$else i8086}
+
    {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
-{$endif i8086}
+
    {G} (typesw:ignoredsw; setsw:ord(cs_localnone)),
    {H} (typesw:localsw; setsw:ord(cs_refcountedstrings)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
@@ -133,11 +127,9 @@ const
    {T} (typesw:localsw; setsw:ord(cs_typed_addresses)),
    {U} (typesw:illegalsw; setsw:ord(cs_localnone)),
    {V} (typesw:localsw; setsw:ord(cs_strict_var_strings)),
-{$ifdef i8086}
-   {W} (typesw:targetsw; setsw:ord(ts_x86_far_procs_push_odd_bp)),
-{$else i8086}
+
    {W} (typesw:localsw; setsw:ord(cs_generate_stackframes)),
-{$endif i8086}
+
    {X} (typesw:modulesw; setsw:ord(cs_extsyntax)),
    {Y} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {Z} (typesw:localsw; setsw:ord(cs_externally_visible))

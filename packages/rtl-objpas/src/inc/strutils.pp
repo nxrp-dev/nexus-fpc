@@ -358,8 +358,7 @@ procedure BoyerMoore.MakeDeltaJumpTables(aPattern: PAnsiChar; aPatternSize: Size
 var
    i, Position, LastPrefixIndex, SuffixLength: SizeInt;
 begin
-{$if sizeof(SizeInt)=sizeof(word)} FillWord
-{$elseif sizeof(SizeInt)=sizeof(dword)} FillDWord
+{$if sizeof(SizeInt)=sizeof(dword)} FillDWord
 {$elseif sizeof(SizeInt)=sizeof(qword)} FillQWord
 {$else} {$error unknown SizeInt size}
 {$endif}

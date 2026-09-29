@@ -500,9 +500,7 @@ unit scandir;
     procedure dir_forcefarcalls;
       begin
         if not (target_info.system in [system_i8086_msdos,system_i8086_embedded])
-{$ifdef i8086}
-           or (current_settings.x86memorymodel in x86_near_code_models)
-{$endif i8086}
+
             then
           begin
             Message1(scan_n_ignored_switch,current_scanner.pattern);
@@ -839,23 +837,9 @@ unit scandir;
         heapsize_limit: int64;
         maxheapsize_limit: int64;
       begin
-{$if defined(i8086)}
-        if current_settings.x86memorymodel in x86_far_data_models then
-          begin
-            heapsize_limit:=655360;
-            maxheapsize_limit:=655360;
-          end
-        else
-          begin
-            heapsize_limit:=65520;
-            maxheapsize_limit:=65520;
-          end;
-{$elseif defined(WASM32)}
+{$if defined(WASM32)}
         heapsize_limit:=int64(high(uint32))+1;
         maxheapsize_limit:=int64(high(uint32))+1;
-{$elseif defined(cpu16bitaddr)}
-        heapsize_limit:=65520;
-        maxheapsize_limit:=65520;
 {$else}
         heapsize_limit:=high(longint);
         maxheapsize_limit:=high(longint);
@@ -863,14 +847,11 @@ unit scandir;
         current_scanner.skipspace;
         l:=current_scanner.readval;
         if (l>=1024)
-{$ifdef cpu16bitaddr}
-          and (l<=65521) { TP7's $M directive allows specifying a stack size of
-                           65521, but it actually sets the stack size to 65520 }
-{$else cpu16bitaddr}
+
           and (l<67107840)
-{$endif cpu16bitaddr}
+
         then
-          stacksize:=min(l,{$ifdef cpu16bitaddr}65520{$else}67107839{$endif})
+          stacksize:=min(l,67107839)
         else
           Message(scan_w_invalid_stacksize);
         if current_scanner.c=',' then
@@ -1990,9 +1971,7 @@ unit scandir;
     procedure dir_hugecode;
       begin
         if not (target_info.system in [system_i8086_msdos,system_i8086_embedded])
-{$ifdef i8086}
-           or (current_settings.x86memorymodel in x86_near_code_models)
-{$endif i8086}
+
             then
           begin
             Message1(scan_n_ignored_switch,current_scanner.pattern);

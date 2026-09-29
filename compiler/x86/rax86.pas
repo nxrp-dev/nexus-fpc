@@ -78,9 +78,9 @@ type
   end;
 
 const
-  AsmPrefixes = 8{$ifdef i8086}+2{$endif i8086};
+  AsmPrefixes = 8;
   AsmPrefix : array[0..AsmPrefixes-1] of TasmOP =(
-    A_LOCK,A_REP,A_REPE,A_REPNE,A_REPNZ,A_REPZ,A_XACQUIRE,A_XRELEASE{$ifdef i8086},A_REPC,A_REPNC{$endif i8086}
+    A_LOCK,A_REP,A_REPE,A_REPNE,A_REPNZ,A_REPZ,A_XACQUIRE,A_XRELEASE
   );
 
   AsmOverrides = 6;
@@ -208,12 +208,7 @@ begin
     64: size := OS_M512;
   end;
 
-{$ifdef i8086}
-  { allows e.g. using 32-bit registers in i8086 inline asm }
-  if size in [OS_32,OS_S32] then
-    opsize:=S_L
-  else
-{$endif i8086}
+
     opsize:=TCGSize2Opsize[size];
 end;
 
@@ -393,29 +388,17 @@ end;
 
 procedure Tx86Operand.SetupCode;
 begin
-{$ifdef i8086}
-  opr.typ:=OPR_SYMBOL;
-  opr.symofs:=0;
-  opr.symbol:=current_asmdata.RefAsmSymbol(current_procinfo.procdef.mangledname,AT_FUNCTION);
-  opr.symseg:=true;
-  opr.sym_farproc_entry:=false;
-{$else i8086}
+
   Message(asmr_w_CODE_and_DATA_not_supported);
-{$endif i8086}
+
 end;
 
 
 procedure Tx86Operand.SetupData;
 begin
-{$ifdef i8086}
-  InitRef;
-  if current_settings.x86memorymodel=mm_huge then
-    opr.ref.refaddr:=addr_fardataseg
-  else
-    opr.ref.refaddr:=addr_dgroup;
-{$else i8086}
+
   Message(asmr_w_CODE_and_DATA_not_supported);
-{$endif i8086}
+
 end;
 
 constructor Tx86Operand.create;
@@ -1434,8 +1417,6 @@ begin
                   tx86operand(operands[i]).opsize:=S_Q;
   {$elseif defined(i386)}
                   tx86operand(operands[i]).opsize:=S_L;
-  {$elseif defined(i8086)}
-                  tx86operand(operands[i]).opsize:=S_W;
   {$endif}
                 end;
               else
@@ -1648,11 +1629,9 @@ begin
             (opcode=A_POP)) and
            (operands[1].opr.typ=OPR_REGISTER) and
            is_segment_reg(operands[1].opr.reg) then
-{$ifdef i8086}
-          opsize:=S_W
-{$else i8086}
+
           opsize:=S_L
-{$endif i8086}
+
         else
           opsize:=tx86operand(operands[1]).opsize;
       end;
@@ -1915,10 +1894,7 @@ begin
         siz:=S_B;
       if (ops=1) and (opcode=A_XABORT) then
         siz:=S_B;
-{$ifdef i8086}
-      if (ops=1) and (opcode=A_BRKEM) then
-        siz:=S_B;
-{$endif i8086}
+
       if (ops=1) and (opcode=A_RET) or (opcode=A_RETN) or (opcode=A_RETF) or
                      (opcode=A_RETW) or (opcode=A_RETNW) or (opcode=A_RETFW) or
 {$ifndef x86_64}
@@ -1932,24 +1908,13 @@ begin
         siz:=S_W;
       if (ops=1) and (opcode=A_PUSH) then
         begin
-{$ifdef i8086}
-          if (tx86operand(operands[1]).opr.val>=-128) and (tx86operand(operands[1]).opr.val<=127) then
-            begin
-              siz:=S_B;
-              message(asmr_w_unable_to_determine_constant_size_using_byte);
-            end
-          else
-            begin
-              siz:=S_W;
-              message(asmr_w_unable_to_determine_constant_size_using_word);
-            end;
-{$else i8086}
+
           { We are a 32 compiler, assume 32-bit by default. This is Delphi
             compatible but bad coding practise.}
 
           siz:=S_L;
           message(asmr_w_unable_to_determine_reference_size_using_dword);
-{$endif i8086}
+
         end;
       if (opcode=A_JMP) or (opcode=A_JCC) or (opcode=A_CALL) then
         if ops=1 then
@@ -2028,15 +1993,11 @@ begin
    { Check for 'POP CS' }
    if (opcode=A_POP) and (ops=1) and (operands[1].opr.typ=OPR_REGISTER) and
       (operands[1].opr.reg=NR_CS) then
-{$ifdef i8086}
-     { On i8086 we print only a warning, because 'POP CS' works on 8086 and 8088
-       CPUs, but isn't supported on any later CPU }
-     Message(asmr_w_pop_cs_not_portable);
-{$else i8086}
+
      { On the i386 and x86_64 targets, we print out an error, because no CPU,
        supported by these targets support 'POP CS' }
      Message(asmr_e_pop_cs_not_valid);
-{$endif i8086}
+
 
    { I tried to convince Linus Torvalds to add
      code to support ENTER instruction
@@ -2065,11 +2026,7 @@ begin
        OPR_REGISTER:
          ai.loadreg(i-1,operands[i].opr.reg);
        OPR_SYMBOL:
-{$ifdef i8086}
-        if operands[i].opr.symseg then
-          taicpu(ai).loadsegsymbol(i-1,operands[i].opr.symbol)
-        else
-{$endif i8086}
+
           ai.loadsymbol(i-1,operands[i].opr.symbol,operands[i].opr.symofs);
        OPR_LOCAL :
          with operands[i].opr do
@@ -2115,14 +2072,9 @@ begin
                    OS_16,OS_S16, OS_M16:
                      asize:=OT_BITS16;
                    OS_32,OS_S32 :
-{$ifdef i8086}
-                     if siz=S_FAR then
-                       asize:=OT_FAR
-                     else
-                       asize:=OT_BITS32;
-{$else i8086}
+
                      asize:=OT_BITS32;
-{$endif i8086}
+
                    OS_F32,OS_M32 :
                      asize:=OT_BITS32;
                    OS_64,OS_S64:

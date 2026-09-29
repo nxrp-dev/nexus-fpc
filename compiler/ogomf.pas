@@ -589,16 +589,7 @@ implementation
 
     class function TOmfObjData.CodeSectionName(const aname: string): string;
       begin
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_code_models then
-          begin
-            if cs_huge_code in current_settings.moduleswitches then
-              result:=TrimStrCRC32(aname,30) + '_TEXT'
-            else
-              result:=current_module.modulename^ + '_TEXT';
-          end
-        else
-{$endif}
+
           result:='_TEXT';
       end;
 
@@ -3424,25 +3415,8 @@ cleanup:
 {*****************************************************************************
                                   Initialize
 *****************************************************************************}
-{$ifdef i8086}
-    const
-       as_i8086_omf_info : tasminfo =
-          (
-            id     : as_i8086_omf;
-            idtxt  : 'OMF';
-            asmbin : '';
-            asmcmd : '';
-            supported_targets : [system_i8086_msdos,system_i8086_embedded];
-            flags : [af_outputbinary,af_smartlink_sections];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-{$endif i8086}
+
 
 initialization
-{$ifdef i8086}
-  RegisterAssembler(as_i8086_omf_info,TOmfAssembler);
-{$endif i8086}
+
 end.

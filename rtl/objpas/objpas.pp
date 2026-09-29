@@ -22,19 +22,13 @@ unit objpas;
 interface
 
   { first, in object pascal, the integer type must be redefined }
-{$ifdef CPU16}
-   const
-       MaxInt  = MaxSmallint;
-    type
-       Integer  = smallint;
-       PInteger = ^Integer;
-{$else CPU16}
+
     const
        MaxInt  = MaxLongint;
     type
        Integer  = longint;
        PInteger = ^Integer;
-{$endif CPU16}
+
 
        { Ansistring are the default }
 {$IF SIZEOF(Char)=2}
@@ -44,18 +38,14 @@ interface
 {$ENDIF}
 
        { array types }
-{$ifdef CPU16}
-       IntegerArray  = array[0..(32768 div SizeOf(Integer))-2] of Integer;
-{$else CPU16}
+
        IntegerArray  = array[0..$effffff] of Integer;
-{$endif CPU16}
+
        TIntegerArray = IntegerArray;
        PIntegerArray = ^IntegerArray;
-{$ifdef CPU16}
-       PointerArray  = array [0..(32768 div SizeOf(Pointer))-2] of Pointer;
-{$else CPU16}
+
        PointerArray  = array [0..512*1024*1024-2] of Pointer;
-{$endif CPU16}
+
        TPointerArray = PointerArray;
        PPointerArray = ^PointerArray;
 
@@ -363,7 +353,7 @@ Type
    PPResourceStringRecord = ^PResourceStringRecord;
    TResourceStringTableList = Packed Record
      Count : sizeint;
-     Tables : Array[{$ifdef cpu16}Byte{$else cpu16}Word{$endif cpu16}] of record
+     Tables : Array[Word] of record
        TableStart,
        TableEnd   : PPResourceStringRecord;
      end;
@@ -380,7 +370,7 @@ Type
 
    TResStrInitTable = packed record
      Count: sizeint;
-     Tables: packed array[1..{$ifdef cpu16}8191{$else cpu16}32767{$endif cpu16}] of PResStrInitEntry;
+     Tables: packed array[1..32767] of PResStrInitEntry;
    end;
    PResStrInitTable = ^TResStrInitTable;
 

@@ -222,11 +222,11 @@ Const
 {$if defined(generic_cpu)}
          case byte of
 {$endif}
-{$if defined(i8086) or defined(generic_cpu)}
+{$if defined(generic_cpu)}
    {$ifdef generic_cpu} 1:({$endif}
            x86memorymodel  : tx86memorymodel;
    {$ifdef generic_cpu}   );{$endif}
-{$endif defined(i8086) or defined(generic_cpu)}
+{$endif defined(generic_cpu)}
 
 {$if defined(ARM) or defined(generic_cpu)}
    {$ifdef generic_cpu} 2:({$endif}
@@ -517,25 +517,21 @@ Const
         globalswitches : [cs_check_unit_name,cs_link_static];
         targetswitches : [];
         moduleswitches : [cs_extsyntax,cs_implicit_exceptions];
-        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_imported_data{$ifdef i8086},cs_force_far_calls{$endif}];
+        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_imported_data];
         modeswitches : fpcmodeswitches;
         optimizerswitches : [];
         genwpoptimizerswitches : [];
         dowpoptimizerswitches : [];
-{$ifdef i8086}
-        debugswitches : [ds_dwarf_sets,ds_dwarf_omf_linnum];
-{$else i8086}
+
         debugswitches : [ds_dwarf_sets];
-{$endif i8086}
+
 
         setalloc : 0;
         packenum : 4;
 
-{$ifdef i8086}
-        packrecords     : 1;
-{$else i8086}
+
         packrecords     : 0;
-{$endif i8086}
+
         maxfpuregisters : 0;
 
         verbosity : V_Default;
@@ -585,32 +581,14 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_vfp;
   {$endif aarch64}
-  {$ifdef i8086}
-        cputype : cpu_8086;
-        optimizecputype : cpu_8086;
-        { Use cpu_none by default,
-        because using cpu_8086 by default means
-        that we reject any instruction above bare 8086 instruction set
-        for all assembler code PM }
-        asmcputype : cpu_none;
-        fputype : fpu_x87;
-  {$endif i8086}
+
   {$ifdef xtensa}
         cputype : cpu_none;
         optimizecputype : cpu_none;
         asmcputype : cpu_none;
         fputype : fpu_none;
   {$endif xtensa}
-  {$ifdef z80}
-        cputype : cpu_zilog_z80;
-        optimizecputype : cpu_zilog_z80;
-        { Use cpu_none by default,
-        because using cpu_8086 by default means
-        that we reject any instruction above bare 8086 instruction set
-        for all assembler code PM }
-        asmcputype : cpu_none;
-        fputype : fpu_soft;
-  {$endif z80}
+
   {$ifdef wasm}
         cputype : cpu_none;
         optimizecputype : cpu_none;
@@ -636,9 +614,9 @@ Const
         lineendingtype : le_platform;
         whitespacetrimcount : 0;
         whitespacetrimauto : false;
-{$if defined(i8086) or defined(GENERIC_CPU)}
+{$if defined(GENERIC_CPU)}
         x86memorymodel : mm_small;
-{$endif defined(i8086) or defined(GENERIC_CPU)}
+{$endif defined(GENERIC_CPU)}
 {$if defined(ARM)}
         instructionset : is_arm;
 {$endif defined(ARM)}
@@ -1030,11 +1008,9 @@ implementation
            Replace(s,'$FPCTARGET',target_full_string);
          Replace(s,'$FPCSUBARCH',lower(cputypestr[init_settings.cputype]));
          Replace(s,'$FPCABI',lower(abiinfo[target_info.abi].name));
-{$ifdef i8086}
-         Replace(s,'$FPCMEMORYMODEL',lower(x86memorymodelstr[init_settings.x86memorymodel]));
-{$else i8086}
+
          Replace(s,'$FPCMEMORYMODEL','flat');
-{$endif i8086}
+
 {$ifdef mswindows}
          ReplaceSpecialFolder('$LOCAL_APPDATA',CSIDL_LOCAL_APPDATA);
          ReplaceSpecialFolder('$APPDATA',CSIDL_APPDATA);

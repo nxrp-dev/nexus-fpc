@@ -118,6 +118,7 @@ type
     FFinalState: TNXWorkState;
     FTransitions: array of TNXTransitionMethod;
     FBlockedBy: TNXWorkID;
+    FData: Pointer;
 
     function GetState: TNXWorkState;
     function GetTransition(AState: TNXWorkState): TNXTransitionMethod;
@@ -135,8 +136,25 @@ type
       ARequiredState: TNXWorkState
     );
 
-    procedure Commit(AState: TNXWorkState); virtual;
+    procedure BeginDataRead; virtual;
+    procedure EndDataRead; virtual;
+    procedure BeginDataWrite; virtual;
+    procedure EndDataWrite; virtual;
+
+    function CloneDataValue(AData: Pointer): Pointer; virtual; abstract;
+    procedure FreeDataValue(AData: Pointer); virtual; abstract;
+
+    procedure Commit(
+      ANewData: Pointer;
+      ANewState: TNXWorkState
+    ); virtual;
   public
+    destructor Destroy; override;
+
+    function BeginReadData: Pointer;
+    procedure EndReadData;
+    function CloneData: Pointer;
+
     function Started: Boolean;
     function Completed: Boolean;
     function CanAdvance: Boolean;
@@ -187,47 +205,163 @@ type
     function BlockedCount: Integer;
   end;
 
-  { Compiler example }
+  { Compiler example
+
+    The compiler work flow is intentionally linear.  Each state represents
+    completed progress, except for csTokenizing which is explicitly resumable.
+
+    Tokenization rules:
+
+      * Directives are consumed by tokenization and do not become parser tokens.
+      * Includes are expanded by the tokenizer into one logical token stream.
+      * Most directives can be resolved immediately from tokenizer/compiler
+        configuration state.
+      * A semantic directive such as SizeOf(SomeType) may require information
+        that has not yet been published by another compilation work item.
+      * In that case tokenization MUST NOT throw away work already performed.
+        The tokenizer retains its current token buffer plus enough operational
+        state to resume later, records the blocker, and returns.
+      * Partial tokenization is operational data and is not published to
+        consumers.  csTokenizing therefore means "tokenization is in progress
+        and may be resumed".  Consumers normally depend on csTokenized, which
+        means the complete immutable token stream has been committed.
+
+    This keeps "paused" or "blocked" out of the state enum.  Blocking is an
+    assignment/state-map concern, not semantic progress.
+
+    After tokenization, the remaining states mirror the important dependency
+    barriers in FPC's ctask/pmodules source-compilation path:
+
+      csCompile
+        -> compile-module entry
+
+      csCompilingWait
+        -> equivalent to usedunitsloaded(true)
+
+      csCompilingWaitIntf
+        -> equivalent to usedunitsloaded(true)
+
+      csCompilingWaitImpl
+        -> equivalent to usedunitsloaded(false)
+
+      csCompilingWaitFinish
+        -> equivalent to nowaitingforunits()
+
+      csCompiledWaitCRC
+        -> equivalent to usedunitsfinalcrc()
+
+    PPU loading/recompile/error recovery are intentionally not modeled here.
+    They are alternate work paths and should not force branching semantics into
+    this deliberately linear source-compilation example.
+  }
 
   TNXCompileState = (
     csNotStarted,
-    csInterfaceParsed,
-    csInterfaceReady,
-    csImplementationReady,
-    csCodeGenerated,
-    csCompleted
+    csTokenizing,
+    csTokenized,
+    csCompile,
+    csCompilingWait,
+    csCompilingWaitIntf,
+    csCompilingWaitImpl,
+    csCompilingWaitFinish,
+    csCompiledWaitCRC,
+    csCompiled,
+    csProcessed
   );
 
+  TNXToken = record
+    TokenType: Word;
+    Variant: Word;
+    Value: LongWord;
+    Source: LongWord;
+  end;
+
+  TNXTokenBuffer = array of TNXToken;
+
+  TNXTokenizerState = class
+  public
+    Tokens: TNXTokenBuffer;
+
+    { These fields represent the minimum kind of state that must survive a
+      semantic-directive blocker.  The real compiler implementation will
+      replace/expand these placeholders with its actual source/include,
+      directive/conditional, mode/settings and source-position state. }
+    SourcePosition: LongWord;
+    IncludeDepth: Integer;
+    DirectiveDepth: Integer;
+
+    function Clone: TNXTokenizerState; virtual;
+  end;
 
   TNXPublishedUnit = class
   public
+    Tokenizer: TNXTokenizerState;
+
+    constructor Create;
+    destructor Destroy; override;
+
     procedure UpdateFrom(AWorkingUnit: TObject); virtual;
+    function Clone: TNXPublishedUnit; virtual;
   end;
 
   TNXWorkingUnit = class
   public
-    procedure ParseInterface; virtual;
-    procedure ResolveInterface; virtual;
-    procedure ResolveImplementation; virtual;
-    procedure GenerateCode; virtual;
-    procedure FinalizeUnit; virtual;
+    Tokenizer: TNXTokenizerState;
+
+    constructor Create;
+    destructor Destroy; override;
   end;
 
   TNXCompileUnit = class(TNXWorkItem)
   private
     FPublished: TNXPublishedUnit;
     FWorking: TNXWorkingUnit;
-    function ParseInterface: TNXTransitionResult;
-    function ResolveInterface: TNXTransitionResult;
-    function ResolveImplementation: TNXTransitionResult;
-    function GenerateCode: TNXTransitionResult;
-    function FinalizeUnit: TNXTransitionResult;
+
+    function StartTokenizing: TNXTransitionResult;
+    function ContinueTokenizing: TNXTransitionResult;
+    function BeginCompile: TNXTransitionResult;
+    function ProcessProgramDeclarations: TNXTransitionResult;
+    function ParseInterfaceDeclarations: TNXTransitionResult;
+    function ProcessImplementation: TNXTransitionResult;
+    function FinishCompile: TNXTransitionResult;
+    function FinalizeCRC: TNXTransitionResult;
+    function FinishUnit: TNXTransitionResult;
+    function MarkProcessed: TNXTransitionResult;
   protected
-    procedure Commit(AState: TNXWorkState); override;
+    function CloneDataValue(AData: Pointer): Pointer; override;
+    procedure FreeDataValue(AData: Pointer); override;
+    procedure Commit(
+      ANewData: Pointer;
+      ANewState: TNXWorkState
+    ); override;
   public
-    constructor Create(AStateMap: TNXStateMap; const AUnitIdentity: string);
+    constructor Create(
+      AStateMap: TNXStateMap;
+      const AUnitIdentity: string
+    );
     destructor Destroy; override;
-    procedure RequireInterface(AUnit: TNXCompileUnit);
+
+    { Called when tokenization reaches a semantic directive that requires
+      another work item to have published sufficient semantic state.
+
+      The tokenizer keeps its current token buffer and resumable tokenizer
+      state as private operational data.  Nothing partial is published.  The
+      work item remains csTokenizing and will later continue from that saved
+      point instead of restarting from source position zero. }
+    procedure BlockTokenizingOn(
+      AUnit: TNXCompileUnit;
+      ARequiredState: TNXCompileState
+    );
+
+    { Normal consumers should depend on this milestone, not csTokenizing. }
+    procedure BlockOnTokenized(AUnit: TNXCompileUnit);
+
+    procedure BlockProgramDeclarationsOn(AUnit: TNXCompileUnit);
+    procedure BlockInterfaceOn(AUnit: TNXCompileUnit);
+    procedure BlockImplementationOn(AUnit: TNXCompileUnit);
+    procedure BlockFinishOn(AUnit: TNXCompileUnit);
+    procedure BlockCRCOn(AUnit: TNXCompileUnit);
+
     property Published: TNXPublishedUnit read FPublished;
     property Working: TNXWorkingUnit read FWorking;
   end;
@@ -599,12 +733,72 @@ begin
   );
 end;
 
-procedure TNXWorkItem.Commit(AState: TNXWorkState);
+procedure TNXWorkItem.BeginDataRead;
 begin
-  FStateMap.TransitionTo(
-    FWorkID,
-    AState
-  );
+end;
+
+procedure TNXWorkItem.EndDataRead;
+begin
+end;
+
+procedure TNXWorkItem.BeginDataWrite;
+begin
+end;
+
+procedure TNXWorkItem.EndDataWrite;
+begin
+end;
+
+destructor TNXWorkItem.Destroy;
+begin
+  if FData <> nil then
+    FreeDataValue(FData);
+
+  inherited Destroy;
+end;
+
+function TNXWorkItem.BeginReadData: Pointer;
+begin
+  BeginDataRead;
+  Result := FData;
+end;
+
+procedure TNXWorkItem.EndReadData;
+begin
+  EndDataRead;
+end;
+
+function TNXWorkItem.CloneData: Pointer;
+begin
+  BeginDataRead;
+  try
+    Result := CloneDataValue(FData);
+  finally
+    EndDataRead;
+  end;
+end;
+
+procedure TNXWorkItem.Commit(
+  ANewData: Pointer;
+  ANewState: TNXWorkState
+);
+var
+  OldData: Pointer;
+begin
+  BeginDataWrite;
+  try
+    OldData := FData;
+    FData := ANewData;
+    FStateMap.TransitionTo(
+      FWorkID,
+      ANewState
+    );
+  finally
+    EndDataWrite;
+  end;
+
+  if OldData <> nil then
+    FreeDataValue(OldData);
 end;
 
 function TNXWorkItem.Started: Boolean;
@@ -638,6 +832,7 @@ function TNXWorkItem.Process: TNXWorkResult;
 var
   Method: TNXTransitionMethod;
   BlockingWorkID: TNXWorkID;
+  WorkingData: Pointer;
 begin
   FBlockedBy := 0;
 
@@ -661,17 +856,28 @@ begin
         [State]
       );
 
-    if Method() = trBlocked then
-    begin
-      if FBlockedBy = 0 then
-        raise Exception.Create(
-          'Transition reported blocked without identifying a blocker'
-        );
+    WorkingData := CloneData;
+    try
+      if Method() = trBlocked then
+      begin
+        if FBlockedBy = 0 then
+          raise Exception.Create(
+            'Transition reported blocked without identifying a blocker'
+          );
 
-      Exit(wrBlocked);
+        Exit(wrBlocked);
+      end;
+
+      Commit(
+        WorkingData,
+        State + 1
+      );
+      WorkingData := nil;
+    finally
+      if WorkingData <> nil then
+        FreeDataValue(WorkingData);
     end;
 
-    Commit(State + 1);
     FBlockedBy := 0;
   end;
 
@@ -861,32 +1067,64 @@ begin
   Result := Length(FBlocked);
 end;
 
+function TNXTokenizerState.Clone: TNXTokenizerState;
+begin
+  Result := TNXTokenizerState.Create;
+  Result.Tokens := Copy(Tokens);
+  Result.SourcePosition := SourcePosition;
+  Result.IncludeDepth := IncludeDepth;
+  Result.DirectiveDepth := DirectiveDepth;
+end;
+
+constructor TNXPublishedUnit.Create;
+begin
+  inherited Create;
+  Tokenizer := TNXTokenizerState.Create;
+end;
+
+destructor TNXPublishedUnit.Destroy;
+begin
+  Tokenizer.Free;
+  inherited Destroy;
+end;
+
 procedure TNXPublishedUnit.UpdateFrom(AWorkingUnit: TObject);
+var
+  WorkingUnit: TNXWorkingUnit;
 begin
+  if not (AWorkingUnit is TNXWorkingUnit) then
+    Exit;
+
+  WorkingUnit := TNXWorkingUnit(AWorkingUnit);
+
+  Tokenizer.Free;
+  Tokenizer := WorkingUnit.Tokenizer.Clone;
 end;
 
-procedure TNXWorkingUnit.ParseInterface;
+function TNXPublishedUnit.Clone: TNXPublishedUnit;
 begin
+  Result := TNXPublishedUnit.Create;
+
+  Result.Tokenizer.Free;
+  Result.Tokenizer := Tokenizer.Clone;
 end;
 
-procedure TNXWorkingUnit.ResolveInterface;
+constructor TNXWorkingUnit.Create;
 begin
+  inherited Create;
+  Tokenizer := TNXTokenizerState.Create;
 end;
 
-procedure TNXWorkingUnit.ResolveImplementation;
+destructor TNXWorkingUnit.Destroy;
 begin
+  Tokenizer.Free;
+  inherited Destroy;
 end;
 
-procedure TNXWorkingUnit.GenerateCode;
-begin
-end;
-
-procedure TNXWorkingUnit.FinalizeUnit;
-begin
-end;
-
-constructor TNXCompileUnit.Create(AStateMap: TNXStateMap;
-  const AUnitIdentity: string);
+constructor TNXCompileUnit.Create(
+  AStateMap: TNXStateMap;
+  const AUnitIdentity: string
+);
 begin
   inherited Create(
     AStateMap,
@@ -895,70 +1133,227 @@ begin
     Ord(High(TNXCompileState))
   );
 
-  FPublished := TNXPublishedUnit.Create;
+  FPublished := nil;
   FWorking := TNXWorkingUnit.Create;
 
-  Transition[Ord(csNotStarted)] := @ParseInterface;
-  Transition[Ord(csInterfaceParsed)] := @ResolveInterface;
-  Transition[Ord(csInterfaceReady)] := @ResolveImplementation;
-  Transition[Ord(csImplementationReady)] := @GenerateCode;
-  Transition[Ord(csCodeGenerated)] := @FinalizeUnit;
+  { csNotStarted -> csTokenizing establishes resumable tokenizer state. }
+  Transition[Ord(csNotStarted)] := @StartTokenizing;
+
+  { csTokenizing -> csTokenized may run more than once operationally.
+    If a semantic directive blocks, the work item remains csTokenizing.
+    Once the entire effective token stream is complete, the transition
+    succeeds and the published state advances to csTokenized. }
+  Transition[Ord(csTokenizing)] := @ContinueTokenizing;
+
+  Transition[Ord(csTokenized)] := @BeginCompile;
+  Transition[Ord(csCompile)] := @ProcessProgramDeclarations;
+  Transition[Ord(csCompilingWait)] := @ParseInterfaceDeclarations;
+  Transition[Ord(csCompilingWaitIntf)] := @ProcessImplementation;
+  Transition[Ord(csCompilingWaitImpl)] := @FinishCompile;
+  Transition[Ord(csCompilingWaitFinish)] := @FinalizeCRC;
+  Transition[Ord(csCompiledWaitCRC)] := @FinishUnit;
+  Transition[Ord(csCompiled)] := @MarkProcessed;
 end;
 
 destructor TNXCompileUnit.Destroy;
 begin
   FWorking.Free;
-  FPublished.Free;
   inherited Destroy;
 end;
 
-procedure TNXCompileUnit.RequireInterface(AUnit: TNXCompileUnit);
+procedure TNXCompileUnit.BlockTokenizingOn(
+  AUnit: TNXCompileUnit;
+  ARequiredState: TNXCompileState
+);
+begin
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  { Resumable tokenizer data already lives in FWorking and survives release
+    of the worker.  BlockOn records only the scheduling/dependency relationship.
+    State remains csTokenizing and no partial token data is published. }
+  BlockOn(
+    AUnit.WorkID,
+    Ord(ARequiredState)
+  );
+end;
+
+procedure TNXCompileUnit.BlockOnTokenized(AUnit: TNXCompileUnit);
 begin
   if AUnit = nil then
     raise Exception.Create('AUnit cannot be nil');
 
   StateMap.BlockOn(
     WorkID,
-    Ord(csInterfaceParsed),
+    State,
     AUnit.WorkID,
-    Ord(csInterfaceReady)
+    Ord(csTokenized)
   );
 end;
 
-function TNXCompileUnit.ParseInterface: TNXTransitionResult;
+procedure TNXCompileUnit.BlockProgramDeclarationsOn(AUnit: TNXCompileUnit);
 begin
-  FWorking.ParseInterface;
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  StateMap.BlockOn(
+    WorkID,
+    Ord(csCompile),
+    AUnit.WorkID,
+    Ord(csCompilingWaitIntf)
+  );
+end;
+
+procedure TNXCompileUnit.BlockInterfaceOn(AUnit: TNXCompileUnit);
+begin
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  StateMap.BlockOn(
+    WorkID,
+    Ord(csCompilingWait),
+    AUnit.WorkID,
+    Ord(csCompilingWaitIntf)
+  );
+end;
+
+procedure TNXCompileUnit.BlockImplementationOn(AUnit: TNXCompileUnit);
+begin
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  StateMap.BlockOn(
+    WorkID,
+    Ord(csCompilingWaitIntf),
+    AUnit.WorkID,
+    Ord(csCompilingWaitIntf)
+  );
+end;
+
+procedure TNXCompileUnit.BlockFinishOn(AUnit: TNXCompileUnit);
+begin
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  StateMap.BlockOn(
+    WorkID,
+    Ord(csCompilingWaitImpl),
+    AUnit.WorkID,
+    Ord(csCompilingWaitImpl)
+  );
+end;
+
+procedure TNXCompileUnit.BlockCRCOn(AUnit: TNXCompileUnit);
+begin
+  if AUnit = nil then
+    raise Exception.Create('AUnit cannot be nil');
+
+  StateMap.BlockOn(
+    WorkID,
+    Ord(csCompiledWaitCRC),
+    AUnit.WorkID,
+    Ord(csCompiledWaitCRC)
+  );
+end;
+
+function TNXCompileUnit.StartTokenizing: TNXTransitionResult;
+begin
+  { Real implementation will initialize the tokenizer from source and perform
+    as much work as convenient before entering the resumable tokenizing state. }
   Result := trCompleted;
 end;
 
-function TNXCompileUnit.ResolveInterface: TNXTransitionResult;
+function TNXCompileUnit.ContinueTokenizing: TNXTransitionResult;
 begin
-  FWorking.ResolveInterface;
+  { Placeholder for the real tokenizer.
+
+    Intended behavior:
+
+      while source remains do
+        tokenize
+        process directives immediately
+        expand includes through the tokenizer source stack
+
+        if a semantic directive cannot yet be resolved then
+        begin
+          retain current token buffer and tokenizer resume state in FWorking
+          BlockTokenizingOn(...)
+          Exit(trBlocked)
+        end
+
+      Result := trCompleted
+
+    trCompleted is the only result that advances csTokenizing -> csTokenized.
+    trBlocked leaves the work item in csTokenizing so it can resume later.
+  }
   Result := trCompleted;
 end;
 
-function TNXCompileUnit.ResolveImplementation: TNXTransitionResult;
+function TNXCompileUnit.BeginCompile: TNXTransitionResult;
 begin
-  FWorking.ResolveImplementation;
   Result := trCompleted;
 end;
 
-function TNXCompileUnit.GenerateCode: TNXTransitionResult;
+function TNXCompileUnit.ProcessProgramDeclarations: TNXTransitionResult;
 begin
-  FWorking.GenerateCode;
   Result := trCompleted;
 end;
 
-function TNXCompileUnit.FinalizeUnit: TNXTransitionResult;
+function TNXCompileUnit.ParseInterfaceDeclarations: TNXTransitionResult;
 begin
-  FWorking.FinalizeUnit;
   Result := trCompleted;
 end;
 
-procedure TNXCompileUnit.Commit(AState: TNXWorkState);
+function TNXCompileUnit.ProcessImplementation: TNXTransitionResult;
 begin
-  FPublished.UpdateFrom(FWorking);
-  inherited Commit(AState);
+  Result := trCompleted;
+end;
+
+function TNXCompileUnit.FinishCompile: TNXTransitionResult;
+begin
+  Result := trCompleted;
+end;
+
+function TNXCompileUnit.FinalizeCRC: TNXTransitionResult;
+begin
+  Result := trCompleted;
+end;
+
+function TNXCompileUnit.FinishUnit: TNXTransitionResult;
+begin
+  Result := trCompleted;
+end;
+
+function TNXCompileUnit.MarkProcessed: TNXTransitionResult;
+begin
+  Result := trCompleted;
+end;
+
+function TNXCompileUnit.CloneDataValue(AData: Pointer): Pointer;
+begin
+  if AData = nil then
+    Result := TNXPublishedUnit.Create
+  else
+    Result := TNXPublishedUnit(AData).Clone;
+end;
+
+procedure TNXCompileUnit.FreeDataValue(AData: Pointer);
+begin
+  TObject(AData).Free;
+end;
+
+procedure TNXCompileUnit.Commit(
+  ANewData: Pointer;
+  ANewState: TNXWorkState
+);
+begin
+  TNXPublishedUnit(ANewData).UpdateFrom(FWorking);
+  FPublished := TNXPublishedUnit(ANewData);
+
+  inherited Commit(
+    ANewData,
+    ANewState
+  );
 end;
 
 end.

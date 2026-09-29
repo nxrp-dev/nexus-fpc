@@ -526,11 +526,9 @@ implementation
                     opdef:=s32inttype;
                     opsize:=OS_S32;
                   end;
-{$ifdef cpu16bitalu}
-                shiftcountdef:=s16inttype;
-{$else cpu16bitalu}
+
                 shiftcountdef:=opdef;
-{$endif cpu16bitalu}
+
               end
             else
               begin
@@ -545,11 +543,9 @@ implementation
                     opdef:=u32inttype;
                     opsize:=OS_32;
                   end;
-{$ifdef cpu16bitalu}
-                shiftcountdef:=u16inttype;
-{$else cpu16bitalu}
+
                 shiftcountdef:=opdef;
-{$endif cpu16bitalu}
+
               end
           end
         else

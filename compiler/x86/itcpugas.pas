@@ -39,9 +39,6 @@ interface
 {$elseif defined(i386)}
       gas_op2str:op2strtable={$i i386att.inc}
       gas_needsuffix:array[tasmop] of TAttSuffix={$i i386atts.inc}
-{$elseif defined(i8086)}
-      gas_op2str:op2strtable={$i i8086att.inc}
-      gas_needsuffix:array[tasmop] of TAttSuffix={$i i8086atts.inc}
 {$endif}
 
 {$ifdef x86_64}
@@ -146,17 +143,6 @@ implementation
         {r386ari.inc contains an index which sorts att_regname_table by
          ATT name.}
         {$i r386ari.inc}
-      );
-    {$elseif defined(i8086)}
-      att_regname_table : TRegNameTable = (
-        {r8086att.inc contains the AT&T name of each register.}
-        {$i r8086att.inc}
-      );
-
-      att_regname_index : array[tregisterindex] of tregisterindex = (
-        {r8086ari.inc contains an index which sorts att_regname_table by
-         ATT name.}
-        {$i r8086ari.inc}
       );
     {$endif}
 

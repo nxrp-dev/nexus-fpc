@@ -282,11 +282,9 @@ unit TypInfo;
         ArgData: Pointer;
       end;
 
-{$ifdef CPU16}
-      TAttributeEntryList = array[0..(High(SizeUInt) div SizeOf(TAttributeEntry))-1] of TAttributeEntry;
-{$else CPU16}
+
       TAttributeEntryList = array[0..$ffff] of TAttributeEntry;
-{$endif CPU16}
+
 
       TAttributeTable =
       {$ifndef FPC_REQUIRES_PROPER_ALIGNMENT}
@@ -392,7 +390,7 @@ unit TypInfo;
         property Tail: Pointer read GetTail;
         property Next: PVmtMethodParam read GetNext;
       end;
-      TVmtMethodParamArray = array[0..{$ifdef cpu16}(32768 div sizeof(TVmtMethodParam))-2{$else}65535{$endif}] of TVmtMethodParam;
+      TVmtMethodParamArray = array[0..65535] of TVmtMethodParam;
       PVmtMethodParamArray = ^TVmtMethodParamArray;
 
       PIntfMethodEntry = ^TIntfMethodEntry;
@@ -510,7 +508,7 @@ unit TypInfo;
         Params: array[0..0] of TVmtMethodParam;
        { ResultLocs: PParameterLocations (if ResultType != Nil) }
       end;
-      TVmtMethodExEntryArray = array[0.. {$ifdef cpu16}(32768 div sizeof(TVmtMethodExEntry))-2{$else}65535{$endif}] of TVmtMethodExEntry;
+      TVmtMethodExEntryArray = array[0.. 65535] of TVmtMethodExEntry;
       PVmtMethodExEntryArray = ^TVmtMethodExEntryArray;
 
       PVmtMethodExTable = ^TVmtMethodExTable;
@@ -531,7 +529,7 @@ unit TypInfo;
       end;
 
       PExtendedMethodInfoTable = ^TExtendedMethodInfoTable;
-      TExtendedMethodInfoTable = array[0..{$ifdef cpu16}(32768 div sizeof(PVmtMethodExEntry))-2{$else}65535{$endif}] of PVmtMethodExEntry;
+      TExtendedMethodInfoTable = array[0..65535] of PVmtMethodExEntry;
 
       PExtendedVmtFieldEntry = ^TExtendedVmtFieldEntry;
       PExtendedFieldEntry = PExtendedVmtFieldEntry; // For records, there is no VMT, but currently the layout is identical
@@ -579,7 +577,7 @@ unit TypInfo;
       end;
 
       PExtendedFieldInfoTable = ^TExtendedFieldInfoTable;
-      TExtendedFieldInfoTable = array[0..{$ifdef cpu16}(32768 div sizeof(PExtendedVmtFieldEntry))-2{$else}65535{$endif}] of PExtendedVmtFieldEntry;
+      TExtendedFieldInfoTable = array[0..65535] of PExtendedVmtFieldEntry;
 
       TRecOpOffsetEntry =
       {$ifndef FPC_REQUIRES_PROPER_ALIGNMENT}
@@ -685,7 +683,7 @@ unit TypInfo;
       end;
 
       PRecordMethodInfoTable = ^TRecordMethodInfoTable;
-      TRecordMethodInfoTable = array[0..{$ifdef cpu16}(32768 div sizeof(PRecMethodExEntry))-2{$else}65535{$endif}] of PRecMethodExEntry;
+      TRecordMethodInfoTable = array[0..65535] of PRecMethodExEntry;
 
       PInterfaceData = ^TInterfaceData;
       TInterfaceData =
@@ -1090,7 +1088,7 @@ unit TypInfo;
       end;
 
       PPropListEx = ^TPropListEx;
-      TPropListEx = array[0..{$ifdef cpu16}(32768 div sizeof(PPropInfoEx))-2{$else}65535{$endif}] of PPropInfoEx;
+      TPropListEx = array[0..65535] of PPropInfoEx;
 
       TPropParams =
       {$ifndef FPC_REQUIRES_PROPER_ALIGNMENT}
@@ -1139,7 +1137,7 @@ unit TypInfo;
       TProcInfoProc = Procedure(PropInfo : PPropInfo) of object;
 
       PPropList = ^TPropList;
-      TPropList = array[0..{$ifdef cpu16}(32768 div sizeof(PPropInfo))-2{$else}65535{$endif}] of PPropInfo;
+      TPropList = array[0..65535] of PPropInfo;
 
    const
       tkString = tkSString;
@@ -1827,7 +1825,7 @@ Generic Function ConstParamIsRef<T>(aCallConv: TCallConv): Boolean;
     Result := @aArg1 = @aArg2;
   end;
 
-{$if defined(cpui8086) or defined(cpui386)}
+{$if defined(cpui386)}
   Function SameAddrPascal(const aArg1: T; constref aArg2: T): Boolean; pascal;
   begin
     Result := @aArg1 = @aArg2;
@@ -1865,14 +1863,14 @@ begin
       Result := SameAddrRegister(v, v);
     ccCdecl:
       Result := SameAddrCDecl(v, v);
-{$if defined(cpui386) or defined(cpui8086)}
+{$if defined(cpui386)}
     ccPascal:
       Result := SameAddrPascal(v, v);
 {$endif}
 {$if not defined(cpui386)}
     ccOldFPCCall,
 {$endif}
-{$if not defined(cpui386) and not defined(cpui8086)}
+{$if not defined(cpui386)}
     ccPascal,
 {$endif}
     ccStdCall:

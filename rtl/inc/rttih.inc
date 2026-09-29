@@ -11,12 +11,7 @@
 
  **********************************************************************}
 
-{$IF DEFINED(CPU8) OR DEFINED(CPU16)}
-{ disable the extended RTTI for the RTL/FCL on these targets; the user can of
-  course still enable it for their own classes if needed (and published
-  properties and methods are accessible using the legacy RTTI as well) }
-{$DEFINE SMALLRTTI}
-{$ENDIF}
+
 
 {$PUSH}
 {$MINENUMSIZE 1   this saves a lot of memory }

@@ -51,8 +51,8 @@ type
 {$endif FPC_HAS_FEATURE_UNICODESTRINGS}
   TCriticalSectionHandler = Procedure (var cs);
   TCriticalSectionHandlerTryEnter = function (var cs):longint;
-  TInitThreadVarHandler = Procedure(var offset : {$ifdef cpu16}word{$else}dword{$endif};size : dword);
-  TRelocateThreadVarHandler = Function(offset : {$ifdef cpu16}word{$else}dword{$endif}) : pointer;
+  TInitThreadVarHandler = Procedure(var offset : dword;size : dword);
+  TRelocateThreadVarHandler = Function(offset : dword) : pointer;
   TAllocateThreadVarsHandler = Procedure;
   TReleaseThreadVarsHandler = Procedure;
   TBasicEventHandler        = procedure(state:peventstate);

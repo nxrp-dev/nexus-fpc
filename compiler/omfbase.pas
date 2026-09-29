@@ -2974,11 +2974,7 @@ implementation
       );
     begin
       result:=segclass[atype];
-{$ifdef i8086}
-      if (current_settings.x86memorymodel=mm_huge) and
-        ((result='DATA') or (result='BSS')) then
-        result:='FAR_DATA';
-{$endif i8086}
+
     end;
 
   function omf_sectiontype2align(atype: TAsmSectiontype): longint;
@@ -3013,54 +3009,16 @@ implementation
 
   function section_belongs_to_dgroup(atype: TAsmSectiontype): Boolean;
     begin
-{$ifdef i8086}
-      case omf_segclass(atype) of
-        'CODE':
-          result:=current_settings.x86memorymodel=mm_tiny;
-        'FAR_DATA':
-          result:=false;
-        'DATA',
-        'BSS':
-          result:=true;
-        'STACK':
-          result:=current_settings.x86memorymodel in (x86_near_data_models-[mm_tiny]);
-        'HEAP':
-          result:=current_settings.x86memorymodel in x86_near_data_models;
-        else
-          result:=false;
-      end;
-{$else i8086}
+
       result:=false;
-{$endif i8086}
+
     end;
 
   function omf_section_primary_group(atype: TAsmSectiontype;const aname:string): string;
     begin
-{$ifdef i8086}
-      if section_belongs_to_dgroup(atype) then
-        result:='DGROUP'
-      else if create_smartlink_sections and (aname<>'') then
-        begin
-          case omf_segclass(atype) of
-            'CODE':
-              if current_settings.x86memorymodel in x86_far_code_models then
-                begin
-                  if cs_huge_code in current_settings.moduleswitches then
-                    result:=''
-                  else
-                    result:='CGROUP_'+current_module.modulename^;
-                end
-              else
-                result:='CGROUP';
-            else
-              result:='';
-          end;
-        end
-      else
-        result:='';
-{$else i8086}
+
       result:='';
-{$endif i8086}
+
     end;
 
 end.

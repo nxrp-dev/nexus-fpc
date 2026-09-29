@@ -684,12 +684,7 @@ interface
          pno_mangledname, pno_noparams, pno_prettynames);
        tprocnameoptions = set of tprocnameoption;
        tproccopytyp = (pc_normal,
-{$ifdef i8086}
-                       { the address in a far format }
-                       pc_far_address,
-                       { the offset part of the far address }
-                       pc_offset,
-{$endif i8086}
+
                        { creates a procvardef describing only the code pointer
                          of a method/netsted function/... }
                        pc_address_only,
@@ -1177,16 +1172,7 @@ interface
        voidnearespointertype,
        voidnearfspointertype,
        voidneargspointertype,
-  {$ifdef i8086}
-       voidfarpointertype,
-       voidhugepointertype,
-       charnearpointertype,
-       charfarpointertype,
-       charhugepointertype,
-       bytefarpointertype,        { used for Mem[] }
-       wordfarpointertype,        { used for MemW[] }
-       longintfarpointertype,     { used for MemL[] }
-  {$endif i8086}
+
 {$endif x86}
 {$ifdef wasm}
        wasmvoidexternreftype,
@@ -1563,11 +1549,9 @@ implementation
           offset = sizeof(pint) as expected }
         result:=crecorddef.create_global_internal(
           name,sizeof(pint),sizeof(pint));
-{$ifdef cpu16bitaddr}
-        index_field:=result.add_field_by_def('',u16inttype);
-{$else cpu16bitaddr}
+
         index_field:=result.add_field_by_def('',u32inttype);
-{$endif cpu16bitaddr}
+
         non_mt_data_field:=result.add_field_by_def('',def);
         { no need to add alignment padding, we won't create arrays of these }
       end;
@@ -3112,10 +3096,10 @@ implementation
          savesize:=8
 {$IFNDEF cpu64bitaddr} {$pop} {$ENDIF}
         else
-{$IFDEF cpu16bitaddr} {$push}{$warnings off} {$ENDIF} //comparison always false warning
+ //comparison always false warning
          if (packenum=4) or (min<low(smallint)) or (max>high(word)) or ((min<0) and (max>high(smallint))) then
           savesize:=4
-{$IFDEF cpu16bitaddr} {$pop} {$ENDIF}
+
         else
          if (packenum=2) or (min<low(shortint)) or (max>high(byte)) or ((min<0) and (max>high(shortint))) then
           savesize:=2
@@ -4279,10 +4263,7 @@ implementation
          setmax:=high;
          setlow:=low;
          actual_setalloc:=current_settings.setalloc;
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-         if actual_setalloc=0 then
-           actual_setalloc:=1;
-{$endif}
+
          if (actual_setalloc=0) then
            begin
              setbase:=0;
@@ -4299,10 +4280,10 @@ implementation
              setbase:=low and not(setallocbits-1);
              packedsavesize:=actual_setalloc*((((high+setallocbits)-setbase)) DIV setallocbits);
              savesize:=packedsavesize;
-{$if not defined(cpu8bitalu) and not defined(cpu16bitalu)}
+
              if savesize=3 then
                savesize:=4;
-{$endif}
+
            end;
       end;
 
@@ -4689,13 +4670,7 @@ implementation
         if (ado_IsBitPacked in arrayoptions) then
           { can't just add 7 and divide by 8, because that may overflow }
           result:=result div 8 + ord((result mod 8)<>0);
-{$ifdef cpu16bitaddr}
-        if result>65535 then
-          begin
-            result:=-1;
-            exit;
-          end;
-{$endif cpu16bitaddr}
+
       end;
 
 
@@ -9688,11 +9663,11 @@ implementation
                   ((tarraydef(def).elecount = 4) and (current_settings.fputype in sse_singlescalar)) or
                   { AVX YMM register }
                   ((tarraydef(def).elecount = 8) and (current_settings.fputype in fpu_avx_instructionsets))
-{$ifndef i8086}
+
                   or
                   { AVX512 ZMM register }
                   ((tarraydef(def).elecount = 16) and (current_settings.fputype in [fpu_avx512f]))
-{$endif not i8086}
+
                 )
               ) or
               (
@@ -9702,10 +9677,10 @@ implementation
                   ((tarraydef(def).elecount = 2) and (current_settings.fputype in sse_doublescalar)) or
                   { AVX YMM register }
                   ((tarraydef(def).elecount = 4) and (current_settings.fputype in fpu_avx_instructionsets))
-{$ifndef i8086}
+
                   { AVX512 ZMM register }
                   or ((tarraydef(def).elecount = 8) and (current_settings.fputype in [fpu_avx512f]))
-{$endif not i8086}
+
                 )
               )
             )
@@ -9744,16 +9719,7 @@ implementation
        voidnearespointertype:=nil;
        voidnearfspointertype:=nil;
        voidneargspointertype:=nil;
-  {$ifdef i8086}
-       voidfarpointertype:=nil;
-       voidhugepointertype:=nil;
-       charnearpointertype:=nil;
-       charfarpointertype:=nil;
-       charhugepointertype:=nil;
-       bytefarpointertype:=nil;        { used for Mem[] }
-       wordfarpointertype:=nil;        { used for MemW[] }
-       longintfarpointertype:=nil;     { used for MemL[] }
-  {$endif i8086}
+
 {$endif x86}
 {$ifdef wasm}
        wasmvoidexternreftype:=nil;

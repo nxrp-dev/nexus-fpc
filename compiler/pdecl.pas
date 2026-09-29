@@ -1019,19 +1019,10 @@ implementation
                     try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
                     consume(_SEMICOLON);
 {$ifdef x86}
-  {$ifdef i8086}
-                    if try_to_consume(_HUGE) then
-                     begin
-                       tcpupointerdef(hdef).x86pointertyp:=x86pt_huge;
-                       consume(_SEMICOLON);
-                     end
-                    else
-  {$endif i8086}
+
                     if try_to_consume(_FAR) then
                      begin
-  {$if defined(i8086)}
-                       tcpupointerdef(hdef).x86pointertyp:=x86pt_far;
-  {$elseif defined(i386)}
+  {$if defined(i386)}
                        tcpupointerdef(hdef).x86pointertyp:=x86pt_near_fs;
   {$elseif defined(x86_64)}
                        { for compatibility with previous versions of fpc,

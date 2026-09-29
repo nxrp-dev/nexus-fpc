@@ -45,11 +45,9 @@ const
 {$ENDIF}
 { Maximum TList size }
 
-{$ifdef cpu16}
-  MaxListSize = {Maxint div 16}1024;
-{$else cpu16}
+
   MaxListSize = Maxint div 16;
-{$endif cpu16}
+
 
 { values for TShortCut }
 

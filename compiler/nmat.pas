@@ -935,8 +935,6 @@ implementation
                    begin
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
                      inserttypeconv(left,s32inttype)
-{$elseif defined(cpu16bitalu) or defined(cpu8bitalu)}
-                     inserttypeconv(left,get_common_intdef(torddef(left.resultdef),torddef(sinttype),true));
 {$else}
                      internalerror(2013031301);
 {$endif}
@@ -945,8 +943,6 @@ implementation
                    begin
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
                      inserttypeconv(left,u32inttype);
-{$elseif defined(cpu16bitalu) or defined(cpu8bitalu)}
-                     inserttypeconv(left,get_common_intdef(torddef(left.resultdef),torddef(uinttype),true));
 {$else}
                      internalerror(2013031302);
 {$endif}

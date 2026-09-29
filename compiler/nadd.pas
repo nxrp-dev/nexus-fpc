@@ -2389,12 +2389,12 @@ const
           operation on a float and int are also handled }
 {$ifdef x86}
         { use extended as default real type only when the x87 fpu is used }
-  {$if defined(i386) or defined(i8086)}
+  {$if defined(i386)}
         if not(current_settings.fputype=fpu_x87) then
           resultrealdef:=s64floattype
         else
           resultrealdef:=pbestrealtype^;
-  {$endif i386 or i8086}
+  {$endif i386}
   {$ifdef x86_64}
         { x86-64 has no x87 only mode, so use always double as default }
         resultrealdef:=s64floattype;
@@ -2863,9 +2863,7 @@ const
                  if is_signed(left.resultdef) or
                     is_signed(right.resultdef) or
                     ((nodetype=subn)
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                     and not (m_tp7 in current_settings.modeswitches)
-{$endif}
+
                     ) then
                    begin
                      if nodetype<>subn then
@@ -2904,9 +2902,7 @@ const
                  if is_signed(ld) or
                     is_signed(rd) or
                     (([m_iso,m_extpas]*current_settings.modeswitches)<>[]) or
-{$if defined(cpu16bitalu)}
-                    (m_tp7 in current_settings.modeswitches) or
-{$endif}
+
                     (nodetype=subn) then
                    begin
                      inserttypeconv(right,sinttype);
@@ -4860,7 +4856,7 @@ const
       begin
         result:=(nodetype=muln) and
                 not(torddef(resultdef).ordtype in [u8bit,s8bit
-                {$if defined(cpu16bitalu)},u16bit,s16bit{$endif}]);
+                ]);
       end;
 {$endif cpuneedsmulhelper}
 

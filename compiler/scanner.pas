@@ -528,15 +528,7 @@ implementation
               end;
           end;
 
-{$ifdef i8086}
-        { enable cs_force_far_calls when m_nested_procvars is enabled }
-        if switch=m_nested_procvars then
-          begin
-            include(current_settings.localswitches,cs_force_far_calls);
-            if changeinit then
-              include(init_settings.localswitches,cs_force_far_calls);
-          end;
-{$endif i8086}
+
       end;
 
     procedure set_current_scanner(avalue: tscannerfile);
@@ -664,20 +656,18 @@ implementation
                init_settings.packenum:=current_settings.packenum;
                init_settings.setalloc:=current_settings.setalloc;
              end;
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
            { Default to intel assembler for delphi/tp7 on i386/i8086 }
            if (m_delphi in current_settings.modeswitches) or
               (m_tp7 in current_settings.modeswitches) then
              begin
-{$ifdef i8086}
-               current_settings.asmmode:=asmmode_i8086_intel;
-{$else i8086}
+
                current_settings.asmmode:=asmmode_i386_intel;
-{$endif i8086}
+
                if changeinit then
                  init_settings.asmmode:=current_settings.asmmode;
              end;
-{$endif i386 or i8086}
+{$endif i386}
 
            { Exception support explicitly turned on (mainly for macpas, to }
            { compensate for lack of interprocedural goto support)          }
@@ -704,21 +694,7 @@ implementation
                  end;
              end;
 
-{$ifdef i8086}
-           { Do not force far calls in the TP mode by default, force it in other modes }
-           if (m_tp7 in current_settings.modeswitches) then
-             begin
-               exclude(current_settings.localswitches,cs_force_far_calls);
-               if changeinit then
-                 exclude(init_settings.localswitches,cs_force_far_calls);
-             end
-           else
-             begin
-               include(current_settings.localswitches,cs_force_far_calls);
-               if changeinit then
-                 include(init_settings.localswitches,cs_force_far_calls);
-             end;
-{$endif i8086}
+
 
             { Undefine old symbol }
             if (m_delphi in oldmodeswitches) then
@@ -837,23 +813,7 @@ implementation
 
     procedure SetAppType(NewAppType:tapptype);
       begin
-{$ifdef i8086}
-        { Set application extension regardless if it might or might not have been correct.
-          Important for secondary compilations from Textmode IDE. }
-        if (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-          begin
-            if NewAppType=app_com then
-              begin
-                targetinfos[target_info.system]^.exeext:='.com';
-                target_info.exeext:='.com';
-              end
-            else
-              begin
-                targetinfos[target_info.system]^.exeext:='.exe';
-                target_info.exeext:='.exe';
-              end;
-          end;
-{$endif i8086}
+
 {$ifdef m68k}
         if target_info.system in [system_m68k_atari] then
           case NewAppType of

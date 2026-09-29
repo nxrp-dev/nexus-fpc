@@ -57,7 +57,7 @@ implementation
        systems,
        { symtable }
        symconst,symbase,defutil,defcmp,symutil,symcreat,
-{$if defined(i386) or defined(i8086) or defined(wasm)}
+{$if defined(i386) or defined(wasm)}
        symcpu,
 {$endif}
        fmodule,htypechk,procdefutil,
@@ -475,17 +475,13 @@ implementation
                    if is_constnode(pt) and
                       is_ordinal(pt.resultdef)
                       and (not is_64bitint(pt.resultdef))
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                      and (not is_32bitint(pt.resultdef))
-{$endif}
+
                       then
                      begin
                        if is_integer(pt.resultdef) then
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                         inserttypeconv_internal(pt,s16inttype);
-{$else}
+
                          inserttypeconv_internal(pt,s32inttype);
-{$endif}
+
                        p.index:=tordconstnode(pt).value.svalue;
                      end
                    else
@@ -1219,9 +1215,9 @@ implementation
           abssym : tabsolutevarsym;
           pt,hp  : tnode;
           st     : tsymtable;
-          {$if defined(i386) or defined(i8086)}
+          {$if defined(i386)}
           tmpaddr : int64;
-          {$endif defined(i386) or defined(i8086)}
+          {$endif defined(i386)}
         begin
           abssym:=nil;
           { only allowed for one var }
@@ -1261,7 +1257,7 @@ implementation
              else
 {$endif}
                 abssym.addroffset:=Tordconstnode(pt).value.svalue;
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
               tcpuabsolutevarsym(abssym).absseg:=false;
               if (target_info.system in [system_i386_go32v2,system_i386_watcom,system_i8086_msdos,system_i8086_embedded]) and
                   try_to_consume(_COLON) then
@@ -1270,15 +1266,7 @@ implementation
                   pt:=expr(true);
                   if is_constintnode(pt) then
                     begin
-                      {$if defined(i8086)}
-                        tcpuabsolutevarsym(abssym).addrsegment:=abssym.addroffset;
-                        tmpaddr:=tordconstnode(pt).value.svalue;
-                        if (tmpaddr<int64(low(abssym.addroffset))) or
-                           (tmpaddr>int64(high(abssym.addroffset))) then
-                          message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(abssym.addroffset)),tostr(high(abssym.addroffset)))
-                        else
-                          abssym.addroffset:=tmpaddr;
-                      {$elseif defined(i386)}
+                      {$if defined(i386)}
                         tmpaddr:=abssym.addroffset shl 4+tordconstnode(pt).value.svalue;
                         if (tmpaddr<int64(low(abssym.addroffset))) or
                            (tmpaddr>int64(high(abssym.addroffset))) then
@@ -1291,7 +1279,7 @@ implementation
                   else
                     Message(type_e_ordinal_expr_expected);
                 end;
-{$endif i386 or i8086}
+{$endif i386}
             end
           { variable }
           else

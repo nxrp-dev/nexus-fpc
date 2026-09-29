@@ -13,11 +13,7 @@
 
  **********************************************************************}
 
-{$ifdef cpui8086}
-  {$if defined(FPC_X86_DATA_FAR) or defined(FPC_X86_DATA_HUGE)}
-    {$define FPC_TINYHEAP_HUGE}
-  {$endif}
-{$endif cpui8086}
+
 
     var
       { these vars are TP7-compatible }

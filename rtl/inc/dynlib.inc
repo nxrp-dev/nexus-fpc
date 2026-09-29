@@ -80,13 +80,13 @@ end;
 
 {$endif not FPCRTL_FILESYSTEM_TWO_BYTE_API}
 
-Function GetProcedureAddress(Lib : TLibHandle; const ProcName : AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcedureAddress(Lib : TLibHandle; const ProcName : AnsiString) : Pointer;
 begin
   Result:=CurrentDLM.GetProcAddress(Lib, ProcName);
 end;
 
 
-Function GetProcedureAddress(Lib : TLibHandle; Ordinal : TOrdinalEntry) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcedureAddress(Lib : TLibHandle; Ordinal : TOrdinalEntry) : Pointer;
 begin
   if Assigned(CurrentDLM.GetProcAddressOrdinal) then
     Result:=CurrentDLM.GetProcAddressOrdinal(Lib, Ordinal)
@@ -113,7 +113,7 @@ begin
 end;
 
 
-Function GetProcAddress(Lib : TLibHandle; const ProcName : AnsiString) : {$ifdef cpui8086}FarPointer{$else}Pointer{$endif};
+Function GetProcAddress(Lib : TLibHandle; const ProcName : AnsiString) : Pointer;
 begin
   Result:=GetProcedureAddress(Lib,Procname);
 end;
@@ -171,12 +171,12 @@ begin
   NoDynLibsError;
 end;
 
-function NoGetProcAddress(Lib: TLibHandle; const Proc: AnsiString): {$ifdef cpui8086}FarPointer{$else}Pointer{$endif}; noreturn;
+function NoGetProcAddress(Lib: TLibHandle; const Proc: AnsiString): Pointer; noreturn;
 begin
   NoDynLibsError;
 end;
 
-function NoGetProcAddressOrdinal(Lib: TLibHandle; Ordinal: TOrdinalEntry): {$ifdef cpui8086}FarPointer{$else}Pointer{$endif}; noreturn;
+function NoGetProcAddressOrdinal(Lib: TLibHandle; Ordinal: TOrdinalEntry): Pointer; noreturn;
 begin
   NoDynLibsError;
 end;

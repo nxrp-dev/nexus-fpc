@@ -2016,10 +2016,10 @@ implementation
         flowcontrol:=[];
         do_firstpass(code);
 
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
         if node_resources_fpu(code)>0 then
           include(flags,pi_uses_fpu);
-{$endif i386 or i8086}
+{$endif i386}
 
         { Print the node to tree.log }
         if paraprintnodetree <> 0 then

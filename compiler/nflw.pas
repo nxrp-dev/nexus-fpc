@@ -304,9 +304,7 @@ implementation
     {$ifdef state_tracking}
       nstate,
     {$endif}
-    {$ifdef i8086}
-      cpuinfo,
-    {$endif i8086}
+
     {$if defined(xtensa) or defined(i386)}
       cpuinfo,
     {$endif defined(xtensa) or defined(i386)}

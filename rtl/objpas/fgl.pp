@@ -104,11 +104,9 @@ type
   end;
 
 const
-{$ifdef cpu16}
-  MaxGListSize = {MaxInt div} 1024 deprecated;
-{$else cpu16}
+
   MaxGListSize = MaxInt div 1024 deprecated;
-{$endif cpu16}
+
 
 type
   generic TFPGListEnumerator<T> = class(TObject)
@@ -1164,9 +1162,7 @@ end;
 function TFPGObjectList.IndexOf(const Item: T): Integer;
 begin
   Result :=
-{$if sizeof(pointer) = sizeof(word)}
-    IndexWord
-{$elseif sizeof(pointer) = sizeof(dword)}
+{$if sizeof(pointer) = sizeof(dword)}
     IndexDWord
 {$elseif sizeof(pointer) = sizeof(qword)}
     IndexQWord
@@ -1301,9 +1297,7 @@ end;
 function TFPGInterfacedObjectList.IndexOf(const Item: T): Integer;
 begin
   Result :=
-{$if sizeof(pointer) = sizeof(word)}
-    IndexWord
-{$elseif sizeof(pointer) = sizeof(dword)}
+{$if sizeof(pointer) = sizeof(dword)}
     IndexDWord
 {$elseif sizeof(pointer) = sizeof(qword)}
     IndexQWord

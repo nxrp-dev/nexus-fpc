@@ -454,8 +454,6 @@ implementation
                     gcc_except_table_data.concat(tai_const.create_8bit(DW_EH_PE_udata8));
 {$elseif defined(CPU32BITADDR)}
                     gcc_except_table_data.concat(tai_const.create_8bit(DW_EH_PE_udata4));
-{$elseif defined(CPU16BITADDR)}
-                    gcc_except_table_data.concat(tai_const.create_8bit(DW_EH_PE_udata2));
 {$endif}
                     current_asmdata.getlabel(typefilterlistlabel,alt_data);
                     current_asmdata.getlabel(typefilterlistlabelref,alt_data);

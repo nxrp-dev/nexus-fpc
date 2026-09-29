@@ -551,7 +551,7 @@ type
     FStrictVisibility : Boolean;
     function GetVisibility: TMemberVisibility; virtual;
     function GetStrictVisibility: Boolean; virtual;
-  protected  
+  protected
     constructor Create(AParent: TRttiType; AHandle: Pointer); virtual;
   public
     constructor Create(AParent: TRttiType);
@@ -969,21 +969,21 @@ type
     property OnInvoke: TVirtualInterfaceInvokeEvent read fOnInvoke write fOnInvoke;
   end;
 
-  { Fired before the original virtual method is invoked. 
-    Set aDoInvoke to False to suppress the original call; 
+  { Fired before the original virtual method is invoked.
+    Set aDoInvoke to False to suppress the original call;
     aResult is then used as the return value. }
-  TInterceptBeforeNotify = procedure(aInstance: TObject; 
+  TInterceptBeforeNotify = procedure(aInstance: TObject;
                                      aMethod: TRttiMethod;
-                                     const aArgs: TValueArray; 
-                                     out aDoInvoke: Boolean; 
+                                     const aArgs: TValueArray;
+                                     out aDoInvoke: Boolean;
                                      out aResult: TValue) of object;
-                                     
+
   { Fired after the original virtual method returned. aResult may be modified. }
-  TInterceptAfterNotify = procedure(aInstance: TObject; 
+  TInterceptAfterNotify = procedure(aInstance: TObject;
                                     aMethod: TRttiMethod;
-                                    const aArgs: TValueArray; 
+                                    const aArgs: TValueArray;
                                     var aResult: TValue) of object;
-  { Fired when the original virtual method raised an exception. 
+  { Fired when the original virtual method raised an exception.
     Set aRaiseException to False to swallow it and return aResult instead. }
   TInterceptExceptionNotify = procedure(aInstance: TObject; aMethod: TRttiMethod;
     const aArgs: TValueArray; out aRaiseException: Boolean;
@@ -994,16 +994,16 @@ type
      method table routes through this object.
      Proxify changes an instance to use the proxy class,
      Unproxify restores the original class.
-     Only virtual methods that have RTTI are intercepted. 
-    
-     NOTE: 
+     Only virtual methods that have RTTI are intercepted.
+
+     NOTE:
      Unlike Delphi, FPC does not emit method RTTI by default, it is opt-in.
-     so the target class must be compiled with e.g. 
-     
+     so the target class must be compiled with e.g.
+
      {$RTTI EXPLICIT METHODS[vcPrivate,vcProtected,vcPublic,vcPublished]
-  
-    for the OnBefore/OnAfter/OnException events to fire; 
-    virtual methods without RTTI keep working but are not intercepted. 
+
+    for the OnBefore/OnAfter/OnException events to fire;
+    virtual methods without RTTI keep working but are not intercepted.
     *)
   TVirtualMethodInterceptor = class
   private
@@ -2636,7 +2636,7 @@ begin
     LeaveCriticalsection(FLock);
   end;
 {$endif}
-  
+
 end;
 
 destructor TRttiPool.Destroy;
@@ -7733,12 +7733,9 @@ var
 begin
   case (FPropInfo^.PropProcs shr 2) and 3 of
     ptField:
-      {$ifdef cpui8086}
-      { convert to the correct pointer type }
-      AValue.Cast(FPropInfo^.PropType).ExtractRawData(PPointer(@(FPropInfo^.SetProc))^);
-      {$else}
+
       AValue.Cast(FPropInfo^.PropType).ExtractRawData(FPropInfo^.SetProc);
-      {$endif}
+
     ptStatic,
     ptVirtual:
       begin
@@ -7798,12 +7795,9 @@ begin
     { tkRecord etc }
     case (FPropInfo^.PropProcs shr 2) and 3 of
       ptField:
-        {$ifdef cpui8086}
-        { convert to the correct pointer type }
-        AValue.Cast(FPropInfo^.PropType).ExtractRawData(Pointer(Instance)+CodePtrUInt(FPropInfo^.SetProc));
-        {$else}
+
         AValue.Cast(FPropInfo^.PropType).ExtractRawData(Pointer(Instance)+PtrUInt(FPropInfo^.SetProc));
-        {$endif}
+
       ptStatic,
       ptVirtual:
         begin
@@ -8274,7 +8268,7 @@ begin
   if Assigned(fMethods) then
     Exit(fMethods);
 
-  { TRttiType instances are shared through the GRttiPool cache. 
+  { TRttiType instances are shared through the GRttiPool cache.
     Two concurrent initializers assigning the managed fMethods field race on its
     reference count and can leave a reader with a dangling array }
 {$ifdef FPC_HAS_FEATURE_THREADING}
@@ -8876,7 +8870,7 @@ begin
     InheritsFrom keep working for the original class and its ancestors }
   PVmt(fProxyVmt)^.vParentRef:=PPVmt(@fOriginalClass);
 
-  { override every virtual method that has RTTI with an interception thunk. 
+  { override every virtual method that has RTTI with an interception thunk.
     The childmost declaration is encountered first (GetMethods lists self before
     parents), so the first thunk for a slot wins. }
   slots:=PCodePointer(PByte(fProxyVmt) + vmtMethodStart);

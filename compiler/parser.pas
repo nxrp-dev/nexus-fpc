@@ -198,35 +198,7 @@ implementation
                else
                  maxheapsize:=0;
              end;
-{$ifdef i8086}
-           system_i8086_embedded:
-             begin
-               if stacksize=0 then
-                 begin
-                   if init_settings.x86memorymodel in x86_far_data_models then
-                     stacksize:=16384
-                   else
-                     stacksize:=2048;
-                 end;
-             end;
-           system_i8086_msdos:
-             begin
-               if stacksize=0 then
-                 begin
-                   if init_settings.x86memorymodel in x86_far_data_models then
-                     stacksize:=16384
-                   else
-                     stacksize:=4096;
-                 end;
-               if maxheapsize=0 then
-                 begin
-                   if init_settings.x86memorymodel in x86_far_data_models then
-                     maxheapsize:=655360
-                   else
-                     maxheapsize:=65520;
-                 end;
-             end;
-{$endif i8086}
+
            else
              ;
          end;

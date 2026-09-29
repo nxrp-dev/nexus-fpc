@@ -48,18 +48,14 @@ uses
       TAsmOp={$i x8664op.inc}
 {$elseif defined(i386)}
       TAsmOp={$i i386op.inc}
-{$elseif defined(i8086)}
-      TAsmOp={$i i8086op.inc}
 {$endif}
 
       { This should define the array of instructions as string }
         op2strtable=array[tasmop] of string[17];
 
-{$ifdef i8086}
-      ImmInt = SmallInt;
-{$else i8086}
+
       ImmInt = Longint;
-{$endif i8086}
+
 
     const
       { First value of opcode enumeration }
@@ -164,8 +160,6 @@ uses
       RS_RFLAGS      = $06;
 {$elseif defined(i386)}
       RS_EFLAGS      = $06;
-{$elseif defined(i8086)}
-      RS_FLAGS       = $06;
 {$endif}
 
       { Number of first imaginary register }
@@ -184,10 +178,6 @@ uses
       { i386 }
       R_SUBWHOLE    = R_SUBD;
       R_SUBADDR     = R_SUBD;
-{$elseif defined(i8086)}
-      { i8086 }
-      R_SUBWHOLE    = R_SUBW;
-      R_SUBADDR     = R_SUBW;
 {$endif}
 
       { Available Registers }
@@ -195,8 +185,6 @@ uses
       {$i r8664con.inc}
 {$elseif defined(i386)}
       {$i r386con.inc}
-{$elseif defined(i8086)}
-      {$i r8086con.inc}
 {$endif}
 
     type
@@ -205,8 +193,6 @@ uses
       tregisterindex=0..{$i r8664nor.inc}-1;
 {$elseif defined(i386)}
       tregisterindex=0..{$i r386nor.inc}-1;
-{$elseif defined(i8086)}
-      tregisterindex=0..{$i r8086nor.inc}-1;
 {$endif}
 
     const
@@ -215,8 +201,6 @@ uses
         {$i r8664num.inc}
 {$elseif defined(i386)}
         {$i r386num.inc}
-{$elseif defined(i8086)}
-        {$i r8086num.inc}
 {$endif}
       );
 
@@ -225,8 +209,6 @@ uses
         {$i r8664stab.inc}
 {$elseif defined(i386)}
         {$i r386stab.inc}
-{$elseif defined(i8086)}
-        {$i r8086stab.inc}
 {$endif}
       );
 
@@ -235,8 +217,6 @@ uses
         {$i r8664dwrf.inc}
 {$elseif defined(i386)}
         {$i r386dwrf.inc}
-{$elseif defined(i8086)}
-        {$i r8086dwrf.inc}
 {$endif}
       );
 
@@ -246,9 +226,6 @@ uses
 {$elseif defined(i386)}
       RS_DEFAULTFLAGS = RS_EFLAGS;
       NR_DEFAULTFLAGS = NR_EFLAGS;
-{$elseif defined(i8086)}
-      RS_DEFAULTFLAGS = RS_FLAGS;
-      NR_DEFAULTFLAGS = NR_FLAGS;
 {$endif}
 
 {*****************************************************************************
@@ -379,13 +356,7 @@ topsize2memsize: array[topsize] of integer =
       a x86 string instruction }
     function get_x86_string_op_di_param(op: TAsmOp):shortint;
 
-{$ifdef i8086}
-    { return whether we need to add an extra FWAIT instruction before the given
-      instruction, when we're targeting the i8087. This includes almost all x87
-      instructions, but certain ones, which always have or have not a built in
-      FWAIT prefix are excluded (e.g. FINIT,FNINIT,etc.). }
-    function requires_fwait_on_8087(op: TAsmOp): boolean;
-{$endif i8086}
+
 
    function UseAVX: boolean;
    function UseAVX512: boolean;
@@ -420,18 +391,6 @@ implementation
 
       std_regname_index : array[tregisterindex] of tregisterindex = (
         {$i r386sri.inc}
-      );
-    {$elseif defined(i8086)}
-      std_regname_table : TRegNameTable = (
-        {$i r8086std.inc}
-      );
-
-      regnumber_index : array[tregisterindex] of tregisterindex = (
-        {$i r8086rni.inc}
-      );
-
-      std_regname_index : array[tregisterindex] of tregisterindex = (
-        {$i r8086sri.inc}
       );
     {$endif}
 
@@ -562,9 +521,9 @@ implementation
       begin
         case o of
           A_CALL,
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
           A_JCXZ,
-{$endif defined(i386) or defined(i8086)}
+{$endif defined(i386)}
           A_JECXZ,
 {$ifdef x86_64}
           A_JRCXZ,
@@ -776,31 +735,7 @@ implementation
         { every segment register is equal to itself }
         if r1=r2 then
           exit(true);
-{$if defined(i8086)}
-        case current_settings.x86memorymodel of
-          mm_tiny:
-            begin
-              { CS=DS=SS }
-              if ((r1=NR_CS) or (r1=NR_DS) or (r1=NR_SS)) and
-                 ((r2=NR_CS) or (r2=NR_DS) or (r2=NR_SS)) then
-                exit(true);
-              { the remaining are distinct from each other }
-              exit(false);
-            end;
-          mm_small,mm_medium:
-            begin
-              { DS=SS }
-              if ((r1=NR_DS) or (r1=NR_SS)) and
-                 ((r2=NR_DS) or (r2=NR_SS)) then
-                exit(true);
-              { the remaining are distinct from each other }
-              exit(false);
-            end;
-          mm_compact,mm_large,mm_huge:
-            { all segment registers are different in these models }
-            exit(false);
-        end;
-{$elseif defined(i386) or defined(x86_64)}
+{$if defined(i386) or defined(x86_64)}
         { DS=SS=ES }
         if ((r1=NR_DS) or (r1=NR_SS) or (r1=NR_ES)) and
            ((r2=NR_DS) or (r2=NR_SS) or (r2=NR_ES)) then
@@ -956,36 +891,18 @@ implementation
       end;
 
 
-{$ifdef i8086}
-    function requires_fwait_on_8087(op: TAsmOp): boolean;
-      begin
-        case op of
-            A_F2XM1,A_FABS,A_FADD,A_FADDP,A_FBLD,A_FBSTP,A_FCHS,A_FCOM,A_FCOMP,
-            A_FCOMPP,A_FDECSTP,A_FDIV,A_FDIVP,A_FDIVR,A_FDIVRP,
-            A_FFREE,A_FIADD,A_FICOM,A_FICOMP,A_FIDIV,A_FIDIVR,A_FILD,
-            A_FIMUL,A_FINCSTP,A_FIST,A_FISTP,A_FISUB,A_FISUBR,A_FLD,A_FLD1,
-            A_FLDCW,A_FLDENV,A_FLDL2E,A_FLDL2T,A_FLDLG2,A_FLDLN2,A_FLDPI,A_FLDZ,
-            A_FMUL,A_FMULP,A_FNOP,A_FPATAN,A_FPREM,A_FPTAN,A_FRNDINT,
-            A_FRSTOR,A_FSCALE,A_FSQRT,A_FST,
-            A_FSTP,A_FSUB,A_FSUBP,A_FSUBR,A_FSUBRP,A_FTST,
-            A_FXAM,A_FXCH,A_FXTRACT,A_FYL2X,A_FYL2XP1:
-              result:=true;
-          else
-            result:=false;
-        end;
-      end;
-{$endif i8086}
+
 
 
   function UseAVX: boolean;
     begin
-      Result:={$ifdef i8086}false{$else i8086}(FPUX86_HAS_AVXUNIT in fpu_capabilities[current_settings.fputype]){$endif i8086};
+      Result:=(FPUX86_HAS_AVXUNIT in fpu_capabilities[current_settings.fputype]);
     end;
 
 
   function UseAVX512: boolean;
     begin
-      Result:={$ifdef i8086}false{$else i8086}UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[current_settings.fputype]){$endif i8086};
+      Result:=UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[current_settings.fputype]);
     end;
 
 

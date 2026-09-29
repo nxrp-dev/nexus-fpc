@@ -51,13 +51,9 @@ type
   TOprRec = record
     case typ:TOprType of
       OPR_NONE      : ();
-{$if defined(i8086)}
-      OPR_CONSTANT  : (val:longint);
-{$elseif defined(Z80)}
-      OPR_CONSTANT  : (val:longint);
-{$else}
+
       OPR_CONSTANT  : (val:aint);
-{$endif}
+
       OPR_SYMBOL    : (symbol:tasmsymbol;symofs:aint;symseg:boolean;sym_farproc_entry:boolean);
       OPR_REFERENCE : (varsize:asizeint; constoffset: asizeint;ref_farproc_entry:boolean;ref:treference);
       OPR_LOCAL     : (localvarsize, localconstoffset: asizeint;localsym:tabstractnormalvarsym;localsymofs:aint;localsegment,localindexreg:tregister;localscale:byte;localgetoffset,localforceref:boolean);
@@ -1050,19 +1046,13 @@ Begin
             begin
               opr.ref.symbol:=current_asmdata.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
               Inc(opr.ref.offset,absoffset);
-{$ifdef i8086}
-              opr.ref_farproc_entry:=is_proc_far(tprocdef(tprocsym(sym).ProcdefList[0]))
-                        and not (po_interrupt in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions);
-{$endif i8086}
+
             end;
           OPR_NONE:
             begin
               opr.typ:=OPR_SYMBOL;
               opr.symbol:=current_asmdata.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
-{$ifdef i8086}
-              opr.sym_farproc_entry:=is_proc_far(tprocdef(tprocsym(sym).ProcdefList[0]))
-                        and not (po_interrupt in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions);
-{$endif i8086}
+
               opr.symofs:=absoffset;
             end;
         else
@@ -1073,29 +1063,7 @@ Begin
         SetupVar:=TRUE;
         Exit;
       end;
-{$ifdef i8086}
-    labelsym :
-      begin
-        case opr.typ of
-          OPR_REFERENCE:
-            begin
-              opr.ref.symbol:=current_asmdata.RefAsmSymbol(tlabelsym(sym).mangledname,AT_FUNCTION);
-              Inc(opr.ref.offset,absoffset);
-              if opr.ref.segment=NR_NO then
-                opr.ref.segment:=NR_CS;
-            end;
-          else
-            begin
-              Message(asmr_e_unsupported_symbol_type);
-              exit;
-            end;
-        end;
-        haslabelref:=true;
-        hasvar:=true;
-        SetupVar:=TRUE;
-        Exit;
-      end
-{$endif i8086}
+
     else
       begin
         Message(asmr_e_unsupported_symbol_type);
@@ -1860,28 +1828,9 @@ end;
 
   Procedure ConcatConstSymbol(p : TAsmList;const sym,endsym:string;symtyp:tasmsymtype;l:tcgint;constsize:byte;isofs:boolean);
   begin
-{$ifdef i8086}
-    { 'DW xx' as well as 'DW OFFSET xx' are just near pointers }
-    if constsize=2 then
-      p.concat(Tai_const.Createname_near(sym,l))
-    else if constsize=4 then
-      begin
-        if isofs then
-          begin
-            { 'DD OFFSET xx' is a 32-bit offset; since we don't produce 32-bit
-              relocations yet, just do a 16-bit one and set the high word to 0 }
-            p.concat(Tai_const.Createname_near(sym,l));
-            p.concat(Tai_const.Create_16bit(0));
-          end
-        else
-          { 'DD xx' is a far pointer }
-          p.concat(Tai_const.Createname_far(sym,l));
-      end
-    else
-      internalerror(2018020701);
-{$else i8086}
+
     p.concat(Tai_const.Createname(sym,l));
-{$endif i8086}
+
   end;
 
 

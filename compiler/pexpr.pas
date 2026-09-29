@@ -677,21 +677,7 @@ implementation
               statement_syssym:=p1;
             end;
 
-{$ifdef i8086}
-          in_faraddr_x :
-            begin
-              consume(_LKLAMMER);
-              got_addrn:=true;
-              p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\webtbs\tb27517.pp }
-              if current_scanner.token<>_RKLAMMER then
-                p1:=sub_expr(opcompare,[ef_accept_equal],p1);
-              p1:=geninlinenode(in_faraddr_x,false,p1);
-              got_addrn:=false;
-              consume(_RKLAMMER);
-              statement_syssym:=p1;
-            end;
-{$endif i8086}
+
 
           in_ofs_x :
             begin
@@ -2493,24 +2479,7 @@ implementation
                                (tloadnode(p1).symtableentry.name='MEMW') or
                                (tloadnode(p1).symtableentry.name='MEML')) then
                              begin
-{$if defined(i8086)}
-                               consume(_COLON);
-                               inserttypeconv(p2,u16inttype);
-                               inserttypeconv_internal(p2,u32inttype);
-                               p3:=cshlshrnode.create(shln,p2,cordconstnode.create($10,s16inttype,false));
-                               p2:=comp_expr([ef_accept_equal]);
-                               inserttypeconv(p2,u16inttype);
-                               inserttypeconv_internal(p2,u32inttype);
-                               p2:=caddnode.create(addn,p2,p3);
-                               case tloadnode(p1).symtableentry.name of
-                                 'MEM': p2:=ctypeconvnode.create_internal(p2,bytefarpointertype);
-                                 'MEMW': p2:=ctypeconvnode.create_internal(p2,wordfarpointertype);
-                                 'MEML': p2:=ctypeconvnode.create_internal(p2,longintfarpointertype);
-                                 else
-                                   internalerror(2013053102);
-                               end;
-                               p1:=cderefnode.create(p2);
-{$elseif defined(i386)}
+{$if defined(i386)}
                                if try_to_consume(_COLON) then
                                 begin
                                   p3:=caddnode.create(muln,cordconstnode.create($10,s32inttype,false),p2);

@@ -1034,14 +1034,9 @@ implementation
             { load a smaller size to OS_64 }
             if l.loc=LOC_REGISTER then
              begin
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-               { on avr, we cannot change the size of a register
-                 due to the nature how register with size > OS8 are handled
-               }
-               hregister:=cg.getintregister(list,OS_32);
-{$else}
+
                hregister:=cg.makeregsize(list,l.register64.reglo,OS_32);
-{$endif}
+
              end
             else
              hregister:=cg.getintregister(list,OS_32);
@@ -1063,9 +1058,7 @@ implementation
                   cg.a_label(list,l.falselabel);
                   cg.a_load_const_reg(list,OS_INT,0,hregister);
                   cg.a_label(list,hl);
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                  cg.a_load_reg_reg(list,OS_INT,OS_32,hregister,hregister);
-{$endif}
+
                 end;
               else
                 a_load_loc_reg(list,src_size,u32inttype,l,hregister);
@@ -1152,10 +1145,7 @@ implementation
             LOC_JUMP :
               begin
                 tmpsize:=dst_cgsize;
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                if TCGSize2Size[dst_cgsize]>TCGSize2Size[OS_INT] then
-                  tmpsize:=OS_INT;
-{$endif}
+
                 cg.a_label(list,l.truelabel);
                 cg.a_load_const_reg(list,tmpsize,1,hregister);
                 current_asmdata.getjumplabel(hl);
@@ -1163,9 +1153,7 @@ implementation
                 cg.a_label(list,l.falselabel);
                 cg.a_load_const_reg(list,tmpsize,0,hregister);
                 cg.a_label(list,hl);
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                cg.a_load_reg_reg(list,tmpsize,dst_cgsize,hregister,hregister);
-{$endif}
+
               end;
             else
               begin
@@ -1176,9 +1164,7 @@ implementation
                  begin
                    if (l.loc in [LOC_REGISTER,LOC_CREGISTER]) then
                      begin
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                       if TCGSize2Size[dst_cgsize]<=TCGSize2Size[OS_INT] then
-{$endif}
+
                          l.register:=cg.makeregsize(list,l.register,dst_cgsize);
                      end;
                    { for big endian systems, the reference's offset must }
@@ -1659,9 +1645,7 @@ implementation
       tempreg  : tregister;
 {$ifndef cpu64bitalu}
       reg64    : tregister64;
-{$if defined(cpu8bitalu)}
-      curparaloc : PCGParaLocation;
-{$endif defined(cpu8bitalu)}
+
 {$endif not cpu64bitalu}
     begin
       paraloc:=para.location;
@@ -1817,85 +1801,8 @@ implementation
                   LOC_REGISTER:
                     begin
                       case para.locations_count of
-{$if defined(cpu8bitalu)}
-                        { 8 paralocs? }
-                        8:
-                          if (target_info.endian=ENDIAN_BIG) then
-                            begin
-                              { is there any big endian 8 bit ALU/16 bit Addr CPU? }
-                              internalerror(2015041003);
-                              { paraloc^ -> high
-                                paraloc^.next^.next^.next^.next -> low }
-                              unget_para(paraloc^);
-                              gen_alloc_regloc(list,destloc,vardef);
-                              { reg->reg, alignment is irrelevant }
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^,cg.GetNextReg(destloc.register64.reghi),1);
-                              unget_para(paraloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^,destloc.register64.reghi,1);
-                              unget_para(paraloc^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^,cg.GetNextReg(destloc.register64.reglo),1);
-                              unget_para(paraloc^.next^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^.next^,destloc.register64.reglo,1);
-                            end
-                          else
-                            begin
-                              { paraloc^ -> low
-                                paraloc^.next^.next^.next^.next -> high }
-                              curparaloc:=paraloc;
-                              unget_para(curparaloc^);
-                              gen_alloc_regloc(list,destloc,vardef);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^,destloc.register64.reglo,2);
-                              unget_para(curparaloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^,cg.GetNextReg(destloc.register64.reglo),1);
-                              unget_para(curparaloc^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^.next^,cg.GetNextReg(cg.GetNextReg(destloc.register64.reglo)),1);
-                              unget_para(curparaloc^.next^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^.next^.next^,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(destloc.register64.reglo))),1);
 
-                              curparaloc:=paraloc^.next^.next^.next^.next;
-                              unget_para(curparaloc^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^,destloc.register64.reghi,2);
-                              unget_para(curparaloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^,cg.GetNextReg(destloc.register64.reghi),1);
-                              unget_para(curparaloc^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^.next^,cg.GetNextReg(cg.GetNextReg(destloc.register64.reghi)),1);
-                              unget_para(curparaloc^.next^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_8,curparaloc^.next^.next^.next^,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(destloc.register64.reghi))),1);
-                            end;
-{$endif defined(cpu8bitalu)}
-{$if defined(cpu16bitalu) or defined(cpu8bitalu)}
-                        { 4 paralocs? }
-                        4:
-                          if (target_info.endian=ENDIAN_BIG) then
-                            begin
-                              { paraloc^ -> high
-                                paraloc^.next^.next -> low }
-                              unget_para(paraloc^);
-                              gen_alloc_regloc(list,destloc,vardef);
-                              { reg->reg, alignment is irrelevant }
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^,cg.GetNextReg(destloc.register64.reghi),2);
-                              unget_para(paraloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^,destloc.register64.reghi,2);
-                              unget_para(paraloc^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^,cg.GetNextReg(destloc.register64.reglo),2);
-                              unget_para(paraloc^.next^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^.next^,destloc.register64.reglo,2);
-                            end
-                          else
-                            begin
-                              { paraloc^ -> low
-                                paraloc^.next^.next -> high }
-                              unget_para(paraloc^);
-                              gen_alloc_regloc(list,destloc,vardef);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^,destloc.register64.reglo,2);
-                              unget_para(paraloc^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^,cg.GetNextReg(destloc.register64.reglo),2);
-                              unget_para(paraloc^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^,destloc.register64.reghi,2);
-                              unget_para(paraloc^.next^.next^.next^);
-                              cg.a_load_cgparaloc_anyreg(list,OS_16,paraloc^.next^.next^.next^,cg.GetNextReg(destloc.register64.reghi),2);
-                            end;
-{$endif defined(cpu16bitalu) or defined(cpu8bitalu)}
+
                         2:
                           if (target_info.endian=ENDIAN_BIG) then
                             begin
@@ -1946,27 +1853,11 @@ implementation
                         gen_alloc_regloc(list,destloc,vardef);
                         cg.a_load_cgparaloc_anyreg(list,OS_INT,paraloc^,destloc.register,sizeof(aint));
                         unget_para(paraloc^.Next^);
-                        {$if defined(cpu16bitalu) or defined(cpu8bitalu)}
-                          cg.a_load_cgparaloc_anyreg(list,OS_INT,paraloc^.Next^,cg.GetNextReg(destloc.register),sizeof(aint));
-                        {$else}
+
                           cg.a_load_cgparaloc_anyreg(list,OS_INT,paraloc^.Next^,destloc.registerhi,sizeof(aint));
-                        {$endif}
+
                       end
-{$if defined(cpu8bitalu)}
-                    else if (destloc.size in [OS_32,OS_S32]) and
-                      (para.Size in [OS_32,OS_S32]) then
-                      begin
-                        unget_para(paraloc^);
-                        gen_alloc_regloc(list,destloc,vardef);
-                        cg.a_load_cgparaloc_anyreg(list,OS_8,paraloc^,destloc.register,sizeof(aint));
-                        unget_para(paraloc^.Next^);
-                        cg.a_load_cgparaloc_anyreg(list,OS_8,paraloc^.Next^,cg.GetNextReg(destloc.register),sizeof(aint));
-                        unget_para(paraloc^.Next^.Next^);
-                        cg.a_load_cgparaloc_anyreg(list,OS_8,paraloc^.Next^.Next^,cg.GetNextReg(cg.GetNextReg(destloc.register)),sizeof(aint));
-                        unget_para(paraloc^.Next^.Next^.Next^);
-                        cg.a_load_cgparaloc_anyreg(list,OS_8,paraloc^.Next^.Next^.Next^,cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(destloc.register))),sizeof(aint));
-                      end
-{$endif defined(cpu8bitalu)}
+
                     else
                       begin
                         { this can happen if a parameter is spread over

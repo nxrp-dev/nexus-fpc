@@ -910,7 +910,7 @@ inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has
              oo_can_have_published];
 {$endif not jvm}
 
-{$if defined(i8086) or defined(i386)}
+{$if defined(i386)}
    { we only take this into account on i8086 and i386, on other platforms we always
      push in the same order
    }

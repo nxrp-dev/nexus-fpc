@@ -1824,11 +1824,9 @@ unit raatt;
          begin
            oper.opr.typ:=OPR_CONSTANT;
            { cast properly to avoid a range check error }
-{$if defined(i8086)}
-           oper.opr.val:=longint(l);
-{$else}
+
            oper.opr.val:=aint(l);
-{$endif}
+
          end;
       end;
 

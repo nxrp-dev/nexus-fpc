@@ -31,8 +31,8 @@ interface
 {$S-}
 
 type
-  TExeProcessAddress = {$ifdef cpui8086}word{$else}ptruint{$endif};
-  TExeOffset = {$ifdef cpui8086}longword{$else}ptruint{$endif};
+  TExeProcessAddress = ptruint;
+  TExeOffset = ptruint;
   TExeFile=record
     f : file;
     // cached filesize
@@ -42,9 +42,7 @@ type
     sechdrofs,
     secstrofs : TExeOffset;
     processaddress : TExeProcessAddress;
-{$ifdef cpui8086}
-    processsegment : word;
-{$endif cpui8086}
+
 {$ifdef darwin}
     { total size of all headers }
     loadcommandssize: ptruint;
@@ -61,11 +59,9 @@ function CloseExeFile(var e:TExeFile):boolean;
 function ReadDebugLink(var e:TExeFile;var dbgfn:ansistring):boolean; overload;
 function ReadDebugLink(var e:TExeFile;var dbgfn:shortstring):boolean; overload;
 
-{$ifdef CPUI8086}
-procedure GetModuleByAddr(addr: farpointer; var baseaddr: farpointer; var filename: ansistring);
-{$else CPUI8086}
+
 procedure GetModuleByAddr(addr: pointer; var baseaddr: pointer; var filename: ansistring);
-{$endif CPUI8086}
+
 
 implementation
 
@@ -199,11 +195,9 @@ end;
 
 {$else}
 
-{$ifdef CPUI8086}
-  procedure GetModuleByAddr(addr: farpointer; var baseaddr: farpointer; var filename: ansistring);
-{$else CPUI8086}
+
   procedure GetModuleByAddr(addr: pointer; var baseaddr: pointer; var filename: ansistring);
-{$endif CPUI8086}
+
     begin
       baseaddr:= nil;
 {$ifdef FPC_HAS_FEATURE_COMMANDARGS}
@@ -1465,15 +1459,7 @@ begin
 end;
 
 
-{$ifdef CPUI8086}
-  {$if defined(MSDOS)}
-    {$if defined(FPC_MM_TINY) or defined(FPC_MM_SMALL) or defined(FPC_MM_MEDIUM)}
-      {$define NEED_SMALL_BUFFER_SIZE}
-    {$endif}
-  {$else}
-    {$define NEED_SMALL_BUFFER_SIZE}
-  {$endif}
-{$endif}
+
 
 {$ifdef NEED_SMALL_BUFFER_SIZE}
 const

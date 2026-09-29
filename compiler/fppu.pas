@@ -366,39 +366,7 @@ var
               Message2(unit_u_ppu_invalid_long_version,tostr(longversion),tostr(CurrentPPULongVersion),@queuecomment);
               exit;
             end;
-{$ifdef i8086}
-          { check i8086 memory model flags }
-          if (mf_i8086_far_code in moduleflags) <>
-             (current_settings.x86memorymodel in [mm_medium,mm_large,mm_huge]) then
-            begin
-              Message(unit_u_ppu_invalid_memory_model,@queuecomment);
-              exit;
-            end;
-          if (mf_i8086_far_data in moduleflags) <>
-             (current_settings.x86memorymodel in [mm_compact,mm_large]) then
-            begin
-              Message(unit_u_ppu_invalid_memory_model,@queuecomment);
-              exit;
-            end;
-          if (mf_i8086_huge_data in moduleflags) <>
-             (current_settings.x86memorymodel=mm_huge) then
-            begin
-              Message(unit_u_ppu_invalid_memory_model,@queuecomment);
-              exit;
-            end;
-          if (mf_i8086_cs_equals_ds in moduleflags) <>
-             (current_settings.x86memorymodel=mm_tiny) then
-            begin
-              Message(unit_u_ppu_invalid_memory_model,@queuecomment);
-              exit;
-            end;
-          if (mf_i8086_ss_equals_ds in moduleflags) <>
-             (current_settings.x86memorymodel in [mm_tiny,mm_small,mm_medium]) then
-            begin
-              Message(unit_u_ppu_invalid_memory_model,@queuecomment);
-              exit;
-            end;
-{$endif i8086}
+
 {$ifdef wasm}
           { check WebAssembly exceptions mode flag }
           if ((mf_wasm_no_exceptions in moduleflags) <>
@@ -1138,18 +1106,7 @@ var
           include(moduleflags,mf_system_unit);
         if cs_nexus_profile in current_settings.moduleswitches then
           include(moduleflags,mf_nexus_profile);
-{$ifdef i8086}
-        if current_settings.x86memorymodel in [mm_medium,mm_large,mm_huge] then
-          include(moduleflags,mf_i8086_far_code);
-        if current_settings.x86memorymodel in [mm_compact,mm_large] then
-          include(moduleflags,mf_i8086_far_data);
-        if current_settings.x86memorymodel=mm_huge then
-          include(moduleflags,mf_i8086_huge_data);
-        if current_settings.x86memorymodel=mm_tiny then
-          include(moduleflags,mf_i8086_cs_equals_ds);
-        if current_settings.x86memorymodel in [mm_tiny,mm_small,mm_medium] then
-          include(moduleflags,mf_i8086_ss_equals_ds);
-{$endif i8086}
+
 {$ifdef wasm}
         if ts_wasm_no_exceptions in current_settings.targetswitches then
           include(moduleflags,mf_wasm_no_exceptions);

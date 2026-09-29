@@ -1215,8 +1215,6 @@ begin
       2 * BsrQWord(QWord(N)),
 {$elseif defined(CPU32)}
       2 * BsrDWord(LongWord(N)),
-{$elseif defined(CPU16)}
-      2 * BsrWord(Word(N)),
 {$endif}
       AComparer
     );

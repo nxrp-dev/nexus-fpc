@@ -2481,9 +2481,7 @@ implementation
                      {Don't construct pointers from negative values.}
                      if (vl.signed and (vl.svalue<0)) or (vl2.signed and (vl2.svalue<0)) then
                        cgmessage(parser_e_range_check_error);
-{$if defined(i8086)}
-                     hp:=cpointerconstnode.create((vl2.uvalue shl 16)+vl.uvalue,voidfarpointertype);
-{$elseif defined(i386)}
+{$if defined(i386)}
                      hp:=cpointerconstnode.create((vl2.uvalue shl 4)+vl.uvalue,voidnearfspointertype);
 {$else}
                      hp:=cpointerconstnode.create((vl2.uvalue shl 4)+vl.uvalue,voidpointertype);

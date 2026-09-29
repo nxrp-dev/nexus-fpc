@@ -2254,10 +2254,7 @@ unit rgobj;
               if include_prefix then
                 result:='register '+result;
             end;
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-          if (sr>=first_int_imreg) and cg.has_next_reg[sr] then
-            result:=result+':'+get_reg_name_full(cg.GetNextReg(r),false);
-{$endif defined(cpu8bitalu) or defined(cpu16bitalu)}
+
         end;
 
       var

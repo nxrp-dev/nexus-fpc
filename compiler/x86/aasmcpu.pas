@@ -304,8 +304,6 @@ interface
       instabentries = {$i x8664nop.inc}
 {$elseif defined(i386)}
       instabentries = {$i i386nop.inc}
-{$elseif defined(i8086)}
-      instabentries = {$i i8086nop.inc}
 {$endif}
       maxinfolen    = 12;
 
@@ -417,8 +415,6 @@ interface
         {$i x8664pro.inc}
 {$elseif defined(i386)}
         {$i i386prop.inc}
-{$elseif defined(i8086)}
-        {$i i8086prop.inc}
 {$endif}
 
     type
@@ -654,9 +650,7 @@ interface
          function is_same_reg_move(regtype: Tregistertype):boolean;override;
          { register spilling code }
          function spilling_get_operation_type(opnr: longint): topertype;override;
-{$ifdef i8086}
-         procedure loadsegsymbol(opidx:longint;s:tasmsymbol);
-{$endif i8086}
+
          property OperandOrder : TOperandOrder read FOperandOrder;
       private
          { next fields are filled in pass1, so pass2 is faster }
@@ -784,8 +778,6 @@ implementation
        InsTab:array[0..instabentries-1] of TInsEntry={$i x8664tab.inc}
 {$elseif defined(i386)}
        InsTab:array[0..instabentries-1] of TInsEntry={$i i386tab.inc}
-{$elseif defined(i8086)}
-       InsTab:array[0..instabentries-1] of TInsEntry={$i i8086tab.inc}
 {$endif}
      var
        InsTabCache : PInsTabCache;
@@ -873,47 +865,6 @@ implementation
       reg_ot_table : array[tregisterindex] of longint = (
         {$i r386ot.inc}
       );
-{$elseif defined(i8086)}
-       { Intel style operands ! }
-       opsize_2_type:array[0..2,topsize] of int64=(
-         (OT_NONE,
-          OT_BITS8,OT_BITS16,OT_BITS32,OT_BITS64,OT_BITS16,OT_BITS32,OT_BITS32,
-          OT_BITS16,OT_BITS32,OT_BITS64,
-          OT_BITS32,OT_BITS64,OT_BITS80,OT_BITS64,OT_NONE,
-          OT_BITS64,
-          OT_NEAR,OT_FAR,OT_SHORT,
-          OT_NONE,
-          OT_BITS128,
-          OT_BITS256,
-          OT_BITS512
-         ),
-         (OT_NONE,
-          OT_BITS8,OT_BITS16,OT_BITS32,OT_BITS64,OT_BITS8,OT_BITS8,OT_BITS16,
-          OT_BITS16,OT_BITS32,OT_BITS64,
-          OT_BITS32,OT_BITS64,OT_BITS80,OT_BITS64,OT_NONE,
-          OT_BITS64,
-          OT_NEAR,OT_FAR,OT_SHORT,
-          OT_NONE,
-          OT_BITS128,
-          OT_BITS256,
-          OT_BITS512
-         ),
-         (OT_NONE,
-          OT_BITS8,OT_BITS16,OT_BITS32,OT_BITS64,OT_NONE,OT_NONE,OT_NONE,
-          OT_BITS16,OT_BITS32,OT_BITS64,
-          OT_BITS32,OT_BITS64,OT_BITS80,OT_BITS64,OT_NONE,
-          OT_BITS64,
-          OT_NEAR,OT_FAR,OT_SHORT,
-          OT_NONE,
-          OT_BITS128,
-          OT_BITS256,
-          OT_BITS512
-         )
-      );
-
-      reg_ot_table : array[tregisterindex] of longint = (
-        {$i r8086ot.inc}
-      );
 {$endif}
 
     function MemRefInfo(aAsmop: TAsmOp): TInsTabMemRefSizeInfoRec;
@@ -967,7 +918,7 @@ implementation
           Intel 64 and IA-32 Architectures Software Developer’s Manual
             Volume 2B: Instruction Set Reference, N-Z, January 2015
         }
-{$ifndef i8086}
+
         alignarray_cmovcpus:array[0..10] of string[11]=(
           #$66#$66#$66#$0F#$1F#$84#$00#$00#$00#$00#$00,
           #$66#$66#$0F#$1F#$84#$00#$00#$00#$00#$00,
@@ -980,16 +931,8 @@ implementation
           #$0F#$1F#$00,
           #$66#$90,
           #$90);
-{$endif i8086}
-{$ifdef i8086}
-        alignarray:array[0..5] of string[8]=(
-          #$90#$90#$90#$90#$90#$90#$90,
-          #$90#$90#$90#$90#$90#$90,
-          #$90#$90#$90#$90,
-          #$90#$90#$90,
-          #$90#$90,
-          #$90);
-{$else i8086}
+
+
         alignarray:array[0..5] of string[8]=(
           #$8D#$B4#$26#$00#$00#$00#$00,
           #$8D#$B6#$00#$00#$00#$00,
@@ -997,7 +940,7 @@ implementation
           #$8D#$76#$00,
           #$89#$F6,
           #$90);
-{$endif i8086}
+
       var
         bufptr : pchar;
         j : longint;
@@ -1012,7 +955,7 @@ implementation
            localsize:=fillsize;
            while (localsize>0) do
             begin
-{$ifndef i8086}
+
               if (CPUX86_HAS_CMOV in cpu_capabilities[current_settings.cputype]) then
                 begin
                   for j:=low(alignarray_cmovcpus) to high(alignarray_cmovcpus) do
@@ -1023,7 +966,7 @@ implementation
                   dec(localsize,length(alignarray_cmovcpus[j]));
                 end
               else
-{$endif not i8086}
+
                 begin
                   for j:=low(alignarray) to high(alignarray) do
                    if (localsize>=length(alignarray[j])) then
@@ -1658,21 +1601,14 @@ implementation
                              ) then
                             ot:=OT_IMM8 or OT_SHORT
                           else
-{$ifdef i8086}
-                            ot:=OT_IMM16 or OT_NEAR;
-{$else i8086}
+
                             ot:=OT_IMM32 or OT_NEAR;
-{$endif i8086}
+
                         end
                       else
-{$ifdef i8086}
-                        if opsize=S_FAR then
-                          ot:=OT_IMM16 or OT_FAR
-                        else
-                          ot:=OT_IMM16 or OT_NEAR;
-{$else i8086}
+
                         ot:=OT_IMM32 or OT_NEAR;
-{$endif i8086}
+
                     end;
                 end;
               top_local :
@@ -1712,12 +1648,10 @@ implementation
                       ) then
                       message(asmr_e_invalid_opcode_and_operand);
                     if
-{$ifdef i8086}
-                       (longint(val)>=-128) and (val<=127) then
-{$else i8086}
+
                        (opsize<>S_W) and
                        (aint(val)>=-128) and (val<=127) then
-{$endif not i8086}
+
                       ot:=OT_IMM8 or OT_SIGNED
                     else
                       ot:=OT_IMMEDIATE or opsize_2_type[i,opsize];
@@ -1780,16 +1714,7 @@ implementation
         if (p^.opcode<>opcode) or (p^.ops<>ops) then
           exit;
 
-{$ifdef i8086}
-        { On i8086, we need to skip the i386+ version of Jcc near, if the target
-          cpu is earlier than 386. There's another entry, later in the table for
-          i8086, which simulates it with i8086 instructions:
-            JNcc short +3
-            JMP near target }
-        if (p^.opcode=A_Jcc) and (current_settings.cputype<cpu_386) and
-          (IF_386 in p^.flags) then
-          exit;
-{$endif i8086}
+
 
         EvexRegs:=false;
         for i:=0 to p^.ops-1 do
@@ -2389,11 +2314,7 @@ implementation
         { Segment override }
         if (segprefix>=NR_ES) and (segprefix<=NR_GS) then
          begin
-{$ifdef i8086}
-           if (objdata.CPUType<>cpu_none) and (objdata.CPUType<cpu_386) and
-              ((segprefix=NR_FS) or (segprefix=NR_GS)) then
-             Message(asmw_e_instruction_not_supported_by_cpu);
-{$endif i8086}
+
            objdata.writebytes(segprefixes[segprefix],1);
            { fix the offset for GenNode }
            inc(InsOffset);
@@ -2416,7 +2337,7 @@ implementation
       begin
 {$if defined(x86_64)}
         result:=not is_32_bit_ref(ref);
-{$elseif defined(i386) or defined(i8086)}
+{$elseif defined(i386)}
         result:=false;
 {$endif}
       end;
@@ -2431,7 +2352,7 @@ implementation
                  ((ref.index<>NR_NO) and (getsubreg(ref.index)=R_SUBD)) or
                  ((ref.base<>NR_NO) and (getsubreg(ref.base)=R_SUBD))
                 );
-{$elseif defined(i386) or defined(i8086)}
+{$elseif defined(i386)}
         result:=not is_16_bit_ref(ref);
 {$endif}
       end;
@@ -2451,11 +2372,9 @@ implementation
         { it's a direct address }
         if (br=NR_NO) and (ir=NR_NO) then
           begin
-            {$ifdef i8086}
-            result:=true;
-            {$else i8086}
+
             result:=false;
-            {$endif}
+
           end
         else
           { it's an indirection }
@@ -2571,8 +2490,6 @@ implementation
         result:=(oper[opidx]^.typ=top_ref) and is_32_bit_ref(oper[opidx]^.ref^);
 {$elseif defined(i386)}
         result:=(oper[opidx]^.typ=top_ref) and is_16_bit_ref(oper[opidx]^.ref^);
-{$elseif defined(i8086)}
-        result:=(oper[opidx]^.typ=top_ref) and is_32_bit_ref(oper[opidx]^.ref^);
 {$endif}
       end;
 
@@ -2938,7 +2855,7 @@ implementation
       end;
 
 
-{$elseif defined(i386) or defined(i8086)}
+{$elseif defined(i386)}
 
     function process_ea_ref_32(const input:toper;out output:ea;rfield:longint; uselargeoffset: boolean):boolean;
       var
@@ -3216,7 +3133,7 @@ implementation
           internalerror(200409263);
 {$if defined(x86_64)}
         result:=process_ea_ref_64_32(input,output,rfield, uselargeoffset,forceSibByte);
-{$elseif defined(i386) or defined(i8086)}
+{$elseif defined(i386)}
         if is_16_bit_ref(input.ref^) then
           result:=process_ea_ref_16(input,output,rfield, uselargeoffset)
         else
@@ -3286,7 +3203,7 @@ implementation
               end;
             &4,&5,&6,&7 :
               begin
-                if opsize={$ifdef i8086}S_L{$else}S_W{$endif} then
+                if opsize=S_W then
                   inc(len,2)
                 else
                   inc(len);
@@ -3302,14 +3219,12 @@ implementation
               inc(len,2);
             &34,&35,&36:
               begin
-{$ifdef i8086}
-                inc(len,2);
-{$else i8086}
+
                 if opsize=S_Q then
                   inc(len,8)
                 else
                   inc(len,4);
-{$endif i8086}
+
               end;
             &44,&45,&46:
               inc(len,sizeof(pint));
@@ -3320,19 +3235,15 @@ implementation
             &254,&255,&256 :
               inc(len,4);
             &64,&65,&66:
-{$ifdef i8086}
-              inc(len,2);
-{$else i8086}
+
               inc(len,4);
-{$endif i8086}
+
             &74,&75,&76,&77: ; // ignore vex-coded operand-idx
             &320,&321,&322 :
               begin
                 case (oper[c-&320]^.ot and OT_SIZE_MASK) of
 {$if defined(i386) or defined(x86_64)}
                   OT_BITS16 :
-{$elseif defined(i8086)}
-                  OT_BITS32 :
 {$endif}
                     inc(len);
 {$ifdef x86_64}
@@ -3349,18 +3260,16 @@ implementation
               InternalError(2011051301);
 {$elseif defined(i386)}
               inc(len);
-{$elseif defined(i8086)}
-              {nothing};
 {$endif}
             &311 :
-{$if defined(x86_64) or defined(i8086)}
+{$if defined(x86_64)}
               inc(len)
-{$endif x86_64 or i8086}
+{$endif x86_64}
               ;
             &324 :
-{$ifndef i8086}
+
               inc(len)
-{$endif not i8086}
+
               ;
             &326 :
               begin
@@ -3373,9 +3282,7 @@ implementation
             &327,
             &331,&332: ;
             &325:
-{$ifdef i8086}
-                inc(len)
-{$endif i8086}
+
               ;
 
             &333:
@@ -3390,10 +3297,10 @@ implementation
               end;
             &361:
               begin
-{$ifndef i8086}
+
                 inc(len);
                 exists_prefix_66 := true;
-{$endif not i8086}
+
               end;
             &335:
 {$ifdef x86_64}
@@ -3489,10 +3396,10 @@ implementation
               end;
             &300,&301,&302:
               begin
-{$if defined(x86_64) or defined(i8086)}
+{$if defined(x86_64)}
                 if (oper[c and 3]^.ot and OT_SIZE_MASK)=OT_BITS32 then
                   inc(len);
-{$endif x86_64 or i8086}
+{$endif x86_64}
               end;
             else
              InternalError(200603141);
@@ -3573,10 +3480,7 @@ implementation
       const
         b66: Byte=$66;
       begin
-{$ifdef i8086}
-        if (objdata.CPUType<>cpu_none) and (objdata.CPUType<cpu_386) then
-          Message(asmw_e_instruction_not_supported_by_cpu);
-{$endif i8086}
+
         objdata.writebytes(b66,1);
       end;
 
@@ -3585,10 +3489,7 @@ implementation
       const
         b67: Byte=$67;
       begin
-{$ifdef i8086}
-        if (objdata.CPUType<>cpu_none) and (objdata.CPUType<cpu_386) then
-          Message(asmw_e_instruction_not_supported_by_cpu);
-{$endif i8086}
+
         objdata.writebytes(b67,1);
       end;
 
@@ -3677,11 +3578,9 @@ implementation
       }
 
       var
-{$ifdef i8086}
-        currval : longint;
-{$else i8086}
+
         currval : aint;
-{$endif i8086}
+
         currsym : tobjsymbol;
         currrelreloc,
         currabsreloc,
@@ -3697,27 +3596,7 @@ implementation
                 begin
                   currval:=oper[opidx]^.ref^.offset;
                   currsym:=ObjData.symbolref(oper[opidx]^.ref^.symbol);
-{$ifdef i8086}
-                  if oper[opidx]^.ref^.refaddr=addr_seg then
-                    begin
-                      currrelreloc:=RELOC_SEGREL;
-                      currabsreloc:=RELOC_SEG;
-                      currabsreloc32:=RELOC_SEG;
-                    end
-                  else if oper[opidx]^.ref^.refaddr=addr_dgroup then
-                    begin
-                      currrelreloc:=RELOC_DGROUPREL;
-                      currabsreloc:=RELOC_DGROUP;
-                      currabsreloc32:=RELOC_DGROUP;
-                    end
-                  else if oper[opidx]^.ref^.refaddr=addr_fardataseg then
-                    begin
-                      currrelreloc:=RELOC_FARDATASEGREL;
-                      currabsreloc:=RELOC_FARDATASEG;
-                      currabsreloc32:=RELOC_FARDATASEG;
-                    end
-                  else
-{$endif i8086}
+
 {$ifdef i386}
                   if (oper[opidx]^.ref^.refaddr=addr_pic) and
                      (tf_pic_uses_got in target_info.flags) then
@@ -3775,11 +3654,9 @@ implementation
                 end;
               top_const :
                 begin
-{$ifdef i8086}
-                  currval:=longint(oper[opidx]^.val);
-{$else i8086}
+
                   currval:=aint(oper[opidx]^.val);
-{$endif i8086}
+
                   currsym:=nil;
                   currabsreloc:=RELOC_ABSOLUTE;
                   currabsreloc32:=RELOC_ABSOLUTE32;
@@ -3892,62 +3769,7 @@ implementation
 
         { check instruction's processor level }
         { todo: maybe adapt and enable this code for i386 and x86_64 as well }
-{$ifdef i8086}
-        if objdata.CPUType<>cpu_none then
-          begin
-            if IF_8086 in insentry^.flags then
-            else if IF_186 in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_186 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_286 in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_286 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_386 in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_386 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_486 in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_486 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_PENT in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_Pentium then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_P6 in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_Pentium2 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_KATMAI in insentry^.flags then
-              begin
-                if objdata.CPUType<cpu_Pentium3 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if insentry^.flags*[IF_WILLAMETTE,IF_PRESCOTT]<>[] then
-              begin
-                if objdata.CPUType<cpu_Pentium4 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_NEC in insentry^.flags then
-              begin
-              { the NEC V20/V30 extensions are incompatible with 386+, due to overlapping opcodes }
-                if objdata.CPUType>=cpu_386 then
-                  Message(asmw_e_instruction_not_supported_by_cpu);
-              end
-            else if IF_SANDYBRIDGE in insentry^.flags then
-              begin
-              { todo: handle these properly }
-            end;
-          end;
-{$endif i8086}
+
 
         { load data to write }
         codes:=insentry^.code;
@@ -3955,7 +3777,7 @@ implementation
         rexwritten:=false;
 {$endif x86_64}
         { Force word push/pop for registers }
-        if (opsize={$ifdef i8086}S_L{$else}S_W{$endif}) and ((codes[0]=#4) or (codes[0]=#6) or
+        if (opsize=S_W) and ((codes[0]=#4) or (codes[0]=#6) or
             ((codes[0]=#1) and ((codes[2]=#5) or (codes[2]=#7)))) then
           write0x66prefix(objdata);
 
@@ -4420,15 +4242,13 @@ implementation
             &30,&31,&32 :     // 030..032
               begin
                 getvalsym(c-&30);
-{$ifndef i8086}
+
                 { currval is an aint so this cannot happen on i8086 and causes only a warning }
                 if (currval<-65536) or (currval>65535) then
                  Message2(asmw_e_value_exceeds_bounds,'word',tostr(currval));
-{$endif i8086}
+
                 if assigned(currsym)
-{$ifdef i8086}
-                   or (currabsreloc in [RELOC_DGROUP,RELOC_FARDATASEG])
-{$endif i8086}
+
                 then
                  objdata_writereloc(currval,2,currsym,currabsreloc)
                 else
@@ -4439,12 +4259,7 @@ implementation
                     on address size, *not* operand size. Works by coincidence only. }
               begin
                 getvalsym(c-&34);
-{$ifdef i8086}
-                if assigned(currsym) then
-                  objdata_writereloc(currval,2,currsym,currabsreloc)
-                else
-                  objdata.writeInt16LE(int16(currval));
-{$else i8086}
+
                 if opsize=S_Q then
                   begin
                     if assigned(currsym) then
@@ -4459,15 +4274,13 @@ implementation
                     else
                       objdata.writeInt32LE(int32(currval));
                   end
-{$endif i8086}
+
               end;
             &40,&41,&42 :    // 040..042
               begin
                 getvalsym(c-&40);
                 if assigned(currsym)
-{$ifdef i8086}
-                   or (currabsreloc in [RELOC_DGROUP,RELOC_FARDATASEG])
-{$endif i8086}
+
                 then
                  objdata_writereloc(currval,4,currsym,currabsreloc32)
                 else
@@ -4486,11 +4299,6 @@ implementation
                   objdata_writereloc(currval,4,currsym,currabsreloc32)
                 else
                   objdata.writeInt32LE(int32(currval));
-{$elseif defined(i8086)}
-                if assigned(currsym) then
-                  objdata_writereloc(currval,2,currsym,currabsreloc)
-                else
-                  objdata.writeInt16LE(int16(currval));
 {$endif}
               end;
             &50,&51,&52 :   // 050..052 - byte relative operand
@@ -4517,29 +4325,19 @@ implementation
             &60,&61,&62 :
               begin
                 getvalsym(c-&60);
-{$ifdef i8086}
-                if assigned(currsym) then
-                 objdata_writereloc(currval,2,currsym,currrelreloc)
-                else
-                 objdata_writereloc(currval-insend,2,nil,currabsreloc)
-{$else i8086}
+
                 InternalError(2020100821);
-{$endif i8086}
+
               end;
             &64,&65,&66 :  // 064..066 - select between 16/32 address mode, but we support only 32 (only 16 on i8086)
               begin
                 getvalsym(c-&64);
-{$ifdef i8086}
-                if assigned(currsym) then
-                 objdata_writereloc(currval,2,currsym,currrelreloc)
-                else
-                 objdata_writereloc(currval-insend,2,nil,currabsreloc)
-{$else i8086}
+
                 if assigned(currsym) then
                  objdata_writereloc(currval,4,currsym,currrelreloc)
                 else
                  objdata_writereloc(currval-insend,4,nil,currabsreloc32)
-{$endif i8086}
+
               end;
             &70,&71,&72 :  // 070..072 - long relative operand
               begin
@@ -4573,10 +4371,10 @@ implementation
               end;
             &300,&301,&302:
               begin
-{$if defined(x86_64) or defined(i8086)}
+{$if defined(x86_64)}
                 if (oper[c and 3]^.ot and OT_SIZE_MASK)=OT_BITS32 then
                   write0x67prefix(objdata);
-{$endif x86_64 or i8086}
+{$endif x86_64}
               end;
             &310 :   { fixed 16-bit addr }
 {$if defined(x86_64)}
@@ -4584,21 +4382,17 @@ implementation
               InternalError(2011051302);
 {$elseif defined(i386)}
               write0x67prefix(objdata);
-{$elseif defined(i8086)}
-              {nothing};
 {$endif}
             &311 :   { fixed 32-bit addr }
-{$if defined(x86_64) or defined(i8086)}
+{$if defined(x86_64)}
               write0x67prefix(objdata)
-{$endif x86_64 or i8086}
+{$endif x86_64}
               ;
             &320,&321,&322 :
               begin
                 case oper[c-&320]^.ot and OT_SIZE_MASK of
 {$if defined(i386) or defined(x86_64)}
                   OT_BITS16 :
-{$elseif defined(i8086)}
-                  OT_BITS32 :
 {$endif}
                     write0x66prefix(objdata);
 {$ifndef x86_64}
@@ -4609,19 +4403,17 @@ implementation
               end;
             &323 : {no action needed};
             &325:
-{$ifdef i8086}
-               write0x66prefix(objdata);
-{$else i8086}
+
               {no action needed};
-{$endif i8086}
+
 
             &324,
             &361:
               begin
-{$ifndef i8086}
+
                 if not(needed_VEX or needed_EVEX) then
                   write0x66prefix(objdata);
-{$endif not i8086}
+
               end;
             &326 :
               begin
@@ -4680,14 +4472,9 @@ implementation
             &370..&377: ; // VEX and EVEX flags =>> nothing todo
             &37:
               begin
-{$ifdef i8086}
-                if assigned(currsym) then
-                  objdata_writereloc(0,2,currsym,RELOC_SEG)
-                else
-                  InternalError(2015041503);
-{$else i8086}
+
                 InternalError(2020100822);
-{$endif i8086}
+
               end;
             else
               begin
@@ -4789,25 +4576,17 @@ implementation
                            currabsreloc:=RELOC_NTPOFF
                          else
 {$endif i386}
-{$ifdef i8086}
-                         if ea_data.bytes=2 then
-                           currabsreloc:=RELOC_ABSOLUTE
-                         else
-{$endif i8086}
+
                              currabsreloc:=RELOC_ABSOLUTE32;
 
-                           if (currabsreloc in [RELOC_ABSOLUTE32{$ifdef i8086},RELOC_ABSOLUTE{$endif}]) and
+                           if (currabsreloc in [RELOC_ABSOLUTE32]) and
                             (Assigned(oper[opidx]^.ref^.relsymbol)) then
                            begin
                              relsym:=objdata.symbolref(oper[opidx]^.ref^.relsymbol);
                              if relsym.objsection=objdata.CurrObjSec then
                                begin
                                  currval:=objdata.CurrObjSec.size+ea_data.bytes-relsym.offset+currval;
-{$ifdef i8086}
-                                 if ea_data.bytes=4 then
-                                   currabsreloc:=RELOC_RELATIVE32
-                                 else
-{$endif i8086}
+
                                    currabsreloc:=RELOC_RELATIVE;
                                end
                              else
@@ -4984,10 +4763,7 @@ implementation
         tmpref: treference;
       begin
         tmpref:=ref;
-{$ifdef i8086}
-        if tmpref.segment=NR_SS then
-          tmpref.segment:=NR_NO;
-{$endif i8086}
+
         case getregtype(r) of
           R_INTREGISTER :
             begin
@@ -5048,10 +4824,7 @@ implementation
         tmpref: treference;
       begin
         tmpref:=ref;
-{$ifdef i8086}
-        if tmpref.segment=NR_SS then
-          tmpref.segment:=NR_NO;
-{$endif i8086}
+
         case getregtype(r) of
           R_INTREGISTER :
             begin
@@ -5112,16 +4885,7 @@ implementation
       end;
 
 
-{$ifdef i8086}
-    procedure taicpu.loadsegsymbol(opidx:longint;s:tasmsymbol);
-      var
-        r: treference;
-      begin
-        reference_reset_symbol(r,s,0,1,[]);
-        r.refaddr:=addr_seg;
-        loadref(opidx,r);
-      end;
-{$endif i8086}
+
 
 {*****************************************************************************
                               Instruction table

@@ -97,11 +97,9 @@ type
     Next: PHashItem;
     Data: TObject;
   end;
-{$ifdef CPU16}
-  THashItemArray = array[0..MaxSmallInt div sizeof(Pointer)-1] of PHashItem;
-{$else CPU16}
+
   THashItemArray = array[0..MaxInt div sizeof(Pointer)-1] of PHashItem;
-{$endif CPU16}
+
   PHashItemArray = ^THashItemArray;
 
   THashForEach = function(Entry: PHashItem; arg: Pointer): Boolean;
@@ -138,11 +136,9 @@ type
     lname: PWideChar;
     lnameLen: Integer;
   end;
-{$ifdef CPU16}
-  TExpHashEntryArray = array[0..MaxSmallInt div sizeof(TExpHashEntry)-1] of TExpHashEntry;
-{$else CPU16}
+
   TExpHashEntryArray = array[0..MaxInt div sizeof(TExpHashEntry)-1] of TExpHashEntry;
-{$endif CPU16}
+
   PExpHashEntryArray = ^TExpHashEntryArray;
 
   TDblHashArray = class(TObject)

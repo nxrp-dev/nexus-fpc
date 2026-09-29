@@ -150,11 +150,9 @@ implementation
            in_x86_get_es,
            in_x86_get_fs,
            in_x86_get_gs:
-{$ifdef i8086}
-             resultdef:=u16inttype;
-{$else i8086}
+
              resultdef:=s32inttype;
-{$endif i8086}
+
            { include automatically generated code }
            {$i x86mmtype.inc}
            else
@@ -206,15 +204,7 @@ implementation
 
      function tx86inlinenode.first_arctan_real : tnode;
       begin
-{$ifdef i8086}
-        { FPATAN's range is limited to (0 <= value < 1) on the 8087 and 80287,
-          so we need to use the RTL helper on these FPUs }
-        if current_settings.cputype < cpu_386 then
-          begin
-            result := inherited;
-            exit;
-          end;
-{$endif i8086}
+
         if (tfloatdef(pbestrealtype^).floattype=s80real) then
           begin
             expectloc:=LOC_FPUREGISTER;
@@ -264,14 +254,7 @@ implementation
 
      function tx86inlinenode.first_cos_real : tnode;
       begin
-{$ifdef i8086}
-        { FCOS is 387+ }
-        if current_settings.cputype < cpu_386 then
-          begin
-            result := inherited;
-            exit;
-          end;
-{$endif i8086}
+
         if (tfloatdef(pbestrealtype^).floattype=s80real) then
           begin
             expectloc:=LOC_FPUREGISTER;
@@ -283,14 +266,7 @@ implementation
 
      function tx86inlinenode.first_sin_real : tnode;
       begin
-{$ifdef i8086}
-        { FSIN is 387+ }
-        if current_settings.cputype < cpu_386 then
-          begin
-            result := inherited;
-            exit;
-          end;
-{$endif i8086}
+
         if (tfloatdef(pbestrealtype^).floattype=s80real) then
           begin
             expectloc:=LOC_FPUREGISTER;
@@ -339,7 +315,7 @@ implementation
      function tx86inlinenode.first_popcnt: tnode;
        begin
          Result:=nil;
-{$ifndef i8086}
+
          if (CPUX86_HAS_POPCNT in cpu_capabilities[current_settings.cputype])
   {$ifdef i386}
             and not is_64bit(left.resultdef)
@@ -347,14 +323,14 @@ implementation
            then
              expectloc:=LOC_REGISTER
          else
-{$endif not i8086}
+
            Result:=inherited first_popcnt
        end;
 
 
      function tx86inlinenode.first_fma : tnode;
        begin
-{$ifndef i8086}
+
          if ((fpu_capabilities[current_settings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]) and
            ((is_double(resultdef)) or (is_single(resultdef))) then
            begin
@@ -362,7 +338,7 @@ implementation
              Result:=nil;
            end
          else
-{$endif i8086}
+
            Result:=inherited first_fma;
        end;
 
@@ -396,7 +372,7 @@ implementation
 
      function tx86inlinenode.first_minmax: tnode;
        begin
-{$ifndef i8086}
+
          if
 {$ifdef i386}
            ((current_settings.fputype>=fpu_sse) and is_single(resultdef)) or
@@ -410,7 +386,7 @@ implementation
              Result:=nil;
            end
          else
-{$endif i8086}
+
          if
 {$ifndef x86_64}
            (CPUX86_HAS_CMOV in cpu_capabilities[current_settings.cputype]) and
@@ -640,14 +616,14 @@ implementation
 
 
      procedure tx86inlinenode.second_AndOrXorShiftRot_assign;
-{$ifndef i8086}
+
        var
          opsize : tcgsize;
          valuenode, indexnode, loadnode: TNode;
          DestReg: TRegister;
-{$endif i8086}
+
        begin
-{$ifndef i8086}
+
          if (cs_opt_level2 in current_settings.optimizerswitches) then
            begin
              { Saves on a lot of typecasting and potential coding mistakes }
@@ -722,7 +698,7 @@ implementation
                    end;
                end;
            end;
-{$endif not i8086}
+
 
          inherited second_AndOrXorShiftRot_assign;
        end;
@@ -923,15 +899,7 @@ implementation
               begin
                 tg.GetTemp(current_asmdata.CurrAsmList,2,2,tt_normal,oldcw);
                 tg.GetTemp(current_asmdata.CurrAsmList,2,2,tt_normal,newcw);
-{$ifdef i8086}
-                if current_settings.cputype<=cpu_286 then
-                  begin
-                    emit_ref(A_FSTCW,S_NO,newcw);
-                    emit_ref(A_FSTCW,S_NO,oldcw);
-                    emit_none(A_FWAIT,S_NO);
-                  end
-                else
-{$endif i8086}
+
                   begin
                     emit_ref(A_FNSTCW,S_NO,newcw);
                     emit_ref(A_FNSTCW,S_NO,oldcw);
@@ -1031,28 +999,14 @@ implementation
 
      procedure tx86inlinenode.second_cos_real;
        begin
-{$ifdef i8086}
-       { FCOS is 387+ }
-       if current_settings.cputype < cpu_386 then
-         begin
-           inherited;
-           exit;
-         end;
-{$endif i8086}
+
          load_fpu_location(left);
          emit_none(A_FCOS,S_NO);
        end;
 
      procedure tx86inlinenode.second_sin_real;
        begin
-{$ifdef i8086}
-       { FSIN is 387+ }
-       if current_settings.cputype < cpu_386 then
-         begin
-           inherited;
-           exit;
-         end;
-{$endif i8086}
+
          load_fpu_location(left);
          emit_none(A_FSIN,S_NO)
        end;
@@ -1063,9 +1017,9 @@ implementation
          r : tregister;
          checkpointer_used : boolean;
        begin
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
          if current_settings.cputype>=cpu_Pentium3 then
-{$endif i386 or i8086}
+{$endif i386}
            begin
              { do not call Checkpointer for left node }
              checkpointer_used:=(cs_checkpointer in current_settings.localswitches);
@@ -1097,7 +1051,7 @@ implementation
         hp : taicpu;
         hl: TAsmLabel;
       begin
-{$if defined(i8086) or defined(i386)}
+{$if defined(i386)}
         if is_64bitint(resultdef) then
           inherited
         else if not(CPUX86_HAS_CMOV in cpu_capabilities[current_settings.cputype]) then
@@ -1120,7 +1074,7 @@ implementation
               end;
           end
         else
-{$endif i8086 or i386}
+{$endif i386}
           begin
             opsize:=def_cgsize(left.resultdef);
             secondpass(left);
@@ -1163,14 +1117,11 @@ implementation
          opsize,
          orgsize: tcgsize;
         begin
-{$ifdef i8086}
-          { BTS and BTR are 386+ }
-          if current_settings.cputype < cpu_386 then
-{$else i8086}
+
           { bts on memory locations is very slow, so even the default code is faster }
           if not(cs_opt_size in current_settings.optimizerswitches) and (tcallparanode(tcallparanode(left).right).left.expectloc<>LOC_CONSTANT) and
             (tcallparanode(left).left.expectloc=LOC_REFERENCE) then
-{$endif i8086}
+
             begin
               inherited;
               exit;
@@ -1280,7 +1231,7 @@ implementation
 
 
     procedure tx86inlinenode.second_fma;
-{$ifndef i8086}
+
       const
         op : array[false..true,false..true,s32real..s64real,0..3] of TAsmOp =
           (
@@ -1315,9 +1266,9 @@ implementation
         negop3,
         negproduct,
         gotmem : boolean;
-{$endif i8086}
+
       begin
-{$ifndef i8086}
+
          if (fpu_capabilities[current_settings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
            begin
              negop3:=false;
@@ -1436,7 +1387,7 @@ implementation
                end;
            end
          else
-{$endif i8086}
+
            internalerror(2014032301);
       end;
 
@@ -1455,11 +1406,11 @@ implementation
               case tfloatdef(left.resultdef).floattype of
                 s32real:
                   begin
-{$ifndef i8086}
+
                     if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[current_settings.fputype]) then
                       current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VREDUCESS,S_NO,3,left.location.register,left.location.register,location.register))
                     else
-{$endif not i8086}
+
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
                         current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
@@ -1468,11 +1419,11 @@ implementation
                   end;
                 s64real:
                   begin
-{$ifndef i8086}
+
                     if UseAVX512 and (FPUX86_HAS_AVX512DQ in fpu_capabilities[current_settings.fputype]) then
                       current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VREDUCESD,S_NO,3,left.location.register,left.location.register,location.register))
                     else
-{$endif not i8086}
+
                       begin
                         { using left.location.register here as 3rd parameter is crucial to break dependency chains }
                         current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSD,S_NO,3,left.location.register,left.location.register,location.register));
@@ -1582,7 +1533,7 @@ implementation
 
 
     procedure tx86inlinenode.second_minmax;
-{$ifndef i8086}
+
       const
         oparray : array[false..true,false..true,s32real..s64real] of TAsmOp =
           (
@@ -1596,13 +1547,13 @@ implementation
            )
           );
 
-{$endif i8086}
+
       var
-{$ifndef i8086}
+
         memop : integer;
         gotmem : boolean;
         op: TAsmOp;
-{$endif i8086}
+
         i : integer;
         paraarray : array[1..2] of tnode;
         instr: TAiCpu;
@@ -1610,7 +1561,7 @@ implementation
         finalval: TCgInt;
         tmpreg: TRegister;
       begin
-{$ifndef i8086}
+
          if
 {$ifdef i386}
            ((current_settings.fputype>=fpu_sse) and is_single(resultdef)) or
@@ -1704,7 +1655,7 @@ implementation
                end;
            end
          else
-{$endif i8086}
+
          if
 {$ifndef x86_64}
            (CPUX86_HAS_CMOV in cpu_capabilities[current_settings.cputype]) and

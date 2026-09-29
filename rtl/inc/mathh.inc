@@ -14,7 +14,7 @@
 
    { i386 FPU Controlword }
 
-{$if defined(cpui8086) or defined(cpui386) or defined(cpux86_64)}
+{$if defined(cpui386) or defined(cpux86_64)}
     {$define FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD}
     const
       Default8087CW : word = $1332;

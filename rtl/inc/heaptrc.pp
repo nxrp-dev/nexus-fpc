@@ -26,9 +26,9 @@ unit heaptrc;
   {$define can_use_ln_in_constants} // :(
 {$endif}
 
-{$if not defined(CPUINT8) and not defined(CPUINT16)}
+
   {$define can_use_int32_case} // :(
-{$endif}
+
 
 // Buggy and does not help: https://gitlab.com/freepascal.org/fpc/source/-/issues/39611.
 // As a workaround, you can wrap this with {$define disable_warnings := ...all of these $warns...} and sprinkle disable_warnings here and there.

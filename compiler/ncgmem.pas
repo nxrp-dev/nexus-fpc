@@ -885,9 +885,7 @@ implementation
          temp : longint;
          hreg : tregister;
          indexdef : tdef;
-         {$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-         i : Integer;
-         {$endif}
+
       begin
          paraloc1.init;
          paraloc2.init;
@@ -1067,11 +1065,7 @@ implementation
                             hreg:=left.location.register64.reghi;
                         end;
 {$endif defined(cpu64bitalu)}
-{$if defined(cpu8bitalu) or defined(cpu16bitalu)}
-                      { we support only the case that one element fills at least one register }
-                      for i:=1 to location.reference.offset mod 4 do
-                        hreg:=cg.GetNextReg(hreg);
-{$endif defined(cpu8bitalu) or defined(cpu16bitalu)}
+
                       location_reset(location,left.location.loc,def_cgsize(tarraydef(left.resultdef).elementdef));
                       location.register:=hreg;
                     end;

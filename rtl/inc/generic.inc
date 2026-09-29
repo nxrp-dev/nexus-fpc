@@ -167,12 +167,8 @@ begin
   pdest:=@x;
   if Count>4*sizeof(ptruint)-1 then
     begin
-{$if sizeof(v)>=2}
       v:=(value shl 8) or value;
-{$endif sizeof(v)>=2}
-{$if sizeof(v)>=4}
       v:=(v shl 16) or v;
-{$endif sizeof(v)>=4}
 {$if sizeof(v)=8}
       v:=(v shl 32) or v;
 {$endif sizeof(v)=8}
@@ -215,9 +211,7 @@ begin
   pdest:=@x;
   if Count>4*sizeof(ptruint)-1 then
     begin
-{$if sizeof(v)>=4}
       v:=(value shl 16) or value;
-{$endif sizeof(v)>=4}
 {$if sizeof(v)=8}
       v:=(v shl 32) or v;
 {$endif sizeof(v)=8}
@@ -839,7 +833,7 @@ begin
   res[0]:=chr(slen);
 end;
 
-procedure fpc_shortstr_assign(len:{$ifdef cpu16}smallint{$else}longint{$endif};sstr,dstr:pointer);[public,alias:'FPC_SHORTSTR_ASSIGN']; compilerproc;
+procedure fpc_shortstr_assign(len:longint;sstr,dstr:pointer);[public,alias:'FPC_SHORTSTR_ASSIGN']; compilerproc;
 var
   slen : byte;
 begin
@@ -2082,29 +2076,9 @@ end;
 
 {****************************************************************************}
 
-{$if defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_ABS_SHORTINT}
-function abs(l:shortint):shortint;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   if l<0 then
-     abs:=-l
-   else
-     abs:=l;
-end;
-{$endif not FPC_SYSTEM_HAS_ABS_SMALLINT}
-{$endif CPUINT8}
 
-{$if defined(CPUINT16) or defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_ABS_SMALLINT}
-function abs(l:smallint):smallint;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   if l<0 then
-     abs:=-l
-   else
-     abs:=l;
-end;
-{$endif not FPC_SYSTEM_HAS_ABS_SMALLINT}
-{$endif CPUINT16 or CPUINT8}
+
+
 
 {$ifndef FPC_SYSTEM_HAS_ABS_LONGINT}
 { This is only needed to bootstrap on SPARC targets
@@ -2119,35 +2093,9 @@ end;
 
 {$endif not FPC_SYSTEM_HAS_ABS_LONGINT}
 
-{$if defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_ODD_SHORTINT}
-function odd(l:shortint):Boolean;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   odd:=boolean(l and 1);
-end;
-{$endif ndef FPC_SYSTEM_HAS_ODD_SHORTINT}
-{$ifndef FPC_SYSTEM_HAS_ODD_BYTE}
-function odd(l:byte):Boolean;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   odd:=boolean(l and 1);
-end;
-{$endif ndef FPC_SYSTEM_HAS_ODD_BYTE}
-{$endif CPUINT8}
 
-{$if defined(CPUINT16) or defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_ODD_SMALLINT}
-function odd(l:smallint):Boolean;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   odd:=boolean(l and 1);
-end;
-{$endif ndef FPC_SYSTEM_HAS_ODD_SMALLINT}
-{$ifndef FPC_SYSTEM_HAS_ODD_WORD}
-function odd(l:word):Boolean;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   odd:=boolean(l and 1);
-end;
-{$endif ndef FPC_SYSTEM_HAS_ODD_WORD}
-{$endif CPUINT16 or CPUINT8}
+
+
 
 {$ifndef FPC_SYSTEM_HAS_ODD_LONGINT}
 
@@ -2186,23 +2134,9 @@ end;
 
 {$endif ndef FPC_SYSTEM_HAS_ODD_QWORD}
 
-{$if defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_SQR_SHORTINT}
-function sqr(l:shortint):shortint;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   sqr:=l*l;
-end;
-{$endif ndef FPC_SYSTEM_HAS_SQR_SHORTINT}
-{$endif CPUINT8}
 
-{$if defined(CPUINT16) or defined(CPUINT8)}
-{$ifndef FPC_SYSTEM_HAS_SQR_SMALLINT}
-function sqr(l:smallint):smallint;{$ifdef SYSTEMINLINE}inline;{$endif}
-begin
-   sqr:=l*l;
-end;
-{$endif ndef FPC_SYSTEM_HAS_SQR_SMALLINT}
-{$endif CPUINT16 or CPUINT8}
+
+
 
 {$ifndef FPC_SYSTEM_HAS_SQR_LONGINT}
 
@@ -2246,15 +2180,7 @@ end;
 
 {$endif ndef FPC_SYSTEM_HAS_SQR_INT64}
 
-{$ifdef CPU16}
-{$ifndef FPC_SYSTEM_HAS_DECLOCKED_SMALLINT}
-function declocked(var l:smallint):boolean;
-  begin
-    Dec(l);
-    declocked:=(l=0);
-  end;
-{$endif FPC_SYSTEM_HAS_DECLOCKED_SMALLINT}
-{$endif CPU16}
+
 
 {$ifndef FPC_SYSTEM_HAS_DECLOCKED_LONGINT}
 function declocked(var l:longint):boolean;
@@ -2274,14 +2200,7 @@ function declocked(var l:int64):boolean;
 {$endif FPC_SYSTEM_HAS_DECLOCKED_INT64}
 
 
-{$ifdef CPU16}
-{$ifndef FPC_SYSTEM_HAS_INCLOCKED_SMALLINT}
-procedure inclocked(var l:smallint);
-  begin
-    Inc(l);
-  end;
-{$endif FPC_SYSTEM_HAS_INCLOCKED_SMALLINT}
-{$endif CPU16}
+
 
 {$ifndef FPC_SYSTEM_HAS_INCLOCKED_LONGINT}
 procedure inclocked(var l:longint);
@@ -3084,7 +3003,7 @@ function BsrByte(Const AValue: Byte): Byte;
 
 {$ifndef FPC_SYSTEM_HAS_BSF_WORD}
 {$ifndef FPC_HAS_INTERNAL_BSF_WORD}
-function BsfWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsfWord(Const AValue: Word): cardinal;
   begin
     result:=ord(lo(AValue)=0)*8;
     result:=result or BsfByte(byte(AValue shr result));
@@ -3094,7 +3013,7 @@ function BsfWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};
 
 {$ifndef FPC_SYSTEM_HAS_BSR_WORD}
 {$ifndef FPC_HAS_INTERNAL_BSR_WORD}
-function BsrWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsrWord(Const AValue: Word): cardinal;
   begin
     result:=ord(AValue>255)*8;
     result:=result or BsrByte(byte(AValue shr result));
@@ -3104,7 +3023,7 @@ function BsrWord(Const AValue: Word): {$ifdef CPU16}byte{$else}cardinal{$endif};
 
 {$ifndef FPC_HAS_INTERNAL_BSF_DWORD}
 {$ifndef FPC_SYSTEM_HAS_BSF_DWORD}
-function BsfDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsfDWord(Const AValue : DWord): cardinal;
   var
     tmp: DWord;
   begin
@@ -3119,7 +3038,7 @@ function BsfDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endi
 
 {$ifndef FPC_HAS_INTERNAL_BSR_DWORD}
 {$ifndef FPC_SYSTEM_HAS_BSR_DWORD}
-function BsrDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsrDWord(Const AValue : DWord): cardinal;
   var
     tmp: DWord;
   begin
@@ -3134,7 +3053,7 @@ function BsrDWord(Const AValue : DWord): {$ifdef CPU16}byte{$else}cardinal{$endi
 
 {$ifndef FPC_HAS_INTERNAL_BSF_QWORD}
 {$ifndef FPC_SYSTEM_HAS_BSF_QWORD}
-function BsfQWord(Const AValue : QWord): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsfQWord(Const AValue : QWord): cardinal;
   var
     tmp: DWord;
   begin
@@ -3152,7 +3071,7 @@ function BsfQWord(Const AValue : QWord): {$ifdef CPU16}byte{$else}cardinal{$endi
 
 {$ifndef FPC_HAS_INTERNAL_BSR_QWORD}
 {$ifndef FPC_SYSTEM_HAS_BSR_QWORD}
-function BsrQWord(Const AValue : QWord): {$ifdef CPU16}byte{$else}cardinal{$endif};
+function BsrQWord(Const AValue : QWord): cardinal;
   var
     tmp: DWord;
   begin
@@ -3489,12 +3408,7 @@ procedure AtomicEnterLock; forward;
 procedure AtomicLeaveLock; forward;
 
 {$ifndef FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_8}
-{$if SizeOf(ALUSInt) = SizeOf(ShortInt)}
-{$message warning 'At least fpc_atomic_cmp_xchg_8 must be implemented for the current platform'}
-{$define FPC_SYSTEM_ATOMIC_8_NO_LOCK}
-{$else}
 {$define FPC_SYSTEM_NEEDS_ATOMIC_FALLBACK}
-{$endif}
 function fpc_atomic_cmp_xchg_8(var Target: shortint; NewValue: shortint; Comparand: shortint): shortint;compilerproc;
 begin
   {$ifndef FPC_SYSTEM_ATOMIC_8_NO_LOCK}
@@ -3510,12 +3424,7 @@ end;
 {$endif FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_8}
 
 {$ifndef FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_16}
-{$if SizeOf(ALUSInt) = SizeOf(SmallInt)}
-{$message warning 'At least fpc_atomic_cmp_xchg_16 must be implemented for the current platform'}
-{$define FPC_SYSTEM_ATOMIC_16_NO_LOCK}
-{$else}
 {$define FPC_SYSTEM_NEEDS_ATOMIC_FALLBACK}
-{$endif}
 function fpc_atomic_cmp_xchg_16(var Target: smallint; NewValue: smallint; Comparand: smallint): smallint;compilerproc;
 begin
   {$ifndef FPC_SYSTEM_ATOMIC_16_NO_LOCK}
@@ -3578,11 +3487,7 @@ var
   gAtomicLock: ALUSInt = 0;
 
 function fpc_atomic_cmp_xchg_alu(var Target: ALUSInt; NewValue: ALUSInt; Comparand: ALUSInt): ALUSInt; external name
-{$if defined(CPUINT8)}
-  'FPC_ATOMIC_CMP_XCHG_8'
-{$elseif defined(CPUINT16)}
-  'FPC_ATOMIC_CMP_XCHG_16'
-{$elseif defined(CPUINT32)}
+{$if defined(CPUINT32)}
   'FPC_ATOMIC_CMP_XCHG_32'
 {$elseif defined(CPUINT64)}
   'FPC_ATOMIC_CMP_XCHG_64'
@@ -3615,32 +3520,7 @@ begin
 end;
 {$endif}
 
-{$ifdef cpu16}
-function InterlockedIncrement (var Target: smallint) : smallint;
-begin
-  Result := AtomicIncrement(Target);
-end;
 
-function InterlockedDecrement (var Target: smallint) : smallint;
-begin
-  Result := AtomicDecrement(Target);
-end;
-
-function InterlockedExchange (var Target: smallint;Source : smallint) : smallint;
-begin
-  Result := AtomicExchange(Target, Source);
-end;
-
-function InterlockedExchangeAdd (var Target: smallint;Source : smallint) : smallint;
-begin
-  Result := AtomicIncrement(Target, Source) - Source;
-end;
-
-function InterlockedCompareExchange(var Target: smallint; NewValue: smallint; Comperand: smallint): smallint;
-begin
-  Result := AtomicCmpExchange(Target, NewValue, Comperand);
-end;
-{$endif cpu16}
 
 function InterlockedIncrement (var Target: longint) : longint;
 begin

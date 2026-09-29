@@ -107,11 +107,9 @@ type
 
   TNodePool = class;
   PNodePoolArray = ^TNodePoolArray;
-{$ifdef CPU16}
-  TNodePoolArray = array[0..MaxSmallInt div sizeof(Pointer)-1] of TNodePool;
-{$else CPU16}
+
   TNodePoolArray = array[0..MaxInt div sizeof(Pointer)-1] of TNodePool;
-{$endif CPU16}
+
 
 {$ifndef fpc}
   TFPList = TList;

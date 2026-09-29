@@ -122,14 +122,10 @@ Unit Rax86int;
        systems,
        { aasm }
        aasmdata,aasmcpu,
-{$ifdef i8086}
-       aasmtai,
-{$endif i8086}
+
        { symtable }
        symconst,symbase,symtype,symsym,symutil,symdef,
-{$ifdef i8086}
-       symcpu,
-{$endif i8086}
+
        { parser }
        scanner,pbase,
        { register allocator }
@@ -1417,15 +1413,7 @@ Unit Rax86int;
                 expr:=expr + actasmpattern;
                 Consume(AS_INTNUM);
               end;
-{$ifdef i8086}
-            AS_SEG:
-              begin
-                include(out_flags,cseof_isseg);
-                Consume(actasmtoken);
-                if actasmtoken<>AS_ID then
-                 Message(asmr_e_seg_without_identifier);
-              end;
-{$endif i8086}
+
             AS_VMTOFFSET,
             AS_OFFSET:
               begin
@@ -1585,13 +1573,7 @@ Unit Rax86int;
                                if Tprocsym(sym).ProcdefList.Count>1 then
                                 Message(asmr_w_calling_overload_func);
                                hs:=tprocdef(tprocsym(sym).ProcdefList[0]).mangledname;
-{$ifdef i8086}
-                               if is_proc_far(tprocdef(tprocsym(sym).ProcdefList[0]))
-                                  and not (po_interrupt in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions) then
-                                 include(out_flags,cseof_is_farproc_entry)
-                               else
-                                 exclude(out_flags,cseof_is_farproc_entry);
-{$endif i8086}
+
                                hssymtyp:=AT_FUNCTION;
                              end;
                            typesym :
@@ -1853,10 +1835,7 @@ Unit Rax86int;
                           end
                         else
                           oper.opr.ref.relsymbol:=hl;
-{$ifdef i8086}
-                        if oper.opr.ref.segment=NR_NO then
-                          oper.opr.ref.segment:=NR_CS;
-{$endif i8086}
+
                       end
                    else
                     if oper.SetupVar(tempstr,GotOffset) then
@@ -2156,15 +2135,7 @@ Unit Rax86int;
                    if not assigned(oper.opr.ref.symbol) then
                      begin
                        oper.opr.ref.symbol:=current_asmdata.RefAsmSymbol(tempstr,tempsymtyp);
-{$ifdef i8086}
-                       if cseof_isseg in cse_out_flags then
-                         begin
-                           if not (oper.opr.ref.refaddr in [addr_fardataseg,addr_dgroup]) then
-                             oper.opr.ref.refaddr:=addr_seg;
-                         end
-                       else if (tempsymtyp=AT_FUNCTION) and (oper.opr.ref.segment=NR_NO) then
-                         oper.opr.ref.segment:=NR_CS;
-{$endif i8086}
+
                      end
                    else
                     Message(asmr_e_cant_have_multiple_relocatable_symbols);
@@ -2279,21 +2250,7 @@ Unit Rax86int;
         if not (oper.opr.typ in [OPR_NONE,OPR_CONSTANT]) then
           Message(asmr_e_invalid_operand_type);
         BuildConstSymbolExpression([cseif_needofs],l,tempstr,tempsymtyp,size,cse_out_flags);
-{$ifdef i8086}
-        if tempstr='@DATA' then
-          begin
-            if not (cseof_isseg in cse_out_flags) then
-              Message(asmr_e_CODE_or_DATA_without_SEG);
-            oper.SetupData;
-          end
-        else if tempstr='@CODE' then
-          begin
-            if not (cseof_isseg in cse_out_flags) then
-              Message(asmr_e_CODE_or_DATA_without_SEG);
-            oper.SetupCode;
-          end
-        else
-{$endif i8086}
+
         if tempstr<>'' then
           begin
             oper.opr.typ:=OPR_SYMBOL;
@@ -2328,10 +2285,7 @@ Unit Rax86int;
              oper.InitRef;
              oper.opr.ref.symbol:=hl;
              oper.haslabelref:=true;
-{$ifdef i8086}
-             if oper.opr.ref.segment=NR_NO then
-               oper.opr.ref.segment:=NR_CS;
-{$endif i8086}
+
            end;
         end;
 
@@ -2415,15 +2369,13 @@ Unit Rax86int;
            end;
 
           case actasmtoken of
-{$ifndef i8086}
+
             AS_SEG :
               Begin
                 Message(asmr_e_seg_not_supported);
                 Consume(actasmtoken);
               end;
-{$else not i8086}
-            AS_SEG,
-{$endif not i8086}
+
             AS_OFFSET,
             AS_SIZEOF,
             AS_VMTOFFSET,
@@ -2516,11 +2468,9 @@ Unit Rax86int;
                    else
                     if (actasmpattern = '@CODE') or (actasmpattern = '@DATA') then
                      begin
-{$ifdef i8086}
-                       Message(asmr_e_CODE_or_DATA_without_SEG);
-{$else i8086}
+
                        Message(asmr_w_CODE_and_DATA_not_supported);
-{$endif i8086}
+
                        Consume(AS_ID);
                      end
                    else
@@ -2766,14 +2716,7 @@ Unit Rax86int;
         if (oper.typesize<>0) and
            (oper.opr.typ in [OPR_REFERENCE,OPR_LOCAL]) then
           oper.SetSize(oper.typesize,true);
-{$ifdef i8086}
-        { references to a procedure/function entry, without an explicit segment
-          override, are added an CS: override by default (this is Turbo Pascal 7
-          compatible) }
-        if (oper.opr.typ=OPR_REFERENCE) and assigned(oper.opr.ref.symbol) and
-           (oper.opr.ref.symbol.typ=AT_FUNCTION) and (oper.opr.ref.segment=NR_NO) then
-          oper.opr.ref.segment:=NR_CS;
-{$endif i8086}
+
       end;
 
 
@@ -2787,11 +2730,7 @@ Unit Rax86int;
         tmp: toperand;
         di_param, si_param: ShortInt;
         prefix_or_override_pending_concat: boolean = false;
-{$ifdef i8086}
-        hsymbol: TAsmSymbol;
-        hoffset: ASizeInt;
-        href_farproc_entry: Boolean;
-{$endif i8086}
+
       begin
         PrefixOp:=A_None;
         OverrideOp:=A_None;
@@ -2876,18 +2815,7 @@ Unit Rax86int;
         else if (instr.opcode=A_POPA) then
           instr.opcode:=A_POPAW
 {$endif x86_64}
-{$ifdef i8086}
-        { ret is converted to retn or retf, depending on the call model of the
-          current procedure (BP7 compatible) }
-        else if (instr.opcode=A_RET) then
-          begin
-            if is_proc_far(current_procinfo.procdef) and
-               not (po_interrupt in current_procinfo.procdef.procoptions) then
-              instr.opcode:=A_RETF
-            else
-              instr.opcode:=A_RETN;
-          end
-{$endif i8086}
+
         ;
         { We are reading operands, so opcode will be an AS_ID }
         { process operands backwards to get them in AT&T order }
@@ -2935,16 +2863,16 @@ Unit Rax86int;
               begin
                 if actasmtoken = AS_NEAR then
                   begin
-{$ifndef i8086}
+
                     Message(asmr_w_near_ignored);
-{$endif not i8086}
+
                     instr.opsize:=S_NEAR;
                   end
                 else
                   begin
-{$ifndef i8086}
+
                     Message(asmr_w_far_ignored);
-{$endif not i8086}
+
                     instr.opsize:=S_FAR;
                   end;
                 Consume(actasmtoken);
@@ -3026,38 +2954,7 @@ Unit Rax86int;
         if (instr.ops=1) and
            (instr.operands[1].typesize<>0) then
           instr.operands[1].setsize(instr.operands[1].typesize,false);
-{$ifdef i8086}
-        for i:=1 to operandnum do
-          with instr.operands[i].opr do
-            begin
-              { convert 'call/jmp [proc/label]' to 'call/jmp proc/label'. Ugly,
-                but Turbo Pascal 7 compatible. }
-              if (instr.opcode in [A_CALL,A_JMP]) and
-                 (instr.operands[i].haslabelref or instr.operands[i].hasproc) and
-                 (not instr.operands[i].hastype)
-                 and (typ=OPR_REFERENCE) and
-                 assigned(ref.symbol) and (ref.symbol.typ in [AT_FUNCTION,AT_LABEL,AT_ADDR]) and
-                 (ref.base=NR_NO) and (ref.index=NR_NO) then
-                begin
-                  hsymbol:=ref.symbol;
-                  hoffset:=ref.offset;
-                  href_farproc_entry:=ref_farproc_entry;
-                  typ:=OPR_SYMBOL;
-                  symbol:=hsymbol;
-                  symofs:=hoffset;
-                  symseg:=False;
-                  sym_farproc_entry:=href_farproc_entry;
-                end;
-              { convert 'call/jmp symbol' to 'call/jmp far symbol' for symbols that are an entry point of a far procedure }
-              if (instr.opcode in [A_CALL,A_JMP]) and (instr.opsize=S_NO) and
-                 (typ=OPR_SYMBOL) and sym_farproc_entry then
-                instr.opsize:=S_FAR;
-              { convert 'call/jmp dword [something]' to 'call/jmp far [something]' (BP7 compatibility) }
-              if (instr.opcode in [A_CALL,A_JMP]) and (instr.opsize=S_NO) and
-                 (typ in [OPR_LOCAL,OPR_REFERENCE]) and (instr.operands[i].size=OS_32) then
-                instr.opsize:=S_FAR;
-            end;
-{$endif i8086}
+
         if (MemRefInfo(instr.opcode).ExistsSSEAVX) and
            (MemRefInfo(instr.opcode).MemRefSize in MemRefSizeInfoVMems) then
         begin
@@ -3139,59 +3036,22 @@ Unit Rax86int;
             AS_INTNUM,
             AS_OFFSET,
             AS_LBRACKET,
-{$ifdef i8086}
-            AS_SEG,
-{$endif i8086}
+
             AS_ID :
               Begin
                 BuildConstSymbolExpression([cseif_referencelike],value,asmsym,asmsymtyp,size,cse_out_flags);
                 if asmsym<>'' then
                  begin
                    if not (cseof_isseg in cse_out_flags) and
-{$ifdef i8086}
-                      ((constsize<>2) and (constsize<>4))
-{$else i8086}
+
                       (constsize<>sizeof(pint))
-{$endif i8086}
+
                       then
                      begin
                        Message1(asmr_w_const32bit_for_address,asmsym);
                        constsize:=sizeof(pint);
                      end;
-{$ifdef i8086}
-                   if asmsym='@DATA' then
-                     begin
-                       if not (cseof_isseg in cse_out_flags) then
-                         Message(asmr_e_CODE_or_DATA_without_SEG);
-                       if constsize<2 then
-                         Message1(asmr_e_const16bit_for_segment,asmsym);
-                       if current_settings.x86memorymodel=mm_huge then
-                         curlist.concat(Tai_const.Create_fardataseg)
-                       else
-                         curlist.concat(Tai_const.Create_dgroup);
-                       if constsize>2 then
-                         ConcatConstant(curlist,0,constsize-2);
-                     end
-                   else if asmsym='@CODE' then
-                     begin
-                       if not (cseof_isseg in cse_out_flags) then
-                         Message(asmr_e_CODE_or_DATA_without_SEG);
-                       if constsize<2 then
-                         Message1(asmr_e_const16bit_for_segment,asmsym);
-                       curlist.concat(Tai_const.Create_seg_name(current_procinfo.procdef.mangledname));
-                       if constsize>2 then
-                         ConcatConstant(curlist,0,constsize-2);
-                     end
-                   else if cseof_isseg in cse_out_flags then
-                     begin
-                       if constsize<2 then
-                         Message1(asmr_e_const16bit_for_segment,asmsym);
-                       curlist.concat(Tai_const.Create_seg_name(asmsym));
-                       if constsize>2 then
-                         ConcatConstant(curlist,0,constsize-2);
-                     end
-                   else
-{$endif i8086}
+
                      ConcatConstSymbol(curlist,asmsym,'',asmsymtyp,value,constsize,cseof_hasofs in cse_out_flags);
                  end
                 else

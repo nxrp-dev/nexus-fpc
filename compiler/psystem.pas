@@ -88,9 +88,7 @@ implementation
         systemunit.insertsym(csyssym.create('Assert',in_assert_x_y));
         systemunit.insertsym(csyssym.create('Val',in_val_x));
         systemunit.insertsym(csyssym.create('Addr',in_addr_x));
-{$ifdef i8086}
-        systemunit.insertsym(csyssym.create('FarAddr',in_faraddr_x));
-{$endif i8086}
+
         systemunit.insertsym(csyssym.create('TypeInfo',in_typeinfo_x));
         systemunit.insertsym(csyssym.create('SetLength',in_setlength_x));
         systemunit.insertsym(csyssym.create('Copy',in_copy_x));
@@ -149,22 +147,9 @@ implementation
         aluuinttype:=u32inttype;
         alusinttype:=s32inttype;
 {$endif cpu32bitalu}
-{$ifdef cpu16bitaddr}
-        sizeuinttype:=u16inttype;
-        sizesinttype:=s16inttype;
-{$endif cpu16bitaddr}
-{$ifdef cpu16bitalu}
-        uinttype:=u16inttype;
-        sinttype:=s16inttype;
-        aluuinttype:=u16inttype;
-        alusinttype:=s16inttype;
-{$endif cpu16bitalu}
-{$ifdef cpu8bitalu}
-        uinttype:=u8inttype;
-        sinttype:=s8inttype;
-        aluuinttype:=u8inttype;
-        alusinttype:=s8inttype;
-{$endif cpu8bitalu}
+
+
+
 
         osuinttype:=uinttype;
         ossinttype:=sinttype;
@@ -173,18 +158,10 @@ implementation
 
     procedure set_default_ptr_types;
       begin
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_code_models then
-          voidcodepointertype:=voidfarpointertype
-        else if current_settings.x86memorymodel=mm_tiny then
-          voidcodepointertype:=voidnearpointertype
-        else
-          voidcodepointertype:=voidnearcspointertype;
-        voidstackpointertype:=voidnearsspointertype;
-{$else i8086}
+
         voidcodepointertype:=voidpointertype;
         voidstackpointertype:=voidpointertype;
-{$endif i8086}
+
         case voidcodepointertype.size of
           2:
             begin
@@ -345,13 +322,7 @@ implementation
         create_fpu_types;
         s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
 {$endif aarch64}
-{$ifdef z80}
-        s32floattype:=cfloatdef.create(s32real,true);
-        s64floattype:=cfloatdef.create(s64real,true);
-        s80floattype:=cfloatdef.create(s80real,true);
-        sc80floattype:=cfloatdef.create(sc80real,true);
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif z80}
+
 {$ifdef jvm}
         create_fpu_types;
         s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
@@ -368,11 +339,9 @@ implementation
         { some other definitions }
         charpointertype:=cpointerdef.create(cansichartype);
         widecharpointertype:=cpointerdef.create(cwidechartype);
-{$ifdef i8086}
-        parentfpvoidpointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_ss);
-{$else i8086}
+
         parentfpvoidpointertype:=cpointerdef.create(voidtype);
-{$endif i8086}
+
 {$ifdef x86}
         voidnearpointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near);
         voidnearcspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_cs);
@@ -381,16 +350,7 @@ implementation
         voidnearespointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_es);
         voidnearfspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_fs);
         voidneargspointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_near_gs);
-  {$ifdef i8086}
-        voidfarpointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_far);
-        voidhugepointertype:=tcpupointerdefclass(cpointerdef).createx86(voidtype,x86pt_huge);
-        charnearpointertype:=tcpupointerdefclass(cpointerdef).createx86(cansichartype,x86pt_near);
-        charfarpointertype:=tcpupointerdefclass(cpointerdef).createx86(cansichartype,x86pt_far);
-        charhugepointertype:=tcpupointerdefclass(cpointerdef).createx86(cansichartype,x86pt_huge);
-        bytefarpointertype:=tcpupointerdefclass(cpointerdef).createx86(u8inttype,x86pt_far);
-        wordfarpointertype:=tcpupointerdefclass(cpointerdef).createx86(u16inttype,x86pt_far);
-        longintfarpointertype:=tcpupointerdefclass(cpointerdef).createx86(s32inttype,x86pt_far);
-  {$endif i8086}
+
         x86_m64type:=carraydef.create_vector(0,1,s32inttype);
         x86_m128type:=carraydef.create_vector(0,3,s32inttype);
         x86_m128dtype:=carraydef.create_vector(0,1,s32inttype);
@@ -469,10 +429,7 @@ implementation
         addtype('NearEsPointer',voidnearespointertype);
         addtype('NearFsPointer',voidnearfspointertype);
         addtype('NearGsPointer',voidneargspointertype);
-  {$ifdef i8086}
-        addtype('FarPointer',voidfarpointertype);
-        addtype('HugePointer',voidhugepointertype);
-  {$endif i8086}
+
         addtype('__m64',x86_m64type);
         addtype('__m128', x86_m128type);
         addtype('__m128d',x86_m128dtype);
@@ -578,16 +535,7 @@ implementation
         addtype('$void_nearespointer',voidnearespointertype);
         addtype('$void_nearfspointer',voidnearfspointertype);
         addtype('$void_neargspointer',voidneargspointertype);
-  {$ifdef i8086}
-        addtype('$void_farpointer',voidfarpointertype);
-        addtype('$void_hugepointer',voidhugepointertype);
-        addtype('$char_nearpointer',charnearpointertype);
-        addtype('$char_farpointer',charfarpointertype);
-        addtype('$char_hugepointer',charhugepointertype);
-        addtype('$byte_farpointer',bytefarpointertype);
-        addtype('$word_farpointer',wordfarpointertype);
-        addtype('$longint_farpointer',longintfarpointertype);
-  {$endif i8086}
+
         addtype('$__m64',  x86_m64type);
         addtype('$__m128', x86_m128type);
         addtype('$__m128d',x86_m128dtype);
@@ -742,16 +690,7 @@ implementation
         loadtype('void_nearespointer',voidnearespointertype);
         loadtype('void_nearfspointer',voidnearfspointertype);
         loadtype('void_neargspointer',voidneargspointertype);
-  {$ifdef i8086}
-        loadtype('void_farpointer',voidfarpointertype);
-        loadtype('void_hugepointer',voidhugepointertype);
-        loadtype('char_nearpointer',charnearpointertype);
-        loadtype('char_farpointer',charfarpointertype);
-        loadtype('char_hugepointer',charhugepointertype);
-        loadtype('byte_farpointer',bytefarpointertype);
-        loadtype('word_farpointer',wordfarpointertype);
-        loadtype('longint_farpointer',longintfarpointertype);
-  {$endif i8086}
+
         loadtype('__m64',  x86_m64type);
         loadtype('__m128', x86_m128type);
         loadtype('__m128d',x86_m128dtype);

@@ -530,3 +530,4 @@ end;
 
 {$ifdef lstrings_unit}
 end.
+{$endif lstrings_unit}

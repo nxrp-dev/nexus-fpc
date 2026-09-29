@@ -1327,7 +1327,7 @@ Begin
     end;
   { on x87, a floating point exception may be pending in case of an invalid
     input value -> trigger it now }
-{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64))) or defined(cpui8086)}
+{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64)))}
     asm
       fwait
     end;
@@ -1369,7 +1369,7 @@ Begin
     Val(trim(S),Value,E);
   { on x87, a floating point exception may be pending in case of an invalid
     input value -> trigger it now }
-{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64))) or defined(cpui8086)}
+{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64)))}
     asm
       fwait
     end;
@@ -1431,7 +1431,7 @@ Begin
     end;
   { on x87, a floating point exception may be pending in case of an invalid
     input value -> trigger it now }
-{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64))) or defined(cpui8086)}
+{$if defined(cpui386) or (defined(cpux86_64) and not(defined(win64)))}
     asm
       fwait
     end;

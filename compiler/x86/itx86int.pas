@@ -55,14 +55,6 @@ implementation
       int_regname_index : array[tregisterindex] of tregisterindex = (
         {$i r386iri.inc}
       );
-    {$elseif defined(i8086)}
-      int_regname_table : array[tregisterindex] of string[13] = (
-        {$i r8086int.inc}
-      );
-
-      int_regname_index : array[tregisterindex] of tregisterindex = (
-        {$i r8086iri.inc}
-      );
     {$endif}
 
 

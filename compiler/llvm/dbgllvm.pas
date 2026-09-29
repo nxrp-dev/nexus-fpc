@@ -1403,9 +1403,7 @@ implementation
 {$ifdef cpu32bitaddr}
               addnormalstringdef('LongString',u32inttype,cardinal(1024*1024));
 {$endif cpu32bitaddr}
-{$ifdef cpu16bitaddr}
-              addnormalstringdef('LongString',u16inttype,cardinal(1024));
-{$endif cpu16bitaddr}
+
            end;
          st_ansistring:
            begin

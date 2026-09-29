@@ -151,7 +151,7 @@ end;
 
 
 {$IFNDEF HAS_GETINTVEC}
-procedure GetIntVec (IntNo: byte; var Vector: {$ifdef cpui8086}farpointer{$else}pointer{$endif});
+procedure GetIntVec (IntNo: byte; var Vector: pointer);
 begin
   Vector := nil;
 end;
@@ -159,7 +159,7 @@ end;
 
 
 {$IFNDEF HAS_SETINTVEC}
-procedure SetIntVec (IntNo: byte; Vector: {$ifdef cpui8086}farpointer{$else}pointer{$endif});
+procedure SetIntVec (IntNo: byte; Vector: pointer);
 begin
 end;
 {$ENDIF HAS_SETINTVEC}

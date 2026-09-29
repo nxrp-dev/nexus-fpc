@@ -53,9 +53,9 @@ interface
       private
         FSections: TFPHashObjectList;
         FGroups: TFPHashObjectList;
-{$ifndef i8086}
+
         using_relative : boolean;
-{$endif i8086}
+
         function CodeSectionName(const aname:string): string;
         procedure WriteReference(var ref : treference);
         procedure WriteOper(const o:toper;s : topsize; opcode: tasmop;ops:longint;dest : boolean);
@@ -99,8 +99,6 @@ interface
         {$i r8664nasm.inc}
 {$elseif defined(i386)}
         {$i r386nasm.inc}
-{$elseif defined(i8086)}
-        {$i r8086nasm.inc}
 {$endif}
       );
       { nasm 2.13 expects lowercase cpu names }
@@ -154,18 +152,6 @@ interface
         'ia64',     // cpu_zen3
         'ia64',     // cpu_zen4
         'ia64'      // cpu_zen5
-{$elseif defined(i8086)}
-        'ia64',    // cpu_none
-        '8086',    // cpu_8086
-        '186',     // cpu_186
-        '286',     // cpu_286
-        '386',     // cpu_386
-        '486',     // cpu_486
-        'pentium', // cpu_Pentium
-        'p2',      // cpu_Pentium2
-        'p3',      // cpu_Pentium3
-        'p4',      // cpu_Pentium4
-        'p4'       // cpu_PentiumM
 {$endif}
       );
 
@@ -335,19 +321,9 @@ interface
 
     function TX86NasmAssembler.CodeSectionName(const aname:string): string;
       begin
-{$ifdef i8086}
-        if current_settings.x86memorymodel in x86_far_code_models then
-          begin
-            if cs_huge_code in current_settings.moduleswitches then
-              result:=TrimStrCRC32(aname,30) + '_TEXT'
-            else
-              result:=current_module.modulename^ + '_TEXT';
-          end
-        else
-          result:='_TEXT';
-{$else i8086}
+
         result:='.text';
-{$endif}
+
       end;
 
 
@@ -440,18 +416,7 @@ interface
                     writer.AsmWrite(sizestr(s,dest));
                   WriteReference(o.ref^);
                 end
-{$ifdef i8086}
-              else if o.ref^.refaddr=addr_dgroup then
-                begin
-                  writer.AsmWrite('DGROUP');
-                  { Make sure GROUP DGROUP is generated }
-                  AddGroup('DGROUP');
-                end
-              else if o.ref^.refaddr=addr_fardataseg then
-                begin
-                  writer.AsmWrite(current_module.modulename^+'_DATA');
-                end
-{$endif i8086}
+
               else
                 begin
 {$ifdef x86_64}
@@ -463,12 +428,7 @@ interface
 {$ifdef i386}
                   writer.AsmWrite('dword ');
 {$endif i386}
-{$ifdef i8086}
-                  if o.ref^.refaddr=addr_seg then
-                    writer.AsmWrite('SEG ')
-                  else
-                    writer.AsmWrite('word ');
-{$endif i8086}
+
                   if assigned(o.ref^.symbol) then
                    begin
                     if SmartAsm then
@@ -716,15 +676,7 @@ interface
 
     procedure TX86NasmAssembler.WriteGroups;
       begin
-{$ifdef i8086}
-        if target_info.system in [system_i8086_msdos,system_i8086_embedded] then
-          begin
-            if current_settings.x86memorymodel=mm_huge then
-              WriteSection(sec_data,'',2);
-            writer.AsmLn;
-            FGroups.ForEachCall(@WriteGroup,nil);
-          end;
-{$endif i8086}
+
       end;
 
     procedure TX86NasmAssembler.WriteTree(p:TAsmList);
@@ -841,46 +793,7 @@ interface
                  aitconst_128bit:
                    writer.AsmWriteLn(asminfo^.comment+'Unsupported const type '+
                      ait_const2str[consttype]);
-{$ifdef i8086}
-                 aitconst_farptr:
-                   begin
-                     writer.AsmWrite(ait_const2str[aitconst_16bit]);
-                     if assigned(tai_const(hp).sym) then
-                       begin
-                         if SmartAsm then
-                           AddSymbol(tai_const(hp).sym.name,false);
-                         writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_const(hp).sym.name));
-                         if tai_const(hp).value<>0 then
-                           writer.AsmWrite(tostr_with_plus(tai_const(hp).value));
-                         writer.AsmLn;
-                         writer.AsmWrite(ait_const2str[aitconst_16bit]);
-                         writer.AsmWrite('SEG ');
-                         writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_const(hp).sym.name));
-                       end
-                     else
-                       writer.AsmWrite(tostr(lo(longint(tai_const(hp).value)))+','+
-                                tostr(hi(longint(tai_const(hp).value))));
-                     writer.AsmLn;
-                   end;
-                 aitconst_seg:
-                   begin
-                     writer.AsmWrite(ait_const2str[aitconst_16bit]);
-                     if assigned(tai_const(hp).sym) then
-                       begin
-                         if SmartAsm then
-                           AddSymbol(tai_const(hp).sym.name,false);
-                         writer.AsmWrite('SEG ');
-                         writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_const(hp).sym.name));
-                       end
-                     else
-                       internalerror(2015110501);
-                     writer.AsmLn;
-                   end;
-                 aitconst_dgroup:
-                   writer.AsmWriteLn(#9'DW'#9'DGROUP');
-                 aitconst_fardataseg:
-                   writer.AsmWriteLn(#9'DW'#9+current_module.modulename^+'_DATA');
-{$endif i8086}
+
 {$ifdef x86_64}
                  aitconst_rva_symbol,
                  aitconst_secrel32_symbol: ;
@@ -1150,7 +1063,7 @@ interface
                else
                 begin
                   prefix:='';
-{$ifndef i8086}
+
                   { We need to explicitely set
                     word prefix to get selectors
                     to be pushed in 2 bytes  PM }
@@ -1160,7 +1073,7 @@ interface
                       (taicpu(hp).oper[0]^.typ=top_reg) and
                       (is_segment_reg(taicpu(hp).oper[0]^.reg)) then
                     writer.AsmWriteln(#9#9'DB'#9'066h');
-{$endif not i8086}
+
                   if (fixed_opcode=A_RETW) or (fixed_opcode=A_RETNW) or (fixed_opcode=A_RETFW) or
 {$ifdef x86_64}
                      (fixed_opcode=A_RETQ) or (fixed_opcode=A_RETNQ) or (fixed_opcode=A_RETFQ) or
@@ -1374,9 +1287,7 @@ interface
 
     procedure TX86NasmAssembler.WriteHeader;
       begin
-{$if defined(i8086)}
-        writer.AsmWriteLn('BITS 16');
-{$elseif defined(i386)}
+{$if defined(i386)}
         writer.AsmWriteLn('BITS 32');
         using_relative:=false;
 {$elseif defined(x86_64)}
@@ -1430,22 +1341,7 @@ interface
         FormatName : string;
       begin
         result:=Inherited MakeCmdLine;
-{$ifdef i8086}
-        case target_info.system of
-          system_i8086_msdos,
-          system_i8086_embedded:
-            begin
-              FormatName:='obj';
-              if (cs_debuginfo in current_settings.moduleswitches) or
-                 (cs_asm_source in current_settings.globalswitches) then
-                Replace(result,'$DEBUG','-g')
-              else
-                Replace(result,'$DEBUG','');
-            end
-          else
-            internalerror(2014082060);
-        end;
-{$endif i8086}
+
 {$ifdef i386}
         case target_info.system of
           system_i386_go32v2:
@@ -1485,35 +1381,7 @@ interface
                                   Initialize
 *****************************************************************************}
 
-{$ifdef i8086}
-    const
-        as_i8086_nasm_info : tasminfo =
-          (
-            id           : as_i8086_nasm;
-            idtxt  : 'NASM';
-            asmbin : 'nasm';
-            asmcmd : '-f $FORMAT $DEBUG -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i8086_msdos,system_i8086_embedded];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-        as_i8086_nasmobj_info : tasminfo =
-          (
-            id           : as_i8086_nasmobj;
-            idtxt  : 'NASMOBJ';
-            asmbin : 'nasm';
-            asmcmd : '-f obj -o $OBJ -w-orphan-labels $EXTRAOPT $ASM';
-            supported_targets : [system_i8086_msdos,system_i8086_embedded];
-            flags : [af_needar,af_no_debug];
-            labelprefix : '..@';
-            labelmaxlen : -1;
-            comment : '; ';
-            dollarsign: '$';
-          );
-{$endif i8086}
+
 {$ifdef i386}
     const
         as_i386_nasmcoff_info : tasminfo =
@@ -1706,10 +1574,7 @@ interface
 
 
 initialization
-{$ifdef i8086}
-  RegisterAssembler(as_i8086_nasm_info,TX86NasmAssembler);
-  RegisterAssembler(as_i8086_nasmobj_info,TX86NasmAssembler);
-{$endif i8086}
+
 {$ifdef i386}
   RegisterAssembler(as_i386_nasmcoff_info,TX86NasmAssembler);
   RegisterAssembler(as_i386_nasmwin32_info,TX86NasmAssembler);

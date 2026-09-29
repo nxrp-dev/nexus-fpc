@@ -349,46 +349,6 @@ uses
 {$elseif defined(cpu32bitalu)}
               OS_64,OS_S64:
                 result:=std_regname(locreg.registerhi)+':'+std_regname(locreg.register);
-{$elseif defined(cpu16bitalu)}
-              OS_64,OS_S64:
-                if getsupreg(locreg.register)<first_int_imreg then
-                  result:='??:'+std_regname(locreg.registerhi)
-                          +':??:'+std_regname(locreg.register)
-                else
-                  result:=std_regname(cg.GetNextReg(locreg.registerhi))+':'+std_regname(locreg.registerhi)
-                          +':'+std_regname(cg.GetNextReg(locreg.register))+':'+std_regname(locreg.register);
-              OS_32,OS_S32:
-                if getsupreg(locreg.register)<first_int_imreg then
-                  result:='??:'+std_regname(locreg.register)
-                else
-                  result:=std_regname(cg.GetNextReg(locreg.register))
-                          +':'+std_regname(locreg.register);
-{$elseif defined(cpu8bitalu)}
-              OS_64,OS_S64:
-                if getsupreg(locreg.register)<first_int_imreg then
-                  result:='??:??:??:'+std_regname(locreg.registerhi)
-                          +':??:??:??:'+std_regname(locreg.register)
-                else
-                  result:=std_regname(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(locreg.registerhi))))
-                          +':'+std_regname(cg.GetNextReg(cg.GetNextReg(locreg.registerhi)))
-                          +':'+std_regname(cg.GetNextReg(locreg.registerhi))
-                          +':'+std_regname(locreg.registerhi)
-                          +':'+std_regname(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(locreg.register))))
-                          +':'+std_regname(cg.GetNextReg(cg.GetNextReg(locreg.register)))
-                          +':'+std_regname(cg.GetNextReg(locreg.register))
-                          +':'+std_regname(locreg.register);
-              OS_32,OS_S32:
-                if getsupreg(locreg.register)<first_int_imreg then
-                  result:='??:??:??:'+std_regname(locreg.register)
-                else
-                  result:=std_regname(cg.GetNextReg(cg.GetNextReg(cg.GetNextReg(locreg.register))))
-                          +':'+std_regname(cg.GetNextReg(cg.GetNextReg(locreg.register)))
-                          +':'+std_regname(cg.GetNextReg(locreg.register))+':'+std_regname(locreg.register);
-              OS_16,OS_S16:
-                if getsupreg(locreg.register)<first_int_imreg then
-                  result:='??:'+std_regname(locreg.register)
-                else
-                  result:=std_regname(cg.GetNextReg(locreg.register))+':'+std_regname(locreg.register);
 {$endif}
               else
                 result:=std_regname(locreg.register);
@@ -531,10 +491,6 @@ uses
         shift:=BsfQWord(d);
 {$elseif defined(cpu32bitalu)}
         shift:=BsfDWord(d);
-{$elseif defined(cpu16bitalu)}
-        shift:=BsfWord(d);
-{$elseif defined(cpu8bitalu)}
-        shift:=BsfByte(d);
 {$else}
 {$error ALU not defined}
 {$endif}

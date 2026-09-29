@@ -69,10 +69,10 @@ unit cgx86;
         procedure a_op_reg_ref(list : TAsmList; Op: TOpCG; size: TCGSize;reg: TRegister; const ref: TReference); override;
         procedure a_op_ref(list : TAsmList; Op: TOpCG; size: TCGSize; const ref: TReference); override;
 
-{$ifndef i8086}
+
         procedure a_op_const_reg_reg(list : TAsmList; op : Topcg; size : Tcgsize; a : tcgint; src,dst : Tregister); override;
         procedure a_op_reg_reg_reg(list : TAsmList; op : TOpCg; size : tcgsize; src1,src2,dst : tregister); override;
-{$endif not i8086}
+
 
         { move instructions }
         procedure a_load_const_reg(list : TAsmList; tosize: tcgsize; a : tcgint;reg : tregister);override;
@@ -168,11 +168,6 @@ unit cgx86;
         (S_NO,S_B,S_W,S_L,S_L,S_T,S_B,S_W,S_L,S_L,S_L,
          S_FS,S_FL,S_FX,S_IQ,S_FXX,
          S_NO,S_NO,S_NO,S_MD,S_XMM,S_YMM,S_ZMM);
-{$elseif defined(i8086)}
-      TCGSize2OpSize: Array[tcgsize] of topsize =
-        (S_NO,S_B,S_W,S_W,S_W,S_T,S_B,S_W,S_W,S_W,S_W,
-         S_FS,S_FL,S_FX,S_IQ,S_FXX,
-         S_NO,S_NO,S_NO,S_MD,S_XMM,S_YMM,S_ZMM);
 {$endif}
 
 {$ifndef NOTARGETWIN}
@@ -203,8 +198,6 @@ unit cgx86;
         Result:=cs_opt_size in current_settings.optimizerswitches;
 {$elseif defined(i386)}
         Result:=(cs_opt_size in current_settings.optimizerswitches) or (current_settings.cputype in [cpu_386]);
-{$elseif defined(i8086)}
-        Result:=(cs_opt_size in current_settings.optimizerswitches) or (current_settings.cputype in [cpu_8086..cpu_386]);
 {$endif}
       end;
 
@@ -216,8 +209,6 @@ unit cgx86;
         Result:=cs_opt_size in current_settings.optimizerswitches;
 {$elseif defined(i386)}
         Result:=(cs_opt_size in current_settings.optimizerswitches) or (current_settings.optimizecputype<cpu_Pentium2);
-{$elseif defined(i8086)}
-        Result:=current_settings.cputype>=cpu_186;
 {$endif}
       end;
 
@@ -446,17 +437,17 @@ unit cgx86;
 
     procedure tcgx86.make_simple_ref(list:TAsmList;var ref: treference;isdirect:boolean);
       var
-{$ifndef i8086}
+
         hreg : tregister;
-{$endif i8086}
+
         href : treference;
 {$ifdef i386}
         add_hreg: boolean;
 {$endif i386}
       begin
-{$ifndef i8086}
+
         hreg:=NR_NO;
-{$endif i8086}
+
         { make_simple_ref() may have already been called earlier, and in that
           case make sure we don't perform the PIC-simplifications twice }
         if (ref.refaddr in [addr_pic,addr_pic_no_got]) then
@@ -654,35 +645,6 @@ unit cgx86;
                 ref.base:=hreg;
               end;
           end;
-{$elseif defined(i8086)}
-        { i8086 does not support stack relative addressing }
-        if ref.base = NR_STACK_POINTER_REG then
-          begin
-            href:=ref;
-            href.base:=getaddressregister(list);
-            { let the register allocator find a suitable register for the reference }
-            list.Concat(Taicpu.op_reg_reg(A_MOV, S_W, NR_SP, href.base));
-            { if DS<>SS in the current memory model, we need to add an SS: segment override as well }
-            if (ref.segment=NR_NO) and not segment_regs_equal(NR_DS,NR_SS) then
-              href.segment:=NR_SS;
-            ref:=href;
-          end;
-
-        { if there is a segment in an int register, move it to ES }
-        if (ref.segment<>NR_NO) and (not is_segment_reg(ref.segment)) then
-          begin
-            list.concat(taicpu.op_reg_reg(A_MOV,S_W,ref.segment,NR_ES));
-            ref.segment:=NR_ES;
-          end;
-
-        { can the segment override be dropped? }
-        if ref.segment<>NR_NO then
-          begin
-            if (ref.base=NR_BP) and segment_regs_equal(ref.segment,NR_SS) then
-              ref.segment:=NR_NO;
-            if (ref.base<>NR_BP) and segment_regs_equal(ref.segment,NR_DS) then
-              ref.segment:=NR_NO;
-          end;
 {$endif}
       end;
 
@@ -802,11 +764,7 @@ unit cgx86;
          list.concat(Taicpu.Op_ref(op,s,tmpref));
          { storing non extended floats can cause a floating point overflow }
          if ((t<>OS_F80) and (cs_fpu_fwait in current_settings.localswitches))
-{$ifdef i8086}
-           { 8087 and 80287 need a FWAIT after a memory store, before it can be
-             read with the integer unit }
-           or (current_settings.cputype<=cpu_286)
-{$endif i8086}
+
            then
            list.concat(Taicpu.Op_none(A_FWAIT,S_NO));
          dec_fpu_stack;
@@ -1089,9 +1047,9 @@ unit cgx86;
     procedure tcgx86.a_loadaddr_ref_reg(list : TAsmList;const ref : treference;r : tregister);
       var
         dirref,tmpref : treference;
-{$ifndef i8086}
+
         tmpreg : TRegister;
-{$endif i8086}
+
       begin
         dirref:=ref;
 
@@ -1248,14 +1206,9 @@ unit cgx86;
               end;
             if segment<>NR_NO then
               begin
-{$ifdef i8086}
-                if is_segment_reg(segment) then
-                  list.concat(Taicpu.op_reg_reg(A_MOV,S_W,segment,GetNextReg(r)))
-                else
-                  a_load_reg_reg(list,OS_16,OS_16,segment,GetNextReg(r));
-{$else i8086}
+
                 cgmessage(cg_e_cant_use_far_pointer_there);
-{$endif i8086}
+
               end;
           end;
       end;
@@ -1964,7 +1917,7 @@ unit cgx86;
       end;
 
 
-{$ifndef i8086}
+
     procedure tcgx86.a_op_const_reg_reg(list:TAsmList;op:Topcg;size:Tcgsize;
                                         a:tcgint;src,dst:Tregister);
       var
@@ -2099,7 +2052,7 @@ unit cgx86;
         else
           inherited a_op_reg_reg_reg(list,op,size,src1,src2,dst);
       end;
-{$endif not i8086}
+
 
 
     procedure tcgx86.a_op_const_reg(list : TAsmList; Op: TOpCG; size: TCGSize; a: tcgint; reg: TRegister);
@@ -2183,22 +2136,6 @@ unit cgx86;
                 list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,reg));
               if (a shr 5) <> 0 Then
                 internalerror(200609071);
-{$elseif defined(i8086)}
-              if (a shr 5) <> 0 Then
-                internalerror(2013043002);
-              a := a and 31;
-              if a <> 0 Then
-                begin
-                  if (current_settings.cputype < cpu_186) and (a <> 1) then
-                    begin
-                      getcpuregister(list,NR_CL);
-                      a_load_const_reg(list,OS_8,a,NR_CL);
-                      list.concat(taicpu.op_reg_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],NR_CL,reg));
-                      ungetcpuregister(list,NR_CL);
-                    end
-                  else
-                    list.concat(taicpu.op_const_reg(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,reg));
-                end;
 {$endif}
             end
           else internalerror(200609072);
@@ -2289,22 +2226,6 @@ unit cgx86;
                 list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a and 31,tmpref));
               if (a shr 5) <> 0 Then
                 internalerror(2013111002);
-{$elseif defined(i8086)}
-              if (a shr 5) <> 0 Then
-                internalerror(2013111001);
-              a := a and 31;
-              if a <> 0 Then
-                begin
-                  if (current_settings.cputype < cpu_186) and (a <> 1) then
-                    begin
-                      getcpuregister(list,NR_CL);
-                      a_load_const_reg(list,OS_8,a,NR_CL);
-                      list.concat(taicpu.op_reg_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],NR_CL,tmpref));
-                      ungetcpuregister(list,NR_CL);
-                    end
-                  else
-                    list.concat(taicpu.op_const_ref(TOpCG2AsmOp[op],TCgSize2OpSize[size],a,tmpref));
-                end;
 {$endif}
             end
           else internalerror(68992);
@@ -2320,9 +2241,6 @@ unit cgx86;
 {$elseif defined(cpu32bitalu)}
         REGCX=NR_ECX;
         REGCX_Size = OS_32;
-{$elseif defined(cpu16bitalu)}
-        REGCX=NR_CX;
-        REGCX_Size = OS_16;
 {$endif}
       var
         dstsize: topsize;
@@ -2413,9 +2331,6 @@ unit cgx86;
 {$elseif defined(cpu32bitalu)}
         REGCX=NR_ECX;
         REGCX_Size = OS_32;
-{$elseif defined(cpu16bitalu)}
-        REGCX=NR_CX;
-        REGCX_Size = OS_16;
 {$endif}
       var
         tmpref  : treference;
@@ -2777,9 +2692,6 @@ unit cgx86;
         copy_len_sizes = [1, 2, 4, 8];
 {$elseif defined(cpu32bitalu)}
         copy_len_sizes = [1, 2, 4];
-{$elseif defined(cpu16bitalu)}
-        copy_len_sizes = [1, 2, 4]; { 4 is included here, because it's still more
-          efficient to use copy_move instead of copy_string for copying 4 bytes }
 {$endif}
       var
         helpsize: tcgint;
@@ -2788,7 +2700,7 @@ unit cgx86;
         helpsize:=3*sizeof(aword);
         if cs_opt_size in current_settings.optimizerswitches then
           helpsize:=2*sizeof(aword);
-  {$ifndef i8086}
+
         { avx helps only to reduce size, using it in general does at least not help on
           an i7-4770
           but using the xmm registers reduces register pressure (FK) }
@@ -2811,7 +2723,7 @@ unit cgx86;
            ({$ifdef i386}(len=8) or {$endif i386}(len=16) or (len=24) or (len=32) or (len=40) or (len=48)) then
            result:=copy_mm
         else
-  {$endif i8086}
+
         if (cs_mmx in current_settings.localswitches) and
            not(pi_uses_fpu in current_procinfo.flags) and
            ({$ifdef i386}(len=8) or {$endif i386}(len=16) or (len=24) or (len=32)) then
@@ -2847,11 +2759,6 @@ unit cgx86;
         REGSI=NR_ESI;
         REGDI=NR_EDI;
         push_segment_size = S_L;
-{$elseif defined(cpu16bitalu)}
-        REGCX=NR_CX;
-        REGSI=NR_SI;
-        REGDI=NR_DI;
-        push_segment_size = S_W;
 {$endif}
 
     var
@@ -2866,10 +2773,10 @@ unit cgx86;
     begin
       srcref:=source;
       dstref:=dest;
-{$ifndef i8086}
+
       make_simple_ref(list,srcref);
       make_simple_ref(list,dstref);
-{$endif not i8086}
+
 {$ifdef i386}
       { we could handle "far" pointers here, but reloading es/ds is probably much slower
         than just resolving the tls segment }
@@ -2907,12 +2814,12 @@ unit cgx86;
          end;
 {$endif x86_64}
       cm:=getcopymode(len);
-{$ifndef i8086}
+
       { using %fs and %gs as segment prefixes is perfectly valid }
       if ((srcref.segment<>NR_NO) and (srcref.segment<>NR_FS) and (srcref.segment<>NR_GS)) or
          ((dstref.segment<>NR_NO) and (dstref.segment<>NR_FS) and (dstref.segment<>NR_GS)) then
         cm:=copy_string;
-{$endif not i8086}
+
       case cm of
         copy_mov:
           begin
@@ -3138,17 +3045,7 @@ unit cgx86;
                 list.concat(taicpu.op_reg(A_POP,push_segment_size,NR_ES));
               end;
             getcpuregister(list,REGSI);
-{$ifdef i8086}
-            { at this point, si and di are allocated, so no register is available as index =>
-              compiler will hang/ie during spilling, so avoid that srcref has base and index, see also tests/tbs/tb0637.pp }
-            if (srcref.base<>NR_NO) and (srcref.index<>NR_NO) then
-              begin
-                r:=getaddressregister(list);
-                a_op_reg_reg_reg(list,OP_ADD,OS_ADDR,srcref.base,srcref.index,r);
-                srcref.base:=r;
-                srcref.index:=NR_NO;
-              end;
-{$endif i8086}
+
             if ((srcref.segment=NR_NO) and (segment_regs_equal(NR_SS,NR_DS) or ((srcref.base<>NR_BP) and (srcref.base<>NR_SP)))) or
                (is_segment_reg(srcref.segment) and segment_regs_equal(srcref.segment,NR_DS)) then
               begin
@@ -3199,8 +3096,6 @@ unit cgx86;
                     list.concat(Taicpu.op_none(A_MOVSQ,S_NO))
 {$elseif defined(cpu32bitalu)}
                     list.concat(Taicpu.op_none(A_MOVSD,S_NO));
-{$elseif defined(cpu16bitalu)}
-                    list.concat(Taicpu.op_none(A_MOVSW,S_NO));
 {$endif}
                   end;
                 if len>=4 then
@@ -3255,12 +3150,12 @@ unit cgx86;
 
 {$ifdef x86}
 {$ifndef NOTARGETWIN}
-{$ifndef i8086}
+
       var
         href : treference;
         i : integer;
         again : tasmlabel;
-{$endif i8086}
+
 {$endif NOTARGETWIN}
 {$endif x86}
       begin
@@ -3358,10 +3253,7 @@ unit cgx86;
       var
         stackmisalignment: longint;
         regsize: longint;
-{$ifdef i8086}
-        dgroup: treference;
-        fardataseg: treference;
-{$endif i8086}
+
 
       procedure push_regs;
         var
@@ -3393,51 +3285,7 @@ unit cgx86;
         regsize:=0;
         stackmisalignment:=0;
         list.concat(tai_regalloc.alloc(NR_STACK_POINTER_REG,nil));
-{$ifdef i8086}
-        { interrupt support for i8086 }
-        if po_interrupt in current_procinfo.procdef.procoptions then
-          begin
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_AX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_BX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_CX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_DX));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_SI));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_DI));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_DS));
-            list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_ES));
-            if current_settings.x86memorymodel=mm_tiny then
-              begin
-                { in the tiny memory model, we can't use dgroup, because that
-                  adds a relocation entry to the .exe and we can't produce a
-                  .com file (because they don't support relocations), so instead
-                  we initialize DS from CS. }
-                if cs_opt_size in current_settings.optimizerswitches then
-                  begin
-                    list.concat(Taicpu.Op_reg(A_PUSH,S_W,NR_CS));
-                    list.concat(Taicpu.Op_reg(A_POP,S_W,NR_DS));
-                  end
-                else
-                  begin
-                    list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_CS,NR_AX));
-                    list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_AX,NR_DS));
-                  end;
-              end
-            else if current_settings.x86memorymodel=mm_huge then
-              begin
-                reference_reset(fardataseg,0,[]);
-                fardataseg.refaddr:=addr_fardataseg;
-                list.concat(Taicpu.Op_ref_reg(A_MOV,S_W,fardataseg,NR_AX));
-                list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_AX,NR_DS));
-              end
-            else
-              begin
-                reference_reset(dgroup,0,[]);
-                dgroup.refaddr:=addr_dgroup;
-                list.concat(Taicpu.Op_ref_reg(A_MOV,S_W,dgroup,NR_AX));
-                list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_AX,NR_DS));
-              end;
-          end;
-{$endif i8086}
+
 {$ifdef i386}
         { interrupt support for i386 }
         if (po_interrupt in current_procinfo.procdef.procoptions) then
@@ -3475,11 +3323,7 @@ unit cgx86;
             else
               begin
                 list.concat(tai_regalloc.alloc(current_procinfo.framepointer,nil));
-{$ifdef i8086}
-                if (ts_x86_far_procs_push_odd_bp in current_settings.targetswitches) and
-                    is_proc_far(current_procinfo.procdef) then
-                  cg.a_op_const_reg(list,OP_ADD,OS_ADDR,1,current_procinfo.framepointer);
-{$endif i8086}
+
                 { push <frame_pointer> }
                 inc(stackmisalignment,sizeof(pint));
                 include(rg[R_INTREGISTER].preserved_by_proc,RS_FRAME_POINTER_REG);
@@ -3516,35 +3360,10 @@ unit cgx86;
                   current_asmdata.asmcfi.cfa_def_cfa_offset(list,regsize+localsize+sizeof(pint));
                 current_procinfo.final_localsize:=localsize;
               end
-{$ifdef i8086}
-            else
-              { on i8086 we always call g_stackpointer_alloc, even with a zero size,
-                because it will generate code for stack checking, if stack checking is on }
-              g_stackpointer_alloc(list,0)
-{$endif i8086}
+
               ;
 
-{$ifdef i8086}
-              if (current_settings.x86memorymodel=mm_huge) and
-                      not (po_interrupt in current_procinfo.procdef.procoptions) then
-                begin
-                  list.concat(Taicpu.op_reg(A_PUSH,S_W,NR_DS));
-                  reference_reset(fardataseg,0,[]);
-                  fardataseg.refaddr:=addr_fardataseg;
-                  if current_procinfo.procdef.proccalloption=pocall_register then
-                    begin
-                      { Use CX register if using register convention
-                        as it is not a register used to store parameters }
-                      list.concat(Taicpu.Op_ref_reg(A_MOV,S_W,fardataseg,NR_CX));
-                      list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_CX,NR_DS));
-                    end
-                  else
-                    begin
-                      list.concat(Taicpu.Op_ref_reg(A_MOV,S_W,fardataseg,NR_AX));
-                      list.concat(Taicpu.Op_reg_reg(A_MOV,S_W,NR_AX,NR_DS));
-                    end;
-                end;
-{$endif i8086}
+
 
 {$ifdef i386}
             if (not paramanager.use_fixed_stack) and
@@ -3627,9 +3446,6 @@ unit cgx86;
             current_asmdata.asmcfi.cfa_restore(list,NR_EBP);
             current_asmdata.asmcfi.cfa_def_cfa_offset(list,4);
             list.Concat(taicpu.op_reg(A_POP,S_L,NR_EBP));
-{$elseif defined(i8086)}
-            list.Concat(taicpu.op_reg_reg(A_MOV,S_W,NR_BP,NR_SP));
-            list.Concat(taicpu.op_reg(A_POP,S_W,NR_BP));
 {$endif}
           end;
       end;

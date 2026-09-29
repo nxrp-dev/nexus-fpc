@@ -15,13 +15,10 @@
 { ObjpasInt is the integer type, equivalent to Objpas.Integer (the Integer
   type in ObjFpc and Delphi modes). It is defined here for use in the
   implementation part of the System unit. }
-{$ifdef CPU16}
-type
-  ObjpasInt = SmallInt;
-{$else CPU16}
+
 type
   ObjpasInt = LongInt;
-{$endif CPU16}
+
 
 {****************************************************************************
                                 Local types
@@ -44,9 +41,7 @@ type
 {$endif FPC_HAS_FEATURE_TEXTIO}
 
 const
-{$if defined(CPUZ80)}
-  STACK_MARGIN_MAX = 64;    { Stack size margin for stack checking }
-{$elseif defined(CPULOONGARCH64)}
+{$if defined(CPULOONGARCH64)}
   STACK_MARGIN_MAX = 65536;    { Stack size margin for stack checking }
 {$elseif defined(CPUX86_64)}
   STACK_MARGIN_MAX = 32768;    { Stack size margin for stack checking }
@@ -178,13 +173,7 @@ function do_isdevice(handle:thandle):boolean;forward;
   {$define SYSPROCDEFINED}
 {$endif cpui386}
 
-{$ifdef cpui8086}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i i8086.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpui8086}
+
 
 {$ifdef cpum68k}
   {$ifdef SYSPROCDEFINED}
@@ -255,13 +244,7 @@ function do_isdevice(handle:thandle):boolean;forward;
 
 
 
-{$ifdef cpuz80}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i z80.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpuz80}
+
 
 {$ifdef cpuwasm32}
   {$ifdef SYSPROCDEFINED}
@@ -790,7 +773,7 @@ end;
 ****************************************************************************}
 
 {$ifndef FPC_SYSTEM_HAS_PTR}
-Function Ptr(sel,off : {$ifdef CPU16}Word{$else}Longint{$endif}) : farpointer;{$ifdef SYSTEMINLINE}inline;{$endif}
+Function Ptr(sel,off : Longint) : farpointer;{$ifdef SYSTEMINLINE}inline;{$endif}
 Begin
   ptr:=farpointer((sel shl 4)+off);
 End;

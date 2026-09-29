@@ -467,11 +467,11 @@ unit optloop;
                 ((tvecnode(n).left.nodetype=loadn) or
                 { ... or loop invariant expression? }
                 is_loop_invariant(currforloop,tvecnode(n).right))
-{$if not (defined(cpu16bitalu) or defined(cpu8bitalu))}
+
                 { removing the multiplication is only worth the
                   effort if it's not a simple shift }
                 and not(ispowerof2(tcgvecnode(n).get_mul_size,dummy))
-{$endif}
+
                 then
                 begin
                   changedforloop:=true;
@@ -813,7 +813,7 @@ unit optloop;
 
     { Estimate a per-platform register limit to prevent too much register pressure. }
     const
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
       RECORD_TEMP_LIMIT = 3;
 {$elseif defined(aarch64)}
       RECORD_TEMP_LIMIT = 15;

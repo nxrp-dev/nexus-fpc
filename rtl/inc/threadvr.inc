@@ -24,13 +24,13 @@ type
   pltvInitEntry = ^ltvInitEntry;
   ppltvInitEntry = ^pltvInitEntry;
   ltvInitEntry = {$ifndef FPC_ALIGNED_THREADVARTABLES}packed{$endif} record
-     varaddr : {$ifdef cpu16}pword{$else}pdword{$endif};
+     varaddr : pdword;
      size    : longint;
   end;
 
   TltvInitTablesTable = {$ifndef FPC_ALIGNED_THREADVARTABLES}packed{$endif} record
     count  : SizeInt;
-    tables : {$ifndef FPC_ALIGNED_THREADVARTABLES}packed{$endif} array [1..{$ifdef cpu16}16{$else}32767{$endif}] of ppltvInitEntry;
+    tables : {$ifndef FPC_ALIGNED_THREADVARTABLES}packed{$endif} array [1..32767] of ppltvInitEntry;
   end;
   PltvInitTablesTable = ^TltvInitTablesTable;
 

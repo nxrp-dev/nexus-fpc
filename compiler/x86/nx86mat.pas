@@ -255,7 +255,7 @@ interface
     procedure tx86notnode.second_boolean;
       var
          opsize : tcgsize;
-         {$if defined(cpu32bitalu) or defined(cpu16bitalu)}
+         {$if defined(cpu32bitalu)}
          hreg: tregister;
          {$endif}
       begin
@@ -285,30 +285,6 @@ interface
                      cg.a_op_ref_reg(current_asmdata.CurrAsmList,OP_OR,OS_32,left.location.reference,hreg);
                    end
                  else
-{$elseif defined(cpu16bitalu)}
-                 if is_64bit(resultdef) then
-                   begin
-                     hreg:=cg.GetIntRegister(current_asmdata.CurrAsmList,OS_16);
-                     tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,left.location.reference);
-                     cg.a_load_ref_reg(current_asmdata.CurrAsmList,OS_16,OS_16,left.location.reference,hreg);
-                     inc(left.location.reference.offset,2);
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                     cg.a_op_ref_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.reference,hreg);
-                     inc(left.location.reference.offset,2);
-                     cg.a_op_ref_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.reference,hreg);
-                     inc(left.location.reference.offset,2);
-                     cg.a_op_ref_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.reference,hreg);
-                   end
-                 else if is_32bit(resultdef) then
-                   begin
-                     hreg:=cg.GetIntRegister(current_asmdata.CurrAsmList,OS_16);
-                     tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,left.location.reference);
-                     cg.a_load_ref_reg(current_asmdata.CurrAsmList,OS_16,OS_16,left.location.reference,hreg);
-                     inc(left.location.reference.offset,2);
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                     cg.a_op_ref_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.reference,hreg);
-                   end
-                 else
 {$endif}
                    begin
                      cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
@@ -331,22 +307,6 @@ interface
                      hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
                      cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
                      emit_reg_reg(A_OR,S_L,left.location.register64.reghi,left.location.register64.reglo);
-                   end
-                 else
-{$elseif defined(cpu16bitalu)}
-                 if is_64bit(resultdef) then
-                   begin
-                     hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                     emit_reg_reg(A_OR,S_W,cg.GetNextReg(left.location.register64.reghi),left.location.register64.reghi);
-                     emit_reg_reg(A_OR,S_W,cg.GetNextReg(left.location.register64.reglo),left.location.register64.reglo);
-                     emit_reg_reg(A_OR,S_W,left.location.register64.reghi,left.location.register64.reglo);
-                   end
-                 else if is_32bit(resultdef) then
-                   begin
-                     hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                     emit_reg_reg(A_OR,S_L,cg.GetNextReg(left.location.register),left.location.register);
                    end
                  else
 {$endif}
@@ -425,7 +385,7 @@ interface
       label
         DefaultDiv;
 
-{$ifndef i8086}
+
         procedure DoBMI2ReciprocalDivision;
           var
             exp_regd: Tregister;
@@ -563,7 +523,7 @@ interface
             else
               location.register := hreg2;
           end;
-{$endif not i8086}
+
 
         procedure DoUnsignedReciprocalDivision;
           var
@@ -571,14 +531,14 @@ interface
             exp_opsize:topsize;
             DoMod: Boolean;
           begin
-{$ifndef i8086}
+
             IF (CPUX86_HAS_BMI2 in cpu_capabilities[current_settings.cputype]) then
               begin
                 { If BMI2 is available, use more efficient instructions }
                 DoBMI2ReciprocalDivision;
                 Exit;
               end;
-{$endif not i8086}
+
 
             DoMod := (nodetype = modn);
             { Extend 32-bit divides to 64-bit registers and 16-bit

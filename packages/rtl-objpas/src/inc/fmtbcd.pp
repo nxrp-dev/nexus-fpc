@@ -752,11 +752,9 @@ INTERFACE
 
   operator := ( const BCD : tBCD ) z : longword; Inline;
 
-{$if declared ( qword ) }
   operator := ( const i : qword ) z : tBCD; Inline;
 
   operator := ( const BCD : tBCD ) z : qword; Inline;
-{$endif}
 
   operator := ( const i : ShortInt ) z : tBCD; Inline;
 
@@ -770,11 +768,9 @@ INTERFACE
 
   operator := ( const BCD : tBCD ) z : LongInt; Inline;
 
-{$if declared ( int64 ) }
   operator := ( const i : int64 ) z : tBCD; Inline;
 
   operator := ( const BCD : tBCD ) z : int64; Inline;
-{$endif}
 
 {$ifndef FPUNONE}
   operator := ( const r : Single ) z : tBCD; Inline;
@@ -1016,13 +1012,7 @@ IMPLEMENTATION
      end;
 {$endif}
 
-{$if sizeof ( integer ) = 2 }
-  {$ifdef BCDgr4 }
-                                  var
-                                    myMinIntBCD : tBCD;
-  {$endif}
-{$else}
-  {$if sizeof ( integer ) = 4 }
+{$if sizeof ( integer ) = 4 }
     {$ifdef BCDgr9 }
                                   var
                                     myMinIntBCD : tBCD;
@@ -1036,7 +1026,6 @@ IMPLEMENTATION
     {$else}
       {$fatal You have an interesting integer type! Sorry, not supported}
     {$endif}
-  {$endif}
 {$endif}
 
   procedure not_implemented;
@@ -4155,7 +4144,6 @@ writeln;
       z := BCDToInteger ( BCD );
      end;
 
-{$if declared ( qword ) }
   operator := ( const i : qword ) z : tBCD; Inline;
 
     begin
@@ -4167,7 +4155,6 @@ writeln;
     begin
       z := BCDToInteger ( BCD );
      end;
-{$endif}
 
   operator := ( const i : ShortInt ) z : tBCD; Inline;
 
@@ -4205,7 +4192,6 @@ writeln;
       z := BCDToInteger ( BCD );
      end;
 
-{$if declared ( int64 ) }
   operator := ( const i : int64 ) z : tBCD; Inline;
 
     begin
@@ -4217,7 +4203,6 @@ writeln;
     begin
       z := BCDToInteger ( BCD );
      end;
-{$endif}
 
 {$ifndef FPUNONE}
   operator := ( const r : Single ) z : tBCD; Inline;
@@ -4615,15 +4600,7 @@ initialization
   myMinIntBCD.Negativ := True;
 {$endif}
 
-  {$if sizeof ( integer ) = 2 }
-    {$ifdef BCDgr4 }
-
-  myMinIntBCD.Precision := 5;
-  Move ( myMinIntBCDValue, myMinIntBCD.Fraction, SizeOf ( myMinIntBCDValue ) );
-
-    {$endif}
-  {$else}
-    {$if sizeof ( integer ) = 4 }
+  {$if sizeof ( integer ) = 4 }
       {$ifdef BCDgr9 }
 
   myMinIntBCD.Precision := 10;
@@ -4641,7 +4618,6 @@ initialization
       {$else}
         {$fatal You have an interesting integer type! Sorry, not supported}
       {$endif}
-    {$endif}
   {$endif}
 {$endif}
 

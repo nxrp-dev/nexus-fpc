@@ -196,9 +196,9 @@ unit aoptx86;
         function OptPass1MOVD(var p : tai) : boolean;
         function OptPass1Movx(var p : tai) : boolean;
         function OptPass1MOVXX(var p : tai) : boolean;
-{$ifndef i8086}
+
         function OptPass1NOT(var p : tai) : boolean;
-{$endif not i8086}
+
         function OptPass1OP(var p : tai) : boolean;
         function OptPass1LEA(var p : tai) : boolean;
         function OptPass1Sub(var p : tai) : boolean;
@@ -1536,9 +1536,7 @@ unit aoptx86;
         Result := True;
 {$else x86_64}
         Result :=
-{$ifdef i8086}
-          (current_settings.cputype >= cpu_386) and
-{$endif i8086}
+
           (
             { Always accept if optimising for size }
             (cs_opt_size in current_settings.optimizerswitches) or
@@ -1573,13 +1571,13 @@ unit aoptx86;
           begin
             CurrentReg := newreg(R_INTREGISTER, TSuperRegister(CurrentSuperReg), RegSize);
             if not AUsedRegs[R_INTREGISTER].IsUsed(CurrentReg)
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
               { If the target size is 8-bit, make sure we can actually encode it }
               and (
                 (RegSize >= R_SUBW) or { Not R_SUBL or R_SUBH }
                 (GetSupReg(CurrentReg) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX])
               )
-{$endif i386 or i8086}
+{$endif i386}
               then
               begin
                 Currentp := p;
@@ -6111,7 +6109,7 @@ unit aoptx86;
           end;
       end;
 
-{$ifndef i8086}
+
        function TX86AsmOptimizer.OptPass1NOT(var p: tai): Boolean;
          var
            hp1, p_next: tai;
@@ -6192,7 +6190,7 @@ unit aoptx86;
                  end;
              end;
          end;
-{$endif not i8086}
+
 
     function TX86AsmOptimizer.OptPass1OP(var p : tai) : boolean;
       var
@@ -12391,11 +12389,11 @@ unit aoptx86;
         case taicpu(p).opsize of
           S_BW, S_BL{$ifdef x86_64}, S_BQ{$endif x86_64}:
             begin
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
               { If the target size is 8-bit, make sure we can actually encode it }
               if not (GetSupReg(ThisReg) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX]) then
                 Exit;
-{$endif i386 or i8086}
+{$endif i386}
 
               LowerLimit := $FF;
               SignedLowerLimit := $7F;
@@ -14763,10 +14761,10 @@ unit aoptx86;
         carryadd_opcode : TAsmOp;
         symbol: TAsmSymbol;
         increg, tmpreg: TRegister;
-{$ifndef i8086}
+
         CMOVTracking: TCMOVTracking;
         hp3,hp4,hp5: tai;
-{$endif i8086}
+
         TempBool: Boolean;
 
       begin
@@ -14972,7 +14970,7 @@ unit aoptx86;
                           internalerror(2016041302);
                       end;
                     end;
-{$ifndef i8086}
+
                 end
               {
                   convert
@@ -15065,7 +15063,7 @@ unit aoptx86;
                     end;
 
                   CMOVTracking.Done;
-{$endif i8086}
+
               end;
           end;
       end;
@@ -15490,11 +15488,11 @@ unit aoptx86;
                     ((taicpu(hp1).oper[0]^.val and Limit) = taicpu(hp1).oper[0]^.val)
                   ) then
                   begin
-{$if defined(i386) or defined(i8086)}
+{$if defined(i386)}
                     { If the target size is 8-bit, make sure we can actually encode it }
                     if (NewRegSize = R_SUBL) and (taicpu(hp1).oper[0]^.typ = top_reg) and not (GetSupReg(taicpu(hp1).oper[0]^.reg) in [RS_EAX,RS_EBX,RS_ECX,RS_EDX]) then
                       Exit;
-{$endif i386 or i8086}
+{$endif i386}
 
                     DebugMsg(SPeepholeOptimization + 'MovxOp2Op 2',p);
 
@@ -15936,7 +15934,7 @@ unit aoptx86;
                           Result := True;
                         end;
                     end;
-{$ifndef i8086} { movzbl %al,%eax cannot be encoded in 16-bit mode (the machine code is equivalent to movzbw %al,%ax }
+ { movzbl %al,%eax cannot be encoded in 16-bit mode (the machine code is equivalent to movzbw %al,%ax }
                   S_BL:
                     if not IsMOVZXAcceptable then
                       begin
@@ -15968,7 +15966,7 @@ unit aoptx86;
                             Result := True;
                           end;
                       end;
-{$endif i8086}
+
                   S_WL:
                     if not IsMOVZXAcceptable then
                       begin

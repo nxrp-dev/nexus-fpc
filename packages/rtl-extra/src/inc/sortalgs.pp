@@ -437,9 +437,7 @@ end;
 
 function Random_SizeUInt(L: SizeUInt): SizeUInt;
 begin
-{$if sizeof(SizeUInt)=2}
-  Result := Random(LongInt(L));
-{$elseif sizeof(SizeUInt)=4}
+{$if sizeof(SizeUInt)=4}
   Result := Random(Int64(L));
 {$elseif sizeof(SizeUInt)=8}
   Result := Random(Int64($100000000));

@@ -17,11 +17,9 @@
  **********************************************************************}
 
 type
-{$ifdef CPU16}
-  TFilerFlagsInt = Byte;
-{$else CPU16}
+
   TFilerFlagsInt = LongInt;
-{$endif CPU16}
+
 
 var
   ClassList : TThreadlist;
@@ -1452,10 +1450,10 @@ Type
     AClass : TComponentClass;
   end;
 
-{$ifndef i8086}
+
 type
   TCodePtrList = TList;
-{$endif i8086}
+
 
 Var
   InitHandlerList : TList;

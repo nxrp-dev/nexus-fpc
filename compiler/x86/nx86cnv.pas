@@ -124,7 +124,7 @@ implementation
               begin
                 cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
 {$ifndef cpu64bitalu}
-                if left.location.size in [OS_64,OS_S64{$ifdef cpu16bitalu},OS_32,OS_S32{$endif}] then
+                if left.location.size in [OS_64,OS_S64] then
                  begin
                    hregister:=cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
                    cg.a_load_ref_reg(current_asmdata.CurrAsmList,OS_INT,OS_INT,left.location.reference,hregister);
@@ -156,19 +156,6 @@ implementation
                    cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_32,OS_32,left.location.register64.reglo,hregister);
                    cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,OS_32,left.location.register64.reghi,hregister);
                  end
-                else
-{$elseif defined(cpu16bitalu)}
-                if left.location.size in [OS_64,OS_S64] then
-                 begin
-                   hregister:=cg.getintregister(current_asmdata.CurrAsmList,OS_16);
-                   cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_16,OS_16,left.location.register64.reglo,hregister);
-                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,cg.GetNextReg(left.location.register64.reglo),hregister);
-                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.register64.reghi,hregister);
-                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,cg.GetNextReg(left.location.register64.reghi),hregister);
-                 end
-                else
-                  if left.location.size in [OS_32,OS_S32] then
-                    cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,OS_16,left.location.register,cg.GetNextReg(left.location.register))
                 else
 {$endif}
                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_OR,left.location.size,left.location.register,left.location.register);
@@ -270,11 +257,9 @@ implementation
          signtested : boolean;
          use_bt: boolean;  { true = use BT (386+), false = use TEST (286-) }
       begin
-{$ifdef i8086}
-        use_bt:=current_settings.cputype>=cpu_386;
-{$else i8086}
+
         use_bt:=true;
-{$endif i8086}
+
         if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER,LOC_REFERENCE,LOC_CREFERENCE]) then
           hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
         if int_to_real_mm_location then
@@ -358,17 +343,13 @@ implementation
                     emit_const_reg(A_BT,S_Q,63,left.location.register);
     {$elseif defined(cpu32bitalu)}
                     emit_const_reg(A_BT,S_L,31,left.location.register64.reghi);
-    {$elseif defined(cpu16bitalu)}
-                    emit_const_reg(A_BT,S_W,15,cg.GetNextReg(left.location.register64.reghi));
     {$endif}
                   end
                 else
                   begin
-    {$ifdef i8086}
-                    emit_const_reg(A_TEST,S_W,aint($8000),cg.GetNextReg(left.location.register64.reghi));
-    {$else i8086}
+
                     internalerror(2013052510);
-    {$endif i8086}
+
                   end;
                 signtested:=true;
               end
@@ -423,25 +404,13 @@ implementation
                            cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
                            emit_const_ref(A_BT,S_L,31,leftref);
                            dec(leftref.offset,4);
-           {$elseif defined(cpu16bitalu)}
-                           inc(leftref.offset,6);
-                           cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                           emit_const_ref(A_BT,S_W,15,leftref);
-                           dec(leftref.offset,6);
            {$endif}
                          end
                        else
                          begin
-           {$ifdef i8086}
-                           { reading a byte, instead of word is faster on a true }
-                           { 8088, because of the 8-bit data bus }
-                           inc(leftref.offset,7);
-                           cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                           emit_const_ref(A_TEST,S_B,aint($80),leftref);
-                           dec(leftref.offset,7);
-           {$else i8086}
+
                            internalerror(2013052511);
-           {$endif i8086}
+
                          end;
                      end;
 

@@ -57,10 +57,7 @@ interface
        PUint = cardinal;
        PInt = longint;
 {$endif cpu32bitaddr}
-{$ifdef cpu16bitaddr}
-       PUint = word;
-       PInt = Smallint;
-{$endif cpu16bitaddr}
+
 
        { Natural integer register type and size for the target machine }
 {$ifdef cpu64bitalu}
@@ -77,44 +74,24 @@ interface
      Const
        AIntBits = 32;
 {$endif cpu32bitalu}
-{$ifdef cpu16bitalu}
-       AWord = Word;
-       AInt = Smallint;
 
-     Const
-       AIntBits = 16;
-{$endif cpu16bitalu}
-{$ifdef cpu8bitalu}
-       AWord = Byte;
-       AInt = Shortint;
 
-     Const
-       AIntBits = 8;
-{$endif cpu8bitalu}
 
      { Maximum possible size of locals space (stack frame) }
      Const
-{$if defined(cpu16bitaddr)}
-       MaxLocalsSize = High(PUint);
-{$else}
+
        MaxLocalsSize = High(longint) - 15;
-{$endif}
+
 
      Type
        PAWord = ^AWord;
        PAInt = ^AInt;
 
        { target cpu specific type used to store data sizes }
-{$ifdef cpu16bitaddr}
-       { on small CPUs such as i8086, we use LongInt to support data structures
-         larger than 32767 bytes and up to 65535 bytes in size. Since asizeint
-         must be signed, we use LongInt/LongWord. }
-       ASizeInt = LongInt;
-       ASizeUInt = LongWord;
-{$else cpu16bitaddr}
+
        ASizeInt = PInt;
        ASizeUInt = PUInt;
-{$endif cpu16bitaddr}
+
 
        { type used for handling constants etc. in the code generator }
        TCGInt = Int64;
@@ -124,11 +101,9 @@ interface
          pointer(-1) will result in a pointer with the value
          $fffffffffffffff on a 32bit machine if the compiler uses
          int64 constants internally (JM) }
-{$ifdef i8086}
-       TConstPtrUInt = LongWord;  { 32-bit for far pointers support }
-{$else i8086}
+
        TConstPtrUInt = PUint;
-{$endif i8086}
+
 
        { Use a variant record to be sure that the array if aligned correctly }
        tcompdoublerec=record
@@ -712,9 +687,7 @@ interface
          );
 
        { Default calling convention }
-{$if defined(i8086)}
-       pocall_default = pocall_pascal;
-{$elseif defined(i386) or defined(x86_64)}
+{$if defined(i386) or defined(x86_64)}
        pocall_default = pocall_register;
 {$elseif defined(m68k)}
        pocall_default = pocall_register;

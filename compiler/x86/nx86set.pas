@@ -162,11 +162,9 @@ implementation
         reference_reset_symbol(href,table,0,sizeof(pint),[]);
         href.offset:=(-aint(min_))*sizeof(aint);
         href.index:=indexreg;
-{$ifdef i8086}
-        cg.a_op_const_reg(current_asmdata.CurrAsmList,OP_SHL,OS_INT,1,indexreg);
-{$else i8086}
+
         href.scalefactor:=sizeof(aint);
-{$endif i8086}
+
 
         if (not (target_info.system in [system_i386_darwin,system_i386_iphonesim])) and
            (cs_create_pic in current_settings.moduleswitches) then
@@ -313,11 +311,9 @@ implementation
                 cond_le:=F_BE;
              end;
            { do we need to generate cmps? }
-{$ifdef i8086}
-           if (with_sign and (min_label<0)) or (opcgsize in [OS_32, OS_S32]) then
-{$else i8086}
+
            if (with_sign and (min_label<0)) then
-{$endif i8086}
+
              genlinearcmplist(hp)
            else
              begin
@@ -425,7 +421,7 @@ implementation
            start,stop : byte;    {Start/stop when range; Stop=element when an element.}
          end;
        var
-         hreg,{$ifndef i8086} hreg2, {$endif}
+         hreg, hreg2,
          pleftreg   : tregister;
          opsize     : tcgsize;
          opdef      : torddef;
@@ -441,9 +437,7 @@ implementation
 {$ifdef CORRECT_SET_IN_FPC}
          AM         : tasmop;
 {$endif CORRECT_SET_IN_FPC}
-{$ifdef i8086}
-         extra_offset_reg: TRegister;
-{$endif i8086}
+
 
          function analizeset(Aset:pconstset;is_small:boolean):boolean;
            var
@@ -504,24 +498,7 @@ implementation
              analizeset:=true;
            end;
 
-{$ifdef i8086}
-         procedure add_extra_offset(offset_reg:TRegister;var ref:treference);
-           var
-             reg: TRegister;
-           begin
-             if ref.index=NR_NO then
-               ref.index:=offset_reg
-             else if ref.base=NR_NO then
-               ref.base:=offset_reg
-             else
-               begin
-                 reg:=cg.getaddressregister(current_asmdata.CurrAsmList);
-                 cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_ADDR,OS_ADDR,ref.index,reg);
-                 cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_ADD,OS_ADDR,offset_reg,reg);
-                 ref.index:=reg;
-               end;
-           end;
-{$endif i8086}
+
 
        begin
          ranges:=false;
@@ -535,8 +512,8 @@ implementation
            to 32 bits, the left side may also not contain higher values or be signed !! }
          use_small:=is_smallset(right.resultdef) and
                     not is_signed(left.resultdef) and
-                    ((left.resultdef.typ=orddef) and (torddef(left.resultdef).high.svalue<{$ifdef i8086}16{$else}32{$endif}) or
-                     (left.resultdef.typ=enumdef) and (tenumdef(left.resultdef).max<{$ifdef i8086}16{$else}32{$endif}));
+                    ((left.resultdef.typ=orddef) and (torddef(left.resultdef).high.svalue<32) or
+                     (left.resultdef.typ=enumdef) and (tenumdef(left.resultdef).max<32));
 
          { Can we generate jumps? Possible for all types of sets }
          genjumps:=(right.nodetype=setconstn) and
@@ -562,11 +539,9 @@ implementation
           swapleftright;
 
          orgopsize := def_cgsize(left.resultdef);
-{$ifdef i8086}
-         opsize := OS_16;
-{$else i8086}
+
          opsize := OS_32;
-{$endif i8086}
+
          if is_signed(left.resultdef) then
            opsize := tcgsize(ord(opsize)+(ord(OS_S8)-ord(OS_8)));
          opdef:=cgsize_orddef(opsize);
@@ -692,39 +667,7 @@ implementation
                 end
                else
                 begin
-{$ifdef i8086}
-                  register_maybe_adjust_setbase(current_asmdata.CurrAsmList,left.resultdef,left.location,setbase);
-                  cg.getcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                  if TCGSize2Size[left.location.size] > 2 then
-                    left.location.size := OS_16;
-                  cg.a_load_loc_reg(current_asmdata.CurrAsmList,OS_16,left.location,NR_CX);
 
-                  if (tcgsize2size[right.location.size] < 2) or
-                     (right.location.loc = LOC_CONSTANT) then
-                    hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,u16inttype,true);
-
-                  hreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_16);
-                  emit_const_reg(A_MOV,S_W,1,hreg);
-                  emit_reg_reg(A_SHL,S_W,NR_CL,hreg);
-
-                  cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                  case right.location.loc of
-                    LOC_REGISTER,
-                    LOC_CREGISTER :
-                      begin
-                        emit_reg_reg(A_TEST,S_W,hreg,right.location.register);
-                      end;
-                     LOC_CREFERENCE,
-                     LOC_REFERENCE :
-                       begin
-                         emit_reg_ref(A_TEST,S_W,hreg,right.location.reference);
-                       end;
-                     else
-                       internalerror(2002032210);
-                  end;
-                  cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                  location.resflags:=F_NE;
-{$else i8086}
                   hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,u32inttype,true);
                   register_maybe_adjust_setbase(current_asmdata.CurrAsmList,u32inttype,left.location,setbase);
 
@@ -752,47 +695,14 @@ implementation
                        internalerror(2002032210);
                   end;
                   location.resflags:=F_C;
-{$endif i8086}
+
                 end;
              end
             else
              begin
                if right.location.loc=LOC_CONSTANT then
                 begin
-{$ifdef i8086}
-                  location.resflags:=F_NE;
-                  current_asmdata.getjumplabel(l);
-                  current_asmdata.getjumplabel(l2);
 
-                  { load constants to a register }
-                  if (left.location.loc=LOC_CONSTANT) or
-                     (setbase<>0) then
-                    begin
-                      hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,true);
-                      register_maybe_adjust_setbase(current_asmdata.CurrAsmList,opdef,left.location,setbase);
-                    end;
-
-                  cg.getcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                  if TCGSize2Size[left.location.size] > 2 then
-                    left.location.size := OS_16;
-                  cg.a_load_loc_reg(current_asmdata.CurrAsmList,OS_16,left.location,NR_CX);
-                  cg.a_cmp_const_reg_label(current_asmdata.CurrAsmList,opsize,OC_BE,15,NR_CX,l);
-                  cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                  { set the zero flag }
-                  current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(A_TEST,S_B,0,NR_AL));
-                  cg.a_jmp_always(current_asmdata.CurrAsmList,l2);
-                  cg.a_reg_dealloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-
-                  hreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_16);
-                  cg.a_label(current_asmdata.CurrAsmList,l);
-                  emit_const_reg(A_MOV,S_W,1,hreg);
-                  emit_reg_reg(A_SHL,S_W,NR_CL,hreg);
-                  cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                  cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                  emit_const_reg(A_TEST,S_W,right.location.value,hreg);
-
-                  cg.a_label(current_asmdata.CurrAsmList,l2);
-{$else i8086}
                   location.resflags:=F_C;
                   current_asmdata.getjumplabel(l);
                   current_asmdata.getjumplabel(l2);
@@ -842,7 +752,7 @@ implementation
                        end;
                   end;
                   cg.a_label(current_asmdata.CurrAsmList,l2);
-{$endif i8086}
+
                 end { of right.location.loc=LOC_CONSTANT }
                { do search in a normal set which could have >32 elementsm
                  but also used if the left side contains values > 32 or < 0 }
@@ -871,106 +781,7 @@ implementation
                 end
                else
                 begin
-{$ifdef i8086}
-                  hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,false);
-                  register_maybe_adjust_setbase(current_asmdata.CurrAsmList,opdef,left.location,setbase);
 
-                  if TCGSize2Size[left.location.size] > 2 then
-                    left.location.size := OS_16;
-
-                  if not use_small then
-                    begin
-                      extra_offset_reg:=cg.getintregister(current_asmdata.CurrAsmList,OS_16);
-                      cg.a_load_loc_reg(current_asmdata.CurrAsmList,OS_16,left.location,extra_offset_reg);
-                      cg.a_op_const_reg(current_asmdata.CurrAsmList,OP_SHR,OS_16,4,extra_offset_reg);
-                      cg.a_op_const_reg(current_asmdata.CurrAsmList,OP_SHL,OS_16,1,extra_offset_reg);
-                    end
-                  else
-                    extra_offset_reg:=NR_NO;
-
-                  cg.getcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                  cg.a_load_loc_reg(current_asmdata.CurrAsmList,OS_16,left.location,NR_CX);
-                  if not use_small then
-                    current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(A_AND,S_B,15,NR_CL));
-
-                  pleftreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_16);
-
-                  if (right.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
-                    hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,opdef,true);
-
-                  if (opsize >= OS_S8) or { = if signed }
-                     ((left.resultdef.typ=orddef) and
-                      ((torddef(left.resultdef).low < int64(tsetdef(right.resultdef).setbase)) or
-                       (torddef(left.resultdef).high > int64(tsetdef(right.resultdef).setmax)))) or
-                     ((left.resultdef.typ=enumdef) and
-                      ((tenumdef(left.resultdef).min < aint(tsetdef(right.resultdef).setbase)) or
-                       (tenumdef(left.resultdef).max > aint(tsetdef(right.resultdef).setmax)))) then
-                   begin
-
-                    { we have to check if the value is < 0 or > setmax }
-
-                    current_asmdata.getjumplabel(l);
-                    current_asmdata.getjumplabel(l2);
-
-                    { BE will be false for negative values }
-                    cg.a_cmp_const_reg_label(current_asmdata.CurrAsmList,opsize,OC_BE,tsetdef(right.resultdef).setmax-tsetdef(right.resultdef).setbase,pleftreg,l);
-                    { set the zero flag }
-                    cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                    current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(A_TEST,S_B,0,NR_AL));
-                    cg.a_jmp_always(current_asmdata.CurrAsmList,l2);
-
-                    cg.a_label(current_asmdata.CurrAsmList,l);
-                    cg.a_reg_dealloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-
-                    emit_const_reg(A_MOV,S_W,1,pleftreg);
-                    emit_reg_reg(A_SHL,S_W,NR_CL,pleftreg);
-                    cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                    case right.location.loc of
-                      LOC_REGISTER, LOC_CREGISTER :
-                        begin
-                          cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                          emit_reg_reg(A_TEST,S_W,pleftreg,right.location.register);
-                        end;
-                      LOC_CREFERENCE, LOC_REFERENCE :
-                        begin
-                          if not use_small then
-                            add_extra_offset(extra_offset_reg,right.location.reference);
-                          cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                          emit_reg_ref(A_TEST,S_W,pleftreg,right.location.reference);
-                        end;
-                    else
-                      internalerror(2007020301);
-                    end;
-
-                    cg.a_label(current_asmdata.CurrAsmList,l2);
-
-                    location.resflags:=F_NE;
-
-                   end
-                  else
-                   begin
-                      emit_const_reg(A_MOV,S_W,1,pleftreg);
-                      emit_reg_reg(A_SHL,S_W,NR_CL,pleftreg);
-                      cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_CX);
-                      case right.location.loc of
-                        LOC_REGISTER, LOC_CREGISTER :
-                          begin
-                            cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                            emit_reg_reg(A_TEST,S_W,pleftreg,right.location.register);
-                          end;
-                        LOC_CREFERENCE, LOC_REFERENCE :
-                          begin
-                            if not use_small then
-                              add_extra_offset(extra_offset_reg,right.location.reference);
-                            cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                            emit_reg_ref(A_TEST,S_W,pleftreg,right.location.reference);
-                          end;
-                      else
-                        internalerror(2007020302);
-                      end;
-                      location.resflags:=F_NE;
-                   end;
-{$else i8086}
                   hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,false);
                   register_maybe_adjust_setbase(current_asmdata.CurrAsmList,opdef,left.location,setbase);
 
@@ -1030,7 +841,7 @@ implementation
                       end;
                       location.resflags:=F_C;
                     end;
-{$endif i8086}
+
                 end;
              end;
           end;

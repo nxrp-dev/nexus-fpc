@@ -52,7 +52,7 @@ var
   AllowReuseOfLineInfoData: Boolean = True;
 
 // While the cache can scale down arbitrarily, e.g. down to 8 records, its mere code size is nontrivial (3.3 Kb on x64), so just disable for small bitnesses.
-{$if not defined(cpuint8) and not defined(cpuint16)}
+
 {$define has_LineInfoCache}
 type
   LineInfoCache = record
@@ -176,7 +176,7 @@ type
     procedure Dump(var f: text);
   {$endif}
   end;
-{$endif enable LineInfoCache}
+
 
 
 implementation
@@ -208,11 +208,9 @@ uses
 { some type definitions }
 type
   Bool8 = ByteBool;
-{$ifdef CPUI8086}
-  TOffset = Word;
-{$else CPUI8086}
+
   TOffset = PtrUInt;
-{$endif CPUI8086}
+
   TSegment = Word;
 
 const
@@ -265,11 +263,7 @@ const
   DW_LNE_END_SEQUENCE = 1;
   DW_LNE_SET_ADDRESS = 2;
   DW_LNE_DEFINE_FILE = 3;
-{$ifdef CPUI8086}
-  { non-standard Open Watcom extension; might conflict with future versions of
-    the DWARF standard }
-  DW_LNE_SET_SEGMENT = 4;
-{$endif CPUI8086}
+
   { Standard opcodes }
   DW_LNS_COPY = 1;
   DW_LNS_ADVANCE_PC = 2;
@@ -433,9 +427,9 @@ type
     debug_info_offset : QWord;
     address_size : Byte;
     segment_size : Byte;
-{$ifndef CPUI8086}
+
     padding : DWord;
-{$endif CPUI8086}
+
   end;
 
   TDebugArangesHeader32= packed record
@@ -444,9 +438,9 @@ type
     debug_info_offset : DWord;
     address_size : Byte;
     segment_size : Byte;
-{$ifndef CPUI8086}
+
     padding : DWord;
-{$endif CPUI8086}
+
   end;
 
 {---------------------------------------------------------------------------
@@ -454,36 +448,19 @@ type
 ---------------------------------------------------------------------------}
 
 type
-{$ifdef cpui8086}
-  TFilePos = LongInt;
-{$else cpui8086}
+
   TFilePos = SizeInt;
-{$endif cpui8086}
+
 
 var
   lastfilename: string;   { store last processed file }
-  lastbaseaddr: {$ifdef cpui8086}farpointer{$else}pointer{$endif};  { store last base address }
+  lastbaseaddr: pointer;  { store last base address }
   lastopendwarf: Boolean; { store last result of processing a file }
 
-{$ifdef cpui8086}
-function tofar(fp: FarPointer): FarPointer; inline;
-begin
-  tofar:=fp;
-end;
 
-function tofar(cp: NearCsPointer): FarPointer; inline;
-begin
-  tofar:=Ptr(CSeg,Word(cp));
-end;
-
-function tofar(cp: NearPointer): FarPointer; inline;
-begin
-  tofar:=Ptr(DSeg,Word(cp));
-end;
-{$else cpui8086}
 type
   tofar=Pointer;
-{$endif cpui8086}
+
 
 procedure CloseDwarf(needLock: boolean);
 begin
@@ -501,7 +478,7 @@ end;
 function OpenDwarf(addr : codepointer) : boolean;
 var
   oldprocessaddress: TExeProcessAddress;
-  baseaddr : {$ifdef cpui8086}farpointer{$else}pointer{$endif};
+  baseaddr : pointer;
   filename,dbgfn : ansistring;
 begin
   // False by default
@@ -594,9 +571,7 @@ type
     function ReadLEB128 : Int64;
     procedure SkipLEB128s(count : longint);
     function ReadAddress(addr_size: smallint) : PtrUInt;
-  {$ifdef CPUI8086}
-    function ReadSegment() : Word;
-  {$endif CPUI8086}
+
     function ReadString(sp: PShortstring) : SizeInt;
     function ReadUHalf : Word;
   private
@@ -741,20 +716,11 @@ end;
 { Reads an address from the current input stream }
 function TEReader.ReadAddress(addr_size: smallint) : PtrUInt;
 begin
-{$ifdef CPUI8086}
-  ReadAddress := 0;
-  if (addr_size = 4) or (addr_size = 2) then
-{$endif}
+
     ReadNext(ReadAddress, sizeof(ReadAddress));
 end;
 
-{$ifdef CPUI8086}
-{ Reads a segment from the current input stream }
-function TEReader.ReadSegment() : Word;
-begin
-  ReadNext(ReadSegment, sizeof(ReadSegment));
-end;
-{$endif CPUI8086}
+
 
 
 { Reads a zero-terminated string from the current input stream. If the
@@ -1119,12 +1085,7 @@ begin
             state.address := er.ReadAddress(extended_opcode_length-1);
             DEBUG_WRITELN('DW_LNE_SET_ADDRESS (', hexstr(state.address, sizeof(state.address)*2), ')');
           end;
-{$ifdef CPUI8086}
-          DW_LNE_SET_SEGMENT : begin
-            state.segment := er.ReadSegment();
-            DEBUG_WRITELN('DW_LNE_SET_SEGMENT (', hexstr(state.segment, sizeof(state.segment)*2), ')');
-          end;
-{$endif CPUI8086}
+
           DW_LNE_DEFINE_FILE : begin
             er.ReadString({$ifdef DEBUG_DWARF_PARSER}@s{$else}nil{$endif});
             er.SkipLEB128s(3);
@@ -1211,9 +1172,7 @@ begin
 
     if (state.append_row) then begin
       DEBUG_WRITELN('Current state : address = ', hexstr(state.address, sizeof(state.address) * 2),
-{$ifdef CPUI8086}
-      DEBUG_COMMENT ' segment = ', hexstr(state.segment, sizeof(state.segment) * 2),
-{$endif CPUI8086}
+
       DEBUG_COMMENT ' file_id = ', state.file_id, ' line = ', state.line, ' column = ', state.column,
       DEBUG_COMMENT  ' is_stmt = ', state.is_stmt, ' basic_block = ', state.basic_block,
       DEBUG_COMMENT  ' end_sequence = ', state.end_sequence, ' prolouge_end = ', state.prolouge_end,
@@ -1353,22 +1312,19 @@ procedure ReadAbbrevTable(var er: TEReader; var abbrevs: TAbbrevs);
 
 function ParseCompilationUnitForDebugInfoOffset(var er: TEReader; const addr : TOffset; const segment : TSegment; const file_offset : QWord;
   var debug_info_offset : QWord; var found : Boolean) : QWord;
-{$ifndef CPUI8086}
+
 const
   arange_segment = 0;
-{$endif CPUI8086}
+
 var
   { we need both headers on the stack, although we only use the 64 bit one internally }
   header64 : TDebugArangesHeader64;
   header32 : TDebugArangesHeader32;
   temp_length : DWord;
   unit_length : QWord;
-{$ifdef CPUI8086}
-  arange_start, arange_size: DWord;
-  arange_segment: Word;
-{$else CPUI8086}
+
   arange_start, arange_size: PtrUInt;
-{$endif CPUI8086}
+
 begin
   found := false;
 
@@ -1406,9 +1362,7 @@ begin
   DEBUG_WRITELN('address_size: ', header64.address_size);
   DEBUG_WRITELN('segment_size: ', header64.segment_size);
   arange_start:=er.ReadAddress(header64.address_size);
-{$ifdef CPUI8086}
-  arange_segment:=er.ReadSegment();
-{$endif CPUI8086}
+
   arange_size:=er.ReadAddress(header64.address_size);
 
   while not((arange_start=0) and (arange_segment=0) and (arange_size=0)) and (not found) do
@@ -1421,9 +1375,7 @@ begin
         end;
 
       arange_start:=er.ReadAddress(header64.address_size);
-{$ifdef CPUI8086}
-      arange_segment:=er.ReadSegment();
-{$endif CPUI8086}
+
       arange_size:=er.ReadAddress(header64.address_size);
     end;
 end;
@@ -1707,14 +1659,7 @@ begin
     exit;
   end;
 
-{$ifdef CPUI8086}
-  {$if defined(FPC_MM_MEDIUM) or defined(FPC_MM_LARGE) or defined(FPC_MM_HUGE)}
-    segment := (addr shr 16) - e.processsegment;
-    addr := Word(addr);
-  {$else}
-    segment := CSeg - e.processsegment;
-  {$endif}
-{$endif CPUI8086}
+
 
   addr := addr - e.processaddress;
 
