@@ -53,12 +53,6 @@
 {$endif}
 {$endif}
 
-{$if (defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPU_NONE)) and not declared(TNativeFPUControlWord)}
-  type
-    TNativeFPUControlWord = record
-    end;
-{$endif}
-
     function GetNativeFPUControlWord: TNativeFPUControlWord; {$if (defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPUNONE)) and defined(SYSTEMINLINE)}inline;{$endif}
     procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord); {$if (defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPUNONE)) and defined(SYSTEMINLINE)}inline;{$endif}
 

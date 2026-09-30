@@ -1776,25 +1776,22 @@ RawThunkEnd:
 end;
 {$endif}
 
-{$if declared(RawThunk)}
 const
   RawThunkEndPtr: Pointer = @RawThunkEnd;
 
 type
-{$if declared(TRawThunkBytesToPop)}
+{$ifdef cpui386}
   PRawThunkBytesToPop = ^TRawThunkBytesToPop;
 {$endif}
   PRawThunkContext = ^TRawThunkContext;
   PRawThunkProc = ^TRawThunkProc;
-{$endif}
 
 { Delphi has these as part of TRawVirtualClass.TVTable; until we have that we
   simply leave that here in the implementation }
 function AllocateRawThunk(aProc: CodePointer; aContext: Pointer; aBytesToPop: SizeInt): CodePointer;
-{$if declared(RawThunk)}
 var
   size, i: SizeInt;
-{$if declared(TRawThunkBytesToPop)}
+{$ifdef cpui386}
   btp: PRawThunkBytesToPop;
   btpdone: Boolean;
 {$endif}
@@ -1802,24 +1799,19 @@ var
   contextdone: Boolean;
   proc: PRawThunkProc;
   procdone: Boolean;
-{$endif}
 begin
-{$if not declared(RawThunk)}
-  { platform dose not have thunk support... :/ }
-  Result := Nil;
-{$else}
   Size := PtrUInt(RawThunkEndPtr) - PtrUInt(@RawThunk) + 1;
   Result := AllocateMemory(size);
   Move(Pointer(@RawThunk)^, Result^, size);
 
-{$if declared(TRawThunkBytesToPop)}
+{$ifdef cpui386}
   btpdone := False;
 {$endif}
   contextdone := False;
   procdone := False;
 
   for i := 0 to Size - 1 do begin
-{$if declared(TRawThunkBytesToPop)}
+{$ifdef cpui386}
     if not btpdone and (i <= Size - SizeOf(TRawThunkBytesToPop)) then begin
       btp := PRawThunkBytesToPop(PByte(Result) + i);
       if btp^ = TRawThunkBytesToPop(RawThunkPlaceholderBytesToPop) then begin
@@ -1845,7 +1837,7 @@ begin
   end;
 
   if not contextdone or not procdone
-{$if declared(TRawThunkBytesToPop)}
+{$ifdef cpui386}
       or not btpdone
 {$endif}
       then begin
@@ -1853,14 +1845,11 @@ begin
     Result := Nil;
   end else
     ProtectMemory(Result, Size, True);
-{$endif}
 end;
 
 procedure FreeRawThunk(aThunk: CodePointer);
 begin
-{$if declared(RawThunk)}
   FreeMemory(aThunk, PtrUInt(RawThunkEndPtr) - PtrUInt(@RawThunk));
-{$endif}
 end;
 
 {$ENDIF use_thunk_class}

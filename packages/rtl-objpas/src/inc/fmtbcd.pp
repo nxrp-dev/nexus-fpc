@@ -1012,21 +1012,8 @@ IMPLEMENTATION
      end;
 {$endif}
 
-{$if sizeof ( integer ) = 4 }
-    {$ifdef BCDgr9 }
                                   var
                                     myMinIntBCD : tBCD;
-    {$endif}
-  {$else}
-    {$if sizeof ( integer ) = 8 }
-      {$ifdef BCDgr18 }
-                                  var
-                                    myMinIntBCD : tBCD;
-      {$endif}
-    {$else}
-      {$fatal You have an interesting integer type! Sorry, not supported}
-    {$endif}
-{$endif}
 
   procedure not_implemented;
 
@@ -1625,11 +1612,7 @@ IMPLEMENTATION
           _THEN result := OneBCD;
         _WHEN aValue = low ( myInttype )
           _THEN
-{$if declared ( myMinIntBCD ) }
             result := myMinIntBCD;
-{$else}
-            RAISE eBCDOverflowException.create ( 'in IntegerToBCD' );
-{$endif}
         _WHENOTHER
           bh := null_.bh;
           WITH bh do
@@ -3181,12 +3164,8 @@ writeln ( '> ', i4, ' ', bh.Singles[i4], ' ', Add );
 
       if IntIn = low ( myInttype )
         then begin
-{$if declared ( myMinIntBCD ) }
           BCDAdd ( BCDIn, myMinIntBCD, BCDout );
           EXIT;
-{$else}
-          RAISE eBCDOverflowException.create ( 'in BCDAdd' );
-{$endif}
          end;
 
       if IsBCDNegative ( BCDIn )
@@ -3259,12 +3238,8 @@ writeln ( '> ', i4, ' ', bh.Singles[i4], ' ', Add );
 
       if IntIn = low ( myInttype )
         then begin
-{$if declared ( myMinIntBCD ) }
           BCDSubtract ( BCDIn, myMinIntBCD, BCDout );
           EXIT;
-{$else}
-          RAISE eBCDOverflowException.create ( 'in BCDSubtract' );
-{$endif}
          end;
 
       if IsBCDNegative ( BCDIn )
@@ -3541,12 +3516,8 @@ write(direct);dumpbcd(bcdin);write('[',intin,']');
 
       if IntIn = low ( myInttype )
         then begin
-{$if declared ( myMinIntBCD ) }
           BCDMultiply ( BCDIn, myMinIntBCD, BCDout );
           EXIT;
-{$else}
-          RAISE eBCDOverflowException.create ( 'in BCDmultiply' );
-{$endif}
          end;
 
       if Abs ( IntIn ) > low ( bhrr.Singles[0] ) DIV 10
@@ -4549,7 +4520,6 @@ begin
     inherited;
 end;
 
-{$if declared ( myMinIntBCD ) }
 (*
   {$if sizeof ( integer ) = 2 }
     {$ifdef BCDgr4 }
@@ -4582,7 +4552,6 @@ end;
     {$endif}
   {$endif}
 *)
-{$endif}
 
 initialization
   FillChar ( null_, SizeOf ( null_ ), #0 );
@@ -4590,8 +4559,6 @@ initialization
   FillChar ( OneBCD_, SizeOf ( OneBCD_ ), #0 );
   OneBCD_.Precision := 1;
   OneBCD_.Fraction[low ( OneBCD_.Fraction )] := $10;
-
-{$if declared ( myMinIntBCD ) }
 
   FillChar ( myMinIntBCD, SizeOf ( myMinIntBCD ), #0 );
 {$ifndef bigger_BCD}
@@ -4619,7 +4586,6 @@ initialization
         {$fatal You have an interesting integer type! Sorry, not supported}
       {$endif}
   {$endif}
-{$endif}
 
   FMTBcdFactory:=TFMTBcdFactory.create;
 finalization

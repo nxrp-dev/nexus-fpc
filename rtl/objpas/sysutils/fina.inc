@@ -313,7 +313,8 @@ begin
 end;
 
 
-{$if not declared(MaxDirs)}
+{$ifndef FPC_SYSUTILS_MAXDIRS_DECLARED}
+{$define FPC_SYSUTILS_MAXDIRS_DECLARED}
 Const
   MaxDirs = 129;
 {$endif}

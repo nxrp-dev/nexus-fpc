@@ -166,11 +166,6 @@ uses
   dbconst, sysutils, dateutils, FmtBCD;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$IF NOT DECLARED(JulianEpoch)} // sysutils/datih.inc
-const
-  JulianEpoch = TDateTime(-2415018.5); // "julian day 0" is January 1, 4713 BC 12:00AM
-{$ENDIF}
-
 type
 
  TStorageType = (stNone,stInteger,stFloat,stText,stBlob,stNull);

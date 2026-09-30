@@ -40,9 +40,7 @@ type
 {$endif}
 
 const
-{$IF NOT DECLARED(NilHandle)}
   NilHandle = TFPResourceHMODULE(0);
-{$ENDIF}
 { Maximum TList size }
 
 
