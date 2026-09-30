@@ -1193,9 +1193,7 @@ interface
        bool16type,
        bool32type,
        bool64type,                { implement me }
-{$ifdef llvm}
-       llvmbool1type,             { LLVM i1 type }
-{$endif llvm}
+
        u8inttype,                 { 8-Bit unsigned integer }
        s8inttype,                 { 8-Bit signed integer }
        u16inttype,                { 16-Bit unsigned integer }
@@ -1293,11 +1291,7 @@ interface
        objc_fastenumeration      : tobjectdef;
        objc_fastenumerationstate : trecorddef;
 
-{$ifdef llvm}
-       { llvm types }
-       { a unique def to identify any kind of metadata }
-       llvm_metadatatype         : tdef;
-{$endif llvm}
+
 
        { Java base types }
        { java.lang.Object }
@@ -9719,9 +9713,7 @@ implementation
        bool16type:=nil;
        bool32type:=nil;
        bool64type:=nil;
-{$ifdef llvm}
-       llvmbool1type:=nil;             { LLVM i1 type }
-{$endif llvm}
+
        u8inttype:=nil;                 { 8-Bit unsigned integer }
        s8inttype:=nil;                 { 8-Bit signed integer }
        u16inttype:=nil;                { 16-Bit unsigned integer }
@@ -9802,11 +9794,7 @@ implementation
        objc_fastenumeration:=nil;
        objc_fastenumerationstate:=nil;
 
-{$ifdef llvm}
-       { llvm types }
-       { a unique def to identify any kind of metadata }
-       llvm_metadatatype:=nil;
-{$endif llvm}
+
 
        { Java base types }
        java_jlobject:=nil;

@@ -786,7 +786,7 @@ Implementation
 {$ifdef hasunix}
         DoPipe:=(cs_asm_pipe in current_settings.globalswitches) and
                 (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * current_settings.globalswitches) = []) and
-                ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_llvm,as_clang_llvm_darwin,as_clang_asdarwin]));
+                ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin]));
 {$else hasunix}
         DoPipe:=false;
 {$endif}
@@ -1027,7 +1027,7 @@ Implementation
          begin
 {$ifdef hasunix}
           if DoPipe then
-            if not(asminfo^.id in [as_clang_gas,as_clang_asdarwin,as_clang_llvm,as_clang_llvm_darwin]) then
+            if not(asminfo^.id in [as_clang_gas,as_clang_asdarwin]) then
               Replace(result,'$ASM','')
             else
               Replace(result,'$ASM','-')

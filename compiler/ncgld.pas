@@ -949,7 +949,7 @@ implementation
                     LOC_MMREGISTER,
                     LOC_CMMREGISTER:
                       begin
-{$if defined(x86) and not defined(llvm)}
+{$ifdef x86}
                         if (right.resultdef.typ=floatdef) and
                            not use_vectorfpu(right.resultdef) then
                           begin
@@ -1054,7 +1054,7 @@ implementation
                   { we can't do direct moves between fpu and mm registers }
                   if left.location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER] then
                     begin
-{$if defined(x86) and not defined(llvm)}
+{$ifdef x86}
                       if not use_vectorfpu(right.resultdef) then
                         begin
                           { perform size conversion if needed (the mm-code cannot convert an   }

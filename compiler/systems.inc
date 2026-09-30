@@ -117,9 +117,7 @@
              ,as_x86_64_nasmelf
              ,as_x86_64_nasmdarwin
              ,as_clang_asdarwin        { machine code assembler in Darwin as style assembled by clang }
-             ,as_clang_llvm
              ,as_clang_gas             { machine code assembler in gas style assembled by clang }
-             ,as_clang_llvm_darwin
              ,as_win64_gas
        );
 
@@ -154,7 +152,7 @@
 
        tdbg = (dbg_none
             ,dbg_stabs,dbg_stabx,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
-            ,dbg_codeview,dbg_llvm
+            ,dbg_codeview
        );
 
        tscripttype = (script_none
@@ -198,8 +196,6 @@
        tcgbackend = (
            { default FPC code generator }
              cg_fpc
-           { LLVM code generator }
-           , cg_llvm
        );
 
      const

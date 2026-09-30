@@ -128,9 +128,7 @@ Type
 {$if defined(XTENSA)}
     function ParseVersionStr(out ver: longint; const compvarname, value: string): boolean;
 {$endif}
-{$ifdef llvm}
-    procedure LLVMEnableSanitizers(sanitizers: TCmdStr);
-{$endif llvm}
+
     procedure VerifyTargetProcessor;
   end;
 
@@ -152,10 +150,7 @@ uses
   comphook,
   symtable,scanner,rabase,
   symconst,
-{$ifdef llvm}
-  { override supported optimizer transformations at the compiler level }
-  llvminfo,
-{$endif llvm}
+
   dirparse,
   pkgutil;
 
@@ -284,7 +279,6 @@ const
   FeatureListPlaceholder = '$FEATURELIST';
   ModeSwitchListPlaceholder = '$MODESWITCHES';
   CodeGenerationBackendPlaceholder = '$CODEGENERATIONBACKEND';
-  LLVMVersionPlaceholder = '$LLVMVERSIONS';
 
   procedure SplitLine (var OrigString: TCmdStr; const Placeholder: TCmdStr;
                                                  out RemainderString: TCmdStr);
@@ -783,50 +777,6 @@ const
       WriteLn(xmloutput,'    <codegeneratorbackend>',cgbackend2str[cgbackend],'</codegeneratorbackend>');
     end;
 
-  procedure ListLLVMVersions (OrigString: TCmdStr);
-{$ifdef LLVM}
-    var
-      llvmversion : tllvmversion;
-{$endif LLVM}
-    begin
-{$ifdef LLVM}
-      SplitLine (OrigString, LLVMVersionPlaceholder, HS3);
-      for llvmversion:=low(llvmversion) to high(llvmversion) do
-       begin
-        hs1:=llvmversionstr[llvmversion];
-        if hs1<>'' then
-         begin
-          if OrigString = '' then
-           Comment (V_Normal, hs1)
-          else
-           begin
-            hs:=OrigString;
-            Replace(hs,LLVMVersionPlaceholder,hs1);
-            Comment(V_Normal,hs);
-           end;
-         end;
-       end;
-{$else LLVM}
-      Comment (V_Normal, '')
-{$endif LLVM}
-    end;
-
-  procedure ListLLVMVersionsXML;
-{$ifdef LLVM}
-    var
-      llvmversion : tllvmversion;
-{$endif LLVM}
-    begin
-{$ifdef LLVM}
-      WriteLn(xmloutput,'    <llvmversions>');
-      for llvmversion:=Low(tllvmversion) to High(tllvmversion) do
-        if llvmversionstr[llvmversion]<>'' then
-          WriteLn(xmloutput,'      <llvmversion name="',llvmversionstr[llvmversion],'"/>');
-      WriteLn(xmloutput,'    </llvmversions>');
-{$endif LLVM}
-    end;
-
-
 
 begin
   if More = '' then
@@ -859,8 +809,6 @@ begin
        ListFeatures (S)
       else if pos(CodeGenerationBackendPlaceholder,s)>0 then
        ListCodeGenerationBackend (S)
-      else if pos(LLVMVersionPlaceholder,s)>0 then
-       ListLLVMVersions (s)
       else
        Comment(V_Normal,s);
      end;
@@ -883,7 +831,6 @@ begin
       ListControllerTypesXML;
       ListFeaturesXML;
       ListCodeGenerationBackendXML;
-      ListLLVMVersionsXML;
       WriteLn(xmloutput,'  </info>');
       WriteLn(xmloutput,'</fpcoutput>');
       Close(xmloutput);
@@ -901,9 +848,7 @@ begin
         'c': ListCPUInstructionSets ('');
         'f': ListFPUInstructionSets ('');
         'i': ListAsmModes ('');
-{$ifdef LLVM}
-        'l': ListLLVMVersions ('');
-{$endif LLVM}
+
         'm': ListModeswitches ('');
         'o': ListOptimizations ('');
         'r': ListFeatures ('');
@@ -990,9 +935,7 @@ begin
 {$ifdef jvm}
       'J',
 {$endif}
-{$ifdef llvm}
-      'L',
-{$endif}
+
 {$ifdef xtensa}
       'x',
 {$endif}
@@ -1337,11 +1280,7 @@ begin
           Message1(option_invalid_macosx_deployment_target,envstr)
         else
           begin
-{$ifdef llvm}
-             { We only support libunwind as part of libsystem, which happened in Mac OS X 10.6 }
-            if MacOSXVersionMin.relationto(10,6,0)<0 then
-              Message1(option_invalid_macosx_deployment_target,envstr);
-{$endif}
+
             exit;
           end;
     end
@@ -1388,23 +1327,7 @@ begin
   end;
 end;
 
-{$ifdef llvm}
-procedure TOption.LLVMEnableSanitizers(sanitizers: TCmdStr);
-  var
-    sanitizer: TCMdStr;
-  begin
-    sanitizer:=GetToken(sanitizers,',');
-    repeat
-       case sanitizer of
-         'address':
-           include(init_settings.moduleswitches,cs_sanitize_address);
-         else
-           IllegalPara(sanitizer);
-       end;
-       sanitizer:=GetToken(sanitizers,',');
-    until sanitizer='';
-  end;
-{$endif}
+
 
 
 procedure TOption.VerifyTargetProcessor;
@@ -2299,9 +2222,7 @@ var
   j,l,code,deletepos : integer;
   s : string;
   includecapability : Boolean;
-  {$ifdef llvm}
-  disable: boolean;
-  {$endif}
+
   {$ifdef cpucapabilities}
   cf   : tcpuflags;
   cpuflagsstr,
@@ -2425,67 +2346,7 @@ begin
            break;
          end;
 {$endif arm}
-{$ifdef llvm}
-       'l':
-         begin
-           l:=j+1;
-           while l<=length(More) do
-             begin
-               case More[l] of
-                 'f':
-                   begin
-                     delete(More,1,l);
-                     disable:=Unsetbool(More,length(More)-1,opt,false);
-                     case More of
-                       'lto':
-                          begin
-                            if not disable then
-                              begin
-                                include(init_settings.moduleswitches,cs_lto);
-                                LTOExt:='.bc';
-                              end
-                            else
-                              exclude(init_settings.moduleswitches,cs_lto);
-                          end;
-                        'ltonosystem':
-                          begin
-                            if not disable then
-                              begin
-                                include(init_settings.globalswitches,cs_lto_nosystem);
-                              end
-                            else
-                              exclude(init_settings.globalswitches,cs_lto_nosystem);
-                          end;
-                       else if More.StartsWith('sanitize=') then
-                         begin
-                           delete(More,1,length('sanitize='));
-                           LLVMEnableSanitizers(more);
-                         end
-                       else
-                         begin
-                           IllegalPara(opt);
-                         end;
-                     end;
-                     l:=length(more)+1;
-                   end;
-                 'v':
-                   begin
-                     init_settings.llvmversion:=llvmversion2enum(copy(More,l+1));
-                     if init_settings.llvmversion=llvmver_invalid then
-                       begin
-                         IllegalPara(opt);
-                       end;
-                     l:=length(More)+1;
-                   end
-                 else
-                   begin
-                     IllegalPara(opt);
-                   end;
-               end;
-             end;
-           j:=l;
-         end;
-{$endif llvm}
+
        'n' :
          If UnsetBool(More, j, opt, false) then
            exclude(init_settings.globalswitches,cs_link_nolink)
@@ -3166,7 +3027,7 @@ procedure TOption.Interpret_I_l(more: TCmdStr);
 
 begin
   if (More='') or
-     (More [1] in ['a', 'b', 'c', 'f', 'i', {$ifdef LLVM}'l',{$endif} 'm', 'o', 'r', 't', 'u', 'w', 'x']) then
+     (More [1] in ['a', 'b', 'c', 'f', 'i',  'm', 'o', 'r', 't', 'u', 'w', 'x']) then
     WriteInfo (More)
   else
     QuickInfo:=QuickInfo+More;
@@ -3923,7 +3784,7 @@ begin
            else
              include(init_settings.globalswitches,cs_link_native);
          end;
-{$if defined(llvm) or defined(wasm32)}
+{$ifdef wasm32}
        'l' :
          begin
            if j=length(more) then
@@ -4160,9 +4021,7 @@ procedure read_arguments(cmd:TCmdStr);
       controller: tcontrollertype;
       s: string;
     begin
-{$ifdef llvm}
-      def_system_macro('CPULLVM');
-{$endif}
+
       for cputype:=low(tcputype) to high(tcputype) do
         undef_system_macro('CPU'+Cputypestr[cputype]);
       def_system_macro('CPU'+Cputypestr[init_settings.cputype]);
@@ -4628,16 +4487,7 @@ begin
   objectsearchpath.AddList(unitsearchpath,false);
   librarysearchpath.AddList(unitsearchpath,false);
 
-{$ifdef llvm}
-  { default to clang }
-  if (option.paratargetasm=as_none) then
-    begin
-      if not(target_info.system in systems_darwin) then
-        option.paratargetasm:=as_clang_llvm
-      else
-        option.paratargetasm:=as_clang_llvm_darwin;
-    end;
-{$endif llvm}
+
   { maybe override assembler }
   if (option.paratargetasm<>as_none) then
     begin
@@ -4696,14 +4546,9 @@ begin
        end
      else
        Message(option_switch_bin_to_src_assembler);
-{$ifdef llvm}
-     if not(target_info.system in systems_darwin) then
-       set_target_asm(as_clang_llvm)
-     else
-       set_target_asm(as_clang_llvm_darwin);
-{$else}
+
      set_target_asm(target_info.assemextern);
-{$endif}
+
      { At least i8086 needs that for nasm and -CX
        which is incompatible with internal linker }
      option.checkoptionscompatibility;
@@ -4812,12 +4657,6 @@ begin
         init_settings.fputype:=fpu_soft;
       if not(init_settings.fputype in [fpu_none,fpu_soft,fpu_libgcc]) then
         Message2(option_unsupported_fpu,fputypestr[init_settings.fputype],'Thumb');
-{$if defined(FPC_ARMEL) or defined(FPC_ARMHF)}
-      target_info.llvmdatalayout:='e-p:32:32:32-i1:8:32-i8:8:32-i16:16:32-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:64:128-a0:0:32-n32-S64';
-{$else FPC_ARMAL or FPC_ARMHF}
-      if target_info.endian=endian_little then
-        target_info.llvmdatalayout:='e-p:32:32:32-i1:8:32-i8:8:32-i16:16:32-i32:32:32-i64:32:64-f32:32:32-f64:32:64-v64:32:64-v128:32:128-a0:0:32-n32-S32';
-{$endif FPC_ARMAL or FPC_ARMHF}
     end;
 
   if (init_settings.instructionset=is_thumb) and (CPUARM_HAS_THUMB2 in cpu_capabilities[init_settings.cputype]) then
@@ -4839,12 +4678,7 @@ begin
 {$endif aarch64}
 
 
-{$ifdef llvm}
-  { standard extension for llvm bitcode files }
-  target_info.asmext:='.ll';
-  { don't generate dwarf cfi, llvm will do that }
-  exclude(target_info.flags,tf_needs_dwarf_cfi);
-{$endif llvm}
+
 {$ifdef wasm}
   { if no explicit exception handling mode is set for WebAssembly, select branchful exceptions }
   if init_settings.targetswitches*[ts_wasm_no_exceptions,ts_wasm_native_exnref_exceptions,ts_wasm_native_legacy_exceptions,ts_wasm_bf_exceptions]=[] then

@@ -239,12 +239,6 @@ interface
           { stack alignment }
           stackalign   : byte;
           abi          : tabi;
-          { llvm -- varies wildly in length and is empty for many targets ->
-            ansistring instead of shortstring; tsysteminfo records aren't
-            copied very often anyway. These strings come from the file
-            lib/Basic/Targets.cpp in the clang (cfe 3.3) source tree, sometimes
-            adapted to match our (custom) stack alignment requirements }
-          llvmdatalayout: ansistring;
        end;
 
     tabiinfo = record
@@ -377,8 +371,7 @@ interface
        );
 
        cgbackend2str: array[tcgbackend] of ansistring = (
-         'FPC',
-         'LLVM'
+         'FPC'
        );
 
        { x86 asm modes with an Intel-style syntax }

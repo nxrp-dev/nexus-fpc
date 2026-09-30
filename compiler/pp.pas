@@ -39,8 +39,6 @@ program pp;
   EXTDEBUG            some extra debug code is executed
   EXTERN_MSG          Don't compile the msgfiles in the compiler, always
                       use external messagefiles, default for TP
-  LLVM                Create an LLVM-based code generator for the selected
-                      target architecture (not supported for all targets)
 
   -----------------------------------------------------------------
   I386 specific switches

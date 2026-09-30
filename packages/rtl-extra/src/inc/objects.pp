@@ -37,9 +37,7 @@
 UNIT Objects;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$ifdef cpullvm}
-{$define TYPED_LOCAL_CALLBACKS}
-{$endif}
+
 
 {$ifdef TYPED_LOCAL_CALLBACKS}
 {$modeswitch nestedprocvars}

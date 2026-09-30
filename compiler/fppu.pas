@@ -393,11 +393,6 @@ var
               Message(unit_u_ppu_symansistr_mismatch,@queuecomment);
               exit;
             end;
-          if {$ifdef llvm}not{$endif}(mf_llvm in moduleflags) then
-            begin
-              Message(unit_u_ppu_llvm_mismatch,@queuecomment);
-              exit;
-            end;
           { A profiling build may use an ordinary PPU, producing deliberately
             gapped coverage. An ordinary build must never reuse an instrumented
             PPU because that would retain profiler hooks. }
@@ -1119,9 +1114,7 @@ var
         if ts_wasm_threads in current_settings.targetswitches then
           include(moduleflags,mf_wasm_threads);
 {$endif wasm}
-{$ifdef llvm}
-        include(moduleflags,mf_llvm);
-{$endif}
+
 {$ifdef symansistr}
         include(moduleflags,mf_symansistr);
 {$endif}

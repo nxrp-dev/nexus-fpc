@@ -123,19 +123,9 @@ const
     will be inserted with n+1 }
   paranr_blockselfpara = 1;
   paranr_parentfp_delphi_cc_leftright = 2;
-{$if defined(aarch64) and defined(llvm)}
-  { for AArch64 on LLVM, the "sret" parameter must always be the first
-    (it gets passed in a dedicated register, so it won't shift the register
-     assignments) -> give it a lower number; can't do it for other platforms,
-     because that would change the register assignment/parameter order }
-  paranr_result = 2;
-  paranr_parentfp = 3;
-  paranr_self = 4;
-{$else}
   paranr_parentfp = 2;
   paranr_self = 3;
   paranr_result = 4;
-{$endif}
   { pointers to managed result parameters must always be passed in the same way as the first regular
     parameter, regardless of ABI conventions, because the RTL expects the two following declarations
     to be handled in the same way:
@@ -242,18 +232,13 @@ type
       across units) -- never stored to ppu, because in that case the def would
       be registered }
     df_not_registered_no_free,
-    { don't pack this record at the llvm level -- can't do this via symllvm
-      because we have to access this information in the symtable unit }
-    df_llvm_no_struct_packing,
     { internal def that's not for any export }
     df_internal,
     { the local def is referenced from a public function }
     df_has_global_ref,
     { the def was derived with generic type or const fields so the size
       of the def can not be determined }
-    df_has_generic_fields,
-    {  never use the typename for this type, always expand full definition }
-    df_llvm_no_typename
+    df_has_generic_fields
   );
   tdefoptions=set of tdefoption;
 
@@ -788,7 +773,6 @@ type
   tinternaltypeprefix = (
     itp_1byte,
     itp_emptyrec,
-    itp_llvmstruct,
     itp_vmt_tstringmesssagetable,
     itp_vmt_msgint_table_entries,
     itp_vmt_tmethod_name_table,
@@ -944,7 +928,6 @@ inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has
      internaltypeprefixName : array[tinternaltypeprefix] of TSymStr = (
        '$1byte$',
        '$emptyrec',
-       '$llvmstruct$',
        '$vmt_TStringMessageTable$',
        '$vmt_msgint_table_entries$',
        '$vmt_tmethod_name_table$',

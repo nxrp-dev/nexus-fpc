@@ -44,9 +44,6 @@ interface
       { comphook pulls in sysutils anyways }
       cutils,cclasses,cfileutl,
       cpuinfo,
-{$if defined(LLVM) or defined(GENERIC_CPU)}
-      llvminfo,
-{$endif LLVM or GENERIC_CPU}
       globtype,version,versioncmp,systems;
 
     const
@@ -234,11 +231,6 @@ Const
    {$ifdef generic_cpu}   );{$endif}
 {$endif defined(ARM) or defined(generic_cpu)}
 
-{$if defined(LLVM) or defined(GENERIC_CPU)}
-   {$ifdef generic_cpu} 3:({$endif}
-         llvmversion: tllvmversion;
-   {$ifdef generic_cpu}   );{$endif}
-{$endif defined(LLVM) or defined(GENERIC_CPU)}
        end;
 
     const
@@ -620,9 +612,6 @@ Const
 {$if defined(ARM)}
         instructionset : is_arm;
 {$endif defined(ARM)}
-{$if defined(LLVM) and not defined(GENERIC_CPU)}
-        llvmversion    : llvmver_7_0;
-{$endif defined(LLVM) and not defined(GENERIC_CPU)}
       );
 
       starttime  : real;
@@ -1747,11 +1736,9 @@ implementation
      end;
 
 initialization
-{$ifdef LLVM}
-  cgbackend:=cg_llvm;
-{$else}
+
   cgbackend:=cg_fpc;
-{$endif}
+
 finalization
   tfplist.FreeAndNilDisposing(initdoneprocs,TypeInfo(tinitdoneentry));
 end.

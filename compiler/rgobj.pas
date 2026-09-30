@@ -116,9 +116,7 @@ unit rgobj;
         degree   : TSuperregister;
         flags    : Treginfoflagset;
         weight   : longint;
-{$ifdef llvm}
-        def      : pointer;
-{$endif llvm}
+
         count_uses : longint;
         total_interferences : longint;
         real_reg_interferences: word;
@@ -2592,9 +2590,7 @@ unit rgobj;
                           end;
                       end;
                   end;
-{$ifdef llvm}
-              ait_llvmins,
-{$endif llvm}
+
               ait_instruction:
                 with tai_cpu_abstract_sym(p) do
                   begin

@@ -524,7 +524,7 @@ unit cpupara;
               exit(0);
           end;
 
-{$ifndef llvm}
+
           { FIXME: in case a record contains empty padding space, e.g. a
             "single" field followed by a "double", then we have a problem
             because the cgpara helpers cannot figure out that they should
@@ -564,7 +564,7 @@ unit cpupara;
               else
                 ;
             end;
-{$endif not llvm}
+
           result:=words;
       end;
 
@@ -1846,14 +1846,14 @@ unit cpupara;
                                 Not for LLVM, since there the zero/signext
                                 attributes by definition only apply to the
                                 caller side }
-{$ifndef LLVM}
+
                               if not(target_info.system in systems_darwin) and
                                  (side=calleeside) and
                                  (hp.paraloc[side].intsize in [1,2]) then
                                 begin
                                   paraloc^.def:=hp.paraloc[side].def
                                 end;
-{$endif not LLVM}
+
                               paraloc^.size:=def_cgsize(paraloc^.def);
                               { s64comp/s64currency is pushed in an int register }
                               if paraloc^.size=OS_C64 then

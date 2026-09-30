@@ -58,54 +58,7 @@ Uses UnixApi.SysCall;
 Uses Syscall;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$IFDEF cpullvm}
-procedure fpc_x86_outportb(p:longint;v:byte);
-  begin
-    asm
-      movl %edx, p
-      movb v, %al
-      outb %al, %dx
-    end ['eax','edx'];
-  end;
 
-procedure fpc_x86_outportw(p:longint;v:word);
-  begin
-    asm
-      movl %edx, p
-      movw v, %ax
-      outw %ax, %dx
-    end ['eax','edx'];
-  end;
-
-procedure fpc_x86_outportl(p:longint;v:longint);
-  begin
-    asm
-      movl %edx, p
-      movl v, %eax
-      outl %eax, %dx
-    end ['eax','edx'];
-  end;
-
-function fpc_x86_inportb(p:word):byte; assembler; nostackframe;
-  asm
-    xorl %eax, %eax
-    movw %dx, p
-    inb %dx, %al
-  end;
-
-function fpc_x86_inportw(p:word):word; assembler; nostackframe;
-  asm
-    xorl %eax, %eax
-    movw %dx, p
-    inw %dx, %ax
-  end;
-
-function fpc_x86_inportl(p:word):longint; assembler; nostackframe;
-  asm
-    movw %dx, p
-    inl %dx, %eax
-  end;
-{$ENDIF ndef cpullvm}
 
 Procedure WritePort (Port : Longint; Value : Byte);inline;
 {

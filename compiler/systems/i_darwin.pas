@@ -61,7 +61,7 @@ const
         name         : 'Darwin for x86_64';
         shortname    : 'Darwin';
         flags        : [tf_p_ext_support,tf_files_case_sensitive,tf_smartlink_sections,tf_dwarf_relative_addresses,tf_dwarf_only_local_labels,tf_pic_default,tf_has_winlike_resources,tf_use_hlcfi
-                        {$ifdef llvm},tf_use_psabieh{$endif},tf_supports_symbolorderfile,tf_supports_hidden_symbols];
+                        ,tf_supports_symbolorderfile,tf_supports_hidden_symbols];
         cpu          : cpu_x86_64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX';
@@ -119,7 +119,6 @@ const
         stacksize   : 262144;
         stackalign   : 16;
         abi : abi_default;
-        llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128';
       );
 
 
@@ -130,7 +129,7 @@ const
         shortname    : 'iPhoneSim';
         flags        : [tf_p_ext_support,tf_files_case_sensitive,tf_smartlink_sections,tf_dwarf_relative_addresses,tf_dwarf_only_local_labels,
                         tf_pic_default,tf_has_winlike_resources,tf_use_hlcfi,tf_supports_symbolorderfile,tf_supports_hidden_symbols
-                        {$ifdef llvm},tf_use_psabieh{$endif},tf_requires_proper_alignment];
+                        ,tf_requires_proper_alignment];
         cpu          : cpu_x86_64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN'; // also define darwin for code compatibility
@@ -188,7 +187,6 @@ const
         stacksize   : 262144;
         stackalign   : 16;
         abi : abi_default;
-        llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128';
       );
 
 
@@ -201,7 +199,7 @@ const
         shortname    : 'iOS';
         flags        : [tf_p_ext_support,tf_requires_proper_alignment,tf_files_case_sensitive,tf_smartlink_sections,tf_dwarf_relative_addresses,
                         tf_dwarf_only_local_labels,tf_pic_default,tf_has_winlike_resources,tf_supports_symbolorderfile,tf_supports_hidden_symbols
-                        {$ifdef llvm},tf_use_psabieh{$endif}];
+                        ];
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN';
@@ -259,7 +257,6 @@ const
         stacksize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
-        llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-n32:64-S128'
       );
 
    system_aarch64_darwin_info  : tsysteminfo =
@@ -269,7 +266,7 @@ const
         shortname    : 'Darwin';
         flags        : [tf_p_ext_support,tf_requires_proper_alignment,tf_files_case_sensitive,tf_smartlink_sections,tf_dwarf_relative_addresses,
                         tf_dwarf_only_local_labels,tf_pic_default,tf_has_winlike_resources,tf_supports_symbolorderfile,tf_supports_hidden_symbols
-                        {$ifdef llvm},tf_use_psabieh{$endif}];
+                        ];
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX';
@@ -327,7 +324,6 @@ const
         stacksize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
-        llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-n32:64-S128'
       );
 
 
@@ -338,7 +334,7 @@ const
         shortname    : 'iPhoneSim';
         flags        : [tf_p_ext_support,tf_requires_proper_alignment,tf_files_case_sensitive,tf_smartlink_sections,tf_dwarf_relative_addresses,
                         tf_dwarf_only_local_labels,tf_pic_default,tf_has_winlike_resources,tf_supports_symbolorderfile,tf_supports_hidden_symbols
-                        {$ifdef llvm},tf_use_psabieh{$endif}];
+                        ];
         cpu          : cpu_aarch64;
         unit_env     : 'BSDUNITS';
         extradefines : 'UNIX;BSD;HASUNIX;DARWIN'; // also define darwin for code compatibility
@@ -396,7 +392,6 @@ const
         stacksize   : 8*1024*1024;
         stackalign   : 16;
         abi : abi_aarch64_darwin;
-        llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-n32:64-S128'
       );
 
 implementation

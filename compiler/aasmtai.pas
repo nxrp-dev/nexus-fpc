@@ -35,10 +35,7 @@ interface
        cutils,cclasses,
        globtype,systems,
        cpuinfo,cpubase,
-{$ifdef llvm}
-       { overrides max_operands }
-       llvmbase,
-{$endif llvm}
+
        cgbase,cgutils,
        symtype,
        aasmbase,aasmdata,ogbase
@@ -83,14 +80,7 @@ interface
           ait_jvar,    { debug information for a local variable }
           ait_jcatch,  { exception catch clause }
 {$endif JVM}
-{$ifdef llvm}
-          ait_llvmins, { llvm instruction }
-          ait_llvmalias, { alias for a symbol }
-          ait_llvmdecl, { llvm symbol declaration (global/external variable, external procdef) }
-          ait_llvmmetadatanode, (* llvm metadata node: !id = !{type value, ...} *)
-          ait_llvmmetadatareftypedconst, { reference to metadata inside a metadata constant }
-          ait_llvmmetadatarefoperand, { llvm metadata reference: !metadataname !id }
-{$endif}
+
 {$ifdef wasm}
           ait_export_name,
           ait_local,
@@ -229,14 +219,7 @@ interface
           'jvar',
           'jcatch',
 {$endif JVM}
-{$ifdef llvm}
-          'llvmins',
-          'llvmalias',
-          'llvmdecl',
-          'llvmmetadata',
-          'llvmmetadatareftc',
-          'llvmmetadatarefop',
-{$endif}
+
 {$ifdef wasm}
           'export_name',
           'local',
@@ -283,22 +266,7 @@ interface
        ,top_string
        ,top_wstring
 {$endif jvm}
-{$ifdef llvm}
-       { llvm only }
-       ,top_single
-       ,top_double
-       ,top_undef
-{$ifdef cpuextended}
-       ,top_extended80
-{$endif cpuextended}
-       ,top_tai
-       ,top_def
-       ,top_fpcond
-       ,top_cond
-       ,top_para
-       ,top_asmlist
-       ,top_callingconvention
-{$endif llvm}
+
 {$ifdef wasm}
        ,top_functype
        ,top_single
@@ -351,12 +319,7 @@ interface
 {$ifdef JVM}
                      ait_jvar, ait_jcatch,
 {$endif JVM}
-{$ifdef llvm}
-                     ait_llvmdecl,
-                     ait_llvmmetadatanode,
-                     ait_llvmmetadatareftypedconst,
-                     ait_llvmmetadatarefoperand,
-{$endif llvm}
+
 {$ifdef wasm}
                      ait_export_name,
                      ait_local,
@@ -523,21 +486,7 @@ interface
             top_string : (pcvallen: aint; pcval: pchar);
             top_wstring : (pwstrval: tcompilerwidestring);
         {$endif jvm}
-        {$ifdef llvm}
-            top_single : (sval:single);
-            top_double : (dval:double);
-            top_undef :  ();
-          {$ifdef cpuextended}
-            top_extended80 : (eval:extended);
-          {$endif cpuextended}
-            top_tai    : (ai: tai);
-            top_def    : (def: tdef);
-            top_cond   : (cond: topcmp);
-            top_fpcond : (fpcond: tllvmfpcmp);
-            top_para   : (paras: tfplist);
-            top_asmlist : (asmlist: tasmlist);
-            top_callingconvention: (callingconvention: tproccalloption);
-        {$endif llvm}
+
         {$ifdef wasm}
             top_functype : (functype: TWasmFuncType);
             top_single : (sval:single);
@@ -2844,7 +2793,7 @@ implementation
             else if (ref^.segment<>NR_NO) and (ref^.segment<>get_default_segment_of_ref(ref^)) then
               segprefix:=ref^.segment;
 {$endif}
-{$ifndef llvm}
+
             if (cs_create_pic in current_settings.moduleswitches) and
               assigned(r.symbol) and
               not assigned(r.relsymbol) and
@@ -2857,7 +2806,7 @@ implementation
 {$endif aarch64}
               then
               internalerror(200502052);
-{$endif not llvm}
+
             typ:=top_ref;
             if assigned(add_reg_instruction_hook) then
               begin
@@ -3612,7 +3561,7 @@ implementation
 {$endif JVM}
 
 begin
-{$if not defined(WASM) and not defined(LLVM)}
+{$ifndef WASM}
 {$push}{$warnings off}
   { taitype should fit into a 4 byte set for speed reasons }
   if ord(high(taitype))>31 then

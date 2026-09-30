@@ -193,14 +193,7 @@ interface
         ptrdefs       : THashSet; { list of pointerdefs created in this module so we can reuse them (not saved/restored) }
         arraydefs     : THashSet; { list of single-element-arraydefs created in this module so we can reuse them (not saved/restored) }
         procaddrdefs  : THashSet; { list of procvardefs created when getting the address of a procdef (not saved/restored) }
-{$ifdef llvm}
-        llvmdefs      : THashSet; { defs added for llvm-specific reasons (not saved/restored) }
-        llvmusedsyms  : TFPObjectList; { a list of asmsymbols and their defs that need to be added to llvm.used (so they're not removed by llvm optimisation passes nor by the linker) }
-        llvmcompilerusedsyms : TFPObjectList; { a list of asmsymbols and their defs that need to be added to llvm.compiler.used (so they're not removed by llvm optimisation passes) }
-        llvminitprocs,
-        llvmfiniprocs : TFPList;
-        llvmmetadatastrings: TFPHashList; { metadata strings (mapping string -> superregister) }
-{$endif llvm}
+
         ansistrdef    : tobject; { an ansistring def redefined for the current module }
         wpoinfo       : tunitwpoinfobase; { whole program optimization-related information that is generated during the current run for this unit }
         globalsymtable,           { pointer to the global symtable of this unit }
@@ -683,14 +676,7 @@ implementation
         ptrdefs:=THashSet.Create(64,true,false);
         arraydefs:=THashSet.Create(64,true,false);
         procaddrdefs:=THashSet.Create(64,true,false);
-{$ifdef llvm}
-        llvmdefs:=THashSet.Create(64,true,false);
-        llvmusedsyms:=TFPObjectList.Create(true);
-        llvmcompilerusedsyms:=TFPObjectList.Create(true);
-        llvminitprocs:=TFPList.Create;
-        llvmfiniprocs:=TFPList.Create;
-        llvmmetadatastrings:=TFPHashList.Create;
-{$endif llvm}
+
         ansistrdef:=nil;
         wpoinfo:=nil;
         checkforwarddefs:=TFPObjectList.Create(false);
@@ -860,20 +846,7 @@ implementation
         arraydefs := nil;
         procaddrdefs.free;
         procaddrdefs := nil;
-{$ifdef llvm}
-        llvmdefs.free;
-        llvmdefs := nil;
-        llvmusedsyms.free;
-        llvmusedsyms := nil;
-        llvmcompilerusedsyms.free;
-        llvmcompilerusedsyms := nil;
-        llvminitprocs.free;
-        llvminitprocs := nil;
-        llvmfiniprocs.free;
-        llvmfiniprocs := nil;
-        llvmmetadatastrings.free;
-        llvmmetadatastrings := nil;
-{$endif llvm}
+
         ansistrdef:=nil;
         wpoinfo.free;
         wpoinfo := nil;
@@ -954,20 +927,7 @@ implementation
         arraydefs:=THashSet.Create(64,true,false);
         procaddrdefs.free;
         procaddrdefs:=THashSet.Create(64,true,false);
-{$ifdef llvm}
-        llvmdefs.free;
-        llvmdefs:=THashSet.Create(64,true,false);
-        llvmusedsyms.free;
-        llvmusedsyms:=TFPObjectList.Create(true);
-        llvmcompilerusedsyms.free;
-        llvmcompilerusedsyms:=TFPObjectList.Create(true);
-        llvminitprocs.free;
-        llvminitprocs:=TFPList.Create;
-        llvmfiniprocs.free;
-        llvmfiniprocs:=TFPList.Create;
-        llvmmetadatastrings.free;
-        llvmmetadatastrings:=TFPHashList.Create;
-{$endif llvm}
+
         ansistrdef:=nil;
         wpoinfo.free;
         wpoinfo:=nil;
@@ -1630,10 +1590,7 @@ implementation
         arraydefs:=nil;
         procaddrdefs.free;
         procaddrdefs:=nil;
-{$ifdef llvm}
-        llvmdefs.free;
-        llvmdefs:=nil;
-{$endif llvm}
+
         checkforwarddefs.free;
         checkforwarddefs:=nil;
         tcinitcode.free;

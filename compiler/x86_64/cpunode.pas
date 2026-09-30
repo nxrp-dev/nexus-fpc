@@ -46,7 +46,7 @@ unit cpunode;
        { symtable }
        symcpu,
        aasmdef,
-{$ifndef llvm}
+
        { the cpu specific node units must be used after the generic ones to
          get the correct class pointer }
        nx86bas,
@@ -63,9 +63,7 @@ unit cpunode;
 {$endif DISABLE_WIN64_SEH}
        nx64inl,
        nx64set
-{$else}
-       llvmnode
-{$endif ndef llvm}
+
        ;
 
 end.

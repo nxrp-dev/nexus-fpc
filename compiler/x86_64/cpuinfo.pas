@@ -179,23 +179,6 @@ const
      'X86-64-V4'
    );
 
-   fputypestrllvm : array[tfputype] of string[9] = ('',
-//     'SOFT',
-     '',
-     'x86-64-v1',
-     'sse3',
-     'ssse3',
-     'sse4.1',
-     'sse4.2',
-     'x86-64-v2',
-     'avx',
-     'fma',
-     'avx2',
-     'x86-64-v3',
-     'avx512f',
-     'x86-64-v4'
-   );
-
    sse_singlescalar = [fpu_sse64..fpu_avx512f];
    sse_doublescalar = [fpu_sse64..fpu_avx512f];
 
@@ -207,12 +190,12 @@ const
                                  genericlevel3optimizerswitches-
                                  { no need to write info about those }
                                  [cs_opt_level1,cs_opt_level2,cs_opt_level3]+
-                                 [{$ifndef llvm}cs_opt_regvar,{$endif}cs_opt_loopunroll,cs_opt_stackframe,cs_userbp,
+                                 [cs_opt_regvar,cs_opt_loopunroll,cs_opt_stackframe,cs_userbp,
 				  cs_opt_tailrecursion,cs_opt_nodecse,cs_opt_reorder_fields,cs_opt_fastmath];
 
    level1optimizerswitches = genericlevel1optimizerswitches;
    level2optimizerswitches = genericlevel2optimizerswitches + level1optimizerswitches +
-     [{$ifndef llvm}cs_opt_regvar,{$endif}cs_opt_stackframe,cs_opt_tailrecursion,cs_opt_nodecse,cs_opt_consts];
+     [cs_opt_regvar,cs_opt_stackframe,cs_opt_tailrecursion,cs_opt_nodecse,cs_opt_consts];
    level3optimizerswitches = genericlevel3optimizerswitches + level2optimizerswitches;
    level4optimizerswitches = genericlevel4optimizerswitches + level3optimizerswitches + [cs_userbp];
 

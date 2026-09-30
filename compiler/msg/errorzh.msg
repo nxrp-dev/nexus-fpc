@@ -2998,8 +2998,6 @@ cg_f_internal_type_not_found=10065_F_找不到内部类型"$1"。请检查是否
 cg_f_internal_type_does_not_match=10066_F_内部类型"$1"与预期不符。请检查是否使用了正确的运行时库。
 % 编译器期望运行时库包含某些类型。如果你看到此错误且没有更改运行时库代码，很可能你使用的运行时库与正在使用的编译器不匹配。
 % 如果你更改了运行时库，此错误意味着你更改了编译器内部使用所需且必须具有特定结构的类型。
-unit_u_ppu_llvm_mismatch=10067_U_跳过单元，PPU 和编译器必须都使用或都不使用 LLVM 支持进行编译
-% 由使用 LLVM 代码生成器构建的编译器编译的单元不能与常规编译器一起使用，反之亦然。
 unit_u_ppu_invalid_wasm_exceptions_mode=10068_U_PPU 是为另一个 WebAssembly 异常模式编译的
 % 此单元文件是为不同的 WebAssembly 异常模式编译的。
 unit_u_ppu_symansistr_mismatch=10069_U_跳过单元，PPU 和编译器必须都使用或都不使用 SYMANSISTR 支持进行编译
@@ -3360,8 +3358,6 @@ Free Pascal 编译器版本 $FPCVERSION
 代码生成后端:
   $CODEGENERATIONBACKEND
 
-支持的 LLVM/Xcode 版本(仅适用于 LLVM 代码生成后端):
-  $LLVMVERSIONS
 
 支持的微控制器类型:$\n  $CONTROLLERTYPES$\n
 本程序遵循 GNU 通用公共许可证
@@ -3506,11 +3502,6 @@ V*3Cdz_丢弃初始化零寄存器和栈指针的代码
 **2Ch<n>[,m]_<n> 字节最小堆大小(在 1023 和 67107840 之间)以及可选的 [m] 最大堆大小
 **2Ci_IO 检查
 A*2CI<x>_在 ARM 上选择指令集: ARM 或 THUMB
-L*2Cl<x>_LLVM 代码生成选项
-L*3Clflto_启用链接时优化(编译单元和程序/库时都需要)
-L*3Clfltonosystem_为系统单元禁用 LTO(由于链接器错误，至少在 Xcode 10.2 及更早版本中需要)
-L*3Clflsanitize=address_启用地址检查器
-L*3Clv<x>_LLVM 目标版本: Xcode-10.1, 7.0, 8.0, .., 10.0
 **2Cn_省略链接阶段
 P*2CN_生成空指针检查(仅限 AIX)
 W*2CN_生成空指针检查
@@ -3613,7 +3604,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 **2iD_返回编译器日期
 **2if_返回支持的 FPU 指令集列表
 **2ii_返回支持的内联汇编器模式列表
-L*2il_返回 LLVM 后端支持的 LLVM/Xcode 版本列表
 **2im_返回支持的模式开关列表
 **2io_返回支持的优化列表
 **2ir_返回已识别的编译器和 RTL 功能列表

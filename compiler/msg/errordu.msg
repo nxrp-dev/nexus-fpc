@@ -3587,9 +3587,6 @@ cg_f_internal_type_does_not_match=10066_F_Interner Typ "$1" ist unerwartet. Übe
 % and you didn't change the runtime library code, it's very likely that the runtime library
 % you're using doesn't match the compiler in use. If you changed the runtime library this error means
 % that you changed a type which the compiler needs for internal use and which needs to have a certain structure.
-unit_u_ppu_llvm_mismatch=10067_U_Überspringe die Unit, PPU und Compiler müssen beide entweder mit oder ohne LLVM-Unterstützung übersetzt sein
-% Units compiled by a compiler built with the LLVM code generator cannot be used with a regular compiler,
-% and vice versa.
 unit_u_ppu_invalid_wasm_exceptions_mode=10068_U_PPU ist für einen anderen WebAssembly Exception-Modus kompiliert
 % This unit file was compiled for a different WebAssembly exceptions mode.
 unit_u_ppu_symansistr_mismatch=10069_U_Überspringe Unit, PPU und Compiler müssen beide mit oder ohne SYMANSISTR Unterstützung kompiliert werden
@@ -4004,8 +4001,6 @@ Unterstützte Gesamtprogramm-Optimierungen:
 Backend der Codeerzeugung:
   $CODEGENERATIONBACKEND
 
-Unterstützte LLVM/Xcode Versionen (nur mit LLVM-Code-Generation-Backend verfügbar):
-  $LLVMVERSIONS
 
 Unterstützte Mikro-Kontroller:
   $CONTROLLERTYPES
@@ -4152,11 +4147,6 @@ V*3Cdz_Verwerfe Code, der das Zero-Register und den Stack-Pointer initialisiert
 **2Ch<n>[,m]_<n> Minimale Größe des Heap in Byte (zwischen 1023 und 67107840) und optional [m] maximale Größe des Heap
 **2Ci_I/O-Prüfung
 A*2CI<x>_Wähle den Befehlssatz für ARM aus: ARM oder THUMB
-L*2Cl<x>_LLVM Codeerzeugungsoptionen
-L*3Clflto_Schalte Link-time-Optimierungen ein (benötigt, wenn Units oder Programme/Bibliotheken übersetzt werden)
-L*3Clfltonosystem_Schalte LTO für die Systemunit aus (benötigt für Xcode 10.2 und früher wegen Bugs im Linker)
-L*3Clflsanitize=address_Schalte Adressenbereiniger (address sanitizer) ein
-L*3Clv<x>_LLVM Zielversion: Xcode-10.1, 7.0, 8.0, .., 10.0
 **2Cn_Lasse die Linkstufe aus
 W*2CN_Erzeuge Überprüfungen auf Nil-Zeiger
 **2Co_Prüfe auf Überlauf von Integer-Operationen
@@ -4258,7 +4248,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2iD_Zeige Compilerdatum
 **2if_Zeige Liste der unterstützten Fliesskomma-Befehle
 **2ii_Zeige Liste der unterstützten Inline-Assembler-Modi
-L*2il_Zeige Liste der unterstützten LLVM/Xcode Versionen des LLVM-Backend
 **2im_Zeige Liste der unterstützten Modeswitches
 **2io_Zeige Liste der unterstützten Optimierungen
 **2ir_Zeige Liste der erkannten Compiler- und RTL-Feature

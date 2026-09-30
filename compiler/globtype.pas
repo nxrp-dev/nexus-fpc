@@ -401,7 +401,6 @@ interface
          mf_i8086_ss_equals_ds,       { this unit uses an i8086 memory model with SS=DS (i.e. tiny, small or medium) }
          mf_package_deny,             { this unit must not be part of a package }
          mf_package_weak,             { this unit may be completely contained in a package }
-         mf_llvm,                     { compiled for LLVM code generator, not compatible with regular compiler because of different nodes in inline functions }
          mf_symansistr,               { symbols are ansistrings (for ppudump) }
          mf_wasm_no_exceptions,       { unit was compiled in WebAssembly 'no exceptions' mode }
          mf_wasm_bf_exceptions,       { unit was compiled in WebAssembly 'branchful' exceptions mode }
@@ -465,7 +464,7 @@ interface
        genericlevel1optimizerswitches = [cs_opt_level1,cs_opt_peephole];
        genericlevel2optimizerswitches = [cs_opt_level2,cs_opt_remove_empty_proc,cs_opt_unused_para];
        genericlevel3optimizerswitches = [cs_opt_level3,cs_opt_constant_propagate,cs_opt_nodedfa,cs_opt_loopstrength
-                                         {$ifndef llvm},cs_opt_use_load_modify_store{$endif},
+                                         ,cs_opt_use_load_modify_store,
                                          cs_opt_loopunroll,cs_opt_forloop];
        genericlevel4optimizerswitches = [cs_opt_level4,cs_opt_reorder_fields,cs_opt_dead_values,cs_opt_fastmath];
 

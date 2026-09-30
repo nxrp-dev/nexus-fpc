@@ -51,7 +51,7 @@
     {$endif FPC_SYSTEM_HAS_SQRT}
 
 
-{$if not defined(VER3_2) and not defined(CPULLVM)}
+{$ifndef VER3_2}
     {$ifndef FPC_SYSTEM_HAS_FRAC}
     {$define FPC_SYSTEM_HAS_FRAC}
     function fpc_frac_real(d : ValReal) : ValReal;compilerproc;
@@ -61,7 +61,7 @@
         result:=0;
       end;
     {$endif FPC_SYSTEM_HAS_FRAC}
-{$endif not VER3_2 and not CPULLVM }
+{$endif not VER3_2}
 
 
     {$ifndef FPC_SYSTEM_HAS_INT}

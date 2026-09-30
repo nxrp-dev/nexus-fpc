@@ -278,9 +278,7 @@ implementation
         bool16type:=corddef.create(bool16bit,low(int64),high(int64),true);
         bool32type:=corddef.create(bool32bit,low(int64),high(int64),true);
         bool64type:=corddef.create(bool64bit,low(int64),high(int64),true);
-{$ifdef llvm}
-        llvmbool1type:=corddef.create(pasbool1,0,1,true);
-{$endif llvm}
+
         cansichartype:=corddef.create(uchar,0,255,true);
         cwidechartype:=corddef.create(uwidechar,0,65535,true);
         cshortstringtype:=cstringdef.createshort(255,true);
@@ -453,9 +451,7 @@ implementation
         addtype('WordBool',bool16type);
         addtype('LongBool',bool32type);
         addtype('QWordBool',bool64type);
-{$ifdef llvm}
-        addtype('LLVMBool1',llvmbool1type);
-{$endif llvm}
+
         addtype('Byte',u8inttype);
         addtype('ShortInt',s8inttype);
         addtype('Word',u16inttype);
@@ -514,13 +510,7 @@ implementation
         addtype('$wordbool',bool16type);
         addtype('$longbool',bool32type);
         addtype('$qwordbool',bool64type);
-{$ifdef llvm}
-        addtype('$llvmbool1',llvmbool1type);
-        llvm_metadatatype:=cformaldef.create(false);
-        { if this gets renamed, also adjust agllvm so it still writes the identifier of this type as "metadata" }
-        addtype('$metadata',llvm_metadatatype);
-        addtype('LLVMMetadata',llvm_metadatatype);
-{$endif llvm}
+
         addtype('$char_pointer',charpointertype);
         addtype('$widechar_pointer',widecharpointertype);
         addtype('$parentfp_void_pointer',parentfpvoidpointertype);
@@ -695,10 +685,7 @@ implementation
         loadtype('__m256d',x86_m256dtype);
         loadtype('__m256i',x86_m256itype);
 {$endif x86}
-{$ifdef llvm}
-        loadtype('llvmbool1',llvmbool1type);
-        loadtype('metadata',llvm_metadatatype);
-{$endif llvm}
+
 {$ifdef wasm}
         loadtype('wasm_void_externref',wasmvoidexternreftype);
 {$endif wasm}

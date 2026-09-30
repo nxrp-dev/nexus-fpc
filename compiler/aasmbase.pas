@@ -207,10 +207,7 @@ interface
            so we have to store an offset somewhere to calculate jump distances }
          bind       : TAsmsymbind;
          typ        : TAsmsymtype;
-{$ifdef llvm}
-         { have we generated a declaration for this symbol? }
-         declared   : boolean;
-{$endif llvm}
+
          { Alternate symbol which can be used for 'renaming' needed for
            asm inlining. Also used for external and common solving during linking }
          altsymbol  : TAsmSymbol;

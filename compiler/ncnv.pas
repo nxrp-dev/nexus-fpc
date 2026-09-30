@@ -3049,20 +3049,7 @@ implementation
                        to different kinds of refcounting helpers }
                       (resultdef=left.resultdef)) then
                    begin
-{$ifdef llvm}
-                     { we still may have to insert a type conversion at the
-                       llvm level }
-                     if (blocktype<>bt_const) and
-                        (left.resultdef<>resultdef) and
-                        { if unspecialised generic -> we won't generate any code
-                          for this, and keeping the type conversion node will
-                          cause valid_for_assign to fail because the typecast will be from/to something of 0
-                          bytes to/from something with a non-zero size }
-                        not is_typeparam(left.resultdef) and
-                        not is_typeparam(resultdef) then
-                       result:=nil
-                     else
-{$endif llvm}
+
                        begin
                          left.resultdef:=resultdef;
                          if (nf_explicit in flags) and (left.nodetype = addrn) then

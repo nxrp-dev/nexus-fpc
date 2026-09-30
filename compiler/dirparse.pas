@@ -143,8 +143,8 @@ implementation
             end;
           if found then
             begin
-{$if defined(llvm) or defined(wasm32)}
-             { -Ooregvar is not supported, llvm will take care of that }
+{$ifdef wasm32}
+             { -Ooregvar is not supported on wasm32. }
              if opt<>cs_opt_regvar then
 {$endif}
               if doset then

@@ -1575,12 +1575,7 @@ implementation
                           if report_errors then
                             CGMessagePos2(hp.fileinfo,type_e_typecast_wrong_size_for_assignment,tostr(fromdef.size),tostr(todef.size));
                       end
-{$ifdef llvm}
-                    { we can never typecast a non-memory value on the assignment
-                      side in llvm }
-                    else
-                      make_not_regable(hp,[ra_addr_regable])
-{$endif llvm}
+
                   end;
 
                  { don't allow assignments to typeconvs that need special code }

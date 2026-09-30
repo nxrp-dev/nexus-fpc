@@ -34,12 +34,10 @@ implementation
     { symtable }
     symcpu,
     aasmdef,
-{$ifndef llvm}
+
     narmbas,
     ncpuadd,ncpumat,ncpumem,ncpuinl,ncpucnv,ncpuset,ncpucon,ncpuflw,naarch64util
-{$else llvm}
-    llvmnode
-{$endif llvm}
+
     ;
 
 end.

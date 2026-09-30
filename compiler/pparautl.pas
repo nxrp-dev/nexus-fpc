@@ -157,25 +157,12 @@ implementation
               paranr:=paranr_parentfp_delphi_cc;
             { Generate frame pointer. It can't be put in a register since it
               must be accessible from nested routines }
-{$ifdef llvm}
-            { in case of errors or declared procvardef types, prevent invalid
-              type cast and possible nil pointer dereference }
-            if not assigned(pd.owner.defowner) or
-               (pd.owner.defowner.typ<>procdef) then
-{$endif llvm}
+
               begin
                 vs:=cparavarsym.create('$'+name_parentfp,paranr,vs_value
                       ,parentfpvoidpointertype,[vo_is_parentfp,vo_is_hidden_para]);
               end
-{$ifdef llvm}
-            else
-              begin
-                if not assigned(tprocdef(pd.owner.defowner).parentfpstruct) then
-                  build_parentfpstruct(tprocdef(pd.owner.defowner));
-                vs:=cparavarsym.create('$'+name_parentfp,paranr,vs_value,
-                      tprocdef(pd.owner.defowner).parentfpstructptrtype,[vo_is_parentfp,vo_is_hidden_para]);
-              end
-{$endif llvm}
+
             ;
             pd.parast.insertsym(vs);
 

@@ -776,9 +776,7 @@ procedure fpc_longjmp(var s : jmp_buf; value : longint); compilerproc;
 
 
 
-{$ifdef cpullvm}
-{$i llvmintr.inc}
-{$endif cpullvm}
+
 
 {$ifdef cpuwasm32}
 procedure fpc_wasm_invoke_helper(CodeAddress: CodePointer; Args: Pointer; Result: Pointer); compilerproc;

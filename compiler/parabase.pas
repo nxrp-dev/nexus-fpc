@@ -26,9 +26,7 @@ unit parabase;
 
     uses
        cclasses,globtype,
-{$ifdef llvm}
-       aasmbase,
-{$endif}
+
        cgbase,cgutils,
        symtype;
 
@@ -44,31 +42,7 @@ unit parabase;
          Def  : tdef;
          Size : TCGSize; { size of this location }
          Loc  : TCGLoc;
-{$ifdef llvm}
-         { The following fields are used to determine the name and handling of
-           the location by the llvm code generator. They exist in parallel with
-           the regular information, because that original information is still
-           required for handling inline assembler routines }
 
-         { true if the llvmloc symbol is the value itself, rather than a
-           pointer to the value (~ named register) }
-         llvmvalueloc,
-         retvalloc: boolean;
-         llvmloc: record
-           case loc: TCGLoc of
-             { nil if none corresponding to this particular paraloc }
-             LOC_REFERENCE: (sym: tasmsymbol);
-             { if llvmvalueloc=true: the value is stored in the "register"
-                (anonymous temp, can be any register type and can also be e.g.
-                 a struct)
-               if llvmvalueloc=false: must be a tempreg. Means that the value is
-               stored in a temp with this register as base address }
-             LOC_REGISTER:  (reg: tregister);
-             LOC_CONSTANT:  (value: int64);
-             { for debug info }
-             LOC_CREFERENCE: (localsym: tsym);
-         end;
-{$endif llvm}
          case TCGLoc of
            LOC_REFERENCE : (reference : TCGParaReference);
            LOC_FPUREGISTER,

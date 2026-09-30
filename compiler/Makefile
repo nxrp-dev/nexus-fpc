@@ -463,12 +463,6 @@ export REVSTR
 endif
 endif
 override LOCALOPT+=-d$(CPC_TARGET)
-ifdef LLVM
-ifeq ($(findstring $(PPC_TARGET),x86_64 aarch64),)
-$(error The $(PPC_TARGET) architecture is not (yet) supported by the FPC/LLVM code generator)
-endif
-override LOCALOPT+=-dllvm -Fullvm
-endif
 ifeq ($(PPC_TARGET),x86_64)
 override LOCALOPT+=-Fux86 -Fix86
 endif

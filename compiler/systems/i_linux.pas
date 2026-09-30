@@ -40,7 +40,7 @@ unit i_linux;
 {$endif tls_threadvars}
                             tf_library_needs_pic,tf_needs_symbol_type,tf_files_case_sensitive,
                             tf_has_winlike_resources,tf_safecall_exceptions,tf_safecall_clearstack
-                            {$ifdef llvm},tf_use_psabieh{$endif}
+
 {$ifdef psabieh}
                             ,tf_use_psabieh
 {$endif psabieh}
@@ -103,7 +103,6 @@ unit i_linux;
             stacksize    : 8*1024*1024;
             stackalign   : 16;
             abi : abi_default;
-            llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-s0:64:64-f80:128:128-n8:16:32:64-S128';
           );
 
 
@@ -121,9 +120,7 @@ unit i_linux;
                             tf_requires_proper_alignment,tf_safecall_exceptions,
                             tf_smartlink_sections,tf_pic_uses_got,
                             tf_has_winlike_resources
-{$ifdef llvm}
-                            ,tf_use_psabieh
-{$endif llvm}
+
                             ,tf_supports_hidden_symbols
                             ];
             cpu          : cpu_aarch64;
@@ -183,7 +180,6 @@ unit i_linux;
             stacksize    : 8*1024*1024;
             stackalign   : 16;
             abi : abi_default;
-            llvmdatalayout : 'e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v64:64:64-v128:128:128-a0:0:64-n32:64-S128'
           );
 
 

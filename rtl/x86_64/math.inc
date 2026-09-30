@@ -132,47 +132,34 @@ const
     {$ifndef FPC_SYSTEM_HAS_ABS}
     {$define FPC_SYSTEM_HAS_ABS}
     function fpc_abs_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldt d
-      fabs
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_ABS}
     {$ifndef FPC_SYSTEM_HAS_SQR}
     {$define FPC_SYSTEM_HAS_SQR}
     function fpc_sqr_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    begin
-      fpc_sqr_real:=d*d;
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_SQR}
     {$ifndef FPC_SYSTEM_HAS_SQRT}
     {$define FPC_SYSTEM_HAS_SQRT}
     function fpc_sqrt_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldt d
-      fsqrt
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_SQRT}
 
@@ -181,67 +168,45 @@ const
     {$ifndef FPC_SYSTEM_HAS_ARCTAN}
     {$define FPC_SYSTEM_HAS_ARCTAN}
     function fpc_arctan_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldt d
-      fld1
-      fpatan
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_ARCTAN}
     {$ifndef FPC_SYSTEM_HAS_LN}
     {$define FPC_SYSTEM_HAS_LN}
     function fpc_ln_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldln2
-      fldt d
-      fyl2x
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_LN}
     {$ifndef FPC_SYSTEM_HAS_SIN}
     {$define FPC_SYSTEM_HAS_SIN}
     function fpc_sin_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldt d
-      fsin
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_SIN}
     {$ifndef FPC_SYSTEM_HAS_COS}
     {$define FPC_SYSTEM_HAS_COS}
     function fpc_cos_real(d : ValReal) : ValReal;compilerproc;
-{$ifndef cpullvm}
+
     begin
       { Function is handled internal in the compiler }
       runerror(207);
       result:=0;
-{$else not cpullvm}
-    assembler;
-    asm
-      fldt d
-      fcos
-{$endif not cpullvm}
+
     end;
     {$endif FPC_SYSTEM_HAS_COS}
 

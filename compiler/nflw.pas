@@ -1652,11 +1652,11 @@ implementation
         include(flags,nf_internal);
       end;
 
-{$ifndef llvm}
+
   {$if defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
     {$define HAS_MINMAX_INTRINSICS}
   {$endif defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
-{$endif llvm}
+
 
     function tifnode.internalsimplify(warn: boolean) : tnode;
 {$if defined(HAS_MINMAX_INTRINSICS)}
@@ -2284,16 +2284,7 @@ implementation
           code generator will load it into the function result location),
           because the code to this that we add in tnodeutils.wrap_proc_body()
           gets inserted before the exit label to which this node will jump }
-{$ifdef llvm}
-        if not(nf_internal in flags) and
-           current_procinfo.procdef.get_funcretsym_info(ressym,resdef) and
-           (tabstractnormalvarsym(ressym).inparentfpstruct) then
-          begin
-            if not assigned(result) then
-              result:=internalstatements(newstatement);
-            cnodeutils.load_parentfpstruct_nested_funcret(ressym,resdef,newstatement);
-          end;
-{$endif llvm}
+
         if assigned(result) then
           begin
             addstatement(newstatement,self.getcopy);

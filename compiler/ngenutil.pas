@@ -239,17 +239,7 @@ implementation
         in parentfpstruct will be initialised when that struct gets initialised,
         and references to it will actually be translated into references to the
         field in the parentfpstruct (so we'll initialise it twice) }
-{$ifdef llvm}
-      if (p.nodetype=loadn) and
-         (tloadnode(p).symtableentry.typ=localvarsym) and
-         tlocalvarsym(tloadnode(p).symtableentry).inparentfpstruct then
-        begin
-          p.free;
-          p := nil;
-          result:=cnothingnode.create;
-        end
-      else
-{$endif llvm}
+
         begin
           if not assigned(p.resultdef) then
             typecheckpass(p);
@@ -290,17 +280,7 @@ implementation
       hs : string;
     begin
       { see comment in initialize_data_node above }
-{$ifdef llvm}
-      if (p.nodetype=loadn) and
-         (tloadnode(p).symtableentry.typ=localvarsym) and
-         tlocalvarsym(tloadnode(p).symtableentry).inparentfpstruct then
-        begin
-          p.free;
-          p := nil;
-          result:=cnothingnode.create;
-        end
-      else
-{$endif llvm}
+
         begin
           if not assigned(p.resultdef) then
             typecheckpass(p);
@@ -713,16 +693,7 @@ implementation
           result:=block;
         end;
 
-{$ifdef llvm}
-      if pd.get_funcretsym_info(ressym,resdef) and
-         (tabstractnormalvarsym(ressym).inparentfpstruct) then
-        begin
-          block:=internalstatements(stat);
-          addstatement(stat,result);
-          load_parentfpstruct_nested_funcret(ressym,resdef,stat);
-          result:=block;
-        end;
-{$endif llvm}
+
     end;
 
 

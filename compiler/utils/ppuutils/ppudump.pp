@@ -2245,9 +2245,6 @@ var
          instructionset : tinstructionset;
 {$endif defined(ARM)}
 
-{$if defined(LLVM) and not defined(GENERIC_CPU)}
-         llvmversion: tllvmversion;
-{$endif defined(LLVM) and not defined(GENERIC_CPU)}
 
         { CPU targets with microcontroller support can add a controller specific unit }
          controllertype   : tcontrollertype;
@@ -2865,11 +2862,9 @@ const
      (mask:df_genconstraint;  str:'Generic Constraint'),
      { this should never happen for defs stored to a ppu file }
      (mask:df_not_registered_no_free;  str:'Unregistered/No free (invalid)'),
-     (mask:df_llvm_no_struct_packing;  str:'LLVM unpacked struct'),
      (mask:df_internal;       str:'Internal'),
      (mask:df_has_global_ref; str:'Has Global Ref'),
-     (mask:df_has_generic_fields; str:'Has generic fields'),
-     (mask:df_llvm_no_typename; str:'LLVM no typename')
+     (mask:df_has_generic_fields; str:'Has generic fields')
   );
   defstate : array[1..ord(high(tdefstate))] of tdefstateinfo=(
      (mask:ds_vmt_written;           str:'VMT Written'),
