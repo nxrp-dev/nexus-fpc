@@ -19,11 +19,6 @@
 
 {$I systemh.inc}
 
-{$ifdef cpum68k}
-{ used for single computations }
-const
-  BIAS4 = $7f-1;
-{$endif cpum68k}
 
 const
  LineEnding = #10;

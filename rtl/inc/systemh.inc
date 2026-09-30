@@ -167,24 +167,6 @@ Type
   {$define SUPPORT_DOUBLE}
 {$endif CPUX86_64}
 
-{$ifdef CPUM68K}
-  {$define DEFAULT_DOUBLE}
-
-  {$if defined(CPUCOLDFIRE) or defined(CPU68000)}
-    {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-    {$define FPC_INCLUDE_SOFTWARE_MUL}
-  {$endif}
-
-  { m68k int64 shl/shr uses soft helper for non constant values }
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    ValReal = Real;
-  {$endif}
-{$endif CPUM68K}
 
 
 
@@ -206,21 +188,6 @@ Type
 
 
 
-{$ifdef CPUARM}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_MOD_DIV}
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Real;
-  {$endif}
-{$endif CPUARM}
 
 
 {$ifdef CPUAARCH64}
@@ -237,18 +204,6 @@ Type
 
 
 
-{$ifdef CPUWASM32}
-  {$define DEFAULT_DOUBLE}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-
-  FarPointer = Pointer;
-{$endif CPUWASM32}
 
 
 
@@ -256,7 +211,7 @@ Type
 
 
 
-{$if not defined(CPUI386) and not defined(CPUWASM32)}
+{$ifndef CPUI386}
   FarPointer = Pointer;
 {$endif}
 
@@ -816,14 +771,14 @@ function UMul64x64_128(a,b: uint64; out rHi: uint64): uint64;
 {$define FPC_HAS_INTERNAL_ROX_WORD}
 {$endif defined(cpux86_64) or defined(cpui386)}
 
-{$if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$if defined(cpux86_64) or defined(cpui386) or defined(cpuaarch64)}
 {$define FPC_HAS_INTERNAL_ROX_DWORD}
-{$endif defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$endif defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpuaarch64)}
 
-{$if defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$if defined(cpux86_64) or defined(cpuaarch64)}
 {$define FPC_HAS_INTERNAL_ROX_QWORD}
 {$define FPC_HAS_INTERNAL_ROX_ASSIGN_QWORD}
-{$endif defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$endif defined(cpux86_64) or defined(cpuaarch64)}
 
 {$endif FPC_HAS_INTERNAL_ROX}
 
@@ -888,20 +843,20 @@ function RolQWord(Const AValue : QWord;const Dist : Byte): QWord;{$ifdef SYSTEMI
 
 {$ifdef FPC_HAS_INTERNAL_SAR}
 
-{$if defined(cpux86_64) or defined(cpui386) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
+{$if defined(cpux86_64) or defined(cpui386)}
 {$define FPC_HAS_INTERNAL_SAR_BYTE}
 {$define FPC_HAS_INTERNAL_SAR_WORD}
-{$endif defined(cpux86_64) or defined(cpui386) or defined(cpumips) or defined(cpumipsel) or defined(cpusparc)}
+{$endif defined(cpux86_64) or defined(cpui386)}
 
 { currently, all supported CPUs have an internal 32 bit sar implementation }
 { $if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel)}
 {$define FPC_HAS_INTERNAL_SAR_DWORD}
 { $endif defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpumips) or defined(cpumipsel)}
 
-{$if defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$if defined(cpux86_64) or defined(cpuaarch64)}
 {$define FPC_HAS_INTERNAL_SAR_QWORD}
 {$define FPC_HAS_INTERNAL_SAR_ASSIGN_QWORD}
-{$endif defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$endif defined(cpux86_64) or defined(cpuaarch64)}
 
 {$endif FPC_HAS_INTERNAL_SAR}
 
@@ -933,7 +888,7 @@ function fpc_SarInt64(Const AValue : Int64;const Shift : Byte): Int64;compilerpr
 {$endif FPC_HAS_INTERNAL_SAR_QWORD}
 
 {$ifdef FPC_HAS_INTERNAL_BSF}
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpuarm) or defined(cpuaarch64) or defined(cpupowerpc32) or defined(cpupowerpc64)}
+{$if defined(cpui386) or defined(cpux86_64) or defined(cpuaarch64)}
 {$define FPC_HAS_INTERNAL_BSF_BYTE}
 {$define FPC_HAS_INTERNAL_BSF_WORD}
 {$define FPC_HAS_INTERNAL_BSF_DWORD}
@@ -944,7 +899,7 @@ function fpc_SarInt64(Const AValue : Int64;const Shift : Byte): Int64;compilerpr
 {$endif}
 
 {$ifdef FPC_HAS_INTERNAL_BSR}
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpuarm) or defined(cpuaarch64) or defined(cpupowerpc32) or defined(cpupowerpc64)}
+{$if defined(cpui386) or defined(cpux86_64) or defined(cpuaarch64)}
 {$define FPC_HAS_INTERNAL_BSR_BYTE}
 {$define FPC_HAS_INTERNAL_BSR_WORD}
 {$define FPC_HAS_INTERNAL_BSR_DWORD}
@@ -1297,11 +1252,6 @@ Function GetProcessID:SizeUInt;{$ifdef SYSTEMINLINE}inline;{$endif}
 Function GetThreadID:TThreadID;{$ifdef SYSTEMINLINE}inline;{$endif}
 {$endif FPC_HAS_FEATURE_PROCESSES}
 
-{$ifdef cpum68k}
-{ due to the register calling convention which uses address registers explicit
-  variants of the Interlocked* functions for Pointers are needed }
-{$define FPC_HAS_EXPLICIT_INTERLOCKED_POINTER}
-{$endif}
 
 
 

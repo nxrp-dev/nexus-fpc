@@ -2312,25 +2312,17 @@ type
     procedure ForceQueue(aMethod: TThreadMethod); inline;
     property ReturnValue: Integer read FReturnValue write FReturnValue;
     property Terminated: Boolean read FTerminated;
-{$if defined(windows) or defined(OS2)}
+{$ifdef windows}
   private
     FInitialSuspended: boolean;
 {$endif}
-{$if defined(Unix) or defined(wasi)}
+{$ifdef Unix}
   private
     // see tthread.inc, ThreadFunc and TThread.Resume
     FSuspendEvent: PRTLEvent;
     FInitialSuspended: boolean;
     FSuspendedInternal: longbool;
     FThreadReaped: boolean;
-{$endif}
-{$if defined(hasamiga)}
-  private
-    FInitialSuspended: boolean;
-{$endif}
-{$ifdef beos}
-    FSem : pointer;
-    FSuspendedExternal: boolean;
 {$endif}
   public
     constructor Create(CreateSuspended: Boolean;

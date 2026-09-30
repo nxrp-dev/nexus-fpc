@@ -18,27 +18,15 @@ Type
 
 
   // Some operating systems need FindHandle to be a Pointer
-{$if defined(unix) or defined(msdos) or defined(hasamiga) or defined(atari) or defined(sinclairql)}
+{$ifdef unix}
     {$define FINDHANDLE_IS_POINTER}
 {$endif}
 
   // Some operating systems need extra find data.
-{$if defined(Win32) or defined(WinCE) or defined(Win64)}
+{$if defined(Win32) or defined(Win64)}
     {$define SEARCHREC_USEFINDDATA}
     {$define SYMLINKREC_USEFINDDATA}
     TFindData = TWin32FindDataW;
-{$endif}
-{$ifdef MacOS}
-    TFindData = TMacOSFindData;
-    {$define SEARCHREC_USEFINDDATA}
-{$endif}
-{$ifdef nativent}
-    TFindData = TNativeNTFindData;
-    {$define SEARCHREC_USEFINDDATA}
-{$endif}
-{$ifdef wasi}
-    TFindData = TWasiFindData;
-    {$define SEARCHREC_USEFINDDATA}
 {$endif}
 
   // The actual unicode search record

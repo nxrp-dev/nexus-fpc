@@ -24,9 +24,9 @@ The following are currently supported.
 
 | Platform | CPUs to retain |
 |---|---|
-| Windows desktop | x86-64, ARM64 |
-| Windows Server | x86-64 |
-| Linux desktop/server | x86-64, ARM64 |
+| Windows desktop | x86 (i386), x86-64, ARM64 |
+| Windows Server | x86 (i386), x86-64 |
+| Linux desktop/server | x86 (i386), x86-64, ARM64 |
 | macOS | ARM64 and Intel x86-64 |
 | Android | ARM64; x86-64 for emulator testing |
 | iPhone/iPad | ARM64 |

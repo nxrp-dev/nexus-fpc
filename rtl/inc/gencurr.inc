@@ -20,11 +20,7 @@
         result := int64(c)
       end;
 
-{$ifndef cpujvm}
     function trunc(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$else not cpujvm}
-    function trunc_comp(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$endif cpujvm}
       begin
         result := c
       end;
@@ -67,11 +63,7 @@
 {$endif FPUNONE}
 
 
-{$ifndef cpujvm}
     function round(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$else not cpujvm}
-    function round_comp(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$endif cpujvm}
       begin
         result := c
       end;

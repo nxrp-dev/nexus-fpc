@@ -314,10 +314,10 @@ CONST
     { SIGCHLD or CLONE_CHILD_CLEARTID or CLONE_CHILD_SETTID }
     clone_flags_fork = $01200011;
 
-{$if defined(cpuarm) or defined(cpualpha) or defined(cpublackfin) or defined(cpum68k) or defined(cpuaarch64)}
+{$ifdef cpuaarch64}
     O_LARGEFILE =   $20000;
 {$endif}
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpuia64)}
+{$if defined(cpui386) or defined(cpux86_64)}
     O_LARGEFILE =    $8000;
 {$endif}
     { mode_t possible values                                 }

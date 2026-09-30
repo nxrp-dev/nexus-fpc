@@ -187,9 +187,6 @@ begin
   undef_system_macro('FPC_LINK_DYNAMIC');
   init_settings.globalswitches:=init_settings.globalswitches+[cs_link_static];
   init_settings.globalswitches:=init_settings.globalswitches-[cs_link_shared,cs_link_smart];
-{$ifdef AIX}
-  init_settings.globalswitches:=init_settings.globalswitches+[cs_link_native];
-{$endif}
 end;
 
 procedure set_endianess_macros;
@@ -922,26 +919,12 @@ begin
 {$ifdef x86_64}
       '4',
 {$endif}
-{$ifdef m68k}
-      '6',
-{$endif}
 
 {$ifdef aarch64}
       'a',
 {$endif}
 {$ifdef arm}
       'A',
-{$endif}
-{$ifdef jvm}
-      'J',
-{$endif}
-
-{$ifdef xtensa}
-      'x',
-{$endif}
-
-{$ifdef wasm32}
-      'W',
 {$endif}
       '*' : show:=true;
      end;
@@ -951,9 +934,6 @@ begin
          'g',
 {$ifdef Unix}
          'L',
-{$endif}
-{$ifdef os2}
-         'O',
 {$endif}
          '*' : show:=true;
         else
@@ -3784,25 +3764,6 @@ begin
            else
              include(init_settings.globalswitches,cs_link_native);
          end;
-{$ifdef wasm32}
-       'l' :
-         begin
-           if j=length(more) then
-             IllegalPara(opt)
-           else
-             begin
-                case more[j+1] of
-                  'S':
-                    begin
-                      llvmutilssuffix:=copy(more,j+2);
-                      j:=length(more);
-                    end
-                  else
-                    IllegalPara(opt);
-                end;
-             end;
-         end;
-{$endif}
        'm' :
          begin
            If UnsetBool(More, j, opt, false) then
@@ -4079,14 +4040,6 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('FPC_HAS_TYPE_SINGLE');
       {$endif}
 
-      {$ifdef m68k}
-        def_system_macro('CPU68');
-        def_system_macro('CPU68K');
-        def_system_macro('CPUM68K');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif}
 
 
 
@@ -4150,13 +4103,6 @@ procedure read_arguments(cmd:TCmdStr);
 
 
 
-      {$ifdef wasm32}
-        def_system_macro('CPUWASM');
-        def_system_macro('CPUWASM32');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif wasm32}
 
 
       {$if defined(cpu32bitalu)}
@@ -4182,12 +4128,7 @@ procedure read_arguments(cmd:TCmdStr);
 
       { these cpus have an inline rol/ror implementation }
       {$ifdef cpurox}
-      {$if defined(m68k)}
-        if CPUM68K_HAS_ROLROR in cpu_capabilities[init_settings.cputype] then
-          def_system_macro('FPC_HAS_INTERNAL_ROX');
-      {$else}
         def_system_macro('FPC_HAS_INTERNAL_ROX');
-      {$endif}
       {$endif}
 
 
@@ -4731,9 +4672,6 @@ begin
 {$if not defined(i386) and not defined(x86_64) and not defined(aarch64)}
       def_system_macro('FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE');
 {$endif}
-{$if defined(m68k)}
-      def_system_macro('FPC_INCLUDE_SOFTWARE_LONGWORD_TO_DOUBLE');
-{$endif}
 {$ifdef x86_64}
 {$ifndef FPC_SUPPORT_X87_TYPES_ON_WIN64}
       { normally, win64 doesn't support the legacy fpu }
@@ -4768,7 +4706,7 @@ begin
 {$endif ARM}
 
 { inline bsf/bsr implementation }
-{$if defined(i386) or defined(x86_64) or defined(aarch64) or defined(powerpc) or defined(powerpc64)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
   def_system_macro('FPC_HAS_INTERNAL_BSF');
   def_system_macro('FPC_HAS_INTERNAL_BSR');
 {$endif}

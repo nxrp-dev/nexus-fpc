@@ -36,7 +36,6 @@ const
       https://preshing.com/20110717/the-windows-heap-is-slow-when-launched-from-the-debugger/ }
   SysOSAllocZeroesIfAtLeast = 128 * 1024 * sizeof(pointer) - 4096 - 7; { not like - 4096 - 7 are important: SysOSAlloc gets a multiple of 64 Kb. }
 
-{$ifndef wince}
 var
   { nil at start, CodePointer(1) if not found (to not attempt every time). }
   VirtualAlloc2: function(Process: THandle; BaseAddress: pointer; Size: SizeUint; AllocationType, PageProtection: uint32;
@@ -55,19 +54,16 @@ begin
   if not Assigned(VirtualAlloc2) then
     CodePointer(VirtualAlloc2) := CodePointer(1); { Failed. }
 end;
-{$endif}
 
 function SysOSAlloc(size: ptruint): pointer;
 begin
   if size >= SysOSAllocZeroesIfAtLeast then
   begin
-  {$ifndef wince}
     result := nil;
     if not Assigned(VirtualAlloc2) then DetectVirtualAlloc2;
     if CodePointer(VirtualAlloc2) <> CodePointer(1) then
       result := VirtualAlloc2(GetCurrentProcess, nil, (size + 65535) and SizeUint(-65536), MEM_RESERVE or MEM_COMMIT or MEM_64K_PAGES, PAGE_READWRITE, nil, 0);
     if not Assigned(result) then
-  {$endif}
       result := VirtualAlloc(nil, size, MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
   end else
     result := HeapAlloc(GetProcessHeap, 0, size);

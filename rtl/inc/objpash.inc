@@ -458,9 +458,6 @@
 
 {$ifdef FPC_USE_PSABIEH}
 
-{$if (defined(CPUARMEL) or defined(CPUARMHF)) and not defined(darwin)}
-{$define __ARM_EABI_UNWINDER__}
-{$endif}
 
        { needed here for TExceptObject (rest is in psabiehh.inc) }
        FPC_Unwind_Reason_Code = longint; {cint}

@@ -28,9 +28,6 @@ Unit System;
 {$define FPC_IS_SYSTEM}
 {$define HAS_CMDLINE}
 {$define USE_NOTHREADMANAGER}
-{$ifdef CPUM68K}
-{$define FPC_68K_SYSTEM_HAS_FPU_EXCEPTIONS}
-{$endif}
 
 {$i osdefs.inc}
 
@@ -39,9 +36,6 @@ Unit System;
 function get_cmdline:PAnsiChar; deprecated 'use paramstr' ;
 property cmdline:PAnsiChar read get_cmdline;
 
-{$if defined(CPUARM) or defined(CPUM68K)}
-{$define FPC_LOAD_SOFTFPU}
-{$endif defined(CPUARM) or defined(CPUM68K)}
 
 {$ifdef FPC_SOFT_FPUX80}
 {$define FPC_SOFTFLOAT_FLOATX80}
@@ -78,10 +72,6 @@ procedure OsSetupEntryInformation(constref info: TEntryInformation); forward;
 {$ifdef FPC_LOAD_SOFTFPU}
 
 {$define fpc_softfpu_implementation}
-{$if defined(CPUM68K)}
-{$define softfpu_compiler_mul32to64}
-{$define softfpu_inline}
-{$endif}
 {$i softfpu.pp}
 {$undef fpc_softfpu_implementation}
 
@@ -114,13 +104,6 @@ procedure OsSetupEntryInformation(constref info: TEntryInformation); forward;
 { TLS initialization is not required if linking against libc }
 {$if not defined(FPC_USE_LIBC)}
 
-{$if defined(CPUARM)}
-{$define INITTLS}
-Function fpset_tls(p : pointer;size : SizeUInt):cint;
-begin
-  Result:=do_syscall(syscall_nr___ARM_NR_set_tls,TSysParam(p));
-end;
-{$endif defined(CPUARM)}
 
 {$if defined(CPUI386)}
 {$define INITTLS}
@@ -375,11 +358,7 @@ end;
 
 {$endif FPC_BOOTSTRAP_INDIRECT_ENTRY}
 
-{$if defined(CPUARM) and defined(FPC_ABI_EABI)}
-procedure haltproc(e:longint);cdecl;external name '_haltproc_eabi';
-{$else}
 procedure haltproc(e:longint);cdecl;external name '_haltproc';
-{$endif}
 {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 
 {*****************************************************************************
@@ -643,13 +622,8 @@ function FpUGetRLimit(resource : cInt; rlim : PRLimit) : cInt; cdecl; external c
 {$endif}
 {$endif}
 
-{$if defined(CPULOONGARCH)}
-const
-  page_size = $4000;
-{$else}
 const
   page_size = $1000;
-{$endif}
 
 function CheckInitialStkLen(stklen : SizeUInt) : SizeUInt;
 var
@@ -672,9 +646,9 @@ begin
 end;
 
 {$if FPC_FULLVERSION>30300}
-{$if defined(CPUI386) or defined(CPUARM)}
+{$ifdef CPUI386}
 {$I abitag.inc}
-{$endif defined(CPUI386) or defined(CPUARM)}
+{$endif CPUI386}
 {$endif FPC_FULLVERSION>30300}
 
 begin
@@ -692,7 +666,7 @@ begin
 {$endif}
   { Set up signals handlers (may be needed by init code to test cpu features) }
   InstallSignals;
-{$if defined(cpui386) or defined(cpuarm)}
+{$ifdef cpui386}
   fpc_cpucodeinit;
 {$endif cpui386}
 

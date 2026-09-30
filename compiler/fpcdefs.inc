@@ -77,9 +77,6 @@
   {$define cpuextended}
 {$endif generic_cpu}
 
-{$ifdef cpuarm}
-  {$packrecords c}
-{$endif cpuarm}
 
 
 {$ifdef i386}
@@ -124,42 +121,6 @@
 
 
 
-{$ifdef arm}
-  {$define cpu32bit}
-  {$define cpu32bitaddr}
-  {$define cpu32bitalu}
-  {$define cpuflags}
-  {$define cpufpemu}
-  {$define cpuneedsdivhelper}
-  {$define cpurox}
-  {$define cputargethasfixedstack}
-  {$define cpurefshaveindexreg}
-  {$define cpucapabilities}
-  {$define fpucapabilities}
-  {$define SUPPORT_SAFECALL}
-  {$define SUPPORT_GET_FRAME}
-  {$define support_rodata}
-  { default to armel }
-  {$if not(defined(CPUARM)) and not(defined(CPUARMEB)) and not(defined(FPC_OARM)) and not(defined(FPC_ARMEB)) and not(defined(FPC_ARMHF))}
-    {$define FPC_ARMEL}
-  {$endif}
-  { inherit FPC_ARMEL? }
-  {$if defined(CPUARMEL) and not(defined(FPC_OARM)) and not(defined(FPC_ARMEB)) and not(defined(FPC_ARMHF))}
-    {$define FPC_ARMEL}
-  {$endif}
-  { inherit FPC_ARMEB? }
-  {$if defined(CPUARMEB) and not(defined(FPC_OARM)) and not(defined(FPC_ARMEL)) and not(defined(FPC_ARMHF))}
-    {$define FPC_ARMEB}
-  {$endif}
-  { inherit FPC_ARMHF? }
-  {$if defined(CPUARMHF) and not(defined(FPC_OARM)) and not(defined(FPC_ARMEL)) and not(defined(FPC_ARMEB))}
-    {$define FPC_ARMHF}
-  {$endif}
-  { inherit FPC_OARM? }
-  {$if defined(CPUARM) and not(defined(FPC_ARMHF)) and not(defined(FPC_ARMEL)) and not(defined(FPC_ARMEB))}
-    {$define FPC_ARMHF}
-  {$endif}
-{$endif arm}
 
 
 

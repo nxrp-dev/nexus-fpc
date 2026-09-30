@@ -931,22 +931,10 @@ end;
  | Fills string region with certain character.
  |
  *-------------------------------------------------------*)
-{$ifdef cpujvm}
-procedure do_fillchar( var str: shortstring; pos, count: integer; c: AnsiChar );
-begin
-  while count>0 do
-    begin
-      str[pos]:=c;
-      inc(pos);
-      dec(count);
-    end;
-end;
-{$else not cpujvm}
 procedure do_fillchar( var str: shortstring; pos, count: integer; c: AnsiChar ); {$ifdef grisu1_inline}inline;{$endif}
 begin
   fillchar( str[pos], count, c );
 end;
-{$endif cpujvm}
 
 (*-------------------------------------------------------
  | try_return_fixed [local]
@@ -986,12 +974,8 @@ begin
     if ( cut_digits_at < n_digits_have ) then
     begin
         // round digits
-{$ifdef cpujvm}
-        temp_round := digits;
-{$else not cpujvm}
         if ( n_digits_have > 0 ) then
             move( digits, temp_round, n_digits_have * sizeof( digits[0] ) );
-{$endif cpujvm}
         inc( fixed_dot_pos, round_digits( temp_round, n_digits_have, cut_digits_at {$ifdef GRISU1_F2A_HALF_ROUNDUP}, false {$endif} ) );
         rounded := true;
     end;

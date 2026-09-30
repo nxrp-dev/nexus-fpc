@@ -143,10 +143,6 @@ implementation
             end;
           if found then
             begin
-{$ifdef wasm32}
-             { -Ooregvar is not supported on wasm32. }
-             if opt<>cs_opt_regvar then
-{$endif}
               if doset then
                 include(a,opt)
               else

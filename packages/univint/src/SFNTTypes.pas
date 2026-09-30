@@ -70,11 +70,7 @@ interface
 {$elsec}
 	{$setc __x86_64__ := 0}
 {$endc}
-{$ifc not defined __arm__ and defined CPUARM}
-	{$setc __arm__ := 1}
-{$elsec}
-	{$setc __arm__ := 0}
-{$endc}
+{$setc __arm__ := 0}
 {$ifc not defined __arm64__ and defined CPUAARCH64}
   {$setc __arm64__ := 1}
 {$elsec}

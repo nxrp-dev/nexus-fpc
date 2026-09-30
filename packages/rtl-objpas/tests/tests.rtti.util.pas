@@ -33,7 +33,7 @@ type
 {$endif}
 
 const
-{$if defined(cpui386) or defined(cpux86_64) or defined(cpum68k)}
+{$if defined(cpui386) or defined(cpux86_64)}
   DefaultCC = ccReg;
 {$else}
   DefaultCC = ccStdCall;

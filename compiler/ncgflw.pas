@@ -24,9 +24,6 @@ unit ncgflw;
 
 {$i fpcdefs.inc}
 
-{$if defined(jvm) or defined(wasm)}
-  {$define SkipABIEH}
-{$endif}
 
 
 interface

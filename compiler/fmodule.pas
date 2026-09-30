@@ -23,22 +23,6 @@ unit fmodule;
 
 {$i fpcdefs.inc}
 
-{$ifdef go32v2}
-  {$define shortasmprefix}
-{$endif}
-{$ifdef watcom}
-  {$define shortasmprefix}
-{$endif}
-{$ifdef atari}
-  {$define shortasmprefix}
-{$endif}
-{$ifdef OS2}
-  { Although OS/2 supports long filenames I play it safe and
-    use 8.3 filenames, because this allows the compiler to run
-    on a FAT partition. (DM) }
-  {$define shortasmprefix}
-{$endif}
-
 interface
 
     uses
@@ -630,12 +614,7 @@ implementation
           end;
         all_modules[moduleid]:=self;
 
-        { Dos has the famous 8.3 limit :( }
-{$ifdef shortasmprefix}
-        asmprefix:=stringdup(FixFileName('as'));
-{$else}
         asmprefix:=stringdup(FixFileName(n));
-{$endif}
         setfilename(fn,true);
         localunitsearchpath:=TSearchPathList.Create;
         localobjectsearchpath:=TSearchPathList.Create;

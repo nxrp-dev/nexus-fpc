@@ -57,9 +57,9 @@ implementation
        systems,
        { symtable }
        symconst,symbase,defutil,defcmp,symutil,symcreat,
-{$if defined(i386) or defined(wasm)}
+{$ifdef i386}
        symcpu,
-{$endif}
+{$endif i386}
        fmodule,htypechk,procdefutil,
        { pass 1 }
        node,pass_1,aasmbase,aasmdata,

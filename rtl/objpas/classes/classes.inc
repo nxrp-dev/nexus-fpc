@@ -330,7 +330,7 @@ begin
 // enable for all platforms once http://bugs.freepascal.org/view.php?id=16884
 // is fixed for all platforms (in case the fix for non-unix platforms also
 // requires this field at least)
-{$if defined(unix) or defined(windows) or defined(os2) or defined(hasamiga) or defined(wasi) }
+{$if defined(unix) or defined(windows)}
   if not FExternalThread and not FInitialSuspended then
     Resume;
 {$endif}
@@ -912,14 +912,8 @@ begin
     {$else}
     {$IF defined(CPUX86_64) or Defined(CPUI386)}
     fpc_x86_pause;
-    {$ELSEIF defined(CPUARM)}
-    fpc_arm_yield;
     {$ELSEIF defined(CPUAARCH64)}
     fpc_aarch64_yield;
-    {$ELSEIF defined(CPUPOWERPC64) or defined(CPUPOWERPC)}
-    fpc_ppc_yield;
-    {$ELSEIF defined(RISCV) and defined(CPURV_HAS_ZIHINTPAUSE)}
-    fpc_riscv_pause;
     {$ifend}
     {$endif FPC_USE_INTRINSICS}
     end;

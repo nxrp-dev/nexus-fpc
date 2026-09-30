@@ -39,14 +39,6 @@ uses
   BaseUnix,Unix,
  {$endif}
 {$endif}
-{$ifdef go32v2}
-{$define has_signal}
-  dpmiexcp,
-{$endif}
-{$ifdef watcom}
-  {$define has_signal}
-  dpmiexcp,
-{$endif}
   verbose;
 
 {$ifdef has_signal}

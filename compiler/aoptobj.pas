@@ -28,9 +28,7 @@ Unit AoptObj;
 
 {$i fpcdefs.inc}
 
-{$if not defined(JVM) and not defined(WASM)}
 {$define CPU_SUPPORTS_OPT_COND_JUMP}
-{$endif}
 
   { general, processor independent objects for use by the assembler optimizer }
 
@@ -1782,14 +1780,10 @@ Unit AoptObj;
       optimisations if the label appeared earlier in the stream) }
     function TAOptObj.RemoveDeadCodeAfterJump(p: tai): Boolean;
       const
-{$ifdef JVM}
-        TaiFence = SkipInstr + [ait_const, ait_realconst, ait_typedconst, ait_label, ait_jcatch];
-{$else JVM}
         { Stop if it reaches SEH directive information in the form of
           consts, which may occur if RemoveDeadCodeAfterJump is called on
           the final RET instruction on x86, for example }
         TaiFence = SkipInstr + [ait_const, ait_realconst, ait_typedconst, ait_label];
-{$endif JVM}
       var
         hp1, hp2: tai;
       begin

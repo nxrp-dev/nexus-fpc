@@ -209,10 +209,6 @@ type
      {$i x86/cx86innr.inc}
 {$endif }
 
-{$if defined(WASM32)}
-     ,
-     {$i ccpuinnr.inc}
-{$endif}
 {$if defined(ARM)}
      ,
      {$i ccpuinnr.inc}

@@ -25,7 +25,7 @@ unit optloadmodifystore;
 
 {$i fpcdefs.inc}
 
-{$if defined(i386) or defined(x86_64) or defined(m68k)}
+{$if defined(i386) or defined(x86_64)}
   {$define enable_shl_shr_assign_x_y}
 {$endif}
 {$if defined(i386) or defined(x86_64)}

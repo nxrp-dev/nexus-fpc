@@ -18,54 +18,6 @@
 { precision and we need extended precision if supported  }
 {$ifndef FPC_HAS_TYPE_EXTENDED}
 
-{$ifdef aix}
-    { aix math library routines don't raise exceptions, you have to manually
-      check for them }
-    function feclearexcept(flags: longint): longint; cdecl; external 'c';
-    function fetestexcept(flags: longint): longint; cdecl; external 'c';
-
-    const
-      FE_DIVBYZERO  = $04000000;
-      FE_INEXACT    = $02000000;
-      FE_INVALID    = $20000000;
-      FE_OVERFLOW   = $10000000;
-      FE_UNDERFLOW  = $08000000;
-      FE_ALL_EXCEPT = $3E000000;
-
-    procedure resetexcepts;
-      begin
-        seterrno(0);
-        feclearexcept(FE_ALL_EXCEPT);
-      end;
-
-    procedure checkexcepts;
-      var
-        feres: longint;
-        sfexcepts: TFPUExceptionMask;
-      begin
-        feres:=fetestexcept(FE_ALL_EXCEPT);
-        sfexcepts:=[];
-        if feres<>0 then
-          begin
-            if (feres and FE_DIVBYZERO) <> 0 then
-              include(sfexcepts,float_flag_divbyzero);
-            if (feres and FE_INEXACT) <> 0 then
-              include(sfexcepts,float_flag_inexact);
-            if (feres and FE_INVALID) <> 0 then
-              include(sfexcepts,float_flag_invalid);
-            if (feres and FE_OVERFLOW) <> 0 then
-              include(sfexcepts,float_flag_overflow);
-            if (feres and FE_UNDERFLOW) <> 0 then
-              include(sfexcepts,float_flag_underflow);
-          end
-        { unknown error }
-        else if (geterrno<>0) then
-          include(sfexcepts,float_flag_invalid);
-        if sfexcepts<>[] then
-          float_raise(sfexcepts);
-      end;
-
-{$else aix}
     procedure resetexcepts; inline;
       begin
       end;
@@ -75,22 +27,14 @@
       begin
       end;
 
-{$endif aix}
-
-
-
-{$if defined(LINUX) or defined(BSD) or defined(AIX) or defined(SOLARIS)}
+{$if defined(LINUX) or defined(BSD)}
 const
   mathlibname = 'm';
-{$elseif defined(HAIKU)}
-const
-  mathlibname = 'root';
 {$else}
 const
   mathlibname = 'c';
 {$endif}
 
-{$ifndef SOLARIS}
 {$ifndef FPC_SYSTEM_HAS_INT}
 {$define FPC_SYSTEM_HAS_INT}
 
@@ -120,7 +64,6 @@ const
 {$endif SUPPORT_DOUBLE}
 
 {$endif FPC_SYSTEM_HAS_INT}
-{$endif SOLARIS}
 
 {$ifndef SYSTEM_HAS_FREXP}
 {$define SYSTEM_HAS_FREXP}
@@ -177,8 +120,6 @@ const
 {$endif}
 
 
-{ buggy on aix, sets DIV_BY_ZERO flag for some valid inputs }
-{$ifndef aix}
 {$ifndef FPC_SYSTEM_HAS_LN}
 {$define FPC_SYSTEM_HAS_LN}
 
@@ -190,7 +131,6 @@ const
       result := c_log(d);
       checkexcepts;
     end;
-{$endif}
 {$endif}
 
 

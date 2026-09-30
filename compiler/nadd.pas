@@ -2044,9 +2044,6 @@ const
 {$ifdef cpurox}
             { optimize (i shl x) or (i shr (bitsizeof(i)-x)) into rol(x,i) (and different flavours with shl/shr swapped etc.) }
             if (nodetype in [addn,orn]) { add also works here }
-{$ifdef m68k}
-               and (CPUM68K_HAS_ROLROR in cpu_capabilities[current_settings.cputype])
-{$endif m68k}
 {$ifndef cpu64bitalu}
                and (ld.typ=orddef) and
                not(torddef(ld).ordtype in [s64bit,u64bit,scurrency])

@@ -1019,9 +1019,6 @@ begin
   Result:=arIntelX86;
   {$endif i386}
 
-  {$ifdef m68k}
-  Result:=arM68k;
-  {$endif m68k}
 
 
 
@@ -1042,9 +1039,6 @@ begin
 
 
 
-  {$ifdef wasm32}
-  Result:=arWasm32;
-  {$endif wasm32}
 
 end;
 
@@ -1142,9 +1136,6 @@ begin
   {$IFDEF AIX}
   Result:=pfAIX;
   {$ENDIF}
-  {$IFDEF JAVA}
-  Result:=pfJava;
-  {$ENDIF}
   {$IFDEF NATIVENT}
   Result:=pfNativeNT;
   {$ENDIF}
@@ -1165,9 +1156,6 @@ begin
   {$ENDIF}
   {$IFDEF SINCLAIRQL}
   Result:=pfSinclairQL;
-  {$ENDIF}
-  {$IFDEF WASI}
-  Result:=pfWasi;
   {$ENDIF}
 end;
 

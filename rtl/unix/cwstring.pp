@@ -266,13 +266,13 @@ threadvar
 procedure InitThread;
 var
   transliterate: cint;
-{$if not(defined(darwin) and (defined(cpuarm) or defined(cpuaarch64))) and not defined(iphonesim)}
+{$if not(defined(darwin) and defined(cpuaarch64)) and not defined(iphonesim)}
   iconvindex: longint;
 {$endif}
   iconvname, toencoding: shortstring;
 begin
   current_DefaultSystemCodePage:=DefaultSystemCodePage;
-{$if not(defined(darwin) and (defined(cpuarm) or defined(cpuaarch64))) and not defined(iphonesim)}
+{$if not(defined(darwin) and defined(cpuaarch64)) and not defined(iphonesim)}
   iconvindex:=GetCodepageData(DefaultSystemCodePage);
   if iconvindex<>-1 then
     iconvname:=UnixCpMap[iconvindex].name

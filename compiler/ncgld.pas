@@ -1035,17 +1035,6 @@ implementation
                   else
 {$endif cpu64bitalu}
 {$endif not cpuhighleveltarget}
-{$if defined(wasm32)}
-                  { prefer a_load_loc_ref, because it supports i8086-specific types
-                    that use registerhi (like 6-byte method pointers). The same
-                    applies to WebAssembly, which has a 64-bit ALU, but keeps
-                    method pointers in a register pair, because that's more
-                    convenient.
-                    (todo: maybe we should add a_load_loc_loc?) }
-                  if left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE] then
-                    hlcg.a_load_loc_ref(current_asmdata.CurrAsmList,right.resultdef,left.resultdef,right.location,left.location.reference)
-                  else
-{$endif}
                     hlcg.a_load_reg_loc(current_asmdata.CurrAsmList,right.resultdef,left.resultdef,right.location.register,left.location);
                 end;
               LOC_FPUREGISTER,

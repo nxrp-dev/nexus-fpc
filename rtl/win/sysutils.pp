@@ -1073,17 +1073,14 @@ begin
 end;
 
 
-{$IFNDEF WINCE}
 type
   TGetTickCount64 = function : QWord; stdcall;
 
 var
   WinGetTickCount64: TGetTickCount64 = Nil;
-{$ENDIF}
 
 function GetTickCount64: QWord;
 begin
-{$IFNDEF WINCE}
   if Assigned(WinGetTickCount64) then
     Exit(WinGetTickCount64());
   { on Vista and newer there is a GetTickCount64 implementation }
@@ -1091,7 +1088,6 @@ begin
     WinGetTickCount64 := TGetTickCount64(GetProcAddress(GetModuleHandle('kernel32.dll'), 'GetTickCount64'));
     Result := WinGetTickCount64();
   end else
-{$ENDIF}
     Result := {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.GetTickCount;
 end;
 

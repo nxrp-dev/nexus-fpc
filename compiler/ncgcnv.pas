@@ -129,8 +129,7 @@ interface
                     location.reference.alignment:=newalignment(location.reference.alignment,leftsize-ressize);
                   end;
               end
-{$if not defined(m68k) and not defined(cpuhighleveltarget)}
-            { FIXME: reg_cgsize incorrectly identifies m68k as "without subregisters" }
+{$if not defined(cpuhighleveltarget)}
             { On targets without 8/16 bit register components, 8/16-bit operations
               always adjust high bits of result, see 'maybeadjustresult' method in
               respective cgcpu.pas. Therefore 8/16-bit locations are valid as larger
@@ -208,25 +207,8 @@ interface
                location.size:=newsize;
              exit;
           end;
-        { though ppc/ppc64 doesn't use the generic code, we need to ifdef here
-          because the code is included into the powerpc compilers }
-{$if defined(POWERPC) or defined(POWERPC64)}
-        resflags.cr := RS_CR0;
-        resflags.flag:=F_NE;
-{$elseif defined(mips)}
-        resflags.reg1:=NR_NO;
-        resflags.reg2:=NR_NO;
-        resflags.cond:=OC_NONE;
-{$elseif defined(sparcgen)}
-        { Load left node into flag F_NE/F_E }
-        resflags.Init(NR_ICC,F_NE);
-{$elseif defined(xtensa)}
-        { Xtensa uses its own implementation }
-        Internalerror(2020032901);
-{$else}
         { Load left node into flag F_NE/F_E }
         resflags:=F_NE;
-{$endif defined(POWERPC) or defined(POWERPC64)}
         case left.location.loc of
           LOC_CREFERENCE,
           LOC_REFERENCE :

@@ -107,7 +107,7 @@ type
   {$define longdouble_is_double}
 {$endif}
 
-{$if defined(linux) and (defined(cpupowerpc) or defined(cpuarm))}
+{$if defined(linux) and defined(cpuarm)}
   {$define longdouble_is_double}
 {$ifend}
 

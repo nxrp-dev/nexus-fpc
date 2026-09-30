@@ -37,7 +37,7 @@ type
   NSCoder = objcclass external;
 
 { needed by NSZone.h below }
-{$if defined(cpu64) or defined(cpuarm) or defined(win32)}
+{$if defined(cpu64) or defined(win32)}
   NSInteger = clong;
   NSUInteger = culong;
 {$else}

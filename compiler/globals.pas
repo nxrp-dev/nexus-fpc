@@ -29,9 +29,6 @@ interface
 {$ifdef windows}
       windows,
 {$endif}
-{$ifdef os2}
-      dos,
-{$endif os2}
 {$ifdef hasunix}
       Baseunix,unix,
 {$endif}
@@ -91,14 +88,6 @@ interface
 
        treelogfilename = 'tree.log';
 
-{$if defined(CPUARM) and defined(FPUFPA)}
-       MathQNaN : tcompdoublerec = (bytes : (0,0,252,255,0,0,0,0));
-       MathInf : tcompdoublerec = (bytes : (0,0,240,127,0,0,0,0));
-       MathNegInf : tcompdoublerec = (bytes : (0,0,240,255,0,0,0,0));
-       MathPosZero : tcompdoublerec = (bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : tcompdoublerec = (bytes : (0,0,0,128,0,0,0,0));
-       MathPi : tcompdoublerec =  (bytes : (251,33,9,64,24,45,68,84));
-{$else}
 {$ifdef FPC_LITTLE_ENDIAN}
        MathQNaN : tcompdoublerec = (bytes : (0,0,0,0,0,0,252,255));
        MathInf : tcompdoublerec = (bytes : (0,0,0,0,0,0,240,127));
@@ -116,7 +105,6 @@ interface
        MathPi : tcompdoublerec =  (bytes : (64,9,33,251,84,68,45,24));
        MathPiExtended : tcompextendedrec = (bytes : (64,0,201,15,218,162,33,104,194,53));
 {$endif FPC_LITTLE_ENDIAN}
-{$endif}
 
        CP_UTF8 = 65001;
        CP_UTF16LE = 1200;
@@ -459,20 +447,11 @@ Const
        { for error info in pp.pas }
        parser_current_file : string = '';
 
-{$if defined(m68k) or defined(arm)}
+{$ifdef arm}
        { PalmOS resources }
        palmos_applicationname : string = 'FPC Application';
        palmos_applicationid : string[4] = 'FPCA';
-{$endif defined(m68k) or defined(arm)}
-{$if defined(m68k)}
-       { Atari Specific }
-       ataritos_exe_flags: dword = 7;
-       ataritos_exe_format: string = 'ataritos';
-
-       { Sinclair QL specific }
-       sinclairql_metadata_format: string[4] = 'QHDR';
-       sinclairql_vlink_experimental: boolean = true; { temporary }
-{$endif defined(m68k)}
+{$endif arm}
 
     const
        { default name of the C-style "main" procedure of the library/program }
@@ -543,30 +522,12 @@ Const
         asmcputype : cpu_none;
         fputype : fpu_x87;
   {$endif i386}
-  {$ifdef m68k}
-        cputype : cpu_MC68020;
-        optimizecputype : cpu_MC68020;
-        asmcputype : cpu_none;
-        fputype : fpu_soft;
-  {$endif m68k}
-  {$ifdef arm}
-        cputype : cpu_armv4;
-        optimizecputype : cpu_armv4;
-        asmcputype : cpu_none;
-        fputype : fpu_fpa;
-  {$endif arm}
   {$ifdef x86_64}
         cputype : cpu_athlon64;
         optimizecputype : cpu_athlon64;
         asmcputype : cpu_none;
         fputype : fpu_sse64;
   {$endif x86_64}
-  {$ifdef jvm}
-        cputype : cpu_none;
-        optimizecputype : cpu_none;
-        asmcputype : cpu_none;
-        fputype : fpu_standard;
-  {$endif jvm}
   {$ifdef aarch64}
         cputype : cpu_armv8;
         optimizecputype : cpu_armv8;
@@ -581,19 +542,9 @@ Const
         fputype : fpu_none;
   {$endif xtensa}
 
-  {$ifdef wasm}
-        cputype : cpu_none;
-        optimizecputype : cpu_none;
-        asmcputype : cpu_none;
-        fputype : fpu_standard;
-  {$endif wasm}
 {$endif not GENERIC_CPU}
         asmmode : asmmode_standard;
-{$ifndef jvm}
         interfacetype : it_interfacecom;
-{$else jvm}
-        interfacetype : it_interfacejava;
-{$endif jvm}
         defproccall : pocall_default;
         sourcecodepage : 28591;
         minfpconstprec : s32real;
@@ -951,30 +902,6 @@ implementation
          end;
 
 {$endif mswindows}
-{$ifdef openbsd}
-       function GetOpenBSDLocalBase: ansistring;
-         var
-           envvalue: pchar;
-         begin
-           envvalue := GetEnvPChar('LOCALBASE');
-           if assigned(envvalue) then
-             Result:=envvalue
-           else
-             Result:='/usr/local';
-           FreeEnvPChar(envvalue);
-         end;
-       function GetOpenBSDX11Base: ansistring;
-         var
-           envvalue: pchar;
-         begin
-           envvalue := GetEnvPChar('X11BASE');
-           if assigned(envvalue) then
-             Result:=envvalue
-           else
-             Result:='/usr/X11R6';
-           FreeEnvPChar(envvalue);
-         end;
-{$endif openbsd}
        var
          envstr: string;
          envvalue: pchar;
@@ -1008,10 +935,6 @@ implementation
          ReplaceSpecialFolder('$PROGRAM_FILES_COMMON',CSIDL_PROGRAM_FILES_COMMON);
          ReplaceSpecialFolder('$PROFILE',CSIDL_PROFILE);
 {$endif mswindows}
-{$ifdef openbsd}
-         Replace(s,'$OPENBSD_LOCALBASE',GetOpenBSDLocalBase);
-         Replace(s,'$OPENBSD_X11BASE',GetOpenBSDX11Base);
-{$endif openbsd}
 {$ifdef xtensa}
          if idf_version > 0 then
            Replace(s,'$IDF_VERSION',idfversionstring(idf_version));
@@ -1085,10 +1008,6 @@ implementation
         FreeEnvironmentStrings(p);
         {$define GETENVOK}
       {$endif}
-      {$ifdef os2}
-        GetEnvPChar := Dos.GetEnvPChar (EnvName);
-        {$define GETENVOK}
-      {$endif}
       {$ifdef GETENVOK}
         {$undef GETENVOK}
       {$else}
@@ -1105,9 +1024,7 @@ implementation
     procedure FreeEnvPChar(p:pchar);
       begin
       {$ifndef hasunix}
-       {$ifndef os2}
         freemem(p);
-       {$endif}
       {$endif}
       end;
 
@@ -1143,19 +1060,8 @@ implementation
       end;
 
     function convertdoublerec(d : tcompdoublerec) : tcompdoublerec;{$ifdef USEINLINE}inline;{$endif}
-{$ifdef CPUARM}
-      var
-        i : longint;
-      begin
-        for i:=0 to 3 do
-          begin
-            result.bytes[i+4]:=d.bytes[i];
-            result.bytes[i]:=d.bytes[i+4];
-          end;
-{$else CPUARM}
       begin
         result:=d;
-{$endif CPUARM}
       end;
 
 {$if sizeof(bestreal)=sizeof(double)}
@@ -1543,9 +1449,6 @@ implementation
 {$ifdef unix}
   {$define need_path_search}
 {$endif unix}
-{$ifdef os2}
-  {$define need_path_search}
-{$endif os2}
 
    procedure get_exepath;
      var

@@ -4807,8 +4807,8 @@ implementation
                               That means the for pushes the para with the
                               highest offset (see para3) needs to be pushed first
                             }
-{$if defined(i386) or defined(m68k)}
-                            { the i386, i8086, m68k, z80 and jvm code generators expect all reference }
+{$ifdef i386}
+                            { the i386 code generator expects all reference }
                             { parameters to be in this order so they can use   }
                             { pushes in case of no fixed stack                 }
                             if (not paramanager.use_fixed_stack and
@@ -4816,11 +4816,9 @@ implementation
                                  hp.parasym.paraloc[callerside].location^.reference.offset)) or
                                (paramanager.use_fixed_stack and
                                 (node_complexity(hpcurr.left)<node_complexity(hp.left))) then
-{$elseif defined(jvm) or defined(wasm)}
-                            if (hpcurr.parasym.paraloc[callerside].location^.reference.offset<hp.parasym.paraloc[callerside].location^.reference.offset) then
-{$else jvm}
+{$else i386}
                             if (node_complexity(hpcurr.left)<node_complexity(hp.left)) then
-{$endif jvm}
+{$endif i386}
                               break;
                           end;
                         LOC_MMREGISTER,

@@ -272,10 +272,10 @@ end;
 
 {$else not android}
 
-{$if defined(cpui386) or defined(cpuarm) or defined(cpux86_64)}
+{$if defined(cpui386) or defined(cpux86_64)}
   {$define NEED_USER_TRAMPOLINE}
 {$endif}
-{$if defined(cpui386) or defined(cpuarm)}
+{$ifdef cpui386}
   {$define NEED_USER_TRAMPOLINE_RT_DIFFERENT}
 {$endif}
 
@@ -284,22 +284,6 @@ end;
 {$ifdef NEED_USER_TRAMPOLINE}
 
 procedure linux_restore; cdecl; nostackframe; assembler;
-{$ifdef cpuarm}
-asm
-{$ifdef FPC_ABI_EABI}
-  mov r7, syscall_nr_sigreturn
-{$ifdef CPUTHUMB}
-  // svc   #0x0
-  // GNU 2.22 does not like svc #0x0
-  .byte 0,0xdf
-{$else CPUTHUMB}
-  swi #0x0
-{$endif CPUTHUMB}
-{$else}
-  swi syscall_nr_sigreturn
-{$endif}
-end;
-{$endif}
 {$ifdef cpui386}
 asm
   popl %eax
@@ -319,22 +303,6 @@ end;
 {$ifdef NEED_USER_TRAMPOLINE_RT_DIFFERENT}
 
 procedure linux_restore_rt; cdecl; nostackframe; assembler;
-{$ifdef cpuarm}
-asm
-{$ifdef FPC_ABI_EABI}
-  mov r7, syscall_nr_rt_sigreturn
-{$ifdef CPUTHUMB}
-  // svc   #0x0
-  // GNU 2.22 does not like svc #0x0
-  .byte 0,0xdf
-{$else CPUTHUMB}
-  swi #0x0
-{$endif CPUTHUMB}
-{$else}
-  swi syscall_nr_rt_sigreturn
-{$endif}
-end;
-{$endif}
 {$ifdef cpui386}
 asm
   movl $syscall_nr_rt_sigreturn, %eax

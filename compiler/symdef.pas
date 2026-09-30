@@ -710,9 +710,6 @@ interface
           procoptions     : tprocoptions;
           callerargareasize,
           calleeargareasize: pint;
-{$ifdef m68k}
-          exp_funcretloc : tregister;   { explicit funcretloc for AmigaOS }
-{$endif}
           funcretloc : array[callerside..calleeside] of TCGPara;
           has_paraloc_info : tcallercallee; { paraloc info is available }
           { number of user visible parameters }
@@ -6152,9 +6149,6 @@ implementation
           tabstractprocdef(result).funcretloc[callerside]:=funcretloc[callerside].getcopy;
         { recalculate parameter info }
         tabstractprocdef(result).has_paraloc_info:=callnoside;
-{$ifdef m68k}
-        tabstractprocdef(result).exp_funcretloc:=exp_funcretloc;
-{$endif}
         if (typ=procdef) and
            (newtyp=procvardef) and
            (owner.symtabletype in [ObjectSymtable,recordsymtable]) then
@@ -7729,9 +7723,6 @@ implementation
         for i:=low(funcretloc) to high(funcretloc) do
           tprocvardef(result).funcretloc[i]:=funcretloc[i].getcopy;
         tprocvardef(result).has_paraloc_info:=has_paraloc_info;
-{$ifdef m68k}
-        tprocvardef(result).exp_funcretloc:=exp_funcretloc;
-{$endif}
       end;
 
 

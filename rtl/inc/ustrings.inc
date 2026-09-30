@@ -2160,9 +2160,6 @@ begin
   Result:=UTF8ToString(S);
 end;
 
-{ byte and ansichar are the same on the JVM, and "array of" and "pointer to"
-  are as well }
-{$ifndef CPUJVM}
 function UTF8ToString(const S: array of AnsiChar): UnicodeString;
 var
   rs: RawByteString;
@@ -2186,7 +2183,6 @@ begin
     fpc_pchar_ansistr_intern_charmove(pansichar(@S),Low(S),rs,0,Count);
   Result := UTF8ToString(rs);
 end;
-{$endif not CPUJVM}
 
 
 Function LocaleNameToCodePage(const localename : shortstring; out codepage : TSystemCodePage) : Boolean;

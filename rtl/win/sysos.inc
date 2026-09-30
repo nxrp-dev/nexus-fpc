@@ -228,17 +228,17 @@ type
 
    { misc. functions }
    function GetLastError : DWORD;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'GetLastError';
+stdcall;external KernelDLL name 'GetLastError';
 
    procedure SetLastError(dwErrCode : DWORD);
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'SetLastError';
+     stdcall;external KernelDLL name 'SetLastError';
 
    procedure RaiseException(dwExceptionCode: DWORD; dwExceptionFlags: DWORD; dwArgCount: DWORD; lpArguments: Pointer);
-     {$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'RaiseException';
+     stdcall; external KernelDLL name 'RaiseException';
 
    { time and date functions }
    function GetTickCount : DWORD;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'GetTickCount';
+     stdcall;external KernelDLL name 'GetTickCount';
 
 {$ifndef WINCE}
    { process functions }
@@ -308,47 +308,47 @@ const
   PAGE_READWRITE = $4;
 
   function GetProcessHeap : THandle;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'GetProcessHeap';
+    stdcall;external KernelDLL name 'GetProcessHeap';
   function HeapAlloc(hHeap : THandle; dwFlags : DWord; dwBytes : SIZE_T) : pointer;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'HeapAlloc';
+    stdcall;external KernelDLL name 'HeapAlloc';
   function HeapFree(hHeap : THandle; dwFlags : dword; lpMem: pointer) : LongBool;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'HeapFree';
+    stdcall;external KernelDLL name 'HeapFree';
   function HeapReAlloc(hHeap : THandle; dwFlags : dword; lpMem: pointer; dwBytes : SizeUint) : pointer;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'HeapReAlloc';
+    stdcall;external KernelDLL name 'HeapReAlloc';
 
   function VirtualAlloc(lpAddress: pointer; dwSize: SizeUint; flAllocationType, flProtect: DWORD): pointer;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'VirtualAlloc';
+    stdcall;external KernelDLL name 'VirtualAlloc';
   function VirtualFree(lpAddress: pointer; dwSize: SizeUint; dwFreeType: DWORD): LongBool;
-    {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'VirtualFree';
+    stdcall;external KernelDLL name 'VirtualFree';
 
    { file functions }
    function WriteFile(fh:thandle;buf:pointer;len:longint;var loaded:longint;
      overlap:pointer):longint;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'WriteFile';
+     stdcall;external KernelDLL name 'WriteFile';
    function ReadFile(fh:thandle;buf:pointer;len:longint;var loaded:longint;
      overlap:pointer):longint;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'ReadFile';
+     stdcall;external KernelDLL name 'ReadFile';
    function CloseHandle(h : thandle) : longint;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'CloseHandle';
+     stdcall;external KernelDLL name 'CloseHandle';
    function SetFilePointer(l1,l2 : thandle;l3 : pointer;l4 : longint) : longint;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'SetFilePointer';
+     stdcall;external KernelDLL name 'SetFilePointer';
    function GetFileSize(h:thandle;p:pointer) : longint;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'GetFileSize';
+     stdcall;external KernelDLL name 'GetFileSize';
    function SetEndOfFile(h : thandle) : longbool;
-     {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'SetEndOfFile';
+     stdcall;external KernelDLL name 'SetEndOfFile';
 
-   procedure GetSystemInfo(lpSystemInfo: PSystemInfo); {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'GetSystemInfo';
+   procedure GetSystemInfo(lpSystemInfo: PSystemInfo); stdcall;external KernelDLL name 'GetSystemInfo';
 
-   function WinLoadLibraryW(lpLibFileName:pwidechar):THandle; {$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'LoadLibraryW';
-   function WinGetModuleHandleW(lpModuleName:pwidechar):THandle; {$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'GetModuleHandleW';
+   function WinLoadLibraryW(lpLibFileName:pwidechar):THandle; stdcall; external KernelDLL name 'LoadLibraryW';
+   function WinGetModuleHandleW(lpModuleName:pwidechar):THandle; stdcall; external KernelDLL name 'GetModuleHandleW';
    {$ifdef wince}
-   function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; {$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'GetProcAddressA';
+   function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; stdcall; external KernelDLL name 'GetProcAddressA';
    {$else}
-   function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; {$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'GetProcAddress';
+   function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; stdcall; external KernelDLL name 'GetProcAddress';
    {$endif}
-   function WinFreeLibrary(hLibModule:THandle):ByteBool; {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'FreeLibrary';
+   function WinFreeLibrary(hLibModule:THandle):ByteBool; stdcall;external KernelDLL name 'FreeLibrary';
 
-   function FormatMessageW(dwFlags:DWORD; lpSource:LPCVOID; dwMessageId:DWORD; dwLanguageId:DWORD; lpBuffer:LPWSTR;nSize:DWORD; Arguments:va_list):DWORD;{$ifdef wince}cdecl{$else}stdcall{$endif}; external KernelDLL name 'FormatMessageW';
+   function FormatMessageW(dwFlags:DWORD; lpSource:LPCVOID; dwMessageId:DWORD; dwLanguageId:DWORD; lpBuffer:LPWSTR;nSize:DWORD; Arguments:va_list):DWORD;stdcall; external KernelDLL name 'FormatMessageW';
 
 {$ifndef WINCE}
    function GetFileType(Handle:thandle):DWord;

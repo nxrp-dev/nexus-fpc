@@ -883,16 +883,9 @@ var
   cdecl_pocalls      : tproccalloptions;
 
 const
-{$ifndef jvm}
    inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has_protected,
                 oo_has_strictprotected,oo_has_strictprivate,oo_has_constructor,oo_has_destructor,
                 oo_can_have_published,oo_inherits_not_specialized];
-{$else not jvm}
-{ constructors are not inherited in Java }
-inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has_protected,
-             oo_has_strictprotected,oo_has_strictprivate,oo_has_destructor,
-             oo_can_have_published];
-{$endif not jvm}
 
 {$if defined(i386)}
    { we only take this into account on i8086 and i386, on other platforms we always
@@ -988,11 +981,7 @@ inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has
      );
 
 
-{$ifndef jvm}
      default_class_type=odt_class;
-{$else not jvm}
-     default_class_type=odt_javaclass;
-{$endif not jvm}
 
      objecttypes_with_helpers=[odt_class,odt_interfacecom,odt_interfacecorba,odt_dispinterface];
      objecttypes_with_thunk=[odt_interfacecorba,odt_interfacecom];

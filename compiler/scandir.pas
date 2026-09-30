@@ -580,13 +580,11 @@ unit scandir;
         {corba/com/default}
         current_scanner.skipspace;
         hs:=current_scanner.readid;
-{$ifndef jvm}
         if (hs='CORBA') then
           current_settings.interfacetype:=it_interfacecorba
         else if (hs='COM') then
           current_settings.interfacetype:=it_interfacecom
         else
-{$endif jvm}
              if (hs='DEFAULT') then
           current_settings.interfacetype:=init_settings.interfacetype
         else
@@ -801,13 +799,8 @@ unit scandir;
         heapsize_limit: int64;
         maxheapsize_limit: int64;
       begin
-{$if defined(WASM32)}
-        heapsize_limit:=int64(high(uint32))+1;
-        maxheapsize_limit:=int64(high(uint32))+1;
-{$else}
         heapsize_limit:=high(longint);
         maxheapsize_limit:=high(longint);
-{$endif}
         current_scanner.skipspace;
         l:=current_scanner.readval;
         if (l>=1024)

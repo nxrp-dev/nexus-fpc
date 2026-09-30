@@ -24,15 +24,6 @@ unit fppu;
 {$i fpcdefs.inc}
 
 
-{ close ppufiles on system that are
-  short on file handles like DOS system PM }
-{$ifdef GO32V2}
-  {$define SHORT_ON_FILE_HANDLES}
-{$endif GO32V2}
-{$ifdef WATCOM}
-  {$define SHORT_ON_FILE_HANDLES}
-{$endif WATCOM}
-
 interface
 
     uses
@@ -2346,11 +2337,6 @@ var
           internalerror(200212283);
 
         { reopen the old module }
-  {$ifdef SHORT_ON_FILE_HANDLES}
-        if from_module.is_unit and
-            assigned(tppumodule(from_module).ppufile) then
-           tppumodule(from_module).ppufile.tempopen;
-  {$endif SHORT_ON_FILE_HANDLES}
       end;
 
     function tppumodule.loadppu(from_module : tmodule) : boolean;
@@ -2396,13 +2382,6 @@ var
           exit(state in [ms_compiled,ms_processed]);
         end;
 
-        { close old_current_ppu on system that are
-          short on file handles like DOS PM }
-{$ifdef SHORT_ON_FILE_HANDLES}
-        if from_module.is_unit and
-            assigned(tppumodule(from_module).ppufile) then
-          tppumodule(from_module).ppufile.tempclose;
-{$endif SHORT_ON_FILE_HANDLES}
 
         { search ppu file }
         Message1(unit_u_loading_unit,modulename^);

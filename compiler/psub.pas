@@ -171,9 +171,9 @@ implementation
        optloadmodifystore,
        optcall,
        optutils
-{$if defined(arm) or defined(m68k)}
+{$ifdef arm}
        ,cpuinfo
-{$endif defined(arm) or defined(m68k)}
+{$endif arm}
        {$ifndef NOOPT}
        ,aopt
        {$endif}
@@ -1021,7 +1021,7 @@ implementation
       end;
 
 
-{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64) or defined(m68k)}
+{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64)}
     const
       exception_flags: array[boolean] of tprocinfoflags = (
         [],
@@ -1033,7 +1033,7 @@ implementation
       begin
         tg:=tgobjclass.create;
 
-{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64) or defined(m68k)}
+{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64)}
 {$if defined(arm)}
         { frame and stack pointer must be always the same on arm thumb so it makes no
           sense to fiddle with a frame pointer }
@@ -1076,12 +1076,6 @@ implementation
                ((cs_opt_stackframe in current_settings.optimizerswitches) and
                 not(cs_generate_stackframes in current_settings.localswitches) and
                 not(po_assembler in procdef.procoptions) and
-{$if defined(m68k)}
-                { do not optimize away the frame pointer, if the CPU has no long
-                  displacement support, this fixes optimizations on the plain 68000
-                  until some shortcomings of the CG itself can be addressed. (KB) }
-                (CPUM68K_HAS_BASEDISP in cpu_capabilities[current_settings.cputype]) and
-{$endif defined(m68k)}
 {$if defined(aarch64)}
                { on aarch64, it must be a leaf subroutine }
                 not(pi_do_call in flags) and
@@ -2464,14 +2458,12 @@ implementation
 
         { check if the definitions of certain types are available which might not be available in older rtls and
           which are assigned "on the fly" in types_dec }
-{$if not defined(jvm) and not defined(wasm)}
         if not assigned(rec_exceptaddr) then
           Message1(cg_f_internal_type_not_found,'TEXCEPTADDR');
         if not assigned(rec_tguid) then
           Message1(cg_f_internal_type_not_found,'TGUID');
         if not assigned(rec_jmp_buf) then
           Message1(cg_f_internal_type_not_found,'JMP_BUF');
-{$endif}
 
          { if the procdef is truly a generic (thus takes parameters itself) then
            /that/ is our genericdef, not the - potentially - generic struct }

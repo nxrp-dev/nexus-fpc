@@ -106,16 +106,6 @@
 	{$undef TARGET_OS_IPHONE}
 	{$undef TARGET_IPHONE_SIMULATOR}
 	{$define TARGET_RT_64_BIT}
-{$elseif defined(CPUARM)}
-	{$undef TARGET_CPU_PPC}
-	{$undef TARGET_CPU_PPC64}
-	{$undef TARGET_CPU_X86}
-	{$undef TARGET_CPU_X86_64}
-	{$define TARGET_CPU_ARM}
-	{$undef TARGET_OS_MAC}
-	{$define TARGET_OS_IPHONE}
-	{$undef TARGET_IPHONE_SIMULATOR}
-	{$undef TARGET_RT_64_BIT}
 {$endif}
 
 {$ifdef CPU64}

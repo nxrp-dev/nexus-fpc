@@ -688,8 +688,6 @@ interface
        { Default calling convention }
 {$if defined(i386) or defined(x86_64)}
        pocall_default = pocall_register;
-{$elseif defined(m68k)}
-       pocall_default = pocall_register;
 {$else}
        pocall_default = pocall_stdcall;
 {$endif}

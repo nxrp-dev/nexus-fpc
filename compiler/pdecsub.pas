@@ -2176,7 +2176,7 @@ procedure pd_syscall(pd:tabstractprocdef);
           internalerror(2016090101);
         end;
 
-{$if defined(powerpc) or defined(m68k) or defined(i386) or defined(x86_64) or defined(arm)}
+{$if defined(i386) or defined(x86_64) or defined(arm)}
 const
   syscall_paranr: array[boolean] of aint =
       ( paranr_syscall_lib_last, paranr_syscall_lib_first );
@@ -2187,12 +2187,12 @@ var
   v: Tconstexprint;
   vo: tvaroptions;
   paranr: aint;
-{$endif defined(powerpc) or defined(m68k) or defined(i386) or defined(x86_64) or defined(arm)}
+{$endif defined(i386) or defined(x86_64) or defined(arm)}
 begin
   if pd.typ<>procdef then
     internalerror(2003042614);
   tprocdef(pd).forwarddef:=false;
-{$if defined(powerpc) or defined(m68k) or defined(i386) or defined(x86_64) or defined(arm)}
+{$if defined(i386) or defined(x86_64) or defined(arm)}
   Message(parser_e_syscall_format_not_support);
 
   if consume_sym(sym,symtable) then

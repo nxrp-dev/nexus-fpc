@@ -44,24 +44,12 @@ interface
 {$ifdef cpui386}
         source_cpu_string = 'i386';
 {$endif cpui386}
-{$ifdef cpum68k}
-        source_cpu_string = 'm68k';
-{$endif cpum68k}
 {$ifdef cpux86_64}
         source_cpu_string = 'x86_64';
 {$endif cpux86_64}
-{$ifdef cpuarm}
-        source_cpu_string = 'arm';
-{$endif cpuarm}
 {$ifdef cpuaarch64}
         source_cpu_string = 'aarch64';
 {$endif cpuaarch64}
-{$ifdef cpuxtensa}
-        source_cpu_string = 'xtensa';
-{$endif cpuxtensa}
-{$ifdef cpuwasm32}
-        source_cpu_string = 'wasm32';
-{$endif cpuwasm32}
 
 function version_string:string;
 function full_version_string:string;

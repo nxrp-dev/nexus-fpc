@@ -58,10 +58,6 @@ type
       OPR_REFERENCE : (varsize:asizeint; constoffset: asizeint;ref_farproc_entry:boolean;ref:treference);
       OPR_LOCAL     : (localvarsize, localconstoffset: asizeint;localsym:tabstractnormalvarsym;localsymofs:aint;localsegment,localindexreg:tregister;localscale:byte;localgetoffset,localforceref:boolean);
       OPR_REGISTER  : (reg:tregister);
-{$ifdef m68k}
-      OPR_REGSET    : (regsetdata,regsetaddr,regsetfpu : tcpuregisterset);
-      OPR_REGPAIR   : (reghi,reglo: tregister);
-{$endif m68k}
 {$ifdef arm}
       OPR_REGSET    : (regset : tcpuregisterset; regtype: tregistertype; subreg: tsubregister; usermode: boolean);
       OPR_SHIFTEROP : (shifterop : tshifterop);
@@ -75,10 +71,6 @@ type
       OPR_SHIFTEROP : (shifterop : tshifterop);
       OPR_COND      : (cc : tasmcond);
 {$endif aarch64}
-{$ifdef wasm32}
-      OPR_FLOATCONSTANT: (floatval:double);
-      OPR_FUNCTYPE     : (functype: TWasmFuncType);
-{$endif wasm32}
   end;
 
   TInstruction = class;
@@ -1265,12 +1257,6 @@ end;
                 end;
               OPR_REFERENCE:
                 ai.loadref(i-1,ref);
-{$ifdef m68k}
-              OPR_REGSET:
-                ai.loadregset(i-1,regsetdata,regsetaddr,regsetfpu);
-              OPR_REGPAIR:
-                ai.loadregpair(i-1,reghi,reglo);
-{$endif}
 {$ifdef ARM}
               OPR_REGSET:
                 ai.loadregset(i-1,regtype,subreg,regset,usermode);
@@ -1291,19 +1277,6 @@ end;
               OPR_INDEXEDREG:
                 ai.loadindexedreg(i-1,indexedreg,regindex);
 {$endif aarch64}
-{$ifdef wasm32}
-              OPR_FLOATCONSTANT:
-                case opcode of
-                  a_f32_const:
-                    ai.loadsingle(i-1,floatval);
-                  a_f64_const:
-                    ai.loaddouble(i-1,floatval);
-                  else
-                    internalerror(2024072001);
-                end;
-              OPR_FUNCTYPE:
-                ai.loadfunctype(i-1,functype);
-{$endif wasm32}
               { ignore wrong operand }
               OPR_NONE:
                 ;

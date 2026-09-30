@@ -149,10 +149,6 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
         threadvarblocksize:=align(threadvarblocksize,4);
         {$endif cpuarm}
 
-        {$ifdef cpum68k}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,2);
-        {$endif cpum68k}
 
         {$ifdef cpux86_64}
         {$define threadvarblocksize_set}

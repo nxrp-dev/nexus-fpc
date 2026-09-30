@@ -254,9 +254,7 @@ initialization
 
 {$ifdef CPUX86_64}
   {$ifdef WIN64}
-    {$ifndef WDOSX}
       set_source_info(system_x64_win64_info);
-    {$endif WDOSX}
   {$endif WIN64}
 {$endif CPUX86_64}
 

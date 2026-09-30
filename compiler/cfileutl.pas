@@ -34,9 +34,6 @@ interface
 {$ifdef win32}
       Windows,
 {$endif win32}
-{$if defined(go32v2) or defined(watcom)}
-      Dos,
-{$endif}
 {$IFNDEF USE_FAKE_SYSUTILS}
       SysUtils,
 {$ELSE}
@@ -138,17 +135,7 @@ interface
   const
     ExecuteProcess = 'Do not use' deprecated 'Use cfileutil.RequotedExecuteProcess instead, ExecuteProcess cannot deal with single quotes as used by Unix command lines';
 
-{ * Since native Amiga commands can't handle Unix-style relative paths used by the compiler,
-    and some GNU tools, Unix2AmigaPath is needed to handle such situations (KB) * }
-
-
-{$IFDEF HASAMIGA}
-{ * PATHCONV is implemented in the Amiga/MorphOS system unit * }
-{$NOTE TODO Amiga: implement PathConv() in System unit, which works with AnsiString}
-function Unix2AmigaPath(path: ShortString): ShortString; external name 'PATHCONV';
-{$ELSE}
 function Unix2AmigaPath(path: String): String;
-{$ENDIF}
 
 {$if FPC_FULLVERSION < 20701}
 type
@@ -177,26 +164,17 @@ implementation
 {$endif}
 
 {$ifndef AllFilesMaskIsInRTL}
-  {$if defined(go32v2) or defined(watcom)}
-  const
-    AllFilesMask = '*.*';
-  {$else}
   const
     AllFilesMask = '*';
-  {$endif not (go32v2 or watcom)}
 {$endif not AllFilesMaskIsInRTL}
     var
       DirCache : TDirectoryCache;
 
 
-{$IFNDEF HASAMIGA}
-{ Stub function for Unix2Amiga Path conversion functionality, only available in
-  Amiga/MorphOS RTL. I'm open for better solutions. (KB) }
 function Unix2AmigaPath(path: String): String;
 begin
   Unix2AmigaPath:=path;
 end;
-{$ENDIF}
 
 
 
@@ -536,13 +514,7 @@ end;
 {$if defined(unix)}
         if (length(s)>0) and (s[1] in AllowDirectorySeparators) then
           result:=true;
-{$elseif defined(hasamiga)}
-        (* An Amiga path is absolute, if it has a volume/device name in it (contains ":"),
-           otherwise it's always a relative path, no matter if it starts with a directory
-           separator or not. (KB) *)
-        if (length(s)>0) and (Pos(':',s) <> 0) then
-          result:=true;
-{$elseif defined(win32) or defined(win64) or defined(go32v2) or defined(os2) or defined(watcom)}
+{$elseif defined(win32) or defined(win64)}
         if ((length(s)>0) and (s[1] in AllowDirectorySeparators)) or
 (* The following check for non-empty AllowDriveSeparators assumes that all
    other platforms supporting drives and not handled as exceptions above
@@ -881,11 +853,7 @@ end;
             currPath:=FixPath(ExpandFileName(currpath),false);
             if (CurrentDir<>'') and (Copy(currPath,1,length(CurrentDir))=CurrentDir) then
              begin
-{$ifdef hasamiga}
-               currPath:= CurrentDir+Copy(currPath,length(CurrentDir)+1,length(currPath));
-{$else}
                currPath:= CurDirRelPath(source_info)+Copy(currPath,length(CurrentDir)+1,length(currPath));
-{$endif}
              end;
           end;
          { wildcard adding ? }
@@ -1099,10 +1067,6 @@ end;
         hs,hs2 : TCmdStr;
         i : longint;
 {$endif}
-{$if defined(go32v2) or defined(watcom)}
-      var
-        hs : shortstring;
-{$endif}
       begin
         GetShortName:=n;
 {$ifdef win32}
@@ -1116,11 +1080,6 @@ end;
             setlength(hs2,strlen(@hs2[1]));
             GetShortName:=hs2;
           end;
-{$endif}
-{$if defined(go32v2) or defined(watcom)}
-        hs:=n;
-        if Dos.GetShortName(hs) then
-         GetShortName:=hs;
 {$endif}
       end;
 
@@ -1377,12 +1336,6 @@ end;
         result := Unix.fpsystem(command);
       end;
 {$else hasunix}
-  {$ifdef hasamiga}
-      begin
-        do_comment(V_Executable,'Executing "'+Command+'" using RequotedExecuteProcess');
-        result := RequotedExecuteProcess('',command);
-      end;
-  {$else hasamiga}
       var
         comspec : string;
       begin
@@ -1391,7 +1344,6 @@ end;
             +ComSpec+'"');
         result := RequotedExecuteProcess(comspec,' /C '+command);
       end;
-   {$endif hasamiga}
 {$endif hasunix}
 
 

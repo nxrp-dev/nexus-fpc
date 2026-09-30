@@ -57,11 +57,7 @@ unit iso7185;
 {$ifndef FPUNONE}
 {$ifdef FPC_CURRENCY_IS_INT64}
     function round(c : currency) : int64;
-{$ifndef cpujvm}
     function round(c : comp) : int64;
-{$else not cpujvm}
-    function round_comp(c : comp) : int64;
-{$endif not cpujvm}
 {$endif FPC_CURRENCY_IS_INT64}
     function Round(d : ValReal) : int64;
 {$endif FPUNONE}
@@ -283,7 +279,6 @@ unit iso7185;
       end;
 
 
-{$ifndef cpujvm}
     function round(c : comp) : int64;
       begin
         if c>=0.0 then
@@ -291,15 +286,6 @@ unit iso7185;
         else
           round:=Trunc(c-0.5);
       end;
-{$else not cpujvm}
-    function round_comp(c : comp) : int64;
-      begin
-        if c>=0.0 then
-          round_comp:=Trunc(c+0.5)
-        else
-          round_comp:=Trunc(c-0.5);
-      end;
-{$endif cpujvm}
 {$endif FPC_CURRENCY_IS_INT64}
 
 

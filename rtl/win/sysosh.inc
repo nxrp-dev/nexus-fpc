@@ -30,7 +30,6 @@ type
   { and they shouldn't be used in a program     }
   { only the type TCriticalSection is important }
   PRTLCriticalSection = ^TRTLCriticalSection;
-{$ifndef WINCE}
   TRTLCriticalSection = packed record
     DebugInfo : pointer;
     LockCount : longint;
@@ -39,16 +38,6 @@ type
     LockSemaphore : THandle;
     SpinCount : ULONG_PTR;
   end;
-{$else WINCE}
-  //CE only
-  TRTLCriticalSection = packed record
-    LockCount     : DWord ;   // Nesting count on critical section
-    OwnerThread   : THandle; 	// Handle of owner thread
-    hCrit         : THandle;	// Handle to this critical section
-    needtrap      : DWORD;	// Trap in when freeing critical section
-    dwContentions : DWORD ;	// Count of contentions
-  end;
-{$endif WINCE}
 
 {$if defined(WIN32) or defined(WIN64)}
   {$define HAS_ENTRYINFORMATION_OS}
@@ -63,13 +52,8 @@ type
 {$endif WIN32 or WIN64}
 
 const
-{$ifdef WINCE}
-  KernelDLL = 'coredll';
-  ApiSuffix = 'W';
-{$else WINCE}
   KernelDLL = 'kernel32';
   ApiSuffix = 'A';
-{$endif WINCE}
 
 function OleStrToString(source: PWideChar) : UnicodeString;inline;
 procedure OleStrToStrVar(source : PWideChar;var dest : UnicodeString);inline;

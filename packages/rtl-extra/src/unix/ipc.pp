@@ -903,7 +903,7 @@ uses Syscall;
 
 {$ifndef FPC_USE_LIBC}
  {$if defined(Linux)}
-  {$if defined(cpux86_64) or defined(cpuaarch64) or defined(cpuxtensa) or defined(NO_SYSCALL_IPC)}
+  {$if defined(cpux86_64) or defined(cpuaarch64) or defined(NO_SYSCALL_IPC)}
     {$i ipcsys.inc}
   {$else}
     {$i ipccall.inc}

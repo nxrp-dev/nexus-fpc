@@ -81,10 +81,6 @@ begin
   l:=Length(FileName);
   if (l<2) then
     exit;
-{$IFDEF HASAMIGA}
-  i:=Pos(DriveSeparator,FileName);
-  if (i > 0) then Result:=Copy(FileName,1,i);
-{$ELSE}
   If CharInSet(FileName[2],AllowDriveSeparators) then
     result:=Copy(FileName,1,2)
   else if CharInSet(FileName[1],AllowDirectorySeparators) and
@@ -101,7 +97,6 @@ begin
         inc(i);
       Result:=Copy(FileName,1,i);
     end;
-{$ENDIF}
 end;
 
 function ExtractFileName(const FileName: PathStr): PathStr;
@@ -420,9 +415,6 @@ begin
   While I<=Length(DirName) do
     begin
     If (CharInSet(DirName[i],AllowDirectorySeparators)
-    {$ifdef HASAMIGA}
-      or (DirName[i] = DriveSeparator)
-    {$endif}
       ) and
        { avoid error in case last AnsiChar=pathdelim }
        (length(dirname)>i) then
@@ -445,9 +437,6 @@ begin
   Result:=Path;
   l:=Length(Result);
   If (L=0) or not CharInSet(Result[l],AllowDirectorySeparators) then
-{$ifdef HASAMIGA}
-    If (L>0) and (Result[l] <> DriveSeparator) then
-{$endif}
 {$ifdef SYSUTILSUNICODE}
     Result:=Result+DirectorySeparator;
 {$else SYSUTILSUNICODE}

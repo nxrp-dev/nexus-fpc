@@ -20,10 +20,7 @@
 {$modeswitch FUNCTIONREFERENCES}
 {$define FPC_HAS_REFERENCE_PROCEDURE}
 {$ifndef CPULLVM}
-{$if DEFINED(CPUARM) or DEFINED(CPUAARCH64)}
-   {$define FPC_USE_INTRINSICS}
-{$endif}
-{$if defined(CPUPOWERPC) or defined(CPUPOWERPC64)}
+{$ifdef CPUAARCH64}
    {$define FPC_USE_INTRINSICS}
 {$endif}
 {$endif}

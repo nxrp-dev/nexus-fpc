@@ -88,11 +88,6 @@ unit cgutils;
          addressmode : taddressmode;
          shiftmode   : tshiftmode;
 {$endif aarch64}
-{$ifdef m68k}
-         { indexed increment and decrement mode }
-         { (An)+ and -(An)                      }
-         direction : tdirection;
-{$endif m68k}
 {$ifdef jvm}
          arrayreftype: tarrayreftype;
          indexbase: tregister;
@@ -149,11 +144,6 @@ unit cgutils;
                 1 : (register : tregister;
                      { some x86_64 targets require two function result registers }
                      registerhi : tregister;
-{$ifdef m68k}
-                     { some m68k OSes require that the result is returned in d0 and a0
-                       the second location must be stored here }
-                     registeralias : tregister;
-{$endif m68k}
                     );
 {$ifdef cpu64bitalu}
                 { overlay a 128 Bit register type }

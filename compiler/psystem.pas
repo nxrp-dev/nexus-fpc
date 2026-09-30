@@ -305,10 +305,6 @@ implementation
 {$endif FPC_SUPPORT_X87_TYPES_ON_WIN64}
           s64currencytype:=cfloatdef.create(s64currency,true);
 {$endif x86}
-{$ifdef m68k}
-        create_fpu_types;
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif}
 {$ifdef arm}
         create_fpu_types;
         s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);

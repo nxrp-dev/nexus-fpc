@@ -30,37 +30,29 @@ function IsATTY(var t : text) : Boolean;
 
 const
 (* This allows compile-time removal of the colouring functionality under not supported platforms *)
-{$if defined(linux) or defined(MSWINDOWS) or defined(OS2) or defined(GO32V2) or defined(WATCOM) or defined(DARWIN) or defined(FREEBSD)}
+{$if defined(linux) or defined(MSWINDOWS) or defined(DARWIN)}
   TTYCheckSupported = true;
-{$else defined(linux) or defined(MSWINDOWS) or defined(OS2) or defined(GO32V2) or defined(WATCOM) or defined(DARWIN) or defined(FREEBSD)}
+{$else}
   TTYCheckSupported = false;
-{$endif defined(linux) or defined(MSWINDOWS) or defined(OS2) or defined(GO32V2) or defined(WATCOM) or defined(DARWIN) or defined(FREEBSD)}
+{$endif}
 
 
 implementation
 
-{$if defined(linux) or defined(darwin) or defined(FREEBSD)}
+{$if defined(linux) or defined(darwin)}
   uses
    termio;
-{$endif defined(linux) or defined(darwin) or defined(FREEBSD)}
+{$endif}
 {$ifdef mswindows}
   uses
    windows;
 {$endif mswindows}
-{$ifdef os2}
-  uses
-   doscalls;
-{$endif os2}
-{$if defined(GO32V2) or defined(WATCOM)}
-  uses
-   dos;
-{$endif defined(GO32V2) or defined(WATCOM)}
 
 var
   CachedIsATTY : Boolean = false;
   IsATTYValue : Boolean = false;
 
-{$if defined(linux) or defined(darwin) or defined(FREEBSD)}
+{$if defined(linux) or defined(darwin)}
 function LinuxIsATTY(var t : text) : Boolean; inline;
 begin
   LinuxIsATTY:=termio.IsATTY(t)=1;
@@ -86,85 +78,17 @@ begin
 end;
 {$endif MSWINDOWS}
 
-{$IFDEF OS2}
-function OS2IsATTY(var t : text) : Boolean; inline;
-var
-  HT, Attr: cardinal;
- {$IFDEF EMX}
-  OK: boolean;
- {$ENDIF EMX}
-const
-  dhDevice = 1;
-begin
- {$IFDEF EMX}
-  if os_mode = osOS2 then
-    begin
- {$ENDIF EMX}
-      OS2IsATTY := (DosQueryHType (TextRec (T).Handle, HT, Attr) = 0)
-                                                           and (HT = dhDevice);
- {$IFDEF EMX}
-    end
-  else
-    begin
-      OK := false;
-{$ASMMODE INTEL}
-      asm
-        mov ebx, TextRec (T).Handle
-        mov eax, 4400h
-        call syscall
-        jc @IsDevEnd
-        test edx, 80h           { bit 7 is set if it is a device or a pipe }
-        jz @IsDevEnd
-        mov eax, 1A00h          { Check ANSI.SYS availability }
-        int 2Fh
-        inc al                  { If it was FFh, then OK }
-        jnz @IsDevEnd
-        mov OK, true
-@IsDevEnd:
-      end;
-    OS2IsATTY := OK;
-  end;
- {$ENDIF EMX}
-end;
-{$ENDIF OS2}
-
-{$if defined(GO32V2) or defined(WATCOM)}
-function DosIsATTY(var t : text) : Boolean; inline;
-var
-  Regs: Registers;
-begin
-  Regs.EBX := TextRec (T).Handle;
-  Regs.EAX := $4400;
-  MsDos (Regs);
-  if (Regs.Flags and FCarry <> 0) or (Regs.EDX and $80 = 0) then
-{ bit 7 is set if it is a device or a pipe }
-    DosIsATTY := false
-  else
-    begin
-      Regs.EAX := $1A00;             { Check ANSI.SYS availability }
-      Intr ($2F, Regs);
-      DosIsATTY := Regs.AL = $FF;    { If it was FFh, then OK }
-    end;
-end;
-{$endif defined(GO32V2) or defined(WATCOM)}
-
 function IsATTY(var t : text) : Boolean;
 begin
   if not(CachedIsATTY) then
     begin
 (* If none of the supported values is defined, false is returned by default. *)
-{$if defined(linux) or defined(darwin) or defined(FREEBSD)}
+{$if defined(linux) or defined(darwin)}
       IsATTYValue:=LinuxIsATTY(t);
-{$endif defined(linux) or defined(darwin) or defined(FREEBSD)}
+{$endif}
 {$ifdef MSWINDOWS}
       IsATTYValue:=WindowsIsATTY(t);
 {$endif MSWINDOWS}
-{$ifdef OS2}
-      IsATTYValue:=OS2IsATTY(t);
-{$endif OS2}
-{$if defined(GO32V2) or defined(WATCOM)}
-      IsATTYValue:=DosIsATTY(t);
-{$endif defined(GO32V2) or defined(WATCOM)}
       CachedIsATTY:=true;
     end;
   Result:=IsATTYValue;

@@ -156,16 +156,9 @@ begin
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/aarch64-linux-gnu',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/aarch64-linux-gnu',true);
 {$endif aarch64}
-{$ifdef m68k}
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/m68k-linux-gnu',true);
-      LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/m68k-linux-gnu',true);
-{$endif m68k}
     end;
 end;
 
-{$ifdef m68k}
-  const defdynlinker='/lib/ld.so.1';
-{$endif m68k}
 
 {$ifdef i386}
   const defdynlinker='/lib/ld-linux.so.2';
@@ -178,17 +171,6 @@ end;
 
 
 
-{$ifdef arm}
-{$ifdef FPC_ARMHF}
-  const defdynlinker='/lib/ld-linux-armhf.so.3';
-{$else FPC_ARMHF}
-{$ifdef FPC_ARMEL}
-  const defdynlinker='/lib/ld-linux.so.3';
-{$else FPC_ARMEL}
-  const defdynlinker='/lib/ld-linux.so.2';
-{$endif FPC_ARMEL}
-{$endif FPC_ARMHF}
-{$endif arm}
 
 {$ifdef aarch64}
 const defdynlinker='/lib/ld-linux-aarch64.so.1';
@@ -298,7 +280,6 @@ begin
 {$endif}
 {$ifdef arm}       target_opt:='';{$endif} {unknown :( }
 {$ifdef aarch64}   target_opt:='';{$endif} {unknown :( }
-{$ifdef m68k}      target_opt:='';{$endif} {unknown :( }
 
 {$ifdef arm}
   platformopt:=' -z noexecstack';

@@ -670,82 +670,10 @@ var
   );
 
 
-{$ifdef jvm}
-const
-  { reserved JVM tokens: keywords, true/false, and "null"; the commented out
-    ones are also Pascal keywords in all modes }
-  njvmtokens = 40;
-  jvmreservedwords: array[1..njvmtokens] of string[12] =
-  (
-//    'DO',
-//    'IF',
-//    'FOR',
-    'INT',
-    'NEW',
-    'TRY',
-    'BYTE',
-//    'CASE',
-    'CHAR',
-//    'ELSE',
-//    'GOTO',
-    'LONG',
-    'NULL',
-    'THIS',
-    'VOID',
-    'BREAK',
-    'CATCH',
-    'CLASS',
-//    'CONST',
-    'FINAL',
-    'FLOAT',
-    'SHORT',
-    'SUPER',
-    'THROW',
-//    'WHILE',
-    'DOUBLE',
-    'IMPORT',
-    'NATIVE',
-    'PUBLIC',
-    'RETURN',
-    'STATIC',
-    'SWITCH',
-    'THROWS',
-    'BOOLEAN',
-    'DEFAULT',
-    'EXTENDS',
-    'FINALLY',
-    'PACKAGE',
-    'PRIVATE',
-    'ABSTRACT',
-    'CONTINUE',
-    'STRICTFP',
-    'VOLATILE',
-//    'INTERFACE',
-    'PROTECTED',
-    'TRANSIENT',
-    'IMPLEMENTS',
-    'INSTANCEOF',
-    'SYNCHRONIZED'
-  );
-
-  jvmtokenlenmin = 3;
-  jvmtokenlenmax = 12;
-
-type
-  tjvmtokenidxrec = record
-    first, last: longint;
-  end;
-  tjmvtokenarray=array[1..njvmtokens] of string[12];
-  pjvmtokenidx= ^tjvmtokenidx;
-  tjvmtokenidx=array[jvmtokenlenmin..jvmtokenlenmax] of tjvmtokenidxrec;
-{$endif jvm}
 
 var
   tokeninfo:ptokenarray;
   tokenidx:ptokenidx;
-{$ifdef jvm}
-  jvmtokenidx: pjvmtokenidx;
-{$endif jvm}
 
 
 procedure inittokens;
@@ -762,9 +690,6 @@ var
   t : ttoken;
   i : longint;
   c : char;
-{$ifdef jvm}
-  j : longint;
-{$endif jvm}
 begin
   fillchar(tokenidx^,sizeof(tokenidx^),0);
   for t:=low(ttoken) to high(ttoken) do
@@ -778,16 +703,6 @@ begin
         tokenidx^[i,c].last:=t;
       end;
    end;
-{$ifdef jvm}
-  fillchar(jvmtokenidx^,sizeof(jvmtokenidx^),0);
-  for j:=low(jvmreservedwords) to high(jvmreservedwords) do
-   begin
-     i:=length(jvmreservedwords[j]);
-     if jvmtokenidx^[i].first=0 then
-      jvmtokenidx^[i].first:=j;
-     jvmtokenidx^[i].last:=j;
-   end;
-{$endif jvm}
 end;
 
 
@@ -797,9 +712,6 @@ begin
   begin
     tokeninfo:=@arraytokeninfo;
     new(tokenidx);
-{$ifdef jvm}
-    new(jvmtokenidx);
-{$endif jvm}
     create_tokenidx;
   end;
 end;
@@ -812,10 +724,6 @@ begin
     tokeninfo:=nil;
     dispose(tokenidx);
     tokenidx:=nil;
-{$ifdef jvm}
-    dispose(jvmtokenidx);
-    jvmtokenidx:=nil;
-{$endif jvm}
   end;
 end;
 

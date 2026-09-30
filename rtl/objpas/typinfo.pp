@@ -1390,15 +1390,11 @@ type
 
 function aligntoptr(p : pointer) : pointer;inline;
    begin
-{$ifdef CPUM68K}
-     result:=AlignTypeData(p);
-{$else CPUM68K}
 {$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
      result:=align(p,sizeof(p));
 {$else FPC_REQUIRES_PROPER_ALIGNMENT}
      result:=p;
 {$endif FPC_REQUIRES_PROPER_ALIGNMENT}
-{$endif CPUM68K}
    end;
 
 

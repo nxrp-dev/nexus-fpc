@@ -175,13 +175,6 @@ function do_isdevice(handle:thandle):boolean;forward;
 
 
 
-{$ifdef cpum68k}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i m68k.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpum68k}
 
 {$ifdef cpux86_64}
   {$ifdef SYSPROCDEFINED}
@@ -193,40 +186,9 @@ function do_isdevice(handle:thandle):boolean;forward;
 
 
 
-{$ifdef cpualpha}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i alpha.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpualpha}
-
-{$ifdef cpuiA64}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i ia64.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpuiA64}
 
 
 
-{$ifdef cpuarm}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i armdefines.inc}
-  {$if defined(CPUTHUMB2)}
-    {$i thumb2.inc}  { Case dependent, don't change }
-  {$else}
-    {$if defined(CPUTHUMB)}
-      {$i thumb.inc}  { Case dependent, don't change }
-    {$else}
-      {$i arm.inc}  { Case dependent, don't change }
-    {$endif}
-  {$endif}
-  {$define SYSPROCDEFINED}
-{$endif cpuarm}
 
 
 
@@ -425,11 +387,7 @@ function aligntoqword(p : pointer) : pointer;inline;
 
 function AlignTypeData(p : pointer) : pointer; inline;
   begin
-{$if defined(CPUM68K)}
-    result := aligntoqword(p);
-{$else CPUM68K}
     result := aligntoptr(p);
-{$endif CPUM68K}
   end;
 
 
