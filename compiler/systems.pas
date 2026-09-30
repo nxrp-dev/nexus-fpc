@@ -253,11 +253,11 @@ interface
        system_any = system_none;
 
        systems_android = [system_aarch64_android, system_x86_64_android];
-       systems_linux = [system_x86_64_linux,
+       systems_linux = [system_i386_linux,system_x86_64_linux,
                        system_aarch64_linux];
 
        { all supported Windows systems }
-       systems_windows = [system_x86_64_win64,system_aarch64_win64];
+       systems_windows = [system_i386_win32,system_x86_64_win64,system_aarch64_win64];
 
        { all windows systems }
        systems_all_windows = systems_windows;
@@ -279,7 +279,7 @@ interface
        systems_blocks_supported = systems_darwin;
 
        { all systems supporting exports from programs or units }
-       systems_unit_program_exports = [system_x86_64_win64,
+       systems_unit_program_exports = [system_i386_win32,system_x86_64_win64,
                                          system_aarch64_win64]+systems_linux+systems_android;
 
        { all systems that reference symbols in other binaries using indirect imports }
@@ -287,14 +287,14 @@ interface
 
        { all systems that support indirect entry information }
        systems_indirect_entry_information = systems_darwin+
-                                            [system_x86_64_win64,system_x86_64_linux,
+                                            [system_i386_win32,system_x86_64_win64,system_x86_64_linux,
                                             system_aarch64_win64];
 
        { all systems for which weak linking has been tested/is supported }
        systems_weak_linking = systems_darwin + systems_linux + systems_android;
 
-       systems_internal_sysinit = [system_x86_64_win64,
-                                   system_x86_64_linux,
+       systems_internal_sysinit = [system_i386_win32,system_x86_64_win64,
+                                   system_i386_linux,system_x86_64_linux,
                                    system_aarch64_win64
                                   ]+systems_darwin;
 
@@ -322,10 +322,10 @@ interface
        systems_win64_abi = [system_x86_64_win64];
 
        { all internal COFF writers }
-       asms_int_coff = [as_x86_64_pecoff];
+       asms_int_coff = [as_i386_pecoff,as_x86_64_pecoff];
 
        { all internal ELF writers }
-       asms_int_elf = [as_x86_64_elf64];
+       asms_int_elf = [as_i386_elf32,as_x86_64_elf64];
 
        { all internal writers }
        asms_internals = asms_int_coff + asms_int_elf;
@@ -731,6 +731,25 @@ begin
 { Now default target, this is dependent on the target cpu define,
   when the define is the same as the source cpu then we use the source
   os, else we pick a default }
+
+{$ifdef i386}
+  {$ifdef cpui386}
+    default_target(source_info.system);
+    {$define default_target_set}
+  {$else cpui386}
+    {$ifdef MSWindows}
+      default_target(system_i386_win32);
+      {$define default_target_set}
+    {$endif}
+    {$ifdef linux}
+      default_target(system_i386_linux);
+      {$define default_target_set}
+    {$endif}
+  {$endif cpui386}
+  {$ifndef default_target_set}
+    default_target(system_i386_linux);
+  {$endif default_target_set}
+{$endif i386}
 
 
 {$ifdef x86_64}

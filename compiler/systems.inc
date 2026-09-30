@@ -106,6 +106,7 @@
              ,as_default
              ,as_gas                   { standard gnu assembler }
              ,as_i386_pecoff
+             ,as_i386_elf32
              ,as_darwin
              ,as_x86_64_masm
              ,as_x86_64_pecoff

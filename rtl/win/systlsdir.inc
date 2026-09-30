@@ -142,7 +142,8 @@ const
     public name '__FPC_tls_callbacks' section '.CRT$XLFPC';
   FreePascal_end_of_TLS_callback : pointer = nil;
     public name '__FPC_end_of_tls_callbacks' section '.CRT$XLZZZ';
-{$if defined(win64) and (defined(cpux86_64) or defined(cpuaarch64))}
+{$if (defined(win64) and (defined(cpux86_64) or defined(cpuaarch64))) or
+     (defined(win32) and defined(cpui386))}
 type
   TTlsBoundary = packed record end;
   TTlsDataBoundary = packed record
@@ -164,28 +165,29 @@ const
 
 var
   _tls_index: dword = 0; cvar; public name '_tls_index';
-{$else not win64 or not 64-bit Windows CPU}
+{$else not supported Windows TLS boundary target}
 var
   tls_callbacks : pointer; external name '___crt_xl_start__';
   tls_data_start : pointer; external name '___tls_start__';
   tls_data_end : pointer; external name '___tls_end__';
 
   _tls_index : dword; cvar; external;
-{$endif win64 and 64-bit Windows CPU}
+{$endif supported Windows TLS boundary target}
 
 const
   _tls_used : TTlsDirectory = (
-{$if defined(win64) and (defined(cpux86_64) or defined(cpuaarch64))}
+{$if (defined(win64) and (defined(cpux86_64) or defined(cpuaarch64))) or
+     (defined(win32) and defined(cpui386))}
     data_start : @FreePascal_TLS_data_start.boundary;
     data_end : @FreePascal_TLS_data_end.sentinel;
     index_pointer : @_tls_index;
     callbacks_pointer : @FreePascal_TLS_callback_start.boundary;
-{$else not win64 or not 64-bit Windows CPU}
+{$else not supported Windows TLS boundary target}
     data_start : @tls_data_start;
     data_end : @tls_data_end;
     index_pointer : @_tls_index;
     callbacks_pointer : @tls_callbacks;
-{$endif win64 and 64-bit Windows CPU}
+{$endif supported Windows TLS boundary target}
     zero_fill_size : 0;
     flags : 0;
   ); cvar; public;

@@ -155,9 +155,9 @@ interface
       (
         { os          none   i386    m68k  ppc    sparc  x86_64 arm    ppc64  avr    armeb  armel  mips   mipsel mips64 misp64el jvm    i8086  aarch64 wasm32 sparc64 riscv32 riscv64 xtensa obsolete_z80   loongarch64 }
         { none  }   ( false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),
-        { linux }   ( false, false,  false,  false,  false,  true,  false,  false,  false, false,  false, false,  false,  false,  false,    false, false, true,   false, false,  false,   false,   false,  false, false),
+        { linux }   ( false, true,  false,  false,  false,  true,  false,  false,  false, false,  false, false,  false,  false,  false,    false, false, true,   false, false,  false,   false,   false,  false, false),
         { go32v2 }  ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),
-        { win32 }   ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),
+        { win32 }   ( false, true,   false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),
  { obsolete_os2 }   ( false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),
         { freebsd } ( false, false,  false, false, false, false,  false, false,  false, false, false, false, false, false, false,   false, false, false,   false, false, false,  false,  false, false, false),
         { beos }    ( false, false,  false, false, false, false, false, false, false, false, false, false, false, false, false,   false, false, false,  false, false, false,  false,  false, false, false),

@@ -30,6 +30,76 @@ unit i_win;
 
     const
 
+       system_i386_win32_info : tsysteminfo =
+          (
+            system       : system_i386_win32;
+            name         : 'Win32 for i386';
+            shortname    : 'Win32';
+            flags        : [tf_files_case_aware,tf_has_dllscanner,
+                            tf_smartlink_sections,tf_winlikewidestring,
+                            tf_no_pic_supported,tf_no_generic_stackcheck,
+                            tf_has_winlike_resources,tf_dwarf_only_local_labels,
+                            tf_safecall_exceptions,tf_no_backquote_support,
+                            tf_supports_hidden_symbols];
+            cpu          : cpu_i386;
+            unit_env     : 'WIN32UNITS';
+            extradefines : 'MSWINDOWS;WINDOWS';
+            exeext       : '.exe';
+            defext       : '.def';
+            scriptext    : '.bat';
+            smartext     : '.sl';
+            unitext      : '.ppu';
+            unitlibext   : '.ppl';
+            asmext       : '.s';
+            objext       : '.o';
+            resext       : '.res';
+            resobjext    : '.or';
+            sharedlibext : '.dll';
+            staticlibext : '.a';
+            staticlibprefix : 'libp';
+            sharedlibprefix : '';
+            sharedClibext : '.dll';
+            staticClibext : '.a';
+            staticClibprefix : 'lib';
+            sharedClibprefix : '';
+            importlibprefix : 'libimp';
+            importlibext : '.a';
+            Cprefix      : '_';
+            newline      : #13#10;
+            dirsep       : '\';
+            assem        : as_clang_gas;
+            assemextern  : as_clang_gas;
+            link         : ld_lld_windows;
+            linkextern   : ld_lld_windows;
+            ar           : ar_gnu_ar;
+            res          : res_gnu_windres;
+            dbg          : dbg_dwarf3;
+            script       : script_dos;
+            endian       : endian_little;
+            alignment    :
+              (
+                procalign       : 16;
+                loopalign       : 8;
+                jumpalign       : 16;
+                jumpalignskipmax    : 10;
+                coalescealign   : 0;
+                coalescealignskipmax: 0;
+                constalignmin   : 0;
+                constalignmax   : 64;
+                varalignmin     : 0;
+                varalignmax     : 64;
+                localalignmin   : 4;
+                localalignmax   : 8;
+                recordalignmin  : 0;
+                recordalignmax  : 4;
+                maxCrecordalign : 16
+              );
+            first_parm_offset : 8;
+            stacksize    : 16*1024*1024;
+            stackalign   : 4;
+            abi          : abi_default;
+          );
+
        system_x64_win64_info : tsysteminfo =
           (
             system       : system_x86_64_win64;
@@ -175,6 +245,12 @@ unit i_win;
   implementation
 
 initialization
+
+{$ifdef CPUI386}
+  {$ifdef WIN32}
+    set_source_info(system_i386_win32_info);
+  {$endif WIN32}
+{$endif CPUI386}
 
 {$ifdef CPUX86_64}
   {$ifdef WIN64}

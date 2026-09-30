@@ -9,6 +9,7 @@ version=3.3.1
 [target]
 dirs_linux=linux
 dirs_win64=win64
+dirs_win32=win32
 dirs_go32v1=go32v1
 dirs_darwin=darwin
 dirs_iphonesim=darwin

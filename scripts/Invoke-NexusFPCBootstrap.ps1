@@ -155,6 +155,14 @@ function Update-BootstrapMakefiles {
         $arguments = @('-q', '-w')
         if ($relative -eq 'Makefile') { $arguments += '-Tall' } else {
             $targets = @(Get-GeneratedTargets $file.FullName | Where-Object { $_ -in $supported })
+            $restoredTarget = switch ($relative) {
+                'compiler\Makefile' { @('i386-linux', 'i386-win32') }
+                'rtl\Makefile' { @('i386-linux', 'i386-win32') }
+                'rtl\linux\Makefile' { @('i386-linux') }
+                'rtl\win32\Makefile' { @('i386-win32') }
+                default { @() }
+            }
+            $targets = @($targets + $restoredTarget | Where-Object { $_ -in $supported } | Select-Object -Unique)
             if (-not $targets.Count) { throw "No surviving targets for $relative; review its removal separately." }
             $arguments += '-T' + ($targets -join ',')
         }

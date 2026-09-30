@@ -34,6 +34,9 @@ endif
 
 # New compiler
 ifndef PPNEW
+ifeq ($(CPU_TARGET),i386)
+PPSUF=386
+endif
 ifeq ($(CPU_TARGET),x86_64)
 PPSUF=x64
 endif

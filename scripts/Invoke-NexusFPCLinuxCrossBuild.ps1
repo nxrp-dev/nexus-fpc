@@ -2,8 +2,8 @@
 .SYNOPSIS
 Build Windows-hosted NexusFPC compilers for the retained Linux CPU targets.
 .DESCRIPTION
-Builds separate ppcrossx64.exe and ppcrossa64.exe binaries from the repository's
-native x86-64 Windows compiler. Invoke them with -Tlinux to select Linux output.
+Builds i386, x86-64, and AArch64 cross compilers from the repository's native
+x86-64 Windows compiler. Invoke them with -Tlinux to select Linux output.
 The optional Linux RTL build uses Clang and LLD.
 .EXAMPLE
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-NexusFPCLinuxCrossBuild.ps1
@@ -12,8 +12,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Invoke-NexusFP
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('x86_64', 'aarch64')]
-    [string[]]$TargetCpu = @('x86_64', 'aarch64'),
+    [ValidateSet('i386', 'x86_64', 'aarch64')]
+    [string[]]$TargetCpu = @('i386', 'x86_64', 'aarch64'),
     [string]$SourceRoot,
     [string]$MakeBin = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64',
     [string]$HostCompiler,
@@ -75,7 +75,7 @@ try {
     }
 
     foreach ($cpu in $TargetCpu) {
-        $suffix = if ($cpu -eq 'x86_64') { 'x64' } else { 'a64' }
+        $suffix = switch ($cpu) { 'i386' { '386' } 'x86_64' { 'x64' } 'aarch64' { 'a64' } }
         $compilerName = "ppcross$suffix.exe"
         $compiler = Join-Path $SourceRoot "compiler\$compilerName"
         $common = @(
@@ -83,7 +83,7 @@ try {
             'CPU_TARGET=x86_64', 'OS_TARGET=win64',
             "PPC_TARGET=$cpu", "CPU_UNITDIR=$($cpu)_cross"
         )
-        if ($cpu -eq 'x86_64') { $common += 'LOCALOPT=-dFPC_SOFT_FPUX80' }
+        if ($cpu -in @('i386', 'x86_64')) { $common += 'LOCALOPT=-dFPC_SOFT_FPUX80' }
         if ($cpu -eq 'aarch64') {
             Invoke-MakeStep "compiler-$cpu-linux-clean-units" (@('-C', (Join-Path $SourceRoot 'compiler'),
                 'aarch64_cross_clean', 'CYCLETARGETS=aarch64_cross') + $common)
@@ -101,7 +101,7 @@ try {
 
         if ($BuildRTL) {
             $rtlOptions = @("FPC=$($compiler -replace '\\', '/')", "CPU_TARGET=$cpu", 'OS_TARGET=linux')
-            if ($cpu -in @('x86_64', 'aarch64')) {
+            if ($cpu -in @('i386', 'x86_64', 'aarch64')) {
                 # Match the root Makefile's CROSSASPROG/CROSSASTARGET forwarding.
                 # Clang needs -x assembler because the startup files end in .as.
                 $crossAsProg = 'clang'

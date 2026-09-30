@@ -29,6 +29,78 @@ unit i_linux;
        systems;
 
     const
+       system_i386_linux_info : tsysteminfo =
+          (
+            system       : system_i386_linux;
+            name         : 'Linux for i386';
+            shortname    : 'Linux';
+            flags        : [tf_needs_symbol_size,tf_pic_uses_got,tf_smartlink_sections,
+{$ifdef tls_threadvars}
+                            tf_section_threadvars,
+{$endif tls_threadvars}
+                            tf_needs_symbol_type,tf_files_case_sensitive,
+                            tf_needs_dwarf_cfi,tf_has_winlike_resources,
+                            tf_safecall_exceptions,tf_safecall_clearstack,
+                            tf_supports_hidden_symbols];
+            cpu          : cpu_i386;
+            unit_env     : 'LINUXUNITS';
+            extradefines : 'UNIX;HASUNIX';
+            exeext       : '';
+            defext       : '.def';
+            scriptext    : '.sh';
+            smartext     : '.sl';
+            unitext      : '.ppu';
+            unitlibext   : '.ppl';
+            asmext       : '.s';
+            objext       : '.o';
+            resext       : '.res';
+            resobjext    : '.or';
+            sharedlibext : '.so';
+            staticlibext : '.a';
+            staticlibprefix : 'libp';
+            sharedlibprefix : 'lib';
+            sharedClibext : '.so';
+            staticClibext : '.a';
+            staticClibprefix : 'lib';
+            sharedClibprefix : 'lib';
+            importlibprefix : 'libimp';
+            importlibext : '.a';
+            Cprefix      : '';
+            newline      : #10;
+            dirsep       : '/';
+            assem        : as_clang_gas;
+            assemextern  : as_clang_gas;
+            link         : ld_none;
+            linkextern   : ld_linux;
+            ar           : ar_gnu_ar;
+            res          : res_elf;
+            dbg          : dbg_dwarf3;
+            script       : script_unix;
+            endian       : endian_little;
+            alignment    :
+              (
+                procalign       : 16;
+                loopalign       : 8;
+                jumpalign       : 16;
+                jumpalignskipmax    : 10;
+                coalescealign   : 0;
+                coalescealignskipmax: 0;
+                constalignmin   : 0;
+                constalignmax   : 64;
+                varalignmin     : 0;
+                varalignmax     : 64;
+                localalignmin   : 4;
+                localalignmax   : 8;
+                recordalignmin  : 0;
+                recordalignmax  : 16;
+                maxCrecordalign : 4
+              );
+            first_parm_offset : 8;
+            stacksize    : 8*1024*1024;
+            stackalign   : 16;
+            abi          : abi_i386_dynalignedstack;
+          );
+
        system_x86_64_linux_info : tsysteminfo =
           (
             system       : system_x86_64_LINUX;
@@ -192,6 +264,11 @@ unit i_linux;
   implementation
 
 initialization
+{$ifdef CPUI386}
+  {$ifdef linux}
+    set_source_info(system_i386_linux_info);
+  {$endif linux}
+{$endif CPUI386}
 {$ifdef CPUX86_64}
   {$ifdef linux}
     set_source_info(system_x86_64_linux_info);

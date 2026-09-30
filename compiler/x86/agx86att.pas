@@ -492,7 +492,26 @@ interface
 
 {$endif x86_64}
 
+{$ifdef i386}
+       as_i386_clang_gas_info : tasminfo =
+          (
+            id     : as_clang_gas;
+            idtxt  : 'AS-CLANG';
+            asmbin : 'clang';
+            asmcmd : '-x assembler -c -target $TRIPLET -o $OBJ $EXTRAOPT -x assembler $ASM';
+            supported_targets : [system_i386_linux,system_i386_win32];
+            flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_llvm,af_supports_hlcfi];
+            labelprefix : '.L';
+            labelmaxlen : -1;
+            comment : '// ';
+            dollarsign: '$';
+          );
+{$endif i386}
+
 initialization
+{$ifdef i386}
+  RegisterAssembler(as_i386_clang_gas_info,Tx86ATTAssembler);
+{$endif i386}
 {$ifdef x86_64}
   RegisterAssembler(as_x86_64_as_info,Tx86ATTAssembler);
   RegisterAssembler(as_x86_64_yasm_info,Tx86ATTAssembler);

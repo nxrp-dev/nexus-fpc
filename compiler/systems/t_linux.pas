@@ -842,6 +842,11 @@ function TLinkerLinux.postprocessexecutable(const fn : string;isdll:boolean):boo
 
 initialization
   RegisterLinker(ld_linux,TLinkerLinux);
+{$ifdef i386}
+  RegisterImport(system_i386_linux,timportliblinux);
+  RegisterExport(system_i386_linux,texportliblinux);
+  RegisterTarget(system_i386_linux_info);
+{$endif i386}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_linux,timportliblinux);
   RegisterExport(system_x86_64_linux,texportliblinux);

@@ -1728,7 +1728,11 @@ implementation
         { start with '_' as regular symbols (it does not generate N_GSYM entries    }
         { those in the debug map, leading to troubles with dsymutil). So always     }
         { add an underscore on darwin.                                              }
-        if (target_info.system in systems_darwin) then
+        { LLVM's i386 COFF assembler also treats names beginning with 'L' as
+          local; prefix Pascal-mangled names when using Clang for Win32. }
+        if (target_info.system in systems_darwin) or
+           ((target_info.system=system_i386_win32) and
+            (target_asm.id=as_clang_gas)) then
           result := '_' + result;
       end;
 

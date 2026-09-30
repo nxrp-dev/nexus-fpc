@@ -64,7 +64,7 @@ interface
       end;
 
 
-{$if defined(x86_64) or defined(aarch64)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
       TExternalLinkerWin64LLD=class(TExternalLinker)
       private
          function WriteLLDResponseFile(const OutputFile:string;IsDLL:boolean):boolean;
@@ -75,7 +75,7 @@ interface
          function MakeSharedLibrary:boolean;override;
          procedure InitSysInitUnitName;override;
       end;
-{$endif x86_64 or aarch64}
+{$endif i386 or x86_64 or aarch64}
 
       TDLLScannerWin=class(tDLLScanner)
       private
@@ -894,7 +894,7 @@ implementation
       end;
 
 
-{$if defined(x86_64) or defined(aarch64)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
 {****************************************************************************
                             TExternalLinkerWin64LLD
 ****************************************************************************}
@@ -921,6 +921,11 @@ implementation
         with LinkRes do
           begin
             case target_info.system of
+              system_i386_win32:
+                begin
+                  Add('/machine:x86');
+                  Add('/safeseh:no');
+                end;
               system_x86_64_win64:
                 Add('/machine:x64');
               system_aarch64_win64:
@@ -936,10 +941,25 @@ implementation
               begin
                 Add('/dll');
                 Add('/noimplib');
+                if target_info.system=system_i386_win32 then
+                  begin
+                    if apptype=app_gui then
+                      Add('/entry:DLLWinMainCRTStartup')
+                    else
+                      Add('/entry:DLLMainCRTStartup');
+                  end
+                else
                 if apptype=app_gui then
                   Add('/entry:_DLLWinMainCRTStartup')
                 else
                   Add('/entry:_DLLMainCRTStartup');
+              end
+            else if target_info.system=system_i386_win32 then
+              begin
+                if apptype=app_gui then
+                  Add('/entry:WinMainCRTStartup')
+                else
+                  Add('/entry:mainCRTStartup');
               end
             else if apptype=app_gui then
               Add('/entry:_WinMainCRTStartup')
@@ -1078,7 +1098,7 @@ implementation
       begin
         GlobalInitSysInitUnitName(self);
       end;
-{$endif x86_64 or aarch64}
+{$endif i386 or x86_64 or aarch64}
 
 
 
@@ -1133,9 +1153,16 @@ implementation
 *****************************************************************************}
 
 initialization
-{$if defined(x86_64) or defined(aarch64)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
   RegisterLinker(ld_lld_windows,TExternalLinkerWin64LLD);
-{$endif x86_64 or aarch64}
+{$endif i386 or x86_64 or aarch64}
+{$ifdef i386}
+  RegisterImport(system_i386_win32,TImportLibWin);
+  RegisterExport(system_i386_win32,TExportLibWin);
+  RegisterDLLScanner(system_i386_win32,TDLLScannerWin);
+  RegisterRes(res_gnu_windres_info,TWinLikeResourceFile);
+  RegisterTarget(system_i386_win32_info);
+{$endif i386}
 {$ifdef x86_64}
   RegisterImport(system_x86_64_win64,TImportLibWin);
   RegisterExport(system_x86_64_win64,TExportLibWin);
