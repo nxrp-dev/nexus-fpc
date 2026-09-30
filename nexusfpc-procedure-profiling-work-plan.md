@@ -124,8 +124,8 @@ mf_nexus_profile
 | Ordinary | Profiled | Rebuild from source |
 | Ordinary | Ordinary | Reuse |
 
-`ppudump` must identify the flag. There is no support-unit exemption because
-activation no longer uses a unit.
+PPU compatibility tests must verify the flag. There is no support-unit exemption
+because activation no longer uses a unit.
 
 ## 6. Procedure Instrumentation
 
@@ -387,7 +387,7 @@ Remove:
 Retain and adapt:
 
 - `cs_nexus_profile` and `mf_nexus_profile`;
-- PPU rebuild behavior and `ppudump` visibility;
+- PPU rebuild behavior and marker verification;
 - physical procedure eligibility and entry/leave insertion;
 - native COFF COMDAT association;
 - Win64 physical-frame unwind semantics;
@@ -432,7 +432,7 @@ the exact scenario and evidence before expanding the design.
 - Builds without it remain ordinary.
 - Profiling builds reuse ordinary PPUs as deliberately uninstrumented gaps.
 - Ordinary builds rebuild profiled PPUs.
-- `ppudump` identifies profiling PPUs.
+- PPU compatibility tests identify profiling PPUs.
 
 ### 14.2 Object and linking
 

@@ -7,7 +7,7 @@ name=utils
 version=3.3.1
 
 [target]
-dirs=fpcm tply fpcmkcfg pas2jni
+dirs=fpcm tply fpcmkcfg
 programs=ppdep rstconv data2inc bin2obj postw32
 dirs_win32=fpcres rmwait
 dirs_win64=fpcres rmwait

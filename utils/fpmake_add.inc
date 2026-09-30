@@ -2,6 +2,5 @@
   add_fpcmkcfg(ADirectory+IncludeTrailingPathDelimiter('fpcmkcfg'));
   add_fpcres(ADirectory+IncludeTrailingPathDelimiter('fpcres'));
   add_fpcreslipo(ADirectory+IncludeTrailingPathDelimiter('fpcreslipo'));
-  add_pas2jni(ADirectory+IncludeTrailingPathDelimiter('pas2jni'));
   add_rmwait(ADirectory+IncludeTrailingPathDelimiter('rmwait'));
   add_tply(ADirectory+IncludeTrailingPathDelimiter('tply'));

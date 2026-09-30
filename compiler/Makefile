@@ -425,14 +425,6 @@ CPUSUF=a64
 endif
 NOCPUDEF=1
 MSGFILE=msg/error$(FPCLANG).msg
-PPUDUMPPROG:=$(firstword $(strip $(wildcard $(addsuffix /ppudump$(SRCEXEEXT),$(SEARCHPATH)))))
-ifndef PPUDUMP
-ifdef PPUDUMPPROG
-PPUDUMP=$(PPUDUMPPROG)
-else
-PPUDUMP=ppudump
-endif
-endif
 REVINC:=$(wildcard revision.inc)
 ifneq ($(REVINC),)
 override LOCALOPT+=-dREVINC
@@ -2566,35 +2558,6 @@ rtlclean:
 	$(MAKE) -C $(PACKAGEDIR_RTL) clean
 rtlinstall:
 	$(MAKE) -C $(PACKAGEDIR_RTL) install
-PPUDIR=$(COMPILER_UNITTARGETDIR)
-ALLPPUDIRS:=$(wildcard $(CPU_TARGET)/units/*)
-PPULIST=$(wildcard $(PPUDIR)/*.ppu)
-PPULOGLIST=$(patsubst %.ppu,%.log-ppu,$(PPULIST))
-RTLPPUDIR=../rtl/units/$(TARGETSUFFIX)
-RTLPPULIST=$(wildcard $(RTLPPUDIR)/*.ppu)
-RTLPPULOGLIST=$(patsubst %.ppu,%.log-ppu,$(RTLPPULIST))
-.PHONY : ppulogs cleanppulogs rtlppulogs cleanrtlppulogs testppudump
-ppulogs : $(PPULOGLIST)
-rtlppulogs : $(RTLPPULOGLIST)
-vpath %.ppu $(PPUDIR) $(RTLPPUDIR) $(ALLPPUDIR)
-vpath %.log-ppu $(PPUDIR) $(RTLPPUDIR) $(ALLPPUDIR)
-%.log-ppu : %.ppu
-	$(PPUDUMP) -VA -M $< > $@
-./utils/ppudump$(EXEEXT):
-	$(MAKE) -C $(COMPILERUTILSDIR) ppudump$(EXEEXT)
-ppuinfo :
-	echo list of PPU directories is "$(ALLPPUDIRS)"
-	echo PPU list is "$(PPULIST)"
-	echo PPULOG list is "$(PPULOGLIST)"
-	echo RTLPPUDIR is "$(RTLPPUDIR)"
-	echo RTLPPU list is "$(RTLPPULIST)"
-cleanppulogs :
-	-$(RMPROG) $(PPULOGLIST)
-cleanrtlppulogs :
-	-$(RMPROG) $(RTLPPULOGLIST)
-testppudump :
-	$(MAKE) cleanrtlppulogs cleanppulogs
-	$(MAKE) ppulogs rtlppulogs
 localmake:=$(strip $(wildcard makefile.loc))
 ifdef localmake
 include ./$(localmake)

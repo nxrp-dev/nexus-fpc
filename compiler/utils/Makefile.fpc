@@ -3,11 +3,11 @@
 #
 
 [target]
-programs=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+programs=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 
 [clean]
 units=ppu crc
-programs=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+programs=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 
 [compiler]
 unitdir=..
@@ -46,9 +46,6 @@ ifndef NOCPUDEF
 ppu$(PPUEXT): ../ppu.pas
 	$(MAKE) ppu$(PPUEXT) NOCPUDEF=1
 
-ppudump$(EXEEXT): ppuutils/ppudump.pp ppu$(PPUEXT)
-	$(MAKE) ppudump$(EXEEXT) NOCPUDEF=1
-
 ppufiles$(EXEEXT): ppufiles.pp ppu$(PPUEXT)
 	$(MAKE) ppufiles$(EXEEXT) NOCPUDEF=1
 
@@ -58,9 +55,6 @@ ppumove$(EXEEXT): ppumove.pp ppu$(PPUEXT)
 else
 ppu$(PPUEXT): ../ppu.pas
         $(COMPILER) ../ppu.pas -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..
-
-ppudump$(EXEEXT): ppuutils/ppudump.pp ppu$(PPUEXT)
-        $(COMPILER) ppuutils/ppudump.pp -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..
 
 ppufiles$(EXEEXT): ppufiles.pp ppu$(PPUEXT)
         $(COMPILER) ppufiles.pp -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..

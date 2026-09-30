@@ -1399,25 +1399,6 @@ $(MSDOS_EXITCODE_PROG): $(MSDOS_EXITCODE_SRC)
 	$(TESTCOMPILER) -Fu$(BASEDIR)/$(COMPILER_TARGETDIR) -o$(MSDOS_EXITCODE_PROG) $(MSDOS_EXITCODE_SRC)
 endif
 extra : erroru$(PPUEXT) ptest$(PPUEXT) popuperr$(PPUEXT) $(MSDOS_EXITCODE_PROG)
-PPULIST:=$(wildcard */*.ppu) $(wildcard units/*/*.ppu)
-PPULOGLIST:=$(subst .ppu,.log-ppu,$(PPULIST))
-RMPPULOGLIST:=$(subst .ppu,.rm-log-ppu,$(PPULIST))
-ALLPPUDIRS:=$(wildcard units/*) $(wildcard */units/*)
-.PHONY : ppulogs cleanppulogs testppudump $(RMPPULOGLIST)
-ppulogs : $(PPULOGLIST)
-%.log-ppu : %.ppu ../../compiler/utils/ppudump$(EXEEXT)
-	..$(PATHSEP)..$(PATHSEP)compiler$(PATHSEP)utils$(PATHSEP)ppudump -VA -M $< > $@
-%.rm-log-ppu : %.ppu ../../compiler/utils/ppudump$(EXEEXT)
-	-$(RMPROG) $<
-../../compiler/utils/ppudump$(EXEEXT):
-	$(MAKE) -C $(COMPILERDIR)/utils ppudump$(EXEEXT)
-ppuinfo :
-	echo list of PPU directories is "$(ALLPPUDIRS)"
-	echo PPU list is "$(PPULIST)"
-	echo PPULOG list is "$(PPULOGLIST)"
-cleanppulogs : $(RMPPULOGLIST)
-testppudump :
-	$(MAKE) cleanppulogs ppulogs
 ifdef QUICKTEST
 all : rtl fpcunit extra
 else

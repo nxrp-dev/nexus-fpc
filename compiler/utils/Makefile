@@ -307,37 +307,37 @@ ifdef OPTNEW
 override FPCOPT+=$(OPTNEW)
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-ios)
-override TARGET_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl
+override TARGET_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
 override CLEAN_UNITS+=ppu crc
@@ -373,37 +373,37 @@ ifeq ($(CPU_OS_TARGET),aarch64-ios)
 override CLEAN_UNITS+=ppu crc
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-ios)
-override CLEAN_PROGRAMS+=fpc ppufiles ppudump ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
+override CLEAN_PROGRAMS+=fpc ppufiles ppumove mka64ins mkx86ins msg2inc mkx86inl gppc386 vppcx64
 endif
 override INSTALL_FPCPACKAGE=y
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
@@ -1667,8 +1667,6 @@ REG_EXES=$(subst .pp,$(EXEEXT),$(REG_SOURCES))
 ifndef NOCPUDEF
 ppu$(PPUEXT): ../ppu.pas
 	$(MAKE) ppu$(PPUEXT) NOCPUDEF=1
-ppudump$(EXEEXT): ppuutils/ppudump.pp ppu$(PPUEXT)
-	$(MAKE) ppudump$(EXEEXT) NOCPUDEF=1
 ppufiles$(EXEEXT): ppufiles.pp ppu$(PPUEXT)
 	$(MAKE) ppufiles$(EXEEXT) NOCPUDEF=1
 ppumove$(EXEEXT): ppumove.pp ppu$(PPUEXT)
@@ -1676,8 +1674,6 @@ ppumove$(EXEEXT): ppumove.pp ppu$(PPUEXT)
 else
 ppu$(PPUEXT): ../ppu.pas
 	$(COMPILER) ../ppu.pas -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..
-ppudump$(EXEEXT): ppuutils/ppudump.pp ppu$(PPUEXT)
-	$(COMPILER) ppuutils/ppudump.pp -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..
 ppufiles$(EXEEXT): ppufiles.pp ppu$(PPUEXT)
 	$(COMPILER) ppufiles.pp -Fu../llvm -Fu../generic -dGENERIC_CPU -Fi..
 ppumove$(EXEEXT): ppumove.pp ppu$(PPUEXT)
