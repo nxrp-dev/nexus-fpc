@@ -297,12 +297,6 @@ begin
      Error('Error: PPU is not static linked : '+PPUFn,false);
      Exit;
    end;
-{ Check if shared is allowed }
-  if tsystem(inppu.header.common.target) in [system_i386_go32v2] then
-   begin
-     Writeln('Warning: shared library not supported for ppu target, switching to static library');
-     MakeStatic:=true;
-   end;
 { Create the new ppu }
   if PPUFn=PPLFn then
    outppu:=tppufile.create('ppumove.$$$')

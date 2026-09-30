@@ -322,15 +322,15 @@ var
                exit;
              end;
           { check the target processor }
-            if tsystemcpu(ppufile.header.common.cpu)<>target_cpu then
+            if TSystemCPU(ppufile.header.common.cpu)<>target_cpu then
              begin
-               Message1(unit_u_ppu_invalid_processor,cpu2str[tsystemcpu(ppufile.header.common.cpu)],@queuecomment);
+               Message1(unit_u_ppu_invalid_processor,cpu2str[Ord(TSystemCPU(ppufile.header.common.cpu))],@queuecomment);
                exit;
              end;
           { check target }
-            if tsystem(ppufile.header.common.target)<>target_info.system then
+            if TSystem(ppufile.header.common.target)<>target_info.system then
              begin
-               psi:=targetinfos[tsystem(ppufile.header.common.target)];
+               psi:=targetinfos[Ord(TSystem(ppufile.header.common.target))];
                if assigned(psi) then
                  system_name:=psi^.shortname
                else

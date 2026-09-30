@@ -786,7 +786,7 @@ Implementation
 {$ifdef hasunix}
         DoPipe:=(cs_asm_pipe in current_settings.globalswitches) and
                 (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * current_settings.globalswitches) = []) and
-                ((asminfo^.id in [as_gas,as_ggas,as_darwin,as_powerpc_xcoff,as_clang_gas,as_clang_llvm,as_clang_llvm_darwin,as_solaris_as,as_clang_asdarwin]));
+                ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_llvm,as_clang_llvm_darwin,as_clang_asdarwin]));
 {$else hasunix}
         DoPipe:=false;
 {$endif}
@@ -1017,12 +1017,7 @@ Implementation
       begin
         result:=asminfo^.asmcmd;
         if af_llvm in target_asm.flags then
-          Replace(result,'$TRIPLET',targettriplet(triplet_llvm))
-{$ifdef arm}
-        else if (target_info.system=system_arm_ios) then
-          Replace(result,'$ARCH',lower(cputypestr[current_settings.cputype]))
-{$endif arm}
-        ;
+          Replace(result,'$TRIPLET',targettriplet(triplet_llvm));
         if (cs_assemble_on_target in current_settings.globalswitches) then
          begin
            Replace(result,'$ASM',maybequoted(ScriptFixFileName(AsmFileName)));
@@ -2962,7 +2957,7 @@ Implementation
       var
         asmkind: tasm;
       begin
-        for asmkind in [as_gas,as_ggas,as_darwin,as_clang_gas,as_clang_asdarwin] do
+        for asmkind in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin] do
           if assigned(asminfos[asmkind]) and
              (target_info.system in asminfos[asmkind]^.supported_targets) then
             begin

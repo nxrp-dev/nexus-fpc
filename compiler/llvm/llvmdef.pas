@@ -1181,7 +1181,7 @@ implementation
           retloc:=retloc^.next;
         until not assigned(retloc);
         result:=llvmgettemprecorddef(slice(retdeflist,i),C_alignment,
-          targetinfos[target_info.system]^.alignment.recordalignmin);
+          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
         include(result.defoptions,df_llvm_no_struct_packing);
       end;
 

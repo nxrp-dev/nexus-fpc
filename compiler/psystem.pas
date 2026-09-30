@@ -294,10 +294,7 @@ implementation
         cunicodestringtype:=cstringdef.createunicode(true);
         { length=0 for shortstring is open string (needed for readln(string) }
         openshortstringtype:=cstringdef.createshort(0,true);
-        if target_info.system=system_i386_watcom then
-          pvmt_name:='lower__pvmt'
-        else
-          pvmt_name:='pvmt';
+        pvmt_name:='pvmt';
  {$ifdef x86}
         create_fpu_types;
 {$ifndef FPC_SUPPORT_X87_TYPES_ON_WIN64}
@@ -706,10 +703,7 @@ implementation
         loadtype('wasm_void_externref',wasmvoidexternreftype);
 {$endif wasm}
         loadtype('file',cfiletype);
-        if target_info.system=system_i386_watcom then
-          pvmt_name:='lower__pvmt'
-        else
-          pvmt_name:='pvmt';
+        pvmt_name:='pvmt';
         loadtype(pvmt_name,pvmttype);
         loadtype('vtblarray',vmtarraytype);
         loadtype('__vtbl_ptr_type',vmttype);

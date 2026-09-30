@@ -340,7 +340,7 @@ procedure tobjcrttiwriter.gen_objc_methods(list: tasmlist; objccls: tobjectdef; 
     tcb:=ctai_typedconstbuilder.create(SectFlags[target_info.system in systems_objc_nfabi]);
     tcb.begin_anonymous_record(internaltypeprefixName[itp_objc_method_list]+tostr(mcnt),
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     if (abi=oa_fragile) then
       { not used, always zero }
@@ -456,7 +456,7 @@ procedure tobjcrttiwriter.gen_objc_protocol_list(list: tasmlist; classdef: tobje
     tcb:=ctai_typedconstbuilder.create([tcalo_new_section]);
     tcb.begin_anonymous_record(internaltypeprefixName[itp_objc_proto_list]+tostr(protolist.Count),
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     if (abi=oa_fragile) then
       { From Clang: next, always nil}
@@ -514,7 +514,7 @@ begin
   tcb.begin_anonymous_record(
     internaltypeprefixName[itp_objc_cat_methods]+tostr(items.count),
     C_alignment,1,
-    targetinfos[target_info.system]^.alignment.recordalignmin);
+    targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
   if (abi=oa_nonfragile) then
     begin
       { size of each entry -- always 32 bit value }
@@ -729,7 +729,7 @@ function tobjcrttiwriter_fragile.gen_objc_protocol_ext(list: TAsmList; optinstsy
         tcb.begin_anonymous_record(
           internaltypeprefixName[itb_objc_fr_protocol_ext],
           C_alignment,1,
-          targetinfos[target_info.system]^.alignment.recordalignmin);
+          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
         { size of this structure }
         tcb.emit_ord_const(16,u32inttype);
         { optional instance methods }
@@ -792,7 +792,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_protocol(list:TAsmList; protocol: tob
     tcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_fr_protocol],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     { protocol's isa - points to information about optional methods/properties }
     ConcatSymOrNil(tcb,protoext,voidpointertype);
@@ -863,7 +863,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_category_sections(list:TAsmList; objc
     tcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_fr_category],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     tcb.queue_init(voidpointertype);
     tcb.queue_emit_asmsym(catstrsym,catstrdef);
@@ -980,7 +980,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_classes_sections(list:TAsmList; objcl
     tcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_fr_meta_class],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     tcb.queue_init(voidpointertype);
     tcb.queue_emit_asmsym(metaisaStrSym,metaisaStrDef);
@@ -1035,7 +1035,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_classes_sections(list:TAsmList; objcl
     tcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_fr_class],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     { for class declaration: the isa points to the meta-class declaration }
     tcb.emit_tai(Tai_const.Create_sym(metasym),cpointerdef.getreusable(metaDef));
@@ -1104,7 +1104,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_info_sections(list: tasmlist);
         tcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
         tcb.begin_anonymous_record('',
           C_alignment,1,
-          targetinfos[target_info.system]^.alignment.recordalignmin);
+          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
         { ??? (always 0 in Clang) }
         tcb.emit_tai(tai_const.Create_nil_dataptr,voidpointertype);
         { ??? (From Clang: always 0, pointer to some selector) }
@@ -1135,7 +1135,7 @@ procedure tobjcrttiwriter_fragile.gen_objc_info_sections(list: tasmlist);
     tcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_no_dead_strip]);
     tcb.begin_anonymous_record('',
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
     { version number = 7 (always, both for gcc and clang) }
     tcb.emit_ord_const(7,ptruinttype);
     { sizeof(objc_module): 4 pointer-size entities }
@@ -1301,7 +1301,7 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_ivars(list: tasmlist; objccls: tob
     tcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_nf_ivars]+tostr(vcnt),
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     { size of each entry -- always 32 bit value }
     ivtype:=search_named_unit_globaltype('OBJC','OBJC_IVAR',true).typedef;
@@ -1491,7 +1491,7 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_category_sections(list:TAsmList; o
     tcb:=ctai_typedconstbuilder.create([tcalo_new_section]);
     tcb.begin_anonymous_record(internaltypeprefixName[itb_objc_nf_category],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
     tcb.queue_init(voidpointertype);
     tcb.queue_emit_asmsym(catstrsym,catstrdef);
     tcb.emit_tai(Tai_const.Create_sym(clssym),voidpointertype);
@@ -1702,7 +1702,7 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_class_ro_part(list: tasmlist; objc
     tcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_nf_class_ro_part],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     tcb.emit_ord_const(flags,u32inttype);
     tcb.emit_ord_const(start,u32inttype);
@@ -1777,13 +1777,13 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_classes_sections(list:TAsmList; ob
     classdef:=isatcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_nf_class],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     metatcb:=ctai_typedconstbuilder.create([tcalo_new_section]);
     metadef:=metatcb.begin_anonymous_record(
       internaltypeprefixName[itb_objc_nf_meta_class],
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
     clssym:=current_asmdata.DefineAsmSymbol(objclss.rtti_mangledname(objcclassrtti),vis,AT_DATA,classdef);
     metasym:=current_asmdata.DefineAsmSymbol(objclss.rtti_mangledname(objcmetartti),vis,AT_DATA,metadef);
@@ -1829,7 +1829,7 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_classes_sections(list:TAsmList; ob
     metatcb.emit_tai(Tai_const.Create_sym(ObjCEmptyCacheVar),voidpointertype);
     { pointer to vtable }
     if not assigned(ObjCEmptyVtableVar) and
-       not(target_info.system in [system_arm_ios,system_aarch64_ios,system_aarch64_darwin,system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+       not(target_info.system in [system_aarch64_ios,system_aarch64_darwin,system_i386_iphonesim,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
       ObjCEmptyVtableVar:=current_asmdata.RefAsmSymbol(target_info.Cprefix+'_objc_empty_vtable',AT_DATA);
     ConcatSymOrNil(metatcb,ObjCEmptyVtableVar,voidpointertype);
     { the read-only part }
@@ -1917,7 +1917,7 @@ procedure tobjcrttiwriter_nonfragile.gen_objc_protocol_extmethodtypes(list: tasm
     tcb.begin_anonymous_record(
       internaltypeprefixName[itp_objc_prot_ext_methods]+tostr(items.count),
       C_alignment,1,
-      targetinfos[target_info.system]^.alignment.recordalignmin);
+      targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
     for i:=0 to items.Count-1 do
       begin
         m:=tprocdef(items[i]);

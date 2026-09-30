@@ -46,12 +46,12 @@ type
    TDLLScannerClass=class of TDLLScanner;
 
 var
-  CImportLib  : array[tsystem] of TImportLibClass;
-  CDLLScanner : array[tsystem] of TDLLScannerClass;
+  CImportLib  : array[0..MaxStoredSystemId] of TImportLibClass;
+  CDLLScanner : array[0..MaxStoredSystemId] of TDLLScannerClass;
   ImportLib   : TImportLib;
 
-procedure RegisterImport(t:tsystem;c:TImportLibClass);
-procedure RegisterDLLScanner(t:tsystem;c:TDLLScannerClass);
+procedure RegisterImport(t:TSystem;c:TImportLibClass);
+procedure RegisterDLLScanner(t:TSystem;c:TDLLScannerClass);
 procedure InitImport;
 procedure DoneImport;
 
@@ -97,22 +97,22 @@ end;
                                  Init/Done
 *****************************************************************************}
 
-procedure RegisterImport(t:tsystem;c:TImportLibClass);
+procedure RegisterImport(t:TSystem;c:TImportLibClass);
 begin
-  CImportLib[t]:=c;
+  CImportLib[Ord(t)]:=c;
 end;
 
 
-procedure RegisterDLLScanner(t:tsystem;c:TDLLScannerClass);
+procedure RegisterDLLScanner(t:TSystem;c:TDLLScannerClass);
 begin
-  CDLLScanner[t]:=c;
+  CDLLScanner[Ord(t)]:=c;
 end;
 
 
 procedure InitImport;
 begin
-  if assigned(CImportLib[target_info.system]) then
-   importlib:=CImportLib[target_info.system].Create
+  if assigned(CImportLib[Ord(target_info.system)]) then
+   importlib:=CImportLib[Ord(target_info.system)].Create
   else
    importlib:=TImportLib.Create;
 end;

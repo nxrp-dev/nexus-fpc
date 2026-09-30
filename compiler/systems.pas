@@ -87,7 +87,7 @@ interface
           idtxt       : string[17];
           asmbin      : string[16];
           asmcmd      : string[154];
-          supported_targets : set of tsystem;
+          supported_targets : set of TSystem;
           flags        : set of tasmflags;
           labelprefix : string[3];
           labelmaxlen : integer;
@@ -188,11 +188,11 @@ interface
        psysteminfo = ^tsysteminfo;
        { using packed causes bus errors on processors which require alignment }
        tsysteminfo = record
-          system       : tsystem;
+          system       : TSystem;
           name         : string[88];
           shortname    : string[14];
           flags        : set of tsystemflags;
-          cpu          : tsystemcpu;
+          cpu          : TSystemCPU;
           unit_env     : string[16];
           extradefines : string[40];
           exeext,
@@ -260,7 +260,7 @@ interface
 
        systems_android = [system_aarch64_android, system_x86_64_android];
        systems_linux = [system_x86_64_linux,
-                       system_x86_6432_linux,system_aarch64_linux];
+                       system_aarch64_linux];
 
        { all supported Windows systems }
        systems_windows = [system_x86_64_win64,system_aarch64_win64];
@@ -328,16 +328,15 @@ interface
        systems_win64_abi = [system_x86_64_win64];
 
        { all internal COFF writers }
-       asms_int_coff = [as_arm_pecoffwince,as_x86_64_pecoff];
+       asms_int_coff = [as_x86_64_pecoff];
 
        { all internal ELF writers }
-       asms_int_elf = [as_arm_elf32,as_x86_64_elf64,as_m68k_elf32];
+       asms_int_elf = [as_x86_64_elf64];
 
        { all internal writers }
-       asms_internals = asms_int_coff + asms_int_elf
-                        + [as_i8086_omf, as_wasm32_wasm];
+       asms_internals = asms_int_coff + asms_int_elf;
 
-       cpu2str : array[TSystemCpu] of string[12] =
+       cpu2str : array[0..MaxStoredCPUId] of string[12] =
             ('','i386','m68k','alpha','powerpc','sparc','vm','ia64','x86_64',
              'mips','arm', 'powerpc64', 'avr', 'mipsel','jvm', 'i8086',
              'aarch64', 'wasm32', 'sparc64', 'riscv32', 'riscv64', 'xtensa',
@@ -403,14 +402,14 @@ interface
 {$pop}
 
     var
-       targetinfos   : array[tsystem] of psysteminfo;
+       targetinfos   : array[0..MaxStoredSystemId] of psysteminfo;
        arinfos       : array[tar] of parinfo;
        resinfos      : array[tres] of presinfo;
        asminfos      : array[tasm] of pasminfo;
        dbginfos      : array[tdbg] of pdbginfo;
 
        source_info : tsysteminfo;
-       target_cpu  : tsystemcpu;
+       target_cpu  : TSystemCPU;
        target_info : tsysteminfo;
        target_asm  : tasminfo;
        target_ar   : tarinfo;
@@ -420,13 +419,13 @@ interface
        target_os_string   : string[14]; { for rtl/<X>/,fcl/<X>/, etc. }
        target_full_string : string[28];
 
-    function set_target(t:tsystem):boolean;
+    function set_target(t:TSystem):boolean;
     function set_target_asm(t:tasm):boolean;
     function set_target_ar(t:tar):boolean;
     function set_target_res(t:tres):boolean;
     function set_target_dbg(t:tdbg):boolean;
 
-    function find_system_by_string(const s : string) : tsystem;
+    function find_system_by_string(const s : string) : TSystem;
     function find_asm_by_string(const s : string) : tasm;
     function find_dbg_by_string(const s : string) : tdbg;
 
@@ -450,19 +449,19 @@ implementation
                               Target setting
 ****************************************************************************}
 
-function set_target(t:tsystem):boolean;
+function set_target(t:TSystem):boolean;
 begin
   set_target:=false;
-  if assigned(targetinfos[t]) then
+  if assigned(targetinfos[Ord(t)]) then
    begin
-     target_info:=targetinfos[t]^;
+     target_info:=targetinfos[Ord(t)]^;
      set_target_asm(target_info.assem);
      set_target_ar(target_info.ar);
      set_target_res(target_info.res);
      set_target_dbg(target_info.dbg);
      target_cpu:=target_info.cpu;
      target_os_string:=lower(target_info.shortname);
-     target_cpu_string:=cpu2str[target_cpu];
+     target_cpu_string:=cpu2str[Ord(target_cpu)];
      target_full_string:=target_cpu_string+'-'+target_os_string;
      set_target:=true;
      exit;
@@ -523,16 +522,16 @@ begin
 end;
 
 
-function find_system_by_string(const s : string) : tsystem;
+function find_system_by_string(const s : string) : TSystem;
 var
   hs : string;
-  t  : tsystem;
+  t  : TSystem;
 begin
   result:=system_none;
   hs:=upper(s);
-  for t:=low(tsystem) to high(tsystem) do
-   if assigned(targetinfos[t]) and
-      (upper(targetinfos[t]^.shortname)=hs) then
+  for t:=low(TSystem) to high(TSystem) do
+   if assigned(targetinfos[Ord(t)]) and
+      (upper(targetinfos[Ord(t)]^.shortname)=hs) then
     begin
       result:=t;
       exit;
@@ -635,14 +634,14 @@ end;
 
 procedure RegisterTarget(const r:tsysteminfo);
 var
-  t : tsystem;
+  t : TSystem;
 begin
   t:=r.system;
-  if assigned(targetinfos[t]) then
+  if assigned(targetinfos[Ord(t)]) then
    writeln('Warning: Target is already registered!')
   else
-   new(targetinfos[t]);
-  targetinfos[t]^:=r;
+   new(targetinfos[Ord(t)]);
+  targetinfos[Ord(t)]^:=r;
 end;
 
 
@@ -675,16 +674,16 @@ end;
 procedure DeregisterInfos;
 var
   assem   : tasm;
-  target  : tsystem;
+  target  : TSystem;
   ar      : tar;
   res     : tres;
   dbg     : tdbg;
 begin
-  for target:=low(tsystem) to high(tsystem) do
-   if assigned(targetinfos[target]) then
+  for target:=low(TSystem) to high(TSystem) do
+   if assigned(targetinfos[Ord(target)]) then
     begin
-      freemem(targetinfos[target],sizeof(tsysteminfo));
-      targetinfos[target]:=nil;
+      freemem(targetinfos[Ord(target)],sizeof(tsysteminfo));
+      targetinfos[Ord(target)]:=nil;
     end;
   for assem:=low(tasm) to high(tasm) do
    if assigned(asminfos[assem]) then
@@ -717,7 +716,7 @@ end;
                       Initialization of default target
 ****************************************************************************}
 
-procedure default_target(t:tsystem);
+procedure default_target(t:TSystem);
 begin
   set_target(t);
   if source_info.name='' then
@@ -773,10 +772,6 @@ begin
 
 
 
-
-{$ifdef jvm}
-  default_target(system_jvm_java32);
-{$endif jvm}
 
 
 {$ifdef aarch64}

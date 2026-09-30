@@ -329,28 +329,6 @@ unit scandir;
            recordpendingasmmode(asmmode);
       end;
 
-{$if defined(m68k) or defined(arm)}
-    procedure dir_appid;
-      begin
-        if target_info.system<>system_m68k_palmos then
-          Message(scan_w_appid_not_support);
-        { change description global var in all cases }
-        { it not used but in win32 and os2 }
-        current_scanner.skipspace;
-        palmos_applicationid:=current_scanner.readcomment;
-      end;
-
-    procedure dir_appname;
-      begin
-        if target_info.system<>system_m68k_palmos then
-          Message(scan_w_appname_not_support);
-        { change description global var in all cases }
-        { it not used but in win32 and os2 }
-        current_scanner.skipspace;
-        palmos_applicationname:=current_scanner.readcomment;
-      end;
-{$endif defined(m68k) or defined(arm)}
-
     procedure dir_apptype;
       var
          hs : string;
@@ -471,8 +449,7 @@ unit scandir;
 
     procedure dir_description;
       begin
-        if not (target_info.system in systems_all_windows+[
-                 system_i386_wdosx]) then
+        if not (target_info.system in systems_all_windows) then
           Message(scan_w_description_not_support);
         { change description global var in all cases }
         { it not used but in win32 and os2 }
@@ -493,14 +470,7 @@ unit scandir;
 
     procedure dir_forcefarcalls;
       begin
-        if not (target_info.system in [system_i8086_msdos,system_i8086_embedded])
-
-            then
-          begin
-            Message1(scan_n_ignored_switch,current_scanner.pattern);
-            exit;
-          end;
-        do_localswitch(cs_force_far_calls);
+        Message1(scan_n_ignored_switch,current_scanner.pattern);
       end;
 
     procedure dir_fatal;
@@ -1599,7 +1569,7 @@ unit scandir;
       begin
         do_moduleswitch(cs_create_smart);
         if (target_dbg.id=dbg_dwarf3) and
-            not(target_info.system in (systems_darwin+[system_i8086_msdos,system_i8086_embedded])) and
+            not(target_info.system in systems_darwin) and
             { smart linking does not yet work with DWARF debug info on most targets }
             (cs_create_smart in current_settings.moduleswitches) and
             not (af_outputbinary in target_asm.flags) then
@@ -1730,8 +1700,7 @@ unit scandir;
         major, minor : longint;
         error : integer;
       begin
-        if not (target_info.system in systems_all_windows+[
-                 system_i386_wdosx]) then
+        if not (target_info.system in systems_all_windows) then
           begin
             Message(scan_n_version_not_support);
             exit;
@@ -1956,66 +1925,22 @@ unit scandir;
 
     procedure dir_hugecode;
       begin
-        if not (target_info.system in [system_i8086_msdos,system_i8086_embedded])
-
-            then
-          begin
-            Message1(scan_n_ignored_switch,current_scanner.pattern);
-            exit;
-          end;
-        do_moduleswitch(cs_huge_code);
+        Message1(scan_n_ignored_switch,current_scanner.pattern);
       end;
 
     procedure dir_hugepointernormalization;
-      var
-        hs : string;
       begin
-        if not (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-          begin
-            Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERNORMALIZATION');
-            exit;
-          end;
-        current_scanner.skipspace;
-        hs:=current_scanner.readid;
-        case hs of
-          'BORLANDC':
-             begin
-               recordpendinglocalswitch(cs_hugeptr_arithmetic_normalization,'+');
-               recordpendinglocalswitch(cs_hugeptr_comparison_normalization,'+');
-             end;
-          'MICROSOFTC':
-             begin
-               recordpendinglocalswitch(cs_hugeptr_arithmetic_normalization,'-');
-               recordpendinglocalswitch(cs_hugeptr_comparison_normalization,'-');
-             end;
-          'WATCOMC':
-             begin
-               recordpendinglocalswitch(cs_hugeptr_arithmetic_normalization,'-');
-               recordpendinglocalswitch(cs_hugeptr_comparison_normalization,'+');
-             end;
-          else
-            Message(scan_e_illegal_hugepointernormalization);
-        end;
+        Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERNORMALIZATION');
       end;
 
     procedure dir_hugepointerarithmeticnormalization;
       begin
-        if not (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-          begin
-            Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERARITHMETICNORMALIZATION');
-            exit;
-          end;
-        do_localswitch(cs_hugeptr_arithmetic_normalization);
+        Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERARITHMETICNORMALIZATION');
       end;
 
     procedure dir_hugepointercomparisonnormalization;
       begin
-        if not (target_info.system in [system_i8086_msdos,system_i8086_embedded]) then
-          begin
-            Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERCOMPARISONNORMALIZATION');
-            exit;
-          end;
-        do_localswitch(cs_hugeptr_comparison_normalization);
+        Message1(scanner_w_directive_ignored_on_target, 'HUGEPOINTERCOMPARISONNORMALIZATION');
       end;
 
     procedure dir_codealign;
@@ -2087,10 +2012,6 @@ unit scandir;
         AddDirective('A4',directive_all, @dir_a4);
         AddDirective('A8',directive_all, @dir_a8);
         AddDirective('ALIGN',directive_all, @dir_align);
-{$ifdef m68k}
-        AddDirective('APPID',directive_all, @dir_appid);
-        AddDirective('APPNAME',directive_all, @dir_appname);
-{$endif m68k}
         AddDirective('APPTYPE',directive_all, @dir_apptype);
         AddDirective('ASMCPU',directive_all, @dir_asmcpu);
         AddDirective('ASMMODE',directive_all, @dir_asmmode);

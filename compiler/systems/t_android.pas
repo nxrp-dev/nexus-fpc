@@ -353,7 +353,9 @@ begin
       add('    KEEP (*(.fpc .fpc.n_version .fpc.n_links))');
       add('  }');
       add('}');
-      add('INSERT AFTER .data1');
+      { LLD has no default .data1 section. Keep the augmented .data section
+        before .bss, which is present in Android executable and library links. }
+      add('INSERT BEFORE .bss');
 
       // Define different aliases for normal and JNI libraries
       if FJNIOnLoadName <> '' then

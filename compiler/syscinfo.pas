@@ -32,13 +32,13 @@ type
   tsyscallinfo = record
     token: ttoken;
     procoption: tprocoption;
-    validon: set of tsystem;
+    validon: set of TSystem;
   end;
   psyscallinfo = ^tsyscallinfo;
 
 const
   syscall_conventions: array[1..1] of tsyscallinfo = (
-      ( token: NOTOKEN;    procoption: po_syscall;           validon: [system_m68k_atari,system_m68k_palmos,system_arm_palmos,system_m68k_human68k] ));
+      ( token: NOTOKEN;    procoption: po_syscall;           validon: [] ));
 
 function get_syscall_by_token(const token: ttoken): psyscallinfo;
 function get_syscall_by_name(const name: string): psyscallinfo;
@@ -53,19 +53,6 @@ uses
 const
   syscall_conventions_po = [ po_syscall, po_syscall_legacy, po_syscall_basenone,
                              po_syscall_baselast, po_syscall_basefirst, po_syscall_basereg ];
-
-type
-  tsyscalldefaultinfo = record
-    system: tsystem;
-    procoption: tprocoption;
-  end;
-
-const
-  default_syscall_conventions: array[0..3] of tsyscalldefaultinfo = (
-      ( system: system_arm_palmos;      procoption: po_syscall ),
-      ( system: system_m68k_palmos;     procoption: po_syscall ),
-      ( system: system_m68k_atari;      procoption: po_syscall ),
-      ( system: system_m68k_human68k;   procoption: po_syscall ));
 
 var
   default_syscall_convention: tprocoption = po_none;
@@ -97,17 +84,9 @@ begin
 end;
 
 function get_default_syscall: tprocoption;
-var
-  i: longint;
 begin
   if not (default_syscall_convention in syscall_conventions_po) then
-    begin
-      for i:=low(default_syscall_conventions) to high(default_syscall_conventions) do
-        if default_syscall_conventions[i].system = target_info.system then
-          default_syscall_convention:=default_syscall_conventions[i].procoption;
-      if not (default_syscall_convention in syscall_conventions_po) then
-        internalerror(2016090302);
-    end;
+    internalerror(2016090302);
 
   result:=default_syscall_convention;
 end;

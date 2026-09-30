@@ -45,7 +45,6 @@ interface
         function comp2str(d : bestreal) : string;
         procedure WriteTree(p:TAsmList);override;
         procedure WriteAsmList;override;
-        Function  DoAssemble:boolean;override;
         procedure WriteExternals;
       end;
 
@@ -53,9 +52,9 @@ interface
 implementation
 
     uses
-      SysUtils,math,
+      SysUtils,
       cutils,globtype,globals,systems,cclasses,
-      verbose,cscript,cpuinfo,
+      verbose,cscript,
       itx86int,
       cgbase
 {$ifdef EXTDEBUG}
@@ -66,41 +65,6 @@ implementation
     const
       line_length = 70;
       max_tokens : longint = 25;
-(*
-      wasm_cpu_name : array[tcputype] of string = (
-{$if defined(x86_64)}
-        'IA64',        // cpu_none,
-        '686',         // cpu_athlon64,
-        '686',        // cpu_core_i,
-        '686',        // cpu_core_avx,
-        '686'         // cpu_core_avx2
-{$elseif defined(i386)}
-        'IA64',     // cpu_none,
-        '386',      // cpu_386,
-        '486',      // cpu_486,
-        '586',  // cpu_Pentium,
-        '686',       // cpu_Pentium2,
-        '686',       // cpu_Pentium3,
-        '686',       // cpu_Pentium4,
-        '686',       // cpu_PentiumM,
-        '686',     // cpu_core_i,
-        '686',     // cpu_core_avx,
-        '686'      // cpu_core_avx2
-{$elseif defined(i8086)}
-        'IA64',    // cpu_none
-        '8086',    // cpu_8086
-        '186',     // cpu_186
-        '286',     // cpu_286
-        '386',     // cpu_386
-        '486',     // cpu_486
-        '586', // cpu_Pentium
-        '686',      // cpu_Pentium2
-        '686',      // cpu_Pentium3
-        '686',      // cpu_Pentium4
-        '686'       // cpu_PentiumM
-{$endif}
-      );
-*)
       secnames : array[TAsmSectiontype] of string[4] = ('','',
         'CODE','DATA','DATA','DATA','BSS','TLS',
         '','','','','','',
@@ -308,8 +272,6 @@ implementation
             writer.AsmWrite('[');
            if assigned(symbol) then
             begin
-              if (asminfo^.id = as_i386_tasm) then
-                writer.AsmWrite('dword ptr ');
               writer.AsmWrite(ApplyAsmSymbolRestrictions(symbol.name));
               first:=false;
             end;
@@ -453,17 +415,14 @@ implementation
           begin
             if o.ref^.refaddr=addr_no then
               begin
-                if (asminfo^.id <> as_i386_tasm) then
-                  begin
-                    if s=S_FAR then
-                      writer.AsmWrite('far ptr ')
-                    else
+                if s=S_FAR then
+                  writer.AsmWrite('far ptr ')
+                else
 {$ifdef x86_64}
-                      writer.AsmWrite('qword ptr ');
+                  writer.AsmWrite('qword ptr ');
 {$else x86_64}
-                      writer.AsmWrite('dword ptr ');
+                  writer.AsmWrite('dword ptr ');
 {$endif x86_64}
-                  end;
                 WriteReference(o.ref^);
               end
             else
@@ -514,8 +473,7 @@ implementation
       s,
       prefix,
       suffix   : string;
-      hp,nhp   : tai;
-      cpu: tcputype;
+      hp   : tai;
       counter,
       lines, tokens,
       InlineLevel : longint;
@@ -565,10 +523,7 @@ implementation
                       if LasTSecType<>sec_none then
                         writer.AsmWriteLn('_'+secnames[LasTSecType]+#9#9'ENDS');
                       writer.AsmLn;
-                      if (asminfo^.id=as_i386_wasm) then
-                        s:='DWORD'
-                      else
-                        s:=alignstr(tai_section(hp).secalign);
+                      s:=alignstr(tai_section(hp).secalign);
                       writer.AsmWriteLn('_'+secnames[tai_section(hp).sectype]+#9#9+
                                  'SEGMENT'#9+s+' PUBLIC USE32 '''+
                                  secnames[tai_section(hp).sectype]+'''');
@@ -648,48 +603,11 @@ implementation
              begin
                case tai_realconst(hp).realtyp of
                  aitrealconst_s32bit:
-                   begin
-                     if (asminfo^.id = as_i386_wasm) and (IsInfinite(tai_realconst(hp).value.s32val)) then
-                       begin
-                         { Watcom Wasm does not handle Infinity }
-                         if Sign(tai_realconst(hp).value.s32val)=PositiveValue then
-                           writer.AsmWriteln(#9#9'DB'#9'0,0,80h,7Fh')
-                         else
-                           writer.AsmWriteln(#9#9'DW'#9'0,0,80h,FFh');
-                       end
-                     else if (asminfo^.id = as_i386_wasm) and (IsNan(tai_realconst(hp).value.s32val)) then
-                       writer.AsmWriteln(#9#9'DB'#9'1,0,80h,7Fh')
-                     else
-                       writer.AsmWriteLn(#9#9'DD'#9+single2str(tai_realconst(hp).value.s32val));
-                   end;
+                   writer.AsmWriteLn(#9#9'DD'#9+single2str(tai_realconst(hp).value.s32val));
                  aitrealconst_s64bit:
-                   begin
-                     if (asminfo^.id = as_i386_wasm) and (IsInfinite(tai_realconst(hp).value.s64val)) then
-                       begin
-                         { Watcom Wasm does not handle Infinity }
-                         if Sign(tai_realconst(hp).value.s64val)=PositiveValue then
-                           writer.AsmWriteln(#9#9'DW'#9'0,0,0,7FF0h')
-                         else
-                           writer.AsmWriteln(#9#9'DW'#9'0,0,0,FFF0h');
-                       end
-                     else if (asminfo^.id = as_i386_wasm) and (IsNan(tai_realconst(hp).value.s64val)) then
-                       writer.AsmWriteln(#9#9'DW'#9'0,0,0,0,7FF8h')
-                     else
-                       writer.AsmWriteLn(#9#9'DQ'#9+double2str(tai_realconst(hp).value.s64val));
-                   end;
+                   writer.AsmWriteLn(#9#9'DQ'#9+double2str(tai_realconst(hp).value.s64val));
                  aitrealconst_s80bit:
-                   if (asminfo^.id = as_i386_wasm) and (IsInfinite(tai_realconst(hp).value.s80val)) then
-                     begin
-                       { Watcom Wasm does not handle Infinity }
-                       if Sign(tai_realconst(hp).value.s80val)=PositiveValue then
-                         writer.AsmWriteln(#9#9'DW'#9'0,0,0,8000h,7FFFh')
-                       else
-                         writer.AsmWriteln(#9#9'DW'#9'0,0,0,8000h,FFFFh');
-                     end
-                   else if (asminfo^.id = as_i386_wasm) and (IsNan(tai_realconst(hp).value.s80val)) then
-                     writer.AsmWriteln(#9#9'DW'#9'0,0,0,0xC000,0x7FFF')
-                   else
-                     writer.AsmWriteLn(#9#9'DT'#9+extended2str(tai_realconst(hp).value.s80val));
+                   writer.AsmWriteLn(#9#9'DT'#9+extended2str(tai_realconst(hp).value.s80val));
                  aitrealconst_s64comp:
                    writer.AsmWriteLn(#9#9'DQ'#9+extended2str(tai_realconst(hp).value.s64compval));
                  else
@@ -788,20 +706,6 @@ implementation
              begin
                if tai_symbol(hp).has_value then
                  internalerror(2009090802);
-               { wasm is case insensitive, we need to use only uppercase version
-                 if both a lowercase and an uppercase version are provided }
-               if (asminfo^.id = as_i386_wasm) then
-                 begin
-                   nhp:=tai(hp.next);
-                   while assigned(nhp) and (nhp.typ in [ait_function_name,ait_force_line]) do
-                     nhp:=tai(nhp.next);
-                   if assigned(nhp) and (tai(nhp).typ=ait_symbol) and
-                      (lower(tai_symbol(nhp).sym.name)=tai_symbol(hp).sym.name) then
-                     begin
-                       writer.AsmWriteln(asminfo^.comment+' '+tai_symbol(hp).sym.name+' removed');
-                       hp:=tai(nhp);
-                     end;
-                 end;
                if tai_symbol(hp).is_global then
                  writer.AsmWriteLn(#9'PUBLIC'#9+ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name));
                writer.AsmWrite(ApplyAsmSymbolRestrictions(tai_symbol(hp).sym.name));
@@ -859,46 +763,12 @@ implementation
                      writer.AsmWriteLn(#9#9+prefix);
                      break;
                    end;
-                  { nasm prefers prefix on a line alone
-                  writer.AsmWriteln(#9#9+prefix); but not masm PM
-                  prefix:=''; }
-                  if asminfo^.id in [as_i386_nasmcoff,as_i386_nasmwin32,as_i386_nasmwdosx,
-                    as_i386_nasmelf,as_i386_nasmobj,as_i386_nasmbeos,as_i386_nasmhaiku] then
-                     begin
-                       writer.AsmWriteln(prefix);
-                       prefix:='';
-                     end;
                 end
                else
                 prefix:= '';
-               if (asminfo^.id = as_i386_wasm) and
-                 (taicpu(hp).opsize=S_W) and
-                 (fixed_opcode=A_PUSH) and
-                 (taicpu(hp).oper[0]^.typ=top_const) then
-                 begin
-                   writer.AsmWriteln(#9#9'DB 66h,68h ; pushw imm16');
-                   writer.AsmWrite(#9#9'DW');
-                 end
-               else if (asminfo^.id=as_x86_64_masm) and
+               if (asminfo^.id=as_x86_64_masm) and
                  (fixed_opcode=A_MOVQ) then
                  writer.AsmWrite(#9#9'mov')
-{$ifdef I386}
-               else if (asminfo^.id = as_i386_wasm) and ((fixed_opcode=A_RETD)
-                       or (fixed_opcode=A_RETND) or (fixed_opcode=A_RETFD)) then
-                 begin
-                   { no 'd' suffix for Watcom assembler }
-                   case fixed_opcode of
-                       A_RETD:
-                         writer.AsmWrite(#9#9'ret');
-                       A_RETND:
-                         writer.AsmWrite(#9#9'retn');
-                       A_RETFD:
-                         writer.AsmWrite(#9#9'retf');
-                       else
-                         internalerror(2019050907);
-                   end
-                 end
-{$endif I386}
                else
                  writer.AsmWrite(#9#9+prefix+std_op2str[fixed_opcode]+cond2str[taicpu(hp).condition]+suffix);
                if taicpu(hp).ops<>0 then
@@ -947,13 +817,7 @@ implementation
                       lasTSecType:=tai_section(hp.next).sectype;
                     hp:=tai(hp.next);
                   end;
-                 if (asminfo^.id = as_i386_wasm) then
-                   begin
-                     writer.AsmWriteLn(#9'.686p');
-                     writer.AsmWriteLn(#9'.xmm');
-                   end
-                 else
-                   writer.AsmWriteLn(#9'.386p');
+                 writer.AsmWriteLn(#9'.386p');
 
                  { I was told that this isn't necessary because }
                  { the labels generated by FPC are unique (FK)  }
@@ -990,25 +854,9 @@ implementation
                    end;
                  asd_cpu :
                    begin
-                     if (asminfo^.id = as_i386_wasm) then
-                       begin
-                         {writer.AsmWrite('.');}
-                         for cpu:=low(tcputype) to high(tcputype) do
-                           begin
-                             if tai_directive(hp).name=CPUTypeStr[CPU] then
-                               begin
-                                 { writer.AsmWriteLn(wasm_cpu_name[cpu]); }
-                                 break;
-                               end;
-                           end;
-                       end
-                     else
-                       begin
-                         { TODO: implement this properly for TASM/MASM/WASM (.686p, etc.) }
-                         writer.AsmWrite(asminfo^.comment+' CPU ');
-                         writer.AsmWrite(tai_directive(hp).name);
-                         writer.AsmLn;
-                       end;
+                     writer.AsmWrite(asminfo^.comment+' CPU ');
+                     writer.AsmWrite(tai_directive(hp).name);
+                     writer.AsmLn;
                    end
                  else
                    internalerror(200509192);
@@ -1035,39 +883,13 @@ implementation
             sym:=TAsmSymbol(current_asmdata.AsmSymbolDict[i]);
             if sym.bind in [AB_EXTERNAL,AB_EXTERNAL_INDIRECT] then
               begin
-                case asminfo^.id of
-                  as_i386_masm,
-                  as_i386_wasm :
-                    writer.AsmWriteln(#9'EXTRN'#9+ApplyAsmSymbolRestrictions(sym.name)+': NEAR');
-                  as_x86_64_masm :
-                    writer.AsmWriteln(#9'EXTRN'#9+ApplyAsmSymbolRestrictions(sym.name)+': PROC');
-                  else
-                    writer.AsmWriteln(#9'EXTRN'#9+ApplyAsmSymbolRestrictions(sym.name));
-                end;
+                if asminfo^.id=as_x86_64_masm then
+                  writer.AsmWriteln(#9'EXTRN'#9+ApplyAsmSymbolRestrictions(sym.name)+': PROC')
+                else
+                  writer.AsmWriteln(#9'EXTRN'#9+ApplyAsmSymbolRestrictions(sym.name));
               end;
           end;
       end;
-
-
-    function tx86intelassembler.DoAssemble : boolean;
-    var
-      masmobjfn : string;
-    begin
-      DoAssemble:=Inherited DoAssemble;
-      { masm does not seem to recognize specific extensions and uses .obj always PM }
-      if (asminfo^.id in [as_i386_masm,as_i386_wasm]) then
-        begin
-          masmobjfn:=ChangeFileExt(objfilename,'.obj');
-          if not(cs_asm_extern in current_settings.globalswitches) then
-            begin
-              if Not FileExists(objfilename) and
-                 FileExists(masmobjfn) then
-                RenameFile(masmobjfn,objfilename);
-            end
-          else
-            AsmRes.AddAsmCommand('mv',masmobjfn+' '+objfilename,objfilename);
-        end;
-    end;
 
 
     procedure tx86IntelAssembler.WriteAsmList;
@@ -1078,24 +900,6 @@ implementation
       if current_module.mainsource<>'' then
        comment(v_info,'Start writing intel-styled assembler output for '+current_module.mainsource);
 {$endif}
-      if asminfo^.id<>as_x86_64_masm then
-        begin
-          if (asminfo^.id = as_i386_wasm) then
-            begin
-              writer.AsmWriteLn(#9'.686p');
-              writer.AsmWriteLn(#9'.xmm');
-            end
-          else
-            writer.AsmWriteLn(#9'.386p');
-          { masm 6.11 does not seem to like LOCALS PM }
-          if (asminfo^.id = as_i386_tasm) then
-            begin
-              writer.AsmWriteLn(#9'LOCALS '+asminfo^.labelprefix);
-            end;
-
-          writer.AsmLn;
-        end;
-
       WriteExternals;
 
       for hal:=low(TasmlistType) to high(TasmlistType) do

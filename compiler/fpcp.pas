@@ -111,7 +111,7 @@ implementation
          exit;
        end;
     { check the target processor }
-      if tsystemcpu(pcpfile.header.common.cpu)<>target_cpu then
+      if TSystemCPU(pcpfile.header.common.cpu)<>target_cpu then
        begin
          pcpfile.free;
          pcpfile:=nil;
@@ -119,7 +119,7 @@ implementation
          exit;
        end;
     { check target }
-      if tsystem(pcpfile.header.common.target)<>target_info.system then
+      if TSystem(pcpfile.header.common.target)<>target_info.system then
        begin
          pcpfile.free;
          pcpfile:=nil;

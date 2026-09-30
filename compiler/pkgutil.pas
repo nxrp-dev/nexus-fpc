@@ -322,12 +322,6 @@ implementation
          Comment(V_Error,'PPU is not static linked : '+PPUFn);
          Exit;
        end;
-    { Check if shared is allowed }
-      if tsystem(inppu.header.common.target) in [system_i386_go32v2] then
-       begin
-         Comment(V_Error,'Shared library not supported for ppu target, switching to static library');
-         MakeStatic:=true;
-       end;
     { Create the new ppu }
       outppu:=tppufile.create(PPUFn);
       outppu.createstream(OutStream);

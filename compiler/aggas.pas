@@ -160,30 +160,6 @@ implementation
         #9'.short'#9,#9'.long'#9,#9'.quad'#9
       );
 
-      ait_solaris_const2str : array[aitconst_128bit..aitconst_64bit_unaligned] of string[20]=(
-        #9'.fixme128'#9,#9'.8byte'#9,#9'.4byte'#9,#9'.2byte'#9,#9'.byte'#9,
-        #9'.sleb128'#9,#9'.uleb128'#9,
-        #9'.rva'#9,#9'.secrel32'#9,#9'.8byte'#9,#9'.4byte'#9,#9'.2byte'#9,#9'.2byte'#9,
-        #9'.2byte'#9,#9'.4byte'#9,#9'.8byte'#9
-      );
-
-      ait_unaligned_consts = [aitconst_16bit_unaligned..aitconst_64bit_unaligned];
-
-      { Sparc type of unaligned pseudo-instructions }
-      use_ua_sparc_systems = [system_sparc_linux];
-      ait_ua_sparc_const2str : array[aitconst_16bit_unaligned..aitconst_64bit_unaligned]
-        of string[20]=(
-          #9'.uahalf'#9,#9'.uaword'#9,#9'.uaxword'#9
-        );
-
-      { Generic unaligned pseudo-instructions, seems ELF specific }
-      use_ua_elf_systems = [system_mipsel_linux,system_mipseb_linux,system_mipsel_android,system_mipsel_embedded,system_mipseb_embedded];
-      ait_ua_elf_const2str : array[aitconst_128bit..aitconst_64bit_unaligned] of string[20]=(
-        #9'.fixme128'#9,#9'.8byte'#9,#9'.4byte'#9,#9'.2byte'#9,#9'.byte'#9,
-        #9'.sleb128'#9,#9'.uleb128'#9,
-        #9'.rva'#9,#9'.secrel32'#9,#9'.8byte'#9,#9'.4byte'#9,#9'.2byte'#9,#9'.2byte'#9,
-        #9'.2byte'#9,#9'.4byte'#9,#9'.8byte'#9
-      );
 
 
 
@@ -464,13 +440,6 @@ implementation
               secname:='.tbss';
           end;
 
-        { go32v2 stub only loads .text and .data sections, and allocates space for .bss.
-          Thus, data which normally goes into .rodata and .rodata_norel sections must
-          end up in .data section }
-        if (atype in [sec_rodata,sec_rodata_norel]) and
-          (target_info.system in [system_i386_go32v2,system_m68k_palmos]) then
-          secname:='.data';
-
         { Windows correctly handles reallocations in readonly sections }
         if (atype=sec_rodata) and
           (target_info.system in systems_all_windows) then
@@ -661,31 +630,9 @@ implementation
         usesectionflags:=false;
         usesectionprogbits:=false;
         case target_info.system of
-         system_m68k_atari, { atari tos/mint GNU AS also doesn't seem to like .section (KB) }
-         system_m68k_sinclairql, { same story, only ancient GNU tools available (KB) }
-         system_m68k_palmos, { see above... (KB) }
-         system_m68k_human68k: { see above... (KB) }
-           begin
-             { ... but vasm is GAS compatible on amiga/atari, and supports named sections }
-             if create_smartlink_sections then
-               begin
-                 writer.AsmWrite('.section ');
-                 usesectionflags:=true;
-                 usesectionprogbits:=true;
-                 { hack, to avoid linker warnings on Amiga/Atari, when vlink merges
-                   rodata sections into data sections. Also avoid the warning when
-                   the linker realizes the code section cannot be write protected and
-                   adds the writable bit. }
-                 if atype in [sec_code,sec_rodata,sec_rodata_norel] then
-                   include(secflags,SF_W);
-               end;
-           end;
-         system_i386_go32v2,
          system_i386_win32,
          system_x86_64_win64,
          system_i386_nativent,
-         system_i386_wince,
-         system_arm_wince,
          system_aarch64_win64:
            begin
              { according to the GNU AS guide AS for COFF does not support the
@@ -693,36 +640,23 @@ implementation
              writer.AsmWrite('.section ');
              usesectionflags:=true;
            end;
-         system_powerpc_darwin,
          system_i386_darwin,
          system_i386_iphonesim,
-         system_powerpc64_darwin,
          system_x86_64_darwin,
-         system_arm_ios,
          system_aarch64_ios,
          system_aarch64_iphonesim,
          system_aarch64_darwin,
-         system_x86_64_iphonesim,
-         system_powerpc_aix,
-         system_powerpc64_aix:
+         system_x86_64_iphonesim:
            begin
              if (atype in [sec_stub]) then
                writer.AsmWrite('.section ');
            end;
-         system_wasm32_wasip1,
-         system_wasm32_wasip1threads,
-         system_wasm32_wasip2,
-         system_wasm32_embedded:
-           begin
-             writer.AsmWrite('.section ');
-           end
          else
            begin
              writer.AsmWrite('.section ');
              { sectionname may rename those sections, so we do not write flags/progbits for them,
                the assembler will ignore them/spite out a warning anyways }
              if not(atype in [sec_data,sec_rodata,sec_rodata_norel]) and
-                not(asminfo^.id=as_solaris_as) and
                 not(atype=sec_fpc) and
                 not(atype=sec_note) then
                begin
@@ -770,20 +704,9 @@ implementation
                   { there are processor-independent shortcuts available    }
                   { for this, namely .symbol_stub and .picsymbol_stub, but }
                   { they don't work and gcc doesn't use them either...     }
-                  system_powerpc_darwin,
-                  system_powerpc64_darwin:
-                    if (cs_create_pic in current_settings.moduleswitches) then
-                      writer.AsmWriteln('__TEXT,__picsymbolstub1,symbol_stubs,pure_instructions,32')
-                    else
-                      writer.AsmWriteln('__TEXT,__symbol_stub1,symbol_stubs,pure_instructions,16');
                   system_i386_darwin,
                   system_i386_iphonesim:
                     writer.AsmWriteln('__IMPORT,__jump_table,symbol_stubs,self_modifying_code+pure_instructions,5');
-                  system_arm_ios:
-                    if (cs_create_pic in current_settings.moduleswitches) then
-                      writer.AsmWriteln('__TEXT,__picsymbolstub4,symbol_stubs,none,16')
-                    else
-                      writer.AsmWriteln('__TEXT,__symbol_stub4,symbol_stubs,none,12')
                   { darwin/(x86-64/AArch64) uses PC-based GOT addressing, no
                     explicit symbol stubs }
                   else
@@ -951,7 +874,7 @@ implementation
                             writer.AsmWrite(','+tostr(fillop))
 {$ifdef x86}
                           { force NOP as alignment op code }
-                          else if (LastSecType=sec_code) and (asminfo^.id<>as_solaris_as) then
+                          else if (LastSecType=sec_code) then
                             writer.AsmWrite(',0x90');
 {$endif x86}
                         end;
@@ -1170,10 +1093,7 @@ implementation
                            else
                              writer.AsmWriteln(Tai_datablock(hp).sym.name);
                          end;
-                       if ((target_info.system <> system_arm_linux) and (target_info.system <> system_arm_android)) then
-                         sepChar := '@'
-                       else
-                         sepChar := '%';
+                       sepChar := '@';
                        if replaceforbidden then
                          begin
                            if (tf_needs_symbol_type in target_info.flags) then
@@ -1211,10 +1131,7 @@ implementation
                       if assigned(tai_const(hp).sym) then
                         internalerror(200404292);
                       begin
-                          if (target_info.system in use_ua_elf_systems) then
-                            writer.AsmWrite(ait_ua_elf_const2str[aitconst_32bit])
-                          else
-                            writer.AsmWrite(ait_const2str[aitconst_32bit]);
+                          writer.AsmWrite(ait_const2str[aitconst_32bit]);
                           if target_info.endian = endian_little then
                             begin
                               writer.AsmWrite(tostr(longint(lo(tai_const(hp).value))));
@@ -1282,12 +1199,6 @@ implementation
                        InternalError(2014022601);
                      case target_info.cpu of
 
-                       cpu_mipseb,cpu_mipsel:
-                         begin
-                           writer.AsmWrite(#9'.gpword'#9);
-                           writer.AsmWrite(tai_const(hp).sym.name);
-                         end;
-
                        cpu_i386:
                          begin
                            writer.AsmWrite(ait_const2str[aitconst_32bit]);
@@ -1335,15 +1246,7 @@ implementation
                        end
                      else
                        begin
-                         if (constdef in ait_unaligned_consts) and
-                            (target_info.system in use_ua_sparc_systems) then
-                           writer.AsmWrite(ait_ua_sparc_const2str[constdef])
-                         else if (target_info.system in use_ua_elf_systems) then
-                           writer.AsmWrite(ait_ua_elf_const2str[constdef])
-                         else if (asminfo^.id=as_solaris_as) then
-                           writer.AsmWrite(ait_solaris_const2str[constdef])
-                         else
-                           writer.AsmWrite(ait_const2str[constdef]);
+                         writer.AsmWrite(ait_const2str[constdef]);
                          l:=0;
                          t := '';
                          repeat
@@ -1492,11 +1395,7 @@ implementation
                  end
                else
                  begin
-                   if ((target_info.system <> system_arm_linux) and (target_info.system <> system_arm_android)) or
-                     (target_asm.id=as_arm_vasm) then
-                     sepChar := '@'
-                   else
-                     sepChar := '#';
+                   sepChar := '@';
                    if (tf_needs_symbol_type in target_info.flags) then
                      begin
                        writer.AsmWrite(#9'.type'#9 + tai_symbol(hp).sym.name);
@@ -1527,10 +1426,7 @@ implementation
                  { the .localentry directive has to specify the size from the
                    start till here of the non-local entry code as second argument }
                  s:=', .-';
-               if ((target_info.system <> system_arm_linux) and (target_info.system <> system_arm_android)) then
-                 sepChar := '@'
-               else
-                 sepChar := '#';
+               sepChar := '@';
                if replaceforbidden then
                  begin
                    { avoid string truncation }
@@ -1684,24 +1580,20 @@ implementation
              end;
            ait_eabi_attribute:
              begin
-               { as of today, vasm does not support the eabi directives }
-               if target_asm.id<>as_arm_vasm then
-                 begin
-                   case tai_attribute(hp).eattr_typ of
-                     eattrtype_dword:
-                       writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+','+tostr(tai_attribute(hp).value));
-                     eattrtype_ntbs:
-                       begin
-                         if assigned(tai_attribute(hp).valuestr) then
-                           writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+',"'+tai_attribute(hp).valuestr^+'"')
-                         else
-                           writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+',""');
-                       end
+               case tai_attribute(hp).eattr_typ of
+                 eattrtype_dword:
+                   writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+','+tostr(tai_attribute(hp).value));
+                 eattrtype_ntbs:
+                   begin
+                     if assigned(tai_attribute(hp).valuestr) then
+                       writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+',"'+tai_attribute(hp).valuestr^+'"')
                      else
-                       Internalerror(2019100601);
-                   end;
-                   writer.AsmLn;
-                 end;
+                       writer.AsmWrite(#9'.eabi_attribute '+tostr(tai_attribute(hp).tag)+',""');
+                   end
+                 else
+                   Internalerror(2019100601);
+               end;
+               writer.AsmLn;
              end;
 
            ait_attribute:

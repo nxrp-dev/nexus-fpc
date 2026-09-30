@@ -560,44 +560,9 @@ interface
       begin
         writer.AsmLn;
         writer.AsmWrite('SECTION ');
-        { go32v2 stub only loads .text and .data sections, and allocates space for .bss.
-          Thus, data which normally goes into .rodata and .rodata_norel sections must
-          end up in .data section }
-        if (atype in [sec_rodata,sec_rodata_norel]) and
-          (target_info.system=system_i386_go32v2) then
-          writer.AsmWrite('.data')
-        else if (atype=sec_threadvar) and
+        if (atype=sec_threadvar) and
           (target_info.system in systems_windows) then
           writer.AsmWrite('.tls'#9'bss')
-        else if target_info.system in [system_i8086_msdos,system_i8086_embedded] then
-          begin
-            if (atype=sec_user) then
-              secname:=aname
-            else if secnames[atype]='.text' then
-              secname:=CodeSectionName(aname)
-            else if omf_segclass(atype)='FAR_DATA' then
-              secname:=current_module.modulename^ + '_DATA'
-            else
-              secname:=omf_secnames[atype];
-            writer.AsmWrite(secname);
-            { first use of this section in the object file? }
-            if FSections.Find(secname)=nil then
-              begin
-                { yes -> write the section attributes as well }
-                if atype=sec_stack then
-                  writer.AsmWrite(' stack');
-                if atype in [sec_debug_frame,sec_debug_info,sec_debug_line,sec_debug_abbrev,sec_debug_aranges,sec_debug_ranges] then
-                  writer.AsmWrite(' use32')
-                else
-                  writer.AsmWrite(' use16');
-                writer.AsmWrite(' class='+omf_segclass(atype)+
-                  ' align='+tostr(omf_sectiontype2align(atype)));
-                TX86NasmSection.Create(FSections,secname);
-                secgroup:=omf_section_primary_group(atype,aname);
-                if secgroup<>'' then
-                  AddSegmentToGroup(secgroup,secname);
-              end;
-          end
         else if (atype=sec_user) then
           writer.AsmWrite(aname)
         else if secnames[atype]='.text' then
@@ -1344,15 +1309,9 @@ interface
 
 {$ifdef i386}
         case target_info.system of
-          system_i386_go32v2:
-            FormatName:='coff';
-          system_i386_wdosx,
           system_i386_win32:
             FormatName:='win32';
-          system_i386_embedded:
-            FormatName:='obj';
-          system_i386_linux,
-          system_i386_beos:
+          system_i386_linux:
             FormatName:='elf';
           system_i386_darwin:
             FormatName:='macho32';
@@ -1366,8 +1325,6 @@ interface
             FormatName:='win64';
           system_x86_64_darwin:
             FormatName:='macho64';
-          system_x86_64_embedded:
-            FormatName:='obj';
           system_x86_64_linux:
             FormatName:='elf64';
         else

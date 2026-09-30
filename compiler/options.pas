@@ -54,7 +54,7 @@ Type
     paranamespaces : TCmdStrList;
     ParaAlignment   : TAlignmentInfo;
     parapackages : tfphashobjectlist;
-    paratarget        : tsystem;
+    paratarget        : TSystem;
     paratargetasm     : tasm;
     paratargetdbg     : tdbg;
     parasubtarget    : string;
@@ -127,7 +127,6 @@ Type
     procedure MaybeSetDefaultMacVersionMacro;
 {$if defined(XTENSA)}
     function ParseVersionStr(out ver: longint; const compvarname, value: string): boolean;
-    procedure MaybeSetIdfVersionMacro;
 {$endif}
 {$ifdef llvm}
     procedure LLVMEnableSanitizers(sanitizers: TCmdStr);
@@ -322,20 +321,20 @@ const
 
   procedure ListOSTargets (OrigString: TCmdStr);
   var
-    target : tsystem;
+    target : TSystem;
   begin
     SplitLine (OrigString, OSTargetsPlaceholder, HS3);
-    for target:=low(tsystem) to high(tsystem) do
-    if assigned(targetinfos[target]) then
+    for target:=low(TSystem) to high(TSystem) do
+    if assigned(targetinfos[Ord(target)]) then
      begin
-      hs1:=targetinfos[target]^.shortname;
+      hs1:=targetinfos[Ord(target)]^.shortname;
       if OrigString = '' then
        Comment (V_Normal, hs1)
       else
        begin
         hs := OrigString;
-        hs1:=hs1 + ': ' + targetinfos[target]^.name;
-        if tf_under_development in targetinfos[target]^.flags then
+        hs1:=hs1 + ': ' + targetinfos[Ord(target)]^.name;
+        if tf_under_development in targetinfos[Ord(target)]^.flags then
          hs1:=hs1+' {*}';
         Replace(hs,OSTargetsPlaceholder,hs1);
         Comment(V_Normal,hs);
@@ -345,14 +344,14 @@ const
 
   procedure ListOSTargetsXML;
   var
-    target : tsystem;
+    target : TSystem;
   begin
     WriteLn(xmloutput,'    <ostargets>');
-    for target:=low(tsystem) to high(tsystem) do
-    if assigned(targetinfos[target]) then
+    for target:=low(TSystem) to high(TSystem) do
+    if assigned(targetinfos[Ord(target)]) then
       begin
-        Write(xmloutput,'      <ostarget shortname="',targetinfos[target]^.shortname,'" name="',targetinfos[target]^.name,'"');
-        if tf_under_development in targetinfos[target]^.flags then
+        Write(xmloutput,'      <ostarget shortname="',targetinfos[Ord(target)]^.shortname,'" name="',targetinfos[Ord(target)]^.name,'"');
+        if tf_under_development in targetinfos[Ord(target)]^.flags then
           Write(xmloutput,' experimental="1"');
         WriteLn(xmloutput,'/>');
       end;
@@ -1330,7 +1329,7 @@ begin
   if MacVersionSet then
     exit;
   { check for deployment target set via environment variable }
-  if not(target_info.system in [system_i386_iphonesim,system_arm_ios,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+  if not(target_info.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
     begin
       envstr:=GetEnvironmentVariable('MACOSX_DEPLOYMENT_TARGET');
       if envstr<>'' then
@@ -1363,7 +1362,6 @@ begin
         if not ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED','10.8.0',false) then
           internalerror(2022090912);
       end;
-    system_arm_ios,
     system_i386_iphonesim:
       begin
         if not ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED','9.0.0',false) then
@@ -1408,41 +1406,6 @@ procedure TOption.LLVMEnableSanitizers(sanitizers: TCmdStr);
   end;
 {$endif}
 
-
-{$if defined(XTENSA)}
-procedure TOption.MaybeSetIdfVersionMacro;
-begin
-  if not(target_info.system in [system_xtensa_freertos]) then
-    exit;
-  if IdfVersionSet then
-    exit;
-  { nothing specified -> defaults }
-  case current_settings.controllertype of
-{$ifdef XTENSA}
-    ct_esp8266:
-      begin
-        set_system_compvar('IDF_VERSION','30300');
-        idf_version:=30300;
-      end;
-    ct_esp32:
-      begin
-        set_system_compvar('IDF_VERSION','40200');
-        idf_version:=40200;
-      end;
-    ct_esp32s2,ct_esp32s3:
-      begin
-        set_system_compvar('IDF_VERSION','50006');
-        idf_version:=40400;
-      end;
-{$endif}
-    else
-      begin
-        set_system_compvar('IDF_VERSION','00000');
-        idf_version:=0;
-      end;
-  end;
-end;
-{$endif XTENSA}
 
 procedure TOption.VerifyTargetProcessor;
   begin
@@ -2089,12 +2052,6 @@ begin
   else
     features:=features+target_unsup_features;
 
-{$ifdef m68k}
-   { always enable vlink as default linker for the Sinclair QL, Atari, and Human 68k }
-   if (target_info.system in [system_m68k_sinclairql,system_m68k_atari,system_m68k_human68k]) and
-      not LinkerSetExplicitly then
-     include(init_settings.globalswitches,cs_link_vlink);
-{$endif m68k}
 end;
 
 procedure TOption.CheckOptionsCompatibility;
@@ -2248,8 +2205,7 @@ begin
    begin
      case more[j] of
        '5' :
-         if (target_info.system in systems_all_windows)
-            or (target_info.cpu in [cpu_mipseb, cpu_mipsel]) then
+         if (target_info.system in systems_all_windows) then
            begin
              if UnsetBool(More, j, opt, false) then
                exclude(init_settings.globalswitches,cs_asm_pre_binutils_2_25)
@@ -2942,10 +2898,6 @@ begin
             ParaFrameworkPath.AddPath(More,false)
           else
             frameworksearchpath.AddPath(More,true)
-{$if defined(XTENSA)}
-        else if (target_info.system in [system_xtensa_freertos]) then
-          idfpath:=FixPath(More,true)
-{$endif defined(XTENSA)}
         else
           IllegalPara(opt);
     'F' :
@@ -3786,20 +3738,6 @@ begin
          end;
        'F':
          begin
-{$if defined(m68k)}
-           if target_info.system in [system_m68k_atari] then
-             begin
-               if (length(More)>j) then
-                 begin
-                   val(Copy(More,j+1),ataritos_exe_flags,code);
-                   if code<>0 then
-                     IllegalPara(opt);
-                 end
-               else
-                 IllegalPara(opt);
-               break;
-             end;
-{$endif defined(m68k)}
            IllegalPara(opt);
          end;
        'G':
@@ -3831,7 +3769,7 @@ begin
              begin
                set_target_res(res_macho);
                target_info.resobjext:=
-                 targetinfos[target_info.system]^.resobjext;
+                 targetinfos[Ord(target_info.system)]^.resobjext;
              end
            else
              IllegalPara(opt);
@@ -3843,7 +3781,7 @@ begin
          end;
        'M':
          begin
-           if (target_info.system in (systems_darwin-[system_i386_iphonesim,system_arm_ios,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
+           if (target_info.system in (systems_darwin-[system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
               ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',copy(More,2),false) then
              begin
                break;
@@ -3872,40 +3810,9 @@ begin
              begin
                break;
              end
-{$if defined(XTENSA)}
-           else if (target_info.system in [system_xtensa_freertos]) and
-              ParseVersionStr(idf_version,'IDF_VERSION',copy(More,2)) then
-             begin
-               break;
-             end
-{$endif XTENSA}
            else
              IllegalPara(opt);
          end;
-{$if defined(m68k)}
-       'L':
-         begin
-           if (target_info.system in [system_m68k_sinclairql]) then
-             sinclairql_vlink_experimental:=false
-           else
-             IllegalPara(opt);
-         end;
-       'Q':
-         begin
-           if (target_info.system in [system_m68k_sinclairql]) then
-             begin
-               sinclairql_metadata_format:=Upper(Copy(More,j+1));
-               case sinclairql_metadata_format of
-                 'QHDR', 'XTCC': ; { allowed formats }
-                 else
-                   IllegalPara(opt);
-               end;
-               break;
-             end
-           else
-             IllegalPara(opt);
-         end;
-{$endif defined(m68k)}
        'R':
          begin
            if target_info.system in systems_all_windows then
@@ -3920,19 +3827,6 @@ begin
        't':
          begin
 
-{$if defined(m68k)}
-           if (target_info.system in [system_m68k_atari]) then
-             begin
-               case Upper(Copy(More,j+1)) of
-                 'TOS': ataritos_exe_format := 'ataritos';
-                 'MINT': ataritos_exe_format := 'aoutmint';
-                 else
-                   IllegalPara(opt);
-               end;
-               break;
-             end
-           else
-{$endif defined(m68k)}
              IllegalPara(opt);
          end;
        'X':
@@ -4550,9 +4444,8 @@ begin
     if not UpdateTargetSwitchStr('WASMTHREADS', init_settings.targetswitches, true) then
       InternalError(2025022701);
 
-  { Use standard Android NDK prefixes when cross-compiling }
-  if (source_info.system<>target_info.system) and (target_info.system in systems_android) then
-    utilsprefix:=target_cpu_string + '-linux-android-';
+  { Android uses the NDK's unprefixed Clang with an explicit target triple.
+    An explicit -XP option can still select a tool prefix below. }
 
   { read configuration file }
   if (not disable_configfile) and
@@ -4842,25 +4735,8 @@ begin
   { set Mac OS X version default macros if not specified explicitly }
   option.MaybeSetDefaultMacVersionMacro;
 
-{$if defined(XTENSA)}
-  { set ESP32 or ESP8266 default SDK versions }
-  option.MaybeSetIdfVersionMacro;
-{$endif defined(XTENSA)}
-
 {$ifdef cpufpemu}
-  { force fpu emulation on arm/wince and arm/embedded etc.
-    if fpu type not explicitly set }
-  if not(option.FPUSetExplicitly) and
-     ((target_info.system in [system_arm_wince,
-         system_m68k_atari,
-         system_arm_embedded,system_arm_freertos,
-         system_xtensa_linux])
-{$ifdef arm}
-      or (target_info.abi=abi_eabi)
-{$endif arm}
-     )
-     or (init_settings.fputype=fpu_soft)
-  then
+  if (init_settings.fputype=fpu_soft) then
     begin
       include(init_settings.moduleswitches,cs_fp_emulation);
       { cs_fp_emulation and fpu_soft are equal on arm and m68k }
@@ -4886,52 +4762,7 @@ begin
   end;
 {$endif i386}
 
-{$ifdef xtensa}
-  { xtensa-linux target does not support controller setting option -Wp }
-  if not(option.FPUSetExplicitly) and not(target_info.system = system_xtensa_linux) then
-    begin
-      init_settings.fputype:=embedded_controllers[init_settings.controllertype].fputype;
-      if (init_settings.fputype=fpu_soft) then
-        include(init_settings.moduleswitches,cs_fp_emulation);
-    end;
-  if not(option.CPUSetExplicitly) and (target_info.system=system_xtensa_linux) then
-    init_settings.cputype:=cpu_lx6;
-
-  if (target_info.system in [system_xtensa_embedded,system_xtensa_freertos]) and not(option.ABISetExplicitly) then
-    begin
-      if CPUXTENSA_REGWINDOW in cpu_capabilities[init_settings.cputype] then
-        target_info.abi:=abi_xtensa_windowed
-      else
-        target_info.abi:=abi_xtensa_call0;
-    end;
-{$endif xtensa}
-
 {$ifdef arm}
-  case target_info.system of
-    system_arm_ios:
-      begin
-        { set default cpu type to ARMv7 for Darwin unless specified otherwise, and fpu
-          to VFPv3 (that's what all 32 bit ARM iOS devices use nowadays)
-        }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_armv7;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_armv7;
-        if not option.FPUSetExplicitly then
-          init_settings.fputype:=fpu_vfpv3;
-      end;
-    system_arm_android:
-      begin
-        { set default cpu type to ARMv5T for Android unless specified otherwise }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_armv5t;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_armv5t;
-      end;
-    else
-      ;
-  end;
-
   { set ABI defaults }
   case target_info.abi of
     abi_eabihf:
@@ -4963,25 +4794,11 @@ begin
           end
         else
           begin
-            if (not(FPUARM_HAS_VFP_EXTENSION in fpu_capabilities[init_settings.fputype]))
-              or (target_info.system = system_arm_ios) then
+            if (not(FPUARM_HAS_VFP_EXTENSION in fpu_capabilities[init_settings.fputype])) then
               begin
                 Message(option_illegal_fpu_eabihf);
                 StopOptions(1);
               end;
-          end;
-      end;
-    abi_eabi:
-      begin
-        if target_info.system=system_arm_linux then
-          begin
-            { this is what Debian uses }
-            if not option.CPUSetExplicitly then
-              init_settings.cputype:=cpu_armv4t;
-            if not option.OptCPUSetExplicitly then
-              init_settings.optimizecputype:=cpu_armv4t;
-            if not(option.FPUSetExplicitly) then
-              init_settings.fputype:=fpu_soft;
           end;
       end;
     else
@@ -5022,60 +4839,12 @@ begin
 {$endif aarch64}
 
 
-{$ifdef jvm}
-  { set default CPU type to Dalvik when targeting Android }
-  if target_info.system=system_jvm_android32 then
-    begin
-      if not option.CPUSetExplicitly then
-        init_settings.cputype:=cpu_dalvik;
-    end;
-{$endif jvm}
-
 {$ifdef llvm}
   { standard extension for llvm bitcode files }
   target_info.asmext:='.ll';
   { don't generate dwarf cfi, llvm will do that }
   exclude(target_info.flags,tf_needs_dwarf_cfi);
 {$endif llvm}
-{$ifdef m68k}
-  if init_settings.cputype in cpu_coldfire then
-    def_system_macro('CPUCOLDFIRE');
-
-  case target_info.system of
-    system_m68k_linux,
-    system_m68k_netbsd:
-      begin
-        if not (option.FPUSetExplicitly) and
-           not (init_settings.cputype in cpu_coldfire) then
-          begin
-            { enable HW FPU for UNIX by default, but only for
-              original 68k, not Coldfire }
-            exclude(init_settings.moduleswitches,cs_fp_emulation);
-            init_settings.fputype:=fpu_68881;
-          end;
-      end;
-    system_m68k_atari,
-    system_m68k_sinclairql,
-    system_m68k_human68k:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_mc68000;
-      end;
-    system_m68k_palmos:
-      begin
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_mc68000;
-        if not (option.FPUSetExplicitly) then
-          begin
-            { No FPU for PalmOS by default }
-            exclude(init_settings.moduleswitches,cs_fp_emulation);
-            init_settings.fputype:=fpu_none;
-          end;
-      end;
-    else
-      ;
-  end;
-{$endif m68k}
 {$ifdef wasm}
   { if no explicit exception handling mode is set for WebAssembly, select branchful exceptions }
   if init_settings.targetswitches*[ts_wasm_no_exceptions,ts_wasm_native_exnref_exceptions,ts_wasm_native_legacy_exceptions,ts_wasm_bf_exceptions]=[] then

@@ -2929,7 +2929,6 @@ const pemagic : array[0..3] of byte = (
                  begin
                    if (Pos('.edata',secname)=1) or
                       (Pos('.rsrc',secname)=1) or
-                      ((target_info.system=system_arm_wince) and (Pos('.pdata',secname)=1)) or
                       (Pos('.fpc',secname)=1) then
                      include(secoptions,oso_keep);
                    if (Pos('.idata',secname)=1) then
@@ -4034,20 +4033,6 @@ const pemagic : array[0..3] of byte = (
 
 {$ifdef i386}
     const
-       as_i386_coff_info : tasminfo =
-          (
-            id     : as_i386_coff;
-            idtxt  : 'COFF';
-            asmbin : '';
-            asmcmd : '';
-            supported_targets : [system_i386_go32v2];
-            flags : [af_outputbinary,af_smartlink_sections];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '';
-            dollarsign: '$';
-          );
-
        as_i386_pecoff_info : tasminfo =
           (
             id     : as_i386_pecoff;
@@ -4062,33 +4047,6 @@ const pemagic : array[0..3] of byte = (
             dollarsign: '$';
           );
 
-       as_i386_pecoffwdosx_info : tasminfo =
-          (
-            id     : as_i386_pecoffwdosx;
-            idtxt  : 'PEWDOSX';
-            asmbin : '';
-            asmcmd : '';
-            supported_targets : [system_i386_wdosx];
-            flags : [af_outputbinary];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '';
-            dollarsign: '$';
-          );
-
-       as_i386_pecoffwince_info : tasminfo =
-          (
-            id     : as_i386_pecoffwince;
-            idtxt  : 'PECOFFWINCE';
-            asmbin : '';
-            asmcmd : '';
-            supported_targets : [system_i386_wince];
-            flags : [af_outputbinary,af_smartlink_sections];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '';
-            dollarsign: '$';
-          );
 {$endif i386}
 {$ifdef x86_64}
     const
@@ -4106,22 +4064,6 @@ const pemagic : array[0..3] of byte = (
             dollarsign: '$';
           );
 {$endif x86_64}
-{$ifdef arm}
-    const
-       as_arm_pecoffwince_info : tasminfo =
-          (
-            id     : as_arm_pecoffwince;
-            idtxt  : 'PECOFFWINCE';
-            asmbin : '';
-            asmcmd : '';
-            supported_targets : [system_arm_wince];
-            flags : [af_outputbinary,af_smartlink_sections];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '';
-            dollarsign: '$';
-          );
-{$endif arm}
 
 
 {$ifdef win32}
@@ -4144,17 +4086,11 @@ const pemagic : array[0..3] of byte = (
 
 initialization
 {$ifdef i386}
-  RegisterAssembler(as_i386_coff_info,TDJCoffAssembler);
   RegisterAssembler(as_i386_pecoff_info,TPECoffAssembler);
-  RegisterAssembler(as_i386_pecoffwdosx_info,TPECoffAssembler);
-  RegisterAssembler(as_i386_pecoffwince_info,TPECoffAssembler);
 {$endif i386}
 {$ifdef x86_64}
   RegisterAssembler(as_x86_64_pecoff_info,TPECoffAssembler);
 {$endif x86_64}
-{$ifdef arm}
-  RegisterAssembler(as_arm_pecoffwince_info,TPECoffAssembler);
-{$endif arm}
 {$ifdef win32}
   SetupProcVars;
 {$endif win32}

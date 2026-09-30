@@ -1697,7 +1697,7 @@ implementation
        else
          begin
            result:=crecorddef.create_global_internal('$'+name,4,
-             targetinfos[target_info.system]^.alignment.recordalignmin);
+             targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
            { length in bytes }
            result.add_field_by_def('',s32inttype);
            streledef:=cwidechartype;
@@ -1746,7 +1746,7 @@ implementation
            result.lab:=startlab;
            datatcb.begin_anonymous_record(get_dynstring_rec_name(st_widestring,true,strlength),
              4,4,
-             targetinfos[target_info.system]^.alignment.recordalignmin);
+             targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
            datatcb.emit_tai(Tai_const.Create_32bit(strlength*cwidechartype.size),s32inttype);
            { can we optimise by placing the string constant label at the
              required offset? }

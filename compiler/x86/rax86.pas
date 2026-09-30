@@ -37,7 +37,6 @@ function is_prefix(t:tasmop):boolean;
 function is_override(t:tasmop):boolean;
 Function CheckPrefix(prefixop,op:tasmop): Boolean;
 Function CheckOverride(overrideop,op:tasmop): Boolean;
-Procedure FWaitWarning;
 
 type
   Tx86Operand=class(TOperand)
@@ -184,12 +183,6 @@ Begin
   end }
 end;
 
-
-Procedure FWaitWarning;
-begin
-  if (target_info.system=system_i386_GO32V2) and (cs_fp_emulation in current_settings.moduleswitches) then
-   Message(asmr_w_fwait_emu_prob);
-end;
 
 {*****************************************************************************
                               TX86Operand
@@ -2008,7 +2001,7 @@ begin
      if someone uses this in assembler code
      FPC itself does not use it at all PM }
    if (opcode=A_ENTER) and
-      (target_info.system in [system_i386_linux,system_i386_FreeBSD,system_i386_android]) then
+      (target_info.system in [system_i386_linux,system_i386_android]) then
      Message(asmr_w_enter_not_supported_by_linux);
 
   ai:=taicpu.op_none(opcode,siz);

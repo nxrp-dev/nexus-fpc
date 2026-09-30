@@ -61,7 +61,6 @@ interface
         procedure exportvar(hp : texported_item);override;
         procedure exportfromlist(hp : texported_item);
         procedure generatelib;override;
-        procedure generatenasmlib;virtual;
       end;
 
 
@@ -435,22 +434,6 @@ implementation
         if current_asmdata.asmlists[al_imports]=nil then
           current_asmdata.asmlists[al_imports]:=TAsmList.create;
 
-        if (target_asm.id in [as_i386_masm,as_i386_tasm,as_i386_nasmwin32]) then
-          begin
-            new_section(current_asmdata.asmlists[al_imports],sec_code,'',0);
-            for i:=0 to current_module.ImportLibraryList.Count-1 do
-              begin
-                ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
-                for j:=0 to ImportLibrary.ImportSymbolList.Count-1 do
-                  begin
-                    ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[j]);
-                    current_asmdata.asmlists[al_imports].concat(tai_directive.create(asd_extern,ImportSymbol.Name));
-                    current_asmdata.asmlists[al_imports].concat(tai_directive.create(asd_nasm_import,ImportSymbol.Name+' '+ImportLibrary.Name+' '+ImportSymbol.Name));
-                  end;
-              end;
-            exit;
-          end;
-
         for i:=0 to current_module.ImportLibraryList.Count-1 do
           begin
             ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
@@ -757,12 +740,6 @@ implementation
            exportfromlist(texported_item(EList_indexed.Items[i]));
          FreeAndNil(EList_indexed);
 
-         if (target_asm.id in [as_i386_masm,as_i386_tasm,as_i386_nasmwin32]) then
-          begin
-            generatenasmlib;
-            exit;
-          end;
-
          hp:=texported_item(current_module._exports.first);
          if not assigned(hp) then
            exit;
@@ -914,31 +891,6 @@ implementation
            to create the import library }
          current_module._exports.concatlist(temtexport);
          temtexport.free;
-      end;
-
-
-    procedure TExportLibWin.generatenasmlib;
-      var
-         hp : texported_item;
-         {p  : pchar;
-         s  : string;}
-      begin
-         new_section(current_asmdata.asmlists[al_exports],sec_code,'',0);
-         hp:=texported_item(current_module._exports.first);
-         while assigned(hp) do
-           begin
-{             case hp.sym.typ of
-               staticvarsym :
-                 s:=tstaticvarsym(hp.sym).mangledname;
-               procsym :
-                 s:=tprocdef(tprocsym(hp.sym).ProcdefList[0]).mangledname;
-               else
-                 s:='';
-             end;
-             p:=strpnew(#9+'export '+s+' '+hp.Name^+' '+tostr(hp.index));
-             current_asmdata.asmlists[al_exports].concat(tai_direct.create(p));}
-             hp:=texported_item(hp.next);
-           end;
       end;
 
 

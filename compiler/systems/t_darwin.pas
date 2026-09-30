@@ -186,18 +186,6 @@ implementation
                       if MacOSXVersionMin.relationto(10,5,0)>=0 then
                         exit('crt1.10.5.o');
                     end;
-                  system_arm_ios:
-                    begin
-                      { iOS:
-                          iOS 6 and later: nothing
-                          iOS 3.1 - 5.x: crt1.3.1.o
-                          pre-iOS 3.1: crt1.o
-                      }
-                      if iPhoneOSVersionMin.relationto(6,0,0)>=0 then
-                        exit('');
-                      if iPhoneOSVersionMin.relationto(3,1,0)>=0 then
-                        exit('crt1.3.1.o');
-                    end;
                   system_i386_iphonesim,
                   system_x86_64_iphonesim,
                   system_aarch64_iphonesim:
@@ -232,7 +220,6 @@ implementation
                       if MacOSXVersionMin.relationto(10,6,0)>=0 then
                         exit('');
                     end;
-                  system_arm_ios,
                   system_aarch64_ios:
                     begin
                       { iOS: < 3.1: bundle1.o
@@ -270,7 +257,6 @@ implementation
                       if MacOSXVersionMin.relationto(10,5,0)>=0 then
                         exit('dylib1.10.5.o');
                     end;
-                  system_arm_ios,
                   system_aarch64_ios:
                     begin
                       { iOS: < 3.1: dylib1.o
@@ -322,10 +308,6 @@ implementation
           system_x86_64_darwin,
           system_x86_64_iphonesim:
             result:='-arch x86_64';
-          system_arm_ios:
-            { current versions of the linker require the sub-architecture type
-              to be specified }
-            result:='-arch '+lower(cputypestr[current_settings.cputype]);
           system_aarch64_ios,
           system_aarch64_iphonesim,
           system_aarch64_darwin:

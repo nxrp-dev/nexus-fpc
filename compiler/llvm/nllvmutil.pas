@@ -172,7 +172,7 @@ implementation
           fields[1]:=cprocvardef.getreusableprocaddr(pd,pc_address_only);
           fields[2]:=voidpointertype;
           itemdef:=llvmgettemprecorddef(fields,C_alignment,
-            targetinfos[target_info.system]^.alignment.recordalignmin);
+            targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
           include(itemdef.defoptions,df_llvm_no_struct_packing);
           include(itemdef.defoptions,df_llvm_no_typename);
           tcb:=ctai_typedconstbuilder.create([tcalo_new_section]);
@@ -289,7 +289,7 @@ implementation
       if (m_objectivec1 in current_settings.modeswitches) then
         begin
           { Objective-C ABI version }
-          if not(target_info.system in [system_powerpc_darwin,system_powerpc64_darwin,system_i386_darwin,system_x86_64_darwin]) or
+          if not(target_info.system in [system_i386_darwin,system_x86_64_darwin]) or
              (MacOSXVersionMin.relationto(10,5,0)>=0) then
             objcabiversion:=2
           else

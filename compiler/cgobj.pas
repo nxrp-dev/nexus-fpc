@@ -2761,11 +2761,8 @@ implementation
       begin
         result := NR_NO;
         case target_info.system of
-          system_powerpc_darwin,
           system_i386_darwin,
-          system_i386_iphonesim,
-          system_powerpc64_darwin,
-          system_arm_ios:
+          system_i386_iphonesim:
             begin
               nlsymname:='L'+symname+'$non_lazy_ptr';
               l:=current_asmdata.getasmsymbol(nlsymname);

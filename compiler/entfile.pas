@@ -141,7 +141,7 @@ const
 { We need to use the correct size of aint and pint for
   the target CPU }
 const
-  CpuAddrBitSize : array[tsystemcpu] of longint =
+  CpuAddrBitSize : array[0..MaxStoredCPUId] of longint =
     (
     {  0 } 32 {'none'},
     {  1 } 32 {'i386'},
@@ -170,7 +170,7 @@ const
     { 24 } 64 {'mips64el'},
     { 25 } 64 {'loongarch64'}
     );
-  CpuAluBitSize : array[tsystemcpu] of longint =
+  CpuAluBitSize : array[0..MaxStoredCPUId] of longint =
     (
     {  0 } 32 {'none'},
     {  1 } 32 {'i386'},
@@ -1074,13 +1074,13 @@ begin
 {$endif}
 {$ifdef generic_cpu}
   header:=getheaderaddr;
-  if CpuAluBitSize[tsystemcpu(header^.cpu)]=64 then
+  if CpuAluBitSize[header^.cpu]=64 then
     result:=getint64
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=32 then
+  else if CpuAluBitSize[header^.cpu]=32 then
     result:=getlongint
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=16 then
+  else if CpuAluBitSize[header^.cpu]=16 then
     result:=smallint(getword)
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=8 then
+  else if CpuAluBitSize[header^.cpu]=8 then
     result:=shortint(getbyte)
   else
     begin
@@ -1119,11 +1119,11 @@ begin
 {$endif}
 {$ifdef generic_cpu}
   header:=getheaderaddr;
-  if CpuAddrBitSize[tsystemcpu(header^.cpu)]=64 then
+  if CpuAddrBitSize[header^.cpu]=64 then
     result:=getint64
-  else if CpuAddrBitSize[tsystemcpu(header^.cpu)]=32 then
+  else if CpuAddrBitSize[header^.cpu]=32 then
     result:=getlongint
-  else if CpuAddrBitSize[tsystemcpu(header^.cpu)]=16 then
+  else if CpuAddrBitSize[header^.cpu]=16 then
     begin
       { result:=smallint(getword);
         would have been logical, but it contradicts
@@ -1170,11 +1170,11 @@ begin
 {$endif}
 {$ifdef generic_cpu}
   header:=getheaderaddr;
-  if CpuAddrBitSize[tsystemcpu(header^.cpu)]=64 then
+  if CpuAddrBitSize[header^.cpu]=64 then
     result:=getqword
-  else if CpuAddrBitSize[tsystemcpu(header^.cpu)]=32 then
+  else if CpuAddrBitSize[header^.cpu]=32 then
     result:=getdword
-  else if CpuAddrBitSize[tsystemcpu(header^.cpu)]=16 then
+  else if CpuAddrBitSize[header^.cpu]=16 then
     result:=getword
   else
     begin
@@ -1213,7 +1213,7 @@ begin
 {$endif}
 {$ifdef generic_cpu}
   header:=getheaderaddr;
-  if CpuAddrBitSize[tsystemcpu(header^.cpu)]=64 then
+  if CpuAddrBitSize[header^.cpu]=64 then
     result:=getqword
   else result:=getdword;
 {$else not generic_cpu}
@@ -1242,13 +1242,13 @@ begin
 {$endif}
 {$ifdef generic_cpu}
   header:=getheaderaddr;
-  if CpuAluBitSize[tsystemcpu(header^.cpu)]=64 then
+  if CpuAluBitSize[header^.cpu]=64 then
     result:=getqword
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=32 then
+  else if CpuAluBitSize[header^.cpu]=32 then
     result:=getdword
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=16 then
+  else if CpuAluBitSize[header^.cpu]=16 then
     result:=getword
-  else if CpuAluBitSize[tsystemcpu(header^.cpu)]=8 then
+  else if CpuAluBitSize[header^.cpu]=8 then
     result:=getbyte
   else
     begin
@@ -1466,7 +1466,7 @@ begin
 {$ifndef FPC_HAS_TYPE_EXTENDED}
 {$ifdef FPC_SOFT_FPUX80}
   else
-    if target_info.cpu in [cpu_i8086, cpu_i386, cpu_x86_64] then
+    if target_info.cpu in [cpu_i386, cpu_x86_64] then
       begin
         d:=getrealsize(sizeof(floatx80_byte_array));
 	getreal:=d;
@@ -1487,7 +1487,7 @@ begin
 {$ifndef FPC_HAS_TYPE_EXTENDED}
 {$ifdef FPC_SOFT_FPUX80}
   else
-    if target_info.cpu in [cpu_i8086, cpu_i386, cpu_x86_64] then
+    if target_info.cpu in [cpu_i386, cpu_x86_64] then
       getrealbytesize:=sizeof(floatx80_byte_array)
 {$endif def FPC_SOFT_FPUX80}
 {$endif ndef FPC_HAS_TYPE_EXTENDED}
@@ -1956,7 +1956,7 @@ begin
     end
 {$ifndef FPC_HAS_TYPE_EXTENDED}
 {$ifdef FPC_SOFT_FPUX80}
-  else if target_info.cpu in [cpu_i8086, cpu_i386, cpu_x86_64] then
+  else if target_info.cpu in [cpu_i386, cpu_x86_64] then
     begin
 {$ifdef DEBUG_PPU}
       ppu_log('putreal,size='+tostr(sizeof(floatx80_e)));

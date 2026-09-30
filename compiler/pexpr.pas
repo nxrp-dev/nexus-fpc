@@ -2467,48 +2467,10 @@ implementation
                        arraydef:
                          begin
                            p2:=comp_expr([ef_accept_equal]);
-                           { support SEG:OFS for go32v2/msdos Mem[] }
-                           if (target_info.system in [system_i386_go32v2,system_i386_watcom,system_i8086_msdos,system_i8086_embedded]) and
-                              (p1.nodetype=loadn) and
-                              assigned(tloadnode(p1).symtableentry) and
-                              assigned(tloadnode(p1).symtableentry.owner.name) and
-                              (tloadnode(p1).symtableentry.owner.name^='SYSTEM') and
-                              ((tloadnode(p1).symtableentry.name='MEM') or
-                               (tloadnode(p1).symtableentry.name='MEMW') or
-                               (tloadnode(p1).symtableentry.name='MEML')) then
-                             begin
-{$if defined(i386)}
-                               if try_to_consume(_COLON) then
-                                begin
-                                  p3:=caddnode.create(muln,cordconstnode.create($10,s32inttype,false),p2);
-                                  p2:=comp_expr([ef_accept_equal]);
-                                  p2:=caddnode.create(addn,p2,p3);
-                                  if try_to_consume(_POINTPOINT) then
-                                    { Support mem[$a000:$0000..$07ff] which returns array [0..$7ff] of memtype.}
-                                    p2:=crangenode.create(p2,caddnode.create(addn,comp_expr([ef_accept_equal]),p3.getcopy));
-                                  p1:=cvecnode.create(p1,p2);
-                                  include(tvecnode(p1).vecnodeflags,vnf_memseg);
-                                  include(tvecnode(p1).vecnodeflags,vnf_memindex);
-                                end
-                               else
-                                begin
-                                  if try_to_consume(_POINTPOINT) then
-                                    { Support mem[$80000000..$80000002] which returns array [0..2] of memtype.}
-                                    p2:=crangenode.create(p2,comp_expr([ef_accept_equal]));
-                                  p1:=cvecnode.create(p1,p2);
-                                  include(tvecnode(p1).vecnodeflags,vnf_memindex);
-                                end;
-{$else}
-                               internalerror(2013053105);
-{$endif}
-                             end
-                           else
-                             begin
-                               if try_to_consume(_POINTPOINT) then
-                                 { Support arrayvar[0..9] which returns array [0..9] of arraytype.}
-                                 p2:=crangenode.create(p2,comp_expr([ef_accept_equal]));
-                               p1:=cvecnode.create(p1,p2);
-                             end;
+                           if try_to_consume(_POINTPOINT) then
+                             { Support arrayvar[0..9] which returns array [0..9] of arraytype.}
+                             p2:=crangenode.create(p2,comp_expr([ef_accept_equal]));
+                           p1:=cvecnode.create(p1,p2);
                          end;
                        else
                          begin

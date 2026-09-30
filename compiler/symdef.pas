@@ -1582,7 +1582,7 @@ implementation
         for i:=low(fields) to high(fields) do
           fieldlist.add(fields[i]);
         result:=crecorddef.create_global_internal(internaltypeprefixName[prefix],packrecords,
-          targetinfos[target_info.system]^.alignment.recordalignmin);
+          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
         result.add_fields_from_deflist(fieldlist);
         fieldlist.free;
         fieldlist := nil;
@@ -1623,7 +1623,7 @@ implementation
             exit;
           end;
         recdef:=crecorddef.create_global_internal(name,packrecords,
-          targetinfos[target_info.system]^.alignment.recordalignmin);
+          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
         fields:=tfplist.create;
         fields.add(countdef);
         if count>0 then
@@ -3529,7 +3529,7 @@ implementation
 
     function torddef.alignment:shortint;
       begin
-        if (target_info.system in [system_i386_darwin,system_i386_iphonesim,system_arm_ios]) and
+        if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) and
            (ordtype in [s64bit,u64bit]) then
           result := 4
         else
@@ -3676,7 +3676,7 @@ implementation
 
     function tfloatdef.alignment:shortint;
       begin
-        if (target_info.system in [system_i386_darwin,system_i386_iphonesim,system_arm_ios]) then
+        if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) then
           case floattype of
             sc80real,
             s80real: result:=16;
@@ -3706,10 +3706,7 @@ implementation
              if target_info.system in [system_i386_darwin,
                   system_i386_iphonesim,system_x86_64_darwin,
                   system_x86_64_iphonesim,
-                  system_x86_64_linux,system_x86_64_freebsd,
-                  system_x86_64_openbsd,system_x86_64_netbsd,
-                  system_x86_64_solaris,system_x86_64_embedded,
-                  system_x86_64_dragonfly,system_x86_64_haiku] then
+                  system_x86_64_linux] then
                savesize:=16
              else
                savesize:=12;
@@ -7970,8 +7967,6 @@ implementation
          else
            ImplementedInterfaces:=nil;
 
-         if (target_cpu=tsystemcpu.cpu_wasm32) and (objecttype in objecttypes_with_thunk) then
-           ppufile.getderef(hiddenclassdefref);
          if df_copied_def in defoptions then
            begin
              ppufile.getderef(cloneddefderef);
@@ -8162,9 +8157,6 @@ implementation
                end;
            end;
 
-         if (target_cpu=tsystemcpu.cpu_wasm32) and (objecttype in objecttypes_with_thunk) then
-           ppufile.putderef(hiddenclassdefref);
-
          if df_copied_def in defoptions then
            ppufile.putderef(cloneddefderef);
 
@@ -8199,8 +8191,6 @@ implementation
          vmt_fieldderef.build(vmt_field);
          childofderef.build(childof);
 
-        if (target_cpu=tsystemcpu.cpu_wasm32) and (objecttype in objecttypes_with_thunk) then
-           hiddenclassdefref.build(hiddenclassdef);
          if df_copied_def in defoptions then
            cloneddefderef.build(symtable.defowner)
          else
@@ -8231,8 +8221,6 @@ implementation
          inherited deref;
          vmt_field:=tsym(vmt_fieldderef.resolve);
          childof:=tobjectdef(childofderef.resolve);
-         if (target_cpu=tsystemcpu.cpu_wasm32) and (objecttype in objecttypes_with_thunk) then
-           hiddenclassdef:=tobjectdef(hiddenclassdefref.resolve);
          if df_copied_def in defoptions then
            begin
              cloneddef:=tobjectdef(cloneddefderef.resolve);
@@ -9619,7 +9607,7 @@ implementation
       begin
         if assigned(objc_fastenumeration) then
           exit;
-        if not(target_info.system in [system_arm_ios,system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+        if not(target_info.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
           cocoaunit:='COCOAALL'
         else
           cocoaunit:='IPHONEALL';

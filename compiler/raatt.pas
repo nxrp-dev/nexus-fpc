@@ -1198,11 +1198,6 @@ unit raatt;
              Begin
                Consume(AS_ALIGN);
                l1:=BuildConstExpression(false,false);
-               if (target_info.system in [system_i386_GO32V2]) then
-                 if (l1>=0) and (l1<=16) then
-                   l1:=tcgint(1) shl l1
-                 else
-                   l1:=1;
                ConcatAlign(curlist,l1);
                Message(asmr_n_align_is_target_specific);
                if actasmtoken<>AS_SEPARATOR then

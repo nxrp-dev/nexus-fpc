@@ -1204,9 +1204,6 @@ implementation
           abssym : tabsolutevarsym;
           pt,hp  : tnode;
           st     : tsymtable;
-          {$if defined(i386)}
-          tmpaddr : int64;
-          {$endif defined(i386)}
         begin
           abssym:=nil;
           { only allowed for one var }
@@ -1248,26 +1245,6 @@ implementation
                 abssym.addroffset:=Tordconstnode(pt).value.svalue;
 {$if defined(i386)}
               tcpuabsolutevarsym(abssym).absseg:=false;
-              if (target_info.system in [system_i386_go32v2,system_i386_watcom,system_i8086_msdos,system_i8086_embedded]) and
-                  try_to_consume(_COLON) then
-                begin
-                  pt.free;
-                  pt:=expr(true);
-                  if is_constintnode(pt) then
-                    begin
-                      {$if defined(i386)}
-                        tmpaddr:=abssym.addroffset shl 4+tordconstnode(pt).value.svalue;
-                        if (tmpaddr<int64(low(abssym.addroffset))) or
-                           (tmpaddr>int64(high(abssym.addroffset))) then
-                          message3(type_e_range_check_error_bounds,tostr(Tordconstnode(pt).value),tostr(low(abssym.addroffset)),tostr(high(abssym.addroffset)))
-                        else
-                          abssym.addroffset:=tmpaddr;
-                      {$endif}
-                      tcpuabsolutevarsym(abssym).absseg:=true;
-                    end
-                  else
-                    Message(type_e_ordinal_expr_expected);
-                end;
 {$endif i386}
             end
           { variable }

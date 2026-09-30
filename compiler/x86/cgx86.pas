@@ -3165,7 +3165,7 @@ unit cgx86;
 {$ifndef NOTARGETWIN}
            { windows guards only a few pages for stack growing,
              so we have to access every page first              }
-           if (target_info.system in [system_i386_win32,system_i386_wince]) and
+           if (target_info.system=system_i386_win32) and
               (localsize>=winstackpagesize) then
              begin
                if localsize div winstackpagesize<=5 then

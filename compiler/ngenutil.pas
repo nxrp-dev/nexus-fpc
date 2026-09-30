@@ -1152,7 +1152,7 @@ implementation
     begin
       unitinits:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       unitinits.begin_anonymous_record('',default_settings.packrecords,sizeof(pint),
-        targetinfos[target_info.system]^.alignment.recordalignmin);
+        targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
 
       { tablecount }
       unitinits.emit_ord_const(entries.count,aluuinttype);
@@ -1272,7 +1272,7 @@ implementation
         exit;
       count:=0;
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-      tcb.begin_anonymous_record('',default_settings.packrecords,voidpointertype.alignment,targetinfos[target_info.system]^.alignment.recordalignmin);
+      tcb.begin_anonymous_record('',default_settings.packrecords,voidpointertype.alignment,targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
       placeholder:=tcb.emit_placeholder(sizesinttype);
 
       hp:=tused_unit(usedunits.first);
@@ -1348,7 +1348,7 @@ implementation
        if (tf_section_threadvars in target_info.flags) then
          exit;
        tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
-       tabledef:=tcb.begin_anonymous_record('',default_settings.packrecords,voidpointertype.alignment,targetinfos[target_info.system]^.alignment.recordalignmin);
+       tabledef:=tcb.begin_anonymous_record('',default_settings.packrecords,voidpointertype.alignment,targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
        if assigned(current_module.globalsymtable) then
          current_module.globalsymtable.SymList.ForEachCall(@AddToThreadvarList,tcb);
        current_module.localsymtable.SymList.ForEachCall(@AddToThreadvarList,tcb);
@@ -1381,7 +1381,7 @@ implementation
     begin
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       tcb.begin_anonymous_record('',default_settings.packrecords,sizeof(pint),
-        targetinfos[target_info.system]^.alignment.recordalignmin
+        targetinfos[Ord(target_info.system)]^.alignment.recordalignmin
       );
       { placeholder for the count }
       countplaceholder:=tcb.emit_placeholder(sizesinttype);
@@ -1437,7 +1437,7 @@ implementation
       s:=make_mangledname(prefix,current_module.localsymtable,'');
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       tcb.begin_anonymous_record('',default_settings.packrecords,sizeof(pint),
-        targetinfos[target_info.system]^.alignment.recordalignmin);
+        targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
       repeat
         { optimize away unused local/static symbols }
         if (item.sym.refs>0) or (item.sym.owner.symtabletype=globalsymtable) then
@@ -1502,7 +1502,7 @@ implementation
       count:=0;
       hp:=tmodule(loaded_units.first);
       tcb.begin_anonymous_record('',default_settings.packrecords,sizeof(pint),
-        targetinfos[target_info.system]^.alignment.recordalignmin);
+        targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
       countplaceholder:=tcb.emit_placeholder(sizesinttype);
       while assigned(hp) do
         begin

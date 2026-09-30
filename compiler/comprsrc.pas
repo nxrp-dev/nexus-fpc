@@ -294,22 +294,8 @@ begin
         ObjUsed:=(pos('$OBJ',s)>0);
       Replace(s,'$OBJ',maybequoted(OutName));
       subarch:='all';
-      arch:=cpu2str[target_cpu];
-      if (target_info.cpu=systems.cpu_arm) then
-        begin
-          //Differentiate between arm and armeb
-          if (target_info.endian=endian_big) then
-            arch:=arch+'eb';
-        end;
-      if target_info.cpu=cpu_powerpc64 then
-        begin
-          { differentiate between ppc64 and ppc64le }
-          if target_info.endian=endian_little then
-            arch:=arch+'le';
-        end;
+      arch:=cpu2str[Ord(target_cpu)];
       Replace(s,'$ARCH',arch);
-      if target_info.system=system_arm_ios then
-        subarch:=lower(cputypestr[current_settings.cputype]);
       Replace(s,'$SUBARCH',subarch);
       case target_info.endian of
         endian_little : Replace(s,'$ENDIAN','littleendian');
@@ -557,7 +543,7 @@ begin
 //    exit;
   s:=ChangeFileExt(current_module.ppufilename,target_info.resobjext);
   if (res_arch_in_file_name in target_res.resflags) then
-    s:=ChangeFileExt(s,'.'+cpu2str[target_cpu]+target_info.resobjext);
+    s:=ChangeFileExt(s,'.'+cpu2str[Ord(target_cpu)]+target_info.resobjext);
   resourcefile:=TResourceFile(resinfos[target_info.res]^.resourcefileclass.create(s));
   hp:=tused_unit(usedunits.first);
   while assigned(hp) do

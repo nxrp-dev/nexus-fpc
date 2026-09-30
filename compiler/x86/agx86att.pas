@@ -89,15 +89,9 @@ interface
         result:=Inherited MakeCmdLine;
 {$ifdef i386}
         case target_info.system of
-          system_i386_go32v2:
-            FormatName:='coff';
-          system_i386_wdosx,
           system_i386_win32:
             FormatName:='win32';
-          system_i386_embedded:
-            FormatName:='obj';
-          system_i386_linux,
-          system_i386_beos:
+          system_i386_linux:
             FormatName:='elf';
           system_i386_darwin:
             FormatName:='macho32';
@@ -111,8 +105,6 @@ interface
             FormatName:='win64';
           system_x86_64_darwin:
             FormatName:='macho64';
-          system_x86_64_embedded:
-            FormatName:='obj';
           system_x86_64_linux:
             FormatName:='elf64';
         else
@@ -248,11 +240,7 @@ interface
 
         case o.typ of
           top_reg :
-            { Solaris assembler does not accept %st instead of %st(0) }
-            if (owner.asminfo^.id=as_solaris_as) and (o.reg=NR_ST) then
-              owner.writer.AsmWrite(gas_regname(NR_ST0))
-            else
-              owner.writer.AsmWrite(gas_regname(o.reg));
+            owner.writer.AsmWrite(gas_regname(o.reg));
           top_ref :
             if o.ref^.refaddr in [addr_no,addr_pic,addr_pic_no_got
               {$ifdef i386},addr_ntpoff,addr_tlsgd{$endif i386}
@@ -389,7 +377,6 @@ interface
            (op<>A_FLDCW) and
            (not fskipPopcountSuffix or
             (op<>A_POPCNT)) and
-           ((owner.asminfo^.id<>as_solaris_as) or ((op<>A_Jcc) and (op<>A_SETcc) and (op<>A_CMOVCC))) and
            not(
                (taicpu(hp).ops<>0) and
                (taicpu(hp).oper[0]^.typ=top_reg) and
@@ -494,55 +481,12 @@ interface
             idtxt  : 'AS-CLANG';
             asmbin : 'clang';
             asmcmd : '-x assembler -c -target $TRIPLET -o $OBJ $EXTRAOPT -x assembler $ASM';
-            supported_targets : [system_x86_64_linux,system_x86_64_win64];
+            supported_targets : [system_x86_64_linux,
+                                 system_x86_64_android,system_x86_64_win64];
             flags : [af_needar,af_smartlink_sections,af_supports_dwarf,af_llvm,af_supports_hlcfi];
             labelprefix : '.L';
             labelmaxlen : -1;
             comment : '// ';
-            dollarsign: '$';
-          );
-
-{$else x86_64}
-       as_i386_as_info : tasminfo =
-          (
-            id     : as_gas;
-            idtxt  : 'AS';
-            asmbin : 'as';
-            asmcmd : '--32 -o $OBJ $BIGOBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_6432_linux];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-       as_i386_yasm_info : tasminfo =
-          (
-            id     : as_yasm;
-            idtxt  : 'YASM';
-            asmbin : 'yasm';
-            asmcmd : '-a x86 -p gas -f $FORMAT -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_6432_linux];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
-            dollarsign: '$';
-          );
-
-
-       as_i386_gas_info : tasminfo =
-          (
-            id     : as_ggas;
-            idtxt  : 'GAS';
-            asmbin : 'gas';
-            asmcmd : '--32 -o $OBJ $EXTRAOPT $ASM';
-            supported_targets : [system_x86_6432_linux];
-            flags : [af_needar,af_smartlink_sections,af_supports_dwarf];
-            labelprefix : '.L';
-            labelmaxlen : -1;
-            comment : '# ';
             dollarsign: '$';
           );
 
@@ -555,9 +499,5 @@ initialization
   RegisterAssembler(as_x86_64_gas_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_darwin_info,Tx86AppleGNUAssembler);
   RegisterAssembler(as_x86_64_clang_gas_info,Tx86ATTAssembler);
-{$else x86_64}
-  RegisterAssembler(as_i386_as_info,Tx86ATTAssembler);
-  RegisterAssembler(as_i386_gas_info,Tx86ATTAssembler);
-  RegisterAssembler(as_i386_yasm_info,Tx86ATTAssembler);
 {$endif x86_64}
 end.

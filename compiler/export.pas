@@ -91,10 +91,10 @@ type
 
 
 var
-  CExportLib : array[tsystem] of TExportLibClass;
+  CExportLib : array[0..MaxStoredSystemId] of TExportLibClass;
   ExportLib  : TExportLib;
 
-procedure RegisterExport(t:tsystem;c:TExportLibClass);
+procedure RegisterExport(t:TSystem;c:TExportLibClass);
 procedure InitExport;
 procedure DoneExport;
 
@@ -263,16 +263,16 @@ end;
                                  Init/Done
 *****************************************************************************}
 
-procedure RegisterExport(t:tsystem;c:TExportLibClass);
+procedure RegisterExport(t:TSystem;c:TExportLibClass);
 begin
-  CExportLib[t]:=c;
+  CExportLib[Ord(t)]:=c;
 end;
 
 
 procedure InitExport;
 begin
-  if assigned(CExportLib[target_info.system]) then
-   exportlib:=CExportLib[target_info.system].Create
+  if assigned(CExportLib[Ord(target_info.system)]) then
+   exportlib:=CExportLib[Ord(target_info.system)].Create
   else
    exportlib:=TExportLib.Create;
 end;

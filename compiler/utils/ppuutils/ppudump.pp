@@ -63,7 +63,7 @@ const
 
 { List of all supported cpus }
 const
-  CpuTxt : array[tsystemcpu] of string[16]=
+  CpuTxt : array[0..MaxStoredCPUId] of string[16]=
     (
     {  0 } 'none',
     {  1 } 'i386',
@@ -93,7 +93,7 @@ const
     { 25 } 'loongarch64'
     );
 
-  CpuHasController : array[tsystemcpu] of boolean =
+  CpuHasController : array[0..MaxStoredCPUId] of boolean =
     (
     {  0 } false {'none'},
     {  1 } false {'i386'},
@@ -125,7 +125,7 @@ const
 
 { List of all supported system-cpu couples }
 const
-  Targets : array[tsystem] of string[26]=(
+  Targets : array[0..MaxStoredSystemId] of string[26]=(
   { 0 }   'none',
   { 1 }   'GO32V1 (obsolete)',
   { 2 }   'GO32V2',
@@ -264,7 +264,7 @@ const
   widecharsize : longint = 2;
 
 var
-  cpu : tsystemcpu = cpu_no;
+  cpu : Word = 0;
 
 { This type is defined in scanner.pas unit }
 type
@@ -434,48 +434,42 @@ type
   );
 
   tcpu_type = record
-     case tsystemcpu of
-       cpu_no:                      { 0 }
+     case Byte of
+       0:                           { no CPU }
           ();
-       cpu_i386:                    { 1 }
+       1:                           { i386 }
           (cpu_i386 : tcpu_i386;);
-       cpu_m68k:                    { 2 }
+       2:                           { m68k }
           (cpu_m68k : tcpu_m68k;);
-       obsolete_cpu_alpha:          { 3 }
-          ();
-       cpu_powerpc:                 { 4 }
+       4:                           { powerpc }
           (cpu_powerpc : tcpu_powerpc;);
-       cpu_sparc:                   { 5 }
+       5:                           { sparc }
           (cpu_sparc : tcpu_sparc;);
-       obsolete_cpu_vm:             { 6 }
-          ();
-       obsolete_cpu_ia64:           { 7 }
-          ();
-       cpu_x86_64:                  { 8 }
+       8:                           { x86_64 }
           (cpu_x86_64 : tcpu_x86_64;);
-       cpu_mipseb:                  { 9 }
+       9:                           { mipseb }
           (cpu_mipseb : tcpu_mipseb;);
-       cpu_arm:                     { 10 }
+       10:                          { arm }
           (cpu_arm : tcpu_arm;);
-       cpu_powerpc64:               { 11 }
+       11:                          { powerpc64 }
           (cpu_powerpc64 : tcpu_powerpc64;);
-       cpu_avr:                     { 12 }
+       12:                          { avr }
           (cpu_avr : tcpu_avr;);
-       cpu_mipsel:                  { 13 }
+       13:                          { mipsel }
           (cpu_mipsel : tcpu_mipsel;);
-       cpu_jvm:                     { 14 }
+       14:                          { jvm }
           (cpu_jvm : tcpu_jvm;);
-       cpu_i8086:                   { 15 }
+       15:                          { i8086 }
           (cpu_i8086 : tcpu_i8086;);
-       cpu_aarch64:                 { 16 }
+       16:                          { aarch64 }
           (cpu_aarch64 : tcpu_aarch64;);
-       cpu_wasm32:                  { 17 }
+       17:                          { wasm32 }
           (cpu_wasm32 : tcpu_wasm32;);
-       cpu_sparc64:                 { 18 }
+       18:                          { sparc64 }
           (cpu_sparc64 : tcpu_sparc64;);
-       cpu_riscv32:                 { 19 }
+       19:                          { riscv32 }
           (cpu_riscv32 : tcpu_riscv32;);
-       cpu_riscv64:                 { 20 }
+       20:                          { riscv64 }
           (cpu_riscv64 : tcpu_riscv64;);
      end;
 
@@ -781,8 +775,8 @@ end;
 
 Function Target2Str(w:longint):string;
 begin
-  if w<=ord(high(tsystem)) then
-    Target2Str:=Targets[tsystem(w)]
+  if w<=MaxStoredSystemId then
+    Target2Str:=Targets[w]
   else
     Target2Str:=Unknown('target',w);
 end;
@@ -790,9 +784,9 @@ end;
 
 Function Cpu2Str(w:longint):string;
 begin
-  if w<=ord(high(tsystemcpu)) then
+  if w<=MaxStoredCPUId then
     begin
-      cpu:=tsystemcpu(w);
+      cpu:=Word(w);
       Cpu2Str:=CpuTxt[cpu];
     end
   else
@@ -2089,7 +2083,7 @@ var
     var16 : smallint;
 
   begin
-    if CpuAddrBitSize[cpu]=64 then
+    if CpuAddrBitSize[Ord(cpu)]=64 then
       begin
         var64:=unaligned(pint64(@tokenbuf[tbi])^);
         inc(tbi,sizeof(int64));
@@ -2097,7 +2091,7 @@ var
           var64:=swapendian(var64);
         result:=var64;
       end
-    else if CpuAddrBitSize[cpu]=32 then
+    else if CpuAddrBitSize[Ord(cpu)]=32 then
       begin
         var32:=unaligned(plongint(@tokenbuf[tbi])^);
         inc(tbi,sizeof(longint));
@@ -2105,7 +2099,7 @@ var
           var32:=swapendian(var32);
         result:=var32;
       end
-    else if CpuAddrBitSize[cpu]=16 then
+    else if CpuAddrBitSize[Ord(cpu)]=16 then
       begin
         { ASizeInt is still a longint, see globtype.pas unit }
         var32:=unaligned(plongint(@tokenbuf[tbi])^);
@@ -2192,7 +2186,7 @@ var
 { of this field in the compiler.                                              }
 {$PUSH}
  {$WARN 6018 OFF} (* Unreachable code due to compile time evaluation *)
-            if CpuHasController[cpu] then
+            if CpuHasController[Ord(cpu)] then
              controllertype:=tcontrollertype(tokenreadenum(sizeof(tcontrollertype)))
             else
              ControllerType:=ct_none;
@@ -3998,9 +3992,9 @@ begin
                toaddr :
                  begin
                    Write(['Address : ',getpuint]);
-                   if tsystemcpu(ppufile.header.common.cpu)=cpu_i386 then
+                   if ppufile.header.common.cpu=Ord(cpu_i386) then
                      Write([' (Far: ',getbyte<>0,')']);
-                   if tsystemcpu(ppufile.header.common.cpu)=cpu_i8086 then
+                   if ppufile.header.common.cpu=15 then { retired i8086 CPU ID }
                      if getbyte<>0 then
                        Write([' (Far: TRUE, Segment=',getaword,')'])
                      else
@@ -4245,7 +4239,7 @@ begin
              write  ([space,'     Pointed Type : ']);
              readderef('',TPpuPointerDef(def).Ptr);
              writeln([space,' Has Pointer Math : ',(getbyte<>0)]);
-             if tsystemcpu(ppufile.header.common.cpu) in [cpu_i8086,cpu_i386,cpu_x86_64] then
+             if ppufile.header.common.cpu in [15,Ord(cpu_i386),Ord(cpu_x86_64)] then
                begin
                  write([space,' X86 Pointer Type : ']);
                  b:=getbyte;
@@ -4263,7 +4257,7 @@ begin
                      WriteWarning('Invalid x86 pointer type: ' + IntToStr(b));
                  end;
                end;
-             if tsystemcpu(ppufile.header.common.cpu)=cpu_wasm32 then
+             if ppufile.header.common.cpu=17 then { retired wasm32 CPU ID }
                writeln([space,'   WASM externref : ',(getbyte<>0)]);
            end;
 
@@ -4483,7 +4477,7 @@ begin
              writeln([space,'            Range : ',arrdef.RangeLow,' to ',arrdef.RangeHigh]);
              write  ([space,'          Options : ']);
              readarraydefoptions(arrdef);
-             if tsystemcpu(ppufile.header.common.cpu)=cpu_i8086 then
+             if ppufile.header.common.cpu=15 then { retired i8086 CPU ID }
                writeln([space,'             Huge : ',(getbyte<>0)]);
              readsymtable('symbols', arrdef);
            end;
@@ -4575,7 +4569,7 @@ begin
              readcommondef('Procedural type (ProcVar) definition',defoptions,def);
              read_abstract_proc_def(calloption,procoptions, TPpuProcDef(def));
              writeln([space,'   Symtable level :',ppufile.getbyte]);
-             if tsystemcpu(ppufile.header.common.cpu)=cpu_jvm then
+             if ppufile.header.common.cpu=14 then { retired JVM CPU ID }
                readderef('');
              if not EndOfEntry then
                HasMoreInfos;
@@ -4852,7 +4846,7 @@ begin
                  readsymtable('elements',enumdef);
                  delete(space,1,4);
                end;
-             if tsystemcpu(ppufile.header.common.cpu)=cpu_jvm then
+             if ppufile.header.common.cpu=14 then { retired JVM CPU ID }
                begin
                  write([space,'        Class def : ']);
                  readderef('');

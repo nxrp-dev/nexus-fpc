@@ -593,7 +593,6 @@ begin
     in extradefines in systesms/i_XXX.pas units }
   TargetIsUnix:=
     (LTarget='linux') or
-    (LTarget='linux6432') or
     (LTarget='freebsd') or
     (LTarget='openbsd') or
     (LTarget='netbsd') or

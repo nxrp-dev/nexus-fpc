@@ -1288,14 +1288,6 @@ implementation
         if insertst.currentlyoptional then
           include(pd.procoptions,po_optional);
 
-        { when extended rtti appears, then we must adapt this check}
-        if  (target_cpu=tsystemcpu.cpu_wasm32) and
-             assigned(astruct) and
-            (astruct.typ=objectdef) and
-            (tobjectdef(astruct).objecttype in [odt_interfacecom,odt_interfacecorba]) and
-            (pd.visibility=vis_published)  then
-          pd.synthetickind:=tsk_invoke_helper;
-
         { parse parameters }
         if current_scanner.token=_LKLAMMER then
           begin
@@ -2171,19 +2163,6 @@ end;
 
 procedure pd_syscall(pd:tabstractprocdef);
 
-    procedure include_po_syscall;
-      begin
-        case target_info.system of
-          system_arm_palmos,
-          system_m68k_palmos,
-          system_m68k_human68k,
-          system_m68k_atari:
-              include(pd.procoptions,get_default_syscall);
-          else
-            Message(parser_e_syscall_format_not_support);
-        end;
-      end;
-
       function po_syscall_to_varoptions: tvaroptions;
         begin
           result:=[vo_is_syscall_lib,vo_is_hidden_para];
@@ -2214,53 +2193,7 @@ begin
     internalerror(2003042614);
   tprocdef(pd).forwarddef:=false;
 {$if defined(powerpc) or defined(m68k) or defined(i386) or defined(x86_64) or defined(arm)}
-  include_po_syscall;
-
-  if target_info.system in [system_arm_palmos, system_m68k_palmos] then
-    begin
-      v:=get_intconst;
-      tprocdef(pd).extnumber:=longint(v.svalue);
-      if ((v<0) or (v>high(word))) then
-        message(parser_e_range_check_error);
-
-      if try_to_consume(_COMMA) then
-        begin
-          v:=get_intconst;
-          if ((v<0) or (v>high(word))) then
-            message(parser_e_range_check_error);
-          tprocdef(pd).import_nr:=longint(v.svalue);
-          include(pd.procoptions,po_syscall_has_importnr);
-        end;
-      exit;
-    end;
-
-  if target_info.system = system_m68k_atari then
-    begin
-      v:=get_intconst;
-      if ((v<0) or (v>15)) then
-        message(parser_e_range_check_error)
-      else
-        tprocdef(pd).extnumber:=longint(v.svalue);
-
-      v:=get_intconst;
-      if ((v<0) or (v>high(smallint))) then
-        message(parser_e_range_check_error)
-      else
-        tprocdef(pd).import_nr:=longint(v.svalue);
-
-      exit;
-    end;
-
-  if target_info.system = system_m68k_human68k then
-    begin
-      v:=get_intconst;
-      if ((v<$ff00) or (v>high(word))) then
-        message(parser_e_range_check_error)
-      else
-        tprocdef(pd).extnumber:=longint(v.svalue);
-
-      exit;
-    end;
+  Message(parser_e_syscall_format_not_support);
 
   if consume_sym(sym,symtable) then
     if ((sym.typ=staticvarsym) or

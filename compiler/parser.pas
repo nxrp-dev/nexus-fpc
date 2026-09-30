@@ -177,31 +177,6 @@ implementation
          if paraprintnodetree<>0 then
            printnode_reset;
 
-         { target specific stuff }
-         case target_info.system of
-           system_arm_palmos,
-           system_m68k_atari,
-           system_m68k_palmos:
-             include(supported_calling_conventions,pocall_syscall);
-           system_m68k_human68k:
-             begin
-               include(supported_calling_conventions,pocall_syscall);
-               if heapsize=0 then
-                 heapsize:=65536;
-             end;
-           system_wasm32_wasip1,
-           system_wasm32_wasip1threads,
-           system_wasm32_wasip2:
-             begin
-               if ts_wasm_threads in init_settings.targetswitches then
-                 maxheapsize:=256*1024*1024
-               else
-                 maxheapsize:=0;
-             end;
-
-           else
-             ;
-         end;
       end;
 
 

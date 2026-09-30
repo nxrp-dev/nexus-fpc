@@ -68,8 +68,8 @@ implementation
            (not curr.linkOtherSharedLibs.Empty) then
          begin
            { Init DLLScanner }
-           if assigned(CDLLScanner[target_info.system]) then
-            DLLScanner:=CDLLScanner[target_info.system].Create
+           if assigned(CDLLScanner[Ord(target_info.system)]) then
+            DLLScanner:=CDLLScanner[Ord(target_info.system)].Create
            else
             internalerror(200104121);
            KeepShared:=TCmdStrList.Create;
@@ -83,7 +83,7 @@ implementation
            DLLscanner.Free;
            DLLscanner := nil;
            { Recreate import section }
-           if (target_info.system in [system_i386_win32,system_i386_wdosx]) then
+           if (target_info.system=system_i386_win32) then
             begin
               if assigned(current_asmdata.asmlists[al_imports]) then
                current_asmdata.asmlists[al_imports].clear
@@ -496,44 +496,6 @@ implementation
             CheckAddUnit('fpcylix');
             CheckAddUnit('dynlibs');
           end;
-{$ifdef XTENSA}
-        if not(curr.is_unit) and (target_info.system=system_xtensa_freertos) then
-          if (current_settings.controllertype=ct_esp32) then
-            begin
-              if (idf_version>=40100) and (idf_version<40200) then
-                CheckAddUnit('espidf_40100')
-              else if (idf_version>=40200) and (idf_version<40400) then
-                CheckAddUnit('espidf_40200')
-              else if (idf_version>=40400) and (idf_version<50000) then
-                CheckAddUnit('espidf_40400')
-              else if (idf_version>=50000) and (idf_version<50200) then
-                CheckAddUnit('espidf_50000')
-              else if idf_version>=50200 then
-                CheckAddUnit('espidf_50200')
-              else
-                Comment(V_Warning, 'Unsupported esp-idf version');
-            end
-          else if (current_settings.controllertype=ct_esp32s2) or (current_settings.controllertype=ct_esp32s3) then
-            begin
-              if (idf_version>=40400) and (idf_version<50000) then
-                CheckAddUnit('espidf_40400')
-              else if (idf_version>=50000) and (idf_version<50200) then
-                CheckAddUnit('espidf_50000')
-              else if idf_version>=50200 then
-                CheckAddUnit('espidf_50200')
-              else
-                Message(unit_w_unsupported_esp_idf_version);
-            end
-          else if (current_settings.controllertype=ct_esp8266) then
-            begin
-              if (idf_version>=30300) and (idf_version<30400) then
-                CheckAddUnit('esp8266rtos_30300')
-              else if idf_version>=30400 then
-                CheckAddUnit('esp8266rtos_30400')
-              else
-                Message(unit_w_unsupported_esp_idf_version);
-            end;
-{$endif XTENSA}
       end;
 
     { Load units provided on the command line
@@ -1241,11 +1203,6 @@ type
             exit(false);
           end;
 
-        { we need to be able to reference these in descendants,
-          so they must be generated and included in the interface }
-        if (target_cpu=tsystemcpu.cpu_wasm32) then
-          add_synthetic_interface_classes_for_st(curr.globalsymtable,true,false);
-
         { Our interface is compiled, generate interface CRC and switch to implementation }
         if Errorcount=0 then
           tppumodule(curr).getppucrc;
@@ -1514,13 +1471,6 @@ type
 
          { Generate specializations of objectdefs methods }
          generate_specialization_procs;
-
-         // This needs to be done before we generate the VMTs
-         if (target_cpu=tsystemcpu.cpu_wasm32) then
-           begin
-             add_synthetic_interface_classes_for_st(module.globalsymtable,false,true);
-             add_synthetic_interface_classes_for_st(module.localsymtable,true,true);
-           end;
 
          { generate construction functions for all attributes in the unit:
            this must be done before writing the VMTs because
@@ -2082,7 +2032,7 @@ type
          { Add symbol to the exports section for win32 so smartlinking a
            DLL will include the edata section }
          if assigned(exportlib) and
-            (target_info.system in [system_i386_win32,system_i386_wdosx]) and
+            (target_info.system=system_i386_win32) and
             (mf_has_exports in curr.moduleflags) then
            current_asmdata.asmlists[al_procedures].concat(tai_const.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
 
@@ -2159,13 +2109,6 @@ type
 
              uu:=tused_unit(uu.next);
            end;
-
-{$ifdef arm}
-         { Insert .pdata section for arm-wince.
-           It is needed for exception handling. }
-         if target_info.system in [system_arm_wince] then
-           InsertPData;
-{$endif arm}
 
          { generate debuginfo }
          if (cs_debuginfo in current_settings.moduleswitches) then
@@ -2434,13 +2377,6 @@ type
         else
           sysinitmod:=nil;
 
-  {$ifdef arm}
-        { Insert .pdata section for arm-wince.
-          It is needed for exception handling. }
-        if target_info.system in [system_arm_wince] then
-          InsertPData;
-  {$endif arm}
-
         cnodeutils.InsertThreadvars;
 
         { generate rtti/init tables }
@@ -2648,10 +2584,6 @@ type
         if Errorcount=0 then
           generate_specialization_procs;
 
-        { This needs to be done before we generate the VMTs }
-        if (target_cpu=tsystemcpu.cpu_wasm32) then
-          add_synthetic_interface_classes_for_st(curr.localsymtable,true,true);
-
         { generate construction functions for all attributes in the program }
         { before write_vmts that assume attributes for methods is ready }
         generate_attr_constrs(curr.used_rtti_attrs);
@@ -2672,7 +2604,7 @@ type
         { Add symbol to the exports section for win32 so smartlinking a
           DLL will include the edata section }
         if assigned(exportlib) and
-           (target_info.system in [system_i386_win32,system_i386_wdosx]) and
+           (target_info.system=system_i386_win32) and
            (mf_has_exports in curr.moduleflags) then
           current_asmdata.asmlists[al_procedures].concat(tai_const.createname(make_mangledname('EDATA',curr.localsymtable,''),0));
 

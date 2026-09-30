@@ -307,10 +307,7 @@ implementation
       begin
         Result:=s;
         rchar:=target_asm.dollarsign;
-        if target_asm.id=as_i386_wasm then
-          ochar:='.'
-        else
-          ochar:='$';
+        ochar:='$';
         if (ochar<>rchar) then
           for  i:=1 to Length(Result) do
             if Result[i]=ochar then
