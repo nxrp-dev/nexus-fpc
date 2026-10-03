@@ -35,6 +35,7 @@ Ordinary bug fixes that restore established Free Pascal behavior do not belong h
 | ID | Title | Status |
 |---|---|---|
 | [NXLR-0001](#nxlr-0001-complete-tokenization-of-conditionally-compiled-source) | Complete tokenization of conditionally compiled source | Accepted |
+| [NXLR-0002](#nxlr-0002-compiler-wide-default-text-types) | Compiler-wide default text types | Accepted |
 
 ## NXLR-0001: Complete Tokenization of Conditionally Compiled Source
 
@@ -186,6 +187,133 @@ and conditional processing unchanged for the future parser to reject.
 
 - 2026-09-29: Accepted as the first deliberate NexusFPC language-rule change to simplify frontend architecture and improve concurrency.
 - 2026-09-29: Implemented and tested in the isolated frontend prototype; production scanner integration remains pending.
+
+## NXLR-0002: Compiler-Wide Default Text Types
+
+- Status: Accepted
+- Decision date: 2026-10-01
+- Implemented in: Compiler mode, PPU and System.Char checks, and mode-driven RTL text declarations; full Unicode package parity and automatic RTL selection remain in progress
+- Released in: Not released
+- Applies to: All NexusFPC compiler modes and targets
+- Supersedes: Upstream `$H` selection of the unqualified `String` type
+
+### Rule
+
+One compiler-invocation choice controls the default text types throughout the
+source being compiled. The default is ANSI: unqualified `String`, `Char`, and
+`PChar` mean `AnsiString`, `AnsiChar`, and `PAnsiChar`. `-MUNICODESTRINGS`
+selects `UnicodeString`, `WideChar`, and `PWideChar` instead.
+`-MANSISTRINGS` explicitly selects the ANSI default.
+
+Source-level mode directives cannot change this choice for an individual unit
+or include file. `$H+` and `$H-` are accepted but have no effect. The `-Sh`
+command-line switch is likewise accepted but has no effect. The effective
+long-string state is always on, so `$IFOPT H+` is true and `$IFOPT H-` is false.
+Conflicting source-level requests to select a different default text family
+are errors rather than silent overrides.
+
+`ShortString` and `String[n]` remain explicit fixed-length string types.
+`AnsiString`, `UnicodeString`, `AnsiChar`, `WideChar`, `PAnsiChar`, and
+`PWideChar` also retain their explicit meanings regardless of the default.
+The choice does not specify an `AnsiString` code page or change the encoding
+required by an operating-system or JNI interface.
+
+### Upstream Free Pascal Behavior
+
+In upstream Free Pascal, `$H-` makes unqualified `String` a `ShortString`,
+while `$H+` makes it a long string. Language modes and source directives can
+change that setting within a compilation. The comparison baseline for this
+rule is Free Pascal 3.2.2, the NexusFPC bootstrap compiler.
+
+### Rationale
+
+An unqualified type name should have one predictable meaning for a compiler
+invocation. A source-local switch that changes its representation makes unit
+interfaces and build artifacts harder to reason about. Explicit short-string
+types preserve the fixed-length capability without an ambient type switch.
+The ANSI/Unicode default is an invocation-level policy, not a property of an
+individual unit.
+
+### Examples
+
+With the default ANSI choice, `var S: String;` declares an `AnsiString`.
+With the compiler-wide Unicode choice, the same source declares a
+`UnicodeString`. In either choice, `var S: String[40];` declares a fixed-length
+short string and `var S: ShortString;` remains explicit.
+
+`{$H-}` no longer changes any of those declarations. Code that needs a short
+string must name `ShortString` or use `String[n]`.
+
+### Compatibility Impact
+
+Source relying on `$H-` to make bare `String` short will now compile that name
+as the compiler-wide long-string default. This can change layout, calling
+conventions, overload selection, and behavior; such declarations require an
+explicit short-string type. Source containing `$H` itself remains accepted so
+legacy directives do not force a mass source migration.
+
+Precompiled declarations retain the concrete types recorded in their PPUs. The
+compiler-wide choice does not reinterpret their public signatures. Every PPU,
+including a released RTL or package PPU, records its default text choice and
+must match the current compiler invocation. A PPU built under the other choice
+is rejected rather than treated as an interchangeable cached artifact.
+
+### Diagnostics
+
+`$H` and `-Sh` are silent compatibility no-ops. A source directive that
+attempts to select an ANSI/Unicode default contrary to the compiler-wide
+choice must produce a hard error.
+
+### Implementation
+
+The implementation must keep the invocation choice separate from mutable
+per-module mode settings and leave explicit ANSI and Unicode APIs available.
+The FPC 3.2.2 seed compiler may still apply its historical `$H` semantics
+while building the first NexusFPC compiler; that bootstrap behavior is not a
+NexusFPC language rule.
+
+`FPC_UNICODESTRINGS` is owned by the compiler invocation. Source directives
+and config-file defines, as well as `-d`/`-u`, cannot redefine it. The old
+`UNICODERTL` and `FPC_UNICODE_RTL` defines do not select the default RTL text
+types; the compiler's choice does. `-MUNICODESTRINGS` does not set the separate
+Windows API `UNICODE`/`FPC_OS_UNICODE` aliases; those are not default Pascal
+text types.
+The compiler also checks the actual width of `System.Char`, so a misleading
+PPU mode flag cannot make an incompatible System unit appear valid.
+
+A build uses one mode-matched set of RTL and package PPUs. Switching modes
+requires rebuilding those artifacts; maintaining simultaneous ANSI and Unicode
+installations is not a product requirement. The compiler rejects a mismatched
+PPU even when it is marked as released. The ANSI RTL is the current canonical
+build. A Win64 Unicode RTL can be built with `-MUNICODESTRINGS` alone, but full
+Unicode package parity and automatic selection of the matching unit directory
+are not yet established. Until then, a Unicode build must explicitly supply
+its matching unit search path.
+
+### Tests
+
+Tests must cover both choices using one compiler and separate matched RTLs,
+explicit short strings, inert `$H` and `-Sh`, `$IFOPT H`, conflicting source
+directives, qualified and unqualified default text names, and rejection of
+both crossed client/RTL PPU combinations. They must also cover the public RTL
+text aliases, legacy Unicode defines not changing the mode, and attempted
+redefinition of `FPC_UNICODESTRINGS` through source, options, and config files.
+
+### Decision History
+
+- 2026-10-01: Accepted compiler-wide ANSI default with an explicit Unicode or
+  ANSI compiler choice and no per-unit text-model override.
+- 2026-10-01: Chose silent `$H` compatibility no-ops instead of rejecting
+  existing `$H` directives.
+- 2026-10-01: Bootstrapped the compiler, verified project-PPU mode switching,
+  and built native Android and i386 Linux RTLs under the shared-RTL contract.
+- 2026-10-01: Superseded shared-RTL PPU reuse with strict mode matching for
+  all PPUs. An isolated Win64 Unicode RTL build succeeded, but Unicode RTL
+  parity and automatic selection remain incomplete.
+- 2026-10-02: Made the compiler-owned mode authoritative for RTL text
+  declarations and converted the remaining live `SizeOf(Char)` preprocessor
+  selectors in RTL and packages. An ANSI bootstrap and isolated Win64 Unicode
+  RTL build passed; full Unicode package parity remains future work.
 
 ## Change Record Format
 

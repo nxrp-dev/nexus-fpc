@@ -7,7 +7,7 @@ program tw39740;
 uses classes;
 
 
-{$if not declared(TThreadProcedure)}
+{$if FPC_FULLVERSION<30301}
 type
    TThreadProcedure = reference to procedure;
 {$endif}

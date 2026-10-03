@@ -170,8 +170,8 @@ type
   {---------------------------------------------------------------------}
 
 Function ParseVal(const S:String;base:byte):tcgint;
-Function PadZero(Var s: String; n: byte): Boolean;
-Function EscapeToPascal(const s:string): string;
+Function PadZero(Var s: ShortString; n: byte): Boolean;
+Function EscapeToPascal(const s:ShortString): ShortString;
 
 {---------------------------------------------------------------------
                      Symbol helper routines
@@ -505,12 +505,12 @@ end;
 {                         String conversions/utils                        }
 {*************************************************************************}
 
-Function EscapeToPascal(const s:string): string;
+Function EscapeToPascal(const s:ShortString): ShortString;
 { converts a C styled string - which contains escape }
 { characters to a pascal style string.               }
 var
   i,len : asizeint;
-  hs    : string;
+  hs    : ShortString;
   temp  : string;
   c     : char;
 Begin
@@ -614,7 +614,7 @@ Begin
 end;
 
 
-Function PadZero(Var s: String; n: byte): Boolean;
+Function PadZero(Var s: ShortString; n: byte): Boolean;
 Begin
   PadZero:=TRUE;
   { Do some error checking first }

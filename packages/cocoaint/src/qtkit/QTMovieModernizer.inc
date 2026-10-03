@@ -6,7 +6,7 @@ type
   QTMovieModernizerPtr = ^QTMovieModernizer;
 {$endif}
 
-{$if ((QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_7_3)) and ((MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_9))}
+{$if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_9)}
 {$ifdef TYPES}
 type
   QTMovieModernizerStatus = NSInteger;

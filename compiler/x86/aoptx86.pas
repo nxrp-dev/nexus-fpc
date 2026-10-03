@@ -269,9 +269,7 @@ unit aoptx86;
     function MatchOperand(const oper: TOper; const reg: TRegister): boolean; inline;
     function MatchOperand(const oper: TOper; const a: tcgint): boolean; inline;
     function MatchOperand(const oper1: TOper; const oper2: TOper): boolean;
-{$if max_operands>2}
     function MatchOperand(const oper1: TOper; const oper2: TOper; const oper3: TOper): boolean;
-{$endif max_operands>2}
 
     function RefsEqual(const r1, r2: treference): boolean;
 

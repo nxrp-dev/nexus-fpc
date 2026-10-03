@@ -685,7 +685,7 @@ begin
     if (FFileName<>'') then
       begin
       F:=TFileStream.Create(FFileName,fmOpenRead);
-      {$IF SIZEOF(Char)=2}
+      {$IFDEF FPC_UNICODESTRINGS}
       S:=TStringStream.Create('',TEncoding.Unicode);
       {$ELSE}
       S:=TStringStream.Create('',TEncoding.UTF8);

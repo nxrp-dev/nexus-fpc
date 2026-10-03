@@ -71,7 +71,7 @@ begin
   Writeln('Float variables');
   TestResult(s.Test, 4, 17);
   TestResult(d.Test, 8, 18);
-{$if sizeof(Extended) = sizeof(Double)}
+{$ifndef FPC_HAS_TYPE_EXTENDED}
   // expect the helper for Doubles
   TestResult(e.Test, 8, 19);
 {$else}

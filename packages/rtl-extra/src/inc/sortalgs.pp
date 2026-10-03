@@ -437,9 +437,9 @@ end;
 
 function Random_SizeUInt(L: SizeUInt): SizeUInt;
 begin
-{$if sizeof(SizeUInt)=4}
+{$if defined(CPU32)}
   Result := Random(Int64(L));
-{$elseif sizeof(SizeUInt)=8}
+{$elseif defined(CPU64)}
   Result := Random(Int64($100000000));
   Result := Result or (SizeUInt(Random(Int64($100000000))) shl 32);
   if L <> 0 then

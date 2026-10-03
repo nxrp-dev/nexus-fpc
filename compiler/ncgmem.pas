@@ -294,7 +294,7 @@ implementation
               internalerror(200507031);
          end;
 {$ifopt R+}
-{$if sizeof(tcgint)>sizeof(asizeint)}
+{$ifdef cpu32bitaddr}
          if (newoffset>high(asizeuint)) or (newoffset<low(asizeint)) then
            message(parser_e_range_check_error)
          else
@@ -753,7 +753,7 @@ implementation
        begin
          newoffset:=ref.offset+index*mulsize;
 {$ifopt R+}
-{$if sizeof(tcgint)>sizeof(asizeint)}
+{$ifdef cpu32bitaddr}
          if (newoffset>high(asizeuint)) or (newoffset<low(asizeint)) then
            message(parser_e_range_check_error)
 	 else

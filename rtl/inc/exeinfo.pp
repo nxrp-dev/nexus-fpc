@@ -130,10 +130,11 @@ end;
           TST[0]:= #0;
           if baseaddr <> nil then
             begin
-              GetModuleFileName(THandle(Tmm.AllocationBase), TST, Length(TST));
 {$ifdef FPC_OS_UNICODE}
+              GetModuleFileNameW(THandle(Tmm.AllocationBase), TST, Length(TST));
               filename:= String(PWideChar(@TST));
 {$else}
+              GetModuleFileNameA(THandle(Tmm.AllocationBase), TST, Length(TST));
               filename:= String(PAnsiChar(@TST));
 {$endif FPC_OS_UNICODE}
             end;

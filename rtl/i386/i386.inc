@@ -879,6 +879,7 @@ end;
 {$ifndef CPUX86_HAS_SSE2}
 function IndexByte_Dispatch(const buf;len:SizeInt;b:byte):SizeInt; forward;
 
+{$define FPC_SYSTEM_HAS_INDEXBYTE_IMPL}
 var
   IndexByte_Impl: function(const buf;len:SizeInt;b:byte):SizeInt = @IndexByte_Dispatch;
 
@@ -1658,6 +1659,7 @@ end;
 {$ifndef CPUX86_HAS_BMI2}
 function CompareByte_Dispatch(const buf1, buf2; len: SizeInt): SizeInt; forward;
 
+{$define FPC_SYSTEM_HAS_COMPAREBYTE_IMPL}
 var
   CompareByte_Impl: function(const buf1, buf2; len: SizeInt): SizeInt = @CompareByte_Dispatch;
 
@@ -2190,7 +2192,7 @@ asm
         inc     %eax
         inc     %edx
         { stack is already aligned to 16 bytes if required: return address + push ebp + push ebx + push eax. }
-{$if defined(FPC_PIC) or not declared(CompareByte_Impl)}
+{$if defined(FPC_PIC) or not defined(FPC_SYSTEM_HAS_COMPAREBYTE_IMPL)}
         call    CompareByte
 {$else}
         call    CompareByte_Impl { manually inline CompareByte }
@@ -2216,7 +2218,7 @@ asm
         jne     .LNotEqual
         inc     %eax
         inc     %edx
-{$if defined(FPC_PIC) or not declared(CompareByte_Impl)}
+{$if defined(FPC_PIC) or not defined(FPC_SYSTEM_HAS_COMPAREBYTE_IMPL)}
         jmp     CompareByte
 {$else}
         jmp     CompareByte_Impl { manually inline CompareByte }
@@ -2259,7 +2261,7 @@ asm
 {$if defined(FPC_SYSTEM_STACKALIGNMENT16) and defined(FPC_PROFILE)}
         leal    -12(%esp), %esp
 {$endif defined(FPC_SYSTEM_STACKALIGNMENT16) and defined(FPC_PROFILE)}
-{$if defined(FPC_PIC) or not declared(IndexByte_Impl)}
+{$if defined(FPC_PIC) or not defined(FPC_SYSTEM_HAS_INDEXBYTE_IMPL)}
         call    IndexByte
 {$else}
         call    IndexByte_Impl { manually inline IndexByte }

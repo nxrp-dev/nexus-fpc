@@ -1717,9 +1717,7 @@ unit rgobj;
         adj : Psuperregisterworklist;
         adj_colours:set of 0..255;
         a,c : Tsuperregister;
-{$if declared(RS_STACK_POINTER_REG) and (RS_STACK_POINTER_REG<>RS_INVALID)}
         tmpr: tregister;
-{$endif}
       begin
         {Create a list of colours that we cannot assign to n.}
         adj_colours:=[];
@@ -1731,14 +1729,11 @@ unit rgobj;
               if supregset_in(colourednodes,a) and (reginfo[a].colour<=255) then
                 include(adj_colours,reginfo[a].colour);
             end;
-        { e.g. AVR does not have a stack pointer register }
-{$if declared(RS_STACK_POINTER_REG) and (RS_STACK_POINTER_REG<>RS_INVALID)}
         { FIXME: temp variable r is needed here to avoid Internal error 20060521 }
         {        while compiling the compiler. }
         tmpr:=NR_STACK_POINTER_REG;
         if (regtype=getregtype(tmpr)) then
           include(adj_colours,RS_STACK_POINTER_REG);
-{$ifend}
         {Assume a spill by default...}
         result:=false;
         {Search for a colour not in this list.}

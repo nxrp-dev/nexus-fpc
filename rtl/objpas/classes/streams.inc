@@ -1371,19 +1371,11 @@ begin
   If (THandle(FHandle)=feInvalidHandle) then
     If Mode=fmcreate then
     begin
-      {$if declared(GetLastOSError)}
       raise EFCreateError.createfmt(SFCreateErrorEx,[AFileName, SysErrorMessage(GetLastOSError)])
-      {$else}
-      raise EFCreateError.createfmt(SFCreateError,[AFileName])
-      {$endif}
     end
     else
     begin
-      {$if declared(GetLastOSError)}
       raise EFOpenError.Createfmt(SFOpenErrorEx,[AFilename, SysErrorMessage(GetLastOSError)]);
-      {$else}
-      raise EFOpenError.Createfmt(SFOpenError,[AFilename]);
-      {$endif}
     end;
 end;
 
@@ -1630,7 +1622,7 @@ end;
 
 function TStringStream.GetDataString: RTLString;
 begin
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   Result:=GetAnsiDataString;
 {$ELSE}
   Result:=GetUnicodeDataString;
@@ -1865,7 +1857,11 @@ constructor TResourceStream.CreateFromID(Instance: TFPResourceHMODULE; ResID: In
 
 procedure TResourceStream.Initialize(Instance: TFPResourceHMODULE; Name, ResType: PAnsiChar; NameIsID: Boolean);
   begin
-    Res:=FindResource(Instance, Name, ResType);
+{$IFDEF WINDOWS}
+    Res:=FindResourceA(Instance, Name, ResType);
+{$ELSE}
+    Res:=System.FindResource(Instance, Name, ResType);
+{$ENDIF}
     if Res=0 then
       if NameIsID then
         raise EResNotFound.CreateFmt(SResNotFound,[IntToStr(PtrInt(Name))])
@@ -1889,12 +1885,12 @@ end;
 constructor TResourceStream.Create(Instance: TFPResourceHMODULE; const ResName: string; ResType: PAnsiChar);
 
 Var
-  S : AnsiString {$IF SIZEOF(CHAR)=1} absolute Resname {$endif} ;
+  S : AnsiString {$IFNDEF FPC_UNICODESTRINGS} absolute Resname {$endif} ;
 
 begin
   inherited create;
   // fpcres seems to use default translations...
-  {$IF SIZEOF(CHAR)=2}S:=ResName;{$endif}
+  {$IFDEF FPC_UNICODESTRINGS}S:=ResName;{$endif}
   Initialize(Instance,PAnsiChar(S),ResType,False);
 end;
 

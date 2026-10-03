@@ -2521,7 +2521,7 @@ const pemagic : array[0..3] of byte = (
         bosym     : coffbigobjsymbol;
         objsym    : TObjSymbol;
         bind      : Tasmsymbind;
-        strname   : string;
+        strname   : ShortString;
         auxrec    : array[0..sizeof(coffsymbol)-1] of byte;
         boauxrec  : array[0..sizeof(coffbigobjsymbol)-1] of byte;
         psecrec   : pcoffsectionrec;
@@ -3919,7 +3919,7 @@ const pemagic : array[0..3] of byte = (
         peheader  : tcoffpeoptheader;
         NameOfs,
         newheaderofs : longword;
-        FuncName  : string;
+        FuncName  : ShortString;
         expdir    : TPECoffExpDir;
         i         : longint;
         found     : boolean;

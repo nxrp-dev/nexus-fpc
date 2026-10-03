@@ -15,7 +15,7 @@
     System Utilities For Free Pascal
 }
 
-{$if not declared(TFilenameCaseMatch)}
+{$ifdef FPC_FINAH_DECLARE_FILENAME_CASE_MATCH}
 type
   TFilenameCaseMatch = (mkNone, mkExactMatch, mkSingleMatch, mkAmbiguous);
 {$endif}

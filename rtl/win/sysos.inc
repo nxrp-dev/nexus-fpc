@@ -21,7 +21,7 @@ const
    INVALID_HANDLE_VALUE = THandle(-1);
 
    IGNORE = 0;               { Ignore signal }
-{$IF NOT DECLARED(INFINITE)}
+{$IF NOT (DEFINED(FPC_HAS_FEATURE_CLASSES) AND DEFINED(FPC_HAS_FEATURE_MONITOR))}
    INFINITE = longint($FFFFFFFF);     { Infinite timeout }
 {$ENDIF}
 

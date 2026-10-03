@@ -2780,15 +2780,8 @@ implementation
            { don't use getdata, because the compilerwidechars may have to
              be byteswapped
            }
-{$if sizeof(tcompilerwidechar) = 2}
            for i:=0 to pw.len-1 do
              pw.data[i]:=ppufile.getword;
-{$elseif sizeof(tcompilerwidechar) = 4}
-           for i:=0 to pw.len-1 do
-             pw.data[i]:=cardinal(ppufile.getlongint);
-{$else}
-          {$error Unsupported tcompilerwidechar size}
-{$endif}
            value.valuews:=pw;
          end;
 

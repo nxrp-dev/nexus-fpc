@@ -90,7 +90,7 @@ begin
   PPCharArray(Result)^[List.Count]:=Nil;
   For I:=0 to List.Count-1 do
     begin
-    {$if SIZEOF(CHAR)=2}
+    {$IFDEF FPC_UNICODESTRINGS}
     S:=UTF8Encode(List[i]);
     {$ELSE}
     S:=List[i];

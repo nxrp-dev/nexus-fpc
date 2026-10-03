@@ -86,24 +86,24 @@ type
     HashLoadFactor = 4;
 
     // 64-bit CPUs tend to have more memory.
-    MaxStrings = {$if sizeof(pointer) > 4} 1600 {$else} 1000 {$endif};
-    StringsHashSizePrecomputed = {$if sizeof(pointer) > 4} 512 {$else} 256 {$endif};
+    MaxStrings = {$ifdef CPU64} 1600 {$else} 1000 {$endif};
+    StringsHashSizePrecomputed = {$ifdef CPU64} 512 {$else} 256 {$endif};
     StringsHashSize = {$ifdef can_use_ln_in_constants} 1 shl round(ln(MaxStrings / HashLoadFactor) / ln(2)) {$else} StringsHashSizePrecomputed {$endif};
-  {$if StringsHashSize <> StringsHashSizePrecomputed} {$error fix StringsHashSizePrecomputed} {$endif}
-  {$if StringsHashSize and (StringsHashSize - 1) <> 0} {$error must be 2^N} {$endif}
+    StringsHashSizeMatchesPrecomputed = 1 div Ord(StringsHashSize = StringsHashSizePrecomputed);
+    StringsHashSizeIsPowerOfTwo = 1 div Ord((StringsHashSize and (StringsHashSize - 1)) = 0);
 
-    MaxAddresses = {$if sizeof(pointer) > 4} 8000 {$else} 3600 {$endif};
-    AddressesHashSizePrecomputed = {$if sizeof(pointer) > 4} 2048 {$else} 1024 {$endif};
+    MaxAddresses = {$ifdef CPU64} 8000 {$else} 3600 {$endif};
+    AddressesHashSizePrecomputed = {$ifdef CPU64} 2048 {$else} 1024 {$endif};
     AddressesHashSize = {$ifdef can_use_ln_in_constants} 1 shl round(ln(MaxAddresses / HashLoadFactor) / ln(2)) {$else} AddressesHashSizePrecomputed {$endif};
-  {$if AddressesHashSize <> AddressesHashSizePrecomputed} {$error fix AddressesHashSizePrecomputed} {$endif}
-  {$if AddressesHashSize and (AddressesHashSize - 1) <> 0} {$error must be 2^N} {$endif}
+    AddressesHashSizeMatchesPrecomputed = 1 div Ord(AddressesHashSize = AddressesHashSizePrecomputed);
+    AddressesHashSizeIsPowerOfTwo = 1 div Ord((AddressesHashSize and (AddressesHashSize - 1)) = 0);
   {$endif select cache size}
     MaxStringsData = MaxStrings * (StringHeaderSize + StringLengthEstimation);
 
   type
-    StringIndexType = {$if MaxStrings <= High(uint8)} uint8 {$elseif MaxStrings <= High(uint16)} uint16 {$else} {$error MaxStrings looks too large.} {$endif};
-    StringDataOffsetType = {$if MaxStringsData <= High(uint8)} uint8 {$elseif MaxStringsData <= High(uint16)} uint16 {$else} {$error MaxStringsData looks too large.} {$endif};
-    AddressIndexType = {$if MaxAddresses <= High(uint8)} uint8 {$elseif MaxAddresses <= High(uint16)} uint16 {$else} {$error MaxAddresses looks too large.} {$endif};
+    StringIndexType = uint16;
+    StringDataOffsetType = uint16;
+    AddressIndexType = uint16;
 
   var
     // File and function names are merged only for simplicity, not sure if it hurts the eviction behavior (think of MaxStrings functions in one file evicting other files)...
@@ -2101,7 +2101,7 @@ end;
 
   procedure LineInfoCache.DumpAddressValue(var f: text; id: SizeUint);
   begin
-    write(f, HexStr(CodePtrUint(addresses.p[id]), 1 + {$if sizeof(CodePtrUint) >= 8} BsrQWord {$else} BsrDWord {$endif} (CodePtrUint(addresses.p[id]) or 1) div 4));
+    write(f, HexStr(CodePtrUint(addresses.p[id]), 1 + {$ifdef CPU64} BsrQWord {$else} BsrDWord {$endif} (CodePtrUint(addresses.p[id]) or 1) div 4));
   end;
 
   procedure LineInfoCache.Dump(var f: text);
@@ -2241,11 +2241,9 @@ end;
   end;
 
   procedure LineInfoCache.Put(addr: CodePointer; const func, source: shortstring; line: longint);
-  const
-    EvictionAlwaysMakesSpace = (MaxStrings >= 2) and (MaxStringsData >= 2 * (255 + StringHeaderSize));
   var
     addressHash, funcHash, sourceHash, reqStrings, reqData: SizeUint;
-    funcId, sourceId, addressId, evictPtr, prev, stringsToEvict, dataToEvict, alt {$if not EvictionAlwaysMakesSpace}, origDataToEvict {$endif}: SizeInt;
+    funcId, sourceId, addressId, evictPtr, prev, stringsToEvict, dataToEvict, alt: SizeInt;
   begin
     if longword(line) > 1 shl 24 - 1 then exit; // Won’t fit into lineLo16 + lineHi8...
 
@@ -2275,11 +2273,8 @@ end;
       begin
         alt := strings.dataSize div 8 + strings.dataSize div 32; // Evict at least 15.6% of strings at once, because PackStrings is slow.
         if alt > dataToEvict then dataToEvict := alt;
-      {$if not EvictionAlwaysMakesSpace}
-        origDataToEvict := dataToEvict;
-      {$endif not EvictionAlwaysMakesSpace}
         evictPtr := SizeInt(SizeUint(strings.lastLru1)) - 1;
-        while {$if not EvictionAlwaysMakesSpace} (evictPtr <> -1) and {$endif} ((stringsToEvict > 0) or (dataToEvict > 0)) do
+        while (stringsToEvict > 0) or (dataToEvict > 0) do
         begin
           prev := SizeInt(SizeUint(strings.s[evictPtr].prevLru1)) - 1;
           if (evictPtr <> funcId) and (evictPtr <> sourceId) then
@@ -2290,15 +2285,7 @@ end;
           end;
           evictPtr := prev;
         end;
-      {$if not EvictionAlwaysMakesSpace}
-        if dataToEvict <> origDataToEvict then
-      {$endif not EvictionAlwaysMakesSpace}
-          PackStrings; // This is crucial.
-      {$if not EvictionAlwaysMakesSpace}
-        // Eviction hasn’t evicted enough. Impossible situation for large enough caches.
-        // For small caches, a potential “improvement” is doing eviction in 2 passes, the first is just a simulation, so if the Put() request won’t fit anyway, don’t evict anything.
-        if (stringsToEvict > 0) or (dataToEvict > 0) then exit;
-      {$endif not EvictionAlwaysMakesSpace}
+        PackStrings; // This is crucial.
       end;
     end;
 

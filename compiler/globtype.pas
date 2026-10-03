@@ -408,7 +408,8 @@ interface
          mf_wasm_native_exceptions,   { unit was compiled in WebAssembly native legacy exceptions mode }
          mf_wasm_threads,             { unit was compiled with WebAssembly multithreading support turned on }
          mf_system_unit,              { unit was compiled as a System unit }
-         mf_nexus_profile             { unit contains Nexus procedure profiling instrumentation }
+          mf_nexus_profile,            { unit contains Nexus procedure profiling instrumentation }
+          mf_unicode_default           { unit was compiled with Unicode default text types }
        );
        tmoduleflags = set of tmoduleflag;
 
@@ -501,7 +502,7 @@ interface
                                   procedure variables                     }
          m_autoderef,           { does auto dereferencing of struct. vars }
          m_initfinal,           { initialization/finalization for units }
-         m_default_ansistring,  { ansistring turned on by default }
+         m_default_ansistring,  { compiler-wide AnsiString default }
          m_out,                 { support the calling convention OUT }
          m_default_para,        { support default parameters }
          m_hintdirective,       { support hint directives }
@@ -519,8 +520,7 @@ interface
          m_final_fields,        { allows declaring fields as "final", which means they must be initialised
                                   in the (class) constructor and are constant from then on (same as final
                                   fields in Java) }
-         m_default_unicodestring, { makes the default string type in $h+ mode unicodestring rather than
-                                    ansistring; similarly, char becomes unicodechar rather than ansichar }
+         m_default_unicodestring, { compiler-wide UnicodeString/UnicodeChar default }
          m_type_helpers,        { allows the declaration of "type helper" for all supported types
                                   (primitive types, records, classes, interfaces) }
          m_blocks,              { support for http://en.wikipedia.org/wiki/Blocks_(C_language_extension) }

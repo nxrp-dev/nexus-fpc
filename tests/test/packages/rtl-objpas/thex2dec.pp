@@ -26,11 +26,7 @@ procedure Hex2DecTest(const testhex: string;
   end;
 
 const
-{$IF DECLARED(longint)}
   maxLen = 8;  { The maximum number of hex digits for longint (32 bit) }
-{$ELSE}
-  maxLen = 4;  { The maximum number of hex digits for smallint (16 bit) }
-{$IFEND}
   codes: array[0..15] of char = ('0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F');
 
 var

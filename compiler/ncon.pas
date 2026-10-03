@@ -958,15 +958,8 @@ implementation
             { don't use getdata, because the compilerwidechars may have to
               be byteswapped
             }
-{$if sizeof(tcompilerwidechar) = 2}
             for i:=0 to valuews.len-1 do
               valuews.data[i]:=ppufile.getword;
-{$elseif sizeof(tcompilerwidechar) = 4}
-            for i:=0 to valuews.len-1 do
-              valuews.data[i]:=cardinal(ppufile.getlongint);
-{$else}
-           {$error Unsupported tcompilerwidechar size}
-{$endif}
           end
         else
           begin

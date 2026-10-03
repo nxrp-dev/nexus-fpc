@@ -58,8 +58,4 @@
   {$define generic_linux_syscalls}
   {$define userenameat}
   {$undef usestime}
-  {$undef OLDMMAP}
-  {$ifndef cpu64}
-    {$define MMAP2}
-  {$endif}
 {$endif android}

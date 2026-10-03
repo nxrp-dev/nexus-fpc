@@ -418,11 +418,7 @@ begin
 {$IFDEF OS2}
     FLastError := PLocalEventRec (Handle)^.FLastError;
 {$ELSE OS2}
-  {$if declared(getlastoserror)}
     FLastError := GetLastOSError;
-  {$else}
-    FLastError:=-1;
-  {$endif}
 {$ENDIF OS2}
 end;
 
@@ -723,12 +719,12 @@ end;
 {$ENDIF NOPOINTER}
 
 {$IFDEF UNIX}
-{$IF NOT DECLARED(sem_timedwait)}
+{$IFDEF DARWIN}
 {$DEFINE USE_SEM_TRYWAIT}
 {$DEFINE WAITLOOP}
 {$ENDIF}
 
-{$IF NOT DECLARED(pthread_mutex_timedlock)}
+{$IF DEFINED(DARWIN) OR DEFINED(ANDROID)}
 {$DEFINE USE_pthread_mutex_trylock}
 {$DEFINE WAITLOOP}
 {$ENDIF}
@@ -779,7 +775,7 @@ begin
 {$IFDEF WINDOWS}
   inherited Create(aUseCOMWait);
   PN:=Pchar(Pointer(aName));
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   FHandle:=TEventHandle(CreateSemaphoreA(aAttributes,aInitial,aMaximum,PN));
 {$ELSE}
   FHandle:=TEventHandle(CreateSemaphoreW(aAttributes,aInitial,aMaximum,PN));
@@ -815,7 +811,7 @@ begin
 {$ELSE WINDOWS}
   inherited Create(aUseCOMWait);
   PN:=PChar(Pointer(aName));
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   FHandle:=TEventHandle(OpenSemaphoreA(aAccess,aInherit,PN));
 {$ELSE}
   FHandle:=TEventHandle(OpenSemaphoreW(aAccess,aInherit,PN));
@@ -1003,7 +999,7 @@ begin
 {$IFDEF WINDOWS}
   inherited Create(aUseCOMWait);
   PN:=PChar(Pointer(aName));
-  {$IF SIZEOF(CHAR)=1}
+  {$IFNDEF FPC_UNICODESTRINGS}
   FHandle:=TEventHandle(CreateMutexA(aAttributes,aInitialOwner,PN));
   {$ELSE}
   FHandle:=TEventHandle(CreateMutexW(aAttributes,aInitialOwner,PN));
@@ -1041,7 +1037,7 @@ begin
 {$IFDEF WINDOWS}
   inherited Create(aUseCOMWait);
   PN:=PChar(Pointer(aName));
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   FHandle:=TEventHandle(OpenMutexA(aAccess,aInherit,PN));
 {$ELSE}
   FHandle:=TEventHandle(OpenMutexW(aAccess,aInherit,PN));

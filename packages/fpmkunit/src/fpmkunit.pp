@@ -112,7 +112,7 @@ uses
 {$DEFINE HAVE_VOLATILE}
 
 Type
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   TRTLStringDynArray = TStringDynArray;
 {$ENDIF}
 

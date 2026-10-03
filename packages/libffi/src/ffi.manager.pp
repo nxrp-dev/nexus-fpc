@@ -510,7 +510,7 @@ begin
 {$ifdef WIN32}
       abi := FFI_MS_CDECL;
 {$else}
-      abi := FFI_STDCALL;
+      abi := FFI_DEFAULT_ABI;
 {$endif}
     ccPascal:
       abi := FFI_PASCAL;

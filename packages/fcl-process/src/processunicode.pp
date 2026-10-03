@@ -50,8 +50,8 @@ Type
   TProcess = Class;
 
 {$macro on}
-{$IF SIZEOF(CHAR)=1}
-// For unicode RTL, there is nothing to redefine.
+{$IFNDEF FPC_UNICODESTRINGS}
+// The UnicodeString process wrapper is needed only with a one-byte Char RTL.
 {$define processunicodestring}
 {$ENDIF}
 {$define TProcessnamemacro:=TProcess}

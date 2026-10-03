@@ -176,7 +176,7 @@ type
     constructor Create(aArg: Double);
   end;
 
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   TExtendedHelper = record helper for Extended
     function Test: LongInt;
     constructor Create(aArg: Extended);
@@ -185,7 +185,7 @@ type
 
 implementation
 
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
 { TExtendedHelper }
 
 function TExtendedHelper.Test: LongInt;

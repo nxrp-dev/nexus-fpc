@@ -205,7 +205,7 @@ Uses
 
 {$i unxfunc.inc}   { Platform specific implementations }
 
-Function getenv(name:string):PAnsiChar; external name 'FPC_SYSC_FPGETENV';
+Function getenv(name:ShortString):PAnsiChar; external name 'FPC_SYSC_FPGETENV';
 
 {******************************************************************************
                           timezone support

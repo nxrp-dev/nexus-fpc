@@ -870,7 +870,7 @@ type
 
 procedure error_exit (cinfo : j_common_ptr); far;
 var
-  buffer : string;
+  buffer : ShortString;
 begin
   cinfo^.err^.format_message(cinfo, buffer);
   raise EJPEG.Create(buffer);
@@ -897,14 +897,14 @@ end;
 
 procedure output_message (cinfo : j_common_ptr); far;
 var
-  buffer : string;
+  buffer : ShortString;
 begin
   cinfo^.err^.format_message (cinfo, buffer);
   {message dialog}
   ShowMessage(buffer);
 end;
 
-procedure format_message (cinfo : j_common_ptr; var buffer : string); far;
+procedure format_message (cinfo : j_common_ptr; var buffer : ShortString); far;
 begin
   buffer :=
     'JPEG ERROR -- #' + IntToStr(cinfo^.err^.msg_code);

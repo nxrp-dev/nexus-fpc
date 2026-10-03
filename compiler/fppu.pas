@@ -384,6 +384,14 @@ var
               Message(unit_u_ppu_symansistr_mismatch,@queuecomment);
               exit;
             end;
+           { Every unit, including released RTL/package units, must match the
+             compiler invocation's default text model. }
+           if (mf_unicode_default in moduleflags) <> compilerwide_unicode_strings then
+             begin
+               Comment(V_Normal,
+                 'PPU default text model does not match this compiler invocation');
+               exit;
+             end;
           { A profiling build may use an ordinary PPU, producing deliberately
             gapped coverage. An ordinary build must never reuse an instrumented
             PPU because that would retain profiler hooks. }
@@ -1092,6 +1100,8 @@ var
           include(moduleflags,mf_system_unit);
         if cs_nexus_profile in current_settings.moduleswitches then
           include(moduleflags,mf_nexus_profile);
+         if compilerwide_unicode_strings then
+           include(moduleflags,mf_unicode_default);
 
 {$ifdef wasm}
         if ts_wasm_no_exceptions in current_settings.targetswitches then
@@ -1613,6 +1623,13 @@ var
 
     procedure tppumodule.writeppu;
       begin
+         { A System unit built with a contradictory Char alias must never
+           receive a PPU bearing the invocation's text-model flag. }
+         if (cs_compilesystem in current_settings.moduleswitches) and
+            (search_system_type('CHAR').typedef.size <>
+             1+Ord(compilerwide_unicode_strings)) then
+           Comment(V_Fatal,'System.Char width does not match this compiler invocation''s default text model');
+
          Message1(unit_u_ppu_write,realmodulename^);
 
          { create unit flags }

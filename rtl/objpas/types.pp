@@ -103,7 +103,7 @@ type
   TAnsiStringDynArray = Array of AnsiString;
   TWideStringDynArray   = array of WideString;
   TUnicodeStringDynArray = array of UnicodeString;
-{$if SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   TStringDynArray = Array of UnicodeString;
 {$ELSE}
   TStringDynArray = Array of AnsiString;

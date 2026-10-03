@@ -213,7 +213,7 @@ Function TextToFloat(Buffer: PChar; Out Value: Extended): Boolean;
 Function TextToFloat(Buffer: PChar; Out Value: Extended; Const FormatSettings: TFormatSettings): Boolean;
 Function TextToFloat(Buffer: PChar; Out Value; ValueType: TFloatValue): Boolean;
 Function TextToFloat(Buffer: PChar; Out Value; ValueType: TFloatValue; Const FormatSettings: TFormatSettings): Boolean;
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
 Function TextToFloat(Buffer: PAnsiChar; Out Value; ValueType: TFloatValue): Boolean;
 Function TextToFloat(Buffer: PAnsiChar; Out Value; ValueType: TFloatValue; Const FormatSettings: TFormatSettings): Boolean;
 {$ENDIF}
@@ -350,7 +350,7 @@ Type
 {$undef SBUNICODE}
 
 Type
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   TStringBuilder = TAnsiStringBuilder;
 {$ELSE}
   TStringBuilder = TUnicodeStringBuilder;

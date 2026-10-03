@@ -3,7 +3,7 @@ uses
 var
   s: Single;
   d: Double;
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   e: Extended;
 {$endif}
 begin
@@ -23,7 +23,7 @@ begin
   Writeln(IntToHex(PInt64(@d)^, 16));
   if IntToHex(PInt64(@d)^, 16)<>'0010000000000000' then
     halt(4);
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   e := MinExtended;
   Writeln(IntToHex(TExtended80Rec(e)._Exp)+IntToHex(TExtended80Rec(e).Frac));
   if IntToHex(TExtended80Rec(e)._Exp)+IntToHex(TExtended80Rec(e).Frac)<>'00018000000000000000' then

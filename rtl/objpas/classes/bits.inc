@@ -17,9 +17,9 @@
 
 const
    TBITS_SHIFT =
-{$if sizeof(TBitsBase) = sizeof(dword)}
+{$if defined(CPU32)}
             5
-{$elseif sizeof(TBitsBase) = sizeof(qword)}
+{$elseif defined(CPU64)}
             6
 {$else}
 {$error unknown TBitsBase}
@@ -78,9 +78,9 @@ begin
       if cell <> 0 then
       begin
          result := result + integer(
-{$if sizeof(TBitsBase) = sizeof(dword)}
+{$if defined(CPU32)}
             BsfDWord
-{$elseif sizeof(TBitsBase) = sizeof(qword)}
+{$elseif defined(CPU64)}
             BsfQWord
 {$else} {$error unknown TBitsBase} {$endif}
                (TBitsBaseUnsigned(cell)));
@@ -106,9 +106,9 @@ begin
       cell := TBitsBase((xorMask xor FBits[result shr TBITS_SHIFT]) shl ((-result - 1) and TBITS_MASK));
       if cell <> 0 then
          exit(result - TBITS_MASK + integer(
-{$if sizeof(TBitsBase) = sizeof(dword)}
+{$if defined(CPU32)}
             BsrDWord
-{$elseif sizeof(TBitsBase) = sizeof(qword)}
+{$elseif defined(CPU64)}
             BsrQWord
 {$else} {$error unknown TBitsBase} {$endif}
                (TBitsBaseUnsigned(cell))));

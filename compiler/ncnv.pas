@@ -1105,21 +1105,6 @@ implementation
         result:=nil;
         if left.nodetype=ordconstn then
           begin
-            { check if we have a valid pointer constant (JM) }
-            {$if sizeof(pointer) > sizeof(TConstPtrUInt)}
-              {$if sizeof(TConstPtrUInt) = 4}
-                  if (tordconstnode(left).value < int64(low(longint))) or
-                     (tordconstnode(left).value > int64(high(cardinal))) then
-                  CGMessage(parser_e_range_check_error);
-              {$else} {$if sizeof(TConstPtrUInt) = 8}
-                  if (tordconstnode(left).value < int64(low(int64))) or
-                     (tordconstnode(left).value > int64(high(qword))) then
-                  CGMessage(parser_e_range_check_error);
-              {$else}
-                internalerror(2001020801);
-              {$endif} {$endif}
-            {$endif}
-
             if not(nf_explicit in flags) then
               if (tordconstnode(left).value.svalue=0) then
                 CGMessage(type_w_zero_to_nil)

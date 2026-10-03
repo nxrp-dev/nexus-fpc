@@ -387,7 +387,7 @@ INTERFACE
                        const Precision,
                              Digits : Integer ) : FmtBCDStringtype;
 
-  function FormatBCD ( const Format : string;
+  function FormatBCD ( const Format : ShortString;
                              BCD : tBCD ) : FmtBCDStringtype;
 
 { returns -1 if BCD1 < BCD2, 0 if BCD1 = BCD2, 1 if BCD1 > BCD2 }
@@ -781,7 +781,7 @@ INTERFACE
 
   operator := ( const BCD : tBCD ) z : Double; Inline;
 
-{$if sizeof ( extended ) <> sizeof ( double )}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   operator := ( const r : Extended ) z : tBCD; Inline;
 
   operator := ( const BCD : tBCD ) z : Extended; Inline;
@@ -798,9 +798,9 @@ INTERFACE
   operator := ( const BCD : tBCD ) z : Comp; Inline;
 {$endif}
 
-  operator := ( const s : string ) z : tBCD; Inline;
+  operator := ( const s : ShortString ) z : tBCD; Inline;
 
-  operator := ( const BCD : tBCD ) z : string; Inline;
+  operator := ( const BCD : tBCD ) z : ShortString; Inline;
 
   operator := ( const s : AnsiString ) z : tBCD; Inline;
 
@@ -2884,7 +2884,7 @@ writeln ( '> ', i4, ' ', bh.Singles[i4], ' ', Add );
     end;
 
 
-  function FormatBCD ( const Format : string;
+  function FormatBCD ( const Format : ShortString;
                              BCD : tBCD ) : FmtBCDStringtype;
     // Tests: tests/test/units/fmtbcd/
     type
@@ -2902,7 +2902,7 @@ writeln ( '> ', i4, ' ', bh.Singles[i4], ' ', Add );
       i, j, j1, je, ReqSec, Sec, Scale: integer;
       Section: TSection;
       FF: TFloatFormat;
-      BCDStr: string;                   // BCDToStrF of given BCD parameter
+      BCDStr: ShortString;              // BCDToStrF of given BCD parameter
       Buf: array [0..85] of AnsiChar;       // output buffer
 
     // Parses Format parameter, their sections (positive;negative;zero) and
@@ -4200,7 +4200,7 @@ writeln;
       z := BCDToDouble ( BCD );
      end;
 
-{$if sizeof ( extended ) <> sizeof ( double )}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   operator := ( const r : Extended ) z : tBCD; Inline;
 
     begin
@@ -4301,13 +4301,13 @@ writeln;
 
 {$endif}
 
-  operator := ( const s : string ) z : tBCD; Inline;
+  operator := ( const s : ShortString ) z : tBCD; Inline;
 
     begin
       z := StrToBCD ( s );
      end;
 
-  operator := ( const BCD : tBCD ) z : string; Inline;
+  operator := ( const BCD : tBCD ) z : ShortString; Inline;
 
     begin
       z := BCDToStr ( BCD );
@@ -4520,39 +4520,12 @@ begin
     inherited;
 end;
 
-(*
-  {$if sizeof ( integer ) = 2 }
-    {$ifdef BCDgr4 }
-
-  const
-    myMinIntBCDValue : packed array [ 1..3 ] of AnsiChar = #$32#$76#$80;
-
-    {$endif}
-  {$else}
-    {$if sizeof ( integer ) = 4 }
-*)
       {$ifdef BCDgr9 }
 
   const
     myMinIntBCDValue : packed array [ 1..10 ] of AnsiChar = #$21#$47#$48#$36#$48;
 
       {$endif}
-(*
-    {$else}
-      {$if sizeof ( integer ) = 8 }
-        {$ifdef BCDgr18 }
-
-  const
-    myMinIntBCDValue : packed array [ 1..19 ] of AnsiChar = #$92#$23#$37#$20#$36#$85#$47#$75#$80#$80;
-
-        {$endif}
-      {$else}
-        {$fatal You have an interesting integer type! Sorry, not supported}
-      {$endif}
-    {$endif}
-  {$endif}
-*)
-
 initialization
   FillChar ( null_, SizeOf ( null_ ), #0 );
   FillChar ( NullBCD_, SizeOf ( NullBCD_ ), #0 );
@@ -4567,24 +4540,11 @@ initialization
   myMinIntBCD.Negativ := True;
 {$endif}
 
-  {$if sizeof ( integer ) = 4 }
-      {$ifdef BCDgr9 }
+  {$ifdef BCDgr9 }
 
   myMinIntBCD.Precision := 10;
   Move ( myMinIntBCDValue, myMinIntBCD.Fraction, SizeOf ( myMinIntBCDValue ) );
 
-      {$endif}
-    {$else}
-      {$if sizeof ( integer ) = 8 }
-        {$ifdef BCDgr18 }
-
-  myMinIntBCD.Precision := 19;
-  Move ( myMinIntBCDValue, myMinIntBCD.Fraction, SizeOf ( myMinIntBCDValue ) );
-
-        {$endif}
-      {$else}
-        {$fatal You have an interesting integer type! Sorry, not supported}
-      {$endif}
   {$endif}
 
   FMTBcdFactory:=TFMTBcdFactory.create;

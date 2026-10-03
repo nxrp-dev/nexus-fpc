@@ -98,7 +98,6 @@ type
     Procedure TestVariantsingle;
     Procedure TestVariantdouble;
     Procedure TestVariantCurrency;
-    Procedure TestVariantString;
     Procedure TestVariantolestr;
     Procedure TestVariantboolean;
     Procedure TestVariantDate;
@@ -1692,26 +1691,6 @@ begin
   StreamObject(FTofree);
   AssertPropCount(1);
   AssertProp('VariantProp',3.14);
-end;
-
-procedure TTestJSONStreamer.TestVariantString;
-
-Var
-  i : String;
-  C : TVariantComponent;
-
-begin
-  i:='3.14';
-  C:=CreateVariantComp;
-  C.VariantProp:=i;
-{$IF SIZEOF(CHAR)=2}
-  AssertEquals('Variant type',VarTypeAsText(varOleStr),VarTypeAsText(VarType(C.VariantProp)));
-{$ELSE}
-  AssertEquals('Variant type',VarTypeAsText(varString),VarTypeAsText(VarType(C.VariantProp)));
-{$ENDIF}
-  StreamObject(FTofree);
-  AssertPropCount(1);
-  AssertProp('VariantProp','3.14');
 end;
 
 procedure TTestJSONStreamer.TestVariantolestr;

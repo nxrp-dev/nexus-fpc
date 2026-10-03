@@ -354,10 +354,6 @@ implementation
         result:=inv;
       end;
 
-{$if first_mm_imreg = 0}
-  {$WARN 4044 OFF} { Comparison might be always false ... }
-{$endif}
-
     procedure tparamanager.allocparaloc(list: TAsmList; const paraloc: pcgparalocation);
       begin
         case paraloc^.loc of

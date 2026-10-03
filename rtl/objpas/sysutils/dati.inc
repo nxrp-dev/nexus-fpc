@@ -1297,7 +1297,7 @@ begin
   else
     StoreFormat('C', 0, False);
   ResultBuffer[ResultLen] := #0;
-  {$IF SIZEOF(CHAR)=1}
+  {$IFNDEF FPC_UNICODESTRINGS}
     result := StrPas(PAnsiChar(@ResultBuffer));
   {$ELSE}
     result := StrPas(PWideChar(@ResultBuffer));

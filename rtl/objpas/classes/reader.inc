@@ -1543,7 +1543,7 @@ begin
     tkUstring:
       begin
         uTmpStr:=ReadUnicodeString;
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
         if Assigned(FOnReadStringProperty) then
           FOnReadStringProperty(Self,Instance,PropInfo,uTmpStr);
 {$ENDIF}

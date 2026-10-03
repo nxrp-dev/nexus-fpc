@@ -11,9 +11,6 @@ var
 
 
 begin
-  {$if declared(TMyStringsHelper)}
-  writeln('Using TMyStringsHelper class');
-  {$endif}
   Source := TStringList.Create;
   DestP := TStringList.Create;
   try

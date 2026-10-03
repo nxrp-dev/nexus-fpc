@@ -20,11 +20,7 @@ interface
 
 {$MODE objfpc}
 {$MODESWITCH OUT}
-{$IFDEF UNICODERTL}
-{$MODESWITCH UNICODESTRINGS}
-{$ELSE}
 {$H+}
-{$ENDIF}
 
 {$modeswitch typehelpers}
 {$modeswitch advancedrecords}
@@ -80,15 +76,15 @@ const
 {$ENDIF}
 
 {$if defined(LINUX)}
-  {$if sizeof(clong)<8}
+  {$ifndef CPU64}
     {$DEFINE USE_STATX}
     {$DEFINE USE_UTIMENSAT}
-  {$endif sizeof(clong)<=4}
+  {$endif not CPU64}
 
   {$DEFINE USE_FUTIMES}
 {$endif}
 
-{$if declared(fpfutimens)}
+{$ifdef ANDROID}
   {$DEFINE USE_FUTIMES}
 {$endif}
 

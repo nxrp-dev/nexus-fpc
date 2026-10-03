@@ -37,9 +37,9 @@ type
    packed
 {$endif FPC_REQUIRES_PROPER_ALIGNMENT}
    record
-     {$if declared(TRttiDataCommon)}
+     {$ifndef VER3_2}
      common: TRttiDataCommon;
-     {$endif declared TRttiDataCommon}
+     {$endif not VER3_2}
      case TTypeKind of
        tkArray: (
          elSize : SizeUInt;

@@ -23,9 +23,7 @@ var
   f1: TFunc1;
   f2: TFunc2;
 begin
-  {$if declared(HaltOnNotReleased)}
   HaltOnNotReleased:=True;
-  {$endif}
   f1 := TTest.Create;
   f2 := f1;
   f1 := Nil;

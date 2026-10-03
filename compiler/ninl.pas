@@ -714,7 +714,7 @@ implementation
       end;
 
 
-    procedure get_read_write_int_func(def: tdef; out func_suffix: string; out readfunctype: tdef);
+    procedure get_read_write_int_func(def: tdef; out func_suffix: ShortString; out readfunctype: tdef);
     var
       ordtype: tordtype;
     begin

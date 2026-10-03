@@ -164,7 +164,8 @@ implementation
       block_type:=old_block_type;
       { required for e.g. FpcDeepCopy record method (uses "out" parameter; field
         names are escaped via &, so should not cause conflicts }
-      current_settings.modeswitches:=objfpcmodeswitches;
+      current_settings.modeswitches:=objfpcmodeswitches+
+        (sstate.old_modeswitches*[m_default_ansistring,m_default_unicodestring]);
     end;
 
 

@@ -160,7 +160,7 @@ var
 {LOCAL}
 procedure select_file_name (var fname : TEMP_STRING);
 var
-  env : string;
+  env : ShortString;
   suffix,
   prefix : TEMP_STRING;
   tfile : FILE;

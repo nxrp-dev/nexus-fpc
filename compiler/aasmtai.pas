@@ -531,7 +531,7 @@ interface
 
        tai_string = class(tailineinfo)
           str : TAnsiCharDynArray;
-          constructor Create(const _str : string);
+          constructor Create(const _str : ShortString);
           constructor Create(const _str : ansistring);
           { data: not guaranteed to #0-terminated
             length: length of the data without #0 terminator (unless the #0
@@ -2215,7 +2215,7 @@ implementation
                                TAI_STRING
  ****************************************************************************}
 
-     constructor tai_string.Create(const _str : string);
+     constructor tai_string.Create(const _str : ShortString);
        var
          lNewLen : Integer;
        begin

@@ -730,6 +730,8 @@ unit scandir;
 
     procedure dir_longstrings;
       begin
+        { Consume the legacy ON/OFF syntax. HandleSwitch('H') is inert because
+          the default String type is fixed for the compiler invocation. }
         do_delphiswitch('H');
       end;
 

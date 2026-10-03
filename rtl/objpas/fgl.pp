@@ -1162,9 +1162,9 @@ end;
 function TFPGObjectList.IndexOf(const Item: T): Integer;
 begin
   Result :=
-{$if sizeof(pointer) = sizeof(dword)}
+{$if defined(CPU32)}
     IndexDWord
-{$elseif sizeof(pointer) = sizeof(qword)}
+{$elseif defined(CPU64)}
     IndexQWord
 {$else}
   {$error unknown pointer size}
@@ -1297,9 +1297,9 @@ end;
 function TFPGInterfacedObjectList.IndexOf(const Item: T): Integer;
 begin
   Result :=
-{$if sizeof(pointer) = sizeof(dword)}
+{$if defined(CPU32)}
     IndexDWord
-{$elseif sizeof(pointer) = sizeof(qword)}
+{$elseif defined(CPU64)}
     IndexQWord
 {$else}
   {$error unknown pointer size}

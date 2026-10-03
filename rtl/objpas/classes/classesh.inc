@@ -970,7 +970,7 @@ type
     Procedure CheckSpecialChars;
     Class Function GetNextLine (Const Value : String; Var S : String; Var P : SizeInt) : Boolean;
     Function GetNextLinebreak (Const Value : String; Var S : String; Var P : SizeInt) : Boolean;
-    {$IF (SizeOf(Integer) < SizeOf(SizeInt)) }
+    {$IFDEF CPU64}
     class function GetNextLine(const Value: string; var S: string; var P: Integer) : Boolean; deprecated;
     function GetNextLineBreak(const Value: string; var S: string; var P: Integer) : Boolean; deprecated;
     {$IFEND}

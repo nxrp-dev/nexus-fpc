@@ -154,7 +154,7 @@ function LowerCase(const s: ansistring; LocaleOptions: TLocaleOptions): ansistri
 
 function LowerCase(const V: variant): string; overload;{$ifdef SYSUTILSINLINE}inline;{$endif}
   begin
-  {$IFDEF UNICODERTL}
+  {$IFDEF FPC_UNICODESTRINGS}
     result:=LowerCase(widestring(V));
   {ELSE}
     result:=LowerCase(ansistring(V));
@@ -169,7 +169,7 @@ function LowerCase(const V: variant): string; overload;{$ifdef SYSUTILSINLINE}in
     S1 > S2  > 0
     S1 = S2  = 0     }
 
-{$IF SIZEOF(SIZEINT)>SIZEOF(INTEGER)}
+{$IFDEF CPU64}
 Function DoCapSizeInt(SI : SizeInt) : Integer; inline;
 
 begin
@@ -194,7 +194,14 @@ begin
     Count:=Count2
   else
     Count:=Count1;
+{$IFDEF FPC_UNICODESTRINGS}
+  if Count>0 then
+    result:=CompareWord(S1[1],S2[1],Count)
+  else
+    result:=0;
+{$else}
   result := CompareMemRange(Pointer(S1),Pointer(S2), Count);
+{$endif}
   if result=0 then
     // CAPSIZEINT is no-op if Sizeof(Sizeint)<=SizeOF(Integer)
     result:=CAPSIZEINT(Count1-Count2);
@@ -243,7 +250,7 @@ function CompareText(const S1, S2: string): Integer; overload;
 
 var
   i, count, count1, count2: sizeint;
-  Chr1, Chr2: byte;
+  Chr1, Chr2: Integer;
   P1, P2: PChar;
 begin
   Count1 := Length(S1);
@@ -259,8 +266,8 @@ begin
       P2 := @S2[1];
       while i < Count do
         begin
-          Chr1 := byte(p1^);
-          Chr2 := byte(p2^);
+          Chr1 := Ord(P1^);
+          Chr2 := Ord(P2^);
           if Chr1 <> Chr2 then
             begin
               if Chr1 in [97..122] then
@@ -1249,7 +1256,7 @@ Var
   Len : Integer;
 
 begin
-{$if SIZEOF(Char)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Len:=UnicodeFormatBuf(Buffer^,Maxint,Fmt^,strlen(fmt),args,FormatSettings);
 {$ELSE}
   Len:=FormatBuf(Buffer^,Maxint,Fmt^,strlen(fmt),args,FormatSettings);
@@ -1270,7 +1277,7 @@ var
   Len : integer;
 
 begin
-  {$if SIZEOF(Char)=2}
+  {$IFDEF FPC_UNICODESTRINGS}
   Len:=UnicodeFormatBuf(Buffer^,MaxLen,Fmt^,strlen(fmt),args,FormatSettings);
   {$ELSE}
   Len:=FormatBuf(Buffer^,MaxLen,Fmt^,strlen(fmt),args,FormatSettings);
@@ -1380,7 +1387,7 @@ Begin
   Result:=(E=0);
 End;
 
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
 
 Function TextToFloat(Buffer: PAnsiChar; Out Value; ValueType: TFloatValue): Boolean;
 

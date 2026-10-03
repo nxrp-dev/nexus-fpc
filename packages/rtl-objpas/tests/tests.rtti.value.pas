@@ -1971,7 +1971,7 @@ begin
   CheckEquals(false, IsManaged(TypeInfo(TTestMethod)), 'IsManaged for tkMethod');
   {$else}
   { Delphi bug (or sabotage). For some reason Delphi considers method pointers to be managed (only in newer versions, probably since XE7) :/ }
-  CheckEquals({$if RTLVersion>=28}true{$else}false{$endif}, IsManaged(TypeInfo(TTestMethod)), 'IsManaged for tkMethod');
+  CheckEquals(RTLVersion >= 28, IsManaged(TypeInfo(TTestMethod)), 'IsManaged for tkMethod');
   {$endif}
   CheckEquals(false, IsManaged(TypeInfo(TArrayOfByte)),
     'IsManaged for tkArray (with non managed ElType)');

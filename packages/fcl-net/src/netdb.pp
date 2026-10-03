@@ -380,7 +380,7 @@ uses
 Function AnsiToString(S : AnsiString) : String; inline;
 
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Result:=UTF8Decode(S);
 {$ELSE}
   Result:=S;

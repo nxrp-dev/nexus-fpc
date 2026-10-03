@@ -83,7 +83,7 @@ interface
          token    : ttoken;
          idtoken  : ttoken;
          orgpattern,
-         pattern  : string;
+         pattern  : ShortString;
          cstringpattern: ansistring;
          patternw : tcompilerwidestring;
          settings : tsettings;
@@ -93,7 +93,7 @@ interface
          pending  : tpendingstate;
          verbosity : longint;
          constructor Create(atoken: ttoken;aidtoken:ttoken;
-           const aorgpattern,apattern:string;const acstringpattern:ansistring;
+           const aorgpattern,apattern:ShortString;const acstringpattern:ansistring;
            apatternw:tcompilerwidestring;asettings:tsettings;
            atokenbuf:tdynamicarray;change_endian:boolean;const apending:tpendingstate;
            averbosity:longint;anext:treplaystack);
@@ -152,7 +152,7 @@ interface
           c              : char;
 
           orgpattern,
-          pattern        : string;
+          pattern        : ShortString;
           cstringpattern : ansistring;
           patternw       : tcompilerwidestring;
 
@@ -269,8 +269,8 @@ interface
           function  readid:string;
           function  readval:longint;
           function  readval64:int64;
-          function  readcomment(include_special_char: boolean = false):string;
-          function  readquotedstring:string;
+          function  readcomment(include_special_char: boolean = false):ShortString;
+          function  readquotedstring:ShortString;
           function  readlongcomment(include_special_char: boolean = false):RawByteString;
           function  readlongquotedstring:RawByteString;
           function readstringconstant: boolean;
@@ -404,43 +404,27 @@ implementation
 
     Procedure HandleModeSwitches(switch: tmodeswitch; changeInit: boolean);
       begin
-        { turn ansi/unicodestrings on by default ? (only change when this
-          particular setting is changed, so that a random modeswitch won't
-          change the state of $h+/$h-) }
+        { The compiler invocation owns the default String/Char/PChar model.
+          A source language mode may change grammar but cannot change it. }
         if switch in [m_none,m_default_ansistring,m_default_unicodestring] then
           begin
-            if ([m_default_ansistring,m_default_unicodestring]*current_settings.modeswitches)<>[] then
+            if compilerwide_unicode_strings then
               begin
-                { can't have both ansistring and unicodestring as default }
-                if switch=m_default_ansistring then
-                  begin
-                    exclude(current_settings.modeswitches,m_default_unicodestring);
-                    if changeinit then
-                      exclude(init_settings.modeswitches,m_default_unicodestring);
-                  end
-                else if switch=m_default_unicodestring then
-                  begin
-                    exclude(current_settings.modeswitches,m_default_ansistring);
-                    if changeinit then
-                      exclude(init_settings.modeswitches,m_default_ansistring);
-                  end;
-                { enable $h+ }
-                include(current_settings.localswitches,cs_refcountedstrings);
-                if changeinit then
-                  include(init_settings.localswitches,cs_refcountedstrings);
-                if m_default_unicodestring in current_settings.modeswitches then
-                  begin
-                    def_system_macro('FPC_UNICODESTRINGS');
-                    def_system_macro('UNICODE');
-                  end;
+                exclude(current_settings.modeswitches,m_default_ansistring);
+                include(current_settings.modeswitches,m_default_unicodestring);
+                def_system_macro('FPC_UNICODESTRINGS');
               end
             else
               begin
-                exclude(current_settings.localswitches,cs_refcountedstrings);
-                if changeinit then
-                  exclude(init_settings.localswitches,cs_refcountedstrings);
+                exclude(current_settings.modeswitches,m_default_unicodestring);
+                include(current_settings.modeswitches,m_default_ansistring);
                 undef_system_macro('FPC_UNICODESTRINGS');
-                undef_system_macro('UNICODE');
+              end;
+            include(current_settings.localswitches,cs_refcountedstrings);
+            if changeinit then
+              begin
+                init_settings.modeswitches:=current_settings.modeswitches;
+                include(init_settings.localswitches,cs_refcountedstrings);
               end;
           end;
 
@@ -541,6 +525,25 @@ implementation
         b : boolean;
         oldmodeswitches : tmodeswitches;
       begin
+        if s='DELPHIUNICODE' then
+          begin
+            if changeInit then
+              begin
+                if compilerwide_string_mode_explicit and
+                   not compilerwide_unicode_strings then
+                  begin
+                    Message1(option_illegal_para,'-MDELPHIUNICODE conflicts with -MANSISTRINGS');
+                    exit(true);
+                  end;
+                compilerwide_unicode_strings:=true;
+                compilerwide_string_mode_explicit:=true;
+              end
+            else if not compilerwide_unicode_strings then
+              begin
+                Message1(scan_e_illegal_directive,'MODE DELPHIUNICODE requires -MUNICODESTRINGS');
+                exit(true);
+              end;
+          end;
         oldmodeswitches:=current_settings.modeswitches;
 
         b:=true;
@@ -760,6 +763,26 @@ implementation
         for i:=m_class to high(tmodeswitch) do
           if s=modeswitchstr[i] then
             begin
+              if i in [m_default_ansistring,m_default_unicodestring] then
+                begin
+                  Result:=true;
+                  if not changeInit then
+                    Message1(scan_e_illegal_directive,'MODESWITCH '+s)
+                  else if not doinclude then
+                    Message1(option_illegal_para,'-M'+s+'-')
+                  else if compilerwide_string_mode_explicit and
+                          (compilerwide_unicode_strings<>(i=m_default_unicodestring)) then
+                    Message1(option_illegal_para,'-M'+s+' conflicts with the selected string mode')
+                  else
+                    begin
+                      compilerwide_unicode_strings:=i=m_default_unicodestring;
+                      compilerwide_string_mode_explicit:=true;
+                      if changeInit then
+                        current_settings.modeswitches:=init_settings.modeswitches;
+                      HandleModeSwitches(i,changeInit);
+                    end;
+                  break;
+                end;
               { Objective-C is currently only supported for Darwin targets }
               if doinclude and
                  (i in [m_objectivec1,m_objectivec2]) and
@@ -1655,12 +1678,18 @@ type
                       end;
                     case current_scanner.preproc_token of
                       _ID:
-                        { system.char? (char=widechar comes from the implicit
-                          uachar/uuchar unit -> override) }
-                        if (current_scanner.preproc_pattern='CHAR') and
+                        { Resolve the default Char/PChar from the invocation's
+                          text model, regardless of the System alias. }
+                        if ((current_scanner.preproc_pattern='CHAR') or
+                            (current_scanner.preproc_pattern='PCHAR')) and
                            (tmodule(tunitsym(srsym).module).globalsymtable=systemunit) then
                           begin
-                            if m_default_unicodestring in current_settings.modeswitches then
+                            if current_scanner.preproc_pattern='PCHAR' then
+                              if m_default_unicodestring in current_settings.modeswitches then
+                                searchsym_in_module(tunitsym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                              else
+                                searchsym_in_module(tunitsym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                            else if m_default_unicodestring in current_settings.modeswitches then
                               searchsym_in_module(tunitsym(srsym).module,'WIDECHAR',srsym,srsymtable)
                             else
                               searchsym_in_module(tunitsym(srsym).module,'ANSICHAR',srsym,srsymtable)
@@ -1744,7 +1773,7 @@ type
                end;
           end;
 
-        function preproc_substitutedtoken(const basesearchstr:string;eval:Boolean):texprvalue;
+        function preproc_substitutedtoken(const basesearchstr:ShortString;eval:Boolean):texprvalue;
         { Currently this parses identifiers as well as numbers.
           The result from this procedure can either be that the token
           itself is a value, or that it is a compile time variable/macro,
@@ -1752,13 +1781,13 @@ type
           recursively substituted).}
 
         var
-          hs: string;
+          hs: ShortString;
           mac: tmacro;
           macrocount,
           len: integer;
           foundmacro: boolean;
           searchstr: pshortstring;
-          searchstr2store: string;
+          searchstr2store: ShortString;
         begin
           if not eval then
             begin
@@ -1947,7 +1976,10 @@ type
                       begin
                         hs := current_scanner.preproc_pattern;
                         mac := tmacro(search_macro(hs));
-                        if assigned(mac) then
+                        { FPC_UNICODESTRINGS is always present in the initial
+                          macro table, but is undefined in ANSI mode. }
+                        if assigned(mac) and
+                           ((upper(hs)<>'FPC_UNICODESTRINGS') or mac.defined) then
                           begin
                             result:=texprvalue.create_bool(false);
                             mac.is_used:=true;
@@ -2526,6 +2558,11 @@ type
             Message(scan_e_emptymacroname);
             exit;
           end;
+        if upper(hs)='FPC_UNICODESTRINGS' then
+          begin
+            Message1(scan_e_illegal_directive,'DEFINE '+hs+' (selected by compiler string mode)');
+            exit;
+          end;
         mac:=tmacro(search_macro(hs));
         if not assigned(mac) or (mac.owner <> current_module.localmacrosymtable) then
           begin
@@ -2630,6 +2667,11 @@ type
       begin
         current_scanner.skipspace;
         hs:=current_scanner.readid;
+        if upper(hs)='FPC_UNICODESTRINGS' then
+          begin
+            Message1(scan_e_illegal_directive,'SETC '+hs+' (selected by compiler string mode)');
+            exit;
+          end;
         mac:=tmacro(search_macro(hs));
         if not assigned(mac) or
            (mac.owner <> current_module.localmacrosymtable) then
@@ -2698,6 +2740,11 @@ type
       begin
         current_scanner.skipspace;
         hs:=current_scanner.readid;
+        if upper(hs)='FPC_UNICODESTRINGS' then
+          begin
+            Message1(scan_e_illegal_directive,'UNDEF '+hs+' (selected by compiler string mode)');
+            exit;
+          end;
         mac:=tmacro(search_macro(hs));
         if not assigned(mac) or
            (mac.owner <> current_module.localmacrosymtable) then
@@ -2946,7 +2993,7 @@ type
                               TReplayStack
 *****************************************************************************}
     constructor treplaystack.Create(atoken:ttoken;aidtoken:ttoken;
-      const aorgpattern,apattern:string;const acstringpattern:ansistring;
+      const aorgpattern,apattern:ShortString;const acstringpattern:ansistring;
       apatternw:tcompilerwidestring;asettings:tsettings;
       atokenbuf:tdynamicarray;change_endian:boolean;const apending:tpendingstate;
       averbosity:longint;anext:treplaystack);
@@ -3862,6 +3909,10 @@ type
                         replaytokenbuf.read(current_settings,copy_size);
                         }
                         tokenreadsettings(current_settings,copy_size);
+                        { Generic token buffers carry the defining unit's
+                          settings. Their saved text defaults cannot override
+                          the compiler invocation's String/Char/PChar model. }
+                        HandleModeSwitches(m_default_ansistring,false);
                         recordpendingverbosityfullswitch(current_settings.verbosity);
                       end;
                     ST_LOADMESSAGES:
@@ -4717,7 +4768,7 @@ type
       end;
 
 
-    function tscannerfile.readcomment(include_special_char: boolean):string;
+    function tscannerfile.readcomment(include_special_char: boolean):ShortString;
       var
         i : longint;
       begin
@@ -4808,7 +4859,7 @@ type
       end;
 
 
-    function tscannerfile.readquotedstring:string;
+    function tscannerfile.readquotedstring:ShortString;
       var
         i : longint;
         msgwritten : boolean;

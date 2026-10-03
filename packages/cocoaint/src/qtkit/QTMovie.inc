@@ -80,9 +80,7 @@ const
   QTIncludeStillImageTypes = 1 shl 0;
   QTIncludeTranslatableTypes = 1 shl 1;
   QTIncludeAggressiveTypes = 1 shl 2;
-  {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
   QTIncludeDynamicTypes = 1 shl 3;
-  {$endif}
   QTIncludeCommonTypes = 0;
   QTIncludeAllTypes = $ffff;
 type
@@ -101,7 +99,6 @@ type
   QTMovieOperationPhase = clong;
 {$endif}
 
-{$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
 {$ifdef TYPES}
 const
   QTMovieLoadStateError = -1;
@@ -116,7 +113,6 @@ type
   QTMovieLoadStatePtr = ^QTMovieLoadState;
 {$endif}
 
-{$endif}
 {$ifdef CLASSES}
 
 type
@@ -173,9 +169,7 @@ type
     class function movieFileTypes (types: QTMovieFileTypeOptions): NSArray; message 'movieFileTypes:';
     class function movieUnfilteredFileTypes: NSArray; message 'movieUnfilteredFileTypes';
     class function movieUnfilteredPasteboardTypes: NSArray; message 'movieUnfilteredPasteboardTypes';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     class function movieTypesWithOptions (types: QTMovieFileTypeOptions): NSArray; message 'movieTypesWithOptions:';
-    {$endif}
     class function movie: id; message 'movie';
     class function movieWithFile_error (fileName: NSString; errorPtr: NSErrorPtr): id; message 'movieWithFile:error:';
     class function movieWithURL_error (url: NSURL; errorPtr: NSErrorPtr): id; message 'movieWithURL:error:';
@@ -198,12 +192,10 @@ type
     {$endif}
     function initWithAttributes_error (attributes: NSDictionary; errorPtr: NSErrorPtr): id; message 'initWithAttributes:error:';
     function movieWithTimeRange_error (range: QTTimeRange; errorPtr: NSErrorPtr): id; message 'movieWithTimeRange:error:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function initToWritableFile_error (filename: NSString; errorPtr: NSErrorPtr): id; message 'initToWritableFile:error:';
     function initToWritableData_error (data: NSMutableData; errorPtr: NSErrorPtr): id; message 'initToWritableData:error:';
     function initToWritableDataReference_error (dataReference: QTDataReference; errorPtr: NSErrorPtr): id; message 'initToWritableDataReference:error:';
     procedure invalidate; message 'invalidate';
-    {$endif}
   end;
 
 type
@@ -221,27 +213,21 @@ type
     function posterImage: NSImage; message 'posterImage';
     function currentFrameImage: NSImage; message 'currentFrameImage';
     function frameImageAtTime (time: QTTime): NSImage; message 'frameImageAtTime:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function frameImageAtTime_withAttributes_error (time: QTTime; attributes: NSDictionary; errorPtr: NSErrorPtr): pointer; message 'frameImageAtTime:withAttributes:error:';
-    {$endif}
   end;
 
 type
   QTMovie_Format = objccategory external (QTMovie)
     function movieFormatRepresentation: NSData; message 'movieFormatRepresentation';
     function writeToFile_withAttributes (fileName: NSString; attributes: NSDictionary): ObjCBOOL; message 'writeToFile:withAttributes:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function writeToFile_withAttributes_error (fileName: NSString; attributes: NSDictionary; errorPtr: NSErrorPtr): ObjCBOOL; message 'writeToFile:withAttributes:error:';
-    {$endif}
     function canUpdateMovieFile: ObjCBOOL; message 'canUpdateMovieFile';
     function updateMovieFile: ObjCBOOL; message 'updateMovieFile';
   end;
 
 type
   QTMovie_Time = objccategory external (QTMovie)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     procedure autoplay; message 'autoplay';
-    {$endif}
     procedure play; message 'play';
     procedure stop; message 'stop';
     function currentTime: QTTime; message 'currentTime';
@@ -283,15 +269,11 @@ type
     procedure deleteSegment (segment: QTTimeRange); message 'deleteSegment:';
     procedure scaleSegment_newDuration (segment: QTTimeRange; newDuration: QTTime); message 'scaleSegment:newDuration:';
     procedure addImage_forDuration_withAttributes (image: NSImage; duration: QTTime; attributes: NSDictionary); message 'addImage:forDuration:withAttributes:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function insertSegmentOfTrack_timeRange_atTime (track: QTTrack; range: QTTimeRange; time: QTTime): QTTrack; message 'insertSegmentOfTrack:timeRange:atTime:';
     function insertSegmentOfTrack_fromRange_scaledToRange (track: QTTrack; srcRange: QTTimeRange; dstRange: QTTimeRange): QTTrack; message 'insertSegmentOfTrack:fromRange:scaledToRange:';
     procedure removeTrack (track: QTTrack); message 'removeTrack:';
-    {$endif}
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_7)}
     function trackByInsertingSegmentOfTrack_timeRange_atTime (track: QTTrack; range: QTTimeRange; time: QTTime): QTTrack; message 'trackByInsertingSegmentOfTrack:timeRange:atTime:';
     function trackByInsertingSegmentOfTrack_fromRange_scaledToRange (track: QTTrack; srcRange: QTTimeRange; dstRange: QTTimeRange): QTTrack; message 'trackByInsertingSegmentOfTrack:fromRange:scaledToRange:';
-    {$endif}
   end;
 
 type
@@ -316,25 +298,20 @@ type
 
 type
   QTMovie_VisualSupport = objccategory external (QTMovie)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     procedure generateApertureModeDimensions; message 'generateApertureModeDimensions';
     procedure removeApertureModeDimensions; message 'removeApertureModeDimensions';
-    {$endif}
   end;
 
 type
   QTMovie_VisualContext = objccategory external (QTMovie)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     {$if  not defined(__LP64__)}
     procedure setVisualContext (visualContext: QTVisualContextRef); message 'setVisualContext:';
     function visualContext: QTVisualContextRef; message 'visualContext';
-    {$endif}
     {$endif}
   end;
 
 type
   QTMovie_Threading = objccategory external (QTMovie)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     class procedure enterQTKitOnThread; message 'enterQTKitOnThread';
     class procedure enterQTKitOnThreadDisablingThreadSafetyProtection; message 'enterQTKitOnThreadDisablingThreadSafetyProtection';
     class procedure exitQTKitOnThread; message 'exitQTKitOnThread';
@@ -342,12 +319,10 @@ type
     function detachFromCurrentThread: ObjCBOOL; message 'detachFromCurrentThread';
     procedure setIdling (state: ObjCBOOL); message 'setIdling:';
     function isIdling: ObjCBOOL; message 'isIdling';
-    {$endif}
   end;
 
 type
   QTMovie_Chapters = objccategory external (QTMovie)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function hasChapters: ObjCBOOL; message 'hasChapters';
     function chapterCount: NSInteger; message 'chapterCount';
     function chapters: NSArray; message 'chapters';
@@ -355,7 +330,6 @@ type
     function removeChapters: ObjCBOOL; message 'removeChapters';
     function startTimeOfChapter (chapterIndex: NSInteger): QTTime; message 'startTimeOfChapter:';
     function chapterIndexForTime (time: QTTime): NSInteger; message 'chapterIndexForTime:';
-    {$endif}
   end;
 
 type

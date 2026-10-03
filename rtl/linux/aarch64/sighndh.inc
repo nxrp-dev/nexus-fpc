@@ -57,7 +57,7 @@ type
     uc_link : PUContext;
     uc_stack : stack_t;
     uc_sigmask : sigset_t;
-    {$if sizeof(sigset_t) < 128 }
+    {$ifndef FPC_USE_LIBC}
     __padding : array[1..128 - sizeof(sigset_t)] of byte;
     {$endif}
     __pad : cULong;

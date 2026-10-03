@@ -95,7 +95,7 @@ type
 begin
 	specialize TestSums<single>('single');
 	specialize TestSums<double>('double');
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
 	specialize TestSums<extended>('extended');
 {$endif}
 	if anythingFailed then halt(1);

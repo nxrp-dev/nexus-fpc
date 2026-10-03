@@ -105,13 +105,13 @@ interface
         { these routines will write the filtered version of their argument
           according to the current decorator }
         procedure AsmWriteFiltered(const c:char);
-        procedure AsmWriteFiltered(const s:string);
+        procedure AsmWriteFiltered(const s:ShortString);
         procedure AsmWriteFiltered(const s:ansistring);
         procedure AsmWriteFiltered(p:pchar; len: longint);
 
         {# Write a string to the assembler file }
         Procedure AsmWrite(const c:char);
-        Procedure AsmWrite(const s:string);
+        Procedure AsmWrite(const s:ShortString);
         Procedure AsmWrite(const s:ansistring);
 
         {# Write a string to the assembler file }
@@ -119,7 +119,7 @@ interface
 
         {# Write a string to the assembler file followed by a new line }
         Procedure AsmWriteLn(const c:char);
-        Procedure AsmWriteLn(const s:string);
+        Procedure AsmWriteLn(const s:ShortString);
         Procedure AsmWriteLn(const s:ansistring);
 
         {# Write a new line to the assembler file }
@@ -413,7 +413,7 @@ Implementation
       end;
 
 
-    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(const s: string);
+    procedure TExternalAssemblerOutputFile.AsmWriteFiltered(const s: ShortString);
       begin
         MaybeAddLinePrefix;
         AsmWriteAnsiStringUnfiltered(decorator.LineFilter(s));
@@ -514,7 +514,7 @@ Implementation
       end;
 
 
-    Procedure TExternalAssemblerOutputFile.AsmWrite(const s:string);
+    Procedure TExternalAssemblerOutputFile.AsmWrite(const s:ShortString);
       begin
         if s='' then
           exit;
@@ -549,7 +549,7 @@ Implementation
       end;
 
 
-    Procedure TExternalAssemblerOutputFile.AsmWriteLn(const s:string);
+    Procedure TExternalAssemblerOutputFile.AsmWriteLn(const s:ShortString);
       begin
         AsmWrite(s);
         AsmLn;
@@ -1466,7 +1466,7 @@ Implementation
 
         function consumenumber(var p:pchar;out value:longint):boolean;
         var
-          hs : string;
+          hs : ShortString;
           len,
           code : integer;
         begin
@@ -1492,7 +1492,7 @@ Implementation
 
         function consumeoffset(var p:pchar;out relocsym:tobjsymbol;out value:longint):boolean;
         var
-          hs        : string;
+          hs        : ShortString;
           len,
           code      : integer;
           pstart    : pchar;

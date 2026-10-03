@@ -955,7 +955,7 @@ begin
   Result := True;
 end;
 
-{$IF (SizeOf(Integer) < SizeOf(SizeInt)) }
+{$IFDEF CPU64}
 class function TStrings.GetNextLine(const Value: string; var S: string; var P: Integer) : Boolean;
 var
   LP: SizeInt;
@@ -1694,7 +1694,7 @@ begin
     end;
 
   NL := GetLineBreakCharLBS;
-{$if sizeof(char)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
   BNL:=AEncoding.GetAnsiBytes(NL);
 {$else}
   BNL:=AEncoding.GetBytes(NL);
@@ -1705,7 +1705,7 @@ begin
     S:=Strings[I];
     if S<>'' then
       begin
-      {$if sizeof(char)=1}
+      {$IFNDEF FPC_UNICODESTRINGS}
       B:=AEncoding.GetAnsiBytes(S);
       {$else}
       B:=AEncoding.GetBytes(S);

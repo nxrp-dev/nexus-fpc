@@ -181,7 +181,7 @@ const defdynlinker='/lib/ld-linux-aarch64.so.1';
 
 
 
-procedure SetupDynlinker(out DynamicLinker:string;out libctype:TLibcType);
+procedure SetupDynlinker(out DynamicLinker:ShortString;out libctype:TLibcType);
 begin
   {
     Search order:

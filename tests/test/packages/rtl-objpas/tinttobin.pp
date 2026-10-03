@@ -64,7 +64,6 @@ begin
     IntToBinTest(testinteger, digits, teststring, $10000 + testinteger);
   end;
 
-{$IF DECLARED(longint)}
   randomize;
   for i := 1 to 1000 do
   begin
@@ -92,7 +91,6 @@ begin
     end;
     IntToBinTest(testinteger, digits, teststring, $10000 + 1000 + i);
   end;
-{$IFEND}
 
   halt(exitCode);
 end.

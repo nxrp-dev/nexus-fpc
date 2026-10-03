@@ -187,7 +187,7 @@ type
         cuid  : kernel_uid_t;
         cgid  : kernel_gid_t;
         mode  : kernel_mode_t;
-{$if sizeof(kernel_mode_t) < 4}
+{$ifdef CPU32}
         __pad1    : array[1..4-sizeof(mode_t)] of byte;
 {$endif}
         seq       : cushort;

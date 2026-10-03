@@ -71,7 +71,7 @@ type
   end;
 
 { this will read a line until #10 or #0 and also increase p }
-function GetMsgLine(var p:pchar):string;
+function GetMsgLine(var p:pchar):ShortString;
 
 
 implementation
@@ -387,7 +387,7 @@ begin
 end;
 
 
-function GetMsgLine(var p:pchar):string;
+function GetMsgLine(var p:pchar):ShortString;
 var
   i  : longint;
 begin

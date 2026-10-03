@@ -857,9 +857,9 @@ begin
 end;
 
 { on 32 bit systems, we should use the 64 bit time calls }
-{$if (sizeof(time_t)<=4)}
+{$ifndef CPU64}
     {$define USE_TIME64}
-{$endif (sizeof(clong)<=4)}
+{$endif not CPU64}
 
 Function utimensat(dfd: cint; path:PAnsiChar;const times:TTimespecArr;flags:cint):cint;
 var

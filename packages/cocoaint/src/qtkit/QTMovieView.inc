@@ -55,7 +55,6 @@ type
     function isControllerVisible: ObjCBOOL; message 'isControllerVisible';
     procedure setControllerVisible (controllerVisible: ObjCBOOL); message 'setControllerVisible:';
     procedure setShowsResizeIndicator (show: ObjCBOOL); message 'setShowsResizeIndicator:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function isBackButtonVisible: ObjCBOOL; message 'isBackButtonVisible';
     procedure setBackButtonVisible (state: ObjCBOOL); message 'setBackButtonVisible:';
     function isCustomButtonVisible: ObjCBOOL; message 'isCustomButtonVisible';
@@ -70,7 +69,6 @@ type
     procedure setVolumeButtonVisible (state: ObjCBOOL); message 'setVolumeButtonVisible:';
     function areZoomButtonsVisible: ObjCBOOL; message 'areZoomButtonsVisible';
     procedure setZoomButtonsVisible (state: ObjCBOOL); message 'setZoomButtonsVisible:';
-    {$endif}
     function movieBounds: NSRect; message 'movieBounds';
     function movieControllerBounds: NSRect; message 'movieControllerBounds';
     function controllerBarHeight: single; message 'controllerBarHeight';
@@ -95,10 +93,8 @@ type
     procedure addScaled (sender: id); message 'addScaled:';
     procedure replace (sender: id); message 'replace:';
     procedure trim (sender: id); message 'trim:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function delegate: id; message 'delegate';
     procedure setDelegate (delegate: id); message 'setDelegate:';
-    {$endif}
 
     { Adopted protocols }
     procedure encodeWithCoder (aCoder: NSCoder); message 'encodeWithCoder:';
@@ -108,10 +104,10 @@ type
 
 type
   QTMovieView_Delegate = objccategory external (NSObject)
-    {$if ((QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)) and ((MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4))}
+    {$if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)}
     function view_willDisplayImage (view: QTMovieView; image: CIImage): CIImage; message 'view:willDisplayImage:';
     {$endif}
-    {$if ((QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_6_3)) and ((MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6))}
+    {$if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6)}
     function menuForEventDelegate (event: NSEvent): NSMenu; message 'menuForEventDelegate:';
     {$endif}
   end;

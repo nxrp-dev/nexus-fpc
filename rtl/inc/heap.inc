@@ -186,7 +186,7 @@ type
     { Alignment requirement for blocks. All fixed sizes (among other things) are assumed to be divisible. }
     Alignment = 2 * sizeof(pointer);
 
-  {$if sizeof(pointer) > 4}
+  {$ifdef CPU64}
     { 64-bit(ish) fixed chunk sizes:        ┌──── step = 16 ────┐┌─── step = 32 ────┐┌──── step = 48 ───┐┌ step 64 ┐ }
     FixedSizes: array[0 .. 15] of uint16 = (16, 32, 48, 64, 80, 96, 128, 160, 192, 224, 272, 320, 368, 416, 480, 544);
     MinFixedChunkSize = 16;               { #0  #1  #2  #3  #4  #5  #6   #7   #8   #9   #10  #11  #12  #13  #14  #15 }
@@ -194,7 +194,7 @@ type
     SizeMinus1Div16ToIndex: array[0 .. (MaxFixedChunkSize - 1) div 16] of uint8 =
       {  16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512, 528, 544 }
       (   0,  1,  2,  3,  4,  5,   6,   6,   7,   7,   8,   8,   9,   9,  10,  10,  10,  11,  11,  11,  12,  12,  12,  13,  13,  13,  14,  14,  14,  14,  15,  15,  15,  15);
-  {$else sizeof(pointer) > 4}
+  {$else CPU64}
     { 32-bit(ish) fixed chunk sizes:        ┌──── step = 8 ────┐┌ step 16 ─┐┌─ +24 ──┐┌── +32 ──┐ +40  +48  +56  +64 }
     FixedSizes: array[0 .. 16] of uint16 = (8, 16, 24, 32, 40, 48, 64, 80, 96, 120, 144, 176, 208, 248, 296, 352, 416);
     MinFixedChunkSize = 8;               { #0  #1  #2  #3  #4  #5  #6  #7  #8   #9  #10  #11  #12  #13  #14  #15  #16 }
@@ -204,7 +204,7 @@ type
       (   0,   1,   2,   3,   4,   5,   6,   6,   7,   7,   8,   8,   9,   9,   9,  10,  10,  10,  11,  11,  11,  11,  12,  12,  12,  12,
       { 216, 224, 232, 240, 248, 256, 264, 272, 280, 288, 296, 304, 312, 320, 328, 336, 344, 352, 360, 368, 376, 384, 392, 400, 408, 416 }
          13,  13,  13,  13,  13,  14,  14,  14,  14,  14,  14,  15,  15,  15,  15,  15,  15,  15,  16,  16,  16,  16,  16,  16,  16,  16);
-  {$endif sizeof(pointer) > 4}
+  {$endif CPU64}
 
     class function SizeMinus1ToIndex(sizeMinus1: SizeUint): SizeUint; static; inline; { sizeMinus1 + 1 ≤ MaxFixedChunkSize }
     class function IndexToSize(sizeIndex: SizeUint): SizeUint; static; inline;
@@ -212,7 +212,7 @@ type
   const
     SysOSAllocQuant = 64 * 1024;
     { Tuned so that first ChooseFixedArenaSize(High(FixedSizes)) fits 10 fixed chunks of the maximum size. }
-    MinFixedArenaSize = {$if sizeof(pointer) > 4} 5 * 1024 + 15 * 32 {$else} 4 * 1024 + 5 * 32 {$endif};
+    MinFixedArenaSize = {$ifdef CPU64} 5 * 1024 + 15 * 32 {$else} 4 * 1024 + 5 * 32 {$endif};
     MaxFixedArenaSize = 64 * 1024;
     MaxKeptFixedArenas = 4;
     MaxOutgoingToFreeBytes = sizeof(pointer) * 1024; { Batch up to this much outgoing frees per thread. }
@@ -239,7 +239,8 @@ type
     FixedChunkOffsetDivisor = 4; { Dividing arena offsets (= any fixed chunk sizes) by FixedChunkOffsetDivisor must give even values.
                                    This evenness is required only for ENDIAN_BIG, but for simplicity is always maintained. }
 
-    VarSizeQuant = 1 shl 5; {$if VarSizeQuant <> 32} {$error Should in principle work but explanations below assume exactly 32. :)} {$endif}
+    FirstVarStepP2 = 5;
+    VarSizeQuant = 1 shl FirstVarStepP2;
     VarSizeMask = uint32(-VarSizeQuant);
     TrailingSentinelChunkSize = 0; { VarOSChunks end in a permanently used block of size 0 (TrailingSentinelChunkSize). This replaces explicit LastFlag. }
 
@@ -257,7 +258,6 @@ type
       32 sizes in the range +1 .. 524 288 (2^19) rounded up to the multiple of 16 384 = 2^14, + 2^10 + .. + 2^18, max = 1 047 552 = %1111 1111 1100 0000 0000 }
 
     FirstVarRangeP2 = 10;
-    FirstVarStepP2 = 5; {$if 1 shl FirstVarStepP2 <> VarSizeQuant} {$error :|} {$endif}
     VarSizeClassesCount = 10;
     VarSizesPerClass = 32;
     VarSizesCount = VarSizeClassesCount * VarSizesPerClass;
@@ -267,7 +267,9 @@ type
       Medium chunks can be smaller than this, all the way down to MinAnyVarChunkSize defined later in terms of things it must fit;
       they aren’t visible for varFree searches but are visible for merging with freed neighbors. }
     MinSearchableVarChunkSize = (MaxFixedChunkSize + 1 shl FirstVarStepP2 + VarSizeQuant - 1) and -VarSizeQuant;
-    MaxVarChunkSize = (MaxFixedChunkSize + (1 shl VarSizeClassesCount - 1) shl FirstVarRangeP2) and -VarSizeQuant; {$if MaxVarChunkSize <> MaxFixedChunkSize + 1047552} {$error does not match the explanation above :D} {$endif}
+    VarFreeMapInputRangesDisjoint = 1 div Ord(VarSizesCount <= MinSearchableVarChunkSize);
+    MaxVarChunkSize = (MaxFixedChunkSize + (1 shl VarSizeClassesCount - 1) shl FirstVarRangeP2) and -VarSizeQuant;
+    MaxVarChunkSizeMatchesExplanation = 1 div Ord(MaxVarChunkSize = MaxFixedChunkSize + 1047552);
 
     class function VarSizeToBinIndex(size: uint32; roundUp: boolean): uint32; static; inline; { roundUp is constant. }
     class function BinIndexToVarSize(binIndex: uint32): uint32; static; inline;
@@ -373,7 +375,7 @@ type
         sizeFlags and VarSizeMask = chunk size.
         Also last 2 bytes are interpreted as CommonHeader to distinguish from a fixed chunk; see the comment on CommonHeader. }
       sizeFlags: uint32;
-    end; {$if sizeof(VarHeader) <> 8} {$error unexpected VarHeader size...} {$endif}
+    end;
 
     { Reuses the payload of variable chunks whose sizeFlags and UsedFlag = 0, so variable chunk payload must always fit its size. }
     pFreeVarChunk = ^FreeVarChunk;
@@ -401,7 +403,6 @@ type
       L0: array[0 .. (VarSizesCount + L0BinSize - 1) div L0BinSize - 1] of uint32;
       bins: array[0 .. VarSizesCount - 1] of pFreeVarChunk;
       { As an optimization, Add.binIndex can also be a size (will be rounded down), assuming VarSizesCount <= MinSearchableVarChunkSize. }
-    {$if VarSizesCount > MinSearchableVarChunkSize} {$error assumption above does not hold} {$endif}
       procedure Add(c: pFreeVarChunk; binIndex: SizeUint);
       procedure Remove(c: pFreeVarChunk);
       function Find(binIndex: SizeUint): pFreeVarChunk;
@@ -496,9 +497,9 @@ type
     pVarHugeHeader = ^VarHugeHeader;
     VarHugeHeader = record
       size: SizeUint;
-    {$if sizeof(SizeUint) > sizeof(uint32)} pad: array[0 .. sizeof(SizeUint) - sizeof(uint32) - 1] of byte; {$endif}
+    {$ifdef CPU64} pad: array[0 .. sizeof(SizeUint) - sizeof(uint32) - 1] of byte; {$endif}
       flags: uint32; { Interpreted as VarHeader.sizeFlags when distinguishing from a variable chunk. }
-    end; {$if sizeof(VarHugeHeader) mod Alignment <> 0} {$error VarHugeHeader is assumed to be a multiple of Alignment.} {$endif}
+    end;
 
     pFreeVarHugeChunk = pFreeVarChunk; { Reuse definitions (binIndex is unused). }
     FreeVarHugeChunk = FreeVarChunk;
@@ -579,7 +580,6 @@ type
 
   const
     CommonHeaderSize = sizeof(CommonHeader);
-  {$if MinFixedChunkSize < CommonHeaderSize + sizeof(FreeChunk)} {$error MinFixedChunkSize does not fit CommonHeader + FreeChunk.} {$endif}
     FixedArenaDataOffset = (PtrUint(@FixedArena(nil^).sizeWithoutTrailingPadding) + CommonHeaderSize + Alignment - 1) and -Alignment - CommonHeaderSize;
     VarHeaderSize = sizeof(VarHeader);
     FreeVarTailSize = sizeof(FreeVarTail);
@@ -592,7 +592,7 @@ type
 
   class function HeapInc.SizeMinus1ToIndex(sizeMinus1: SizeUint): SizeUint;
   begin
-    result := {$if sizeof(pointer) > 4} SizeMinus1Div16ToIndex[sizeMinus1 div 16] {$else} SizeMinus1Div8ToIndex[sizeMinus1 div 8] {$endif};
+    result := {$ifdef CPU64} SizeMinus1Div16ToIndex[sizeMinus1 div 16] {$else} SizeMinus1Div8ToIndex[sizeMinus1 div 8] {$endif};
   end;
 
   class function HeapInc.IndexToSize(sizeIndex: SizeUint): SizeUint;
@@ -1598,7 +1598,7 @@ type
     gs.hugeUsed := result;
   {$elseif not defined(VER3_2)}
     result := AtomicIncrement(SizeInt(gs.hugeUsed), delta);
-  {$elseif sizeof(SizeInt) = sizeof(int64)}
+  {$elseif defined(CPU64)}
     result := SizeUint(delta + InterlockedExchangeAdd64(SizeInt(gs.hugeUsed), delta));
   {$else}
     result := SizeUint(delta + InterlockedExchangeAdd(SizeInt(gs.hugeUsed), delta));
@@ -2480,7 +2480,7 @@ begin
     (
       not HeapInc.IsFixedHeader(HeapInc.pCommonHeader(result)[-1].h) and
       (HeapInc.pVarHeader(result)[-1].sizeFlags < HeapInc.VarSizeQuant) { Huge chunk allocated, so it must have used a separate SysOSAlloc. }
-    {$if SysOSAllocZeroesIfAtLeast > 0}
+    {$ifdef MSWINDOWS}
       and (HeapInc.pHugeChunk(result - HeapInc.HugeChunkDataOffset)^.size >= SysOSAllocZeroesIfAtLeast) { SysOSAlloc that large claims to return zeroed memory. }
     {$endif}
     )

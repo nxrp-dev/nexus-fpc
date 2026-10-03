@@ -81,7 +81,7 @@ Type
     property TimeStampUTC: TDateTime read GetTimeStampUTC;
   end;
 
-{$IFDEF FPC_UNICODE_RTL}
+{$IFDEF FPC_UNICODESTRINGS}
   TSearchRec = TUnicodeSearchRec;
 {$ELSE}
   TSearchRec = TRawbyteSearchRec;
@@ -119,7 +119,7 @@ Type
     property TimeStamp: TDateTime read GetTimeStamp;
   end;
 
-{$IFDEF FPC_UNICODE_RTL}
+{$IFDEF FPC_UNICODESTRINGS}
   TSymLinkRec = TUnicodeSymLinkRec;
 {$ELSE}
   TSymLinkRec = TRawbyteSymLinkRec;

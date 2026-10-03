@@ -175,12 +175,13 @@ begin
   Setlength(F,fmtlen);
   if fmtlen > 0 then
     Move(fmt,F[1],fmtlen*sizeof(Unicodechar));
-  S:=UnicodeFormat (F,Args);
+  S:=UnicodeFormat(F,Args,FormatSettings);
   If Cardinal(Length(S))<Buflen then
     Result:=Length(S)
   else
     Result:=Buflen;
-  Move(S[1],Buffer,Result*SizeOf(UnicodeChar));
+  if Result>0 then
+    Move(S[1],Buffer,Result*SizeOf(UnicodeChar));
 end;
 
 Function UnicodeFormatBuf (Var Buffer; BufLen : Cardinal;
@@ -194,7 +195,7 @@ end;
 
 Procedure UnicodeFmtStr(Var Res: UnicodeString; Const Fmt : UnicodeString; Const args: Array of const; Const FormatSettings: TFormatSettings);
 begin
-  Res:=UnicodeFormat(fmt,Args);
+  Res:=UnicodeFormat(Fmt,Args,FormatSettings);
 end;
 
 
@@ -217,7 +218,8 @@ begin
   Len := length(Source);
   if Len > MaxLen then
     Len := MaxLen;
-  Move(Source[1], Dest^, Len*sizeof(WideChar));
+  if Len>0 then
+    Move(Source[1], Dest^, Len*sizeof(WideChar));
   Dest[Len] := #0;
   StrPLCopy := Dest;
 end;

@@ -99,7 +99,7 @@ begin
   d := Double.Create(4.2);
   if not SameValue(d, Double(4.2), 1e-100) then
     Halt(18);
-{$if sizeof(Extended) <> sizeof(Double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
   e := Extended.Create(4.2);
   if not SameValue(e, Extended(4.2), 1e-100) then
     Halt(19);

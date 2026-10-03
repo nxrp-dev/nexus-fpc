@@ -2587,7 +2587,7 @@ begin
     begin
       findlen := length(mnts[i]);
       if (findlen > 0) and (findlen <= plen) then // protect against buffer over-read
-{$if SizeOf(Char)=2}
+{$IFDEF FPC_UNICODESTRINGS}
         if StrLIComp(p,@(mnts[i][1]),findlen)=0 then
           result:=i;
 {$else}
@@ -3821,7 +3821,7 @@ begin
   lInfo:=Default(TTimeZoneInformation);
   GetTimeZoneInformation(lInfo);
   Name:=StrPas(@lInfo.StandardName);
-  {$IF SIZEOF(CHAR)=1}
+  {$IFNDEF FPC_UNICODESTRINGS}
   Result:=UTF8Encode(Name);
   {$ELSE}
   Result:=Name;

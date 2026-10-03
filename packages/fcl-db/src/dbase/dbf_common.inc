@@ -216,9 +216,6 @@
 {$ifdef FPC}
 
   {$mode delphi}
-{$ifndef unicodertl}
-  {$h+}
-{$ENDIF}
 
 {$ifndef CPUI386}
   {$undef USE_ASSEMBLER_486_UP}

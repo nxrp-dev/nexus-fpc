@@ -25,7 +25,7 @@ interface
 {$S-}
 {$Q-}
 
-function GetLineInfo(addr:ptruint;var func,source:string;var line:longint) : boolean;
+function GetLineInfo(addr:ptruint;var func,source:ShortString;var line:longint) : boolean;
 
 implementation
 
@@ -37,13 +37,13 @@ uses
   ctypes,baseunix,unix;
 {$ENDIF FPC_DOTTEDUNITS}
 
-function GetLineInfo(addr:ptruint;var func,source:string;var line:longint) : boolean;
+function GetLineInfo(addr:ptruint;var func,source:ShortString;var line:longint) : boolean;
   var
     mypid: pid_t;
     res,
     err: cint;
     command,
-    pidstr: string;
+    pidstr: ShortString;
     commfile,
     resfile: text;
   begin
@@ -142,7 +142,7 @@ function GetLineInfo(addr:ptruint;var func,source:string;var line:longint) : boo
 function GdbBackTraceStr(addr:Pointer):shortstring;
 var
   func,
-  source : string;
+  source : ShortString;
   hs     : string[32];
   line   : longint;
   Store  : TBackTraceStrFunc;

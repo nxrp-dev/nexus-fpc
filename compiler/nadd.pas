@@ -158,6 +158,7 @@ implementation
       ppu;
 
 const
+    BestRealRecMatchesBestReal = 1 div Ord(SizeOf(bestrealrec) = SizeOf(bestreal));
     swap_relation: array [ltn..unequaln] of Tnodetype=(gtn, gten, ltn, lten, equaln, unequaln);
 
 {*****************************************************************************
@@ -1349,7 +1350,6 @@ const
               end;
           end;
 
-{$if sizeof(bestrealrec) = sizeof(bestreal)}
         { replace .../const by a multiplication, but only if fastmath is enabled or
           the division is done by a power of 2, do not mess with special floating point values like Inf etc.
 
@@ -1396,8 +1396,6 @@ const
             else
               ;
           end;
-{$endif sizeof(bestrealrec) = sizeof(bestreal)}
-
         { first, we handle widestrings, so we can check later for }
         { stringconstn only                                       }
 

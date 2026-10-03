@@ -8,20 +8,26 @@ or pruning targets so FPC's generated package/utility registration and Makefiles
 refreshed from the current source tree before bootstrapping.
 RTL generation includes Makefile.rtl; Makefile.pkg generation uses -s.
 Existing target scopes are retained, excluding targets removed from the generator.
+By default only the native bootstrap is built. -FullMatrix additionally builds
+the retained cross-target RTL matrix and checks heaptrc with -CfNONE.
 .EXAMPLE
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -RegenerateMakefiles
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -FullMatrix -NdkRoot C:\android\ndk\25.2.9519653
 #>
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
     [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64',
     [string]$LogRoot,
+    [string]$NdkRoot,
     [switch]$RegenerateMakefiles,
+    [switch]$FullMatrix,
     [switch]$CheckOnly
 )
 
 $ErrorActionPreference = 'Stop'
-if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..\..\tools\nexus-fpc' }
+if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 if (-not $LogRoot) { $LogRoot = Join-Path $PSScriptRoot '..\output\NexusFPCBootstrap' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $BootstrapBin = (Resolve-Path -LiteralPath $BootstrapBin).Path
@@ -45,9 +51,30 @@ $makeVersion = & $make --version
 if ($LASTEXITCODE -ne 0 -or ($makeVersion -join "`n") -notmatch '^GNU Make') {
     throw "Not GNU make: $make"
 }
+if ($FullMatrix) {
+    foreach ($tool in @('clang.exe', 'ld.lld.exe')) {
+        if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
+            throw "Full matrix requires $tool on PATH."
+        }
+    }
+    if (-not $NdkRoot) {
+        foreach ($candidate in @($env:ANDROID_NDK_HOME, $env:ANDROID_NDK_ROOT)) {
+            if ($candidate -and (Test-Path -LiteralPath $candidate)) { $NdkRoot = $candidate; break }
+        }
+    }
+    if (-not $NdkRoot -and (Test-Path -LiteralPath 'C:\android\ndk')) {
+        $installedNdk = @(Get-ChildItem -LiteralPath 'C:\android\ndk' -Directory)
+        if ($installedNdk.Count -eq 1) { $NdkRoot = $installedNdk[0].FullName }
+    }
+    if (-not $NdkRoot) { throw 'Full matrix requires -NdkRoot, ANDROID_NDK_HOME, ANDROID_NDK_ROOT, or one NDK under C:\android\ndk.' }
+    $NdkRoot = (Resolve-Path -LiteralPath $NdkRoot).Path
+    $ndkClang = Join-Path $NdkRoot 'toolchains\llvm\prebuilt\windows-x86_64\bin\clang.exe'
+    if (-not (Test-Path -LiteralPath $ndkClang)) { throw "Android NDK Clang is missing: $ndkClang" }
+}
 Write-Host "Source: $SourceRoot"
 Write-Host "Bootstrap: $compiler"
 Write-Host "Make: $make"
+Write-Host "Mode: $(if ($FullMatrix) { 'full RTL matrix' } else { 'native bootstrap only' })"
 if ($CheckOnly) { Write-Host 'Preflight passed. No files changed.'; return }
 
 $runRoot = Join-Path ([IO.Path]::GetFullPath($LogRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
@@ -195,6 +222,120 @@ function Update-BootstrapMakefiles {
     Write-Host "Regenerated $($items.Count) makefiles using their current sources."
 }
 
+function Assert-FreshRTLUnit([string]$Target, [string]$Unit, [datetime]$Since) {
+    $path = Join-Path $SourceRoot "rtl\units\$Target\$Unit.ppu"
+    $artifact = Get-Item -LiteralPath $path -ErrorAction Stop
+    if ($artifact.LastWriteTime -lt $Since) { throw "RTL build did not refresh $path" }
+}
+
+function Invoke-FullMatrix([datetime]$NativeStarted) {
+    $targets = @(
+        'i386-linux', 'i386-win32', 'x86_64-linux', 'x86_64-darwin',
+        'x86_64-win64', 'x86_64-iphonesim', 'x86_64-android',
+        'aarch64-linux', 'aarch64-darwin', 'aarch64-win64',
+        'aarch64-iphonesim', 'aarch64-android', 'aarch64-ios'
+    )
+    $declaredTargets = @(Get-GeneratedTargets (Join-Path $SourceRoot 'rtl\Makefile'))
+    $missing = @($declaredTargets | Where-Object { $_ -notin $targets })
+    $removed = @($targets | Where-Object { $_ -notin $declaredTargets })
+    if ($missing.Count -or $removed.Count) {
+        throw "Full-matrix target list differs from rtl/Makefile. Uncovered: $($missing -join ', '); no longer declared: $($removed -join ', ')."
+    }
+    $matrixStarted = Get-Date
+    $powershell = Join-Path $PSHOME 'powershell.exe'
+    $linuxScript = Join-Path $PSScriptRoot 'Invoke-NexusFPCLinuxCrossBuild.ps1'
+    $androidScript = Join-Path $PSScriptRoot 'Invoke-NexusFPCAndroidCrossBuild.ps1'
+    foreach ($script in @($powershell, $linuxScript, $androidScript)) {
+        if (-not (Test-Path -LiteralPath $script)) { throw "Full-matrix input missing: $script" }
+    }
+
+    Invoke-BootstrapStep 'matrix-linux' $SourceRoot $powershell @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $linuxScript,
+        '-SourceRoot', $SourceRoot, '-MakeBin', $BootstrapBin,
+        '-LogRoot', (Join-Path $runRoot 'linux'), '-BuildRTL'
+    )
+    Invoke-BootstrapStep 'matrix-android' $SourceRoot $powershell @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $androidScript,
+        '-SourceRoot', $SourceRoot, '-MakeBin', $BootstrapBin,
+        '-NdkRoot', $NdkRoot, '-LogRoot', (Join-Path $runRoot 'android')
+    )
+
+    # These seven targets are retained by rtl/Makefile but not built by the
+    # Linux or Android helpers. Keep their Clang target and empty binutils
+    # prefix explicit: otherwise Make can look for a prefixed clang.exe.
+    $remaining = @(
+        @('i386',   'win32',     '386', 'i686-w64-windows-gnu',     '-Aas-clang -XLL'),
+        @('x86_64', 'darwin',    'x64', 'x86_64-apple-darwin',       '-n -XLL'),
+        @('x86_64', 'iphonesim', 'x64', 'x86_64-apple-ios-simulator','-n -XLL'),
+        @('aarch64', 'darwin',   'a64', 'aarch64-apple-darwin',      '-n -XLL'),
+        @('aarch64', 'iphonesim','a64', 'aarch64-apple-ios-simulator','-n -XLL'),
+        @('aarch64', 'ios',      'a64', 'aarch64-apple-ios',         '-n -XLL'),
+        @('aarch64', 'win64',    'a64', 'aarch64-windows-gnu',       '-n -Aas-clang -XLL')
+    )
+    foreach ($target in $remaining) {
+        $cpu, $os, $suffix, $triple, $options = $target
+        $targetName = "$cpu-$os"
+        # Makefile.fpc maps the iOS and simulator targets to rtl/darwin.
+        if ($os -in @('iphonesim', 'ios')) { $rtlSubdirectory = 'darwin' }
+        else { $rtlSubdirectory = $os }
+        $crossCompiler = Join-Path $SourceRoot "compiler\ppcross$suffix.exe"
+        if (-not (Test-Path -LiteralPath $crossCompiler) -or
+            (& $crossCompiler "-T$os" -iTP) -ne $cpu -or $LASTEXITCODE -ne 0 -or
+            (& $crossCompiler "-T$os" -iTO) -ne $os -or $LASTEXITCODE -ne 0) {
+            throw "$crossCompiler did not report $targetName."
+        }
+        $rtlArguments = @(
+            "FPC=$($crossCompiler -replace '\\', '/')", "CPU_TARGET=$cpu", "OS_TARGET=$os",
+            'RELEASE=1', 'BINUTILSPREFIX=', 'ASPROG=clang',
+            "ASTARGET=--target=$triple -c -x assembler", "OPT=$options"
+        )
+        Invoke-BootstrapStep "matrix-$targetName-clean" $SourceRoot $make (
+            @('-s', '-C', (Join-Path $SourceRoot "rtl\$rtlSubdirectory"), 'clean') + $rtlArguments
+        )
+        Invoke-BootstrapStep "matrix-$targetName-rtl" $SourceRoot $make (
+            @('-s', '-C', (Join-Path $SourceRoot 'rtl'), 'all') + $rtlArguments
+        )
+    }
+
+    # Check both representative RTL units, including freshness, so old PPUs
+    # left by another run cannot make an incomplete matrix look successful.
+    foreach ($target in $targets) {
+        $since = if ($target -eq 'x86_64-win64') { $NativeStarted } else { $matrixStarted }
+        foreach ($unit in @('system', 'heaptrc')) { Assert-FreshRTLUnit $target $unit $since }
+    }
+
+    # The native package build covers Extended=Double. Compile FmtBCD on Linux
+    # as well, where its distinct Extended conversion operators must exist.
+    $nativeFmtBCD = Get-Item -LiteralPath (Join-Path $SourceRoot 'packages\rtl-objpas\units\x86_64-win64\fmtbcd.ppu') -ErrorAction Stop
+    if ($nativeFmtBCD.LastWriteTime -lt $NativeStarted) { throw "Native bootstrap did not refresh $($nativeFmtBCD.FullName)" }
+    $fmtbcdDir = Join-Path $runRoot 'fmtbcd-x86_64-linux'
+    New-Item -ItemType Directory -Path $fmtbcdDir | Out-Null
+    Invoke-BootstrapStep 'matrix-fmtbcd-x86_64-linux' $SourceRoot "$SourceRoot\compiler\ppcrossx64.exe" @(
+        '-n', '-Tlinux', '-Aas-clang', '-XLL',
+        "-Fu$SourceRoot\rtl\units\x86_64-linux",
+        "-Fu$SourceRoot\packages\rtl-objpas\src\inc",
+        "-Fu$SourceRoot\packages\rtl-objpas\src\x86_64",
+        "-Fi$SourceRoot\packages\rtl-objpas\src\inc",
+        "-Fi$SourceRoot\packages\rtl-objpas\src\x86_64",
+        "-FU$fmtbcdDir", "-FE$fmtbcdDir",
+        "$SourceRoot\packages\rtl-objpas\src\inc\fmtbcd.pp"
+    )
+    if (-not (Test-Path -LiteralPath (Join-Path $fmtbcdDir 'fmtbcd.ppu'))) {
+        throw 'Linux FmtBCD check did not produce fmtbcd.ppu.'
+    }
+
+    $fpuNoneDir = Join-Path $runRoot 'heaptrc-fpunone'
+    New-Item -ItemType Directory -Path $fpuNoneDir | Out-Null
+    Invoke-BootstrapStep 'matrix-heaptrc-fpunone' $SourceRoot "$SourceRoot\compiler\ppcx64.exe" @(
+        '-n', '-CfNONE', "-Fu$SourceRoot\rtl\units\x86_64-win64",
+        "-FU$fpuNoneDir", "-FE$fpuNoneDir", "-Fi$SourceRoot\rtl\inc",
+        "$SourceRoot\rtl\inc\heaptrc.pp"
+    )
+    $fpuNonePpu = Join-Path $fpuNoneDir 'heaptrc.ppu'
+    if (-not (Test-Path -LiteralPath $fpuNonePpu)) { throw "-CfNONE did not produce $fpuNonePpu" }
+    Write-Host "Full matrix passed: $($targets.Count) retained RTL targets and isolated -CfNONE heaptrc."
+}
+
 try {
     # An exclusive file handle prevents two invocations of this helper from
     # cleaning/building the same source tree simultaneously.
@@ -237,6 +378,7 @@ try {
     $warnings = @([IO.File]::ReadLines("$runRoot\bootstrap.log") | Where-Object { $_ -match '(?i)warning:' })
     $warnings | Set-Content -LiteralPath "$runRoot\warnings.txt" -Encoding UTF8
     Write-Host "Bootstrap passed. Compiler and build stamps were refreshed. Warning lines: $($warnings.Count)."
+    if ($FullMatrix) { Invoke-FullMatrix $started }
     Write-Host "Logs: $runRoot"
 } finally {
     $env:PATH = $oldPath

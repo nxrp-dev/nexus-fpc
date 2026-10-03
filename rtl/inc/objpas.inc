@@ -834,7 +834,7 @@ end;
           ClassName := PVmt(Self)^.vClassName^;
         end;
 
-      {$if SIZEOF(CHAR)=2}
+      {$IFDEF FPC_UNICODESTRINGS}
       class function TObject.ClassNameIs(const name : AnsiString) : boolean;
       var
           SS : ShortString;
@@ -856,7 +856,7 @@ end;
           SS : ShortString;
 
         begin
-           {$if SIZEOF(CHAR)=2}
+           {$IFDEF FPC_UNICODESTRINGS}
            SS:=UTF8Encode(Name);
            {$ELSE}
            SS:=Name;

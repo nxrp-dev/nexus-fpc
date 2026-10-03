@@ -86,7 +86,7 @@ type
 		writeln;
 	end;
 
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
 	function IsGoodExtended(const x: extended): boolean;
 	begin
 		result := (TExtended80Rec(x).Exp = 0) = (TExtended80Rec(x).Frac shr 63 = 0);
@@ -121,13 +121,13 @@ type
 begin
 	SetExceptionMask([Low(TFPUException) .. High(TFPUException)]);
 
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
 	TryTrickLdExpIntoReturningMalformedExtended;
 {$endif}
 
 	specialize TestFor<single>.Perform('single', 1.4012984643e-45, 1.1754942107e-38, MinSingle, MaxSingle);
 	specialize TestFor<double>.Perform('double', 4.9406564584124654e-324, 2.2250738585072009e-308, MinDouble, MaxDouble);
-{$if sizeof(extended) <> sizeof(double)}
+{$ifdef FPC_HAS_TYPE_EXTENDED}
 	specialize TestFor<extended>.Perform('extended',
 		3.64519953188247460253e-4951, 3.36210314311209350590e-4932, {MinExtended} 3.36210314311209350626e-4932, {MaxExtended} 1.18973149535723176502e+4932);
 {$endif}

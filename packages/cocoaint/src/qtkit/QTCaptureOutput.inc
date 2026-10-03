@@ -6,7 +6,7 @@ type
   QTCaptureOutputPtr = ^QTCaptureOutput;
 {$endif}
 
-{$if ((QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)) and ((MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4))}
+{$if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)}
 {$ifdef CLASSES}
 
 type

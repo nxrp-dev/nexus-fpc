@@ -415,6 +415,11 @@ Const
        init_settings,
        current_settings   : tsettings;
 
+       { The default text type belongs to the compiler invocation, not to
+         an individual module or its language mode. }
+       compilerwide_unicode_strings : boolean;
+       compilerwide_string_mode_explicit : boolean;
+
        pendingstate       : tpendingstate;
      { Memory sizes }
        heapsize,
@@ -488,8 +493,8 @@ Const
         globalswitches : [cs_check_unit_name,cs_link_static];
         targetswitches : [];
         moduleswitches : [cs_extsyntax,cs_implicit_exceptions];
-        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_imported_data];
-        modeswitches : fpcmodeswitches;
+        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_imported_data,cs_refcountedstrings];
+        modeswitches : fpcmodeswitches + [m_default_ansistring];
         optimizerswitches : [];
         genwpoptimizerswitches : [];
         dowpoptimizerswitches : [];
@@ -583,8 +588,8 @@ Const
     { discern +0.0 and -0.0 }
     function get_real_sign(r: bestreal): longint;
 
-    function IsPosZero(value: bestreal): boolean; {$if sizeof(bestreal)=sizeof(double)}{$ifdef USEINLINE}inline;{$endif USEINLINE}{$endif}
-    function IsNegZero(value: bestreal): boolean; {$if sizeof(bestreal)=sizeof(double)}{$ifdef USEINLINE}inline;{$endif USEINLINE}{$endif}
+    function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
+    function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
 
     procedure InitGlobals;
     procedure DoneGlobals;
@@ -1064,7 +1069,10 @@ implementation
         result:=d;
       end;
 
-{$if sizeof(bestreal)=sizeof(double)}
+{$if defined(aarch64) or not defined(FPC_HAS_TYPE_EXTENDED)}
+    const
+      BestRealZeroLayoutCheck = 1 div Ord(SizeOf(bestreal) = SizeOf(double));
+
     function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
         Result:=(QWord(TCompDoubleRec(value).bytes)=0);
@@ -1074,8 +1082,11 @@ implementation
       begin
         Result:=(QWord(TCompDoubleRec(value).bytes)=QWord(MathNegZero.bytes));
       end;
-{$else sizeof(bestreal)=sizeof(double)}
-    function IsPosZero(value: bestreal): boolean;
+{$else}
+    const
+      BestRealZeroLayoutCheck = 1 div Ord(SizeOf(bestreal) <> SizeOf(double));
+
+    function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       var
         X, Count: Integer;
         ByteArray: PByte;
@@ -1088,7 +1099,7 @@ implementation
         Result:=(CompareByte(ByteArray^,MathPosZero.bytes,Count)=0);
       end;
 
-    function IsNegZero(value: bestreal): boolean;
+    function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       var
         X, Count: Integer;
         ByteArray: PByte;
@@ -1101,7 +1112,7 @@ implementation
           for the most significant (sign) bit }
         Result:=(CompareByte(ByteArray^,MathNegZero.bytes,Count)=0);
       end;
-{$ifend sizeof(bestreal)=sizeof(double)}
+{$endif}
 
     { '('D1:'00000000-'D2:'0000-'D3:'0000-'D4:'0000-000000000000)' }
     function string2guid(const s: string; var GUID: TGUID): boolean;
@@ -1625,6 +1636,8 @@ implementation
         apptype:=app_cui;
 
         { Init values }
+        compilerwide_unicode_strings:=false;
+        compilerwide_string_mode_explicit:=false;
         init_settings:=default_settings;
         if init_settings.optimizecputype=cpu_none then
           init_settings.optimizecputype:=init_settings.cputype;

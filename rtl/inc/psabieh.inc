@@ -929,11 +929,6 @@ function _FPC_psabieh_personality_v0(version: longint; actions: FPC_Unwind_Actio
             DoUnHandledException;
           end;
       end;
-    { For targets with pointers smaller than the word size, we must extend the
-       pointer, and this extension is target dependent.  }
-    {$if sizeof(pointer)<>sizeof(SizeInt)}
-      {$error Add support for extending pointer values}
-    {$endif}
 {$ifdef excdebug}
     writeln('returning exception $',hexstr(libunwind_exception),' with switch value ',handler_switch_value);
 {$endif}

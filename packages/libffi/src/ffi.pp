@@ -102,6 +102,9 @@ type
 {$if not defined(CPUMIPS) and not defined(CPUX86_64) and not defined(CPUPOWERPC) and not defined(CPUSPARCGEN)}
     FFI_SYSV,
 {$endif}
+{$if defined(CPUAARCH64) and defined(WIN64)}
+    FFI_WIN64,
+{$endif}
 {$if defined(CPUARM)}
     FFI_VFP,
 {$endif}
@@ -186,6 +189,8 @@ const
   {$else}
   FFI_DEFAULT_ABI = FFI_UNIX64;
   {$endif}
+{$elseif defined(CPUAARCH64) and defined(WIN64)}
+  FFI_DEFAULT_ABI = FFI_WIN64;
 {$elseif defined(CPUSPARC32)}
   FFI_DEFAULT_ABI = FFI_V8;
 {$elseif defined(CPUSPARC64)}
@@ -204,14 +209,14 @@ const
   {$endif}
 {$else}
   {$ifdef WIN32}
-    FFI_DEFAULT_ABI = FFI_STDCALL;
+    FFI_DEFAULT_ABI = FFI_MS_CDECL;
   {$else}
     FFI_DEFAULT_ABI = FFI_SYSV;
   {$endif}
 {$endif}
 
 const
-{$if defined(CPUPOWERPC)}
+{$if defined(CPUPOWERPC) or (defined(CPUAARCH64) and defined(WIN64))}
   FFI_TARGET_HAS_COMPLEX_TYPE = False;
 {$else}
   FFI_TARGET_HAS_COMPLEX_TYPE = True;
@@ -242,8 +247,6 @@ const
   {$if defined(DARWIN)}
   FFI_TRAMPOLINE_SIZE = 12;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = 8;
-  {$elseif FFI_EXEC_TRAMPOLINE_TABLE}
-    {$error 'No trampoline table implementation'}
   {$else}
   FFI_TRAMPOLINE_SIZE = 12;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = FFI_TRAMPOLINE_SIZE;
@@ -252,8 +255,6 @@ const
   {$if defined(DARWIN)}
   FFI_TRAMPOLINE_SIZE =16;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = 16;
-  {$elseif FFI_EXEC_TRAMPOLINE_TABLE}
-    {$error 'No trampoline table implementation'}
   {$else}
   FFI_TRAMPOLINE_SIZE = 24;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = FFI_TRAMPOLINE_SIZE;
@@ -278,9 +279,9 @@ const
 {$elseif defined(CPUSPARC64)}
   FFI_TRAMPOLINE_SIZE = 24;
 {$elseif defined(CPUX86_64)}
-  FFI_TRAMPOLINE_SIZE = 24;
+  FFI_TRAMPOLINE_SIZE = 32;
 {$elseif defined(CPUI386)}
-  FFI_TRAMPOLINE_SIZE = 12;
+  FFI_TRAMPOLINE_SIZE = 16;
 {$elseif defined(CPUM68K)}
   FFI_TRAMPOLINE_SIZE = 16;
 {$elseif defined(CPURISCV32)}
@@ -339,8 +340,8 @@ var
   ffi_type_longdouble: ffi_type absolute ffi_type_double;
 {$endif}
 
-{$if FFI_TARGET_HAS_COMPLEX_TYPE}
-  ffi_type_complex_single: ffi_type; cvar; external ffilibrary;
+{$if not defined(CPUPOWERPC) and not (defined(CPUAARCH64) and defined(WIN64))}
+  ffi_type_complex_float: ffi_type; cvar; external ffilibrary;
   ffi_type_complex_double: ffi_type; cvar; external ffilibrary;
   {$ifdef HAVE_LONG_DOUBLE}
   ffi_type_complex_longdouble: ffi_type; cvar; external ffilibrary;
@@ -391,6 +392,10 @@ type
 {$elseif defined(CPUAARCH64)}
   {$ifdef DARWIN}
     aarch64_nfixedargs: cuint;
+  {$else}
+  {$ifdef WIN64}
+    is_variadic: cuint;
+  {$endif}
   {$endif}
 {$elseif defined(CPUSPARC64)}
     nfixedargs: cuint;
@@ -410,24 +415,11 @@ type
       0: (sint: ffi_sarg);
       1: (uint: ffi_arg);
       2: (flt: cfloat);
-      3: (data: array[0..FFI_SIZEOF_ARG] of cchar);
+      3: (data: array[0..FFI_SIZEOF_ARG - 1] of cchar);
       4: (ptr: Pointer);
   end;
 
-{$if (FFI_SIZEOF_JAVA_ARG = 4) and (FFI_SIZEOF_ARG = 8)}
-  (* This is a special case for mips64/n32 ABI (and perhaps others) where
-     sizeof(void * ) is 4 and FFI_SIZEOF_ARG is 8.  *)
-  ffi_java_raw = record
-    case longint of
-      0: (sint: ffi_sarg);
-      1: (uint: ffi_arg);
-      2: (flt: cfloat);
-      3: (data: array[0..FFI_SIZEOF_JAVA_ARG] of cchar);
-      4: (ptr: Pointer);
-  end;
-{$else}
   ffi_java_raw = ffi_raw;
-{$endif}
   pffi_java_raw = ^ffi_java_raw;
 
   ffi_fn = procedure;
@@ -456,22 +448,24 @@ function ffi_java_raw_size(cif: pffi_cif): csize_t; cdecl; external ffilibrary n
 
 (* ---- Definitions for closures ----------------------------------------- *)
 
-{$if FFI_CLOSURES}
-
 type
   ffi_closure_fun = procedure(cif: pffi_cif; arg1: Pointer; arg2: PPointer; arg3: Pointer); cdecl;
 
   { ToDo: align 8 }
   ffi_closure = record
-{$if FFI_EXEC_TRAMPOLINE_TABLE}
+{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
-    tramp: array[0..FFI_TRAMPOLINE_SIZE] of cchar;
+    tramp: array[0..FFI_TRAMPOLINE_SIZE - 1] of cchar;
 {$endif}
     cif: pffi_cif;
     fun: ffi_closure_fun;
     user_data: Pointer;
+{$ifdef CPUI386}
+    { Native libffi rounds ffi_closure to eight-byte alignment on i386. }
+    padding: Pointer;
+{$endif}
   end;
   pffi_closure = ^ffi_closure;
 
@@ -495,14 +489,14 @@ type
 
   { ToDo: pack 8 for __sgi aka MIPS? }
   ffi_raw_closure = record
-{$if FFI_EXEC_TRAMPOLINE_TABLE}
+{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
-    tramp: array[0..FFI_TRAMPOLINE_SIZE] of cchar;
+    tramp: array[0..FFI_TRAMPOLINE_SIZE - 1] of cchar;
 {$endif}
     cif: pffi_cif;
-{$if not FFI_NATIVE_RAW_API}
+{$ifndef CPUI386}
     (* If this is enabled, then a raw closure has the same layout
        as a regular closure.  We use this to install an intermediate
        handler to do the translation, void** -> ffi_raw*.  *)
@@ -516,14 +510,14 @@ type
 
   { ToDo: pack 8 for __sgi aka MIPS? }
   ffi_java_raw_closure = record
-{$if FFI_EXEC_TRAMPOLINE_TABLE}
+{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
-    tramp: array[0..FFI_TRAMPOLINE_SIZE] of cchar;
+    tramp: array[0..FFI_TRAMPOLINE_SIZE - 1] of cchar;
 {$endif}
     cif: pffi_cif;
-{$if not FFI_NATIVE_RAW_API}
+{$ifndef CPUI386}
     (* If this is enabled, then a raw closure has the same layout
        as a regular closure.  We use this to install an intermediate
        handler to do the translation, void** -> ffi_raw*.  *)
@@ -557,9 +551,7 @@ function ffi_prep_java_raw_closure_loc(clo: pffi_java_raw_closure;
                                   user_data: Pointer;
                                   codeloc: Pointer): ffi_status; cdecl; external ffilibrary name 'ffi_prep_java_raw_closure_loc';
 
-{$endif}
-
-{$if FFI_GO_CLOSURES}
+{$if defined(CPUARM) or defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not defined(DARWIN)) or (defined(CPUPOWERPC) and not defined(DARWIN))}
 type
   ffi_go_closure = record
     tramp: Pointer;

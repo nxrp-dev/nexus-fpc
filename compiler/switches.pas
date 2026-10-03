@@ -75,7 +75,7 @@ const
    {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
 
    {G} (typesw:localsw; setsw:ord(cs_imported_data)),
-   {H} (typesw:localsw; setsw:ord(cs_refcountedstrings)),
+   {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
    {J} (typesw:localsw; setsw:ord(cs_typed_const_writable)),
    {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
@@ -109,7 +109,7 @@ const
    {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
 
    {G} (typesw:ignoredsw; setsw:ord(cs_localnone)),
-   {H} (typesw:localsw; setsw:ord(cs_refcountedstrings)),
+   {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
    {J} (typesw:localsw; setsw:ord(cs_external_var)),
    {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
@@ -139,6 +139,10 @@ var
 
 begin
   switch:=upcase(switch);
+  { Kept for source compatibility with the 3.2.2 bootstrap compiler.
+    NexusFPC's default String type cannot be changed within a unit. }
+  if (switch='H') and (state in ['+','-']) then
+    exit;
 { Is the Switch in the letters ? }
   if not ((switch in ['A'..'Z']) and (state in ['-','+'])) then
    begin
@@ -246,6 +250,9 @@ var
 
 begin
   switch:=upcase(switch);
+  { The long-string default is always enabled; $H cannot change it. }
+  if (switch='H') and (state in ['+','-']) then
+    exit(state='+');
 { Is the Switch in the letters ? }
   if not ((switch in ['A'..'Z']) and (state in ['-','+'])) then
    begin
@@ -391,6 +398,7 @@ procedure flushpendingswitchesstate;
     if psf_local_switches_changed in pendingstate.flags then
       begin
         current_settings.localswitches:=pendingstate.nextlocalswitches;
+        include(current_settings.localswitches,cs_refcountedstrings);
         exclude(pendingstate.flags,psf_local_switches_changed);
       end;
     { process pending verbosity changes (warnings on, etc) }

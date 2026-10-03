@@ -315,49 +315,7 @@ end;
 
 {$else}
 var
-{$ifndef FPC_BOOTSTRAP_INDIRECT_ENTRY}
   initialstkptr : Pointer;external name '__stkptr';
-{$else FPC_BOOTSTRAP_INDIRECT_ENTRY}
-  initialstkptr : Pointer; public name '__stkptr';
-  operatingsystem_parameter_envp : Pointer; public name 'operatingsystem_parameter_envp';
-  operatingsystem_parameter_argc : LongInt; public name 'operatingsystem_parameter_argc';
-  operatingsystem_parameter_argv : Pointer; public name 'operatingsystem_parameter_argv';
-
-
-{ we need two variants here because TLS must be initialized by FPC only if no libc is linked however,
-  InitTLS cannot be called from the start up files because when they are run, envp is not setup yet.}
-procedure SysEntry(constref info: TEntryInformation);[public,alias:'FPC_SysEntry'];
-begin
-  initialstkptr := info.OS.stkptr;
-  operatingsystem_parameter_envp := info.OS.envp;
-  operatingsystem_parameter_argc := info.OS.argc;
-  operatingsystem_parameter_argv := info.OS.argv;
-{$ifdef cpui386}
-  Set8087CW(Default8087CW);
-{$endif cpui386}
-  info.PascalMain();
-end;
-
-
-{$ifdef FPC_USE_LIBC}
-procedure SysEntry_InitTLS(constref info: TEntryInformation);[public,alias:'FPC_SysEntry_InitTLS'];
-begin
-  initialstkptr := info.OS.stkptr;
-  operatingsystem_parameter_envp := info.OS.envp;
-  operatingsystem_parameter_argc := info.OS.argc;
-  operatingsystem_parameter_argv := info.OS.argv;
-{$ifdef INITTLS}
-  InitTLS;
-{$endif INITTLS}
-{$ifdef cpui386}
-  Set8087CW(Default8087CW);
-{$endif cpui386}
-  info.PascalMain();
-end;
-{$endif FPC_USE_LIBC}
-
-{$endif FPC_BOOTSTRAP_INDIRECT_ENTRY}
-
 procedure haltproc(e:longint);cdecl;external name '_haltproc';
 {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 

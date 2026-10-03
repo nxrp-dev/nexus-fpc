@@ -19,12 +19,12 @@ const
   Version = '1.6.2';
   max_operands = 4;
 var
-   s : string;
+   s : ShortString;
    i : longint;
    i8086  : boolean;
    x86_64 : boolean;
 
-    function lower(const s : string) : string;
+    function lower(const s : ShortString) : ShortString;
     {
       return lowercased string of s
     }
@@ -39,7 +39,7 @@ var
          lower[0]:=s[0];
       end;
 
-      function Replace(var s:string;const s1,s2:string):boolean;
+      function Replace(var s:ShortString;const s1,s2:ShortString):boolean;
       var
         i  : longint;
       begin
@@ -55,7 +55,7 @@ var
       end;
 
 
-function formatop(s:string;allowsizeonly:boolean):string;
+function formatop(s:ShortString;allowsizeonly:boolean):ShortString;
    const
      replaces=29;
      replacetab : array[1..replaces,1..2] of string[32]=(
@@ -136,17 +136,17 @@ function readnumber : longint;
        end;
   end;
 
-function tostr(l : longint) : string;
+function tostr(l : longint) : ShortString;
 
   var
-     hs : string;
+     hs : ShortString;
 
   begin
      str(l,hs);
      tostr:=hs;
   end;
 
-function readstr : string;
+function readstr : ShortString;
 
   begin
      result:='';
@@ -164,7 +164,7 @@ procedure skipspace;
        inc(i);
   end;
 
-procedure openinc(out f:text;const fn:string);
+procedure openinc(out f:text;const fn:ShortString);
 begin
   writeln('creating ',fn);
   assign(f,fn);
@@ -184,7 +184,7 @@ end;
 
 var
    attsuffix,
-   hs : string;
+   hs : ShortString;
    j : longint;
    firstopcode,
    first : boolean;
@@ -202,9 +202,9 @@ var
    attopcode,
    opcode,
    codes,
-   flags   : string;
-   optypes : array[1..max_operands] of string;
-   inschanges: string;
+   flags   : ShortString;
+   optypes : array[1..max_operands] of ShortString;
+   inschanges: ShortString;
    instrwritten: boolean;
    SignCheck: Cardinal;
    StrSearch: Integer;

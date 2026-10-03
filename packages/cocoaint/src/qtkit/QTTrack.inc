@@ -63,12 +63,10 @@ type
 
 type
   QTTrack_VisualSupport = objccategory external (QTTrack)
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
     function apertureModeDimensionsForMode (mode: NSString): NSSize; message 'apertureModeDimensionsForMode:';
     procedure setApertureModeDimensions_forMode (dimensions: NSSize; mode: NSString); message 'setApertureModeDimensions:forMode:';
     procedure generateApertureModeDimensions; message 'generateApertureModeDimensions';
     procedure removeApertureModeDimensions; message 'removeApertureModeDimensions';
-    {$endif}
     {$if ((defined(MAC_OS_X_VERSION_10_7)) and ((MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7)))}
     function commonMetadata: NSArray; message 'commonMetadata'; deprecated 'available in 10.7 and later but deprecated in 10.9';
     function availableMetadataFormats: NSArray; message 'availableMetadataFormats'; deprecated 'available in 10.7 and later but deprecated in 10.9';

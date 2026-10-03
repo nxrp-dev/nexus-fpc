@@ -61,13 +61,13 @@ Var
   FCategory : Word;
   FEventID : DWord;
   FEventType : Word;
-  aMsg : AnsiString {$IF SIZEOF(CHAR)=1} absolute Msg{$ENDIF};
+  aMsg : AnsiString {$IFNDEF FPC_UNICODESTRINGS} absolute Msg{$ENDIF};
 
 begin
   FCategory:=MapTypeToCategory(EventType);
   FEventID:=MapTypeToEventID(EventType);
   FEventType:=MapTypeToEvent(EventType);
-  {$IF SIZEOF(CHAR)=2}
+  {$IFDEF FPC_UNICODESTRINGS}
   aMsg:=Msg;
   {$ENDIF}
   P:=PAnsiChar(aMsg);

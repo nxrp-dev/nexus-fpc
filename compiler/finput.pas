@@ -73,7 +73,7 @@ interface
          function  tempopen:boolean;
          procedure setmacro(p:pchar;len:longint);
          procedure setline(line,linepos:longint);
-         function  getlinestr(l:longint):string;
+         function  getlinestr(l:longint):ShortString;
          function  getfiletime:longint;
        protected
          filetime  : longint;
@@ -394,7 +394,7 @@ uses
       end;
 
 
-    function tinputfile.getlinestr(l:longint):string;
+    function tinputfile.getlinestr(l:longint):ShortString;
       var
         c    : char;
         i,

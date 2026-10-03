@@ -327,8 +327,10 @@ Type
 {$macro on}
 {$define PathStr:=UnicodeString}
 {$define PathPChar:=PUnicodeChar}
+{$define FPC_FINAH_DECLARE_FILENAME_CASE_MATCH}
   { Read filename handling functions declaration }
   {$i finah.inc}
+{$undef FPC_FINAH_DECLARE_FILENAME_CASE_MATCH}
 {$define PathStr:=RawByteString}
 {$define PathPChar:=PAnsiChar}
   { Read filename handling functions declaration }

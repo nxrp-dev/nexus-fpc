@@ -54,9 +54,9 @@ type
   packed
 {$endif USE_PACKED}
   record
-{$if declared(TRttiDataCommon)}
+{$ifndef VER3_2}
     Common: TRttiDataCommon;
-{$endif declared TRttiDataCommon}
+{$endif not VER3_2}
     case TTypeKind of
       tkRecord: (
         InitTable: Pointer;
@@ -115,9 +115,9 @@ type
   packed
 {$endif USE_PACKED}
   record
-{$if declared(TRttiDataCommon)}
+{$ifndef VER3_2}
     Common: TRttiDataCommon;
-{$endif declared TRttiDataCommon}
+{$endif not VER3_2}
     case TTypeKind of
       tkRecord: (
         Terminator: Pointer;
@@ -139,9 +139,9 @@ type
   packed
 {$endif USE_PACKED}
   record
-{$if declared(TRttiDataCommon)}
+{$ifndef VER3_2}
     Common: TRttiDataCommon;
-{$endif declared TRttiDataCommon}
+{$endif not VER3_2}
     case TTypeKind of
       tkArray: (
         Size: SizeInt;

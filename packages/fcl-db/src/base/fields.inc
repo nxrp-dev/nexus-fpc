@@ -613,7 +613,7 @@ end;
 
 function TField.GetAsUTF8String: UTF8String;
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Result := UTF8Encode(GetAsUnicodeString);
 {$ELSE}
   Result := GetAsAnsiString;
@@ -1254,7 +1254,7 @@ end;
 
 function TStringField.GetAsString: String;
 begin
-{$IF SIZEOF(Char)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   // Not GetAsWideString, because in TStringField AsWideString calls GetAsString
   Result := GetAsAnsiString;
 {$ELSE}
@@ -1439,7 +1439,7 @@ end;
 
 procedure TStringField.SetAsString(const AValue: String);
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   SetAsAnsiString(AValue);
 {$ELSE}
   SetValue(AValue);
@@ -1510,7 +1510,7 @@ end;
 
 function TWideStringField.GetAsString: string;
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   if not GetValue(Result) then
     Result := '';
 {$ELSE}
@@ -3092,7 +3092,7 @@ end;
 
 function TBinaryField.GetAsString: String;
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Result:=GetAsUnicodeString;
 {$ELSE}
   Result:=GetAsAnsiString;
@@ -3101,7 +3101,7 @@ end;
 
 procedure TBinaryField.SetAsString(Const S: String);
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   SetAsUnicodeString(S);
 {$ELSE}
   SetAsAnsiString(S);
@@ -3649,7 +3649,7 @@ end;
 
 function TBlobField.GetAsString: string;
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Result := GetAsUnicodeString;
 {$ELSE}
   Result := GetAsAnsiString;
@@ -3771,7 +3771,7 @@ end;
 
 procedure TBlobField.SetAsString(const AValue: string);
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   SetAsUnicodeString(AValue);
 {$ELSE}
   SetAsAnsiString(AValue);

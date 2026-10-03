@@ -210,7 +210,7 @@ end;
 
 function TXMLInputSource.GetStringData: String;
 begin
-{$IF SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   Result:=UnicodeStringData
 {$ELSE}
   Result:=AnsiStringData

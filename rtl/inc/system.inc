@@ -24,12 +24,6 @@ type
                                 Local types
 ****************************************************************************}
 
-{$ifdef FPC_HAS_FEATURE_EXITCODE}
-  {$if High(errorcode)<>maxExitCode}
-    {$define FPC_LIMITED_EXITCODE}
-  {$endif}
-{$endif FPC_HAS_FEATURE_EXITCODE}
-
 Procedure HandleError (Errno : TExitCode); external name 'FPC_HANDLEERROR';
 Procedure HandleErrorFrame (Errno : TExitCode;frame : Pointer); forward;
 Procedure HandleErrorAddrFrame (Errno : TExitCode;addr : CodePointer; frame : Pointer); forward;
@@ -1210,11 +1204,9 @@ end;
 Procedure Halt(ErrNum: TExitCode);noreturn;
 Begin
 {$ifdef FPC_HAS_FEATURE_EXITCODE}
-{$ifdef FPC_LIMITED_EXITCODE}
-  if ErrNum > maxExitCode then
+  if (High(ErrorCode)<>maxExitCode) and (ErrNum>maxExitCode) then
     ExitCode:=255
   else
-{$endif FPC_LIMITED_EXITCODE}
     ExitCode:=ErrNum;
 {$endif FPC_HAS_FEATURE_EXITCODE}
   internal_do_exit;

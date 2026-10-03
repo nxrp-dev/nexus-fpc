@@ -37,7 +37,7 @@ unit lstrings;
 Interface
 
 Type longstring = pansichar;
-     ShortString = string;
+     ShortString = string[255];
 
 { Internal functions, will not appear in systemh.inc }
 
@@ -318,7 +318,7 @@ end;
 
 Procedure Val (Const S : LongString; var R : real; Var Code : Integer);
 
-Var SS : String;
+Var SS : ShortString;
 
 begin
  Long_To_ShortString (SS,S,255);

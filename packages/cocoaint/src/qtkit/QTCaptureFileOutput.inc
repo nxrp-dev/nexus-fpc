@@ -12,7 +12,7 @@ type
   QTCaptureFileOutputPtr = ^QTCaptureFileOutput;
 {$endif}
 
-{$if ((QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)) and ((MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4))}
+{$if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)}
 {$ifdef TYPES}
 const
   QTCaptureFileOutputBufferDestinationNewFile = 1;
@@ -37,11 +37,9 @@ type
     function outputFileURL: NSURL; message 'outputFileURL';
     procedure recordToOutputFileURL (url: NSURL); message 'recordToOutputFileURL:';
     procedure recordToOutputFileURL_bufferDestination (url: NSURL; bufferDestination: QTCaptureFileOutputBufferDestination); message 'recordToOutputFileURL:bufferDestination:';
-    {$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_6_3)}
     function isRecordingPaused: ObjCBOOL; message 'isRecordingPaused';
     procedure pauseRecording; message 'pauseRecording';
     procedure resumeRecording; message 'resumeRecording';
-    {$endif}
     function compressionOptionsForConnection (connection: QTCaptureConnection): QTCompressionOptions; message 'compressionOptionsForConnection:';
     procedure setCompressionOptions_forConnection (compressionOptions: QTCompressionOptions; connection: QTCaptureConnection); message 'setCompressionOptions:forConnection:';
     function maximumVideoSize: NSSize; message 'maximumVideoSize';

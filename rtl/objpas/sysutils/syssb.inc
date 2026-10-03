@@ -675,7 +675,7 @@ begin
 end;
 
 
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
 function TGenericStringBuilder.ToString: RTLString;
 {$ELSE}
 function TGenericStringBuilder.ToString: SBString;
@@ -700,7 +700,7 @@ begin
     end;
 end;
 
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
 function TGenericStringBuilder.ToString(UpdateCapacity: Boolean): RTLString;
 {$ELSE}
 function TGenericStringBuilder.ToString(UpdateCapacity: Boolean): SBString;

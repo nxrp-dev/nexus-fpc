@@ -30,8 +30,8 @@ interface
        PInteger = ^Integer;
 
 
-       { Ansistring are the default }
-{$IF SIZEOF(Char)=2}
+       { PString follows the default character width. }
+{$IFDEF FPC_UNICODESTRINGS}
        PString = PWideString;
 {$ELSE}
        PString = PAnsiString;

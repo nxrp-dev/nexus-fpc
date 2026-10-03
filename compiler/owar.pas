@@ -71,7 +71,7 @@ type
     CurrMemberSize : longint;
     CurrMemberName : string;
     isar: boolean;
-    function  DecodeMemberName(ahdr:TArHdr):string;
+    function  DecodeMemberName(ahdr:TArHdr):ShortString;
     function  DecodeMemberSize(ahdr:TArHdr):longint;
     procedure ReadArchive;
   protected
@@ -391,9 +391,9 @@ implementation
       end;
 
 
-    function tarobjectreader.DecodeMemberName(ahdr:TArHdr):string;
+    function tarobjectreader.DecodeMemberName(ahdr:TArHdr):ShortString;
       var
-        hs : string;
+        hs : ShortString;
         code : integer;
         hsp,
         p : pchar;
@@ -438,7 +438,7 @@ implementation
 
     function tarobjectreader.DecodeMemberSize(ahdr:TArHdr):longint;
       var
-        hs : string;
+        hs : ShortString;
         code : integer;
         hsp,
         p : pchar;

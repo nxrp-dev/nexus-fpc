@@ -162,7 +162,11 @@ end;
 class function TStringHelper.CompareText(const A: TStringType; const B: TStringType
   ): Integer;
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=UnicodeCompareText(A,B);
+{$ELSE}
   Result:=SUT.CompareText(A,B);
+{$ENDIF}
 end;
 
 
@@ -193,13 +197,18 @@ class function TStringHelper.Create(const AValue: array of TStringChar;
 begin
   SetLength(Result,ALen);
   if ALen>0 then
-    Move(AValue[StartIndex],Result[1],ALen);
+    Move(AValue[StartIndex],Result[1],ALen*SizeOf(TStringChar));
 end;
 
 
 class function TStringHelper.EndsText(const ASubText, AText: TStringType): Boolean;
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=(ASubText<>'') and
+    (UnicodeCompareText(System.Copy(AText,System.Length(AText)-System.Length(ASubText)+1,System.Length(ASubText)),ASubText)=0);
+{$ELSE}
   Result:=(ASubText<>'') and (SUT.CompareText(System.Copy(AText,System.Length(AText)-System.Length(ASubText)+1,System.Length(ASubText)),ASubText)=0);
+{$ENDIF}
 end;
 
 
@@ -212,7 +221,11 @@ end;
 class function TStringHelper.Format(const AFormat: TStringType;
   const args: array of const): TStringType;
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=UnicodeFormat(AFormat,Args);
+{$ELSE}
   Result:=SUT.Format(AFormat,Args);
+{$ENDIF}
 end;
 
 
@@ -502,7 +515,11 @@ begin
   Result:=L<=NS;
   if Result then
     if IgnoreCase then
+{$IFDEF IS_UNICODESTRINGHELPER}
+      Result:=UnicodeSameText(System.Copy(Self,NS-L+1,L),AValue)
+{$ELSE}
       Result:=SameText(System.Copy(Self,NS-L+1,L),AValue)
+{$ENDIF}
     else
 {$IFDEF IS_SHORTSTRINGHELPER}
       Result:=CompareByte(PTStringChar(@Self[1])[NS-L],PTStringChar(@AValue[1])^,L*sizeof(TStringChar))=0;
@@ -516,7 +533,11 @@ function TStringHelper.Equals(const AValue: TStringType; IgnoreCase: Boolean = F
 
 begin
   if IgnoreCase then
+{$IFDEF IS_UNICODESTRINGHELPER}
+    Result:=UnicodeSameText(Self,AValue)
+{$ELSE}
     Result:=SameText(Self,aValue)
+{$ENDIF}
   else
     Result:=(Self=AValue);
 end;
@@ -863,8 +884,21 @@ end;
 
 function TStringHelper.IsDelimiter(const Delimiters: TStringType; Index: SizeInt
   ): Boolean;
+{$IFDEF IS_UNICODESTRINGHELPER}
+var
+  I: SizeInt;
+{$ENDIF}
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=False;
+  if (Index<0) or (Index>=System.Length(Self)) then
+    Exit;
+  for I:=1 to System.Length(Delimiters) do
+    if Self[Index+1]=Delimiters[I] then
+      Exit(True);
+{$ELSE}
   Result:=SUT.IsDelimiter(Delimiters,Self,Index+1);
+{$ENDIF}
 end;
 
 
@@ -875,8 +909,20 @@ end;
 
 
 function TStringHelper.LastDelimiter(const Delims: TStringType): SizeInt;
+{$IFDEF IS_UNICODESTRINGHELPER}
+var
+  I,J: SizeInt;
+{$ENDIF}
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=-1;
+  for I:=System.Length(Self) downto 1 do
+    for J:=1 to System.Length(Delims) do
+      if Self[I]=Delims[J] then
+        Exit(I-1);
+{$ELSE}
   Result:=SUT.LastDelimiter(Delims,Self)-1;
+{$ENDIF}
 end;
 
 
@@ -1033,13 +1079,42 @@ end;
 
 function TStringHelper.QuotedString: TStringType;
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  Result:=QuotedString('''');
+{$ELSE}
   Result:=QuotedStr(Self);
+{$ENDIF}
 end;
 
 
 function TStringHelper.QuotedString(const AQuoteChar: TStringChar): TStringType;
+{$IFDEF IS_UNICODESTRINGHELPER}
+var
+  I,D,N: SizeInt;
+{$ENDIF}
 begin
+{$IFDEF IS_UNICODESTRINGHELPER}
+  N:=System.Length(Self)+2;
+  for I:=1 to System.Length(Self) do
+    if Self[I]=AQuoteChar then
+      Inc(N);
+  SetLength(Result,N);
+  Result[1]:=AQuoteChar;
+  D:=2;
+  for I:=1 to System.Length(Self) do
+    begin
+      Result[D]:=Self[I];
+      Inc(D);
+      if Self[I]=AQuoteChar then
+        begin
+          Result[D]:=AQuoteChar;
+          Inc(D);
+        end;
+    end;
+  Result[D]:=AQuoteChar;
+{$ELSE}
   Result:=AnsiQuotedStr(Self,AQuoteChar);
+{$ENDIF}
 end;
 
 
@@ -1357,7 +1432,11 @@ begin
   Result:=L<=System.Length(Self);
   if Result then
     if IgnoreCase then
+{$IFDEF IS_UNICODESTRINGHELPER}
+      Result:=UnicodeSameText(System.Copy(Self,1,L),AValue)
+{$ELSE}
       Result:=SameText(System.Copy(Self,1,L),AValue)
+{$ENDIF}
     else
 {$IFDEF IS_SHORTSTRINGHELPER}
       Result:=CompareByte(PTStringChar(@Self[1])^,PTStringChar(@AValue[1])^,L*sizeof(TStringChar))=0;
@@ -1418,7 +1497,7 @@ begin
 end;
 
 
-function TStringHelper.ToCharArray: TCharArray;
+function TStringHelper.ToCharArray: {$IFDEF IS_UNICODESTRINGHELPER}TUnicodeCharArray{$ELSE}TCharArray{$ENDIF};
 
 begin
   Result:=ToCharArray(0,Self.Length);
@@ -1426,7 +1505,7 @@ end;
 
 
 function TStringHelper.ToCharArray(AStartIndex: SizeInt; ALen: SizeInt
-  ): TCharArray;
+  ): {$IFDEF IS_UNICODESTRINGHELPER}TUnicodeCharArray{$ELSE}TCharArray{$ENDIF};
 
 Var
   I : SizeInt;

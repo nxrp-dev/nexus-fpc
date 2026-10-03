@@ -14,7 +14,7 @@
 
  **********************************************************************}
 {$mode objfpc} // needed for exceptions
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
 {$DEFINE USEUNICODE} // define this if you want to use unicode.
 {$ENDIF}
 
@@ -348,7 +348,9 @@ Function AssertEquals(AMessage : TTestString; const AExpected, AActual : QWord):
 Function AssertEquals(AMessage : TTestString; const AExpected, AActual : Currency): Boolean;
 Function AssertEquals(AMessage : TTestString; const AExpected, AActual: Double; ADelta : Double = 0): Boolean;
 Function AssertEquals(AMessage : TTestString; const AExpected, AActual: Single; ADelta : Single = 0): Boolean;
+{$IFDEF FPC_HAS_TYPE_EXTENDED}
 Function AssertEquals(AMessage : TTestString; const AExpected, AActual: Extended; ADelta : Extended = 0): Boolean;
+{$ENDIF}
 // Assert null
 Function AssertNull(AMessage : TTestString; const AValue : Pointer): Boolean;
 Function AssertNotNull(AMessage : TTestString; const AValue : Pointer): Boolean;
@@ -1623,6 +1625,7 @@ begin
   Result:=AssertTrue(AMessage+'. '+ExpectMessage(SE,SA),Abs(AExpected-AActual)<ADelta);
 end;
 
+{$IFDEF FPC_HAS_TYPE_EXTENDED}
 function AssertEquals(AMessage: TTestString; const AExpected,
   AActual: Extended; ADelta: Extended): Boolean;
 
@@ -1636,6 +1639,7 @@ begin
     ADelta:=DefaultExtendedDelta;
   Result:=AssertTrue(AMessage+'. '+ExpectMessage(SE,SA),Abs(AExpected-AActual)<ADelta);
 end;
+{$ENDIF}
 
 function AssertNull(AMessage: TTestString; const AValue: Pointer): Boolean;
 begin

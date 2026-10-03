@@ -4162,7 +4162,7 @@ implementation
         maxdef:=fromdef
       else
         maxdef:=todef;
-{$if sizeof(aintmax) = 8}
+{$if defined(cpuhighleveltarget) or defined(cpu64bitalu)}
       if maxdef.size=8 then
         aintmax:=high(int64)
       else

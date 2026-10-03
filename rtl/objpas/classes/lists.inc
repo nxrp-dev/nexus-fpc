@@ -218,9 +218,9 @@ function TFPList.IndexOf(Item: Pointer): Integer;
 
 begin
   Result :=
-{$if sizeof(pointer) = sizeof(dword)}
+{$if defined(CPU32)}
     IndexDWord
-{$elseif sizeof(pointer) = sizeof(qword)}
+{$elseif defined(CPU64)}
     IndexQWord
 {$else}
   {$error unknown pointer size}

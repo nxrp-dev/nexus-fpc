@@ -21,11 +21,7 @@ interface
 
 {$MODE objfpc}
 {$MODESWITCH OUT}
-{$IFDEF UNICODERTL}
-{$MODESWITCH UNICODESTRINGS}
-{$ELSE}
 {$H+}
-{$ENDIF}
 {$modeswitch typehelpers}
 {$modeswitch advancedrecords}
 
@@ -643,14 +639,14 @@ begin
     exit;
   if not CheckWin32Version(6, 0) or not(assigned(GetFinalPathNameByHandle)) then
     exit;
-  Attrs:=GetFileAttributes(PAnsiChar(aLink));
+  Attrs:=GetFileAttributesA(PAnsiChar(aLink));
   if (Attrs=INVALID_FILE_ATTRIBUTES) or ((Attrs and faSymLink)=0) then
     exit;
   oFLags:=0;
   // https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
   if (Attrs and faDirectory)=faDirectory then
     oFlags:=FILE_FLAG_BACKUP_SEMANTICS;
-  aHandle:=CreateFile(PAnsiChar(aLink),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,oFlags,0);
+  aHandle:=CreateFileA(PAnsiChar(aLink),GENERIC_READ,FILE_SHARE_READ,nil,OPEN_EXISTING,oFlags,0);
   if aHandle=INVALID_HANDLE_VALUE then
     exit;
   try
@@ -1527,7 +1523,7 @@ Function GetEnvironmentString(Index : Integer) : RTLString;
 
 var
   hp,p : PAnsiChar;
-{$if SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
   tmpstr : RawByteString;
 {$endif}
 begin
@@ -1543,7 +1539,7 @@ begin
         end;
     If (hp^<>#0) then
       begin
-{$if SIZEOF(CHAR)=2}
+{$IFDEF FPC_UNICODESTRINGS}
         tmpstr:=hp;
         SetCodePage(tmpstr,CP_OEMCP,false);
         Result:=tmpstr;

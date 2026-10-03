@@ -29,7 +29,6 @@ type
   end;
 {$endif}
 
-{$if (QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_2)}
 {$ifdef CLASSES}
 
 type
@@ -43,6 +42,4 @@ type
     procedure encodeSMPTETime_forKey (time: SMPTETime; key: NSString); message 'encodeSMPTETime:forKey:';
     function decodeSMPTETimeForKey (key: NSString): SMPTETime; message 'decodeSMPTETimeForKey:';
   end;
-{$endif}
-
 {$endif}

@@ -11,12 +11,13 @@ param(
     [string[]]$TargetCpu = @('x86_64', 'aarch64'),
     [Parameter(Mandatory = $true)]
     [string]$NdkRoot,
-    [string]$SourceRoot = (Join-Path $PSScriptRoot '..'),
+    [string]$SourceRoot,
     [string]$MakeBin = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64',
     [string]$LogRoot = (Join-Path $env:TEMP 'NexusFPCAndroidCrossBuild')
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $NdkRoot = (Resolve-Path -LiteralPath $NdkRoot).Path
 $toolBin = Join-Path $NdkRoot 'toolchains\llvm\prebuilt\windows-x86_64\bin'
@@ -44,7 +45,7 @@ try {
             '-C', (Join-Path $SourceRoot 'rtl\android'),
             '-f', (Join-Path $PSScriptRoot 'android-clang.mk'),
             "FPC=$compiler", "CPU_TARGET=$cpu", 'OS_TARGET=android',
-            'BINUTILSPREFIX=', 'ASPROG=clang',
+            'BINUTILSPREFIX=', 'ASPROG=clang', 'RELEASE=1',
             "ASTARGET=--target=$cpu-linux-android -c -x assembler",
             'OPT=-n -Cg'
         )

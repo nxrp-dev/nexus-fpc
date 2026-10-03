@@ -60,9 +60,7 @@ var
   impl3: TTest3;
   impl4: TTest4<LongInt>;
 begin
-  {$if declared(HaltOnNotReleased)}
   HaltOnNotReleased:=True;
-  {$endif}
   invokeid := 0;
   impl1 := TImpl1.Create;
   impl1();

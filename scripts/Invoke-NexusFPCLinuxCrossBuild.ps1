@@ -81,12 +81,13 @@ try {
         $common = @(
             "FPC=$($HostCompiler -replace '\\', '/')",
             'CPU_TARGET=x86_64', 'OS_TARGET=win64',
-            "PPC_TARGET=$cpu", "CPU_UNITDIR=$($cpu)_cross"
+            "PPC_TARGET=$cpu", "CPU_UNITDIR=$($cpu)_cross",
+            'RELEASE=1'
         )
         if ($cpu -in @('i386', 'x86_64')) { $common += 'LOCALOPT=-dFPC_SOFT_FPUX80' }
+        Invoke-MakeStep "compiler-$cpu-linux-clean-units" (@('-C', (Join-Path $SourceRoot 'compiler'),
+            "${cpu}_cross_clean", "CYCLETARGETS=${cpu}_cross") + $common)
         if ($cpu -eq 'aarch64') {
-            Invoke-MakeStep "compiler-$cpu-linux-clean-units" (@('-C', (Join-Path $SourceRoot 'compiler'),
-                'aarch64_cross_clean', 'CYCLETARGETS=aarch64_cross') + $common)
             Invoke-MakeStep "compiler-$cpu-linux-clean-exe" (@('-C', (Join-Path $SourceRoot 'compiler'),
                 'execlean', 'PPC_SUFFIXES=', 'TEMPWPONAME1=', 'TEMPWPONAME2=', 'ALL_G_COMPILERS=') +
                 $common + "EXENAME=$compilerName")
@@ -100,7 +101,7 @@ try {
         Write-Host "Ready: $compiler -Tlinux ($cpu-linux)"
 
         if ($BuildRTL) {
-            $rtlOptions = @("FPC=$($compiler -replace '\\', '/')", "CPU_TARGET=$cpu", 'OS_TARGET=linux')
+            $rtlOptions = @("FPC=$($compiler -replace '\\', '/')", "CPU_TARGET=$cpu", 'OS_TARGET=linux', 'RELEASE=1')
             if ($cpu -in @('i386', 'x86_64', 'aarch64')) {
                 # Match the root Makefile's CROSSASPROG/CROSSASTARGET forwarding.
                 # Clang needs -x assembler because the startup files end in .as.

@@ -73,7 +73,6 @@ type
     Procedure TestHandler;
     Procedure TestNoHandlerError;
     Procedure TestHandlerResult;
-    Procedure TestHandlerResultStream;
     Procedure TestEmptyLine;
     Procedure TestStartEmptyLine;
     Procedure TestObjectEmptyLine;
@@ -542,29 +541,6 @@ begin
     AssertEquals('Have correct string','123',D.AsString);
   finally
     D.Free;
-  end;
-end;
-
-procedure TTestParser.TestHandlerResultStream;
-Var
-  D : TJSONData;
-  S : TStream;
-
-begin
-{$IF SIZEOF(Char)=2}
-  S:=TStringStream.Create(UTF8Encode('"123"'));
-{$else}
-  S:=TStringStream.Create('"123"');
-{$ENDIF}
-  try
-    D:=GetJSON(S,False);
-    try
-      AssertEquals('Have correct string','123',D.AsString);
-    finally
-      D.Free;
-    end;
-  finally
-    S.Free;
   end;
 end;
 

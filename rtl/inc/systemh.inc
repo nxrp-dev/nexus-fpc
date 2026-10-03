@@ -23,11 +23,6 @@
 {$mode objfpc}
 {$modeswitch advancedrecords}
 
-{$IFDEF UNICODERTL}
-{$modeswitch unicodestrings}
-{ modeswitch typehelpers}
-{$ENDIF}
-
 { At least 3.0.0 is required }
 {$if FPC_FULLVERSION<30000}
   {$fatal You need at least FPC 3.0.0 to build this version of FPC}
@@ -278,17 +273,15 @@ Type
 
 { Zero - terminated strings }
 
-{$IF DECLARED(AnsiChar)}
+{$IF FPC_FULLVERSION < 30301}
+  AnsiChar = Char;
+{$ELSE}
 // Compiler defines AnsiChar and WideChar, not Char
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
   Char = WideChar;
 {$ElSE}
   Char = AnsiChar;
 {$ENDIF}
-
-{$ELSE}
-  // Compiler defines Char, we make AnsiChar an alias
-  AnsiChar = char;
 {$ENDIF}
 
   PChar               = ^Char;

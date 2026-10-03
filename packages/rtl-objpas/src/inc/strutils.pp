@@ -44,6 +44,10 @@ Function AnsiMatchText(const AText: AnsiString; const AValues: array of AnsiStri
 Function AnsiIndexText(const AText: AnsiString; const AValues: array of AnsiString): Integer;
 Function StartsText(const ASubText, AText: string): Boolean; inline;
 Function EndsText(const ASubText, AText: string): Boolean; inline;
+Function UnicodeStartsText(const ASubText, AText: UnicodeString): Boolean;
+Function UnicodeEndsText(const ASubText, AText: UnicodeString): Boolean;
+Function UnicodeContainsText(const AText, ASubText: UnicodeString): Boolean;
+Function UnicodeReplaceText(const AText, AFromText, AToText: UnicodeString): UnicodeString;
 
 function ResemblesText(const AText, AOther: string): Boolean; inline;
 function ContainsText(const AText, ASubText: string): Boolean; inline;
@@ -65,6 +69,10 @@ Function AnsiMatchStr(const AText: AnsiString; const AValues: array of AnsiStrin
 Function AnsiIndexStr(const AText: Ansistring; const AValues: array of Ansistring): Integer;
 Function StartsStr(const ASubText, AText: string): Boolean;
 Function EndsStr(const ASubText, AText: string): Boolean;
+Function UnicodeStartsStr(const ASubText, AText: UnicodeString): Boolean;
+Function UnicodeEndsStr(const ASubText, AText: UnicodeString): Boolean;
+Function UnicodeContainsStr(const AText, ASubText: UnicodeString): Boolean;
+Function UnicodeReplaceStr(const AText, AFromText, AToText: UnicodeString): UnicodeString;
 Function MatchStr(const AText: UnicodeString; const AValues: array of UnicodeString): Boolean;
 Function MatchText(const AText: UnicodeString; const AValues: array of UnicodeString): Boolean;
 Function IndexStr(const AText: UnicodeString; const AValues: array of UnicodeString): Integer;
@@ -88,6 +96,9 @@ Function DupeString(const AText: string; ACount: Integer): string;
 Function ReverseString(const AText: string): string;
 Function AnsiReverseString(const AText: AnsiString): AnsiString;inline;
 Function StuffString(const AText: string; AStart, ALength: Cardinal;  const ASubText: string): string;
+Function UnicodeDupeString(const AText: UnicodeString; ACount: Integer): UnicodeString;
+Function UnicodeReverseString(const AText: UnicodeString): UnicodeString;
+Function UnicodeStuffString(const AText: UnicodeString; AStart, ALength: Cardinal; const ASubText: UnicodeString): UnicodeString;
 Function RandomFrom(const AValues: array of string): string; overload;
 Function IfThen(AValue: Boolean; const ATrue: string; const AFalse: string = ''): string; overload;
 Function IfThen(AValue: Boolean; const ATrue: TStringDynArray; const AFalse: TStringDynArray = nil): TStringDynArray; overload;
@@ -95,6 +106,7 @@ function NaturalCompareText (const S1 , S2 : string ): Integer ;
 function NaturalCompareText(const Str1, Str2: string; const ADecSeparator, AThousandSeparator: AnsiChar): Integer;
 
 function SplitString(const S, Delimiters: string): TRTLStringDynArray;
+function UnicodeSplitString(const S, Delimiters: UnicodeString): TUnicodeStringDynArray;
 
 { ---------------------------------------------------------------------
     VB emulations.
@@ -217,12 +229,12 @@ function AnsiProperCase(const S: string; const WordDelims: TSysCharSet): string;
 function WordCount(const S: string; const WordDelims: TSysCharSet): SizeInt;
 function WordPosition(const N: Integer; const S: string; const WordDelims: TSysCharSet): SizeInt;
 function ExtractWord(N: Integer; const S: string;  const WordDelims: TSysCharSet): string;inline;
-{$IF SIZEOF(SIZEINT)<>SIZEOF(INTEGER)}
+{$IFDEF CPU64}
 function ExtractWordPos(N: Integer; const S: string; const WordDelims: TSysCharSet; out Pos: SizeInt): string;
 {$ENDIF}
 function ExtractWordPos(N: Integer; const S: string; const WordDelims: TSysCharSet; out Pos: Integer): string;
 function ExtractDelimited(N: Integer; const S: string;  const Delims: TSysCharSet): string;
-{$IF SIZEOF(SIZEINT)<>SIZEOF(INTEGER)}
+{$IFDEF CPU64}
 function ExtractSubstr(const S: string; var Pos: SizeInt;  const Delims: TSysCharSet): string;
 {$ENDIF}
 function ExtractSubstr(const S: string; var Pos: Integer;  const Delims: TSysCharSet): string;
@@ -304,7 +316,7 @@ Function StringReplace(const S, OldPattern, NewPattern: string; Flags: TReplaceF
 { We need these for backwards compatibility:
   The compiler will stop searching and convert to ansistring if the widestring version of stringreplace is used.
   They currently simply refer to sysutils, till the new mechanisms are proven to work with unicode.}
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
 Function StringReplace(const S, OldPattern, NewPattern: unicodestring; Flags: TReplaceFlags): unicodestring; overload;
 Function StringReplace(const S, OldPattern, NewPattern: widestring; Flags: TReplaceFlags): widestring; overload;
 {$ENDIF}
@@ -358,8 +370,8 @@ procedure BoyerMoore.MakeDeltaJumpTables(aPattern: PAnsiChar; aPatternSize: Size
 var
    i, Position, LastPrefixIndex, SuffixLength: SizeInt;
 begin
-{$if sizeof(SizeInt)=sizeof(dword)} FillDWord
-{$elseif sizeof(SizeInt)=sizeof(qword)} FillQWord
+{$if defined(CPU32)} FillDWord
+{$elseif defined(CPU64)} FillQWord
 {$else} {$error unknown SizeInt size}
 {$endif}
      (DeltaJumpTable1, Length(DeltaJumpTable1), SizeUint(aPatternSize));
@@ -781,7 +793,7 @@ begin
   end;
 end;
 
-{$IF SIZEOF(CHAR)=1}
+{$IFNDEF FPC_UNICODESTRINGS}
 
 function StringReplace(const S, OldPattern, NewPattern: unicodestring; Flags: TReplaceFlags): unicodestring;
 
@@ -882,7 +894,36 @@ end;
 function AnsiEndsText(const ASubText, AText: UnicodeString): Boolean;
 
 begin
-  Result := (ASubText = '') or SameText(RightStr(AText, Length(ASubText)), ASubText);
+  Result := (ASubText = '') or
+    ((Length(ASubText) <= Length(AText)) and
+     UnicodeSameText(Copy(AText, Length(AText)-Length(ASubText)+1,
+       Length(ASubText)), ASubText));
+end;
+
+function UnicodeStartsText(const ASubText, AText: UnicodeString): Boolean;
+begin
+  Result := (ASubText = '') or
+    ((Length(ASubText) <= Length(AText)) and
+     UnicodeSameText(Copy(AText, 1, Length(ASubText)), ASubText));
+end;
+
+function UnicodeEndsText(const ASubText, AText: UnicodeString): Boolean;
+begin
+  Result := (ASubText = '') or
+    ((Length(ASubText) <= Length(AText)) and
+     UnicodeSameText(Copy(AText, Length(AText)-Length(ASubText)+1,
+       Length(ASubText)), ASubText));
+end;
+
+function UnicodeContainsText(const AText, ASubText: UnicodeString): Boolean;
+begin
+  Result := Pos(UnicodeUpperCase(ASubText), UnicodeUpperCase(AText)) > 0;
+end;
+
+function UnicodeReplaceText(const AText, AFromText, AToText: UnicodeString): UnicodeString;
+begin
+  Result := UnicodeStringReplace(AText, AFromText, AToText,
+    [rfReplaceAll, rfIgnoreCase]);
 end;
 
 
@@ -966,7 +1007,7 @@ end;
 
 function AnsiContainsStr(const AText, ASubText: Unicodestring): Boolean;
 begin
-  Result := AnsiPos(ASubText,AText)>0;
+  Result := Pos(ASubText,AText)>0;
 end;
 
 
@@ -989,6 +1030,31 @@ end;
 function AnsiEndsStr(const ASubText, AText: UnicodeString): Boolean;
 begin
   Result := (ASubText = '') or (RightStr(AText, Length(ASubText)) = ASubText);
+end;
+
+function UnicodeStartsStr(const ASubText, AText: UnicodeString): Boolean;
+begin
+  Result := (ASubText = '') or
+    ((Length(ASubText) <= Length(AText)) and
+     (Copy(AText, 1, Length(ASubText)) = ASubText));
+end;
+
+function UnicodeEndsStr(const ASubText, AText: UnicodeString): Boolean;
+begin
+  Result := (ASubText = '') or
+    ((Length(ASubText) <= Length(AText)) and
+     (Copy(AText, Length(AText)-Length(ASubText)+1,
+       Length(ASubText)) = ASubText));
+end;
+
+function UnicodeContainsStr(const AText, ASubText: UnicodeString): Boolean;
+begin
+  Result := Pos(ASubText, AText) > 0;
+end;
+
+function UnicodeReplaceStr(const AText, AFromText, AToText: UnicodeString): UnicodeString;
+begin
+  Result := UnicodeStringReplace(AText, AFromText, AToText, [rfReplaceAll]);
 end;
 
 
@@ -1117,6 +1183,74 @@ function AnsiReverseString(const AText: AnsiString): AnsiString;
 
 begin
   Result:=ReverseString(AText);
+end;
+
+function UnicodeDupeString(const AText: UnicodeString; ACount: Integer): UnicodeString;
+var
+  ResLen, Rp, ToCopy: SizeInt;
+begin
+  if (AText = '') or (ACount <= 0) then
+    Exit('');
+  if ACount = 1 then
+    Exit(AText);
+
+  Rp := Length(AText);
+  ResLen := ACount * Rp;
+  SetLength(Result, ResLen);
+  Move(AText[1], Result[1], Rp * SizeOf(UnicodeChar));
+  repeat
+    ToCopy := ResLen - Rp;
+    if Rp < ToCopy then
+      ToCopy := Rp;
+    Move(Result[1], Result[Rp+1], ToCopy * SizeOf(UnicodeChar));
+    Inc(Rp, ToCopy);
+  until Rp = ResLen;
+end;
+
+function UnicodeReverseString(const AText: UnicodeString): UnicodeString;
+var
+  I, J: SizeInt;
+begin
+  SetLength(Result, Length(AText));
+  I := Length(AText);
+  J := 1;
+  while I > 0 do
+  begin
+    if (I > 1) and (Ord(AText[I]) >= $DC00) and
+       (Ord(AText[I]) <= $DFFF) and
+       (Ord(AText[I-1]) >= $D800) and
+       (Ord(AText[I-1]) <= $DBFF) then
+    begin
+      Result[J] := AText[I-1];
+      Result[J+1] := AText[I];
+      Dec(I, 2);
+      Inc(J, 2);
+    end
+    else
+    begin
+      Result[J] := AText[I];
+      Dec(I);
+      Inc(J);
+    end;
+  end;
+end;
+
+function UnicodeStuffString(const AText: UnicodeString; AStart, ALength: Cardinal;
+  const ASubText: UnicodeString): UnicodeString;
+var
+  StartAt, Remaining: SizeInt;
+begin
+  if AStart = 0 then
+    StartAt := 1
+  else if UInt64(AStart) > UInt64(Length(AText)) + 1 then
+    StartAt := Length(AText) + 1
+  else
+    StartAt := AStart;
+  Remaining := Length(AText) - StartAt + 1;
+  if ALength > Remaining then
+    ALength := Remaining;
+  Result := Copy(AText, 1, StartAt-1) + ASubText +
+    Copy(AText, StartAt+ALength, MaxInt);
 end;
 
 
@@ -1248,7 +1382,7 @@ type
     if Result = 0 then { Shortcut same strings (file0000, file0001). }
       Result := CompareByte(S1[1 + S1p], S2[1 + S2p], (S1e - S1p) * SizeOf(Char));
     if Result <> 0 then
-      Result := {$if sizeof(char) = 1} AnsiCompareText {$else} UnicodeCompareText {$endif}
+      Result := {$IFNDEF FPC_UNICODESTRINGS} AnsiCompareText {$else} UnicodeCompareText {$endif}
         (Copy(S1, 1 + S1p, S1e - S1p), Copy(S2, 1 + S2p, S2e - S2p));
     S1p := S1e;
     S2p := S2e;
@@ -1313,6 +1447,17 @@ begin
   For I:=1 to Length(Delimiters) do
     A[I-1]:=Delimiters[i];
   Result := S.Split(A);
+end;
+
+function UnicodeSplitString(const S, Delimiters: UnicodeString): TUnicodeStringDynArray;
+var
+  Separators: array of UnicodeChar;
+  I: SizeInt;
+begin
+  SetLength(Separators, Length(Delimiters));
+  for I := 1 to Length(Delimiters) do
+    Separators[I-1] := Delimiters[I];
+  Result := S.Split(Separators);
 end;
 
 function NaturalCompareText (const S1 , S2 : string ): Integer ;
@@ -1581,7 +1726,7 @@ var pc,lastpc,litStart : PAnsiChar;
     nextPattern   : PSizeInt; // Next pattern starting with the same character.
     nextPatternStatic: array[0 .. 63] of SizeInt;
     CompStr       : ansistring;
-{$if sizeof(char) <> sizeof(ansichar)}
+{$IFDEF FPC_UNICODESTRINGS}
     tempStr       : string;
 {$endif}
 
@@ -1609,7 +1754,7 @@ var pc,lastpc,litStart : PAnsiChar;
            (CompareByte(OldPattern[iPattern,1],pc^,OldPatternLen*SizeOf(AnsiChar))=0) then
           begin
           pcc:=PAnsiChar(Pointer(S))+(pc-PAnsiChar(Pointer(CompStr)));
-{$if sizeof(char)=sizeof(ansichar)}
+{$IFNDEF FPC_UNICODESTRINGS}
           Append(litStart,pcc-litStart);
           Append(PChar(Pointer(NewPattern[iPattern])), Length(NewPattern[iPattern]));
 {$else}
@@ -1680,7 +1825,7 @@ begin
     FreeMem(nextPattern);
   if litStart = PAnsiChar(Pointer(S)) then
     exit(S); // Unchanged string.
-{$if sizeof(char)=sizeof(ansichar)}
+{$IFNDEF FPC_UNICODESTRINGS}
   Append(litStart,PAnsiChar(Pointer(S))+(lastpc-PAnsiChar(Pointer(CompStr)))-litStart);
 {$else}
   tempStr := Copy(S,1+litStart-PAnsiChar(Pointer(S)),PAnsiChar(Pointer(S))+(lastpc-PAnsiChar(Pointer(CompStr)))-litStart);
@@ -1896,21 +2041,18 @@ end;
 
 function IndexCharType(p: PChar; nchars: SizeInt; ch: Char): SizeInt; inline;
 begin
-  result :=
-{$if sizeof(char) = sizeof(byte)} IndexByte
-{$elseif sizeof(char) = sizeof(word)} IndexWord
-{$else} {$error unknown char size}
-{$endif}
-    (p^, nchars, ord(ch));
+  if SizeOf(Char) = SizeOf(Byte) then
+    Result := IndexByte(p^, nchars, Byte(Ord(ch)))
+  else
+    Result := IndexWord(p^, nchars, Word(Ord(ch)));
 end;
 
 procedure FillCharType(p: PChar; nchars: SizeInt; ch: Char); inline;
 begin
-{$if sizeof(char) = sizeof(byte)} FillChar
-{$elseif sizeof(char) = sizeof(word)} FillWord
-{$else} {$error unknown char size}
-{$endif}
-    (p^, nchars, ord(ch));
+  if SizeOf(Char) = SizeOf(Byte) then
+    FillChar(p^, nchars, Byte(Ord(ch)))
+  else
+    FillWord(p^, nchars, Word(Ord(ch)));
 end;
 
 function DelChars(const S: string; Chr: Char): string;
@@ -2229,7 +2371,7 @@ begin
   Result:=Copy(S,i,j-i);
 end;
 
-{$IF SIZEOF(SIZEINT)<>SIZEOF(INTEGER)}
+{$IFDEF CPU64}
 function ExtractWordPos(N: Integer; const S: string; const WordDelims: TSysCharSet; Out Pos: SizeInt): string;
 var
   i,j: SizeInt;
@@ -2268,7 +2410,7 @@ begin
   exit(Copy(S,start,i-start));
 end;
 
-{$IF SIZEOF(SIZEINT)<>SIZEOF(INTEGER)}
+{$IFDEF CPU64}
 function ExtractSubstr(const S: string; var Pos: SizeInt; const Delims: TSysCharSet): string;
 
 var
@@ -2992,20 +3134,15 @@ begin
 end;
 
 function RPosEx(C: unicodechar; const S: UnicodeString; offs: SizeInt): SizeInt;
-
-var p,p2: PUnicodeChar;
-
-Begin
- If (offs>0) and (offs<=Length(S)) Then
-   begin
-     p:=@s[offs];
-     p2:=@s[1];
-     while (p2<=p) and (p^<>c) do dec(p);
-     RPosEx:=SizeUint(pointer(p)-pointer(p2)) div sizeof(unicodechar)+1; { p-p2+1 but avoids signed division... }
-   end
-  else
-    RPosEX:=0;
-End;
+var
+  I: SizeInt;
+begin
+  if (offs > 0) and (offs <= Length(S)) then
+    for I := offs downto 1 do
+      if S[I] = C then
+        Exit(I);
+  Result := 0;
+end;
 
 function RPos(c: Unicodechar; const S: UnicodeString): SizeInt;
 
@@ -3383,9 +3520,8 @@ Begin
  k:=1;
  While (k<=J) And (S[k] IN CSet) DO
    INC(k);
- IF k>1 Then
-   move(s[k],s[1],(j-k+1)*sizeof(S[1]));
- setlength(s,j-k+1);
+  if (k>1) or (j<Length(S)) then
+    S:=Copy(S,k,j-k+1);
 End;
 
 

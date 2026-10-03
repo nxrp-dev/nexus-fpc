@@ -4403,6 +4403,18 @@ implementation
       begin
         hashedid.id:=s;
 
+        { The default text model is selected once for the compiler invocation.
+          A unit-local or imported macro must not shadow its define. }
+        if upper(s)='FPC_UNICODESTRINGS' then
+          begin
+            hashedid.id:='FPC_UNICODESTRINGS';
+            if assigned(initialmacrosymtable) then
+              result:=tsym(initialmacrosymtable.FindWithHash(hashedid))
+            else
+              result:=nil;
+            exit;
+          end;
+
         { First search the localmacrosymtable before searching the
           global macrosymtables from the units }
         if assigned(current_module) then
@@ -4636,6 +4648,8 @@ implementation
 ****************************************************************************}
 
    procedure InitSymtable;
+     var
+       textmodemacro: tmacro;
      begin
        { Reset symbolstack }
        symtablestack:=nil;
@@ -4645,6 +4659,9 @@ implementation
        generrordef:=cerrordef.create;
        { macros }
        initialmacrosymtable:=tmacrosymtable.create(false);
+       textmodemacro:=tmacro.create('FPC_UNICODESTRINGS');
+       textmodemacro.defined:=false;
+       initialmacrosymtable.insertsym(textmodemacro);
        macrosymtablestack:=TSymtablestack.create;
        macrosymtablestack.push(initialmacrosymtable);
 {$ifdef UNITALIASES}

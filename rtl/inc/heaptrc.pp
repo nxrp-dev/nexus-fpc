@@ -22,11 +22,6 @@ unit heaptrc;
   {$define windows}
 {$endif}
 
-{$if not defined(FPUNONE) and not defined(FPUSOFT)}
-  {$define can_use_ln_in_constants} // :(
-{$endif}
-
-
   {$define can_use_int32_case} // :(
 
 
@@ -428,8 +423,8 @@ type
       exit;
     end;
     newnh := SizeUint(1) shl
-      {$if sizeof(SizeUint) <= sizeof(uint32)} BsrDWord
-      {$elseif sizeof(SizeUint) <= sizeof(uint64)} BsrQWord
+      {$if defined(CPU32)} BsrDWord
+      {$elseif defined(CPU64)} BsrQWord
       {$else} {$error >64 bits} {$endif}
         (({$ifdef debug_heaptrc} 2 {$else} 10 {$endif} + forNItems) or 1 {“or 1” just triggers node_not_zero optimization});
     // newnh gives 100%~200% load factor for forNItems.
@@ -581,9 +576,9 @@ type
     end else
     begin
       dec(result, FirstByte5 - 5);
-    {$if sizeof(v) <= sizeof(uint32)}
+    {$if defined(CPU32)}
       v := unaligned(pUint32(pb {$ifdef endian_big} + result - 4 {$else} + 1 {$endif})^);
-    {$elseif sizeof(v) <= sizeof(uint64)}
+    {$elseif defined(CPU64)}
       v := unaligned(pUint32(pb + 1)^);
       if result > 5 then
       {$ifdef endian_big}
@@ -647,12 +642,12 @@ type
         end {$ifdef can_use_int32_case} ; {$endif} { actually this ; is optional even with ‘case’. }
       else
         begin
-        {$if sizeof(v) <= sizeof(uint32)}
+        {$if defined(CPU32)}
           pb[0] := 251;
           unaligned(pUint32(pb + 1)^) := v;
           result := 5;
-        {$elseif sizeof(v) <= sizeof(uint64)}
-          result := 2 + {$if sizeof(v) <= sizeof(uint32)} BsrDWord {$else} BsrQWord {$endif}
+        {$elseif defined(CPU64)}
+          result := 2 + BsrQWord
             (v or 1 {“or 1” not required logically, triggers node_not_zero optimization}) div 8;
           pb[0] := 246 + result;
           unaligned(pUint32(pb + 1)^) := uint32(v {$ifdef endian_big} shr (8 * result - 40) {$endif});
@@ -666,7 +661,7 @@ type
 
   class function VarInt.EnZig(sv: PtrInt): PtrUint;
   begin
-    result := PtrUint(sv shl 1 xor {$if sizeof(sv) <= sizeof(uint32)} SarLongint(sv, 31) {$elseif sizeof(sv) <= sizeof(uint64)} SarInt64(sv, 63) {$else} {$error >64 bits} {$endif});
+    result := PtrUint(sv shl 1 xor {$if defined(CPU32)} SarLongint(sv, 31) {$elseif defined(CPU64)} SarInt64(sv, 63) {$else} {$error >64 bits} {$endif});
   end;
 
   class function VarInt.DeZig(uv: PtrUint): PtrInt;
@@ -683,13 +678,13 @@ type
   const
     MaxItems = 64;
   type
-    SizeType = {$if MaxItems > High(byte) div 3} uint16 {$else} byte {$endif}; pSizeType = ^SizeType;
+    SizeType = byte; pSizeType = ^SizeType;
     HashType = uint32; pHashType = ^HashType;
   const
     SizeOffset = 0;
     HashOffset = sizeof(SizeType);
     HeaderSize = HashOffset + sizeof(HashType);
-    MaxBytes = HeaderSize + {$if MaxItems * VarInt.MaxBytes <= High(SizeType)} MaxItems * VarInt.MaxBytes {$else} High(SizeType) {$endif};
+    MaxBytes = HeaderSize + High(SizeType);
     class function Pack(trace: pCodePointer; nTrace: SizeUint; packedTrace: pointer): SizeUint; static;
     class function Unpack(packedTrace: pointer; trace: pCodePointer): SizeUint; static;
   end;
@@ -974,7 +969,6 @@ type
 
   const
     MaxExtraInfos = 3; // Not counting the default (nil, nil, 0). Optimal value is 2^N - 1.
-    Eps = 1e-6;
     // Code assumes HeadTailSizes[0 .. 1] = (0, 1).
     HeadTailSizes: array[0 .. 15] of uint8 = (0, 1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 56);
 
@@ -982,14 +976,20 @@ type
     HasFullUserRequestShift = 0;
     HasFullUserRequestBit = 1 shl HasFullUserRequestShift;
     ExtraInfoIndexShift = HasFullUserRequestShift + 1;
-    ExtraInfoIndexBits = {$ifdef can_use_ln_in_constants} 1 + trunc(ln(MaxExtraInfos) / ln(2) + Eps) {$else} 2 {$endif}; {$if ExtraInfoIndexBits <> 2} {$error fix the hardcoded constant} {$endif}
+    ExtraInfoIndexBits = 2;
+    ExtraInfoIndexBitsMatchesMaxExtraInfos =
+      1 div Ord((MaxExtraInfos >= (1 shl (ExtraInfoIndexBits - 1))) and
+                (MaxExtraInfos < (1 shl ExtraInfoIndexBits)));
     ExtraInfoIndexMask = 1 shl ExtraInfoIndexBits - 1;
     FreelistIndexMask = ExtraInfoIndexMask shl 1 or 1; // Mask for merged ExtraInfoIndex:HasFullUserRequestBit.
     TailSizeIndexShift = ExtraInfoIndexShift + ExtraInfoIndexBits;
-    TailSizeIndexBits = {$ifdef can_use_ln_in_constants} 1 + trunc(ln(High(HeadTailSizes)) / ln(2) + Eps) {$else} 4 {$endif}; {$if TailSizeIndexBits <> 4} {$error fix the hardcoded constant} {$endif}
+    TailSizeIndexBits = 4;
+    TailSizeIndexBitsMatchesHeadTailSizes =
+      1 div Ord((High(HeadTailSizes) >= (1 shl (TailSizeIndexBits - 1))) and
+                (High(HeadTailSizes) < (1 shl TailSizeIndexBits)));
     TailSizeIndexMask = 1 shl TailSizeIndexBits - 1;
     HeadSizeIndexShift = TailSizeIndexShift + TailSizeIndexBits;
-    HeadSizeIndexBits = {$ifdef can_use_ln_in_constants} 1 + trunc(ln(High(HeadTailSizes)) / ln(2) + Eps) {$else} 4 {$endif}; {$if HeadSizeIndexBits <> 4} {$error fix the hardcoded constant} {$endif}
+    HeadSizeIndexBits = TailSizeIndexBits;
     HeadSizeIndexMask = 1 shl HeadSizeIndexBits - 1;
     ReallocatingShift = HeadSizeIndexShift + HeadSizeIndexBits; ReallocatingBit = 1 shl ReallocatingShift;
     ReportedShift = ReallocatingShift + 1;                      ReportedBit = 1 shl ReportedShift;
@@ -1004,7 +1004,7 @@ type
     TailFillerByte = $CC;
     FreedFillerByte = $F0;
     FillerByteToUint32 = $01010101;
-    FillerByteToPtrUint = PtrUint((FillerByteToUint32 shl 32 or FillerByteToUint32) and High(PtrUint)); {$if sizeof(PtrUint) > 8} {$error need more} {$endif}
+    FillerByteToPtrUint = PtrUint((FillerByteToUint32 shl 32 or FillerByteToUint32) and High(PtrUint));
     DontVerifySize = PtrUint(-99);
     NoTrace = SizeUint(-1); // Used in DoFreeMem and also in WalkHeapPrivate.
 
@@ -1084,7 +1084,8 @@ type
 
     // Value that, if multiplied by 0 or HasFullUserRequestBit, gives 0 or OffsetFromExtraIfNoFullUserRequestToExtraIfHasFullUserRequest, respectively.
     HasFullUserRequestBitToOffsetBetweenExtras = OffsetFromExtraIfNoFullUserRequestToExtraIfHasFullUserRequest div HasFullUserRequestBit;
-  {$if OffsetFromExtraIfNoFullUserRequestToExtraIfHasFullUserRequest mod HasFullUserRequestBit <> 0} {$error adjust formula (and probably occurences)} {$endif}
+    ExtraOffsetIsDivisibleByFullUserRequestBit =
+      1 div Ord(OffsetFromExtraIfNoFullUserRequestToExtraIfHasFullUserRequest mod HasFullUserRequestBit = 0);
 
     function CheckHeadAndTail(n: pNode): boolean;
     function CheckFreedMemory(n: pNode; sz: SizeUint): boolean;
@@ -1305,7 +1306,7 @@ var
     begin
       p := n^.userPtr + size;
       remainingUnits := HeadTailSizes[info shr TailSizeIndexShift and TailSizeIndexMask];
-      repeat {$if TailSizeUnit <> sizeof(uint32)} {$error TailSizeUnit is assumed to be uint32} {$endif}
+      repeat
         if unaligned(pUint32(p)^) <> TailFillerByte * FillerByteToUint32 then exit;
         inc(p, sizeof(uint32));
         dec(remainingUnits);
@@ -1316,7 +1317,7 @@ var
       p := n^.userPtr;
       remainingUnits := HeadTailSizes[info shr HeadSizeIndexShift and HeadSizeIndexMask];
       pattern := HeadFillerByte * FillerByteToPtrUint;
-      repeat {$if HeadSizeUnit <> 2 * sizeof(pointer)} {$error HeadSizeUnit is assumed to be two pointers} {$endif}
+      repeat
         dec(p, 2 * sizeof(pointer));
         if (pPtrUint(p)[0] xor pattern) or (pPtrUint(p)[1] xor pattern) <> 0 then exit;
         dec(remainingUnits);
@@ -1435,15 +1436,7 @@ var
     freeBatch.Add(n^.userPtr - HeadTailSizes[info shr HeadSizeIndexShift and HeadSizeIndexMask] * HeadSizeUnit, cf);
   end;
 
-type
-  HeapTracerCheckFlags = HeapTracer.CheckFlags;
-
   class function HeapTracer.CfSkipFrames(cf: CheckFlags): SizeUint;
-{$if sizeof(HeapTracerCheckFlags) = sizeof(uint32)}
-  begin
-    result := PopCnt(uint32(cf * CheckFlagsThatMeanFramesUninterestingInBacktraces));
-  end;
-{$else}
   var
     f: CheckFlag;
   begin
@@ -1451,7 +1444,6 @@ type
     for f in cf * CheckFlagsThatMeanFramesUninterestingInBacktraces do
       inc(result);
   end;
-{$endif}
 
   function HeapTracer.DoGetMem(size: PtrUint; zeroed: boolean): pointer;
   var
@@ -1943,7 +1935,7 @@ type
     n: pNode;
   begin
     n := pointer(hn) - PtrUint(@Node(nil^).hn);
-    write(f, HexStr(PtrUint(n^.userPtr), 1 + {$if sizeof(pointer) <= 4} BsrDWord {$else} BsrQWord {$endif} (PtrUint(n^.userPtr) or 1) div 4), '/', n^.GetUserSizeRequest);
+    write(f, HexStr(PtrUint(n^.userPtr), 1 + {$ifdef CPU32} BsrDWord {$else} BsrQWord {$endif} (PtrUint(n^.userPtr) or 1) div 4), '/', n^.GetUserSizeRequest);
     if Assigned(n^.trace) then write(f, '/t', n^.trace^.dataOfs);
     if n^.info and HasFullUserRequestBit <> 0 then write(f, '/Sz');
     if n^.info and (ExtraInfoIndexMask shl ExtraInfoIndexShift) <> 0 then

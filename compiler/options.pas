@@ -1591,7 +1591,13 @@ begin
                   RemoveSep(opts);
                   tmp:= GetName(opts);
                   if tmp <> '' then
-                    def_system_macro(tmp);
+                    if upper(tmp)='FPC_UNICODESTRINGS' then
+                      begin
+                        Message1(option_illegal_para,'#DEFINE '+tmp+' (selected by -MANSISTRINGS/-MUNICODESTRINGS)');
+                        StopOptions(1);
+                      end
+                    else
+                      def_system_macro(tmp);
                   Option_read:=true;
                 end
               else
@@ -1600,7 +1606,13 @@ begin
                   RemoveSep(opts);
                   tmp:= GetName(opts);
                   if tmp <> '' then
-                    undef_system_macro(tmp);
+                    if upper(tmp)='FPC_UNICODESTRINGS' then
+                      begin
+                        Message1(option_illegal_para,'#UNDEF '+tmp+' (selected by -MANSISTRINGS/-MUNICODESTRINGS)');
+                        StopOptions(1);
+                      end
+                    else
+                      undef_system_macro(tmp);
                   Option_read:=true;
                 end
               else
@@ -2567,6 +2579,12 @@ begin
           Message1(option_malformed_para,opt);
         StopOptions(1);
       end;
+    if upper(hs)='FPC_UNICODESTRINGS' then
+      begin
+        Message1(option_illegal_para,'-d'+hs+' (selected by -MANSISTRINGS/-MUNICODESTRINGS)');
+        StopOptions(1);
+        exit;
+      end;
     if l>0 then
       begin
         if cs_support_macro in init_settings.moduleswitches then
@@ -3290,10 +3308,12 @@ begin
             else
               include(init_settings.moduleswitches,cs_support_goto);
           'h' :
-            If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_refcountedstrings)
-            else
-              include(init_settings.localswitches,cs_refcountedstrings);
+            begin
+              { Accepted for seed-era command lines, but the compiler-wide
+                default String type is not controlled by -Sh. }
+              if (j<length(more)) and (more[j+1] in ['+','-']) then
+                inc(j);
+            end;
           'i' :
             If UnsetBool(More, j, opt, false) then
               exclude(init_settings.localswitches,cs_do_inline)
@@ -3352,7 +3372,7 @@ begin
               init_settings.globalswitches:=init_settings.globalswitches - [cs_constructor_name,cs_support_exceptions,
                                                                             cs_support_vectors,cs_load_fpcylix_unit];
 
-              init_settings.localswitches:=init_settings.localswitches - [cs_do_assertion,cs_do_inline, cs_refcountedstrings,
+              init_settings.localswitches:=init_settings.localswitches - [cs_do_assertion,cs_do_inline,
                                                                           cs_typed_addresses];
 
               init_settings.moduleswitches:=init_settings.moduleswitches - [cs_support_c_operators, cs_support_goto,
@@ -3410,7 +3430,15 @@ procedure TOption.Interpret_U_l(opt, more: TCmdStr);
 
 begin
   if is_identifier(more) then
-    undef_system_macro(more)
+    begin
+      if upper(more)='FPC_UNICODESTRINGS' then
+        begin
+          Message1(option_illegal_para,'-u'+more+' (selected by -MANSISTRINGS/-MUNICODESTRINGS)');
+          StopOptions(1);
+        end
+      else
+        undef_system_macro(more);
+    end
   else
     begin
       if (more='') then

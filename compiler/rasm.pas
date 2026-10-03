@@ -40,7 +40,7 @@ unit rasm;
          _asmsorted     : boolean;
          curlist        : TAsmList;
          c              : char;
-         actasmpattern  : string;
+         actasmpattern  : ShortString;
          actopcode      : tasmop;
          actasmregister : tregister;
          actcondition   : tasmcond;

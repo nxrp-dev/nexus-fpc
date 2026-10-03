@@ -35,7 +35,7 @@ begin
   TestResult($1fffffffffffffff.Test, -8, 11);
   Writeln('Float constants');
   TestResult(1.25.Test, 4, 12);
-{$if sizeof(Extended) = sizeof(Double)}
+{$ifndef FPC_HAS_TYPE_EXTENDED}
   TestResult(1.25e10.Test, 8, 14);
 {$else}
   TestResult(1.25e10.Test, 10, 14);

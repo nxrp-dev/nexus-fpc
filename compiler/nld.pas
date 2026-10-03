@@ -697,13 +697,12 @@ implementation
            is_constrealnode(right) and
            not equal_defs(right.resultdef,left.resultdef) then
           inserttypeconv(right,left.resultdef);
-{$if (cs_opt_use_load_modify_store in supported_optimizerswitches)}
         { Perform simple optimizations when -O2 and the dedicated
           cs_opt_use_load_modify_store optimization pass is not enabled. }
-        if (cs_opt_level2 in current_settings.optimizerswitches) and
+        if (cs_opt_use_load_modify_store in supported_optimizerswitches) and
+           (cs_opt_level2 in current_settings.optimizerswitches) and
            not (cs_opt_use_load_modify_store in current_settings.optimizerswitches) then
           result:=try_opt_assignmentnode(self);
-{$endif}
       end;
 
 

@@ -3003,7 +3003,7 @@ end;
 procedure TValue.Init;
 begin
   { resets the whole variant part; FValueData is already Nil }
-{$if SizeOf(TMethod) > SizeOf(QWord)}
+{$ifdef CPU64}
   FData.FAsMethod.Code := Nil;
   FData.FAsMethod.Data := Nil;
 {$else}
@@ -4156,7 +4156,7 @@ var
 begin
   Result.FData.FTypeInfo := ATypeInfo;
   { resets the whole variant part; FValueData is already Nil }
-{$if SizeOf(TMethod) > SizeOf(QWord)}
+{$ifdef CPU64}
   Result.FData.FAsMethod.Code := Nil;
   Result.FData.FAsMethod.Data := Nil;
 {$else}
@@ -4778,7 +4778,7 @@ end;
 
 function TValue.AsChar: Char;
 begin
-{$if SizeOf(Char) = 1}
+{$IFNDEF FPC_UNICODESTRINGS}
   Result := AsAnsiChar;
 {$else}
   Result := AsWideChar;
@@ -4931,11 +4931,7 @@ begin
         ArrayKind := '';
       Result:=Format('(%sarray [0..%d] of %s)', [ArrayKind, GetArrayLength - 1, GetArrayElType(TypeInfo)^.Name]);
       end;
-    {$IF SIZEOF(POINTER) = SIZEOF(CODEPOINTER)}
-    { if CodePointer is not the same as Pointer then it currently can't be
-      passed onto a array of const }
     tkMethod: Result := Format('(method code=%p, data=%p)', [FData.FAsMethod.Code, FData.FAsMethod.Data]);
-    {$ENDIF}
     tkVariant: Result := '(variant)';
   else
     result := '<unknown kind: '+GetEnumName(System.TypeInfo(TTypeKind),Ord(Kind))+'>';
@@ -9175,7 +9171,7 @@ end;
 
 
 {$ifndef InLazIDE}
-{$if defined(CPUI386) or (defined(CPUX86_64) and defined(WIN64)) or defined(CPUWASM32)}
+{$if (defined(CPUX86_64) and defined(WIN64)) or defined(CPUWASM32)}
 {$I invoke.inc}
 {$endif}
 {$endif}

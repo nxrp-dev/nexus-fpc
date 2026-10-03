@@ -34,14 +34,6 @@ const
 {$endif}
 {$endif}
 
-{$ifndef QTKIT_VERSION_MAX_ALLOWED}
-{$ifdef TYPES}
-const
-  QTKIT_VERSION_MAX_ALLOWED = QTKIT_VERSION_7_7_3;
-{$endif}
-
-{$endif}
-
 {$if defined(__LP64__)}
 {$ifdef TYPES}
 const

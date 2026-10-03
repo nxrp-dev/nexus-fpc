@@ -14,7 +14,6 @@
  **********************************************************************}
 
 {$mode objfpc}
-{$modeswitch unicodestrings-}
 {$h-}
 {$inline on}
 {$implicitexceptions off}

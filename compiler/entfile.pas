@@ -320,7 +320,7 @@ type
     function  getrealsize(sizeofreal : longint):entryreal;
     function  getrealbytesize:byte;
     function  getboolean:boolean; {$ifdef USEINLINE}inline;{$endif}
-    function  getstring:string;
+    function  getstring:ShortString;
     function  getpshortstring:pshortstring;
     function  getansistring:ansistring;
     procedure getset(out arr: array of byte);
@@ -346,7 +346,7 @@ type
     procedure putaword(i:aword); {$ifdef USEINLINE}inline;{$endif}
     procedure putreal(d:entryreal);
     procedure putboolean(b:boolean); {$ifdef USEINLINE}inline;{$endif}
-    procedure putstring(const s:string); {$ifdef USEINLINE}inline;{$endif}
+    procedure putstring(const s:ShortString); {$ifdef USEINLINE}inline;{$endif}
     procedure putansistring(const s:ansistring);
 
     procedure putset(const arr: array of byte);
@@ -1217,7 +1217,7 @@ begin
     result:=getqword
   else result:=getdword;
 {$else not generic_cpu}
-  {$if sizeof(TConstPtrUInt)=8}
+  {$ifdef cpu64bitaddr}
   result:=tconstptruint(getint64);
   {$else}
   result:=TConstPtrUInt(getlongint);
@@ -1507,7 +1507,7 @@ begin
 end;
 
 
-function tentryfile.getstring:string;
+function tentryfile.getstring:ShortString;
 begin
   result[0]:=chr(getbyte);
 {$ifdef DEBUG_PPU}
@@ -1904,7 +1904,7 @@ begin
   ppu_log('putptruint');
   inc_log_level;
 {$endif}
-  {$if sizeof(TConstPtrUInt)=8}
+  {$ifdef cpu64bitaddr}
   putint64(int64(v));
   {$else}
   putlongint(longint(v));
@@ -2006,7 +2006,7 @@ begin
 end;
 
 
-procedure tentryfile.putstring(const s:string);
+procedure tentryfile.putstring(const s:ShortString);
 begin
 {$ifdef DEBUG_PPU}
   { The reading method uses getbyte, so fake it here }

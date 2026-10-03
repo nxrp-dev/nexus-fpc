@@ -31,11 +31,11 @@ interface
       globtype,
       systems;
 
-    function UpdateAlignmentStr(s:string;var a:talignmentinfo):boolean;
-    function UpdateOptimizerStr(s:string;var a:toptimizerswitches):boolean;
-    function UpdateWpoStr(s: string; var a: twpoptimizerswitches): boolean;
-    function UpdateDebugStr(s:string;var a:tdebugswitches):boolean;
-    function UpdateTargetSwitchStr(s: string; var a: ttargetswitches; global: boolean): boolean;
+     function UpdateAlignmentStr(s:ShortString;var a:talignmentinfo):boolean;
+     function UpdateOptimizerStr(s:ShortString;var a:toptimizerswitches):boolean;
+     function UpdateWpoStr(s: ShortString; var a: twpoptimizerswitches): boolean;
+     function UpdateDebugStr(s:ShortString;var a:tdebugswitches):boolean;
+     function UpdateTargetSwitchStr(s: ShortString; var a: ttargetswitches; global: boolean): boolean;
 
 implementation
 
@@ -44,10 +44,10 @@ implementation
       cutils,
       symtable;
 
-    function UpdateAlignmentStr(s:string;var a:talignmentinfo):boolean;
+     function UpdateAlignmentStr(s:ShortString;var a:talignmentinfo):boolean;
       var
-        tok  : string;
-        vstr : string;
+         tok  : ShortString;
+         vstr : ShortString;
         l    : longint;
         code : integer;
         b    : talignmentinfo;
@@ -112,9 +112,9 @@ implementation
       end;
 
 
-    function UpdateOptimizerStr(s:string;var a:toptimizerswitches):boolean;
+     function UpdateOptimizerStr(s:ShortString;var a:toptimizerswitches):boolean;
       var
-        tok   : string;
+         tok   : ShortString;
         doset,
         found : boolean;
         opt   : toptimizerswitch;
@@ -154,9 +154,9 @@ implementation
       end;
 
 
-    function UpdateWpoStr(s: string; var a: twpoptimizerswitches): boolean;
+     function UpdateWpoStr(s: ShortString; var a: twpoptimizerswitches): boolean;
       var
-        tok   : string;
+         tok   : ShortString;
         doset,
         found : boolean;
         opt   : twpoptimizerswitch;
@@ -207,9 +207,9 @@ implementation
       end;
 
 
-    function UpdateDebugStr(s:string;var a:tdebugswitches):boolean;
+     function UpdateDebugStr(s:ShortString;var a:tdebugswitches):boolean;
       var
-        tok   : string;
+         tok   : ShortString;
         doset,
         found : boolean;
         opt   : tdebugswitch;
@@ -249,10 +249,10 @@ implementation
       end;
 
 
-    function UpdateTargetSwitchStr(s: string; var a: ttargetswitches; global: boolean): boolean;
+     function UpdateTargetSwitchStr(s: ShortString; var a: ttargetswitches; global: boolean): boolean;
       var
         tok,
-        value : string;
+         value : ShortString;
         setstr: string[2];
         equalspos: longint;
         doset,

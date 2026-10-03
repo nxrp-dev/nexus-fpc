@@ -79,29 +79,29 @@ interface
     function used_align(varalign,minalign,maxalign:longint):longint;
     function isbetteralignedthan(new, org, limit: cardinal): boolean;
     function packedbitsloadsize(bitlen: int64) : int64;
-    procedure Replace(var s:string;s1:string;const s2:string);
-    procedure Replace(var s:AnsiString;s1:string;const s2:AnsiString);
-    procedure ReplaceCase(var s:string;const s1,s2:string);
+    procedure Replace(var s:ShortString;s1:ShortString;const s2:ShortString);
+    procedure Replace(var s:AnsiString;s1:ShortString;const s2:AnsiString);
+    procedure ReplaceCase(var s:ShortString;const s1,s2:ShortString);
     procedure ReplaceCase(var s:ansistring;const s1,s2:ansistring);
     Function MatchPattern(const pattern,what:string):boolean;
     function upper(const c : char) : char;
-    function upper(const s : string) : string;
+    function upper(const s : ShortString) : ShortString;
     function upper(const s : ansistring) : ansistring;
     function lower(const c : char) : char;
-    function lower(const s : string) : string;
+    function lower(const s : ShortString) : ShortString;
     function lower(const s : ansistring) : ansistring;
     function rpos(const needle: char; const haystack: shortstring): longint; overload;
     function rpos(const needle: shortstring; const haystack: shortstring): longint; overload;
-    function trimspace(const s:string):string;
+    function trimspace(const s:ShortString):ShortString;
     function trimspace(const s:AnsiString):AnsiString;
-    function space (b : longint): string;
+    function space (b : longint): ShortString;
     { returns the position of the first char of the set cs in s, if there is none, then it returns 0 }
     function PosCharset(const cs : TCharSet;const s : ansistring) : integer;
-    function PadSpace(const s:string;len:longint):string;
+    function PadSpace(const s:ShortString;len:longint):ShortString;
     function PadSpace(const s:AnsiString;len:longint):AnsiString;
-    function GetToken(var s:string;endchar:char):string;
+    function GetToken(var s:ShortString;endchar:char):ShortString;
     function GetToken(var s:ansistring;endchar:char):ansistring;
-    procedure uppervar(var s : string);
+    procedure uppervar(var s : ShortString);
     function realtostr(e:extended):string;{$ifdef USEINLINE}inline;{$endif}
     function tostr(i : qword) : string;{$ifdef USEINLINE}inline;{$endif}overload;
     function tostr(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
@@ -131,8 +131,8 @@ interface
        and false is returned.
     }
     function DePascalQuote(var s: ansistring): Boolean;
-    function CompareStr(const S1, S2: string): Integer;
-    function CompareText(S1, S2: string): integer;
+    function CompareStr(const S1, S2: ShortString): Integer;
+    function CompareText(S1, S2: ShortString): integer;
 
     { releases the string p and assigns nil to p  }
     { if p=nil then freemem isn't called          }
@@ -148,7 +148,7 @@ interface
        terminated string to that allocated memory and returns a pointer
        to that mem
     }
-    function  strpnew(const s : string) : pchar;
+    function  strpnew(const s : ShortString) : pchar;
     function  strpnew(const s : ansistring) : pchar;
 
     {# makes the character @var(c) lowercase, with spanish, french and german
@@ -467,7 +467,7 @@ implementation
       end;
 
 
-    procedure Replace(var s:string;s1:string;const s2:string);
+    procedure Replace(var s:ShortString;s1:ShortString;const s2:ShortString);
       var
          last,
          i  : longint;
@@ -488,7 +488,7 @@ implementation
       end;
 
 
-    procedure Replace(var s:AnsiString;s1:string;const s2:AnsiString);
+    procedure Replace(var s:AnsiString;s1:ShortString;const s2:AnsiString);
       var
          last,
          i  : longint;
@@ -509,7 +509,7 @@ implementation
       end;
 
 
-    procedure ReplaceCase(var s:string;const s1,s2:string);
+    procedure ReplaceCase(var s:ShortString;const s1,s2:ShortString);
       var
          last,
          i  : longint;
@@ -613,7 +613,7 @@ implementation
       end;
 
 
-    function upper(const s : string) : string;
+    function upper(const s : ShortString) : ShortString;
     {
       return uppercased string of s
     }
@@ -660,7 +660,7 @@ implementation
       end;
 
 
-    function lower(const s : string) : string;
+    function lower(const s : ShortString) : ShortString;
     {
       return lowercased string of s
     }
@@ -698,7 +698,7 @@ implementation
       end;
 
 
-    procedure uppervar(var s : string);
+    procedure uppervar(var s : ShortString);
     {
       uppercase string s
     }
@@ -773,7 +773,7 @@ implementation
       end;
 
 
-    function trimspace(const s:string):string;
+    function trimspace(const s:ShortString):ShortString;
     {
       return s with all leading and ending spaces and tabs removed
     }
@@ -807,9 +807,9 @@ implementation
       end;
 
 
-    function space (b : longint): string;
+    function space (b : longint): ShortString;
       var
-       s: string;
+       s: ShortString;
       begin
         space[0] := chr(b);
         s[0] := chr(b);
@@ -818,7 +818,7 @@ implementation
       end;
 
 
-    function PadSpace(const s:string;len:longint):string;
+    function PadSpace(const s:ShortString;len:longint):ShortString;
     {
       return s with spaces add to the end
     }
@@ -842,7 +842,7 @@ implementation
       end;
 
 
-    function GetToken(var s:string;endchar:char):string;
+    function GetToken(var s:ShortString;endchar:char):ShortString;
       var
         i : longint;
         quote : char;
@@ -1176,7 +1176,7 @@ implementation
        end;
 
 
-    function strpnew(const s : string) : pchar;
+    function strpnew(const s : ShortString) : pchar;
       var
          p : pchar;
       begin
@@ -1234,7 +1234,7 @@ implementation
       end;
 
 
-    function CompareStr(const S1, S2: string): Integer;
+    function CompareStr(const S1, S2: ShortString): Integer;
       var
         count, count1, count2: integer;
       begin
@@ -1250,7 +1250,7 @@ implementation
       end;
 
 
-    function CompareText(S1, S2: string): integer;
+    function CompareText(S1, S2: ShortString): integer;
       begin
         UpperVar(S1);
         UpperVar(S2);

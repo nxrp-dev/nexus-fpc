@@ -1065,10 +1065,10 @@ implementation
             WritePointer := '$' + hexstr(PtrUInt(P), 4);
           $10000..$FFFFFFFF:
             WritePointer := '$' + hexstr(PtrUInt(P), 8);
-    {$if sizeof(Pointer) > 4}
+    {$ifdef cpu64bitaddr}
           else
             WritePointer := '$' + hexstr(PtrUInt(P), 2*sizeof(Pointer));
-    {$ifend sizeof(Pointer) > 4}
+    {$endif cpu64bitaddr}
         end;
       end;
 
@@ -1082,10 +1082,10 @@ implementation
             WriteConstPUInt := '$' + hexstr(P, 4);
           $10000..$FFFFFFFF:
             WriteConstPUInt := '$' + hexstr(P, 8);
-    {$if sizeof(TConstPtrUInt) > 4}
+    {$ifdef cpu64bitaddr}
           else
             WriteConstPUInt := '$' + hexstr(P, 2*sizeof(TConstPtrUInt));
-    {$endif sizeof(TConstPtrUInt) > 4}
+    {$endif cpu64bitaddr}
         end;
       end;
 

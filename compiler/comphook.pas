@@ -157,7 +157,7 @@ implementation
                           Helper Routines
 ****************************************************************************}
 
-function gccfilename(const s : string) : string;
+function gccfilename(const s : ShortString) : ShortString;
 var
   i : longint;
 begin

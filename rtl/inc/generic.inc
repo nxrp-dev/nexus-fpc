@@ -169,9 +169,9 @@ begin
     begin
       v:=(value shl 8) or value;
       v:=(v shl 16) or v;
-{$if sizeof(v)=8}
+{$ifdef CPUINT64}
       v:=(v shl 32) or v;
-{$endif sizeof(v)=8}
+{$endif CPUINT64}
       { Align on native pointer size }
       pend:=pbyte(align(pdest,sizeof(PtrUInt)));
       dec(count,pend-pdest);
@@ -212,9 +212,9 @@ begin
   if Count>4*sizeof(ptruint)-1 then
     begin
       v:=(value shl 16) or value;
-{$if sizeof(v)=8}
+{$ifdef CPUINT64}
       v:=(v shl 32) or v;
-{$endif sizeof(v)=8}
+{$endif CPUINT64}
       { Align on native pointer size }
       aligncount:=(PtrUInt(pdest) and (sizeof(PtrUInt)-1)) shr 1;
       dec(count,aligncount);
@@ -256,9 +256,9 @@ begin
   if Count>4*sizeof(ptruint)-1 then
     begin
       v:=value;
-{$if sizeof(v)=8}
+{$ifdef CPUINT64}
       v:=(v shl 32) or v;
-{$endif sizeof(v)=8}
+{$endif CPUINT64}
       { Align on native pointer size }
       aligncount:=(PtrUInt(pdest) and (sizeof(PtrUInt)-1)) shr 2;
       dec(count,aligncount);
@@ -543,7 +543,7 @@ begin
   pend:=psrc+len;
   if (pend<psrc) or not ((len>=0) and (len<=High(PtrInt) div 4)) then
     pend:=pdword(high(ptruint)-4);
-{$if sizeof(ptruint)>sizeof(dword)}
+{$ifdef CPU64}
   if (len>=sizeof(ptruint)) { len in uint32s, so at least four pointers }
 {$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
     and ((PtrUInt(pdest) xor PtrUInt(psrc)) and (sizeof(PtrUInt)-1)=0)
@@ -569,7 +569,7 @@ begin
       if psrc<pendpart then
         pointer(pend):=pointer(psrc)+sizeof(ptruint);
     end;
-{$endif sizeof(ptruint)>sizeof(dword)}
+{$endif CPU64}
 {$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
   if (PtrUInt(pdest) or PtrUInt(psrc)) and 3<>0 then
     begin
@@ -3440,7 +3440,7 @@ end;
 {$endif FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_16}
 
 {$ifndef FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_32}
-{$if SizeOf(ALUSInt) = SizeOf(LongInt)}
+{$ifdef CPUINT32}
 {$message warning 'At least fpc_atomic_cmp_xchg_32 must be implemented for the current platform'}
 {$define FPC_SYSTEM_ATOMIC_32_NO_LOCK}
 {$else}
@@ -3461,7 +3461,7 @@ end;
 {$endif FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_32}
 
 {$ifndef FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_64}
-{$if SizeOf(ALUSInt) = SizeOf(Int64)}
+{$ifdef CPUINT64}
 {$message warning 'At least fpc_atomic_cmp_xchg_64 must be implemented for the current platform'}
 {$define FPC_SYSTEM_ATOMIC_64_NO_LOCK}
 {$else}

@@ -113,7 +113,7 @@
     Function Replace(const OldChar, NewChar: SBChar; StartIndex: Integer; Count: Integer): TGenericStringBuilder;
     Function Replace(const OldValue, NewValue: SBRawString): TGenericStringBuilder;
     Function Replace(const OldValue, NewValue: SBRawString; StartIndex: Integer; Count: Integer): TGenericStringBuilder;
-{$IFDEF UNICODERTL}
+{$IFDEF FPC_UNICODESTRINGS}
     Function ToString: RTLString; override;
     function ToString(UpdateCapacity: Boolean): RTLString; overload;
 {$ELSE}

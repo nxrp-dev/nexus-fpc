@@ -28,7 +28,7 @@ type
   CodePointer = Pointer;
 {$ENDIF}
 
-function GetLineInfo(addr:ptruint;var func,source:string;var line:longint) : boolean;
+function GetLineInfo(addr:ptruint;var func,source:ShortString;var line:longint) : boolean;
 function StabBackTraceStr(addr:CodePointer):shortstring;
 procedure CloseStabs;
 
@@ -176,7 +176,7 @@ begin
 end;
 
 
-function GetLineInfo(addr:ptruint;var func,source:string;var line:longint) : boolean;
+function GetLineInfo(addr:ptruint;var func,source:ShortString;var line:longint) : boolean;
 var
   res,
   stabsleft,
@@ -312,8 +312,8 @@ end;
 function StabBackTraceStr(addr:CodePointer):shortstring;
 var
   func,
-  source : string;
-  hs     : string;
+  source : ShortString;
+  hs     : ShortString;
   line   : longint;
   Store  : TBackTraceStrFunc;
   Success : boolean;

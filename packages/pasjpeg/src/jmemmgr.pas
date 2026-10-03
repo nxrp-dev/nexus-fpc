@@ -1215,7 +1215,7 @@ var
   test_mac : size_t;
 {$ifndef NO_GETENV}
 var
-  memenv : string;
+  memenv : ShortString;
   code : integer;
 {$endif}
 begin

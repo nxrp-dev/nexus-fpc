@@ -35,11 +35,11 @@
        // "Maximum" available stringtype : Shortstring, AnsiString or UnicodeString
       {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}
       
-      {$IFNDEF UNICODERTL}
+      {$IFNDEF FPC_UNICODESTRINGS}
       RTLString = ansistring;
-      {$ELSE UNICODERTL}
+      {$ELSE FPC_UNICODESTRINGS}
       RTLString = unicodestring;
-      {$ENDIF UNICODERTL}
+      {$ENDIF FPC_UNICODESTRINGS}
  
       {$else FPC_HAS_FEATURE_ANSISTRINGS}
 
@@ -288,7 +288,7 @@
           class function ClassType : tclass;{$ifdef SYSTEMINLINE}inline;{$endif}
           class function ClassInfo : pointer;
           class function ClassName : shortstring;
-          {$IF SIZEOF(CHAR)=2}
+          {$IFDEF FPC_UNICODESTRINGS}
           class function ClassNameIs(const name : AnsiString) : boolean; overload; {$ifdef SYSTEMINLINE}inline;{$endif}
           {$ENDIF}
           {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}

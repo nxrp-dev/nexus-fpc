@@ -179,7 +179,7 @@ TYPE
 {                    OS dependent File type / consts                        }
 {---------------------------------------------------------------------------}
 type
-   FNameStr = String;
+   FNameStr = ShortString;
 const
    MaxReadBytes = $7fffffff;
 
@@ -574,12 +574,12 @@ TYPE
       CONSTRUCTOR Init (AStream: PStream);
       DESTRUCTOR Done;                                               Virtual;
       FUNCTION Count: Sw_Integer;
-      FUNCTION KeyAt (I: Sw_Integer): String;
-      FUNCTION Get (Key: String): PObject;
+      FUNCTION KeyAt (I: Sw_Integer): ShortString;
+      FUNCTION Get (Key: ShortString): PObject;
       FUNCTION SwitchTo (AStream: PStream; Pack: Boolean): PStream;
       PROCEDURE Flush;
-      PROCEDURE Delete (Key: String);
-      PROCEDURE Put (Item: PObject; Key: String);
+      PROCEDURE Delete (Key: ShortString);
+      PROCEDURE Put (Item: PObject; Key: ShortString);
       PRIVATE
          BasePos: LongInt;                            { Base position }
          IndexPos: LongInt;                           { Index position }
@@ -602,13 +602,13 @@ TYPE
    TStringList = OBJECT (TObject)
       CONSTRUCTOR Load (Var S: TStream);
       DESTRUCTOR Done;                                               Virtual;
-      FUNCTION Get (Key: Sw_Word): String;
+      FUNCTION Get (Key: Sw_Word): ShortString;
       PRIVATE
          Stream   : PStream;
          BasePos  : Longint;
          IndexSize: Longint;
          Index    : PStrIndex;
-      PROCEDURE ReadStr (Var S: String; Offset, Skip: Longint);
+      PROCEDURE ReadStr (Var S: ShortString; Offset, Skip: Longint);
    END;
    PStringList = ^TStringList;
 
@@ -619,7 +619,7 @@ TYPE
    TStrListMaker = OBJECT (TObject)
       CONSTRUCTOR Init (AStrSize, AIndexSize: Sw_Word);
       DESTRUCTOR Done;                                               Virtual;
-      PROCEDURE Put (Key: Sw_Word; S: String);
+      PROCEDURE Put (Key: Sw_Word; S: ShortString);
       PROCEDURE Store (Var S: TStream);
       PRIVATE
          StrPos   : Sw_Word;
@@ -700,7 +700,7 @@ a nil pointer, otherwise NewStr allocates Length(S)+1 bytes of memory
 containing a copy of S, and returns a pointer to the string.
 12Jun96 LdB
 ---------------------------------------------------------------------}
-FUNCTION NewStr (Const S: String): PString;
+FUNCTION NewStr (Const S: ShortString): PString;
 
 {-DisposeStr---------------------------------------------------------
 Disposes of a PString allocated by the function NewStr.
@@ -708,7 +708,7 @@ Disposes of a PString allocated by the function NewStr.
 ---------------------------------------------------------------------}
 PROCEDURE DisposeStr (P: PString);
 
-PROCEDURE SetStr(VAR p:pString; CONST s:STRING);
+PROCEDURE SetStr(VAR p:pString; CONST s:ShortString);
 
 
 {+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
@@ -2789,7 +2789,7 @@ TYPE
    TResourceItem = packed RECORD
       Posn: LongInt;                                  { Resource position }
       Size: LongInt;                                  { Resource size }
-      Key : String;                                   { Resource key }
+      Key : ShortString;                              { Resource key }
    End;
    PResourceItem = ^TResourceItem;
 
@@ -2809,7 +2809,7 @@ END;
 {  GetItem -> Platforms DOS/DPMI/WIN/OS2 - Checked 24May96 LdB              }
 {---------------------------------------------------------------------------}
 FUNCTION TResourceCollection.GetItem (Var S: TStream): Pointer;
-VAR B: Byte; Pos: Longint; Size: Longint; Ts: String; P: PResourceItem;
+VAR B: Byte; Pos: Longint; Size: Longint; Ts: ShortString; P: PResourceItem;
 BEGIN
    S.Read(Pos, SizeOf(Pos));                          { Read position }
    S.Read(Size, SizeOf(Size));                        { Read size }
@@ -2829,7 +2829,7 @@ END;
 {  FreeItem -> Platforms DOS/DPMI/WIN/OS2 - Checked 24May96 LdB             }
 {---------------------------------------------------------------------------}
 PROCEDURE TResourceCollection.FreeItem (Item: Pointer);
-VAR Ts: String;
+VAR Ts: ShortString;
 BEGIN
    If (Item<>Nil) Then FreeMem(Item,
      SizeOf(TResourceItem) - SizeOf(Ts) +
@@ -2840,7 +2840,7 @@ END;
 {  PutItem -> Platforms DOS/DPMI/WIN/OS2 - Checked 24May96 LdB              }
 {---------------------------------------------------------------------------}
 PROCEDURE TResourceCollection.PutItem (Var S: TStream; Item: Pointer);
-VAR Ts: String;
+VAR Ts: ShortString;
 BEGIN
    If (Item<>Nil) Then S.Write(PResourceItem(Item)^,
     SizeOf(TResourceItem) - SizeOf(Ts) +
@@ -2986,7 +2986,7 @@ END;
 {--TResourceFile------------------------------------------------------------}
 {  KeyAt -> Platforms DOS/DPMI/WIN/OS2 - Checked 18Jun96 LdB                }
 {---------------------------------------------------------------------------}
-FUNCTION TResourceFile.KeyAt (I: Sw_Integer): String;
+FUNCTION TResourceFile.KeyAt (I: Sw_Integer): ShortString;
 BEGIN
    KeyAt := PResourceItem(Index.At(I))^.Key;          { Return key }
 END;
@@ -2994,7 +2994,7 @@ END;
 {--TResourceFile------------------------------------------------------------}
 {  Get -> Platforms DOS/DPMI/WIN/OS2 - Checked 18Jun96 LdB                  }
 {---------------------------------------------------------------------------}
-FUNCTION TResourceFile.Get (Key: String): PObject;
+FUNCTION TResourceFile.Get (Key: ShortString): PObject;
 VAR I: Sw_Integer;
 BEGIN
    If (Stream = Nil) OR (NOT Index.Search(@Key, I))   { No match on key }
@@ -3063,7 +3063,7 @@ END;
 {--TResourceFile------------------------------------------------------------}
 {  Delete -> Platforms DOS/DPMI/WIN/OS2 - Checked 18Jun96 LdB               }
 {---------------------------------------------------------------------------}
-PROCEDURE TResourceFile.Delete (Key: String);
+PROCEDURE TResourceFile.Delete (Key: ShortString);
 VAR I: Sw_Integer;
 BEGIN
    If Index.Search(@Key, I) Then Begin                { Search for key }
@@ -3075,8 +3075,8 @@ END;
 {--TResourceFile------------------------------------------------------------}
 {  Put -> Platforms DOS/DPMI/WIN/OS2 - Checked 18Jun96 LdB                  }
 {---------------------------------------------------------------------------}
-PROCEDURE TResourceFile.Put (Item: PObject; Key: String);
-VAR I: Sw_Integer; Ts: String; P: PResourceItem;
+PROCEDURE TResourceFile.Put (Item: PObject; Key: ShortString);
+VAR I: Sw_Integer; Ts: ShortString; P: PResourceItem;
 BEGIN
    If (Stream=Nil) Then Exit;                         { Stream not valid }
    If Index.Search(@Key, I) Then P := Index.At(I)     { Search for item }
@@ -3128,8 +3128,8 @@ END;
 {--TStringList--------------------------------------------------------------}
 {  Get -> Platforms DOS/DPMI/WIN/OS2 - Checked 30Jun97 LdB                  }
 {---------------------------------------------------------------------------}
-FUNCTION TStringList.Get (Key: Sw_Word): String;
-VAR I: Word; S: String;
+FUNCTION TStringList.Get (Key: Sw_Word): ShortString;
+VAR I: Word; S: ShortString;
 BEGIN
    S := '';                                           { Preset empty string }
    If (IndexSize>0) Then Begin                        { We must have strings }
@@ -3151,7 +3151,7 @@ END;
 {--TStringLis---------------------------------------------------------------}
 {  ReadStr -> Platforms DOS/DPMI/WIN/OS2 - Checked 30Jun97 LdB              }
 {---------------------------------------------------------------------------}
-PROCEDURE TStringList.ReadStr (Var S: String; Offset, Skip: Longint);
+PROCEDURE TStringList.ReadStr (Var S: ShortString; Offset, Skip: Longint);
 BEGIN
    Stream^.Seek(BasePos + Offset);                    { Seek to position }
    Inc(Skip);                                         { Adjust skip }
@@ -3190,7 +3190,7 @@ END;
 {--TStrListMaker------------------------------------------------------------}
 {  Put -> Platforms DOS/DPMI/WIN/OS2 - Checked 30Jun97 LdB                  }
 {---------------------------------------------------------------------------}
-PROCEDURE TStrListMaker.Put (Key: Sw_Word; S: String);
+PROCEDURE TStrListMaker.Put (Key: Sw_Word; S: ShortString);
 BEGIN
    If (Cur.Count = 16) OR (Key <> Cur.Key + Cur.Count)
      Then CloseCurrent;                               { Close current }
@@ -3242,7 +3242,7 @@ END;
 {---------------------------------------------------------------------------}
 {  NewStr -> Platforms DOS/DPMI/WINDOWS/OS2 - Checked 12Jun96 LdB           }
 {---------------------------------------------------------------------------}
-FUNCTION NewStr (Const S: String): PString;
+FUNCTION NewStr (Const S: ShortString): PString;
 VAR P: PString;
 BEGIN
    If (S = '') Then P := Nil Else Begin               { Return nil }
@@ -3261,7 +3261,7 @@ BEGIN
 END;
 
 
-PROCEDURE SetStr(VAR p:pString; CONST s:STRING);
+PROCEDURE SetStr(VAR p:pString; CONST s:ShortString);
 BEGIN
   IF p<>NIL THEN
     FreeMem(P, Length(P^) + 1);

@@ -5345,28 +5345,26 @@ implementation
     constructor trecorddef.create_internal(const n: string; packrecords, recordalignmin: shortint; where: tsymtable);
       var
         name : string;
-        pname : pshortstring;
         oldsymtablestack: tsymtablestack;
         ts: ttypesym;
       begin
         { construct name }
         if n<>'' then
-          pname:=@n
+          name:=n
         else
           begin
             init_defid;
             name:='$InternalRec'+unique_id_str;
-            pname:=@name;
           end;
         oldsymtablestack:=symtablestack;
         { do not simply push/pop current_module.localsymtable, because
           that can have side-effects (e.g., it removes helpers) }
         symtablestack:=nil;
 
-        symtable:=trecordsymtable.create(pname^,packrecords,recordalignmin);
+        symtable:=trecordsymtable.create(name,packrecords,recordalignmin);
         symtable.defowner:=self;
         isunion:=false;
-        inherited create(pname^,recorddef,true);
+        inherited create(name,recorddef,true);
         where.insertdef(self);
         { if we specified a name, then we'll probably want to look up the
           type again by name too -> create typesym }

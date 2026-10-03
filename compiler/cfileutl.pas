@@ -119,7 +119,7 @@ interface
     function  FindFileInExeLocations(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
     function  FindExe(const bin:TCmdStr;allowcache:boolean;var foundfile:TCmdStr):boolean;
     function  GetShortName(const n:TCmdStr):TCmdStr;
-    function maybequoted(const s:string):string;
+    function maybequoted(const s:ShortString):ShortString;
     function maybequoted(const s:ansistring):ansistring;
     function maybequoted_for_script(const s:ansistring; quote_script: tscripttype):ansistring;
 
@@ -1084,7 +1084,7 @@ end;
       end;
 
 
-    function maybequoted(const s:string):string;
+    function maybequoted(const s:ShortString):ShortString;
     const
       FORBIDDEN_CHARS_DOS = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')',
                          '{', '}', '''', '`', '~'];

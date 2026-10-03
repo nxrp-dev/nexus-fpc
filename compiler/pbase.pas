@@ -410,12 +410,18 @@ implementation
                           if searchsym_in_module(tunitsym(srsym).module,current_scanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
                             exit(true);
                         end;
-                      { system.char? (char=widechar comes from the implicit
-                        uachar/uuchar unit -> override) }
-                      if (current_scanner.pattern='CHAR') and
+                      { Resolve the default Char/PChar from the invocation's
+                        text model, regardless of the System alias. }
+                      if ((current_scanner.pattern='CHAR') or
+                          (current_scanner.pattern='PCHAR')) and
                          (tmodule(tunitsym(srsym).module).globalsymtable=systemunit) then
                         begin
-                          if m_default_unicodestring in current_settings.modeswitches then
+                          if current_scanner.pattern='PCHAR' then
+                            if m_default_unicodestring in current_settings.modeswitches then
+                              searchsym_in_module(tunitsym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                            else
+                              searchsym_in_module(tunitsym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                          else if m_default_unicodestring in current_settings.modeswitches then
                             searchsym_in_module(tunitsym(srsym).module,'WIDECHAR',srsym,srsymtable)
                           else
                             searchsym_in_module(tunitsym(srsym).module,'ANSICHAR',srsym,srsymtable)

@@ -44,15 +44,15 @@ type
   { interface to reading a section from a file with wpo info }
   twposectionreaderintf = interface
     ['{51BE3F89-C9C5-4965-9C83-AE7490C92E3E}']
-    function sectiongetnextline(out s: string): boolean;
+    function sectiongetnextline(out s: ShortString): boolean;
   end;
 
 
   { interface to writing sections to a file with wpoinfo }
   twposectionwriterintf = interface
     ['{C056F0DD-62B1-4612-86C7-2D39944C4437}']
-    procedure startsection(const name: string);
-    procedure sectionputline(const s: string);
+    procedure startsection(const name: ShortString);
+    procedure sectionputline(const s: ShortString);
   end;
 
 
@@ -202,9 +202,9 @@ type
     procedure writefile;
 
     { starts a new section with name "name" }
-    procedure startsection(const name: string);
+     procedure startsection(const name: ShortString);
     { writes s to the wpo file }
-    procedure sectionputline(const s: string);
+     procedure sectionputline(const s: ShortString);
 
     { register a component instance that needs to be written
       to the wpo feedback file
@@ -222,13 +222,13 @@ type
     ffilename: tcmdstr;
     flinenr: longint;
     finputfile: text;
-    fcurline: string;
+     fcurline: ShortString;
     fusecurline: boolean;
 
     { destination for the read information }
     fdest: twpoinfomanagerbase;
 
-    function getnextnoncommentline(out s: string): boolean;
+     function getnextnoncommentline(out s: ShortString): boolean;
    public
 
      constructor create(const fn: tcmdstr; dest: twpoinfomanagerbase);
@@ -240,7 +240,7 @@ type
      { returns next line of the current section in s, and false if no more
        lines in the current section
      }
-     function sectiongetnextline(out s: string): boolean;
+      function sectiongetnextline(out s: ShortString): boolean;
   end;
 
 
@@ -299,7 +299,7 @@ type
     { get the program optimization class type that can parse the contents
       of the section with name "secname" in the wpo feedback file
     }
-    function gethandlerforsection(const secname: string): twpocomponentbaseclass;
+     function gethandlerforsection(const secname: ShortString): twpocomponentbaseclass;
 
     { tell all instantiated wpo component classes to collect the information
       from the global compiler state that they need (done at the very end of
@@ -445,7 +445,7 @@ implementation
 
   { twpofilereader }
 
-  function twpofilereader.getnextnoncommentline(out s: string):
+  function twpofilereader.getnextnoncommentline(out s: ShortString):
     boolean;
     begin
       if (fusecurline) then
@@ -495,7 +495,7 @@ implementation
       i: longint;
       wpotype: twpotype;
       s,
-      sectionname: string;
+      sectionname: ShortString;
     begin
       cgmessage1(wpo_begin_processing,ffilename);
       reset(finputfile);
@@ -555,7 +555,7 @@ implementation
       cgmessage1(wpo_end_processing,ffilename);
     end;
 
-  function twpofilereader.sectiongetnextline(out s: string): boolean;
+  function twpofilereader.sectiongetnextline(out s: ShortString): boolean;
     begin
       result:=getnextnoncommentline(s);
       if not result then
@@ -618,12 +618,12 @@ implementation
       close(foutputfile);
     end;
 
-  procedure twpofilewriter.startsection(const name: string);
+  procedure twpofilewriter.startsection(const name: ShortString);
     begin
       writeln(foutputfile,'% ',name);
     end;
 
-  procedure twpofilewriter.sectionputline(const s: string);
+  procedure twpofilewriter.sectionputline(const s: ShortString);
     begin
       writeln(foutputfile,s);
     end;
@@ -642,7 +642,7 @@ implementation
     end;
 
 
-  function twpoinfomanagerbase.gethandlerforsection(const secname: string
+  function twpoinfomanagerbase.gethandlerforsection(const secname: ShortString
       ): twpocomponentbaseclass;
     begin
       result:=twpocomponentbaseclass(fwpocomponents.find(secname));

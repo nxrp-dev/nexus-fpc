@@ -317,6 +317,16 @@ implementation
       end;
 
 
+    procedure checksystemcharwidth;
+      begin
+        { The PPU's text-model flag cannot prove that System.Char was
+          declared with the matching width. }
+        if search_system_type('CHAR').typedef.size <>
+           1+Ord(compilerwide_unicode_strings) then
+          Comment(V_Fatal,'System.Char width does not match this compiler invocation''s default text model');
+      end;
+
+
     function loadsystemunit(curr : tmodule) : boolean;
       var
         state: tglobalstate;
@@ -358,18 +368,13 @@ implementation
         state.restore;
         FreeAndNil(state);
         current_scanner.tempopeninputfile;
+        if Result then
+          checksystemcharwidth;
 
         { Set the owner of errorsym and errortype to symtable to
           prevent crashes when accessing .owner }
         generrorsym.owner:=systemunit;
         generrordef.owner:=systemunit;
-        // Implicitly enable unicode strings in unicode RTL in modes objfpc/delphi.
-        { TODO: Check if we should also do this for mode macpas }
-        if not (cs_compilesystem in current_settings.moduleswitches) then
-          if ([m_objfpc,m_delphi] * current_settings.modeswitches)<>[] then
-            if is_systemunit_unicode then
-              Include(current_settings.modeswitches,m_default_unicodestring);
-
         { default the extended RTTI options to that of TObject }
         if assigned(class_tobject) then
           current_module.rtti_directive.options:=class_tobject.rtti.options;
@@ -463,22 +468,6 @@ implementation
         { blocks support? }
         if m_blocks in current_settings.modeswitches then
           CheckAddUnit('blockrtl');
-
-        { Determine char size. }
-
-        // Ansi RTL ?
-        if not is_systemunit_unicode then
-          begin
-          if m_default_unicodestring in current_settings.modeswitches then
-            CheckAddUnit('uuchar'); // redefines char as widechar
-          end
-        else
-          begin
-          // Unicode RTL
-          if not (m_default_ansistring in current_settings.modeswitches) then
-            if not (curr.modulename^<>'UACHAR') then
-              CheckAddUnit('uachar'); // redefines char as ansichar
-          end;
 
         { Objective-C support unit? }
         if (m_objectivec1 in current_settings.modeswitches) then
@@ -1937,6 +1926,7 @@ type
              AddUnit(curr,'system',false);
              systemunit:=tglobalsymtable(symtablestack.top);
              load_intern_types;
+             checksystemcharwidth;
              { system unit is loaded, now insert feature defines }
              for feature:=low(tfeature) to high(tfeature) do
                if feature in features then
@@ -1965,6 +1955,7 @@ type
                        begin
                          systemunit:=tglobalsymtable(hp.globalsymtable);
                          load_intern_types;
+                         checksystemcharwidth;
                        end;
                    end
                  else
@@ -2103,6 +2094,7 @@ type
                begin
                  systemunit:=tglobalsymtable(uu.u.globalsymtable);
                  load_intern_types;
+                 checksystemcharwidth;
                end;
              if not assigned(uu.u.package) then
                export_unit(uu.u);

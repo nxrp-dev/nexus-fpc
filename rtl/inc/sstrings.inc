@@ -483,9 +483,9 @@ type
 {$packrecords c}
   Penum_typedata=^Tenum_typedata;
   Tenum_typedata={$ifndef FPC_REQUIRES_PROPER_ALIGNMENT}packed{$endif}record
-{$if declared(TRttiDataCommon)}
+{$ifndef VER3_2}
     Common: TRttiDataCommon;
-{$endif}
+{$endif not VER3_2}
     case TTypeKind of
       tkInt64,tkQWord,tkInteger,tkChar,tkEnumeration,tkBool,tkWChar: (
          OrdType : Byte;
@@ -1140,9 +1140,8 @@ begin
      {sign extend the result to allow proper range checking}
      sh:=bitsizeof(fpc_Val_SInt_ShortStr)-8*DestSize;
      fpc_Val_SInt_ShortStr:=
-{$if sizeof(ValSint)=sizeof(int64)} SarInt64
-{$elseif sizeof(ValSint)=sizeof(int32)} SarLongint
-{$elseif sizeof(ValSint)=sizeof(int16)} SarSmallint
+{$if defined(CPU64)} SarInt64
+{$elseif defined(CPU32)} SarLongint
 {$else} {$error unknown ValSint size}
 {$endif} (fpc_Val_SInt_ShortStr shl sh, sh);
     End;

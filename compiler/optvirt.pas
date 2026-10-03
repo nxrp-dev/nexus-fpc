@@ -916,7 +916,7 @@ unit optvirt;
       var
         unitid,
         classid,
-        vmtentryname: string;
+        vmtentryname: ShortString;
         vmttype: string[15];
         vmtentrynrstr: string[7];
         classinstantiated: string[1];
