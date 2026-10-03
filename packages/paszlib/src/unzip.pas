@@ -2,7 +2,7 @@
 unit Unzip;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$mode tp}
+{$mode objfpc}
 
 { ----------------------------------------------------------------- }
 { unzip.c -- IO on .zip files using zlib
@@ -1009,7 +1009,7 @@ end;
   store in *piSizeVar the size of extra info in local header
         (filename and size of extra field data) }
 
-function unzlocal_CheckCurrentFileCoherencyHeader(s: unz_s_ptr; var piSizeVar: longint; var poffset_local_extrafield: longint; var psize_local_extrafield: integer): longint;
+function unzlocal_CheckCurrentFileCoherencyHeader(s: unz_s_ptr; var piSizeVar: longint; var poffset_local_extrafield: longint; var psize_local_extrafield: smallint): longint;
 var
   uMagic, uData, uFlags: longint;
   size_filename: longint;
@@ -1087,15 +1087,15 @@ begin
   if ((err = UNZ_OK) and (size_filename <> s^.cur_file_info.size_filename)) then
     err := UNZ_BADZIPFILE;
 
-  Inc(piSizeVar, integer(size_filename));
+  Inc(piSizeVar, smallint(size_filename));
 
   if (unzlocal_getShort(s^.afile, size_extra_field) <> UNZ_OK) then
     err := UNZ_ERRNO;
   poffset_local_extrafield := s^.cur_file_info_internal.offset_curfile +
     SIZEZIPLOCALHEADER + size_filename;
-  psize_local_extrafield := integer(size_extra_field);
+  psize_local_extrafield := smallint(size_extra_field);
 
-  Inc(piSizeVar, integer(size_extra_field));
+  Inc(piSizeVar, smallint(size_extra_field));
 
   unzlocal_CheckCurrentFileCoherencyHeader := err;
 end;

@@ -145,7 +145,7 @@ type
 
 type
   Pos = word;
-  Posf = Pos; {FAR}
+  Posf = Pos;
   IPos = cardinal;
 
   pPosf = ^Posf;

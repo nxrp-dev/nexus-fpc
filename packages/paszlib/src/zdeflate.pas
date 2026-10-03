@@ -374,11 +374,11 @@ type
 {local}
 procedure fill_window(var s : deflate_state); forward;
 {local}
-function deflate_stored(var s : deflate_state; flush : integer) : block_state; far; forward;
+function deflate_stored(var s : deflate_state; flush : integer) : block_state; forward;
 {local}
-function deflate_fast(var s : deflate_state; flush : integer) : block_state; far; forward;
+function deflate_fast(var s : deflate_state; flush : integer) : block_state; forward;
 {local}
-function deflate_slow(var s : deflate_state; flush : integer) : block_state; far; forward;
+function deflate_slow(var s : deflate_state; flush : integer) : block_state; forward;
 {local}
 procedure lm_init(var s : deflate_state); forward;
 
