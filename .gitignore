@@ -45,6 +45,7 @@ bin
 backup
 lazbuild
 *.wpo
+*.nxp
 fp.dsk
 fp.ini
 fp.cfg
