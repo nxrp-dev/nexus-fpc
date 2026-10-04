@@ -477,12 +477,6 @@ parser_w_parser_reloc_no_debug=03011_W_Relokérbar DLL eller program $1 har ikke
 parser_w_parser_win32_debug_needs_WN=03012_W_For at tillade debugging i win32-kode, skal relokérbarhed slås fra med -WN
 % Stabs info is wrong for relocatable DLL or EXES use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_Constructor-navnet skal være INIT
-% You are declaring an object constructor with a name which is not \var{init}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
-parser_e_destructorname_must_be_done=03014_E_Destructor-navnet skal være DONE
-% You are declaring an object destructor with a name which is not \var{done}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
 parser_e_proc_inline_not_supported=03016_E_Proceduretypen INLINE er ikke understøttet
 % You tried to compile a program with C++ style inlining, and forgot to
 % specify the \var{-Si} option (\seeo{Si}). The compiler does not support C++
@@ -727,9 +721,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_Den udvidede syntax af new og dis
 % \var{new}. The constructor must be used for that. For the same reason, you
 % cannot call \var{dispose} to de-allocate an instance of a class, the
 % destructor must be used for that.
-parser_e_procedure_overloading_is_off=03088_E_Procedure overloading er slået fra
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_Det er ikke muligt at overloade denne operator (overload "=" i stedet)
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1722,9 +1713,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Kan ikke tildele lokal procedure/fun
 % procedure variable, because the calling of local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_Kan ikke tildele værdi til en adresse
-% It is not allowed to assign a value to an address of a variable,constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Kan ikke tildele til konstant-erklæret variabel
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const, to allow
@@ -3328,9 +3317,6 @@ option_reading_further_from=11010_D_Læser yderligere indstillinger fra $1
 % to another options file.
 option_target_is_already_set=11011_W_Mål er allerede sat til: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Delte biblioteker er ikke understøttet på DOS-platformen, går tilbage til statisk
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos
 option_too_many_ifdef=11013_F_for mange IF(N)DEF
 % the \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3587,16 +3573,13 @@ option_help_pages=11025_[
 **2ar_indsæt information om register(de)allokering i assemblerfilen
 **2at_indsæt information om midlertidige allokeringer i assemblerfilen
 **1b_generér browser-information
-**2bl_generér information om lokale symboler
 **1B_byg alle moduler
 **1C<x>_Indstillinger for kodegenerering
-**2CD_Byg også et dynamisk bibliotek (ikke understøttet)
 **2Ce_Compilér med emulerede kommatalsoperationer
 **2Cf_Vælg hvilket fpu-instruktionssæt der skal bruges
 **2Cg_Generér PIC-kode
 **2Ch<n>_Sæt heapstørrelsen til <n> bytes (mellem 1023 og 67107840)
 **2Ci_IO-checking
-**2Cn_spring link-stadiet over
 **2Co_check overflow af heltalsoperationer
 **2Cr_værdiområdecheck
 **2CR_verificér gyldigheden af objekters metodekald
@@ -3642,7 +3625,6 @@ option_help_pages=11025_[
 **2Mfpc_free pascal dialekt (standard)
 **2Mobjfpc_slå visse udvidelser fra Delphi 2 til
 **2Mdelphi_forsøg at være Delphi-kompatibel
-**2Mtp_forsøg at være Turbo/Borland Pascal 7.0-kompatibel
 **2Mgpc_forsøg at være GNU-Pascal-kompatibel
 **2Mmacpas_forsøg at være kompatibel med pascal-dialekter fra macintosh 
 **1n_spring læsning af standardkonfigurationsfil over
@@ -3658,9 +3640,7 @@ option_help_pages=11025_[
 **2Sh_brug ansistrenge
 **2Si_brug C++-lignende INLINE
 **2Sm_understøt makroer som I C (globalt)
-**2So_samme som -Mtp
 **2Sp_samme som -Mgpc
-**2Ss_constructor-navn skal være "init" (destructor-navn skal være "done")
 **1s_kør hverken assembler eller linker
 **2sh_generér script til linkning på værtscomputeren
 **2st_generér script til linkning på mål-computeren

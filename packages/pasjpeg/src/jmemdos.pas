@@ -337,7 +337,7 @@ procedure read_file_store (cinfo : j_common_ptr;
                            info : backing_store_ptr;
                            buffer_address : pointer; {FAR}
                            file_offset : long;
-                           byte_count : long); far;
+                           byte_count : long);
 begin
   if jdos_seek(info^.handle.file_handle, file_offset) <> 0 then
     ERREXIT(cinfo, JERR_TFILE_SEEK);
@@ -355,7 +355,7 @@ procedure write_file_store (cinfo : j_common_ptr;
                             info : backing_store_ptr;
                             buffer_address : pointer; {FAR}
                             file_offset : long;
-                            byte_count : long); far;
+                            byte_count : long);
 begin
   if (jdos_seek(info^.handle.file_handle, file_offset)) <> 0 then
     ERREXIT(cinfo, JERR_TFILE_SEEK);
@@ -370,7 +370,7 @@ end;
 
 {METHODDEF}
 procedure close_file_store (cinfo : j_common_ptr;
-                            info : backing_store_ptr); far;
+                            info : backing_store_ptr);
 var
   f : FILE;
 begin
@@ -389,7 +389,7 @@ end;
 {LOCAL}
 function open_file_store (cinfo : j_common_ptr;
                           info : backing_store_ptr;
-                          total_bytes_needed : long): boolean;  far;
+                          total_bytes_needed : long): boolean;
 var
   handle : short;
 begin
@@ -440,7 +440,7 @@ procedure read_xms_store (cinfo : j_common_ptr;
                           info : backing_store_ptr;
                           buffer_address : pointer; {FAR}
                           file_offset : long;
-                          byte_count : long); far;
+                          byte_count : long);
 var
   ctx : XMScontext;
   spec : XMSspec;
@@ -476,7 +476,7 @@ procedure write_xms_store (cinfo : j_common_ptr;
                            info : backing_store_ptr;
                            buffer_address : pointer; {FAR}
                            file_offset : long;
-                           byte_count : long); far;
+                           byte_count : long);
 var
   ctx : XMScontext;
   spec : XMSspec;
@@ -510,7 +510,7 @@ end;
 
 {METHODDEF}
 procedure close_xms_store (cinfo : j_common_ptr;
-                           info : backing_store_ptr); far;
+                           info : backing_store_ptr);
 var
   ctx : XMScontext;
 begin
@@ -612,7 +612,7 @@ procedure read_ems_store (cinfo : j_common_ptr;
                           info : backing_store_ptr;
                           buffer_address : pointer; {FAR}
                           file_offset : long;
-                          byte_count : long); far;
+                          byte_count : long);
 var
   ctx : EMScontext;
   spec : EMSspec;
@@ -639,7 +639,7 @@ procedure write_ems_store (cinfo : j_common_ptr;
                            info : backing_store_ptr;
                            buffer_address : pointer; {FAR}
                            file_offset : long;
-                           byte_count : long); far;
+                           byte_count : long);
 var
   ctx : EMScontext;
   spec : EMSspec;
@@ -663,7 +663,7 @@ end;
 
 {METHODDEF}
 procedure close_ems_store (cinfo : j_common_ptr;
-                           info : backing_store_ptr); far;
+                           info : backing_store_ptr);
 var
   ctx : EMScontext;
 begin

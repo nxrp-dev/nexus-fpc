@@ -1,4 +1,3 @@
-{%OPT=-Og}
 { This verifies if the strings are
   correctly aligned, normally the generated assembler
   should be verified manually.

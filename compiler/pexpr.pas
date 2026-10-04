@@ -3702,7 +3702,7 @@ implementation
               (
                (current_scanner.token=_LKLAMMER) or
                (
-                (([m_tp7,m_delphi,m_mac,m_iso,m_extpas] * current_settings.modeswitches) <> []) and
+                (([m_delphi,m_mac,m_iso,m_extpas] * current_settings.modeswitches) <> []) and
                 (afterassignment or in_args)
                )
               ) then

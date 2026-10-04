@@ -332,7 +332,7 @@ type
 { Initialize for a Huffman-compressed scan. }
 
 {METHODDEF}
-procedure start_pass_huff_decoder (cinfo : j_decompress_ptr); far;
+procedure start_pass_huff_decoder (cinfo : j_decompress_ptr);
 var
   entropy : huff_entropy_ptr;
   ci, blkn, dctbl, actbl : int;
@@ -882,7 +882,7 @@ end;
 
 {METHODDEF}
 function decode_mcu (cinfo : j_decompress_ptr;
-                     var MCU_data : array of JBLOCKROW) : boolean; far;
+                     var MCU_data : array of JBLOCKROW) : boolean;
 {$IFNDEF NOGOTO}
 label
   label1, label2, label3;

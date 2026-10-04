@@ -170,8 +170,12 @@ function Update-BootstrapMakefiles {
     # Root first establishes the currently supported targets. Only regenerate
     # existing generated Makefiles, not the hand-written fpmake wrapper files.
     $files = @((Get-Item -LiteralPath "$SourceRoot\Makefile"))
+    $outputDirectory = Join-Path $SourceRoot 'output'
     $files += @(Get-ChildItem -LiteralPath $SourceRoot -Recurse -File -Filter 'Makefile*' | Where-Object {
-        $_.FullName -ne "$SourceRoot\Makefile" -and $_.Name -in @('Makefile', 'Makefile.pkg')
+        $_.FullName -ne "$SourceRoot\Makefile" -and
+        $_.Name -in @('Makefile', 'Makefile.pkg') -and
+        -not $_.FullName.StartsWith($outputDirectory + [IO.Path]::DirectorySeparatorChar,
+            [StringComparison]::OrdinalIgnoreCase)
     } | Sort-Object FullName)
     foreach ($file in $files) {
         $content = [IO.File]::ReadAllText($file.FullName)
@@ -375,6 +379,42 @@ try {
         throw 'Bootstrap log contains a fatal build error. Inspect bootstrap.log.'
     }
     Invoke-BootstrapStep 'compiler-version' $SourceRoot "$SourceRoot\compiler\ppcx64.exe" @('-iV')
+    Invoke-BootstrapStep 'removed-g-switch' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedGTests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-g")
+    Invoke-BootstrapStep 'removed-e-switch' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedETests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-e")
+    Invoke-BootstrapStep 'removed-legacy-options' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedLegacyOptionsTests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-legacy-options")
+    Invoke-BootstrapStep 'removed-far-directives' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedFarTests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-far-directives")
+    Invoke-BootstrapStep 'removed-n-a5-options' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedNAndA5Tests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-n-a5-options")
+    Invoke-BootstrapStep 'removed-no-op-options' $SourceRoot 'powershell.exe' @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+        "$SourceRoot\tests\switches\Run-NXRemovedNoOpOptionsTests.ps1",
+        '-CompilerPath', "$SourceRoot\compiler\ppcx64.exe",
+        '-RtlUnits', "$SourceRoot\rtl\units\x86_64-win64",
+        '-OutputRoot', "$runRoot\removed-no-op-options")
     $warnings = @([IO.File]::ReadLines("$runRoot\bootstrap.log") | Where-Object { $_ -match '(?i)warning:' })
     $warnings | Set-Content -LiteralPath "$runRoot\warnings.txt" -Encoding UTF8
     Write-Host "Bootstrap passed. Compiler and build stamps were refreshed. Warning lines: $($warnings.Count)."

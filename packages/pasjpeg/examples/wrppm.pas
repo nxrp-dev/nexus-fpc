@@ -122,7 +122,7 @@ type
 {METHODDEF}
 procedure put_pixel_rows (cinfo : j_decompress_ptr;
                           dinfo : djpeg_dest_ptr;
-                          rows_supplied : JDIMENSION); far;
+                          rows_supplied : JDIMENSION);
 var
   dest : ppm_dest_ptr;
 begin
@@ -137,7 +137,7 @@ end;
 {METHODDEF}
 procedure copy_pixel_rows (cinfo : j_decompress_ptr;
                            dinfo : djpeg_dest_ptr;
-                           rows_supplied : JDIMENSION); far;
+                           rows_supplied : JDIMENSION);
 var
   dest : ppm_dest_ptr;
   {register} bufferptr : CharPtr;
@@ -162,7 +162,7 @@ end;
 {METHODDEF}
 procedure put_demapped_rgb (cinfo : j_decompress_ptr;
                             dinfo : djpeg_dest_ptr;
-                            rows_supplied : JDIMENSION); far;
+                            rows_supplied : JDIMENSION);
 var
   dest : ppm_dest_ptr;
   {register} bufferptr : CharPtr;
@@ -196,7 +196,7 @@ end;
 {METHODDEF}
 procedure put_demapped_gray (cinfo : j_decompress_ptr;
                              dinfo : djpeg_dest_ptr;
-                             rows_supplied : JDIMENSION); far;
+                             rows_supplied : JDIMENSION);
 var
   dest : ppm_dest_ptr;
   {register} bufferptr : CharPtr;
@@ -221,7 +221,7 @@ end;
 
 {METHODDEF}
 procedure start_output_ppm (cinfo : j_decompress_ptr;
-                            dinfo : djpeg_dest_ptr); far;
+                            dinfo : djpeg_dest_ptr);
 const
   LF = #10;
 var
@@ -267,7 +267,7 @@ end;
 
 {METHODDEF}
 procedure finish_output_ppm (cinfo : j_decompress_ptr;
-                             dinfo : djpeg_dest_ptr); far;
+                             dinfo : djpeg_dest_ptr);
 begin
   { Make sure we wrote the output file OK }
   {Flush(dinfo^.output_file^);}

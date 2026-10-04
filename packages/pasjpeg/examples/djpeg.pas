@@ -441,7 +441,7 @@ end;
 
 
 {METHODDEF}
-function print_text_marker (cinfo : j_decompress_ptr) : boolean; far;
+function print_text_marker (cinfo : j_decompress_ptr) : boolean;
 const
   LF = #10;
   CR = #13;

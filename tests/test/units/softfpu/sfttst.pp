@@ -4,8 +4,6 @@
 {  Copyright (c) 2002 Carl Eric Codere                           }
 {****************************************************************}
 
-{$E+}
-
 program sfttst;
 
 uses softfpu;

@@ -368,8 +368,7 @@ implementation
                   if (tpointerdef(p.resultdef).pointeddef.typ=orddef) and
                      (torddef(tpointerdef(p.resultdef).pointeddef).ordtype=uvoid) then
                     begin
-                      if (m_tp7 in current_settings.modeswitches) or
-                         (m_delphi in current_settings.modeswitches) then
+                      if m_delphi in current_settings.modeswitches then
                        Message(parser_w_no_new_dispose_on_void_pointers)
                       else
                        Message(parser_e_no_new_dispose_on_void_pointers);

@@ -1,4 +1,4 @@
-{ %OPT=-OG2p3}
+{ %OPT=-O2p3}
 
 procedure t;
 var

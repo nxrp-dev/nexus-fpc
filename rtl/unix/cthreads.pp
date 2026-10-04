@@ -54,7 +54,7 @@ interface
 {$S-}
 
 {$ifndef dynpthreads}   // If you have problems compiling this on FreeBSD 5.x
- {$linklib c}           // try adding -Xf
+ {$linklib c}
  {$if not defined(Darwin) and not defined(iphonesim) and not defined(Android)}
    {$ifndef haiku}
      {$linklib pthread}

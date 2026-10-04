@@ -94,7 +94,7 @@ type
 
 {METHODDEF}
 procedure start_pass_prep (cinfo : j_compress_ptr;
-                           pass_mode : J_BUF_MODE ); far;
+                           pass_mode : J_BUF_MODE );
 var
   prep : my_prep_ptr;
 begin
@@ -150,7 +150,7 @@ procedure pre_process_data (cinfo : j_compress_ptr;
                            in_rows_avail : JDIMENSION;
                            output_buf : JSAMPIMAGE;
                            var out_row_group_ctr : JDIMENSION;
-                           out_row_groups_avail : JDIMENSION); far;
+                           out_row_groups_avail : JDIMENSION);
 var
   prep : my_prep_ptr;
   numrows, ci : int;
@@ -232,7 +232,7 @@ procedure pre_process_context (cinfo : j_compress_ptr;
                               in_rows_avail : JDIMENSION;
                               output_buf : JSAMPIMAGE;
                               var out_row_group_ctr : JDIMENSION;
-                              out_row_groups_avail : JDIMENSION); far;
+                              out_row_groups_avail : JDIMENSION);
 var
   prep : my_prep_ptr;
   numrows, ci : int;

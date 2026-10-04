@@ -301,9 +301,9 @@ implementation
         set_varstate(caseexpr,vs_read,[vsf_must_be_valid]);
         casedeferror:=false;
         casedef:=caseexpr.resultdef;
-        { case of string must be rejected in delphi-,tp7-,mac-pas modes. }
+        { case of string must be rejected in Delphi and MacPas modes. }
         caseofstring :=
-          ([m_delphi, m_mac, m_tp7] * current_settings.modeswitches = []) and
+          ([m_delphi, m_mac] * current_settings.modeswitches = []) and
           is_string(casedef);
 
         if (not assigned(casedef)) or
@@ -682,35 +682,10 @@ implementation
                end;
 
              hp:=hloopvar;
-             while assigned(hp) and
-                   (
-                    { record/object fields and array elements are allowed }
-                    { in tp7 mode only                                    }
-                    (
-                     (m_tp7 in current_settings.modeswitches) and
-                     (
-                      ((hp.nodetype=subscriptn) and
-                       ((tsubscriptnode(hp).left.resultdef.typ=recorddef) or
-                        is_object(tsubscriptnode(hp).left.resultdef))
-                      ) or
-                      { constant array index }
-                      (
-                       (hp.nodetype=vecn) and
-                       is_constintnode(tvecnode(hp).right)
-                      )
-                     )
-                    ) or
-                    { equal typeconversions }
-                    (
-                     (hp.nodetype=typeconvn) and
-                     (ttypeconvnode(hp).convtype=tc_equal)
-                    )
-                   ) do
+              while assigned(hp) and
+                    (hp.nodetype=typeconvn) and
+                    (ttypeconvnode(hp).convtype=tc_equal) do
                begin
-                 { Use the recordfield for loopvarsym }
-                 if not assigned(loopvarsym) and
-                    (hp.nodetype=subscriptn) then
-                   loopvarsym:=tsubscriptnode(hp).vs;
                  hp:=tunarynode(hp).left;
                end;
 
@@ -735,8 +710,8 @@ implementation
                           (tabstractvarsym(tloadnode(hp).symtableentry).varspez=vs_value) and
                           ([vo_is_thread_var,vo_is_typed_const] * tabstractvarsym(tloadnode(hp).symtableentry).varoptions=[]) then
                          begin
-                           { Assigning for-loop variable is only allowed in tp7 and macpas }
-                           if ([m_tp7,m_mac] * current_settings.modeswitches = []) then
+                           { Assigning for-loop variable is allowed in MacPas }
+                           if not(m_mac in current_settings.modeswitches) then
                              begin
                                if not assigned(loopvarsym) then
                                  loopvarsym:=tabstractvarsym(tloadnode(hp).symtableentry);
@@ -745,10 +720,7 @@ implementation
                          end
                        else
                          begin
-                           { Typed const is allowed in tp7 }
-                           if not(m_tp7 in current_settings.modeswitches) or
-                              not(vo_is_typed_const in tabstractvarsym(tloadnode(hp).symtableentry).varoptions) then
-                             MessagePos(hp.fileinfo,type_e_illegal_count_var);
+                            MessagePos(hp.fileinfo,type_e_illegal_count_var);
                          end;
                      end;
                    else

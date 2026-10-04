@@ -130,7 +130,7 @@ end;
 
 {METHODDEF}
 function  get_8bit_row (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 8-bit colormap indexes }
 var
   source : bmp_source_ptr;
@@ -169,7 +169,7 @@ end;
 
 {METHODDEF}
 function get_24bit_row (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 24-bit pixels }
 var
   source : bmp_source_ptr;
@@ -211,7 +211,7 @@ end;
 
 {METHODDEF}
 function preload_image (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 var
   source : bmp_source_ptr;
   {register} infile : FILEptr;
@@ -280,7 +280,7 @@ end;
 
 {METHODDEF}
 procedure start_input_bmp (cinfo : j_compress_ptr;
-                           sinfo : cjpeg_source_ptr); far;
+                           sinfo : cjpeg_source_ptr);
 var
   source : bmp_source_ptr;
 
@@ -522,7 +522,7 @@ end;
 
 {METHODDEF}
 procedure finish_input_bmp (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr); far;
+                            sinfo : cjpeg_source_ptr);
 begin
   { no work }
 end;

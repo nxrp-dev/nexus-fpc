@@ -174,7 +174,7 @@ end;
 { Initialize for an upsampling pass. }
 
 {METHODDEF}
-procedure start_pass_merged_upsample (cinfo : j_decompress_ptr); far;
+procedure start_pass_merged_upsample (cinfo : j_decompress_ptr);
 var
   upsample : my_upsample_ptr;
 begin
@@ -198,7 +198,7 @@ procedure merged_2v_upsample (cinfo : j_decompress_ptr;
                               in_row_groups_avail : JDIMENSION;
                               output_buf : JSAMPARRAY;
                               var out_row_ctr : JDIMENSION;
-                              out_rows_avail : JDIMENSION); far;
+                              out_rows_avail : JDIMENSION);
 { 2:1 vertical sampling case: may need a spare row. }
 var
   upsample : my_upsample_ptr;
@@ -260,7 +260,7 @@ procedure merged_1v_upsample (cinfo : j_decompress_ptr;
                              in_row_groups_avail : JDIMENSION;
                              output_buf : JSAMPARRAY;
                              var out_row_ctr : JDIMENSION;
-                             out_rows_avail : JDIMENSION); far;
+                             out_rows_avail : JDIMENSION);
 { 1:1 vertical sampling case: much easier, never need a spare row. }
 var
   upsample : my_upsample_ptr;
@@ -290,7 +290,7 @@ end;
 procedure h2v1_merged_upsample (cinfo : j_decompress_ptr;
                                 input_buf : JSAMPIMAGE;
                                 in_row_group_ctr : JDIMENSION;
-                                output_buf : JSAMPARRAY); far;
+                                output_buf : JSAMPARRAY);
 var
   upsample : my_upsample_ptr;
   {register} y, cred, cgreen, cblue : int;
@@ -379,7 +379,7 @@ end;
 procedure h2v2_merged_upsample (cinfo : j_decompress_ptr;
                                 input_buf : JSAMPIMAGE;
                                 in_row_group_ctr : JDIMENSION;
-                                output_buf : JSAMPARRAY); far;
+                                output_buf : JSAMPARRAY);
 var
   upsample : my_upsample_ptr;
   {register} y, cred, cgreen, cblue : int;

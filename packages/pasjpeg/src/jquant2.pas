@@ -270,7 +270,7 @@ type
 procedure prescan_quantize (cinfo : j_decompress_ptr;
                             input_buf : JSAMPARRAY;
                             output_buf : JSAMPARRAY;
-                            num_rows : int); far;
+                            num_rows : int);
 var
   cquantize : my_cquantize_ptr;
   {register} ptr : RGBptr;
@@ -1203,7 +1203,7 @@ end;
 procedure pass2_no_dither (cinfo : j_decompress_ptr;
                            input_buf : JSAMPARRAY;
                            output_buf : JSAMPARRAY;
-                           num_rows : int); far;
+                           num_rows : int);
 { This version performs no dithering }
 var
   cquantize : my_cquantize_ptr;
@@ -1248,7 +1248,7 @@ end;
 procedure pass2_fs_dither (cinfo : j_decompress_ptr;
                            input_buf : JSAMPARRAY;
                            output_buf : JSAMPARRAY;
-                           num_rows : int); far;
+                           num_rows : int);
 { This version performs Floyd-Steinberg dithering }
 var
   cquantize : my_cquantize_ptr;
@@ -1477,7 +1477,7 @@ end;
 { Finish up at the end of each pass. }
 
 {METHODDEF}
-procedure finish_pass1 (cinfo : j_decompress_ptr); far;
+procedure finish_pass1 (cinfo : j_decompress_ptr);
 var
   cquantize : my_cquantize_ptr;
 begin
@@ -1492,7 +1492,7 @@ end;
 
 
 {METHODDEF}
-procedure finish_pass2 (cinfo : j_decompress_ptr); far;
+procedure finish_pass2 (cinfo : j_decompress_ptr);
 begin
   { no work }
 end;
@@ -1502,7 +1502,7 @@ end;
 
 {METHODDEF}
 procedure start_pass_2_quant (cinfo : j_decompress_ptr;
-                              is_pre_scan : boolean); far;
+                              is_pre_scan : boolean);
 var
   cquantize : my_cquantize_ptr;
   histogram : hist3d;
@@ -1573,7 +1573,7 @@ end;
 { Switch to a new external colormap between output passes. }
 
 {METHODDEF}
-procedure new_color_map_2_quant (cinfo : j_decompress_ptr); far;
+procedure new_color_map_2_quant (cinfo : j_decompress_ptr);
 var
   cquantize : my_cquantize_ptr;
 begin

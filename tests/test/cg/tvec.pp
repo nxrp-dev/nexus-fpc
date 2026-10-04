@@ -415,13 +415,11 @@ var
    { left: array definition       }
    { right : + operator           }
    { right right : index constant }
-   { With -Or switch only         }
 
 
    { left: array definition       }
    { right : - operator           }
    { right right : index constant }
-   { With -Or switch only         }
 
 var
  i: integer;

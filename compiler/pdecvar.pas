@@ -1480,7 +1480,6 @@ implementation
              { Handling of Delphi typed const = initialized vars }
              if allowdefaultvalue and
                 (current_scanner.token=_EQ) and
-                not(m_tp7 in current_settings.modeswitches) and
                 (symtablestack.top.symtabletype<>parasymtable) then
                begin
                  { Add calling convention for procvar }
@@ -1555,7 +1554,6 @@ implementation
                  handle_calling_convention(hdef,flags);
                  { Handling of Delphi typed const = initialized vars }
                  if (current_scanner.token=_EQ) and
-                    not(m_tp7 in current_settings.modeswitches) and
                     (symtablestack.top.symtabletype<>parasymtable) then
                    begin
                      read_default_value(sc);

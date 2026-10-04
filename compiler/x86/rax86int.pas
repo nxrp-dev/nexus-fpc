@@ -1210,10 +1210,7 @@ Unit Rax86int;
             begin
               if oper.opr.ref.segment<>NR_NO then
                 begin
-                  if m_tp7 in current_settings.modeswitches then
-                    Message(asmr_w_multiple_segment_overrides)
-                  else
-                    Message(asmr_e_multiple_segment_overrides);
+                  Message(asmr_e_multiple_segment_overrides);
                 end;
               oper.opr.ref.segment:=seg;
             end;
@@ -1221,10 +1218,7 @@ Unit Rax86int;
             begin
               if oper.opr.localsegment<>NR_NO then
                 begin
-                  if m_tp7 in current_settings.modeswitches then
-                    Message(asmr_w_multiple_segment_overrides)
-                  else
-                    Message(asmr_e_multiple_segment_overrides);
+                  Message(asmr_e_multiple_segment_overrides);
                 end;
               oper.opr.localsegment:=seg;
             end;

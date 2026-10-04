@@ -684,14 +684,6 @@ begin
   with current_procinfo.procdef do
     if (not is_void(returndef)) then
       begin
-        if (m_tp7 in current_settings.modeswitches) and
-          not (df_generic in defoptions) and
-          (po_assembler in procoptions) and
-          (not paramanager.ret_in_param(returndef,current_procinfo.procdef)) then
-          begin
-            message(asmr_e_cannot_use_RESULT_here);
-            exit;
-          end;
         SetupResult:=setupvar('result',false)
       end
     else

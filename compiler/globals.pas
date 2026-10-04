@@ -61,8 +61,6 @@ interface
          [m_objfpc,m_fpc,m_class,m_objpas,m_result,m_string_pchar,m_nested_comment,
           m_repeat_forward,m_cvar_support,m_initfinal,m_out,m_default_para,m_hintdirective,
           m_property,m_default_inline,m_except,m_multiline_strings];
-       tpmodeswitches =
-         [m_tp7,m_tp_procvar,m_duplicate_names];
 {$ifdef gpc_mode}
        gpcmodeswitches =
          [m_gpc,m_tp_procvar];
@@ -493,7 +491,7 @@ Const
         globalswitches : [cs_check_unit_name,cs_link_static];
         targetswitches : [];
         moduleswitches : [cs_extsyntax,cs_implicit_exceptions];
-        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_imported_data,cs_refcountedstrings];
+        localswitches : [cs_check_io,cs_typed_const_writable,cs_pointermath,cs_refcountedstrings];
         modeswitches : fpcmodeswitches + [m_default_ansistring];
         optimizerswitches : [];
         genwpoptimizerswitches : [];
@@ -1437,8 +1435,7 @@ implementation
 {$ifdef ARM}
     function is_double_hilo_swapped: boolean;{$ifdef USEINLINE}inline;{$endif}
       begin
-        result := (current_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11]) and
-          not(cs_fp_emulation in current_settings.moduleswitches);
+        result := current_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11];
 {$ifdef FPC_DOUBLE_HILO_SWAPPED}
         { inverse result if compiler was compiled with swapped hilo already }
         result := not result;

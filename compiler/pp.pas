@@ -50,8 +50,6 @@ program pp;
   Switches automatically inside fpcdefs.inc
   -----------------------------------------------------------------
   cpuflags            The target processor has status flags (on by default)
-  cpufpemu            The target compiler will also support emitting software
-                       floating point operations
   cpu64bitaddr        Generate code for a 64-bit address space
   cpu64bitalu         The target cpu has 64-bit registers and a 64 bit alu
                       (required for cpu64bitaddr; optional with 32 bit addr space)

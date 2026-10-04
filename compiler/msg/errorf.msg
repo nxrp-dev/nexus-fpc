@@ -338,12 +338,6 @@ parser_w_parser_reloc_no_debug=03011_W_Les DLL ou EXE relogeables sont incompati
 parser_w_parser_win32_debug_needs_WN=03012_W_Pour permettre le d‚bogage de code win32, utilisez l'option -WN
 % Stabs info is wrong for relocatable DLL or EXES use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_Le nom du constructeur doit ˆtre INIT
-% You are declaring a constructor with a name which isn't \var{init}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
-parser_e_destructorname_must_be_done=03014_E_Le nom du destructeur doit ˆtre DONE
-% You are declaring a constructor with a name which isn't \var{done}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
 parser_e_illegal_open_parameter=03015_E_ParamŠtre ouvert non valide
 % You are trying to use the wrong type for an open parameter.
 parser_e_proc_inline_not_supported=03016_E_Directive de fonction INLINE non support‚e
@@ -609,9 +603,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_La syntaxe ‚tendue de new ou disp
 parser_e_asm_incomp_with_function_return=03087_E_Directive "Assembler" incompatible avec le type de la fonction
 % You're trying to implement a \var{assembler} function, but the return type
 % of the function doesn't allow that.
-parser_e_procedure_overloading_is_off=03088_E_L'overloading de proc‚dure est d‚sactiv‚
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_Impossible de red‚finir cet op‚rateur
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1007,9 +998,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Impossible d'assigner une fonction o
 % procedure variable, because the calling of local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_Can't assign values to an address
-% It's not allowed to assign a value to an address of a variable,constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Can't assign values to const variable
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const, to allow
@@ -1670,9 +1659,6 @@ option_reading_further_from=11010_N_Reading further options from $1
 % to another options file.
 option_target_is_already_set=11011_W_Target is already set to: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Shared libs not supported on DOS platform, reverting to static
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos
 option_too_many_ifdef=11013_F_too many IF(N)DEFs
 % the \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -1745,13 +1731,10 @@ option_help_pages=11025_[
 **2ar_liste les allocations de registres dans les fichiers assembleur
 **2at_liste les allocations de donn‚es temporaire dans la pile
 **1b_g‚nŠre les informations pour le browser
-**2bl_g‚nŠre les informations locales ‚galement
 **1B_recompile toutes les unit‚s
 **1C<x>_options de g‚n‚ration de code :
-3*2CD_cr‚erune librairie dynamique
 **2Ch<n>_<n> taille du tas en bytes (entre 1023 et 67107840)
 **2Ci_IO-checking
-**2Cn_pas de linking
 **2Co_g‚nŠre des tests d'overflow pour les op‚rations sur les entiers
 **2Cr_Controle d'intervalles
 **2Cs<n>_sp‚cifie <n> comme taille de la pile
@@ -1802,9 +1785,7 @@ option_help_pages=11025_[
 **2Sh_Utilise les ansistrings
 **2Si_supporte les INLINE type C++
 **2Sm_support des macros comme C (global)
-**2So_essaye d'ˆtre compatible avec TP/BP 7.0
 **2Sp_essaye d'ˆtre compatible avec GPC
-**2Ss_les constructeurs doivent s'appeler init (et les destructeurs done)
 **1s_n'appelle pas l'assembleur ni le linker
 **1u<x>_rend le symbole <x> non d‚fini
 **1U_options d'unit‚s :

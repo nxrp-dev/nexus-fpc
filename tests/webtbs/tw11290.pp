@@ -1,5 +1,5 @@
 program optimiav;
-//compile with -OG2p3
+//compile with -O2p3
 
 {$ifdef FPC}{$mode objfpc}{$h+}{$endif}
 {$ifdef mswindows}{$apptype console}{$endif}

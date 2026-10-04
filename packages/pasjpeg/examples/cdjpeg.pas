@@ -140,7 +140,7 @@ end;
 {$ifdef PROGRESS_REPORT}
 
 {METHODDEF}
-procedure progress_monitor (cinfo : j_common_ptr); far;
+procedure progress_monitor (cinfo : j_common_ptr);
 var
   prog : cd_progress_ptr;
   total_passes : int;

@@ -129,7 +129,7 @@ end;
 { read_pixel methods: get a single pixel from Targa file into tga_pixel[] }
 
 {METHODDEF}
-procedure read_non_rle_pixel (sinfo : tga_source_ptr); far;
+procedure read_non_rle_pixel (sinfo : tga_source_ptr);
 { Read one Targa pixel from the input file; no RLE expansion }
 var
   {register} infile : FILEptr;
@@ -144,7 +144,7 @@ end;
 
 
 {METHODDEF}
-procedure read_rle_pixel (sinfo : tga_source_ptr); far;
+procedure read_rle_pixel (sinfo : tga_source_ptr);
 { Read one Targa pixel from the input file, expanding RLE data as needed }
 var
   {register} infile : FILEptr;
@@ -189,7 +189,7 @@ end;
 
 {METHODDEF}
 function get_8bit_gray_row (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                            sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 8-bit grayscale pixels }
 var
   source : tga_source_ptr;
@@ -209,7 +209,7 @@ end;
 
 {METHODDEF}
 function get_8bit_row (cinfo : j_compress_ptr;
-                       sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                       sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 8-bit colormap indexes }
 var
   source : tga_source_ptr;
@@ -238,7 +238,7 @@ end;
 
 {METHODDEF}
 function get_16bit_row (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 16-bit pixels }
 var
   source : tga_source_ptr;
@@ -271,7 +271,7 @@ end;
 
 {METHODDEF}
 function get_24bit_row (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading 24-bit pixels }
 var
   source : tga_source_ptr;
@@ -311,7 +311,7 @@ const
 
 {METHODDEF}
 function get_memory_row (cinfo : j_compress_ptr;
-                         sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                         sinfo : cjpeg_source_ptr) : JDIMENSION;
 var
   source : tga_source_ptr;
   source_row : JDIMENSION;
@@ -338,7 +338,7 @@ end;
 
 {METHODDEF}
 function preload_image (cinfo : j_compress_ptr;
-                        sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                        sinfo : cjpeg_source_ptr) : JDIMENSION;
 var
   source : tga_source_ptr;
   row : JDIMENSION;
@@ -375,7 +375,7 @@ end;
 
 {METHODDEF}
 procedure start_input_tga (cinfo : j_compress_ptr;
-                           sinfo : cjpeg_source_ptr); far;
+                           sinfo : cjpeg_source_ptr);
 var
   source : tga_source_ptr;
   targaheader : array[0..18-1] of U_CHAR;
@@ -531,7 +531,7 @@ end;
 
 {METHODDEF}
 procedure finish_input_tga (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr); far;
+                            sinfo : cjpeg_source_ptr);
 begin
   { no work }
 end;

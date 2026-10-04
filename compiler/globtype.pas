@@ -135,8 +135,8 @@ interface
          cs_generate_stackframes,cs_do_assertion,cs_generate_rtti,
          cs_full_boolean_eval,cs_typed_const_writable,cs_allow_enum_calc,
          cs_do_inline,cs_fpu_fwait,cs_ieee_errors,
-         cs_check_low_addr_load,cs_imported_data,
-         cs_excessprecision,cs_check_fpu_exceptions,
+          { Preserve PPU-serialized local-switch bit positions after removing obsolete switches. }
+         cs_excessprecision = 19,cs_check_fpu_exceptions,
          cs_check_all_case_coverage,
          { mmx }
          cs_mmx,cs_mmx_saturation,
@@ -160,7 +160,7 @@ interface
        { Switches which can be changed only at the beginning of a new module }
        tmoduleswitch = (cs_modulenone,
          { parser }
-         cs_fp_emulation,cs_extsyntax,
+         cs_extsyntax = 2,
          { support }
          cs_support_goto,cs_support_macro,
          cs_support_c_operators,
@@ -169,11 +169,11 @@ interface
          cs_lineinfo,cs_implicit_exceptions,
          cs_explicit_codepage,cs_system_codepage,
          { linking }
-         cs_create_smart,cs_create_dynamic,cs_create_pic,
+          cs_create_smart,cs_create_pic = 15,
          { browser switches are back }
-         cs_browser,cs_local_browser,
+          cs_browser,
          { target specific }
-         cs_executable_stack,
+          cs_executable_stack = 18,
          { i8086 specific }
          cs_huge_code,
          cs_obsolete_win16_smartcallbacks,
@@ -192,29 +192,28 @@ interface
          mostly set with commandline }
        tglobalswitch = (cs_globalnone,
          { parameter switches }
-         cs_check_unit_name,cs_constructor_name,cs_support_exceptions,
+         cs_check_unit_name,cs_support_exceptions = 3,
          cs_support_c_objectivepas,
          cs_transparent_file_names,
          { units }
          cs_load_objpas_unit,
          cs_load_gpc_unit,
-         cs_load_fpcylix_unit,
-         cs_support_vectors,
+         cs_support_vectors = 9,
          { debuginfo }
          cs_use_heaptrc,cs_use_lineinfo,
          cs_gdb_valgrind,cs_no_regalloc,cs_stabs_preservecase,
          { assembling }
          cs_asm_leave,cs_asm_extern,cs_asm_pipe,cs_asm_source,cs_asm_rtti_source,
-         cs_asm_regalloc,cs_asm_tempalloc,cs_asm_nodes,cs_asm_pre_binutils_2_25,
+         cs_asm_regalloc,cs_asm_tempalloc,cs_asm_nodes,
+         cs_reserved_pre_binutils_2_25,
          { linking }
          cs_link_nolink,cs_link_static,cs_link_smart,cs_link_shared,cs_link_deffile,
          cs_link_strip,cs_link_staticflag,cs_link_on_target,cs_link_extern,cs_link_opt_vtable,
          cs_link_opt_used_sections,cs_link_separate_dbg_file,
-         cs_link_map,cs_link_pthread,cs_link_no_default_lib_order,
-         cs_link_native,
-         cs_link_pre_binutils_2_19,
-         cs_link_vlink,
-         cs_link_discard_start,cs_link_discard_zeroreg_sp,cs_link_discard_copydata,cs_link_discard_jmp_main,
+          cs_link_map,cs_link_no_default_lib_order = 38,
+          cs_link_pre_binutils_2_19 = 40,
+          cs_link_vlink,
+          cs_link_discard_start,cs_link_discard_zeroreg_sp,cs_link_discard_copydata,cs_link_discard_jmp_main,
          cs_link_cvt,
          { disable LTO for the system unit (needed to work around linker bugs on macOS) }
          cs_lto_nosystem,
@@ -483,10 +482,10 @@ interface
        );
 
     type
-       { Switches which can be changed by a mode (fpc,tp7,delphi) }
+       { Switches which can be changed by a mode }
        tmodeswitch = (m_none,
          { generic }
-         m_fpc,m_objfpc,m_delphi,m_tp7,m_mac,m_iso,m_extpas,
+         m_fpc,m_objfpc,m_delphi,m_mac = 5,m_iso,m_extpas,
          {$ifdef gpc_mode}m_gpc,{$endif}
          { more specific }
          m_class,               { delphi class model }
@@ -541,7 +540,7 @@ interface
        tmodeswitches = set of tmodeswitch;
 
     const
-       alllanguagemodes = [m_fpc,m_objfpc,m_delphi,m_tp7,m_mac,m_iso,m_extpas];
+       alllanguagemodes = [m_fpc,m_objfpc,m_delphi,m_mac,m_iso,m_extpas];
 
     type
        { Application types (platform specific) }
@@ -694,7 +693,7 @@ interface
 
        cstylearrayofconst = [pocall_cdecl,pocall_cppdecl,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
 
-       modeswitchstr : array[tmodeswitch] of string[30] = ('',
+       modeswitchstr : array[0..ord(high(tmodeswitch))] of string[30] = ('',
          '','','','','','','',
          {$ifdef gpc_mode}'',{$endif}
          { more specific }

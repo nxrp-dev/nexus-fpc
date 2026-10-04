@@ -30,6 +30,7 @@ uses
 
 procedure HandleSwitch(switch,state:char);
 function CheckSwitch(switch,state:char):boolean;
+function IsRecognizedSwitch(switch:char):boolean;
 
 procedure recordpendingverbosityswitch(sw: char; state: char);
 procedure recordpendingmessagestate(msg: longint; state: tmsgstate);
@@ -57,7 +58,7 @@ uses
 ****************************************************************************}
 
 type
-  TSwitchType=(ignoredsw,localsw,modulesw,globalsw,illegalsw,unsupportedsw,alignsw,optimizersw,packenumsw,pentiumfdivsw,targetsw);
+  TSwitchType=(ignoredsw,unknownsw,localsw,modulesw,globalsw,illegalsw,removedsw,unsupportedsw,alignsw,optimizersw,packenumsw,pentiumfdivsw,targetsw);
   SwitchRec=record
     typesw : TSwitchType;
     setsw  : byte;
@@ -70,18 +71,18 @@ const
    {B} (typesw:localsw; setsw:ord(cs_full_boolean_eval)),
    {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
    {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
-   {E} (typesw:modulesw; setsw:ord(cs_fp_emulation)),
+   {E} (typesw:unknownsw; setsw:ord(cs_localnone)),
 
-   {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
+   {F} (typesw:unknownsw; setsw:ord(cs_localnone)),
 
-   {G} (typesw:localsw; setsw:ord(cs_imported_data)),
+   {G} (typesw:removedsw; setsw:ord(cs_localnone)),
    {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
    {J} (typesw:localsw; setsw:ord(cs_typed_const_writable)),
    {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {L} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {M} (typesw:localsw; setsw:ord(cs_generate_rtti)),
-   {N} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
+   {N} (typesw:unknownsw; setsw:ord(cs_localnone)),
    {O} (typesw:optimizersw; setsw:ord(cs_opt_level2)),
    {P} (typesw:localsw; setsw:ord(cs_openstring)),
    {Q} (typesw:localsw; setsw:ord(cs_check_overflow)),
@@ -104,18 +105,18 @@ const
    {B} (typesw:localsw; setsw:ord(cs_full_boolean_eval)),
    {C} (typesw:localsw; setsw:ord(cs_do_assertion)),
    {D} (typesw:modulesw; setsw:ord(cs_debuginfo)),
-   {E} (typesw:modulesw; setsw:ord(cs_fp_emulation)),
+   {E} (typesw:unknownsw; setsw:ord(cs_localnone)),
 
-   {F} (typesw:ignoredsw; setsw:ord(cs_localnone)),
+   {F} (typesw:unknownsw; setsw:ord(cs_localnone)),
 
-   {G} (typesw:ignoredsw; setsw:ord(cs_localnone)),
+   {G} (typesw:removedsw; setsw:ord(cs_localnone)),
    {H} (typesw:ignoredsw; setsw:ord(cs_localnone)),
    {I} (typesw:localsw; setsw:ord(cs_check_io)),
    {J} (typesw:localsw; setsw:ord(cs_external_var)),
    {K} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {L} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {M} (typesw:localsw; setsw:ord(cs_generate_rtti)),
-   {N} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
+   {N} (typesw:unknownsw; setsw:ord(cs_localnone)),
    {O} (typesw:optimizersw; setsw:ord(cs_opt_level2)),
    {P} (typesw:localsw; setsw:ord(cs_openstring)),
    {Q} (typesw:localsw; setsw:ord(cs_check_overflow)),
@@ -131,6 +132,17 @@ const
    {Y} (typesw:unsupportedsw; setsw:ord(cs_localnone)),
    {Z} (typesw:localsw; setsw:ord(cs_externally_visible))
     );
+
+function IsRecognizedSwitch(switch:char):boolean;
+  begin
+    switch:=upcase(switch);
+    if not(switch in ['A'..'Z']) then
+      exit(false);
+    if m_mac in current_settings.modeswitches then
+      result:=macSwitchTable[switch].typesw<>unknownsw
+    else
+      result:=turboSwitchTable[switch].typesw<>unknownsw;
+  end;
 
 procedure HandleSwitch(switch,state:char);
 
@@ -176,8 +188,12 @@ begin
          end;
        ignoredsw :
          Message1(scan_n_ignored_switch,'$'+switch);
+       unknownsw :
+         Message1(scan_w_illegal_directive,'$'+switch+state);
        illegalsw :
          Message1(scan_w_illegal_switch,'$'+switch);
+       removedsw :
+         Message1(scan_e_illegal_directive,'$'+switch+state);
        unsupportedsw :
          Message1(scan_w_unsupported_switch,'$'+switch);
        localsw :
@@ -186,13 +202,6 @@ begin
          begin
            if current_module.in_global then
             begin
-{$ifndef cpufpemu}
-              if tmoduleswitch(setsw)=cs_fp_emulation then
-                begin
-                  Message1(scan_w_unsupported_switch_by_target,'$'+switch);
-                end
-              else
-{$endif cpufpemu}
                 begin
                   if state='+' then
                     include(current_settings.moduleswitches,tmoduleswitch(setsw))
@@ -275,6 +284,16 @@ begin
      modulesw : found:=(tmoduleswitch(setsw) in current_settings.moduleswitches);
      globalsw : found:=(tglobalswitch(setsw) in current_settings.globalswitches);
      packenumsw : found := (current_settings.packenum = 4);
+      unknownsw :
+        begin
+          Message1(scan_w_illegal_switch,switch);
+          exit(false);
+        end;
+      removedsw :
+        begin
+          Message1(scan_e_illegal_directive,'IFOPT '+switch+state);
+          exit(false);
+        end;
      else
       found:=false;
      end;

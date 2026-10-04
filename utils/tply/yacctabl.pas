@@ -450,9 +450,7 @@ procedure add_lit ( sym : Integer );
     sym_prec^[sym] := 0;
   end(*add_lit*);
 
-{$ifndef fpc}{$F+}{$endif}
 function lookup(k : Integer) : String;
-{$ifndef fpc}{$F-}{$endif}
   (* print name of symbol no. k *)
   begin
     with sym_table^[k] do
@@ -462,9 +460,7 @@ function lookup(k : Integer) : String;
         lookup := pname^
   end(*lookup*);
 
-{$ifndef fpc}{$F+}{$endif}
 procedure entry(k : Integer; symbol : String);
-{$ifndef fpc}{$F-}{$endif}
   (* enter symbol into table *)
   begin
     sym_table^[k].pname := newStr(symbol);
@@ -533,9 +529,7 @@ procedure add_rule ( r : RuleRecPtr );
     rule_table^[n_rules] := r;
   end(*add_rule*);
 
-{$ifndef fpc}{$F+}{$endif}
 function rule_less ( i, j : Integer ) : Boolean;
-{$ifndef fpc}{$F-}{$endif}
   begin
     if rule_table^[rule_no^[i]]^.lhs_sym =
        rule_table^[rule_no^[j]]^.lhs_sym then
@@ -545,9 +539,7 @@ function rule_less ( i, j : Integer ) : Boolean;
                    rule_table^[rule_no^[j]]^.lhs_sym
   end(*rule_less*);
 
-{$ifndef fpc}{$F+}{$endif}
 procedure rule_swap ( i, j : Integer );
-{$ifndef fpc}{$F-}{$endif}
   var x : Integer;
   begin
     x := rule_no^[i]; rule_no^[i] := rule_no^[j]; rule_no^[j] := x;
@@ -598,17 +590,13 @@ procedure add_type ( k : Integer );
 
 (* Routines to sort type identifiers alphabetically: *)
 
-{$ifndef fpc}{$F+}{$endif}
 function type_less ( i, j : Integer ) : Boolean;
-{$ifndef fpc}{$F-}{$endif}
   begin
     type_less := sym_table^[type_table^[i]].pname^<
                  sym_table^[type_table^[j]].pname^
   end(*type_less*);
 
-{$ifndef fpc}{$F+}{$endif}
 procedure type_swap ( i, j : Integer );
-{$ifndef fpc}{$F-}{$endif}
   var x : Integer;
   begin
     x := type_table^[i];
@@ -876,9 +864,7 @@ var sort_items : ItemSet;
 
 (* comparison and swap routines for sort_item_set: *)
 
-{$ifndef fpc}{$F+}{$endif}
 function items_less ( i, j : Integer ) : Boolean;
-{$ifndef fpc}{$F-}{$endif}
   begin
     with sort_items do
       if item[i].pos_no=item[j].pos_no then
@@ -887,9 +873,7 @@ function items_less ( i, j : Integer ) : Boolean;
         items_less := item[i].pos_no>item[j].pos_no
   end(*items_less*);
 
-{$ifndef fpc}{$F+}{$endif}
 procedure items_swap ( i, j : Integer );
-{$ifndef fpc}{$F-}{$endif}
   var x : ItemRec;
   begin
     with sort_items do

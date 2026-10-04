@@ -136,9 +136,6 @@ implementation
             consume(_SEMICOLON);
             exit;
           end;
-        if (cs_constructor_name in current_settings.globalswitches) and
-           (pd.procsym.name<>'INIT') then
-          Message(parser_e_constructorname_must_be_init);
         consume(_SEMICOLON);
         include(current_structdef.objectoptions,oo_has_constructor);
         { Set return type, class and record constructors return the
@@ -171,7 +168,7 @@ implementation
         { check for a class, record or helper }
         if not((is_class_or_interface_or_dispinterface(current_structdef) or is_record(current_structdef) or
                 is_objectpascal_helper(current_structdef) or is_java_class_or_interface(current_structdef)) or
-               (not(m_tp7 in current_settings.modeswitches) and (is_object(current_structdef)))) then
+               is_object(current_structdef)) then
           Message(parser_e_syntax_error);
         consume(_PROPERTY);
         p:=read_property_dec(is_classproperty,current_structdef);
@@ -274,9 +271,6 @@ implementation
             consume(_SEMICOLON);
             exit;
           end;
-        if (cs_constructor_name in current_settings.globalswitches) and
-           (pd.procsym.name<>'DONE') then
-          Message(parser_e_destructorname_must_be_done);
         pd.calcparas;
         if not(pd.maxparacount=0) and
            (m_fpc in current_settings.modeswitches) then

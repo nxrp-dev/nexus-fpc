@@ -267,16 +267,12 @@ procedure spontaneous_lookaheads;
       end;
   end(*spontaneous_lookaheads*);
 
-{$ifndef fpc}{$F+}{$endif}
 function redns_less ( i, j : Integer ) : Boolean;
-{$ifndef fpc}{$F-}{$endif}
   begin
     redns_less := redn_table^[i].rule_no<redn_table^[j].rule_no
   end(*redns_less*);
 
-{$ifndef fpc}{$F+}{$endif}
 procedure redns_swap ( i, j : Integer );
-{$ifndef fpc}{$F-}{$endif}
   var x : RednRec;
   begin
     x := redn_table^[i];

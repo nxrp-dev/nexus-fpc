@@ -21,7 +21,7 @@ unit buildrtl;
       charset, cpall, character, unixcp, getopts,
       errors, dl, dynlibs,
       types, sysconst, fpwidestring,
-      cthreads, sortbase, classes, fgl, rtlconsts, dos, cwstring, bsd, fpcylix,
+      cthreads, sortbase, classes, fgl, rtlconsts, dos, cwstring, bsd,
       softfpu, sfpux80, ufloatx80, sfpu128, ufloat128;
 
   implementation

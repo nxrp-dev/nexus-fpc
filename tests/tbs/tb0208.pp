@@ -3,7 +3,6 @@
 
 Unit tb0208;
 
-{test also with -So !!!}
 
 Interface
 

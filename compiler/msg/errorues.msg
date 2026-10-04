@@ -450,12 +450,6 @@ parser_w_parser_reloc_no_debug=03011_W_La informacion de depurado $1 para ejecut
 parser_w_parser_win32_debug_needs_WN=03012_W_Para permitir el depurado en win32 las reubicaciones deben ser desactivadas con la opcion -WN
 % Stabs info is wrong for relocatable DLL or EXES use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_El nombre del constructor debe ser INIT
-% You are declaring an object constructor with a name which is not \var{init}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
-parser_e_destructorname_must_be_done=03014_E_El nombre del destructor debe ser DONE
-% You are declaring an object destructor with a name which is not \var{done}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
 parser_e_proc_inline_not_supported=03016_E_Procedimientos tipo INLINE no soportados
 % You tried to compile a program with C++ style inlining, and forgot to
 % specify the \var{-Si} option (\seeo{Si}). The compiler doesn't support C++
@@ -700,9 +694,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_La sintaxis extendida de new o di
 % \var{new}. The constructor must be used for that. For the same reason, you
 % cannot call \var{dispose} to de-allocate an instance of a class, the
 % destructor must be used for that.
-parser_e_procedure_overloading_is_off=03088_E_La sobrecarga de funciones no esta activada
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_No es posible sobrecargar este operador (sobrecarge en cambio "=" )
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1682,9 +1673,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_No se puede asignar un prodecimiento
 % procedure variable, because the calling of local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_No se puede asignar un valor a una dirección
-% It is not allowed to assign a value to an address of a variable,constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_No se pueden asignar valores a variables constantes
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const, to allow
@@ -3270,9 +3259,6 @@ option_reading_further_from=11010_D_Leyendo opciones adicionales de $1
 % to another options file.
 option_target_is_already_set=11011_W_Destino está ya puesto a: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Librerías compartidas no soportadas en la plataforma DOS, regresando a estáticas
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos
 option_too_many_ifdef=11013_F_demasiados IF(N)DEFs
 % the \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3550,17 +3536,14 @@ A*2Aas_ensamblar usando GNU AS
 P*2Aas_ensamblar usando GNU AS
 S*2Aas_ensamblar usando GNU AS
 **1b_generar informacion de navegado
-**2bl_generar informació de símbolos locales
 **1B_construir(build) todos los modulos
 **1C<x>_opciones de generado de código:
 **2Cc<x>_cambiar la convencion de llamada por defecto a <x>
-**2CD_crear adicionalmente una librería dinámica (no soportado)
 **2Ce_Compilar con opcodes de punto flotante emulados
 **2Cf<x>_Cambiar el set de instrucciones de la FPU usado, fpc -i para posibles valores<x>
 **2Cg_Generar código PIC
 **2Ch<n>_<n> bytes heap (entre 1023 y 67107840)
 **2Ci_Comprobación de E/S
-**2Cn_omitir etapa de enlazado
 **2Co_comprobar desbordamiento en operaciones de enteros
 **2Cp<x>_Cambiar el set de instrucciones usado, fpc -i para posibles valores
 **2Cr_comprobación de rango
@@ -3610,7 +3593,6 @@ S*2Aas_ensamblar usando GNU AS
 **2Mfpc_dialecto de free pascal(default)
 **2Mobjfpc_activar algunas extensiones de Delphi 2
 **2Mdelphi_tratar de ser compatible con Delphi
-**2Mtp_tratar de ser compatible con TP/BP 7.0
 **2Mgpc_tratar de ser compatible con gpc
 **2Mmacpas_tratar de ser compatible con dialectos de macintosh pascal
 **1n_no leer la configuración por defecto
@@ -3658,9 +3640,7 @@ S*2Aas_ensamblar usando GNU AS
 **3SIcom_interfaces compatibles COM (defecto)
 **3SIcorba_interfaces compatibles CORBA
 **2Sm_soportar macros tipo C (global)
-**2So_igual que -Mtp
 **2Sp_igual que -Mgpc
-**2Ss_el nombre del constructor debe ser init (el destructor debe ser done)
 **1s_no llamar al ensamblador ni enlazador
 **2sh_Generar script para enlazar en host
 **2st_Generar script para enlazar en destino

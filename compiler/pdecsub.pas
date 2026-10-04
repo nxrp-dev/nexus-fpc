@@ -275,8 +275,7 @@ implementation
         consume(_LKLAMMER);
         { Delphi/Kylix supports nonsense like }
         { procedure p();                      }
-        if try_to_consume(_RKLAMMER) and
-          not(m_tp7 in current_settings.modeswitches) then
+        if try_to_consume(_RKLAMMER) then
           exit;
         { parsing a proc or procvar ? }
         currparast:=tparasymtable(pd.parast);
@@ -1051,10 +1050,8 @@ implementation
                        aprocsym:=tprocsym(srsym)
                      else
                        begin
-                         { when the other symbol is a unit symbol then hide the unit
-                           symbol, this is not supported in tp7 }
-                         if not(m_tp7 in current_settings.modeswitches) and
-                            (srsym.typ=unitsym) then
+                         { when the other symbol is a unit symbol then hide the unit symbol }
+                         if srsym.typ=unitsym then
                           begin
                             HideSym(srsym);
                             searchagain:=true;
@@ -1800,16 +1797,6 @@ begin
     end;
 end;
 
-procedure pd_far(pd:tabstractprocdef);
-begin
-  pd.declared_far;
-end;
-
-procedure pd_near(pd:tabstractprocdef);
-begin
-  pd.declared_near;
-end;
-
 procedure pd_export(pd:tabstractprocdef);
 begin
   if pd.typ<>procdef then
@@ -2345,12 +2332,10 @@ end;
 
 procedure pd_hardfloat(pd:tabstractprocdef);
 begin
-  if
 {$if defined(arm)}
-    (current_settings.fputype=fpu_soft) or
-{$endif defined(arm)}
-    (cs_fp_emulation in current_settings.moduleswitches) then
+  if current_settings.fputype=fpu_soft then
     message(parser_e_cannot_use_hardfloat_in_a_softfloat_environment);
+{$endif defined(arm)}
 end;
 
 procedure pd_section(pd:tabstractprocdef);
@@ -2379,7 +2364,7 @@ type
    end;
 const
   {Should contain the number of procedure directives we support.}
-  num_proc_directives=55;
+  num_proc_directives=53;
 var
   proc_direcdata:array[1..num_proc_directives] of proc_dir_rec=
    (
@@ -2483,15 +2468,6 @@ var
       { allowed for external cpp classes }
       mutexclpotype : [{potype_constructor,potype_destructor}potype_class_constructor,potype_class_destructor];
       mutexclpo     : [po_public,po_exports,po_interrupt,po_assembler,po_inline]
-    ),(
-      idtok:_FAR;
-      pd_flags : [pd_implemen,pd_body,pd_interface,pd_procvar,pd_notobject,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_far;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [pocall_internproc];
-      mutexclpotype : [];
-      mutexclpo     : [po_inline]
     ),(
       idtok:_FAR16;
       pd_flags : [pd_interface,pd_implemen,pd_body,pd_procvar,pd_notobject,pd_notrecord,pd_nothelper];
@@ -2612,15 +2588,6 @@ var
       pocall   : pocall_mwpascal;
       pooption : [];
       mutexclpocall : [];
-      mutexclpotype : [];
-      mutexclpo     : []
-    ),(
-      idtok:_NEAR;
-      pd_flags : [pd_implemen,pd_body,pd_procvar,pd_notobjintf,pd_notrecord,pd_nothelper];
-      handler  : @pd_near;
-      pocall   : pocall_none;
-      pooption : [];
-      mutexclpocall : [pocall_internproc];
       mutexclpotype : [];
       mutexclpo     : []
     ),(

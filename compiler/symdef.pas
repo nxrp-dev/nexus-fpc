@@ -738,8 +738,6 @@ interface
           function address_type:tdef;virtual;
           { address type, generated for ofs() }
           function ofs_address_type:tdef;virtual;
-          procedure declared_far;virtual;
-          procedure declared_near;virtual;
           function generate_safecall_wrapper: boolean; virtual;
           { returns true if the def is a generic param of the procdef }
           function is_generic_param(def:tdef): boolean;
@@ -2569,7 +2567,7 @@ implementation
 {$ifdef x86}
        result:=use_vectorfpu(self);
 {$else x86}
-       result:=(typ=floatdef) and not(cs_fp_emulation in current_settings.moduleswitches)
+       result:=(typ=floatdef)
 {$ifdef xtensa}
          and (FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) and (tfloatdef(self).floattype=s32real)
 {$endif xtensa}
@@ -6280,18 +6278,6 @@ implementation
       end;
 
 
-    procedure tabstractprocdef.declared_far;
-      begin
-        Message1(parser_w_proc_directive_ignored,'FAR');
-      end;
-
-
-    procedure tabstractprocdef.declared_near;
-      begin
-        Message1(parser_w_proc_directive_ignored,'NEAR');
-      end;
-
-
     function tabstractprocdef.generate_safecall_wrapper: boolean;
       begin
 {$ifdef SUPPORT_SAFECALL}
@@ -7049,8 +7035,6 @@ implementation
           else if po_is_block in procoptions then
             s:=s+' is block';
         s:=s+';';
-        if po_far in procoptions then
-          s:=s+' far;';
         { forced calling convention? }
         if (po_hascallingconvention in procoptions) then
           s:=s+' '+ProcCallOptionStr[proccalloption]+';';
@@ -7847,8 +7831,6 @@ implementation
            s := s+' of object';
          if is_nested_pd(self) then
            s := s+' is nested';
-         if po_far in procoptions then
-           s := s+';far';
          GetTypeName := s+';'+ProcCallOptionStr[proccalloption]+'>';
       end;
 

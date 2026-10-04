@@ -539,12 +539,6 @@ parser_w_parser_reloc_no_debug=03011_W_Für relozierbare DLL oder ausführbare D
 parser_w_parser_win32_debug_needs_WN=03012_W_Um Win32-Code debuggen zu können, müssen die Relozierungen mit -WN option abgeschaltet werden.
 % Stabs debug info is wrong for relocatable DLL or EXES. Use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_Konstruktor-Name muss INIT sein
-% You are declaring a constructor with a name which isn't \var{init}, and the
-% \var{-Ss} switch is in effect. See the switch \seeo{Ss}.
-parser_e_destructorname_must_be_done=03014_E_Destruktor-Name muss DONE sein
-% You are declaring a constructor with a name which isn't \var{done}, and the
-% \var{-Ss} switch is in effect. See the switch \seeo{Ss}.
 parser_e_proc_inline_not_supported=03016_E_Schlüsselwort INLINE nicht unterstützt
 % You tried to compile a program with C++ style inlining, and forgot to
 % specify the \var{-Si} option (\seeo{Si}). The compiler doesn't support C++
@@ -789,9 +783,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_Die erweiterte Syntax von New ode
 % \var{new}. The constructor must be used for that. For the same reason, you
 % cannot call \var{Dispose} to de-allocate an instance of a class, the
 % destructor must be used for that.
-parser_e_procedure_overloading_is_off=03088_E_Das Überladen von Prozeduren ist ausgeschaltet
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_Es ist nicht möglich, dieesen Operator zu überladen. Verwandte überladbare Operatoren sind "$1"
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1875,9 +1866,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Kann lokale Prozedur/Funktion nicht 
 % procedure variable, because the calling convention of a local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_Kann einer Adresse keine Werte zuweisen
-% It's not allowed to assign a value to an address of a variable,constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Kann einer Konstanten keine Werte zuweisen
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const. To allow
@@ -3063,7 +3052,6 @@ asmr_w_pop_cs_not_portable=07136_W_Die Instruktion "POP CS" ist nicht portabel (
 asmr_e_public_must_be_used_before_label_definition=07137_E_Das Label $1 kann nur "public" deklariert werden, bevor es definiert wird
 asmr_e_local_label_cannot_be_declared_public=07138_E_Das lokale Label $1 kann nicht als "public" deklariert werden
 asmr_e_multiple_segment_overrides=07139_E_Kann "multiple segment overrides" nicht benutzen
-asmr_w_multiple_segment_overrides=07140_W_"Multiple segment overrides" (nur das letzte wird beachtet)
 asmr_w_segment_override_ignored_in_64bit_mode=07141_W_Segment-Basis $1 wird erzeugt, aber von der CPU im 64-Bit-Modus ignoriert
 asmr_e_mismatch_broadcasting_elements=07142_E_Broadcasting-Elemente passen nicht (erwartet: {$1} gefunden: {$2})
 asmr_e_invalid_arrangement=07143_E_Ungültige Anordnung "$1"
@@ -3639,9 +3627,6 @@ option_reading_further_from=11010_D_Lese weitere Optionen aus $1
 % to another options file.
 option_target_is_already_set=11011_W_Zielsystem ist bereits gesetzt: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Gemeinsame Bibliotheken sind auf der DOS Plattform nicht verfügbar, verwende stattdessen statische Bibliotheken
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos.
 option_too_many_ifdef=11013_F_Zu viele \#IF(N)DEFs in Zeile $2 der Optionen-Datei $1
 % The \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3769,8 +3754,6 @@ option_too_many_exception_modes=11064_E_Nur ein unterstützter Modus von WebAsse
 option_subtarget_is_already_set=11065_W_Subzielsystem is bereits auf $1 gesetzt
 % Displayed if more than one \var{-t} option is specified.
 option_subtarget_config_not_found=11066_E_Subzielsystem $1 angegeben, aber keine entsprechende Konfigurationsdatei $2 gefunden.
-% Displayed if more than one \var{-t} option is specified.
-option_x_ignored=11067_N_Ignoriere den Compiler-Programm-Suffix $1.
 % Displayed if more than one \var{-t} option is specified.
 option_switch_bin_to_src_assembler_cross_endian=11068_N_Schalte in der cross-endian Konfiguration um auf den voreingestellten, Quellcode-schreibenden Assembler
 % This notifies you that the assembler has been changed because
@@ -4060,7 +4043,6 @@ F*0*_Es werden nur Optionen aufgelistet, die für die voreingestellte oder ausge
 **1@<x>_Lese zusätzlich zu den voreingestellten Compiler-Optionen aus fpc.cfg auch die aus <x>
 # Assembler related options
 **1a_Der Compiler löscht die erzeugte Assembler-Datei nicht und übergibt automatisch an den externen Assembler-Schreiber
-**2a5_Erzeuge keine Big-Obj-COFF-Dateien für GNU Binutils, die älter als Version 2.25 sind (Windows, NativeNT)
 **2al_Liste Quellcode-Zeilen in der Assembler-Datei
 **2an_Liste "node info" in der Assembler-Datei (-dEXTDEBUG Compiler)
 **2ao_Füge eine zusätzliche Option zum Aufruf des externen Assemblers hinzu (ignoriert für den internen Assembler)
@@ -4126,7 +4108,6 @@ W*2Awasa_Assembliere mit Hilfe von wasa (experimentell)
 x*2Aas_Assembliere mit Hilfe von GNU AS
 # Used only internally by IDE
 **1b_Erzeuge Browser-Info
-**2bl_Erzeuge Info zu lokalen Symbolen
 **1B_Erzeuge alle Module (Build)
 **1C<x>_Optionen für Code-Erzeugung:
 **2C3<x>_Schalte IEEE-Prüfung von Konstanten ein
@@ -4138,7 +4119,6 @@ V*3Cdc_Verwerfe Intialisierungsdaten. Für die Daten wird die Voreinstellung der
 V*3Cdj_Verwerfe den Sprung nach PASCALMAIN. Nur verwenden, wenn PASCALMAIN direkt dem Start-Code folgt
 V*3Cds_Verwerfe den _START Code. Nur verwenden, wenn alle Interrupts ausgeschaltet sind
 V*3Cdz_Verwerfe Code, der das Zero-Register und den Stack-Pointer initialisiert
-**2CD_Erzeuge auch eine dynamische Bibliothek (nicht unterstützt)
 **2Ce_Übersetze mit emulierten Fliesskomma opcodes
 **2CE_Erzeuge FPU Code, der Ausnahmen (exceptions) auslösen kann
 **2Cf<x>_Wähle den Fliesskomma-Befehlssatz aus; fpc -i oder fpc -if geben die möglichen Werte aus
@@ -4147,8 +4127,6 @@ V*3Cdz_Verwerfe Code, der das Zero-Register und den Stack-Pointer initialisiert
 **2Ch<n>[,m]_<n> Minimale Größe des Heap in Byte (zwischen 1023 und 67107840) und optional [m] maximale Größe des Heap
 **2Ci_I/O-Prüfung
 A*2CI<x>_Wähle den Befehlssatz für ARM aus: ARM oder THUMB
-**2Cn_Lasse die Linkstufe aus
-W*2CN_Erzeuge Überprüfungen auf Nil-Zeiger
 **2Co_Prüfe auf Überlauf von Integer-Operationen
 **2CO_Prüfe auf möglichen Überlauf von Integer-Operationen
 **2Cp<x>_Wähle Befehlssatz aus; fpc -i oder fpc -ic geben die möglichen Werte aus
@@ -4271,7 +4249,6 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2Miso_ISO 7185 Modus
 **2Mmacpas_Kompatibilitäts-Modus für MacIntosh Pascal-Dialekte
 **2Mobjfpc_FPC Modus mit Unterstützung von Object-Pascal
-**2Mtp_Kompatibilitäts-Modus für TP/BP 7.0
 **2*_Jeder Modus (wie oben aufgelistet) schaltet seinen voreingestellten Satz an Modeswitches an.
 **2*_Andere Modeswitches sind ausgeschaltet und müssen nacheinander eingeschaltet werden.
 **1M<x>-_Schalte den Modeswitch <x> aus (siehe Option -im)
@@ -4324,11 +4301,8 @@ F*2P<x>_Setze den Zielprozessor (aarch64, arm, avr, i386, i8086, jvm, loongarch6
 **3SIcom_COM kompatibles Interface (Voreinstellung)
 **3SIcorba_CORBA kompatibles Interface
 **2Sj_Erlaube das Schreiben von typisierten Konstanten (Voreinstellung in allen Modi)
-**2Sk_Lade fpcylix Unit
 **2Sm_Unterstütze Makros wie in der Sprache C (global)
-**2So_Sei TP/BP 7.0 kompatibel (wie -Mtp)
 **2Sr_Transparente Dateinamen im ISO-Modus
-**2Ss_Konstruktor- und Destruktorname müssen "Init" und "Done" sein
 **2Sv_Unterstütze Vektor-Verarbeitung (soweit vorhanden benutze CPU-Vektorerweiterungen)
 **2Sx_Exception Schlüsselwörter einschalten (Voreinstellung in Delphi/ObjFPC Moden)
 **2Sy_@<pointer> gibt einen typisierten Zeiger zurück, genau wie $T+
@@ -4562,7 +4536,6 @@ A*2WR_Erzeuge "relocation code" (Windows)
 8*3Wtexe_Erzeuge eine DOS .EXE Datei (Voreinstellung)
 P*2WT_Spezifiziere "MPW tool type application" (Classic Mac OS)
 **2WX_Ermögliche den executable stack (Linux)
-**1x<suff>_Setze den Suffix für das Compiler-Programm (nur für das fpc Kommando)
 **1X_Programm-Optionen:
 **2X9_Erzeuge Linkerscript für GNU Binutils ld älter als Version 2.19.1 (Linux)
 **2Xa_Erzeuge Code, der auf 64-Bit-Zielsystemen mehr als 2 GB statische Daten erlaubt (Linux)
@@ -4570,7 +4543,6 @@ P*2WT_Spezifiziere "MPW tool type application" (Classic Mac OS)
 **2Xd_Den Standard Bibliotheks-Suchpfad NICHT nutzen (benötigt für cross compile, wenn nicht -XR verwendet wird)
 **2XD_Versuche Units dynamisch zu linken             (definiert FPC_LINK_DYNAMIC)
 **2Xe_Verwende den externen Linker
-**2Xf_Ersetze beim Linken den Namen der pthread-Bibliothek (BSD)
 **2Xg_Erstelle die Debug-Informationen in einer separaten Datei und einen "Debug-Link"-Abschnitt im ausführbaren Programm
 **2Xi_Verwende den internen Linker
 L*2XlS<x>_Suffix der LLVM-Programme (z. B. -7, wenn clang clang-7 heißt)
@@ -4579,7 +4551,6 @@ L*2XlS<x>_Suffix der LLVM-Programme (z. B. -7, wenn clang clang-7 heißt)
 **2XLO_Definiere die Reihenfolge der Bibliotheken für das Linken
 **2Xm_Erzeuge die "link map"
 **2XM<x>_Setze den Namen der 'main' Programm-Routine (Voreinstellung ist 'main')
-**2Xn_Nutze den plattformeigenen Linker des Zielsystem anstelle des GNU ld (Solaris, AIX)
 F*2Xp<x>_Suche nach der Compilerbinary zuerst im Verzeichnis <x>
 **2XP<x>_Stelle den Namen der Compiler-Hilfsprogramme (binutils) den Prefix <x> voran
 **2Xr<x>_Setze den rlink-Pfad des Linker zu <x> (benötigt für cross compile, siehe ld-Manual für mehr Informationen) (BeOS, Linux)
@@ -4587,7 +4558,6 @@ F*2Xp<x>_Suche nach der Compilerbinary zuerst im Verzeichnis <x>
 **2Xs_Entferne alle Symbole aus der ausführbaren Datei
 **2XS_Versuche Units statisch zu linken (default)    (definiert FPC_LINK_STATIC)
 **2Xt_Linke mit statischen Bibliotheken              (-static wird an den Linker übergeben)
-**2Xu_Erzeuge ausführbares Program im UF2-Format     (nur embedded-Zielsysteme)
 **2Xv_Erzeuge eine Tabelle mit den virtuellen Entry-Aufrufen
 **2XV_Benutze VLink als externen linker              (Voreinstellung für Amiga, Atari, Sinclair QL)
 **2XX_Versuche Units smart zu linken                 (definiert FPC_LINK_SMART)

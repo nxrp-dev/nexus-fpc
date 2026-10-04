@@ -858,11 +858,8 @@ implementation
                    end;
                  pointerdef :
                    begin
-                   { pchar can be assigned to short/ansistrings,
-                     but not in tp7 compatible mode }
-                     if not(m_tp7 in current_settings.modeswitches) then
-                       begin
-                          if is_pchar(def_from) then
+                      { pchar can be assigned to short/ansistrings }
+                      if is_pchar(def_from) then
                            begin
                              doconv:=tc_pchar_2_string;
                              { prefer ansistrings/unicodestrings because pchars
@@ -877,7 +874,7 @@ implementation
                              else
                               eq:=te_convert_l4
                            end
-                          else if is_pwidechar(def_from) then
+                      else if is_pwidechar(def_from) then
                            begin
                              doconv:=tc_pwchar_2_string;
                              if is_wide_or_unicode_string(def_to) then
@@ -886,8 +883,7 @@ implementation
                                { shortstring and ansistring can both result in
                                  data loss, so don't prefer one over the other }
                                eq:=te_convert_l3;
-                           end;
-                       end;
+                            end;
                    end;
                  objectdef :
                    begin
@@ -924,10 +920,7 @@ implementation
                case def_from.typ of
                  orddef :
                    begin { ordinal to real }
-                     { only for implicit and internal typecasts in tp }
-                     if (([cdo_explicit,cdo_internal] * cdoptions <> [cdo_explicit]) or
-                         (not(m_tp7 in current_settings.modeswitches))) and
-                        (is_integer(def_from) or
+                      if (is_integer(def_from) or
                          (is_currency(def_from) and
                           (s64currencytype.typ = floatdef))) then
                        begin
@@ -1277,8 +1270,7 @@ implementation
                               end
                             else
                             { array -> array }
-                             if ((not(m_tp7 in current_settings.modeswitches) and
-                                  not(m_delphi in current_settings.modeswitches)) or
+                              if ((not(m_delphi in current_settings.modeswitches)) or
                                 { allow assigning vector results to regular
                                   arrays. TODO: change once we expose vector types }
                                  tarraydef(def_from).is_hwvector) and
@@ -2587,7 +2579,7 @@ implementation
          if checkincompatibleuniv then
            include(pa_comp,cpo_warn_incompatible_univ);
          { check return value and options, methodpointer is already checked }
-         po_comp:=[po_interrupt,po_iocheck,po_varargs,po_far];
+         po_comp:=[po_interrupt,po_iocheck,po_varargs];
          { check static only if we compare method pointers (and function
            references don't count as methodpointers here) }
          if def1.is_methodpointer and

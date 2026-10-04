@@ -1,4 +1,3 @@
-{ %OPT=-Or}
 {$maxfpuregisters 3}
 uses
    erroru;

@@ -556,9 +556,6 @@ implementation
          if s='DELPHIUNICODE' then
           current_settings.modeswitches:=delphiunicodemodeswitches
         else
-         if s='TP' then
-          current_settings.modeswitches:=tpmodeswitches
-        else
          if s='FPC' then begin
           current_settings.modeswitches:=fpcmodeswitches;
           { TODO: enable this for 2.3/2.9 }
@@ -613,8 +610,8 @@ implementation
                  end;
              end;
 
-           { support goto/label by default in delphi/tp7/mac/iso/extpas modes }
-           if ([m_delphi,m_tp7,m_mac,m_iso,m_extpas] * current_settings.modeswitches <> []) then
+            { support goto/label by default in delphi/mac/iso/extpas modes }
+            if ([m_delphi,m_mac,m_iso,m_extpas] * current_settings.modeswitches <> []) then
              begin
                include(current_settings.moduleswitches,cs_support_goto);
                if changeinit then
@@ -635,9 +632,8 @@ implementation
                  exclude(init_settings.localswitches,cs_pointermath);
              end;
 
-           { Default enum and set packing for delphi/tp7 }
-           if (m_tp7 in current_settings.modeswitches) or
-              (m_delphi in current_settings.modeswitches) then
+            { Default enum and set packing for Delphi }
+            if m_delphi in current_settings.modeswitches then
              begin
                current_settings.packenum:=1;
                current_settings.setalloc:=1;
@@ -660,9 +656,8 @@ implementation
                init_settings.setalloc:=current_settings.setalloc;
              end;
 {$if defined(i386)}
-           { Default to intel assembler for delphi/tp7 on i386/i8086 }
-           if (m_delphi in current_settings.modeswitches) or
-              (m_tp7 in current_settings.modeswitches) then
+            { Default to Intel assembler for Delphi on i386 }
+            if m_delphi in current_settings.modeswitches then
              begin
 
                current_settings.asmmode:=asmmode_i386_intel;
@@ -677,8 +672,8 @@ implementation
            if (cs_support_exceptions in current_settings.globalswitches) then
              include(current_settings.modeswitches,m_except);
 
-           { Default strict string var checking in TP/Delphi modes }
-           if ([m_delphi,m_tp7] * current_settings.modeswitches <> []) then
+            { Default strict string var checking in Delphi mode }
+            if m_delphi in current_settings.modeswitches then
              begin
                include(current_settings.localswitches,cs_strict_var_strings);
                if changeinit then
@@ -702,8 +697,6 @@ implementation
             { Undefine old symbol }
             if (m_delphi in oldmodeswitches) then
               undef_system_macro('FPC_DELPHI')
-            else if (m_tp7 in oldmodeswitches) then
-              undef_system_macro('FPC_TP')
             else if (m_objfpc in oldmodeswitches) then
               undef_system_macro('FPC_OBJFPC')
 {$ifdef gpc_mode}
@@ -717,11 +710,9 @@ implementation
             else if (m_extpas in oldmodeswitches) then
               undef_system_macro('FPC_EXTENDEDPASCAL');
 
-            { define new symbol in delphi,objfpc,tp,gpc,macpas mode }
+            { define new symbol in Delphi, ObjFPC, GPC, or MacPas mode }
             if (m_delphi in current_settings.modeswitches) then
               def_system_macro('FPC_DELPHI')
-            else if (m_tp7 in current_settings.modeswitches) then
-              def_system_macro('FPC_TP')
             else if (m_objfpc in current_settings.modeswitches) then
               def_system_macro('FPC_OBJFPC')
 {$ifdef gpc_mode}
@@ -761,7 +752,7 @@ implementation
 
         Result:=false;
         for i:=m_class to high(tmodeswitch) do
-          if s=modeswitchstr[i] then
+          if s=modeswitchstr[ord(i)] then
             begin
               if i in [m_default_ansistring,m_default_unicodestring] then
                 begin
@@ -4535,7 +4526,8 @@ type
             exit;
           end;
          { Check for compiler switches }
-         while (length(hs)=1) and (c in ['-','+']) do
+          while (length(hs)=1) and (c in ['-','+']) and
+            IsRecognizedSwitch(hs[1]) do
           begin
             Message1(scan_d_handling_switch,'$'+hs+c);
             HandleSwitch(hs[1],c);

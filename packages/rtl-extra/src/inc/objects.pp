@@ -2392,7 +2392,7 @@ PROCEDURE TCollection.Store (Var S: TStream);
 var
   LimitWord, DeltaWord: Word;
 
-   PROCEDURE DoPutItem (P: Pointer);{$IFNDEF FPC}FAR;{$ENDIF}
+   PROCEDURE DoPutItem (P: Pointer);
    BEGIN
      PutItem(S, P);                                   { Put item on stream }
    END;
@@ -3011,7 +3011,7 @@ END;
 FUNCTION TResourceFile.SwitchTo (AStream: PStream; Pack: Boolean): PStream;
 VAR NewBasePos: LongInt;
 
-   PROCEDURE DoCopyResource (_Item: Pointer);{$IFNDEF FPC}FAR;{$ENDIF}
+   PROCEDURE DoCopyResource (_Item: Pointer);
    var
      Item: PResourceItem absolute _Item;
    BEGIN

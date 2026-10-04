@@ -36,6 +36,11 @@ Ordinary bug fixes that restore established Free Pascal behavior do not belong h
 |---|---|---|
 | [NXLR-0001](#nxlr-0001-complete-tokenization-of-conditionally-compiled-source) | Complete tokenization of conditionally compiled source | Accepted |
 | [NXLR-0002](#nxlr-0002-compiler-wide-default-text-types) | Compiler-wide default text types | Accepted |
+| [NXLR-0003](#nxlr-0003-removal-of-the-g-switch) | Removal of the `$G` switch | Implemented |
+| [NXLR-0004](#nxlr-0004-removal-of-floating-point-emulation-directives) | Removal of floating-point emulation directives | Implemented |
+| [NXLR-0005](#nxlr-0005-removal-of-kylix-and-turbo-pascal-compatibility-options) | Removal of Kylix and Turbo Pascal compatibility options | Implemented |
+| [NXLR-0006](#nxlr-0006-removal-of-nearfar-procedure-directives) | Removal of near/far procedure directives | Implemented |
+| [NXLR-0007](#nxlr-0007-removal-of-n-and-a5-legacy-options) | Removal of `$N` and `-a5` legacy options | Implemented |
 
 ## NXLR-0001: Complete Tokenization of Conditionally Compiled Source
 
@@ -314,6 +319,288 @@ redefinition of `FPC_UNICODESTRINGS` through source, options, and config files.
   declarations and converted the remaining live `SizeOf(Char)` preprocessor
   selectors in RTL and packages. An ANSI bootstrap and isolated Win64 Unicode
   RTL build passed; full Unicode package parity remains future work.
+
+## NXLR-0003: Removal of the `$G` Switch
+
+- Status: Implemented
+- Decision date: 2026-10-03
+- Implemented in: Compiler switch handling and removal of the imported-data local switch
+- Released in: Not released
+- Applies to: All NexusFPC compiler modes and targets
+- Supersedes: Upstream `$G+` and `$G-` compatibility directives
+
+### Rule
+
+An active `{$G+}` or `{$G-}` is an illegal compiler directive. A processed
+conditional query of their state, `{$IFOPT G+}` or `{$IFOPT G-}`, is also
+illegal. There is no `$G`
+state or target-specific exception. MacPas mode's corresponding
+`{$IFC OPTION(G)}` query is illegal as well.
+
+### Upstream Free Pascal Behavior
+
+The [Free Pascal 3.2.2 user documentation](https://docs.freepascal.org/docs-html/user/userap6.html)
+describes `$G` as an ignored switch for generating 80286 code. Before this
+change, NexusFPC's switch table instead mapped it to a local imported-data
+flag. All its code-generation consumers
+were gated on target package support, which no retained NexusFPC target
+enables. The flag was nevertheless observable through `$IFOPT`.
+
+### Rationale
+
+An obsolete switch with no code-generation effect on the supported target
+matrix should not remain as an unexplained, mutable frontend state.
+
+### Examples
+
+`{$G+}`, `{$G-}`, `{$IFOPT G+}`, and `{$IFOPT G-}` each produce a compiler
+error where their enclosing directive syntax is supported. In MacPas mode,
+`{$IFC OPTION(G)}` produces an error.
+
+### Compatibility Impact
+
+Source that processes these directives is rejected. Remove `$G+` and `$G-`;
+they do not select a useful feature on supported targets. Remove `$IFOPT G`
+and MacPas `OPTION(G)` queries or replace them with a condition describing the actual intended
+target or feature. No compatibility mode or silent-ignore behavior is provided.
+
+### Diagnostics
+
+Direct `$G` forms and conditional queries in their respective supported
+directive syntaxes report an illegal compiler directive error.
+
+### Implementation
+
+`compiler/switches.pas` rejects direct and `$IFOPT` forms. The
+`cs_imported_data` local switch and its checks were removed from the compiler.
+The next live local switch keeps its previous ordinal so PPU-serialized node
+switches retain their bit positions.
+The remaining imported-symbol code is separate package-support machinery;
+it does not implement `$G` and is still gated off for retained targets.
+
+### Tests
+
+`tests/switches` contains negative fixtures for both direct states and both
+`$IFOPT` states. The bootstrap runner checks direct forms in FPC, ObjFPC, and
+MacPas modes, `$IFOPT` forms in FPC and ObjFPC modes, and MacPas's
+`OPTION(G)` form. MacPas does not accept `$IFOPT` independently of this rule.
+Each checked form must produce an illegal-directive error. The normal bootstrap also confirms retained source
+compiles without `$G`.
+
+### Decision History
+
+- 2026-10-03: Accepted and implemented removal of `$G` and its imported-data
+  switch state for all supported targets.
+
+## NXLR-0004: Removal of Floating-Point Emulation Directives
+
+- Status: Implemented
+- Decision date: 2026-10-03
+- Implemented in: Compiler directive handling and removal of the `cs_fp_emulation` code paths
+- Released in: Not released
+- Applies to: All NexusFPC compiler modes and targets
+- Supersedes: Upstream `$E+`, `$E-`, and `FLOATINGPOINTEMULATION`
+
+### Rule
+
+`{$E+}` and `{$E-}` are handled as unknown directives, like
+`{$NONSENSEHDKJHKS}`. `{$IFOPT E+}` and `{$IFOPT E-}` query an unknown switch
+and therefore select no branch, as with an unknown `IFOPT` name.
+`{$FLOATINGPOINTEMULATION ...}` is likewise an unknown directive. There is
+no floating-point emulation switch state. The separate `-Cf` FPU selection,
+including soft-FPU configurations, is not changed by this rule.
+
+### Upstream Free Pascal Behavior
+
+Free Pascal recognizes `$E` as a floating-point coprocessor emulation switch.
+The retained NexusFPC targets did not enable the `cpufpemu` compiler feature;
+the switch produced an unsupported-target warning and could not activate its
+code paths.
+
+### Rationale
+
+The switch refers to a legacy emulation mechanism that is not available on the
+retained target matrix. Keeping its syntax and dormant branches would imply a
+supported capability that does not exist.
+
+### Compatibility Impact
+
+Source containing an active `$E` directive or processed `$IFOPT E` query no
+longer has a floating-point emulation state to control or inspect. Such source
+should remove the directive or use a condition for the actual FPU configuration.
+Code using `-Cf` to select an FPU type is unaffected.
+
+### Implementation and Tests
+
+The compiler handles direct `$E` forms through its unknown-directive warning
+and `$IFOPT E` through its unknown-switch behavior. It no longer registers
+`FLOATINGPOINTEMULATION`. The `cs_fp_emulation` state and its
+code-generation alternatives were removed. The following module-switch ordinal
+is fixed so existing PPU-serialized switch positions do not shift.
+
+`tests/switches` checks that direct `$E` forms and an arbitrary unknown
+directive compile under the scanner's normal unknown-directive behavior. It
+also checks that `$IFOPT E` and an arbitrary unknown switch do not select their
+branches, and that the former long-form directive compiles as unknown. The
+bootstrap runner executes these tests after building the compiler.
+
+### Decision History
+
+- 2026-10-03: Accepted and implemented removal of the legacy emulation switch.
+
+## NXLR-0005: Removal of Kylix and Turbo Pascal compatibility options
+
+- Status: Implemented
+- Decision date: 2026-10-03
+- Implemented in: Current worktree
+- Released in: Not released
+- Applies to: All NexusFPC targets and compiler modes
+- Supersedes: None
+
+### Rule
+
+NexusFPC does not support `-Sk`, `-Mtp`, `-So`, or `-Ss`, or the
+`{$MODE TP}` source directive. The command-line options are rejected as unknown
+options. `{$MODE TP}` follows the ordinary unknown-mode path: it emits an
+illegal-switch warning and leaves the current mode unchanged. No Kylix compatibility unit is automatically
+loaded, and object constructors and destructors have no special `Init`/`Done`
+name restriction.
+
+### Rationale
+
+The Kylix unit and Turbo Pascal 7 compatibility mode are outside the supported
+NexusFPC language and target contract. Removing their dedicated compiler state
+also removes otherwise unreachable parsing and code-generation branches.
+
+### Compatibility Impact
+
+Source and build commands requesting these compatibility modes must select a
+retained language mode and update any syntax that depended on the old mode.
+Code that used `-Ss` solely to enforce method names must enforce that convention
+outside the compiler.
+
+### Implementation and Tests
+
+The options, TP mode state and TP-only branches were removed from the compiler.
+The `fpcylix` unit and its RTL build registration were removed. The bootstrap
+runner tests rejection of all four options and the unknown-mode warning for
+`{$MODE TP}`, plus compilation of arbitrarily named constructors and
+destructors. TP-mode-specific legacy test fixtures were removed because changing
+their mode would invalidate the behavior they originally tested.
+
+### Decision History
+
+- 2026-10-03: Removed at the project owner's direction.
+
+## NXLR-0006: Removal of near/far procedure directives
+
+- Status: Implemented
+- Decision date: 2026-10-03
+- Implemented in: Current worktree
+- Released in: Not released
+- Applies to: All NexusFPC compiler modes and retained targets
+- Supersedes: Upstream `$F`, `FARCALLS`, and ignored Pascal procedure `far`/`near` directives
+
+### Rule
+
+`{$F+}`, `{$F-}`, and `{$FARCALLS ...}` follow the ordinary unknown-directive
+path. Pascal `far` and `near` procedure and procedure-variable directives are
+not accepted. The formerly ignored `far` pointer modifier on x86-64 and
+non-x86 targets is not accepted.
+
+This rule does not remove the distinct i386 pointer modifiers: `far` selects
+an FS-segment pointer there, and `near` can explicitly select a segment
+register on x86. It also does not remove `far`/`near` operand qualifiers from
+x86 inline assembly, where they describe control-transfer instruction forms.
+Windows API identifiers such as `FARPROC` are unaffected.
+
+### Upstream Free Pascal Behavior
+
+Free Pascal recognizes `$F` and `FARCALLS` for legacy compatibility but
+ignores their call-distance effect on 32- and 64-bit targets. It accepts
+Pascal `far` and `near` procedure directives while warning that they are
+ignored. Some pointer and inline-assembly uses have separate target-specific
+meanings and are not covered by that no-op behavior.
+
+### Rationale
+
+The retained targets have no segmented-memory procedure call model. Accepting
+ignored call-distance directives implies a capability they do not provide.
+Target-specific pointer and instruction syntax with real semantics remains
+available.
+
+### Examples
+
+`procedure P; far;` and `procedure P; near;` are rejected. `{$F+}` and
+`{$F-}` receive the same unknown-directive warning as an arbitrary unregistered
+directive. On i386, `type PFS = ^Byte; far;` remains meaningful and accepted.
+
+### Compatibility Impact
+
+Existing source using the ignored procedure directives must remove them.
+Source using the ignored x86-64 or non-x86 `far` pointer modifier must remove
+that modifier. i386 segment-qualified pointer declarations, x86 assembly
+operand qualifiers, and Windows API names are unchanged.
+
+### Implementation and Tests
+
+The scanner no longer registers `$F` or `FARCALLS`; the procedure-directive
+table no longer accepts `far` or `near`; their no-op handlers and unreachable
+procedure-option branches were removed. The x86-64/non-x86 no-op `far`
+pointer paths were removed. Obsolete modifiers were removed from retained
+source. The bootstrap runner checks unknown-directive behavior and rejection
+of the removed Pascal syntax on Win64.
+
+### Decision History
+
+- 2026-10-03: Removed no-op near/far call syntax at the project owner's direction; retained behavior-bearing pointer and assembly uses.
+
+## NXLR-0007: Removal of `$N` and `-a5` legacy options
+
+- Status: Implemented
+- Decision date: 2026-10-03
+- Implemented in: Current worktree
+- Released in: Not released
+- Applies to: All NexusFPC compiler modes and retained targets
+- Supersedes: Upstream `$N` numeric-coprocessor compatibility switch and `-a5` old-binutils workaround
+
+### Rule
+
+`{$N+}` and `{$N-}` follow the ordinary unknown-directive path. The `-a5`
+command-line option and its boolean-off form are rejected as unknown options.
+The compiler automatically requests Big Obj COFF output when a Windows target
+has enough sections to require it; that decision is no longer user-overridable
+to support pre-2.25 GNU binutils.
+
+### Upstream Free Pascal Behavior
+
+Free Pascal recognizes `$N` as a Turbo Pascal numeric-processing compatibility
+switch. In this source tree it had no working numeric backend effect and
+reported an unsupported-switch warning. On Windows, `-a5` could suppress
+Big Obj COFF output for old GNU binutils.
+
+### Rationale
+
+The retained targets do not use the Turbo Pascal coprocessor model, and the
+project does not support the obsolete GNU binutils compatibility mode.
+Big Obj COFF itself remains necessary for large Windows object files.
+
+### Compatibility Impact
+
+Source containing `$N` receives an unknown-directive warning and should
+remove it. Commands containing `-a5` must remove that option. If a Windows
+object requires Big Obj COFF, the assembler must support it.
+
+### Implementation and Tests
+
+The switch tables no longer recognize `$N`; the six inactive `$N+` lines in
+pasjpeg were removed. The `-a5` parser, option-help entry, and its conditional
+Big Obj suppression path were removed. The bootstrap runner checks both `$N`
+forms and both `-a5` forms.
+
+### Decision History
+
+- 2026-10-03: Removed both legacy options at the project owner's direction.
 
 ## Change Record Format
 

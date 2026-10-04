@@ -371,22 +371,6 @@ implementation
             colevarianttype:=cvariantdef.create(vt_olevariant);
           end;
 
-{$ifdef cpufpemu}
-        { Normal types }
-        (* we use the same types as without emulator, the only
-          difference is that direct calls to the emulator are generated
-        if (cs_fp_emulation in current_settings.moduleswitches) then
-          begin
-            addtype('Single',s32floattype);
-            { extended size is the best real type for the target }
-            addtype('Real',s32floattype);
-            pbestrealtype:=@s32floattype;
-            { extended size is the best real type for the target }
-            addtype('Extended',pbestrealtype^);
-          end
-        else
-        *)
-{$endif cpufpemu}
         if init_settings.fputype<>fpu_none then
           begin
             addtype('Single',s32floattype);

@@ -1032,8 +1032,7 @@ Implementation
 
          { as we don't keep track of the amount of sections we created we simply
            enable Big Obj COFF files always for targets that need them }
-         if (cs_asm_pre_binutils_2_25 in current_settings.globalswitches) or
-            not (target_info.system in systems_all_windows) or
+         if not (target_info.system in systems_all_windows) or
             (section_high_bound<min_big_obj_section_count) then
            Replace(result,'$BIGOBJ','')
          else

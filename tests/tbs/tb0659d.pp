@@ -2,9 +2,6 @@ program tb0659d;
 
 {$mode delphi}
 
-{$ifdef FPC_TP}
-{$fatal FPC_TP defined}
-{$endif}
 {$ifdef FPC_OBJFPC}
 {$fatal FPC_OBJFPC defined}
 {$endif}

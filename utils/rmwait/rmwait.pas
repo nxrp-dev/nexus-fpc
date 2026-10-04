@@ -392,7 +392,7 @@ begin
 end;
 
 
-procedure NewExit; {$IFNDEF FPC} far;{$ENDIF FPC}
+procedure NewExit;
 begin
   ExitProc := OldExit;
   if (ErrorAddr <> nil) or (ExitCode <> 0) then

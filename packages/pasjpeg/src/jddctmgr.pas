@@ -17,7 +17,6 @@ interface
 
 {$I jconfig.inc}
 
-{$N+}
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
@@ -124,7 +123,7 @@ type
   a matching multiplier table. }
 
 {METHODDEF}
-procedure start_pass (cinfo : j_decompress_ptr); far;
+procedure start_pass (cinfo : j_decompress_ptr);
 var
   idct : my_idct_ptr;
   ci, i : int;

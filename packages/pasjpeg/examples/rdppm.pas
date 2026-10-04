@@ -170,7 +170,7 @@ end;
 
 {METHODDEF}
 function get_text_gray_row (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                            sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading text-format PGM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -194,7 +194,7 @@ end;
 
 {METHODDEF}
 function get_text_rgb_row (cinfo : j_compress_ptr;
-                           sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                           sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading text-format PPM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -222,7 +222,7 @@ end;
 
 {METHODDEF}
 function get_scaled_gray_row (cinfo : j_compress_ptr;
-                              sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                              sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading raw-byte-format PGM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -250,7 +250,7 @@ end;
 
 {METHODDEF}
 function get_scaled_rgb_row (cinfo : j_compress_ptr;
-                             sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                             sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading raw-byte-format PPM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -285,7 +285,7 @@ end;
 
 {METHODDEF}
 function get_raw_row (cinfo : j_compress_ptr;
-                      sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                      sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading raw-byte-format files with maxval := MAXJSAMPLE.
   In this case we just read right into the JSAMPLE buffer!
   Note that same code works for PPM and PGM files. }
@@ -303,7 +303,7 @@ end;
 
 {METHODDEF}
 function get_word_gray_row (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                            sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading raw-word-format PGM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -336,7 +336,7 @@ end;
 
 {METHODDEF}
 function get_word_rgb_row (cinfo : j_compress_ptr;
-                           sinfo : cjpeg_source_ptr) : JDIMENSION; far;
+                           sinfo : cjpeg_source_ptr) : JDIMENSION;
 { This version is for reading raw-word-format PPM files with any maxval }
 var
   source : ppm_source_ptr;
@@ -383,7 +383,7 @@ end;
 
 {METHODDEF}
 procedure start_input_ppm (cinfo : j_compress_ptr;
-                           sinfo : cjpeg_source_ptr); far;
+                           sinfo : cjpeg_source_ptr);
 var
   source : ppm_source_ptr;
   c : AnsiChar;
@@ -552,7 +552,7 @@ end;
 
 {METHODDEF}
 procedure finish_input_ppm (cinfo : j_compress_ptr;
-                            sinfo : cjpeg_source_ptr); far;
+                            sinfo : cjpeg_source_ptr);
 begin
   { no work }
 end;

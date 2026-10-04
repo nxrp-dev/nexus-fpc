@@ -2,9 +2,6 @@ program tb0659f;
 
 {$mode iso}
 
-{$ifdef FPC_TP}
-{$fatal FPC_TP defined}
-{$endif}
 {$ifdef FPC_OBJFPC}
 {$fatal FPC_OBJFPC defined}
 {$endif}

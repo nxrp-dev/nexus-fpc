@@ -152,7 +152,7 @@ procedure fatal(msg : String);
 
 {$ifndef fpc}
 {$IFNDEF Win32}
-function heapErrorHandler ( size : Word ): Integer; far;
+function heapErrorHandler ( size : Word ): Integer;
   begin
     if size>0 then
       fatal(mem_overflow) (* never returns *)

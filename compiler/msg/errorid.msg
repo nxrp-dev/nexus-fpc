@@ -460,12 +460,6 @@ parser_w_parser_reloc_no_debug=03011_W_DLL yang bisa direlokasi atau info debug 
 parser_w_parser_win32_debug_needs_WN=03012_W_Untuk membolehkan men-debug pada kode win32 anda perlu mematikan relokasi dengan opsi -WN
 % Info stab salah untuk DLL atau EXE yang bisa direlokasi, gunakan -WN
 % jika anda ingin men-debug win32 executable.
-parser_e_constructorname_must_be_init=03013_E_Nama konstruktor harus INIT
-% Anda mendeklarasikan konstruktor obyek dengan nama yang bukan \var{init}, dan
-% saklar \var{-Ss} dipakai. Lihat saklar \var{-Ss} (\seeo{Ss}).
-parser_e_destructorname_must_be_done=03014_E_Nama destruktor harus DONE
-% Anda mendeklarasikan destruktor obyek yang bukan \var{done}, dan saklar
-% \var{-Ss} dipakai. Lihat saklar \var{-Ss} (\seeo{Ss}).
 parser_e_proc_inline_not_supported=03016_E_Tipe prosedur INLINE tidak didukung
 % Anda mencoba untuk mengompilasi program dengan gaya inline C++, dan lupa
 % menetapkan opsi \var{-Si} (\seeo{Si}). Standarnya kompilator tidak mendukung 
@@ -710,9 +704,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_Sintaks diperluas pada new atau d
 % \var{new}. Konstruktor harus dipakai untuk itu. Untuk alasan yang sama, anda
 % tidak bisa memanggil \var{dispose} untuk dealokasi turunan kelas, destruktor
 % harus dipakai untuk itu.
-parser_e_procedure_overloading_is_off=03088_E_Procedure overloading dimatikan
-% Ketika menggunakan saklar \var{-So}, procedure overloading dimatikan.
-% Turbo Pascal tidak mendukung overload fungsi.
 parser_e_overload_operator_failed=03089_E_Tidak mungkinuntuk meng-overload operator ini. Operator yang bisa di-overload terkait (bila ada) adalah: $1
 % Anda mencoba untuk meng-overload sebuah operator yang tidak bisa di-overload.
 % Operator berikut dapat di-overload :
@@ -1695,9 +1686,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Tidak bisa menempatkan prosedur/fung
 % prosedur, karena pemanggilan prosedur/fungsi lokal berbeda. Anda hanya bisa 
 % menempatkan prosedur/fungsi lokal ke sebuah pointer.
 type_e_no_assign_to_addr=04031_E_Tidak bisa menempatkan nilai ke alamat
-% Tidak dibolehkan untuk menempatkan nilai ke alamat dari variabel, konstan,
-% prosedur atau fungsi. Anda dapat mencoba mengompilasi dengan -So jika pengenal
-% adalah variabel procedure.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Tidak bisa menempatkan nilai ke variabel const
 % Tidak dibolehkan untuk menempatkan nilai ke variabel yang dideklarasikan
 % sebagai const. Ini biasanya parameter dideklarasikan sebagai const, untuk
@@ -3299,9 +3288,6 @@ option_reading_further_from=11010_D_Membaca opsi lanjutan dari $1
 % file opsi lain.
 option_target_is_already_set=11011_W_Target sudah disetel ke: $1
 % Ditampilkan jika lebih dari satu opsi \var{-T} ditetapkan.
-option_no_shared_lib_under_dos=11012_W_Libs berbagi tidak didukung pada DOS platform, membalikan ke statis
-% Jika anda menetapkan \var{-CD} untuk platform \dos, pesan ini ditampilkan.
-% Kompilator hanya mendukung libari statis di bawah \dos
 option_too_many_ifdef=11013_F_terlalu banyak IF(N)DEF
 % Pernyataan \var{\#IF(N)DEF} dalam file opsi tidak seimbang dengan pernyataan
 % \var{\#ENDIF}.
@@ -3586,18 +3572,15 @@ A*2Aas_Rangkai menggunakan GNU AS
 P*2Aas_Rangkai menggunakan GNU AS
 S*2Aas_Rangkai menggunakan GNU AS
 **1b_Hasilkan info browser
-**2bl_Hasilkan info simbol lokal
 **1B_Bangun seluruh modul
 **1C<x>_Opsi pembuatan kode:
 **2Cc<x>_Setel konvensi pemanggilan standar ke <x>
-**2CD_Buat juga librari dinamis (tidak didukung)
 **2Ce_Kompilasi dengan opcode pecahan diemulasikan
 **2Cf<x>_Pilih set instruksi fpu yang dipakai, lihat fpc -i untuk nilai yang mungkin
 **2CF<x>_Minimal presisi konstan pecahan (standar, 32, 64)
 **2Cg_Hasilkan kode PIC
 **2Ch<n>_<n> byte heap (antara 1023 dan 67107840)
 **2Ci_Pemeriksaan-IO
-**2Cn_Abaikan tahap linking
 **2Co_Periksa kelebihan untuk operasi integer
 **2Cp<x>_Pilih set instruksi, lihat fpc -i untuk nilai yang mungkin
 **2CP<x>=<y>_ setelan pemadatan
@@ -3658,7 +3641,6 @@ S*2Aas_Rangkai menggunakan GNU AS
 **2Mfpc_Dialek Free Pascal (standar)
 **2Mobjfpc_Mode FPC dengan dukungan Obyek Pascal
 **2Mdelphi_Mode kompatibilitas Delphi 7
-**2Mtp_Mode kompatibilitas TP/BP 7.0
 **2Mmacpas_Mode kompatibilitas dialek Macintosh Pascal
 **1n_Jangan baca file konfigurasi standar
 **1o<x>_Ubah nama executable yang dihasilkan ke <x>
@@ -3690,16 +3672,13 @@ S*2Aas_Rangkai menggunakan GNU AS
 **3*_w : Kompilator juga batal setelah peringatan
 **3*_n : Kompilator juga batal setelah catatan
 **3*_h : Kompilator juga batal setelah petunjuk
-**2Sg_Hidupkan LABEL dan GOTO (standar dalam -Mtp dan -Mdelphi)
+**2Sg_Enable LABEL and GOTO
 **2Sh_Gunakan ansistrings secara standar daripada shortstrings
 **2Si_Hidupkan inlining procedures/functions yang dideklarisak sebagai "inline"
-**2Sk_Ambil unit fpcylix
 **2SI<x>_Setel gaya antarmuka ke <x>
 **3SIcom_Antarmuka kompatibel COM (standar)
 **3SIcorba_Antarmuka kompatibel CORBA
 **2Sm_Dukung makro seperti C (global)
-**2So_Sama seperti -Mtp
-**2Ss_Nama konstruktor harus init (destruktor harus done)
 **2Sx_Hidupkan kata kunci exception (standar dalam mode Delphi/ObjFPC)
 **1s_Jangan panggil assembler dan linker
 **2sh_Hasilkan naskah untuk me-link pada host

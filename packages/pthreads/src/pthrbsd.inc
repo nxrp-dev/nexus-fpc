@@ -21,7 +21,7 @@
 }
 
 {$linklib pthread}      // The compiler changes this to c_r if needed.
-{$linklib c}            // (parameter -Xf)
+{$linklib c}
 
 {$PACKRECORDS C}
 

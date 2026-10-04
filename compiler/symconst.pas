@@ -409,10 +409,9 @@ type
       compiler, e.g. because it was designated as a getter/setter for a property
       with a higher visibility on the JVM target }
     po_auto_raised_visibility,
-    { procedure is far (x86 only) }
-    po_far,
-    { near/far call model is specified explicitly (x86 only) }
-    po_hasnearfarcallmodel,
+    { Reserved PPU bit positions: former near/far procedure options. }
+    po_reserved_far,
+    po_reserved_nearfarcallmodel,
     { the procedure never returns, this information is useful for dfa }
     po_noreturn,
     { procvar is a function reference }
@@ -1101,8 +1100,8 @@ const
       'non-virtual Java methods',{po_java_nonvirtual}
       'po_ignore_for_overload_resolution',{po_ignore_for_overload_resolution}
       'po_auto_raised_visibility',{po_auto_raised_visibility}
-      '"FAR"',              {po_far}
-      'po_hasnearfarcallmodel',{po_hasnearfarcallmodel}
+      'reserved',           {po_reserved_far}
+      'reserved',           {po_reserved_nearfarcallmodel}
       '"NORETURN"',{po_noreturn}
       'po_is_function_ref',{po_is_function_ref}
       'C-style blocks',{po_is_block}

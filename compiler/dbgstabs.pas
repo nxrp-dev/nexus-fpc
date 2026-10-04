@@ -1443,7 +1443,7 @@ implementation
         regidx : Tregisterindex;
       begin
         ss:='';
-        { set loc to LOC_REFERENCE to get somewhat usable debugging info for -Or }
+         { set loc to LOC_REFERENCE to get somewhat usable debugging info }
         { while stabs aren't adapted for regvars yet                             }
         if (vo_is_self in sym.varoptions) then
           begin

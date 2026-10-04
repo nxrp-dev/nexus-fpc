@@ -275,7 +275,6 @@ begin
           AddUnit('objpas');
           AddUnit('x86');
         end;
-    T:=P.Targets.AddUnit('fpcylix.pp',[i386],[Linux]);
       With T.Dependencies do
         begin
           AddUnit('cthreads');

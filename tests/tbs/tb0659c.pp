@@ -2,9 +2,6 @@ program tb0659c;
 
 {$mode objfpc}
 
-{$ifdef FPC_TP}
-{$fatal FPC_TP defined}
-{$endif}
 {$ifndef FPC_OBJFPC}
 {$fatal FPC_OBJFPC not defined}
 {$endif}

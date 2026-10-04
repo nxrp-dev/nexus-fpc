@@ -1,7 +1,3 @@
-{ %OPT=-Or }
-
-{ -Or option is not recognized by m68k compiler }
-
 {$mode objfpc}
  Type
       t = class(TObject)

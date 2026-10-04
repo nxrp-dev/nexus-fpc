@@ -3398,10 +3398,9 @@ implementation
               in_lo_word,
               in_hi_word :
                 begin
-                  { give warning for incompatibility with tp and delphi }
+                  { give warning for incompatibility with Delphi }
                   if (inlinenumber in [in_lo_long,in_hi_long,in_lo_qword,in_hi_qword]) and
-                     ((m_tp7 in current_settings.modeswitches) or
-                      (m_delphi in current_settings.modeswitches)) then
+                     (m_delphi in current_settings.modeswitches) then
                     CGMessage(type_w_maybe_wrong_hi_lo);
                   set_varstate(left,vs_read,[vsf_must_be_valid]);
                   if not is_integer(left.resultdef) then
@@ -4833,32 +4832,14 @@ implementation
       end;
 
      function tinlinenode.first_sqr_real : tnode;
-      var
-         callnode : tcallnode;
-         temp_pnode: pnode;
       begin
-{$ifndef cpufpemu}
-        { this procedure might be only used for cpus defining cpufpemu else
-          the optimizer might go into an endless loop when doing x*x -> changes }
+        { All retained CPUs implement this in their CPU-specific inline node. }
         internalerror(2011092401);
-{$endif cpufpemu}
-        { create the call to the helper }
-        { on entry left node contains the parameter }
-        if left.nodetype = callparan then
-          temp_pnode := @tcallparanode(left).left
-        else
-          temp_pnode := @left;
-        callnode:=ccallnode.createintern('fpc_sqr_real',
-                    ccallparanode.create(temp_pnode^,nil));
-        result := ctypeconvnode.create(callnode,resultdef);
-        include(callnode.callnodeflags,cnf_check_fpu_exceptions);
-        temp_pnode^ := nil;
+        result:=nil;
       end;
 
      function tinlinenode.first_sqrt_real : tnode;
       var
-        fdef: tdef;
-        procname: string[31];
         callnode: tcallnode;
         temp_pnode: pnode;
       begin
@@ -4866,41 +4847,12 @@ implementation
           temp_pnode := @tcallparanode(left).left
         else
           temp_pnode := @left;
-        if ((cs_fp_emulation in current_settings.moduleswitches)
-{$ifdef cpufpemu}
-            or (current_settings.fputype=fpu_soft)
-{$endif cpufpemu}
-            ) then
-          begin
-            case tfloatdef(temp_pnode^.resultdef).floattype of
-              s32real:
-                begin
-                  fdef:=search_system_type('FLOAT32REC').typedef;
-                  procname:='float32_sqrt';
-                end;
-              s64real:
-                begin
-                  fdef:=search_system_type('FLOAT64').typedef;
-                  procname:='float64_sqrt';
-                end;
-              {!!! not yet implemented
-              s128real:
-              }
-            else
-              internalerror(2014052101);
-            end;
-            result:=ctypeconvnode.create_internal(ccallnode.createintern(procname,ccallparanode.create(
-               ctypeconvnode.create_internal(temp_pnode^,fdef),nil)),resultdef);
-          end
-        else
-          begin
-            { create the call to the helper }
-            { on entry left node contains the parameter }
-            callnode := ccallnode.createintern('fpc_sqrt_real',
-                ccallparanode.create(temp_pnode^,nil));
-            result := ctypeconvnode.create(callnode,resultdef);
-            include(callnode.callnodeflags,cnf_check_fpu_exceptions);
-          end;
+        { create the call to the helper }
+        { on entry left node contains the parameter }
+        callnode := ccallnode.createintern('fpc_sqrt_real',
+            ccallparanode.create(temp_pnode^,nil));
+        result := ctypeconvnode.create(callnode,resultdef);
+        include(callnode.callnodeflags,cnf_check_fpu_exceptions);
         temp_pnode^ := nil;
       end;
 

@@ -329,16 +329,6 @@ var
                Message1(unit_u_ppu_invalid_target,system_name,@queuecomment);
                exit;
              end;
-{$ifdef cpufpemu}
-          { check if floating point emulation is on?
-            fpu emulation isn't unit levelwise because it affects calling convention }
-          if ((ppufile.header.common.flags and uf_fpu_emulation)<>0) <>
-             (cs_fp_emulation in current_settings.moduleswitches) then
-            begin
-              Message(unit_u_ppu_invalid_fpumode,@queuecomment);
-              exit;
-            end;
-{$endif cpufpemu}
            result:=true;
         end;
 
@@ -1633,10 +1623,6 @@ var
          Message1(unit_u_ppu_write,realmodulename^);
 
          { create unit flags }
-{$ifdef cpufpemu}
-         if (cs_fp_emulation in current_settings.moduleswitches) then
-           headerflags:=headerflags or uf_fpu_emulation;
-{$endif cpufpemu}
          { create new ppufile }
          ppufile:=tcompilerppufile.create(ppufilename);
          if not ppufile.createfile then

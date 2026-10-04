@@ -1,4 +1,4 @@
-{ %OPT=-gl -OG1 -S2cgi }
+{ %OPT=-gl -O1 -S2cgi }
 program Project1;
 
 {$mode objfpc}{$H+}

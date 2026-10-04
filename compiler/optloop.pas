@@ -164,8 +164,8 @@ unit optloop;
 
                 { can we get rid completly of the for ? }
                 getridoffor:=(unrolls=counts) and not(hascontrollflowstatements) and
-                  { TP/Macpas allows assignments to the for-variables, so we cannot get rid of the for }
-                  ([m_tp7,m_mac]*current_settings.modeswitches=[]);
+                  { Macpas allows assignments to the for-variables, so we cannot get rid of the for }
+                  not(m_mac in current_settings.modeswitches);
 
                 if getridoffor then
                   begin

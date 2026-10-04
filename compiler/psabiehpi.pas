@@ -720,7 +720,6 @@ implementation
                 otherunit:=findunitsymtable(excepttype.owner).moduleid<>findunitsymtable(current_procinfo.procdef.owner).moduleid;
                 indirect:=(tf_supports_packages in target_info.flags) and
                         (target_info.system in systems_indirect_var_imports) and
-                        (cs_imported_data in current_settings.localswitches) and
                         otherunit;
                 { add "catch exceptiontype" clause to the landing pad }
                 rttidef:=cpointerdef.getreusable(excepttype.vmt_def);

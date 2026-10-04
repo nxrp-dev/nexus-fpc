@@ -103,7 +103,7 @@ type
 
   Procedure TMy.ShowAll;
 
-      procedure ShowIt(P : pointer);{$ifdef TP}far;{$endif}
+      procedure ShowIt(P : pointer);
         begin
           ShowMy;
           PMyObj(P)^.Display;

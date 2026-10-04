@@ -135,7 +135,7 @@ uses
 
 
 {METHODDEF}
-procedure error_exit (cinfo : j_common_ptr); far;
+procedure error_exit (cinfo : j_common_ptr);
 begin
   { Always display the message }
   cinfo^.err^.output_message(cinfo);
@@ -314,7 +314,7 @@ begin
 end;
 
 {METHODDEF}
-procedure output_message (cinfo : j_common_ptr); far;
+procedure output_message (cinfo : j_common_ptr);
 var
   buffer : ShortString; {[JMSG_LENGTH_MAX];}
 begin
@@ -338,7 +338,7 @@ end;
 
 
 {METHODDEF}
-procedure emit_message (cinfo : j_common_ptr; msg_level : int); far;
+procedure emit_message (cinfo : j_common_ptr; msg_level : int);
 var
   err : jpeg_error_mgr_ptr;
 begin
@@ -370,7 +370,7 @@ end;
 
 
 {METHODDEF}
-procedure format_message (cinfo : j_common_ptr; var buffer : ShortString); far;
+procedure format_message (cinfo : j_common_ptr; var buffer : ShortString);
 var
   err : jpeg_error_mgr_ptr;
   msg_code : J_MESSAGE_CODE;
@@ -437,7 +437,7 @@ end;
 
 
 {METHODDEF}
-procedure reset_error_mgr (cinfo : j_common_ptr); far;
+procedure reset_error_mgr (cinfo : j_common_ptr);
 begin
   cinfo^.err^.num_warnings := 0;
   { trace_level is not reset since it is an application-supplied parameter }

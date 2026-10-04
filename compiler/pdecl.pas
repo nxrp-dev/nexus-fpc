@@ -1019,18 +1019,14 @@ implementation
                     consume(_SEMICOLON);
 {$ifdef x86}
 
+  {$if defined(i386)}
                     if try_to_consume(_FAR) then
                      begin
-  {$if defined(i386)}
                        tcpupointerdef(hdef).x86pointertyp:=x86pt_near_fs;
-  {$elseif defined(x86_64)}
-                       { for compatibility with previous versions of fpc,
-                         far pointer = regular pointer on x86_64 }
-                       Message1(parser_w_ptr_type_ignored,'FAR');
-  {$endif}
                        consume(_SEMICOLON);
                      end
                     else
+  {$endif}
                       if try_to_consume(_NEAR) then
                        begin
                          if current_scanner.token <> _SEMICOLON then
@@ -1051,14 +1047,6 @@ implementation
                            tcpupointerdef(hdef).x86pointertyp:=x86pt_near;
                          consume(_SEMICOLON);
                        end;
-{$else x86}
-                    { Previous versions of FPC support declaring a pointer as
-                      far even on non-x86 platforms. }
-                    if try_to_consume(_FAR) then
-                     begin
-                       Message1(parser_w_ptr_type_ignored,'FAR');
-                       consume(_SEMICOLON);
-                     end;
 {$endif x86}
                   end;
                 procvardef :

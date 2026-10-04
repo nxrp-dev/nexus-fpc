@@ -420,12 +420,6 @@ parser_w_parser_reloc_no_debug=03011_W_Değiştirilebilir DLL veya çalıştır�
 parser_w_parser_win32_debug_needs_WN=03012_W_Win32 kodu için hata ayıklamaya izin vermek için -WN seçeneğiyle yer değiştirmeyi devre dışı bırakmanız gerekir
 % Stabs hata ayıklama bilgisi yer değiştirebilir DLL veya EXES için yanlıştır.
 % Win32 çalıştırılabilir dosyalarında hata ayıklamak istiyorsanız -WN kullanın.
-parser_e_constructorname_must_be_init=03013_E_constructor adı INIT olmalıdır
-% \var{init} olmayan bir ada sahip bir nesne oluşturucuyu ilan ediyorsunuz
-% ve \var{-Ss} anahtarı etkin. Bkz. \seeo{Ss} anahtarı.
-parser_e_destructorname_must_be_done=03014_E_Destructor adı DONE olmalıdır
-% \var{done} olmayan bir ada sahip bir nesne imha edici bildirirsiniz ve
-% \var{-Ss} anahtarı etkindir. Bkz. \seeo{Ss} anahtarı.
 parser_e_proc_inline_not_supported=03016_E_Prosedür tipi INLINE desteklenmiyor
 % Bir programı C ++ stili satır içi ile derlemeye çalıştınız ve
 % \var{-Si} seçeneğini (\seeo{Si}) belirtmeyi unutmuşsunuz.
@@ -637,9 +631,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_Genişletilmiş yeni veya elden �
 % \var{new} genişletilmiş sözdizimine sahip bir sınıf örneği oluşturamazsınız.
 % Bunun için yapıcı kullanılmalıdır. Aynı nedenle, sınıfın bir örneğini ayırmak için
 % \var{dispose} 'ı arayamazsınız, destructors bunun için kullanılmalıdır.
-parser_e_procedure_overloading_is_off=03088_E_Prosedür aşırı yüklemesi kapatıldı
-% \var{-So} anahtarını kullanırken, prosedür aşırı yüklemesi kapatılır.
-% Turbo Pascal, fonksiyon aşırı yüklenmesini desteklemiyor.
 parser_e_overload_operator_failed=03089_E_Bu operatörü aşırı yüklemek mümkün değildir. İlgili aşırı yüklenebilir operatörler (varsa): $1
 % Aşırı yüklenemeyen bir operatörü aşırı yüklemeye çalışıyorsunuz.
 % Aşağıdaki operatörler aşırı yüklenebilir:
@@ -1575,9 +1566,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Prosedür değişkenine yerel prosed
 % procedure variable, because the calling convention of a local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_Bir adrese değer atayamıyor
-% It is not allowed to assign a value to an address of a variable, constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Const değişkenine değer atayamazsınız
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const. To allow
@@ -3082,9 +3071,6 @@ option_reading_further_from=11010_D_$1 'dan daha fazla seçenek okunuyor
 % to another options file.
 option_target_is_already_set=11011_W_Hedef zaten ayarlanmış: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Paylaşılan lib'ler DOS platformunda desteklenmiyor, statik değere dönüyor
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos.
 option_too_many_ifdef=11013_F_Seçenekler dosyasında $1 satırındaki $2 çok fazla #IF(N)DEF ile karşılaştı
 % The \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3410,14 +3396,12 @@ A*2Aas_Assemble using GNU AS
 P*2Aas_Assemble using GNU AS
 S*2Aas_Assemble using GNU AS
 **1b_Generate browser info
-**2bl_Generate local symbol info
 **1B_Build all modules
 **1C<x>_Code generation options:
 **2C3_Turn on ieee error checking for constants
 **2Ca<x>_Select ABI; see fpc -i or fpc -ia for possible values
 **2Cb_Generate code for a big-endian variant of the target architecture
 **2Cc<x>_Set default calling convention to <x>
-**2CD_Create also dynamic library (not supported)
 **2Ce_Compilation with emulated floating point opcodes
 **2Cf<x>_Select fpu instruction set to use; see fpc -i or fpc -if for possible values
 **2CF<x>_Minimal floating point constant precision (default, 32, 64)
@@ -3425,8 +3409,6 @@ S*2Aas_Assemble using GNU AS
 **2Ch<n>_<n> bytes heap (between 1023 and 67107840)
 **2Ci_IO-checking
 A*2CI<x>_Select instruction set on ARM: ARM or THUMB
-**2Cn_Omit linking stage
-P*2CN_Generate nil-pointer checks (AIX-only)
 **2Co_Check overflow of integer operations
 **2CO_Check for possible overflow of integer operations
 **2Cp<x>_Select instruction set; see fpc -i or fpc -ic for possible values
@@ -3527,7 +3509,6 @@ J*2Cv_Var/out parameter copy-out checking
 **2Mfpc_Free Pascal dialect (default)
 **2Mobjfpc_FPC mode with Object Pascal support
 **2Mdelphi_Delphi 7 compatibility mode
-**2Mtp_TP/BP 7.0 compatibility mode
 **2Mmacpas_Macintosh Pascal dialects compatibility mode
 **2Miso_ISO 7185 mode
 **1n_Do not read the default config files
@@ -3565,16 +3546,13 @@ F*2P<x>_Set target CPU (arm,avr,i386,jvm,m68k,mips,mipsel,powerpc,powerpc64,spar
 **3*_n : Compiler also halts after notes
 **3*_h : Compiler also halts after hints
 **2Sf_Enable certain features in compiler and RTL; see fpc -i or fpc -ir for possible values)
-**2Sg_Enable LABEL and GOTO (default in -Mtp and -Mdelphi)
+**2Sg_Enable LABEL and GOTO
 **2Sh_Use reference counted strings (ansistring by default) instead of shortstrings
 **2Si_Turn on inlining of procedures/functions declared as "inline"
-**2Sk_Load fpcylix unit
 **2SI<x>_Set interface style to <x>
 **3SIcom_COM compatible interface (default)
 **3SIcorba_CORBA compatible interface
 **2Sm_Support macros like C (global)
-**2So_Same as -Mtp
-**2Ss_Constructor name must be init (destructor must be done)
 **2Sv_Support vector processing (use CPU vector extensions if available)
 **2Sx_Enable exception keywords (default in Delphi/ObjFPC modes)
 **2Sy_@<pointer> returns a typed pointer, same as $T+
@@ -3734,7 +3712,6 @@ P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2Xc_Pass --shared/-dynamic to the linker (BeOS, Darwin, FreeBSD, Linux)
 **2Xd_Do not search default library path (sometimes required for cross-compiling when not using -XR)
 **2Xe_Use external linker
-**2Xf_Substitute pthread library name for linking (BSD)
 **2Xg_Create debuginfo in a separate file and add a debuglink section to executable
 **2XD_Try to link units dynamically      (defines FPC_LINK_DYNAMIC)
 **2Xi_Use internal linker
@@ -3743,7 +3720,6 @@ P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2XLD_Exclude default order of standard libraries
 **2Xm_Generate link map
 **2XM<x>_Set the name of the 'main' program routine (default is 'main')
-**2Xn_Use target system native linker instead of GNU ld (Solaris, AIX)
 F*2Xp<x>_First search for the compiler binary in the directory <x>
 **2XP<x>_Prepend the binutils names with the prefix <x>
 **2Xr<x>_Set the linker's rlink-path to <x> (needed for cross compile, see the ld manual for more information) (BeOS, Linux)

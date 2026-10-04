@@ -1866,15 +1866,13 @@ implementation
                   s:=current_scanner.orgpattern;
                   defpos:=current_tokenpos;
                   consume(_ID);
-                  { only allow assigning of specific numbers under fpc mode }
-                  if not(m_tp7 in current_settings.modeswitches) and
-                     (
+                  { allow assigning specific numbers }
+                  if
                       { in fpc mode also allow := to be compatible
                         with previous 1.0.x versions }
                       ((m_fpc in current_settings.modeswitches) and
                        try_to_consume(_ASSIGNMENT)) or
-                      try_to_consume(_EQ)
-                     ) then
+                      try_to_consume(_EQ) then
                     begin
                        oldlocalswitches:=current_settings.localswitches;
                        include(current_settings.localswitches,cs_allow_enum_calc);

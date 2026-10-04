@@ -116,7 +116,6 @@ Type
     procedure Interpret_V_l(opt, more: TCmdStr);
     procedure Interpret_V_U(opt, more: TCmdStr);
     procedure Interpret_W_U(opt, more: TCmdStr);
-    procedure Interpret_X_l(opt, more: TCmdStr);
     procedure Interpret_X_U(opt, more: TCmdStr);
 
    protected
@@ -716,12 +715,12 @@ const
      begin
       if (OrigString = '') then
        begin
-        if ModeswitchStr [Modeswitch] <> '' then
-         Comment (V_Normal, ModeswitchStr [Modeswitch]);
+         if ModeswitchStr [ord(Modeswitch)] <> '' then
+          Comment (V_Normal, ModeswitchStr [ord(Modeswitch)]);
        end
       else
        begin
-        if Length (HS1 + ModeswitchStr [Modeswitch]) > 60 then
+         if Length (HS1 + ModeswitchStr [ord(Modeswitch)]) > 60 then
          begin
           HS := OrigString;
           HS1 := HS1 + ',';
@@ -731,8 +730,8 @@ const
          end
         else if HS1 <> '' then
          HS1 := HS1 + ',';
-        if ModeswitchStr [Modeswitch] <> '' then
-         HS1 := HS1 + ModeswitchStr [Modeswitch];
+         if ModeswitchStr [ord(Modeswitch)] <> '' then
+          HS1 := HS1 + ModeswitchStr [ord(Modeswitch)];
        end;
      end;
     if (OrigString <> '') and (HS1 <> '') then
@@ -750,8 +749,8 @@ const
   begin
     WriteLn(xmloutput,'    <modeswitches>');
     for Modeswitch:=Low(TModeswitch) to High(TModeswitch) do
-      if ModeswitchStr [Modeswitch]<>'' then
-        WriteLn(xmloutput,'      <modeswitch name="',ModeswitchStr [Modeswitch],'"/>');
+       if ModeswitchStr [ord(Modeswitch)]<>'' then
+         WriteLn(xmloutput,'      <modeswitch name="',ModeswitchStr [ord(Modeswitch)],'"/>');
     WriteLn(xmloutput,'    </modeswitches>');
   end;
 
@@ -1415,7 +1414,6 @@ begin
            'v' : Interpret_V_l(opt,more);
            'V' : Interpret_V_U(opt,more);
            'W' : Interpret_W_U(opt,more);
-           'x' : Interpret_X_l(opt,more);
            'X' : Interpret_X_U(opt,more);
          else
            IllegalPara(opt);
@@ -2119,16 +2117,6 @@ begin
   while j<=length(more) do
    begin
      case more[j] of
-       '5' :
-         if (target_info.system in systems_all_windows) then
-           begin
-             if UnsetBool(More, j, opt, false) then
-               exclude(init_settings.globalswitches,cs_asm_pre_binutils_2_25)
-             else
-               include(init_settings.globalswitches,cs_asm_pre_binutils_2_25);
-           end
-         else
-           IllegalPara(opt);
        'l' :
          include(init_settings.globalswitches,cs_asm_source);
        'r' :
@@ -2181,23 +2169,12 @@ end;
 procedure TOption.Interpret_B_l(opt, more: TCmdStr);
 
 begin
-  // Message1(option_obsolete_switch,'-b');
   if UnsetBool(More,0,opt,false) then
-    begin
-      init_settings.moduleswitches:=init_settings.moduleswitches-[cs_browser];
-      init_settings.moduleswitches:=init_settings.moduleswitches-[cs_local_browser];
-    end
+    init_settings.moduleswitches:=init_settings.moduleswitches-[cs_browser]
   else
-    begin
-      init_settings.moduleswitches:=init_settings.moduleswitches+[cs_browser];
-    end;
+    init_settings.moduleswitches:=init_settings.moduleswitches+[cs_browser];
   if More<>'' then
-    if (More='l') or (More='l+') then
-      init_settings.moduleswitches:=init_settings.moduleswitches+[cs_local_browser]
-    else if More='l-' then
-      init_settings.moduleswitches:=init_settings.moduleswitches-[cs_local_browser]
-    else
-      IllegalPara(opt);
+    IllegalPara(opt);
 end;
 
 
@@ -2255,15 +2232,6 @@ begin
              IllegalPara(opt);
             break;
           end;
-{$ifdef cpufpemu}
-       'e' :
-          begin
-            If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.moduleswitches,cs_fp_emulation)
-            Else
-              include(init_settings.moduleswitches,cs_fp_emulation);
-          end;
-{$endif cpufpemu}
        'E' :
          If UnsetBool(More, j, opt, false) then
            exclude(init_settings.localswitches,cs_check_fpu_exceptions)
@@ -2344,11 +2312,6 @@ begin
            exclude(init_settings.globalswitches,cs_link_nolink)
          Else
            include(init_settings.globalswitches,cs_link_nolink);
-       'N' :
-         If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_low_addr_load)
-         Else
-           include(init_settings.localswitches,cs_check_low_addr_load);
        'o' :
          If UnsetBool(More, j, opt, false) then
            exclude(init_settings.localswitches,cs_check_overflow)
@@ -2521,11 +2484,6 @@ begin
             exclude(init_settings.localswitches,cs_check_stack)
           Else
             include(init_settings.localswitches,cs_check_stack);
-       'D' :
-          If UnsetBool(More, j, opt, false) then
-            exclude(init_settings.moduleswitches,cs_create_dynamic)
-          Else
-            include(init_settings.moduleswitches,cs_create_dynamic);
        'X' :
           If UnsetBool(More, j, opt, false) then
             exclude(init_settings.moduleswitches,cs_create_smart)
@@ -2783,8 +2741,6 @@ begin
       end;
     'M' :
       unicodepath:=FixPath(More,true);
-    'g' :
-      Message2(option_obsolete_switch_use_new,'-Fg','-Fl');
     'l' :
       begin
         if ispara then
@@ -3138,7 +3094,7 @@ begin
            if not Setoptimizecputype(copy(more,j+1),init_settings.optimizecputype) then
              begin
                OptCPUSetExplicitly:=true;
-               { Give warning for old i386 switches }
+                { Give warning for old i386 switches }
                if (Length(More)-j=1) and
                   (More[j+1]>='1') and (More[j+1]<='5')then
                  Message2(option_obsolete_switch_use_new,'-Op<nr>','-Op<name>')
@@ -3158,15 +3114,6 @@ begin
            init_settings.optimizerswitches:=[];
            FillChar(ParaAlignment,sizeof(ParaAlignment),0);
          end;
-       { Obsolete switches }
-       'g' :
-         Message2(option_obsolete_switch_use_new,'-Og','-Os');
-       'G' :
-         Message1(option_obsolete_switch,'-OG');
-       'r' :
-         Message2(option_obsolete_switch_use_new,'-Or','-O2 or -Ooregvar');
-       'u' :
-         Message2(option_obsolete_switch_use_new,'-Ou','-Oouncertain');
        'w' :
          begin
            if not UpdateWpoStr(copy(more,j+1),init_settings.dowpoptimizerswitches) then
@@ -3324,18 +3271,11 @@ begin
               exclude(init_settings.localswitches,cs_typed_const_writable)
             else
               include(init_settings.localswitches,cs_typed_const_writable);
-          'k' :
-            If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_load_fpcylix_unit)
-            else
-              include(init_settings.globalswitches,cs_load_fpcylix_unit);
           'm' :
             If UnsetBool(More, j, opt, false) then
               exclude(init_settings.moduleswitches,cs_support_macro)
             else
               include(init_settings.moduleswitches,cs_support_macro);
-          'o' : //an alternative to -Mtp
-            SetCompileMode('TP',true);
           'r' :
             If UnsetBool(More, j, opt, false) then
               exclude(init_settings.globalswitches,cs_transparent_file_names)
@@ -3345,13 +3285,6 @@ begin
           'p' : //an alternative to -Mgpc
             SetCompileMode('GPC',true);
           {$endif}
-          's' :
-            If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_constructor_name)
-            else
-              include(init_settings.globalswitches,cs_constructor_name);
-          't' :
-            Message1(option_obsolete_switch,'-St');
           'v' :
             If UnsetBool(More, j, opt, false) then
               exclude(init_settings.globalswitches,cs_support_vectors)
@@ -3369,8 +3302,8 @@ begin
               include(init_settings.localswitches,cs_typed_addresses);
           '-' :
             begin
-              init_settings.globalswitches:=init_settings.globalswitches - [cs_constructor_name,cs_support_exceptions,
-                                                                            cs_support_vectors,cs_load_fpcylix_unit];
+              init_settings.globalswitches:=init_settings.globalswitches - [cs_support_exceptions,
+                                                                            cs_support_vectors];
 
               init_settings.localswitches:=init_settings.localswitches - [cs_do_assertion,cs_do_inline,
                                                                           cs_typed_addresses];
@@ -3469,11 +3402,6 @@ begin
 {$endif UNITALIASES}
        'n' :
          exclude(init_settings.globalswitches,cs_check_unit_name);
-       'p' :
-          begin
-            Message2(option_obsolete_switch_use_new,'-Up','-Fu');
-            break;
-          end;
        'r' :
          begin
            do_release:=true;
@@ -3717,13 +3645,6 @@ begin
    end;
 end;
 
-procedure TOption.Interpret_X_l(opt, more: TCmdStr);
-
-begin
-  message1(option_x_ignored,more);
-end;
-
-
 procedure TOption.Interpret_X_U(opt, more: TCmdStr);
 
 var
@@ -3766,8 +3687,6 @@ begin
            else
              include(init_settings.globalswitches,cs_link_extern);
          end;
-       'f' :
-         include(init_settings.globalswitches,cs_link_pthread);
        'g' :
          begin
            If UnsetBool(More, j, opt, false) then
@@ -3784,13 +3703,6 @@ begin
                exclude(init_settings.globalswitches,cs_link_extern);
                LinkInternSetExplicitly:=true;
              end;
-         end;
-       'n' :
-         begin
-           If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_native)
-           else
-             include(init_settings.globalswitches,cs_link_native);
          end;
        'm' :
          begin
@@ -3826,10 +3738,6 @@ begin
          end;
        't' :
          include(init_settings.globalswitches,cs_link_staticflag);
-       'u' :
-         begin
-           IgnoredPara('-Xu');
-         end;
        'v' :
          begin
            If UnsetBool(More, j, opt, false) then
@@ -4549,15 +4457,6 @@ begin
   { set Mac OS X version default macros if not specified explicitly }
   option.MaybeSetDefaultMacVersionMacro;
 
-{$ifdef cpufpemu}
-  if (init_settings.fputype=fpu_soft) then
-    begin
-      include(init_settings.moduleswitches,cs_fp_emulation);
-      { cs_fp_emulation and fpu_soft are equal on arm and m68k }
-      init_settings.fputype:=fpu_soft;
-    end;
-{$endif cpufpemu}
-
 {$ifdef i386}
   case target_info.system of
     system_i386_android:
@@ -4728,8 +4627,7 @@ begin
 
 {$ifdef ARM}
   { define FPC_DOUBLE_HILO_SWAPPED if needed to properly handle doubles in RTL }
-  if (init_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11]) and
-    not(cs_fp_emulation in init_settings.moduleswitches) then
+   if init_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11] then
     def_system_macro('FPC_DOUBLE_HILO_SWAPPED');
 {$endif ARM}
 

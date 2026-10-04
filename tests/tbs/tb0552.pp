@@ -2,8 +2,8 @@
   {$mode objfpc}
 {$endif FPC}
 type
-  pb1 = ^boolean;far;
-  pb2 = ^boolean deprecated;far;
+  pb1 = ^boolean;
+  pb2 = ^boolean deprecated;
   pt = boolean deprecated;
   o = class
   end deprecated;

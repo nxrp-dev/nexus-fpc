@@ -476,12 +476,6 @@ parser_w_parser_reloc_no_debug=03011_W_可重定位的 DLL 或可执行文件 $1
 parser_w_parser_win32_debug_needs_WN=03012_W_要允许调试 win32 代码，您需要使用 -WN 选项禁用重定位
 % 可重定位 DLL 或 EXE 的 Stabs 调试信息是错误的。如果您想要
 % 调试 win32 可执行文件，请使用 -WN。
-parser_e_constructorname_must_be_init=03013_E_构造函数名必须是 INIT
-% 您正在声明一个名称不是 \var{init} 的对象构造函数，并且
-% \var{-Ss} 开关已启用。请参见开关 \seeo{Ss}。
-parser_e_destructorname_must_be_done=03014_E_析构函数名必须是 DONE
-% 您正在声明一个名称不是 \var{done} 的对象析构函数，并且
-% \var{-Ss} 开关已启用。请参见开关 \seeo{Ss}。
 parser_e_proc_inline_not_supported=03016_E_不支持 INLINE 过程类型
 % 您试图编译带有 C++ 风格内联的程序，但忘记指定 \var{-Si} 选项
 % (\seeo{Si})。编译器默认不支持 C++ 风格的内联。
@@ -681,8 +675,6 @@ parser_e_no_reraise_possible=03085_E_此处不能重新抛出异常
 parser_e_no_new_or_dispose_for_classes=03086_E_类不允许使用 new 或 dispose 的扩展语法
 % 您不能使用 \var{new} 的扩展语法生成类的实例。必须使用构造函数。
 % 同样的原因，您不能调用 \var{dispose} 来释放类的实例，必须使用析构函数。
-parser_e_procedure_overloading_is_off=03088_E_过程重载已关闭
-% 当使用 \var{-So} 开关时，过程重载被关闭。Turbo Pascal 不支持函数重载。
 parser_e_overload_operator_failed=03089_E_无法重载此运算符。相关可重载运算符（如果有）是：$1
 % 您正在尝试重载一个不能重载的运算符。
 % 以下运算符可以重载：
@@ -1562,8 +1554,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_不能将局部过程/函数赋值�
 % 不允许将局部过程/函数赋值给过程变量，因为局部过程/函数的
 % 调用约定不同。你只能将局部过程/函数赋值给空指针。
 type_e_no_assign_to_addr=04031_E_不能向地址赋值
-% 不允许向变量、常量、过程或函数的地址赋值。如果标识符
-% 是过程变量，你可以尝试使用 -So 编译。
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_不能向常量变量赋值
 % 不允许向声明为常量的变量赋值。这通常是一个声明为 const 的
 % 参数。要允许更改值，请通过值传递参数，或使用引用参数
@@ -2590,7 +2581,6 @@ asmr_w_pop_cs_not_portable=07136_W_指令 "POP CS" 不可移植(仅在 8086 和 
 asmr_e_public_must_be_used_before_label_definition=07137_E_标签 $1 只能在定义前声明为 public
 asmr_e_local_label_cannot_be_declared_public=07138_E_局部标签 $1 不能声明为 public
 asmr_e_multiple_segment_overrides=07139_E_不能使用多个段覆盖
-asmr_w_multiple_segment_overrides=07140_W_多个段覆盖(只有最后一个会生效)
 asmr_w_segment_override_ignored_in_64bit_mode=07141_W_段基址 $1 将被生成，但在 64 位模式下被 CPU 忽略
 asmr_e_mismatch_broadcasting_elements=07142_E_广播元素不匹配(期望: {$1} 实际: {$2})
 asmr_e_invalid_arrangement=07143_E_无效的排列说明符 "$1"
@@ -3043,9 +3033,6 @@ option_reading_further_from=11010_D_正在从 $1 读取更多选项
 % 当你启用了注释时，编译器切换到另一个选项文件时会显示此消息。
 option_target_is_already_set=11011_W_目标已设置为：$1
 % 当指定了多个 \var{-T} 选项时显示。
-option_no_shared_lib_under_dos=11012_W_DOS 平台不支持共享库，正在恢复为静态库
-% 如果你为 \dos 平台指定 \var{-CD}，会显示此消息。
-% 编译器在 \dos 下只支持静态库。
 option_too_many_ifdef=11013_F_在选项文件 $1 的第 $2 行遇到过多的 #IF(N)DEF
 % 选项文件中的 \var{\#IF(N)DEF} 语句与 \var{\#ENDIF} 语句不匹配。
 option_too_many_endif=11014_F_在选项文件 $1 的第 $2 行遇到意外的 #ENDIF
@@ -3147,8 +3134,6 @@ option_too_many_exception_modes=11064_E_只能指定一种 WebAssembly 异常支
 option_subtarget_is_already_set=11065_W_子目标已设置为: $1
 % 当指定了多个 \var{-t} 选项时显示。
 option_subtarget_config_not_found=11066_E_指定了子目标 $1 但未找到对应的配置文件 $2。
-% 当指定了多个 \var{-t} 选项时显示。
-option_x_ignored=11067_N_忽略编译器可执行文件后缀 $1。
 % 当指定了多个 \var{-t} 选项时显示。
 option_switch_bin_to_src_assembler_cross_endian=11068_N_在交叉字节序配置中切换汇编器为默认源代码写入汇编器
 % 这通知你汇编器已被更改，因为
@@ -3414,7 +3399,6 @@ F*0*_仅列出对默认或选定平台有效的选项。
 **1@<x>_除默认的 fpc.cfg 外，还从 <x> 读取编译器选项
 # 汇编器相关选项
 **1a_编译器不删除生成的汇编文件，自动切换到外部汇编器写入器
-**2a5_对于 GNU Binutils 2.25 之前的版本不生成 Big Obj COFF 文件(Windows, NativeNT)
 **2al_在汇编文件中列出源代码行
 **2an_在汇编文件中列出节点信息(-dEXTDEBUG 编译器)
 **2ao_为外部汇编器调用添加额外选项(对内部汇编器无效)
@@ -3481,7 +3465,6 @@ W*2Awasa_使用 wasa 汇编(实验性)
 x*2Aas_使用 GNU AS 汇编
 # 仅由 IDE 内部使用
 **1b_生成浏览器信息
-**2bl_生成本地符号信息
 **1B_构建所有模块
 **1C<x>_代码生成选项:
 **2C3_启用常量的 IEEE 错误检查
@@ -3493,7 +3476,6 @@ V*3Cdc_丢弃初始化数据。数据默认为 noinit 段
 V*3Cdj_丢弃跳转到 PASCALMAIN。仅在 PASCALMAIN 直接跟在启动代码后时使用
 V*3Cds_丢弃 _START 代码。仅在所有中断都被禁用时使用
 V*3Cdz_丢弃初始化零寄存器和栈指针的代码
-**2CD_同时创建动态库(不支持)
 **2Ce_使用模拟浮点操作码进行编译
 **2CE_生成可能引发异常的 FPU 代码
 **2Cf<x>_选择要使用的 fpu 指令集；使用 fpc -i 或 fpc -if 查看可能的值
@@ -3502,9 +3484,6 @@ V*3Cdz_丢弃初始化零寄存器和栈指针的代码
 **2Ch<n>[,m]_<n> 字节最小堆大小(在 1023 和 67107840 之间)以及可选的 [m] 最大堆大小
 **2Ci_IO 检查
 A*2CI<x>_在 ARM 上选择指令集: ARM 或 THUMB
-**2Cn_省略链接阶段
-P*2CN_生成空指针检查(仅限 AIX)
-W*2CN_生成空指针检查
 **2Co_检查整数运算的溢出
 **2CO_检查整数运算可能的溢出
 **2Cp<x>_选择指令集；使用 fpc -i 或 fpc -ic 查看可能的值
@@ -3627,7 +3606,6 @@ A*2CV<x>_将线程变量模型设置为 <x>
 **2Miso_ISO 7185 模式
 **2Mmacpas_Macintosh Pascal 方言兼容模式
 **2Mobjfpc_带对象 Pascal 支持的 FPC 模式
-**2Mtp_TP/BP 7.0 兼容模式
 **2*_每个模式(如上所列)都启用其默认的模式开关集。
 **2*_其他模式开关默认禁用，需要一个一个启用。
 **1M<x>-_禁用模式开关 <x> (参见选项 -im)
@@ -3673,18 +3651,15 @@ F*2P<x>_设置目标 CPU (aarch64,arm,avr,i386,i8086,jvm,loongarch64,mips,mipsel
 **3*_n：编译器在注释后也停止
 **3*_w：编译器在警告后也停止
 **2Sf_在编译器和 RTL 中启用某些功能；可能的值请参见 fpc -i 或 fpc -ir
-**2Sg_启用 LABEL 和 GOTO (在 -Mtp 和 -Mdelphi 中默认启用)
+**2Sg_Enable LABEL and GOTO
 **2Sh_使用引用计数字符串(默认为 ansistring)而不是 shortstrings
 **2Si_启用声明为"inline"的过程/函数的内联
 **2SI<x>_将接口风格设置为 <x>
 **3SIcom_COM 兼容接口(默认)
 **3SIcorba_CORBA 兼容接口
 **2Sj_允许类型化常量可写(在所有模式中默认启用)
-**2Sk_加载 fpcylix 单元
 **2Sm_支持 C 语言风格的宏(全局)
-**2So_等同于 -Mtp
 **2Sr_ISO 模式下的透明文件名
-**2Ss_构造函数名必须为"Init"(析构函数名必须为"Done")
 **2Sv_支持向量处理(如果可用则使用 CPU 向量扩展)
 **2Sx_启用异常关键字(在 Delphi/ObjFPC 模式下默认启用)
 **2Sy_@<pointer> 返回类型化指针，等同于 $T+
@@ -3919,7 +3894,6 @@ A*2WR_生成重定位代码(Windows)
 8*3Wtexe_创建 DOS .EXE 文件(默认)
 P*2WT_指定 MPW 工具类型应用程序(经典 Mac OS)
 **2WX_启用可执行栈(Linux)
-**1x<suff>_设置编译器可执行文件的后缀(仅限 fpc 命令)
 **1X_可执行文件选项：
 **2X9_为版本低于 2.19.1 的 GNU Binutils ld 生成链接器脚本(Linux)
 **2Xa_生成允许在 64 位目标上使用超过 2 GB 静态数据的代码(Linux)
@@ -3927,7 +3901,6 @@ P*2WT_指定 MPW 工具类型应用程序(经典 Mac OS)
 **2Xd_不搜索默认库路径(交叉编译时如果不使用 -XR 可能需要)
 **2XD_尝试动态链接单元(定义 FPC_LINK_DYNAMIC)
 **2Xe_使用外部链接器
-**2Xf_替换用于链接的 pthread 库名称(BSD)
 **2Xg_在单独的文件中创建调试信息并向可执行文件添加调试链接部分
 **2Xi_使用内部链接器
 L*2XlS<x>_LLVM 工具后缀(例如，如果 clang 被称为 clang-7，则为 -7)
@@ -3936,7 +3909,6 @@ L*2XlS<x>_LLVM 工具后缀(例如，如果 clang 被称为 clang-7，则为 -7)
 **2XLO_定义库链接顺序
 **2Xm_生成链接映射
 **2XM<x>_设置'main'程序例程的名称(默认为'main')
-**2Xn_使用目标系统原生链接器而不是 GNU ld (Solaris, AIX)
 F*2Xp<x>_首先在目录 <x> 中搜索编译器二进制文件
 **2XP<x>_在 binutils 名称前加上前缀 <x>
 **2Xr<x>_将链接器的 rlink-path 设置为 <x> (交叉编译需要，更多信息请参见 ld 手册) (BeOS, Linux)
@@ -3944,7 +3916,6 @@ F*2Xp<x>_首先在目录 <x> 中搜索编译器二进制文件
 **2Xs_从可执行文件中删除所有符号
 **2XS_尝试静态链接单元(默认，定义 FPC_LINK_STATIC)
 **2Xt_与静态库链接(-static 传递给链接器)
-**2Xu_以 UF2 格式生成可执行文件(仅限嵌入式目标)
 **2Xv_生成虚拟入口调用表
 **2XV_使用 VLink 作为外部链接器(在 Amiga, Atari, Sinclair QL 上默认)
 **2XX_尝试智能链接单元(定义 FPC_LINK_SMART)

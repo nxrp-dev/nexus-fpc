@@ -461,12 +461,6 @@ parser_w_parser_reloc_no_debug=03011_W_שינוי מיקום נתוני הניפ
 parser_w_parser_win32_debug_needs_WN=03012_W_לאפשר ניפוי שגיאות לwin32 יש לבטל את שינוי המיקום ע"י האפשרות -WN
 % Stabs info is wrong for relocatable DLL or EXES use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_שם יוצר חייב להיות INIT
-% You are declaring an object constructor with a name which is not \var{init}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
-parser_e_destructorname_must_be_done=03014_E_שם הורס חייב להיות DONE
-% You are declaring an object destructor with a name which is not \var{done}, and the
-% \var{-Ss} switch is in effect. See the \var{-Ss} switch (\seeo{Ss}).
 parser_e_proc_inline_not_supported=03016_E_פרוצדורת INLINE לא נתמכת
 % You tried to compile a program with C++ style inlining, and forgot to
 % specify the \var{-Si} option (\seeo{Si}). The compiler doesn't support C++
@@ -711,9 +705,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_התחביר המורחב של NE
 % \var{new}. The constructor must be used for that. For the same reason, you
 % cannot call \var{dispose} to de-allocate an instance of a class, the
 % destructor must be used for that.
-parser_e_procedure_overloading_is_off=03088_E_האפשרות לפרוצדורות מרובות שימוש כבוי
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_לא ניתן להעמיס על סוג האופרטור הנוכחי. העמסת האופרטורים הקשורים לפעולה (אם בכלל) הם: $1
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1697,9 +1688,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_לא ניתן לשייך פונקצ�
 % procedure variable, because the calling of local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_לא ניתן לשייך ערך לכתובת
-% It is not allowed to assign a value to an address of a variable,constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_לא ניתן לשייך ערך למשתנה קבוע
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const, to allow
@@ -3291,9 +3280,6 @@ option_reading_further_from=11010_D_קורא הגדרות נוספות מ $1
 % to another options file.
 option_target_is_already_set=11011_W_המטרה כבר הוגדרה ל: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_DOS אינו תומך בספריות משותפות, חוזר לספריות סטטיות
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos
 option_too_many_ifdef=11013_F_IF(N)DEF רבים מידי
 % the \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3578,18 +3564,15 @@ A*2Aas_אסוף עם GNU AS
 P*2Aas_אסוף עם GNU AS
 S*2Aas_אסוף עם GNU AS
 **1b_ייצר מידע לדפדוף
-**2bl_ייצר מידע על סמלים מקומיים
 **1B_בנה את כל המודולים
 **1C<x>_אפשרויות יצירת קוד:
 **2Cc<x>_קובע מוסכמות הפעלה ברירת מחדל ל <ס>
-**2CD_צור גם ספרייה דינאמית (לא נתמך)
 **2Ce_מהדר עם הדמייה של opcodes השייכים לנקודה צפה
 **2Cf<x>_בחר הוראות FPU לשימוש, ראה fpc -i לערכים אפשריים
 **2CF<x>_דיוק נקודה עשרונית קבועה מינימלית (default, 32, 64)
 **2Cg_צור קוד PIC
 **2Ch<n>_כמות של <n> בתים ל מצבור (בין 1023 ו67107840)
 **2Ci_בדיקת IO
-**2Cn_השמט מצב קישור
 **2Co_בדוק גלישה של פעולות מספר שלם
 **2CO_בדוק עבור פעולות גלישה אפשרויות של מספר שלם
 **2Cp<x>_בחר קבוצת הוראות, ראה fpc -i לערכים אפשריים
@@ -3651,7 +3634,6 @@ S*2Aas_אסוף עם GNU AS
 **2Mfpc_דיאלקט של Free Pascal (ברירת מחדל)
 **2Mobjfpc_אפשר כמה תוספות של Delphi 2
 **2Mdelphi_מנסה להיות תואם Delphi
-**2Mtp_מנסה להיות תואם ל TP/BP 7.0
 **2Mmacpas_מנסה להיות תואם ללהג של Macintosh Pascal
 **1n_אל תקרא את קובץ הגדרות ברירת המחדל
 **1o<x>_שנה את שם קובץ הריצה שהתקבל ל <x>
@@ -3686,13 +3668,10 @@ S*2Aas_אסוף עם GNU AS
 **2Sg_אפשר LABEL ו GOTO
 **2Sh_השתמש ב ansistrings
 **2Si_תמוך בסגנון C++ של INLINE
-**2Sk_טען את היחידה fpcylix
 **2SI<x>_קבע סגנון ממשק ל<x>
 **3SIcom_תואם ממשקי COM (ברירת מחדל)
 **3SIcorba_תואם ממשקי CORBA
 **2Sm_תמוך במקרו דומים לC (גלובליים)
-**2So_זהה ל -Mtp
-**2Ss_שם יוצר חייב להיות init (שם הורס חייב להיות done)
 **2Sx_אפשר מילות מפתח לexception (ברירת מחדל במצבי Delphi/ObjFPC)
 **1s_אל תקרא למאסף והמקשר
 **2sh_צור תסריט לקישור במארח

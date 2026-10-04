@@ -1,0 +1,4 @@
+program RemovedLegacyOptionsBaseline;
+
+begin
+end.

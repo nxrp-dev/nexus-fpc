@@ -526,12 +526,6 @@ parser_w_parser_reloc_no_debug=03011_W_Relocatable DLL or executable $1 debug in
 parser_w_parser_win32_debug_needs_WN=03012_W_To allow debugging for win32 code you need to disable relocation with -WN option
 % Stabs debug info is wrong for relocatable DLL or EXES. Use -WN
 % if you want to debug win32 executables.
-parser_e_constructorname_must_be_init=03013_E_Constructor name must be INIT
-% You are declaring an object constructor with a name which is not \var{init}, and the
-% \var{-Ss} switch is in effect. See the switch \seeo{Ss}.
-parser_e_destructorname_must_be_done=03014_E_Destructor name must be DONE
-% You are declaring an object destructor with a name which is not \var{done}, and the
-% \var{-Ss} switch is in effect. See the switch \seeo{Ss}.
 parser_e_proc_inline_not_supported=03016_E_Procedure type INLINE not supported
 % You tried to compile a program with C++ style inlining, and forgot to
 % specify the \var{-Si} option (\seeo{Si}). The compiler doesn't support C++
@@ -776,9 +770,6 @@ parser_e_no_new_or_dispose_for_classes=03086_E_The extended syntax of new or dis
 % \var{new}. The constructor must be used for that. For the same reason, you
 % cannot call \var{dispose} to de-allocate an instance of a class, the
 % destructor must be used for that.
-parser_e_procedure_overloading_is_off=03088_E_Procedure overloading is switched off
-% When using the \var{-So} switch, procedure overloading is switched off.
-% Turbo Pascal does not support function overloading.
 parser_e_overload_operator_failed=03089_E_It is not possible to overload this operator. Related overloadable operators (if any) are: $1
 % You are trying to overload an operator which cannot be overloaded.
 % The following operators can be overloaded :
@@ -1868,9 +1859,7 @@ type_e_cannot_local_proc_to_procvar=04030_E_Can't assign local procedure/functio
 % procedure variable, because the calling convention of a local procedure/function is
 % different. You can only assign local procedure/function to a void pointer.
 type_e_no_assign_to_addr=04031_E_Can't assign values to an address
-% It is not allowed to assign a value to an address of a variable, constant,
-% procedure or function. You can try compiling with -So if the identifier
-% is a procedure variable.
+% Assignments to addresses of variables, constants, procedures, or functions are not allowed.
 type_e_no_assign_to_const=04032_E_Can't assign values to const variable
 % It's not allowed to assign a value to a variable which is declared
 % as a const. This is normally a parameter declared as const. To allow
@@ -3056,7 +3045,6 @@ asmr_w_pop_cs_not_portable=07136_W_Instruction "POP CS" is not portable (it only
 asmr_e_public_must_be_used_before_label_definition=07137_E_Label $1 can only be declared public before it's defined
 asmr_e_local_label_cannot_be_declared_public=07138_E_Local label $1 cannot be declared public
 asmr_e_multiple_segment_overrides=07139_E_Cannot use multiple segment overrides
-asmr_w_multiple_segment_overrides=07140_W_Multiple segment overrides (only the last one will take effect)
 asmr_w_segment_override_ignored_in_64bit_mode=07141_W_Segment base $1 will be generated, but is ignored by the CPU in 64 bit mode
 asmr_e_mismatch_broadcasting_elements=07142_E_Mismatch broadcasting elements (expected: {$1} found: {$2})
 asmr_e_invalid_arrangement=07143_E_Invalid arrangement specifier "$1"
@@ -3621,9 +3609,6 @@ option_reading_further_from=11010_D_Reading further options from $1
 % to another options file.
 option_target_is_already_set=11011_W_Target is already set to: $1
 % Displayed if more than one \var{-T} option is specified.
-option_no_shared_lib_under_dos=11012_W_Shared libs not supported on DOS platform, reverting to static
-% If you specify \var{-CD} for the \dos platform, this message is displayed.
-% The compiler supports only static libraries under \dos.
 option_too_many_ifdef=11013_F_In options file $1 at line $2 too many #IF(N)DEFs encountered
 % The \var{\#IF(N)DEF} statements in the options file are not balanced with
 % the \var{\#ENDIF} statements.
@@ -3752,7 +3737,6 @@ option_subtarget_is_already_set=11065_W_Subtarget is already set to: $1
 % Displayed if more than one \var{-t} option is specified.
 option_subtarget_config_not_found=11066_E_Subtarget $1 specified but no corresponding config file $2 found.
 % Displayed if more than one \var{-t} option is specified.
-option_x_ignored=11067_N_Ignoring compiler executable suffix $1.
 % Displayed if more than one \var{-t} option is specified.
 option_switch_bin_to_src_assembler_cross_endian=11068_N_Switching assembler to default source writing assembler in cross-endian configuration
 % This notifies you that the assembler has been changed because
@@ -4042,7 +4026,6 @@ F*0*_Only options valid for the default or selected platform are listed.
 **1@<x>_Read compiler options from <x> in addition to the default fpc.cfg
 # Assembler related options
 **1a_The compiler does not delete the generated assembler file, automatically switches to external assembler writer
-**2a5_Don't generate Big Obj COFF files for GNU Binutils older than 2.25 (Windows, NativeNT)
 **2al_List source code lines in assembler file
 **2an_List node info in assembler file (-dEXTDEBUG compiler)
 **2ao_Add an extra option to external assembler call (ignored for internal)
@@ -4109,7 +4092,6 @@ W*2Awasa_Assemble using wasa (experimental)
 x*2Aas_Assemble using GNU AS
 # Used only internally by IDE
 **1b_Generate browser info
-**2bl_Generate local symbol info
 **1B_Build all modules
 **1C<x>_Code generation options:
 **2C3_Turn on IEEE error checking for constants
@@ -4122,7 +4104,6 @@ V*3Cdc_Discard initializing data. Data defaults to noinit section
 V*3Cdj_Discard jump to PASCALMAIN. Use only if PASCALMAIN follows directly after startup code
 V*3Cds_Discard _START code. Use only if all interrupts are disabled
 V*3Cdz_Discard code initializing the zero register and stack pointer
-**2CD_Create also dynamic library (not supported)
 **2Ce_Compilation with emulated floating point opcodes
 **2CE_Generate FPU code which can raise exceptions
 **2Cf<x>_Select fpu instruction set to use; see fpc -i or fpc -if for possible values
@@ -4131,9 +4112,6 @@ V*3Cdz_Discard code initializing the zero register and stack pointer
 **2Ch<n>[,m]_<n> bytes min heap size (between 1023 and 67107840) and optionally [m] max heap size
 **2Ci_IO-checking
 A*2CI<x>_Select instruction set on ARM: ARM or THUMB
-**2Cn_Omit linking stage
-P*2CN_Generate nil-pointer checks (AIX-only)
-W*2CN_Generate nil-pointer checks
 **2Co_Check overflow of integer operations
 **2CO_Check for possible overflow of integer operations
 **2Cp<x>_Select instruction set; see fpc -i or fpc -ic for possible values
@@ -4256,7 +4234,6 @@ A*2CV<x>_Set section threadvar model to <x>
 **2Miso_ISO 7185 mode
 **2Mmacpas_Macintosh Pascal dialects compatibility mode
 **2Mobjfpc_FPC mode with Object Pascal support
-**2Mtp_TP/BP 7.0 compatibility mode
 **2*_Each mode (as listed above) enables its default set of modeswitches.
 **2*_Other modeswitches are disabled and need to be enabled one by another.
 **1M<x>-_Disable modeswitch <x> (see option -im)
@@ -4303,18 +4280,15 @@ F*2P<x>_Set target CPU (aarch64,arm,avr,i386,i8086,jvm,loongarch64,mips,mipsel,p
 **3*_n : Compiler also halts after notes
 **3*_w : Compiler also halts after warnings
 **2Sf_Enable certain features in compiler and RTL; see fpc -i or fpc -ir for possible values)
-**2Sg_Enable LABEL and GOTO (default in -Mtp and -Mdelphi)
+**2Sg_Enable LABEL and GOTO (default in -Mdelphi)
 **2Sh_Use reference counted strings (ansistring by default) instead of shortstrings
 **2Si_Turn on inlining of procedures/functions declared as "inline"
 **2SI<x>_Set interface style to <x>
 **3SIcom_COM compatible interface (default)
 **3SIcorba_CORBA compatible interface
 **2Sj_Allows typed constants to be writeable (default in all modes)
-**2Sk_Load fpcylix unit
 **2Sm_Support macros as in the C language (global)
-**2So_Same as -Mtp
 **2Sr_Transparent file names in ISO mode
-**2Ss_Constructor name must be "Init" (destructor name must be "Done")
 **2Sv_Support vector processing (use CPU vector extensions if available)
 **2Sx_Enable exception keywords (default in Delphi/ObjFPC modes)
 **2Sy_@<pointer> returns a typed pointer, same as $T+
@@ -4548,7 +4522,6 @@ A*2WR_Generate relocation code (Windows)
 8*3Wtexe_Create a DOS .EXE file (default)
 P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2WX_Enable executable stack (Linux)
-**1x<suff>_Set suffix for compiler executable (fpc command only)
 **1X_Executable options:
 **2X9_Generate linkerscript for GNU Binutils ld older than version 2.19.1 (Linux)
 **2Xa_Generate code which allows to use more than 2 GB static data on 64 bit targets (Linux)
@@ -4556,7 +4529,6 @@ P*2WT_Specify MPW tool type application (Classic Mac OS)
 **2Xd_Do not search default library path (sometimes required for cross-compiling when not using -XR)
 **2XD_Try to link units dynamically      (defines FPC_LINK_DYNAMIC)
 **2Xe_Use external linker
-**2Xf_Substitute pthread library name for linking (BSD)
 **2Xg_Create debuginfo in a separate file and add a debuglink section to executable
 **2Xi_Use internal linker
 L*2XlS<x>_LLVM utilities suffix (e.g. -7 in case clang is called clang-7)
@@ -4567,7 +4539,6 @@ W*2XlS<x>_LLVM utilities suffix (e.g. -17 in case llvm-mc is called llvm-mc-17)
 **2XLL_Link using ld.lld GNU compatible LLVM linker (Linux and some BSD targets, experimental)
 **2Xm_Generate link map
 **2XM<x>_Set the name of the 'main' program routine (default is 'main')
-**2Xn_Use target system native linker instead of GNU ld (Solaris, AIX)
 F*2Xp<x>_First search for the compiler binary in the directory <x>
 **2XP<x>_Prepend the binutils names with the prefix <x>
 **2Xr<x>_Set the linker's rlink-path to <x> (needed for cross compile, see the ld manual for more information) (BeOS, Linux)
@@ -4575,7 +4546,6 @@ F*2Xp<x>_First search for the compiler binary in the directory <x>
 **2Xs_Strip all symbols from executable
 **2XS_Try to link units statically (default, defines FPC_LINK_STATIC)
 **2Xt_Link with static libraries (-static is passed to linker)
-**2Xu_Generate executable in UF2 format  (embedded targets only)
 **2Xv_Generate table for Virtual Entry calls
 **2XV_Use VLink as external linker       (default on Amiga, Atari, Sinclair QL)
 **2XX_Try to smartlink units             (defines FPC_LINK_SMART)

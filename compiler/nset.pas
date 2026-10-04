@@ -290,28 +290,7 @@ implementation
          if codegenerror then
            exit;
 
-         if (m_tp7 in current_settings.modeswitches) then
-           begin
-             { insert a hint that a range check error might occur on non-byte
-               elements with the in operator.
-             }
-             if  (
-                   (left.resultdef.typ = orddef) and not
-                   (torddef(left.resultdef).ordtype in [s8bit,u8bit,uchar,pasbool1,pasbool8,bool8bit])
-                 )
-                or
-                 (
-                   (left.resultdef.typ = enumdef) and
-                   (tenumdef(left.resultdef).maxval > 255)
-                 )
-               then
-                 CGMessage(type_h_in_range_check);
-
-             { type conversion/check }
-             if assigned(tsetdef(right.resultdef).elementdef) then
-               inserttypeconv(left,tsetdef(right.resultdef).elementdef);
-           end
-         else if not is_ordinal(left.resultdef) or (left.resultdef.size > u32inttype.size) then
+         if not is_ordinal(left.resultdef) or (left.resultdef.size > u32inttype.size) then
            begin
              CGMessage(type_h_in_range_check);
              if is_signed(left.resultdef) then

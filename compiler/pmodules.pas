@@ -422,13 +422,6 @@ implementation
                  CheckAddUnit('lnfodwrf');
              end;
            end;
-{$ifdef cpufpemu}
-           { Floating point emulation unit?
-             softfpu must be in the system unit anyways (FK)
-           if (cs_fp_emulation in current_settings.moduleswitches) and not(target_info.system in system_wince) then
-             CheckAddUnit('softfpu');
-           }
-{$endif cpufpemu}
            { Which kind of resource support?
              Note: if resources aren't used this unit will be removed later,
              otherwise we need it here since it must be loaded quite early }
@@ -479,11 +472,6 @@ implementation
             if not(curr.is_unit) or
                (curr.modulename^<>'OBJCBASE') then
               CheckAddUnit('objcbase');
-          end;
-        if (cs_load_fpcylix_unit in current_settings.globalswitches) then
-          begin
-            CheckAddUnit('fpcylix');
-            CheckAddUnit('dynlibs');
           end;
       end;
 
@@ -542,10 +530,9 @@ implementation
               sorg:=sorg+'.'+current_scanner.orgpattern;
               consume(_ID);
             end;
-          { support "<unit> in '<file>'" construct, but not for tp7 }
+          { support "<unit> in '<file>'" construct }
           fn:='';
-          if not(m_tp7 in current_settings.modeswitches) and
-             try_to_consume(_OP_IN) then
+          if try_to_consume(_OP_IN) then
             fn:=FixFileName(get_stringconst);
           { Give a warning if lineinfo is loaded }
           if s='LINEINFO' then

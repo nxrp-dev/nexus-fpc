@@ -2,8 +2,6 @@
 Unit jmemdosa;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$G+} {enable 286/287 instructions }
-
 { Original: jmemdosa.asm ; Copyright (C) 1992, Thomas G. Lane.
             Based on code contributed by Ge' Weijers.  }
 

@@ -102,7 +102,7 @@ end;
 {METHODDEF}
 procedure put_pixel_rows (cinfo : j_decompress_ptr;
                           dinfo : djpeg_dest_ptr;
-                          rows_supplied : JDIMENSION); far;
+                          rows_supplied : JDIMENSION);
 { used for unquantized full-color output }
 var
   dest : tga_dest_ptr;
@@ -128,7 +128,7 @@ end;
 {METHODDEF}
 procedure put_gray_rows (cinfo : j_decompress_ptr;
                          dinfo : djpeg_dest_ptr;
-                         rows_supplied : JDIMENSION); far;
+                         rows_supplied : JDIMENSION);
 { used for grayscale OR quantized color output }
 var
   dest : tga_dest_ptr;
@@ -156,7 +156,7 @@ end;
 {METHODDEF}
 procedure put_demapped_gray (cinfo : j_decompress_ptr;
                              dinfo : djpeg_dest_ptr;
-                             rows_supplied : JDIMENSION); far;
+                             rows_supplied : JDIMENSION);
 var
   dest : tga_dest_ptr;
   {register} inptr : JSAMPLE_PTR;
@@ -183,7 +183,7 @@ end;
 
 {METHODDEF}
 procedure start_output_tga (cinfo : j_decompress_ptr;
-                            dinfo : djpeg_dest_ptr); far;
+                            dinfo : djpeg_dest_ptr);
 var
   dest : tga_dest_ptr;
   num_colors, i : int;
@@ -241,7 +241,7 @@ end;
 
 {METHODDEF}
 procedure finish_output_tga (cinfo : j_decompress_ptr;
-                             dinfo : djpeg_dest_ptr); far;
+                             dinfo : djpeg_dest_ptr);
 begin
   { Make sure we wrote the output file OK }
   {fflush(dinfo^.output_file^);

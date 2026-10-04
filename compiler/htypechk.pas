@@ -1566,10 +1566,8 @@ implementation
                   begin
                     if (fromdef.size<>todef.size) then
                       begin
-                        { in TP it is allowed to typecast to smaller types. But the variable can't
-                          be in a register }
-                        if (m_tp7 in current_settings.modeswitches) or
-                           (todef.size<fromdef.size) then
+                        { A cast to a smaller type cannot use a register variable. }
+                        if todef.size<fromdef.size then
                           make_not_regable(hp,[ra_addr_regable])
                         else
                           if report_errors then
@@ -1994,15 +1992,6 @@ implementation
                 eq:=te_convert_l6
               else
                 eq:=te_incompatible;
-            end;
-          orddef :
-            begin
-              { allows conversion from word to integer and
-                byte to shortint, but only for TP7 compatibility }
-              if (m_tp7 in current_settings.modeswitches) and
-                 (def_from.typ=orddef) and
-                 (def_from.size=def_to.size) then
-                eq:=te_convert_l1;
             end;
           arraydef :
             begin

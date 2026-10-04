@@ -88,7 +88,7 @@ type
 { Initialize for an upsampling pass. }
 
 {METHODDEF}
-procedure start_pass_upsample (cinfo : j_decompress_ptr); far;
+procedure start_pass_upsample (cinfo : j_decompress_ptr);
 var
   upsample : my_upsample_ptr;
 begin
@@ -114,7 +114,7 @@ procedure sep_upsample (cinfo : j_decompress_ptr;
                         in_row_groups_avail : JDIMENSION;
                         output_buf : JSAMPARRAY;
                         var out_row_ctr : JDIMENSION;
-                        out_rows_avail : JDIMENSION); far;
+                        out_rows_avail : JDIMENSION);
 var
   upsample : my_upsample_ptr;
   ci : int;
@@ -185,7 +185,7 @@ end;
 procedure fullsize_upsample (cinfo : j_decompress_ptr;
                              compptr : jpeg_component_info_ptr;
                              input_data : JSAMPARRAY;
-                             var output_data_ptr : JSAMPARRAY); far;
+                             var output_data_ptr : JSAMPARRAY);
 begin
   output_data_ptr := input_data;
 end;
@@ -198,7 +198,7 @@ end;
 procedure noop_upsample (cinfo : j_decompress_ptr;
                          compptr : jpeg_component_info_ptr;
                          input_data : JSAMPARRAY;
-                         var output_data_ptr : JSAMPARRAY); far;
+                         var output_data_ptr : JSAMPARRAY);
 begin
   output_data_ptr := NIL;       { safety check }
 end;
@@ -217,7 +217,7 @@ end;
 procedure int_upsample (cinfo : j_decompress_ptr;
                         compptr : jpeg_component_info_ptr;
                         input_data : JSAMPARRAY;
-                        var output_data_ptr : JSAMPARRAY); far;
+                        var output_data_ptr : JSAMPARRAY);
 var
   upsample : my_upsample_ptr;
   output_data : JSAMPARRAY;
@@ -275,7 +275,7 @@ end;
 procedure h2v1_upsample (cinfo : j_decompress_ptr;
                          compptr : jpeg_component_info_ptr;
                          input_data : JSAMPARRAY;
-                         var output_data_ptr : JSAMPARRAY); far;
+                         var output_data_ptr : JSAMPARRAY);
 var
   output_data : JSAMPARRAY;
   {register} inptr, outptr : JSAMPLE_PTR;
@@ -313,7 +313,7 @@ end;
 procedure h2v2_upsample (cinfo : j_decompress_ptr;
                          compptr : jpeg_component_info_ptr;
                          input_data : JSAMPARRAY;
-                         var output_data_ptr : JSAMPARRAY); far;
+                         var output_data_ptr : JSAMPARRAY);
 var
   output_data : JSAMPARRAY;
   {register} inptr, outptr : JSAMPLE_PTR;
@@ -367,7 +367,7 @@ end;
 procedure h2v1_fancy_upsample (cinfo : j_decompress_ptr;
                                compptr : jpeg_component_info_ptr;
                                input_data : JSAMPARRAY;
-                               var output_data_ptr : JSAMPARRAY); far;
+                               var output_data_ptr : JSAMPARRAY);
 var
   output_data : JSAMPARRAY;
   {register} pre_inptr, inptr, outptr : JSAMPLE_PTR;
@@ -422,7 +422,7 @@ end;
 procedure h2v2_fancy_upsample (cinfo : j_decompress_ptr;
                                compptr : jpeg_component_info_ptr;
                                input_data : JSAMPARRAY;
-                               var output_data_ptr : JSAMPARRAY); far;
+                               var output_data_ptr : JSAMPARRAY);
 var
   output_data : JSAMPARRAY;
   {register} inptr0, inptr1, outptr : JSAMPLE_PTR;

@@ -308,7 +308,7 @@ type
 { Here's the routine that will replace the standard error_exit method: }
 
 {METHODDEF}
-procedure my_error_exit (cinfo : j_common_ptr); far;
+procedure my_error_exit (cinfo : j_common_ptr);
 var
   myerr : my_error_ptr;
 begin

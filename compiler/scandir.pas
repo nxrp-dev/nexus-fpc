@@ -374,12 +374,6 @@ unit scandir;
       end;
 
 
-    procedure dir_checklowaddrloads;
-      begin
-        do_localswitchdefault(cs_check_low_addr_load);
-      end;
-
-
     procedure dir_checkpointer;
       var
         switch: char;
@@ -468,19 +462,9 @@ unit scandir;
         do_delphiswitch('X');
       end;
 
-    procedure dir_forcefarcalls;
-      begin
-        Message1(scan_n_ignored_switch,current_scanner.pattern);
-      end;
-
     procedure dir_fatal;
       begin
         do_message(scan_f_user_defined);
-      end;
-
-    procedure dir_floatingpointemulation;
-      begin
-        do_delphiswitch('E');
       end;
 
     procedure dir_stackchecking;
@@ -2016,7 +2000,6 @@ unit scandir;
         AddDirective('CALLING',directive_all, @dir_calling);
         AddDirective('CHECKCASECOVERAGE',directive_all, @dir_checkcasecoverage);
         AddDirective('CHECKFPUEXCEPTIONS',directive_all, @dir_checkfpuexceptions);
-        AddDirective('CHECKLOWADDRLOADS',directive_all, @dir_checklowaddrloads);
         AddDirective('CHECKPOINTER',directive_all, @dir_checkpointer);
         AddDirective('CODEALIGN',directive_all, @dir_codealign);
         AddDirective('CODEPAGE',directive_all, @dir_codepage);
@@ -2032,10 +2015,7 @@ unit scandir;
         AddDirective('EXCESSPRECISION',directive_all, @dir_excessprecision);
         AddDirective('EXTENDEDSYNTAX',directive_all, @dir_extendedsyntax);
         AddDirective('EXTERNALSYM',directive_all, @dir_externalsym);
-        AddDirective('F',directive_all, @dir_forcefarcalls);
-        AddDirective('FARCALLS',directive_all, @dir_forcefarcalls);
         AddDirective('FATAL',directive_all, @dir_fatal);
-        AddDirective('FLOATINGPOINTEMULATION',directive_all,@dir_floatingpointemulation);
         AddDirective('FPUTYPE',directive_all, @dir_fputype);
         AddDirective('FRAMEWORKPATH',directive_all, @dir_frameworkpath);
         AddDirective('GOTO',directive_all, @dir_goto);

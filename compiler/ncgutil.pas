@@ -415,8 +415,7 @@ implementation
     procedure location_allocate_register(list: TAsmList;out l: tlocation;def: tdef;constant: boolean);
       begin
         l.size:=def_cgsize(def);
-        if (def.typ=floatdef) and
-           not(cs_fp_emulation in current_settings.moduleswitches) then
+        if def.typ=floatdef then
           begin
             if use_vectorfpu(def) then
               begin

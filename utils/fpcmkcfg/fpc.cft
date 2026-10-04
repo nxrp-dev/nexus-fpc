@@ -51,7 +51,6 @@
 #      -Mfpc      free pascal dialect (default)
 #      -Mobjfpc   switch some Delphi 2 extensions on
 #      -Mdelphi   tries to be Delphi compatible
-#      -Mtp       tries to be TP/BP 7.0 compatible
 #      -Mgpc      tries to be gpc compatible
 #      -Mmacpas   tries to be compatible to the macintosh pascal dialects
 #
@@ -79,14 +78,11 @@
 #      -Sg        allow LABEL and GOTO
 #      -Sh        Use ansistrings
 #      -Si        support C++ styled INLINE
-#      -Sk        load fpcylix unit
 #      -SI<x>     set interface style to <x>
 #         -SIcom    COM compatible interface (default)
 #         -SIcorba  CORBA compatible interface
 #      -Sm        support macros like C (global)
-#      -So        same as -Mtp
 #      -Sp        same as -Mgpc
-#      -Ss        constructor name must be init (destructor must be done)
 #      -Sx        enable exception keywords (default in Delphi/ObjFPC modes)
 #
 # Allow goto, inline, C-operators, C-vars

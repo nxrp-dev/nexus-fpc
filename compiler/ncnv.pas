@@ -4089,54 +4089,11 @@ implementation
 
     function ttypeconvnode.first_real_to_real : tnode;
       begin
-{$ifdef cpufpemu}
-        if cs_fp_emulation in current_settings.moduleswitches then
-          begin
-            begin
-                case tfloatdef(left.resultdef).floattype of
-                  s32real:
-                    case tfloatdef(resultdef).floattype of
-                      s64real:
-                        result:=ctypeconvnode.create_explicit(ccallnode.createintern('float32_to_float64',ccallparanode.create(
-                          ctypeconvnode.create_internal(left,search_system_type('FLOAT32REC').typedef),nil)),resultdef);
-                      s32real:
-                        begin
-                          result:=left;
-                          left:=nil;
-                        end;
-                      else
-                        internalerror(200610151);
-                    end;
-                  s64real:
-                    case tfloatdef(resultdef).floattype of
-                      s32real:
-                        result:=ctypeconvnode.create_explicit(ccallnode.createintern('float64_to_float32',ccallparanode.create(
-                          ctypeconvnode.create_internal(left,search_system_type('FLOAT64').typedef),nil)),resultdef);
-                      s64real:
-                        begin
-                          result:=left;
-                          left:=nil;
-                        end;
-                      else
-                        internalerror(200610152);
-                    end;
-                  else
-                    internalerror(200610153);
-                end;
-                left:=nil;
-                firstpass(result);
-                exit;
-              end;
-          end
+        first_real_to_real:=nil;
+        if not use_vectorfpu(resultdef) then
+          expectloc:=LOC_FPUREGISTER
         else
-{$endif cpufpemu}
-          begin
-            first_real_to_real:=nil;
-            if not use_vectorfpu(resultdef) then
-              expectloc:=LOC_FPUREGISTER
-            else
-              expectloc:=LOC_MMREGISTER;
-          end;
+          expectloc:=LOC_MMREGISTER;
       end;
 
 
@@ -4673,15 +4630,12 @@ implementation
                 { typecasting from void is always allowed }
                 is_void(left.resultdef) or
                 (left.resultdef.typ=formaldef) or
-                { int 2 int with same size reuses same location, or for
-                  tp7 mode also allow size < original size }
+                { int 2 int with same size reuses same location }
                 (
                  (convtype=tc_int_2_int) and
                  (
                   not is_bitpacked_access(left) and
-                  (resultdef.size=left.resultdef.size) or
-                  ((m_tp7 in current_settings.modeswitches) and
-                   (resultdef.size<left.resultdef.size))
+                  (resultdef.size=left.resultdef.size)
                  )
                 ) or
                 { int 2 bool/bool 2 int, explicit typecast, see also nx86cnv }

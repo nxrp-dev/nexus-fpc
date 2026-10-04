@@ -999,8 +999,6 @@ implementation
           floatdef:
             if use_vectorfpu(def) then
               result:=R_MMREGISTER
-            else if cs_fp_emulation in current_settings.moduleswitches then
-              result:=R_INTREGISTER
             else
               result:=R_FPUREGISTER;
           filedef,
@@ -4022,7 +4020,6 @@ implementation
     begin
       result:=(tf_supports_packages in target_info.flags) and
                 (target_info.system in systems_indirect_var_imports) and
-                (cs_imported_data in current_settings.localswitches) and
                 (findunitsymtable(t.owner).moduleid<>current_module.moduleid);
     end;
 

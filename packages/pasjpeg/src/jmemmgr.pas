@@ -292,7 +292,7 @@ const
 {METHODDEF}
 function alloc_small (cinfo : j_common_ptr;
                       pool_id : int;
-                      sizeofobject : size_t) : pointer; far;
+                      sizeofobject : size_t) : pointer;
 type
   byteptr = ^byte;
 { Allocate a "small" object }
@@ -385,7 +385,7 @@ end;
 {METHODDEF}
 function alloc_large (cinfo : j_common_ptr;
                       pool_id : int;
-                      sizeofobject : size_t) : pointer; FAR;
+                      sizeofobject : size_t) : pointer;
 { Allocate a "large" object }
 var
   mem : my_mem_ptr;
@@ -446,7 +446,7 @@ end;
 function alloc_sarray (cinfo : j_common_ptr;
                        pool_id : int;
                        samplesperrow : JDIMENSION;
-                       numrows : JDIMENSION) : JSAMPARRAY; far;
+                       numrows : JDIMENSION) : JSAMPARRAY;
 { Allocate a 2-D sample array }
 var
   mem : my_mem_ptr;
@@ -502,7 +502,7 @@ end;
 function alloc_barray (cinfo : j_common_ptr;
                        pool_id : int;
                        blocksperrow : JDIMENSION;
-                       numrows : JDIMENSION) : JBLOCKARRAY; far;
+                       numrows : JDIMENSION) : JBLOCKARRAY;
 { Allocate a 2-D coefficient-block array }
 var
   mem : my_mem_ptr;
@@ -592,7 +592,7 @@ function request_virt_sarray (cinfo : j_common_ptr;
                               pre_zero : boolean;
                               samplesperrow : JDIMENSION;
                               numrows : JDIMENSION;
-                              maxaccess : JDIMENSION) : jvirt_sarray_ptr; far;
+                              maxaccess : JDIMENSION) : jvirt_sarray_ptr;
 { Request a virtual 2-D sample array }
 var
   mem : my_mem_ptr;
@@ -627,7 +627,7 @@ function request_virt_barray (cinfo : j_common_ptr;
                               pre_zero : boolean;
                               blocksperrow : JDIMENSION;
                               numrows : JDIMENSION;
-                              maxaccess : JDIMENSION) : jvirt_barray_ptr; far;
+                              maxaccess : JDIMENSION) : jvirt_barray_ptr;
 { Request a virtual 2-D coefficient-block array }
 var
   mem : my_mem_ptr;
@@ -657,7 +657,7 @@ end;
 
 
 {METHODDEF}
-procedure realize_virt_arrays (cinfo : j_common_ptr); far;
+procedure realize_virt_arrays (cinfo : j_common_ptr);
 { Allocate the in-memory buffers for any unrealized virtual arrays }
 var
   mem : my_mem_ptr;
@@ -891,7 +891,7 @@ function access_virt_sarray (cinfo : j_common_ptr;
                              ptr : jvirt_sarray_ptr;
                              start_row : JDIMENSION;
                              num_rows : JDIMENSION;
-                             writable : boolean ) : JSAMPARRAY; far;
+                             writable : boolean ) : JSAMPARRAY;
 { Access the part of a virtual sample array starting at start_row }
 { and extending for num_rows rows.  writable is true if  }
 { caller intends to modify the accessed area. }
@@ -994,7 +994,7 @@ function access_virt_barray (cinfo : j_common_ptr;
                              ptr : jvirt_barray_ptr;
                              start_row : JDIMENSION;
                              num_rows : JDIMENSION;
-                             writable : boolean) : JBLOCKARRAY; far;
+                             writable : boolean) : JBLOCKARRAY;
 { Access the part of a virtual block array starting at start_row }
 { and extending for num_rows rows.  writable is true if  }
 { caller intends to modify the accessed area. }
@@ -1096,7 +1096,7 @@ end;
 { Release all objects belonging to a specified pool. }
 
 {METHODDEF}
-procedure free_pool (cinfo : j_common_ptr; pool_id : int); far;
+procedure free_pool (cinfo : j_common_ptr; pool_id : int);
 var
   mem : my_mem_ptr;
   shdr_ptr : small_pool_ptr;
@@ -1182,7 +1182,7 @@ end;
   Note that this cannot be called unless cinfo^.mem is non-NIL. }
 
 {METHODDEF}
-procedure self_destruct (cinfo : j_common_ptr); far;
+procedure self_destruct (cinfo : j_common_ptr);
 var
   pool : int;
 begin

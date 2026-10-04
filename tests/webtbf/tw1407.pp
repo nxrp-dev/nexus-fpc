@@ -4,7 +4,6 @@
 { Submitted by "vigo von harrach" on  2001-02-13 }
 { e-mail: wingo@fh-konstanz.de }
 { compiled with 1.04 on win32 }
-{ options : -B -CX -XXs -OG2p3 -So }
 var
         a : array[1..10] of integer;
         i : byte;

@@ -1,5 +1,3 @@
-{ %opt=-Or }
-
 { Source provided for Free Pascal Bug Report 2514 }
 { Submitted by "Andreas Horst" on  2003-05-28 }
 { e-mail: AndyHorst@web.de }

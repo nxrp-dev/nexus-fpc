@@ -1,7 +1,7 @@
 {****************************************************************}
 {  CODE GENERATOR TEST PROGRAM                                   }
 {****************************************************************}
-{ NODE TESTED : secondadd() FPU real type code with Emulator     }
+{ NODE TESTED : secondadd() FPU real type code                   }
 {****************************************************************}
 { PRE-REQUISITES: secondload()                                   }
 {                 secondassign()                                 }
@@ -23,15 +23,6 @@
 { RIGHT NODE (operand)                                          }
 {  LOC_FPU                                                      }
 {  LOC_REFERENCE / LOC_MEM                                      }
-
-{ Only m68k needs FPU emulation }
-{$ifdef m68k}
-  {$define NEEDFPUEMU}
-{$endif m68k}
-
-{$ifdef NEEDFPUEMU}
-{$E+}
-{$endif NEEDFPUEMU}
 
 procedure fail;
 begin

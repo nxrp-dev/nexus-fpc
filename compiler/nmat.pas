@@ -1205,23 +1205,15 @@ implementation
         if codegenerror then
           exit;
 
-        if (cs_fp_emulation in current_settings.moduleswitches) and (left.resultdef.typ=floatdef) then
-          begin
-            expectloc:=LOC_REGISTER;
-            exit;
-          end
-        else
-          begin
-            if (left.resultdef.typ=floatdef) then
-              expectloc:=LOC_FPUREGISTER
+        if (left.resultdef.typ=floatdef) then
+          expectloc:=LOC_FPUREGISTER
 {$ifdef SUPPORT_MMX}
-             else if (cs_mmx in current_settings.localswitches) and
-               is_mmx_able_array(left.resultdef) then
-              expectloc:=LOC_MMXREGISTER
+        else if (cs_mmx in current_settings.localswitches) and
+          is_mmx_able_array(left.resultdef) then
+          expectloc:=LOC_MMXREGISTER
 {$endif SUPPORT_MMX}
-             else if (left.resultdef.typ=orddef) then
-               expectloc:=LOC_REGISTER;
-          end;
+        else if (left.resultdef.typ=orddef) then
+          expectloc:=LOC_REGISTER;
       end;
 
 {****************************************************************************

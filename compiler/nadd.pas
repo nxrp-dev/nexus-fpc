@@ -99,17 +99,6 @@ interface
             an fma instruction
           }
           function use_fma : boolean; virtual;
-          { This routine calls internal runtime library helpers
-            for all floating point arithmetic in the case
-            where the emulation switches is on. Otherwise
-            returns nil, and everything must be done in
-            the code generation phase.
-          }
-          function first_addfloat : tnode; virtual;
-          {
-            generates softfloat code for the node
-          }
-          function first_addfloat_soft: tnode; virtual;
        private
           { checks whether a muln can be calculated as a 32bit }
           { * 32bit -> 64 bit                                  }
@@ -2023,10 +2012,6 @@ const
             { using sqr(x) for reals instead of x*x might reduces register pressure and/or
               memory accesses while sqr(<real>) has no drawback }
             if
-{$ifdef cpufpemu}
-               (current_settings.fputype<>fpu_soft) and
-               not(cs_fp_emulation in current_settings.moduleswitches) and
-{$endif cpufpemu}
 {$ifdef xtensa}
                (FPUXTENSA_DOUBLE in fpu_capabilities[current_settings.fputype]) and
 {$endif xtensa}
@@ -4679,101 +4664,6 @@ const
       end;
 
 
-    function taddnode.first_addfloat_soft : tnode;
-      var
-        procname: string[31];
-        { do we need to reverse the result ? }
-        notnode : boolean;
-        fdef : tdef;
-      begin
-        notnode:=false;
-        result:=nil;
-        fdef:=nil;
-          begin
-            case tfloatdef(left.resultdef).floattype of
-              s32real:
-                begin
-                  fdef:=search_system_type('FLOAT32REC').typedef;
-                  procname:='float32';
-                end;
-              s64real:
-                begin
-                  fdef:=search_system_type('FLOAT64').typedef;
-                  procname:='float64';
-                end;
-              {!!! not yet implemented
-              s128real:
-              }
-              else
-                internalerror(2005082601);
-            end;
-
-            case nodetype of
-              addn:
-                procname:=procname+'_add';
-              muln:
-                procname:=procname+'_mul';
-              subn:
-                procname:=procname+'_sub';
-              slashn:
-                procname:=procname+'_div';
-              ltn:
-                procname:=procname+'_lt';
-              lten:
-                procname:=procname+'_le';
-              gtn:
-                begin
-                  procname:=procname+'_lt';
-                  swapleftright;
-                end;
-              gten:
-                begin
-                  procname:=procname+'_le';
-                  swapleftright;
-                end;
-              equaln:
-                procname:=procname+'_eq';
-              unequaln:
-                begin
-                  procname:=procname+'_eq';
-                  notnode:=true;
-                end;
-              else
-                CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),left.resultdef.typename,right.resultdef.typename);
-            end;
-          end;
-        { cast softfpu result? }
-          begin
-            if nodetype in [ltn,lten,gtn,gten,equaln,unequaln] then
-              resultdef:=pasbool1type;
-            result:=ctypeconvnode.create_internal(ccallnode.createintern(procname,ccallparanode.create(
-                ctypeconvnode.create_internal(right,fdef),
-                ccallparanode.create(
-                  ctypeconvnode.create_internal(left,fdef),nil))),resultdef);
-          end;
-        left:=nil;
-        right:=nil;
-
-        { do we need to reverse the result }
-        if notnode then
-          result:=cnotnode.create(result);
-      end;
-
-    function taddnode.first_addfloat : tnode;
-      begin
-        result := nil;
-        { In non-emulation mode, real opcodes are
-          emitted for floating point values.
-        }
-        if not ((cs_fp_emulation in current_settings.moduleswitches)
-{$ifdef cpufpemu}
-                or (current_settings.fputype=fpu_soft)
-{$endif cpufpemu}
-                ) then
-          exit;
-        result:=first_addfloat_soft
-      end;
-
 
 {$ifdef cpuneedsmulhelper}
     function taddnode.use_mul_helper: boolean;
@@ -4904,11 +4794,6 @@ const
          { int/int gives real/real! }
          if nodetype=slashn then
            begin
-{$ifdef cpufpemu}
-             result:=first_addfloat;
-             if assigned(result) then
-               exit;
-{$endif cpufpemu}
              expectloc:=LOC_FPUREGISTER;
            end
 
@@ -5141,11 +5026,6 @@ const
          { is one a real float ? }
          else if (rd.typ=floatdef) or (ld.typ=floatdef) then
             begin
-{$ifdef cpufpemu}
-             result:=first_addfloat;
-             if assigned(result) then
-               exit;
-{$endif cpufpemu}
               if nodetype in [addn,subn,muln,andn,orn,xorn] then
                 expectloc:=LOC_FPUREGISTER
               else

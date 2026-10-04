@@ -71,7 +71,7 @@ procedure write_colormap(cinfo : j_decompress_ptr;
 {METHODDEF}
 procedure put_pixel_rows (cinfo : j_decompress_ptr;
                           dinfo : djpeg_dest_ptr;
-                          rows_supplied : JDIMENSION); far;
+                          rows_supplied : JDIMENSION);
 { This version is for writing 24-bit pixels }
 var
   dest : bmp_dest_ptr;
@@ -119,7 +119,7 @@ end;
 {METHODDEF}
 procedure put_gray_rows (cinfo : j_decompress_ptr;
                          dinfo : djpeg_dest_ptr;
-                         rows_supplied : JDIMENSION); far;
+                         rows_supplied : JDIMENSION);
 { This version is for grayscale OR quantized color output }
 var
   dest : bmp_dest_ptr;
@@ -162,7 +162,7 @@ end;
 
 {METHODDEF}
 procedure start_output_bmp (cinfo : j_decompress_ptr;
-                            dinfo : djpeg_dest_ptr); far;
+                            dinfo : djpeg_dest_ptr);
 begin
   { no work here }
 end;
@@ -489,7 +489,7 @@ end;
 
 {METHODDEF}
 procedure finish_output_bmp (cinfo : j_decompress_ptr;
-                             dinfo : djpeg_dest_ptr); far;
+                             dinfo : djpeg_dest_ptr);
 var
   dest : bmp_dest_ptr;
   {register} outfile : FILEptr;

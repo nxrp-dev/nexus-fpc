@@ -1749,14 +1749,12 @@ implementation
           objectdef :
             result:=int_cgsize(def.size);
           floatdef:
-            if (cs_fp_emulation in current_settings.moduleswitches)
 {$ifdef xtensa}
-              or not(tfloatdef(def).floattype=s32real)
-              or not(FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype])
-{$endif xtensa}
-              then
+            if not(tfloatdef(def).floattype=s32real) or
+               not(FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) then
               result:=int_cgsize(def.size)
             else
+{$endif xtensa}
               result:=tfloat2tcgsize[tfloatdef(def).floattype];
           recorddef :
               result:=int_cgsize(def.size);
@@ -1764,7 +1762,7 @@ implementation
             begin
               if is_dynamic_array(def) or not is_special_array(def) then
                 begin
-                  if is_vector(def) and ((TArrayDef(def).elementdef.typ = floatdef) and not (cs_fp_emulation in current_settings.moduleswitches)) then
+                  if is_vector(def) and (TArrayDef(def).elementdef.typ = floatdef) then
                     begin
                       { Determine if, based on the floating-point type and the size
                         of the array, if it can be made into a vector }

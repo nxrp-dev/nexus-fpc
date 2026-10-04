@@ -1,4 +1,4 @@
-{ %OPT=-OG2}
+{ %OPT=-O2}
 {$r+}
 
 type
