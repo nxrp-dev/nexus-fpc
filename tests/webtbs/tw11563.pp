@@ -12,9 +12,6 @@ program ExecStack;
 {$if defined(cpui386) or defined(cpux86_64)}
     ret: Byte;
 {$endif}
-{$ifdef cpuarm}
-    ret: dword;
-{$endif}
 {$ifdef cpum68k}
     ret: word;
 {$endif}
@@ -38,22 +35,6 @@ program ExecStack;
     DoNothing;
 {$endif cpum68k}
 
-{$ifdef cpuarm}
-{$if defined(CPUTHUMB) or defined(CPUTHUMB2)}
-{$ifdef CPUARM_HAS_BX}
-    ret:=$4770;
-{$else}
-    ret:=$46f7;
-{$endif}
-{$else defined(CPUTHUMB) or defined(CPUTHUMB2)}
-    ret:=$e8bd8008;
-{$endif defined(CPUTHUMB) or defined(CPUTHUMB2)}
-{$ifdef ENDIAN_BIG}
-    ret:=SwapEndian(ret);
-{$endif ENDIAN_BIG}
-    DoNothing:=proc(@ret);
-    DoNothing;
-{$endif cpuarm}
 
 
   end;

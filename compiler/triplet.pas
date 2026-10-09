@@ -65,13 +65,6 @@ uses
       if target_info.system in systems_android then
         result:=result+'-android'
       else
-{$ifdef arm}
-      if target_info.abi=abi_eabihf then
-        result:=result+'-gnueabihf'
-      else if target_info.abi=abi_eabi then
-        result:=result+'-gnueabi'
-      else
-{$endif}
       if target_info.system in systems_linux then
         result:=result+'-gnu';
     end;

@@ -2,7 +2,7 @@
     Copyright (c) 1998-2020 by Jonas Maebe and Florian Klaempfl, members of the Free Pascal
     Development Team
 
-    This unit implements an ARM optimizer object used commonly for ARM and AAarch64
+    This unit implements the AArch64 assembly optimizer
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -46,9 +46,7 @@ Type
     function RemoveSuperfluousMove(const p: tai; movp: tai; const optimizer: string): boolean;
     function RedundantMovProcess(var p: tai; var hp1: tai): boolean;
     function GetNextInstructionUsingReg(Current: tai; out Next: tai; const reg: TRegister): Boolean;
-{$ifdef AARCH64}
     function USxtOp2Op(var p, hp1: tai; shiftmode: tshiftmode): Boolean;
-{$endif AARCH64}
     function OptPreSBFXUBFX(var p: tai): Boolean;
 
     function OptPass1UXTB(var p: tai): Boolean;
@@ -72,9 +70,7 @@ Type
 
   function MatchInstruction(const instr: tai; const op: TCommonAsmOps; const cond: TAsmConds; const postfix: TOpPostfixes): boolean;
   function MatchInstruction(const instr: tai; const op: TAsmOp; const cond: TAsmConds; const postfix: TOpPostfixes): boolean;
-{$ifdef AARCH64}
   function MatchInstruction(const instr: tai; const ops : array of TAsmOp; const postfix: TOpPostfixes): boolean;
-{$endif AARCH64}
   function MatchInstruction(const instr: tai; const op: TAsmOp; const postfix: TOpPostfixes): boolean;
 
   function RefsEqual(const r1, r2: treference): boolean;
@@ -132,7 +128,6 @@ Implementation
     end;
 
 
-{$ifdef AARCH64}
   function MatchInstruction(const instr: tai; const ops : array of TAsmOp; const postfix: TOpPostfixes): boolean;
   var
     op : TAsmOp;
@@ -150,7 +145,6 @@ Implementation
           end;
       end;
     end;
-{$endif AARCH64}
 
   function MatchInstruction(const instr: tai; const op: TAsmOp; const postfix: TOpPostfixes): boolean;
     begin
@@ -175,9 +169,6 @@ Implementation
         (r1.index = r2.index) and (r1.scalefactor = r2.scalefactor) and
         (r1.symbol=r2.symbol) and (r1.refaddr = r2.refaddr) and
         (r1.relsymbol = r2.relsymbol) and
-{$ifdef ARM}
-        (r1.signindex = r2.signindex) and
-{$endif ARM}
         (r1.shiftimm = r2.shiftimm) and
         (r1.addressmode = r2.addressmode) and
         (r1.shiftmode = r2.shiftmode) and
@@ -226,12 +217,7 @@ Implementation
       for i:=0 to p.ops-1 do
         begin
           case taicpu(p).oper[i]^.typ of
-{$ifdef arm}
-            top_specialreg,
-{$endif arm}
-{$ifdef aarch64}
             top_indexedreg,
-{$endif aarch64}
             top_reg,
             top_regset:
               if RegInOp(reg,taicpu(p).oper[i]^) then
@@ -257,7 +243,6 @@ Implementation
       Result:=RegWritten;
     end;
 
-{$ifdef AARCH64}
   function TARMAsmOptimizer.USxtOp2Op(var p,hp1: tai; shiftmode: tshiftmode): Boolean;
     var
       so: tshifterop;
@@ -293,7 +278,6 @@ Implementation
           result:=RemoveCurrentP(p);
         end;
     end;
-{$endif AARCH64}
 
 
   function TARMAsmOptimizer.GetNextInstructionUsingReg(Current: tai;
@@ -314,9 +298,6 @@ Implementation
         not(cs_opt_level3 in current_settings.optimizerswitches) or
         (Next.typ<>ait_instruction) or
         is_calljmp(taicpu(Next).opcode)
-{$ifdef ARM}
-        or RegModifiedByInstruction(NR_PC,Next)
-{$endif ARM}
         ;
     end;
 
@@ -336,19 +317,6 @@ Implementation
         (taicpu(movp).oper[0]^.reg<>current_procinfo.framepointer) and
         { the destination register of the mov might not be used between p and movp }
         not(RegUsedBetween(taicpu(movp).oper[0]^.reg,p,movp)) and
-{$ifdef ARM}
-        { PC should be changed only by moves }
-        (taicpu(movp).oper[0]^.reg<>NR_PC) and
-        { cb[n]z are thumb instructions which require specific registers, with no wide forms }
-        (taicpu(p).opcode<>A_CBZ) and
-        (taicpu(p).opcode<>A_CBNZ) and
-        { There is a special requirement for MUL and MLA, oper[0] and oper[1] are not allowed to be the same }
-        not (
-          (taicpu(p).opcode in [A_MLA, A_MUL]) and
-          (taicpu(p).oper[1]^.reg = taicpu(movp).oper[0]^.reg) and
-          (current_settings.cputype < cpu_armv6)
-        ) and
-{$endif ARM}
         { Take care to only do this for instructions which REALLY load to the first register.
           Otherwise
             str reg0, [reg1]
@@ -426,12 +394,7 @@ Implementation
 
           if
             MatchInstruction(hp1, [A_ADD, A_ADC,
-{$ifdef ARM}
-                                   A_RSB, A_RSC,
-{$endif ARM}
-{$ifdef AARCH64}
                                    A_EON,
-{$endif AARCH64}
                                    A_SUB, A_SBC,
                                    A_AND, A_BIC, A_EOR, A_ORN, A_ORR,
                                    A_MOV, A_MVN],
@@ -444,11 +407,9 @@ Implementation
               (taicpu(hp1).ops = 2) or
               (taicpu(hp1).oper[2]^.typ in [top_reg, top_const, top_shifterop])
             ) and
-{$ifdef AARCH64}
             (taicpu(p).oper[1]^.reg<>NR_SP) and
             { in this case you have to transform it to movk or the like }
             (getsupreg(taicpu(p).oper[1]^.reg)<>RS_XZR) and
-{$endif AARCH64}
             not(RegUsedBetween(taicpu(p).oper[1]^.reg,p,hp1)) then
             begin
               { When we get here we still don't know if the registers match }
@@ -460,12 +421,6 @@ Implementation
                 }
                 if (taicpu(hp1).ops > I) and
                    MatchOperand(taicpu(p).oper[0]^, taicpu(hp1).oper[I]^.reg)
-{$ifdef ARM}
-                   { prevent certain combinations on thumb(2), this is only a safe approximation }
-                   and (not(GenerateThumbCode or GenerateThumb2Code) or
-                    ((getsupreg(taicpu(p).oper[1]^.reg)<>RS_R13) and
-                     (getsupreg(taicpu(p).oper[1]^.reg)<>RS_R15)))
-{$endif ARM}
 
                 then
                   begin
@@ -490,15 +445,7 @@ Implementation
               ldr/str r2, [r0, etc.]    mov     r2, r0
           }
           else if (taicpu(p).condition = C_None) and (taicpu(p).oper[1]^.typ = top_reg)
-{$ifdef ARM}
-            and not (getsupreg(taicpu(p).oper[0]^.reg) in [RS_PC, RS_R14, RS_STACK_POINTER_REG])
-            and (getsupreg(taicpu(p).oper[1]^.reg) <> RS_PC)
-            { Thumb does not support references with base and index one being SP }
-            and (not(GenerateThumbCode) or (getsupreg(taicpu(p).oper[1]^.reg) <> RS_STACK_POINTER_REG))
-{$endif ARM}
-{$ifdef AARCH64}
             and (getsupreg(taicpu(p).oper[0]^.reg) <> RS_STACK_POINTER_REG)
-{$endif AARCH64}
             then
             begin
               current_hp := p;
@@ -511,22 +458,15 @@ Implementation
                   LDRChange := False;
 
                   if (taicpu(next_hp).opcode in [A_LDR,A_STR]) and (taicpu(next_hp).ops = 2)
-{$ifdef AARCH64}
                     { If r0 is the zero register, then this sequence of instructions will cause
                       an access violation, but that's better than an assembler error caused by
                       changing r0 to xzr inside the reference (Where it's illegal). [Kit] }
                     and (getsupreg(taicpu(p).oper[1]^.reg) <> RS_XZR)
-{$endif AARCH64}
                     then
                     begin
 
                       { Change the registers from r1 to r0 }
                       if (taicpu(next_hp).oper[1]^.ref^.base = taicpu(p).oper[0]^.reg) and
-{$ifdef ARM}
-                        { This optimisation conflicts with something and raises
-                          an access violation - needs further investigation. [Kit] }
-                        (taicpu(next_hp).opcode <> A_LDR) and
-{$endif ARM}
                         { Don't mess around with the base register if the
                           reference is pre- or post-indexed }
                         (taicpu(next_hp).oper[1]^.ref^.addressmode = AM_OFFSET) then
@@ -645,10 +585,6 @@ Implementation
                             end;
 
                           { We can delete the first MOV (only if the second MOV is unconditional) }
-{$ifdef ARM}
-                          if (taicpu(p).oppostfix = PF_None) and
-                            (taicpu(next_hp).condition = C_None) then
-{$endif ARM}
                             begin
                               DebugMsg('Peephole Optimization: RedundantMovProcess 2b done', p);
                               RemoveCurrentP(p);
@@ -661,9 +597,7 @@ Implementation
                           if MatchOperand(taicpu(next_hp).oper[0]^, taicpu(p).oper[1]^.reg)
                             { Be careful - if the entire register is not used, removing this
                               instruction will leave the unused part uninitialised }
-{$ifdef AARCH64}
                             and (getsubreg(taicpu(p).oper[1]^.reg) = R_SUBQ)
-{$endif AARCH64}
                             then
                             begin
                               { Instruction will become mov r1,r1 }
@@ -686,9 +620,7 @@ Implementation
                           { Change the old register (checking the first operand again
                             forces it to be left alone if the full register is not
                             used, lest mov w1,w1 gets optimised out by mistake. [Kit] }
-{$ifdef AARCH64}
                           if not MatchOperand(taicpu(next_hp).oper[0]^, taicpu(p).oper[1]^.reg) then
-{$endif AARCH64}
                             begin
                               DebugMsg(SPeepholeOptimization + std_regname(taicpu(p).oper[0]^.reg) + ' = ' + std_regname(taicpu(p).oper[1]^.reg) + ' (MovMov2Mov 2)', next_hp);
                               taicpu(next_hp).oper[1]^.reg := taicpu(p).oper[1]^.reg;
@@ -773,18 +705,10 @@ Implementation
           InternalError(2024051401);
       end;
 
-{$ifndef AARCH64}
-      { Regular ARM doesn't have the multi-instruction MatchInstruction available }
-      if (hp1.typ = ait_instruction) and (taicpu(hp1).oppostfix = PF_None) then
-        case taicpu(hp1).opcode of
-          A_ADD, A_SUB, A_MUL, A_LSL, A_AND, A_ORR, A_EOR, A_BIC, A_ORN:
-{$endif AARCH64}
 
       if
         (taicpu(p).oper[1]^.reg = taicpu(p).oper[0]^.reg) and
-{$ifdef AARCH64}
         MatchInstruction(hp1, [A_ADD, A_SUB, A_MUL, A_LSL, A_AND, A_ORR, A_EOR, A_BIC, A_ORN, A_EON], [PF_None]) and
-{$endif AARCH64}
         (taicpu(hp1).condition = C_None) and
         (taicpu(hp1).ops = 3) and
         (taicpu(hp1).oper[0]^.reg = taicpu(p).oper[0]^.reg) and
@@ -829,23 +753,10 @@ Implementation
           Result := RemoveCurrentP(p);
 
           { Simplify bitwise constants if able }
-{$ifdef AARCH64}
           if (taicpu(hp1).opcode in [A_AND, A_ORR, A_EOR, A_BIC, A_ORN, A_EON]) and
             is_shifter_const(taicpu(hp1).oper[2]^.val and ConstLimit, OS_32) then
-{$else AARCH64}
-          if (
-              (ConstLimit = $FF) or
-              (taicpu(hp1).oper[2]^.val <= $100)
-            ) and
-            (taicpu(hp1).opcode in [A_AND, A_ORR, A_EOR, A_BIC, A_ORN]) then
-{$endif AARCH64}
             taicpu(hp1).oper[2]^.val := taicpu(hp1).oper[2]^.val and ConstLimit;
         end;
-{$ifndef AARCH64}
-          else
-            ;
-        end;
-{$endif not AARCH64}
     end;
 
 
@@ -949,10 +860,8 @@ Implementation
                 end
               else if DoXTArithOp(p, hp1) then
                 Result:=true
-{$ifdef AARCH64}
               else if USxtOp2Op(p,hp1,SM_UXTB) then
                 Result:=true
-{$endif AARCH64}
             end;
 
           { Condition doesn't have to be C_None }
@@ -1040,10 +949,8 @@ Implementation
                 end
               else if DoXTArithOp(p, hp1) then
                 Result:=true
-{$ifdef AARCH64}
               else if USxtOp2Op(p,hp1,SM_UXTH) then
                 Result:=true
-{$endif AARCH64}
             end;
 
           { Condition doesn't have to be C_None }
@@ -1154,10 +1061,8 @@ Implementation
                 end
               else if DoXTArithOp(p, hp1) then
                 Result:=true
-{$ifdef AARCH64}
               else if USxtOp2Op(p,hp1,SM_SXTB) then
                 Result:=true
-{$endif AARCH64}
             end;
 
           { Condition doesn't have to be C_None }
@@ -1224,7 +1129,6 @@ Implementation
                   taicpu(hp1).loadReg(1,taicpu(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
-{$ifdef AARCH64}
               {
                 change
                 sxth reg2,reg1
@@ -1248,7 +1152,6 @@ Implementation
                   taicpu(hp1).loadReg(1,taicpu(p).oper[1]^.reg);
                   result:=RemoveCurrentP(p);
                 end
-{$endif AARCH64}
               {
                 change
                 sxth reg2,reg1
@@ -1276,10 +1179,8 @@ Implementation
                 end
               else if DoXTArithOp(p, hp1) then
                 Result:=true
-{$ifdef AARCH64}
               else if USxtOp2Op(p,hp1,SM_SXTH) then
                 Result:=true
-{$endif AARCH64}
             end;
 
           { Condition doesn't have to be C_None }
@@ -1299,7 +1200,6 @@ Implementation
           mov    reg1,reg2
       }
       if (taicpu(p).oper[2]^.val = 0) and
-{$ifdef AARCH64}
         (
           (
             (getsubreg(taicpu(p).oper[0]^.reg) = R_SUBQ) and
@@ -1310,9 +1210,6 @@ Implementation
             (taicpu(p).oper[3]^.val = 32)
           )
         )
-{$else AARCH64}
-        (taicpu(p).oper[3]^.val = 32)
-{$endif AARCH64}
         then
         begin
           DebugMsg(SPeepholeOptimization + 'SBFX or UBFX -> MOV (full bitfield extract)', p);
@@ -1434,9 +1331,7 @@ Implementation
                 (taicpu(hp1).oppostfix = taicpu(p).oppostfix) or
                 ((taicpu(p).oppostfix = PF_B) and (taicpu(hp1).oppostfix = PF_SB)) or
                 ((taicpu(p).oppostfix = PF_H) and (taicpu(hp1).oppostfix = PF_SH))
-{$ifdef AARCH64}
                 or ((taicpu(p).oppostfix = PF_W) and (taicpu(hp1).oppostfix = PF_SW))
-{$endif AARCH64}
               ) then
               begin
                 { With:
@@ -1464,31 +1359,6 @@ Implementation
                     if taicpu(hp1).oppostfix=PF_None then
                       NewOp:=A_MOV
                     else
-{$ifdef ARM}
-                      if (current_settings.cputype < cpu_armv6) then
-                        begin
-                          { The zero- and sign-extension operations were only
-                            introduced under ARMv6 }
-                          case taicpu(hp1).oppostfix of
-                            PF_B:
-                              begin
-                                { The if-block afterwards will set the middle operand to the correct register }
-                                taicpu(hp1).allocate_oper(3);
-                                taicpu(hp1).ops := 3;
-                                taicpu(hp1).loadconst(2, $FF);
-                                NewOp := A_AND;
-                              end;
-                            PF_H:
-                              { ARMv5 and under doesn't have a concise way of storing the immediate $FFFF, so leave alone };
-                            PF_SB,
-                            PF_SH:
-                              { Do nothing - can't easily encode sign-extensions };
-                            else
-                              InternalError(2021043002);
-                          end;
-                        end
-                      else
-{$endif ARM}
                         case taicpu(hp1).oppostfix of
                           PF_B:
                             NewOp := A_UXTB;
@@ -1498,12 +1368,10 @@ Implementation
                             NewOp := A_UXTH;
                           PF_SH:
                             NewOp := A_SXTH;
-{$ifdef AARCH64}
                           PF_SW:
                             NewOp := A_SXTW;
                           PF_W:
                             NewOp := A_MOV;
-{$endif AARCH64}
                         else
                           InternalError(2021043001);
                         end;
@@ -1580,12 +1448,10 @@ Implementation
           RegEndOfLife(taicpu(p).oper[0]^.reg,taicpu(hp1)) and
           MatchOperand(taicpu(hp1).oper[1]^, taicpu(p).oper[0]^.reg) and
           (taicpu(hp1).oper[2]^.typ = top_const)
-{$ifdef AARCH64}
           and ((((getsubreg(taicpu(p).oper[0]^.reg)=R_SUBQ) and is_shifter_const(taicpu(p).oper[2]^.val and taicpu(hp1).oper[2]^.val,OS_64)) or
                ((getsubreg(taicpu(p).oper[0]^.reg)=R_SUBL) and is_shifter_const(taicpu(p).oper[2]^.val and taicpu(hp1).oper[2]^.val,OS_32))
           ) or
           ((taicpu(p).oper[2]^.val and taicpu(hp1).oper[2]^.val)=0))
-{$endif AARCH64}
           then
             begin
               if not(RegUsedBetween(taicpu(hp1).oper[0]^.reg,p,hp1)) then
@@ -1656,11 +1522,7 @@ Implementation
             not(RegModifiedBetween(taicpu(p).oper[1]^.reg,p,hp1)) then
             begin
               DebugMsg('Peephole AndStrb2Strb done', p);
-{$ifdef AARCH64}
               taicpu(hp1).loadReg(0,newreg(R_INTREGISTER,getsupreg(taicpu(p).oper[1]^.reg),R_SUBD));
-{$else AARCH64}
-              taicpu(hp1).loadReg(0,taicpu(p).oper[1]^.reg);
-{$endif AARCH64}
               AllocRegBetween(taicpu(p).oper[1]^.reg,p,hp1,UsedRegs);
               RemoveCurrentP(p);
               result:=true;
@@ -1734,9 +1596,6 @@ Implementation
             (taicpu(hp1).ops=3) and
             MatchOperand(taicpu(hp1).oper[1]^, taicpu(p).oper[0]^.reg) and
             (taicpu(hp1).oper[2]^.typ = top_shifterop) and
-{$ifdef ARM}
-            (taicpu(hp1).oper[2]^.shifterop^.rs = NR_NO) and
-{$endif ARM}
             (taicpu(hp1).oper[2]^.shifterop^.shiftmode=SM_LSL) and
             RegEndOfLife(taicpu(p).oper[0]^.reg,taicpu(hp1)) then
             begin
@@ -1753,9 +1612,6 @@ Implementation
                 (taicpu(hp2).ops=3) and
                 MatchOperand(taicpu(hp2).oper[1]^, taicpu(hp1).oper[0]^.reg) and
                 (taicpu(hp2).oper[2]^.typ = top_shifterop) and
-{$ifdef ARM}
-                (taicpu(hp2).oper[2]^.shifterop^.rs = NR_NO) and
-{$endif ARM}
                 (taicpu(hp2).oper[2]^.shifterop^.shiftmode in [SM_ASR,SM_LSR]) and
                 (taicpu(hp1).oper[2]^.shifterop^.shiftimm=taicpu(hp2).oper[2]^.shifterop^.shiftimm) and
                 RegEndOfLife(taicpu(hp1).oper[0]^.reg,taicpu(hp2)) and
@@ -1842,7 +1698,6 @@ Implementation
         GetNextInstructionUsingReg(p, hp1, taicpu(p).oper[0]^.reg) and
         MatchInstruction(hp1, A_CMP, [C_None], [PF_None]) and
         MatchOperand(taicpu(hp1).oper[1]^, 0) and
-{$ifdef AARCH64}
         (SuperRegistersEqual(taicpu(hp1).oper[0]^.reg, taicpu(p).oper[0]^.reg)) and
         (
           (getsubreg(taicpu(hp1).oper[0]^.reg) = getsubreg(taicpu(p).oper[0]^.reg))
@@ -1853,26 +1708,19 @@ Implementation
             (taicpu(p).oper[2]^.val <= $FFFFFFFF)
           )
         ) and
-{$else AARCH64}
-        (taicpu(hp1).oper[0]^.reg = taicpu(p).oper[0]^.reg) and
-{$endif AARCH64}
 
         not RegModifiedBetween(NR_DEFAULTFLAGS, p, hp1) and
         GetNextInstruction(hp1, hp2) then
         begin
-          if MatchInstruction(hp2, [A_B, A_CMP, A_CMN, A_TST{$ifndef AARCH64}, A_TEQ{$endif not AARCH64}], [C_EQ, C_NE], [PF_None]) then
+          if MatchInstruction(hp2, [A_B, A_CMP, A_CMN, A_TST], [C_EQ, C_NE], [PF_None]) then
             begin
               AllocRegBetween(NR_DEFAULTFLAGS, p, hp1, UsedRegs);
 
               WorkingReg := taicpu(p).oper[0]^.reg;
 
               if
-{$ifndef AARCH64}
-                (taicpu(p).opcode = A_AND) and
-{$endif AARCH64}
                 RegEndOfLife(WorkingReg, taicpu(hp1)) then
                 begin
-{$ifdef AARCH64}
                   if (taicpu(p).opcode <> A_AND) then
                     begin
                       setsupreg(taicpu(p).oper[0]^.reg, RS_XZR);
@@ -1880,7 +1728,6 @@ Implementation
                       DebugMsg(SPeepholeOptimization + 'BIC; CMP -> BICS ' + gas_regname(taicpu(p).oper[0]^.reg), p);
                     end
                   else
-{$endif AARCH64}
                     begin
                       taicpu(p).opcode := A_TST;
                       taicpu(p).oppostfix := PF_None;
@@ -1901,11 +1748,7 @@ Implementation
               else
                 begin
                   taicpu(p).oppostfix := PF_S;
-{$ifdef AARCH64}
                   DebugMsg(SPeepholeOptimization + 'AND/BIC; CMP -> ANDS/BICS', p);
-{$else AARCH64}
-                  DebugMsg(SPeepholeOptimization + 'Bitwise; CMP -> Bitwise+S', p);
-{$endif AARCH64}
                 end;
 
               RemoveInstruction(hp1);
@@ -1949,9 +1792,6 @@ Implementation
     begin
       Result := False;
       if
-{$ifndef AARCH64}
-        (taicpu(p).condition = C_None) and
-{$endif AARCH64}
         GetNextInstruction(p, hp1) and
         MatchInstruction(hp1, A_B, [C_EQ, C_NE], [PF_None]) and
         GetNextInstructionUsingReg(hp1, hp2, taicpu(p).oper[0]^.reg) then
@@ -1971,9 +1811,6 @@ Implementation
                  ...
               }
               if (taicpu(hp2).oppostfix in [PF_None, PF_S]) and
-{$ifndef AARCH64}
-                (taicpu(hp2).condition = C_None) and
-{$endif AARCH64}
                 (taicpu(hp2).ops = taicpu(p).ops + 1) and
                   not RegInUsedRegs(taicpu(hp2).oper[0]^.reg, UsedRegs) and
                   MatchOperand(taicpu(hp2).oper[1]^, taicpu(p).oper[0]^.reg) and
@@ -2021,9 +1858,6 @@ Implementation
                 Remove second tst
               }
               if
-{$ifndef AARCH64}
-                (taicpu(hp2).condition = C_None) and
-{$endif AARCH64}
                 (taicpu(hp2).ops = taicpu(p).ops) and
                 MatchOperand(taicpu(hp2).oper[0]^, taicpu(p).oper[0]^.reg) and
                 MatchOperand(taicpu(hp2).oper[1]^, taicpu(p).oper[1]^) and
@@ -2060,14 +1894,8 @@ Implementation
 
   function TARMAsmOptimizer.TryConstMerge(var p: tai; hp1: tai): Boolean;
     const
-{$ifdef ARM}
-      LO_16_WRITE: TAsmOp = A_MOVW;
-      HI_16_WRITE: TAsmOp = A_MOVT;
-{$endif ARM}
-{$ifdef AARCH64}
       LO_16_WRITE: TAsmOp = A_MOVZ;
       HI_16_WRITE: TAsmOp = A_MOVK;
-{$endif AARCH64}
     var
       hp2, hp2_second, hp3, hp3_second, p_second, hp1_second: tai;
       ThisReg: TRegister;
@@ -2078,10 +1906,6 @@ Implementation
         begin
           { If p.opcode = A_STR, then ThisReg will be NR_NO }
           if
-{$ifdef ARM}
-            Assigned(hp1) and
-{$endif ARM}
-{$ifdef AARCH64}
             (
               (
                 MatchInstruction(p, A_MOVZ, []) and
@@ -2092,12 +1916,10 @@ Implementation
                 SetAndTest(p, hp1)
               )
             ) and
-{$endif AARCH64}
             (
               (
                 (ThisReg <> NR_NO) and
                 (
-{$ifdef AARCH64}
                   (
                     (getsubreg(ThisReg) = R_SUBD) and
                     MatchInstruction(hp1, A_MOVK, []) and
@@ -2107,9 +1929,8 @@ Implementation
                     (taicpu(hp2).oper[0]^.reg = ThisReg) and
                     GetNextInstruction(hp2, p_second)
                   ) or
-{$endif AARCH64}
                   (
-                    MatchInstruction(hp1, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, []) and
+                    MatchInstruction(hp1, A_STR, []) and
                     (taicpu(hp1).oper[0]^.reg = ThisReg) and
                     GetNextInstruction(hp1, p_second)
                   )
@@ -2122,65 +1943,41 @@ Implementation
             ) and
             (
               (
-{$ifdef ARM}
-                (
-                  MatchInstruction(p_second, A_MOV, [taicpu(p).condition], []) or
-                  MatchInstruction(p_second, A_MOVW, [taicpu(p).condition], [])
-                ) and
-{$endif ARM}
-{$ifdef AARCH64}
                 MatchInstruction(p_second, A_MOVZ, []) and
-{$endif AARCH64}
                 { Don't use ThisReg because it may be NR_NO }
                 GetNextInstruction(p_second, hp1_second) and
                 (
-{$ifdef AARCH64}
                   (
                     MatchInstruction(hp1_second, A_MOVK, []) and
                     GetNextInstruction(hp1_second, hp2_second) and
                     MatchInstruction(hp2_second, A_STR, [PF_None])
                   ) or
-{$endif AARCH64}
-                  MatchInstruction(hp1_second, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [])
+                  MatchInstruction(hp1_second, A_STR, [])
                 )
               )
-{$ifdef AARCH64}
               or (
                 MatchInstruction(p_second, A_STR, []) and
                 (getsupreg(taicpu(p_second).oper[0]^.reg) = RS_WZR) and
                 { Negate the result because we're setting hp1_second to nil }
                 not SetAndTest(nil, hp1_second)
               )
-{$endif AARCH64}
             ) then
             TryConstMerge(p_second, hp1_second);
         end;
 
     begin
       Result := False;
-{$ifdef ARM}
-      { We need a Cortex-A ARM processor that supports MOVW and MOVT }
-      if not (CPUARM_HAS_EXTENDED_CONSTANTS in cpu_capabilities[current_settings.cputype]) then
-        Exit;
-{$endif ARM}
 
       ThisReg := NR_NO; { Safe initialisation }
 
       case taicpu(p).opcode of
-{$ifdef ARM}
-        A_MOV,
-        A_MOVW:
-          if (taicpu(p).opcode <> A_MOV) or (taicpu(p).oper[1]^.typ = top_const) then
-{$endif ARM}
-{$ifdef AARCH64}
         A_MOVZ:
-{$endif AARCH64}
           begin
             ThisReg := taicpu(p).oper[0]^.reg;
-            if Assigned(hp1){$ifdef ARM} and (taicpu(hp1).condition = taicpu(p).condition){$endif ARM} then
+            if Assigned(hp1) then
               case taicpu(hp1).opcode of
                 A_STR:
-                  if {$ifdef ARM}(taicpu(hp1).ops = 2) and {$endif ARM}SuperRegistersEqual(taicpu(hp1).oper[0]^.reg, ThisReg) then
+                  if SuperRegistersEqual(taicpu(hp1).oper[0]^.reg, ThisReg) then
                     begin
                       ThisRef := taicpu(hp1).oper[1]^.ref^;
 
@@ -2211,25 +2008,14 @@ Implementation
                               if ((ThisRef.offset mod 2) = 0) and
                                 GetNextInstruction(hp1, p_second) and
                                 (p_second.typ = ait_instruction)
-{$ifdef ARM}
-                                and (taicpu(p_second).condition = taicpu(p).condition)
-{$endif ARM}
                                 then
                                 begin
                                   case taicpu(p_second).opcode of
-{$ifdef ARM}
-                                    A_MOV,
-                                    A_MOVW:
-                                      if (taicpu(p_second).oppostfix = PF_None) and
-                                        ((taicpu(p_second).opcode <> A_MOV) or (taicpu(p_second).oper[1]^.typ = top_const)) then
-{$endif ARM}
-{$ifdef AARCH64}
                                     A_MOVZ:
-{$endif AARCH64}
                                       begin
                                         if SuperRegistersEqual(taicpu(p_second).oper[0]^.reg, ThisReg) and
                                           GetNextInstruction(p_second, hp1_second) and
-                                          MatchInstruction(hp1_second, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [PF_B]) and
+                                          MatchInstruction(hp1_second, A_STR, [PF_B]) and
                                           SuperRegistersEqual(taicpu(hp1_second).oper[0]^.reg, ThisReg) then
                                           begin
                                             { Is the second storage location exactly one byte ahead? }
@@ -2243,35 +2029,23 @@ Implementation
                                                 { See if we can merge 4 bytes at once (this benefits ARM mostly, but provides a speed boost for AArch64 too) }
                                                 if GetNextInstruction(hp1_second, hp2) and
                                                   (
-{$ifdef ARM}
-                                                    MatchInstruction(hp2, A_MOVW, [taicpu(p).condition], []) or
-{$endif ARM}
                                                     (
-                                                      MatchInstruction(hp2, LO_16_WRITE{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [])
-{$ifdef ARM}
-                                                      and (taicpu(hp2).oper[1]^.typ = top_const)
-{$endif ARM}
+                                                      MatchInstruction(hp2, LO_16_WRITE, [])
                                                     )
                                                   ) and
                                                   SuperRegistersEqual(taicpu(hp2).oper[0]^.reg, ThisReg) and
                                                   GetNextInstruction(hp2, hp2_second) and
-                                                  MatchInstruction(hp2_second, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [PF_B]) and
+                                                  MatchInstruction(hp2_second, A_STR, [PF_B]) and
                                                   SuperRegistersEqual(taicpu(hp2_second).oper[0]^.reg, ThisReg) and
                                                   GetNextInstruction(hp2_second, hp3) and
                                                   (
-{$ifdef ARM}
-                                                    MatchInstruction(hp3, A_MOVW, [taicpu(p).condition], []) or
-{$endif ARM}
                                                     (
-                                                      MatchInstruction(hp3, LO_16_WRITE{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [])
-{$ifdef ARM}
-                                                      and (taicpu(hp3).oper[1]^.typ = top_const)
-{$endif ARM}
+                                                      MatchInstruction(hp3, LO_16_WRITE, [])
                                                     )
                                                   ) and
                                                   SuperRegistersEqual(taicpu(hp3).oper[0]^.reg, ThisReg) and
                                                   GetNextInstruction(hp3, hp3_second) and
-                                                  MatchInstruction(hp3_second, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [PF_B]) and
+                                                  MatchInstruction(hp3_second, A_STR, [PF_B]) and
                                                   SuperRegistersEqual(taicpu(hp3_second).oper[0]^.reg, ThisReg) then
                                                   begin
                                                     Inc(ThisRef.offset);
@@ -2282,9 +2056,6 @@ Implementation
                                                           begin
                                                             { Merge the constants }
                                                             DebugMsg(SPeepholeOptimization + 'Merged four byte-writes to memory into a single word-write (MovzStrbMovzStrbMovzStrbMovzStrb2MovzMovkStr)', p);
-{$ifdef ARM}
-                                                            taicpu(p).opcode := A_MOVW;
-{$endif ARM}
                                                             taicpu(p).oper[1]^.val := (taicpu(p).oper[1]^.val and $FF) or ((taicpu(p_second).oper[1]^.val and $FF) shl 8);
 
                                                             taicpu(hp2).opcode := HI_16_WRITE;
@@ -2306,11 +2077,9 @@ Implementation
                                                             RemoveInstruction(hp3);
                                                             RemoveInstruction(hp3_second);
                                                             Result := True;
-{$ifdef AARCH64}
                                                             { Searching ahead only benefits AArch64 here }
                                                             hp1 := hp2; { Since hp2 now appears immediately after p }
                                                             SearchAhead;
-{$endif AARCH64}
                                                             Exit;
                                                           end;
                                                         { Reset the offset so the range check below is correct }
@@ -2318,21 +2087,10 @@ Implementation
                                                       end;
                                                     Dec(ThisRef.offset);
                                                   end;
-{$ifdef ARM}
-                                                { Be careful.  strb and str support offsets between -4095 and +4095, but
-                                                  strh only supports offsets between -255 and +255.  However, we might be
-                                                  able to bypass this if there are four bytes in a row (for AArch64, just
-                                                  use SearchAhead below }
-                                                if { Remember we added 1 to the offset }
-                                                  (ThisRef.offset >= -254) and (ThisRef.offset <= 256) then
-{$endif ARM}
                                                   begin
 
                                                     { Merge the constants and remove the second pair of instructions }
                                                     DebugMsg(SPeepholeOptimization + 'Merged two byte-writes to memory into a single half-write (MovzStrbMovzStrb2MovzStrh)', p);
-{$ifdef ARM}
-                                                    taicpu(p).opcode := A_MOVW;
-{$endif ARM}
                                                     taicpu(p).oper[1]^.val := (taicpu(p).oper[1]^.val and $FF) or ((taicpu(p_second).oper[1]^.val and $FF) shl 8);
                                                     taicpu(hp1).oppostfix := PF_H;
                                                     RemoveInstruction(p_second);
@@ -2342,7 +2100,6 @@ Implementation
                                               end;
                                           end;
                                       end;
-{$ifdef AARCH64}
                                     A_STR:
                                       { Sometimes, the second mov might not be present as we're writing the
                                         zero register to the next address - that is:
@@ -2370,7 +2127,6 @@ Implementation
                                               Result := True;
                                             end;
                                         end;
-{$endif AARCH64}
                                     else
                                       ;
                                   end;
@@ -2403,25 +2159,14 @@ Implementation
                               if ((ThisRef.offset mod 4) = 0) and
                                 GetNextInstruction(hp1, p_second) and
                                 (p_second.typ = ait_instruction)
-{$ifdef ARM}
-                                and (taicpu(p_second).condition = taicpu(p).condition)
-{$endif ARM}
                                 then
                                 begin
                                   case taicpu(p_second).opcode of
-{$ifdef ARM}
-                                    A_MOV,
-                                    A_MOVW:
-                                      if (taicpu(p).oppostfix = PF_None) and
-                                        ((taicpu(p).opcode <> A_MOV) or (taicpu(p).oper[1]^.typ = top_const)) then
-{$endif ARM}
-{$ifdef AARCH64}
                                     A_MOVZ:
-{$endif AARCH64}
                                       begin
                                         if SuperRegistersEqual(taicpu(p_second).oper[0]^.reg, ThisReg) and
                                           GetNextInstruction(p_second, hp1_second) and
-                                          MatchInstruction(hp1_second, A_STR{$ifdef ARM}, [taicpu(p).condition]{$endif ARM}, [PF_H]) and
+                                          MatchInstruction(hp1_second, A_STR, [PF_H]) and
                                           SuperRegistersEqual(taicpu(hp1_second).oper[0]^.reg, ThisReg) then
                                           begin
                                             { Is the second storage location exactly one byte ahead? }
@@ -2439,22 +2184,13 @@ Implementation
                                                   begin
                                                     { Or just remove it if it's not needed }
                                                     RemoveInstruction(p_second);
-{$ifdef ARM}
-                                                    { If within the range 0..255, MOV suffices (256 can also be encoded this way) }
-                                                    if (taicpu(p).oper[1]^.val < 0) or (taicpu(p).oper[1]^.val > 256) then
-                                                      taicpu(p).opcode := A_MOVW;
-{$endif ARM}
                                                     taicpu(hp1).oppostfix := PF_None;
                                                   end
                                                 else
                                                   begin
                                                     asml.Remove(p_second);
                                                     asml.InsertAfter(p_second, p);
-{$ifdef ARM}
-                                                    taicpu(p).opcode := A_MOVW;
-{$endif ARM}
                                                     taicpu(p_second).opcode := HI_16_WRITE;
-{$ifdef AARCH64}
                                                     so.shiftmode := SM_LSL;
                                                     so.shiftimm := 16;
 
@@ -2466,12 +2202,9 @@ Implementation
                                                     taicpu(p).oper[0]^.reg := ThisReg;
                                                     taicpu(p_second).oper[0]^.reg := ThisReg;
                                                     taicpu(hp1).oper[0]^.reg := ThisReg;
-{$endif AARCH64}
                                                     taicpu(hp1).oppostfix := PF_None;
-{$ifdef AARCH64}
                                                     hp1 := p_second; { Since p_second now appears immediately after p }
                                                     p_second := hp1;
-{$endif AARCH64}
                                                     { TODO: Confirm that the A_MOVZ / A_MOVK combination is the most efficient }
                                                   end;
 
@@ -2480,7 +2213,6 @@ Implementation
                                               end;
                                           end;
                                       end;
-{$ifdef AARCH64}
                                     A_STR:
                                       { Sometimes, the second mov might not be present as we're writing the
                                         zero register to the next address - that is:
@@ -2513,11 +2245,9 @@ Implementation
                                               Result := True;
                                             end;
                                         end;
-{$endif AARCH64}
                                     else
                                       ;
                                   end;
-{$ifdef AARCH64}
                                   { Search ahead to see if more half-words are written
                                     individually, because then we may be able to merge
                                     4 words into a full extended write in a single pass }
@@ -2526,14 +2256,12 @@ Implementation
                                       SearchAhead;
                                       Exit;
                                     end;
-{$endif AARCH64}
                                 end;
                             else
                               ;
                           end;
                         end;
                     end;
-{$ifdef AARCH64}
                 A_MOVK:
                   if (getsubreg(ThisReg) = R_SUBD) and
                     Assigned(hp1) and
@@ -2681,12 +2409,10 @@ Implementation
                             ;
                         end;
                     end;
-{$endif AARCH64}
                 else
                   ;
               end;
           end;
-{$ifdef AARCH64}
         A_STR:
           { hp1 is probably nil }
           if getsupreg(taicpu(p).oper[0]^.reg) = RS_WZR then
@@ -2993,7 +2719,6 @@ Implementation
                   end;
                 end;
             end;
-{$endif AARCH64}
         else
           ;
       end;

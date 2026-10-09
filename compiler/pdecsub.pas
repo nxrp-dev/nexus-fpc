@@ -2163,7 +2163,7 @@ procedure pd_syscall(pd:tabstractprocdef);
           internalerror(2016090101);
         end;
 
-{$if defined(i386) or defined(x86_64) or defined(arm)}
+{$if defined(i386) or defined(x86_64)}
 const
   syscall_paranr: array[boolean] of aint =
       ( paranr_syscall_lib_last, paranr_syscall_lib_first );
@@ -2174,12 +2174,12 @@ var
   v: Tconstexprint;
   vo: tvaroptions;
   paranr: aint;
-{$endif defined(i386) or defined(x86_64) or defined(arm)}
+{$endif}
 begin
   if pd.typ<>procdef then
     internalerror(2003042614);
   tprocdef(pd).forwarddef:=false;
-{$if defined(i386) or defined(x86_64) or defined(arm)}
+{$if defined(i386) or defined(x86_64)}
   Message(parser_e_syscall_format_not_support);
 
   if consume_sym(sym,symtable) then
@@ -2210,7 +2210,7 @@ begin
     message3(type_e_range_check_error_bounds,tostr(v),tostr(low(Tprocdef(pd).extnumber)),tostr(high(Tprocdef(pd).extnumber)))
   else
     Tprocdef(pd).extnumber:=v.uvalue;
-{$endif defined(powerpc) or defined(m68k) or defined(i386) or defined(x86_64) or defined(arm)}
+{$endif}
 end;
 
 
@@ -2332,10 +2332,6 @@ end;
 
 procedure pd_hardfloat(pd:tabstractprocdef);
 begin
-{$if defined(arm)}
-  if current_settings.fputype=fpu_soft then
-    message(parser_e_cannot_use_hardfloat_in_a_softfloat_environment);
-{$endif defined(arm)}
 end;
 
 procedure pd_section(pd:tabstractprocdef);

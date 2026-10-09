@@ -472,9 +472,6 @@ Unit AoptObj;
       verbose,
       aoptutils,
       aasmcfi,
-{$if defined(ARM)}
-      cpuinfo,
-{$endif defined(ARM)}
       procinfo;
 
 
@@ -1710,9 +1707,9 @@ Unit AoptObj;
 
         result:=(hp.opcode=aopt_uncondjmp) and
 
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
           (hp.condition=c_None) and
-{$endif arm or aarch64}
+{$endif}
           (hp.ops>0) and
           (JumpTargetOp(hp)^.typ = top_ref) and
           (JumpTargetOp(hp)^.ref^.symbol is TAsmLabel);
@@ -2169,7 +2166,7 @@ Unit AoptObj;
                             <code>
                           NCJLabel:
                         }
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
                         if (taicpu(p).condition<>C_None)
 {$if defined(aarch64)}
                         { can't have conditional branches to
@@ -2179,7 +2176,7 @@ Unit AoptObj;
 {$endif aarch64}
                         then
                           begin
-{$endif arm or aarch64}
+{$endif}
                             DebugMsg(SPeepholeOptimization+'Conditional jump inversion',p);
 
                             taicpu(p).condition:=inverse_cond(taicpu(p).condition);
@@ -2210,9 +2207,9 @@ Unit AoptObj;
 
                                 Continue;
                               end;
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
                           end;
-{$endif arm or aarch64}
+{$endif}
                       end
                     else if CollapseZeroDistJump(hp1, NCJLabel) then
                       begin

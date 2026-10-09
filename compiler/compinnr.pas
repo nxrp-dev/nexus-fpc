@@ -209,10 +209,6 @@ type
      {$i x86/cx86innr.inc}
 {$endif }
 
-{$if defined(ARM)}
-     ,
-     {$i ccpuinnr.inc}
-{$endif}
 {$if defined(AARCH64)}
      ,
      {$i ccpuinnr.inc}

@@ -379,9 +379,6 @@ implementation
       ,
       cpubase,
       cutils,
-{$ifdef arm}
-      agarmgas, { Needed for gas_shiftmode2str }
-{$endif arm}
 {$ifdef aarch64}
       agcpugas, { Needed for gas_shiftmode2str }
 {$endif aarch64}

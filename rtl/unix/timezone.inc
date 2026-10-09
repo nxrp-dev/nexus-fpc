@@ -533,7 +533,7 @@ begin
 //       If fpstat(BSDTimeZoneFile,{$ifdef oldlinuxstat}baseunix.stat(info){$else}info{$endif})>=0 then
 // GetTimeZoneFile:=BSDTimeZoneFile
 {$ENDIF}
-{$if (defined(darwin) and defined(arm)) or defined(iphonesim)}
+{$if defined(iphonesim)}
   else If fpstat(iOSTimeZoneFile,info)>=0 then
       GetTimeZoneFile:=iOSTimeZoneFile
 {$endif}

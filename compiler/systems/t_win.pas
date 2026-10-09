@@ -267,11 +267,6 @@ implementation
           jmpopcode : array[0..1] of byte = (
             $ff,$25             // jmp qword [rip + offset32]
           );
-{$elseif defined(arm)}
-          jmpopcode : array[0..7] of byte = (
-            $00,$c0,$9f,$e5,    // ldr ip, [pc, #0]
-            $00,$f0,$9c,$e5     // ldr pc, [ip]
-          );
 {$elseif defined(aarch64)}
           jmpopcode : array[0..11] of byte = (
             $70,$00,$00,$58,    // ldr ip0, .+12
@@ -420,7 +415,7 @@ implementation
     procedure TImportLibWin.generateidatasection;
       var
          templab,
-         l1,l2,l3,l4 {$ifdef ARM} ,l5 {$endif ARM} : tasmlabel;
+         l1,l2,l3,l4  : tasmlabel;
          importname : string;
          suffix : integer;
 {$ifndef AARCH64}
@@ -498,9 +493,6 @@ implementation
                 if not ImportSymbol.IsVar then
                   begin
                     current_asmdata.getjumplabel(l4);
-                  {$ifdef ARM}
-                    current_asmdata.getjumplabel(l5);
-                  {$endif ARM}
                     { create indirect jump and }
                     { place jump in al_procedures }
                     new_section(current_asmdata.asmlists[al_imports],sec_code,'',0);
@@ -509,15 +501,7 @@ implementation
                     else
                       current_asmdata.asmlists[al_imports].concat(Tai_symbol.Createname_global(ExtractFileName(ImportLibrary.Name)+'_index_'+tostr(ImportSymbol.ordnr),AT_FUNCTION,0,voidcodepointertype));
                     current_asmdata.asmlists[al_imports].concat(tai_function_name.create(''));
-                  {$if defined(ARM)}
-                    reference_reset_symbol(href,l5,0,sizeof(pint),[]);
-                    current_asmdata.asmlists[al_imports].concat(Taicpu.op_reg_ref(A_LDR,NR_R12,href));
-                    reference_reset_base(href,NR_R12,0,ctempposinvalid,sizeof(pint),[]);
-                    current_asmdata.asmlists[al_imports].concat(Taicpu.op_reg_ref(A_LDR,NR_R15,href));
-                    current_asmdata.asmlists[al_imports].concat(Tai_label.Create(l5));
-                    reference_reset_symbol(href,l4,0,sizeof(pint),[]);
-                    current_asmdata.asmlists[al_imports].concat(tai_const.create_sym_offset(href.symbol,href.offset));
-                  {$elseif defined(AARCH64)}
+                  {$if defined(AARCH64)}
                     { ToDo }
                     internalerror(2020033001);
                   {$else X86}
@@ -528,7 +512,7 @@ implementation
 
                     current_asmdata.asmlists[al_imports].concat(Taicpu.Op_ref(A_JMP,S_NO,href));
                     current_asmdata.asmlists[al_imports].concat(Tai_align.Create_op(4,$90));
-                  {$endif X86}
+                  {$endif}
                     { add jump field to al_imports }
                     new_section(current_asmdata.asmlists[al_imports],sec_idata5,'',0);
                     if (cs_debuginfo in current_settings.moduleswitches) then

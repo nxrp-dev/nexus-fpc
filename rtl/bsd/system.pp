@@ -43,18 +43,18 @@ var argc:longint;
 
 CONST SIGSTKSZ = 40960;
 
-{$if defined(CPUARM) or defined(CPUM68K)}
+{$if defined(CPUM68K)}
 
 {$define fpc_softfpu_interface}
 {$i softfpu.pp}
 {$undef fpc_softfpu_interface}
 
-{$endif defined(CPUARM) or defined(CPUM68K)}
+{$endif}
 
 
 Implementation
 
-{$if defined(CPUARM) or defined(CPUM68K)}
+{$if defined(CPUM68K)}
 
 {$define fpc_softfpu_implementation}
 {$i softfpu.pp}
@@ -72,7 +72,7 @@ Implementation
 {$define FPC_SYSTEM_HAS_extractFloat32Exp}
 {$define FPC_SYSTEM_HAS_extractFloat32Sign}
 
-{$endif defined(CPUARM) or defined(CPUM68K)}
+{$endif}
 
 {$ifdef darwin}
 {$define HAS_GETCPUCOUNT}
@@ -407,9 +407,9 @@ Begin
   { Set up signals handlers (may be needed by init code to test cpu features) }
   InstallSignals;
 
-{$if defined(cpui386) or defined(cpuarm)}
+{$if defined(cpui386)}
   fpc_cpucodeinit;
-{$endif cpui386}
+{$endif}
   { Setup heap }
   InitHeap;
   SysInitExceptions;

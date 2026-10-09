@@ -75,13 +75,6 @@ unit cgutils;
          index       : tregister;
          refaddr     : trefaddr;
          scalefactor : byte;
-{$ifdef arm}
-         symboldata  : tlinkedlistitem;
-         signindex   : shortint;
-         shiftimm    : byte;
-         addressmode : taddressmode;
-         shiftmode   : tshiftmode;
-{$endif arm}
 {$ifdef aarch64}
          symboldata  : tlinkedlistitem;
          shiftimm    : byte;
@@ -228,9 +221,6 @@ uses
     procedure reference_reset(var ref: treference; alignment: longint; volatility: tvolatilityset);
       begin
         FillChar(ref,sizeof(treference),0);
-{$ifdef arm}
-        ref.signindex:=1;
-{$endif arm}
         ref.alignment:=alignment;
         ref.volatility:=volatility;
         ref.temppos:=ctempposinvalid;
@@ -287,9 +277,6 @@ uses
       FillChar(l,sizeof(tlocation),0);
       l.loc:=lt;
       l.size:=lsize;
-{$ifdef arm}
-      l.reference.signindex:=1;
-{$endif arm}
       l.reference.alignment:=alignment;
       l.reference.volatility:=volatility;
       l.reference.temppos:=ctempposinvalid;
@@ -522,9 +509,6 @@ uses
       begin
 {$if defined(AARCH64)}
         result:=cs_check_fpu_exceptions in current_settings.localswitches;
-{$elseif defined(ARM)}
-        result:=(cs_check_fpu_exceptions in current_settings.localswitches) and
-          not(FPUARM_HAS_EXCEPTION_TRAPPING in fpu_capabilities[current_settings.fputype]);
 {$elseif defined(XTENSA)}
         result:=cs_check_fpu_exceptions in current_settings.localswitches;
 {$else}

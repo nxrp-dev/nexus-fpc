@@ -34,10 +34,6 @@ uses ctypes;
   {$define NO_FLOAT}
 {$endif}
 
-{$if defined(CPUARMEL) and defined(FPUSOFT)}
-{ for softfloat calls in the C code }
-  {$define LIBGCC_NEEDED}
-{$endif}
 
 {$ifdef OPENBSD}
   { OpenBSD GCC uses __guard_local which is defined in crtbegin.o or crtbeginS.o}

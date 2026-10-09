@@ -58,13 +58,6 @@ type
       OPR_REFERENCE : (varsize:asizeint; constoffset: asizeint;ref_farproc_entry:boolean;ref:treference);
       OPR_LOCAL     : (localvarsize, localconstoffset: asizeint;localsym:tabstractnormalvarsym;localsymofs:aint;localsegment,localindexreg:tregister;localscale:byte;localgetoffset,localforceref:boolean);
       OPR_REGISTER  : (reg:tregister);
-{$ifdef arm}
-      OPR_REGSET    : (regset : tcpuregisterset; regtype: tregistertype; subreg: tsubregister; usermode: boolean);
-      OPR_SHIFTEROP : (shifterop : tshifterop);
-      OPR_COND      : (cc : tasmcond);
-      OPR_MODEFLAGS : (flags : tcpumodeflags);
-      OPR_SPECIALREG: (specialreg : tregister; specialregflags : tspecialregflags);
-{$endif arm}
 {$ifdef aarch64}
       OPR_REGSET    : (basereg: tregister; nregs, regsetindex: byte);
       OPR_INDEXEDREG: (indexedreg: tregister; regindex: byte);
@@ -1249,20 +1242,12 @@ end;
                 end;
               OPR_REFERENCE:
                 ai.loadref(i-1,ref);
-{$ifdef ARM}
-              OPR_REGSET:
-                ai.loadregset(i-1,regtype,subreg,regset,usermode);
-              OPR_MODEFLAGS:
-                ai.loadmodeflags(i-1,flags);
-              OPR_SPECIALREG:
-                ai.loadspecialreg(i-1,specialreg,specialregflags);
-{$endif ARM}
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
              OPR_SHIFTEROP:
                ai.loadshifterop(i-1,shifterop);
              OPR_COND:
                ai.loadconditioncode(i-1,cc);
-{$endif arm or aarch64}
+{$endif}
 {$ifdef aarch64}
               OPR_REGSET:
                 ai.loadregset(i-1,basereg,nregs,regsetindex);
@@ -1815,11 +1800,6 @@ end;
        case real_typ of
           s32real : p.concat(tai_realconst.create_s32real(value));
           s64real :
-{$ifdef ARM}
-           if is_double_hilo_swapped then
-             p.concat(tai_realconst.create_s64real_hiloswapped(value))
-           else
-{$endif ARM}
              p.concat(tai_realconst.create_s64real(value));
           s80real : p.concat(tai_realconst.create_s80real(value,s80floattype.size));
           sc80real : p.concat(tai_realconst.create_s80real(value,sc80floattype.size));

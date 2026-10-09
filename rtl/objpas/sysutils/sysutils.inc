@@ -1022,9 +1022,6 @@ begin
 
 
 
-  {$ifdef arm}
-  Result:=arARM32;
-  {$endif arm}
 
   {$ifdef aarch64}
   Result:=arARM64

@@ -107,9 +107,6 @@ type
   {$define longdouble_is_double}
 {$endif}
 
-{$if defined(linux) and defined(cpuarm)}
-  {$define longdouble_is_double}
-{$ifend}
 
 {$if defined(darwin) and defined(cpuaarch64)}
   {$define longdouble_is_double}

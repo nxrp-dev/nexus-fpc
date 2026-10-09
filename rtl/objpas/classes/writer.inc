@@ -81,10 +81,6 @@ var ext : array[0..9] of byte;
 {$ENDIF}
 begin
 {$IFNDEF FPC_HAS_TYPE_EXTENDED}
-  {$IFDEF FPC_DOUBLE_HILO_SWAPPED}
-  { SwapDoubleHiLo defined in reader.inc }
-  SwapDoubleHiLo(e);
-  {$ENDIF FPC_DOUBLE_HILO_SWAPPED}
   DoubleToExtended(e,@(ext[0]));
   Write(ext[0],10);
 {$ELSE}

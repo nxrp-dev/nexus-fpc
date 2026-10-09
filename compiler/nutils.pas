@@ -749,9 +749,6 @@ implementation
 
       var
         cv : cardinal;
-{$ifdef ARM}
-        dummy : byte;
-{$endif ARM}
       begin
         cv:=0;
         result:=NODE_COMPLEXITY_INF; { For early exits by default. }
@@ -877,10 +874,6 @@ implementation
                 end;
               ordconstn:
                 begin
-{$ifdef ARM}
-                  if not(is_shifter_const(aint(tordconstnode(p).value.svalue),dummy)) then
-                    inc(cv,2);
-{$endif ARM}
                   break;
                 end;
               exitn:

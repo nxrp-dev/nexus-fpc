@@ -85,10 +85,6 @@ Const
          ppcbin:='ppc386';
          processorname:='i386';
     {$endif i386}
-    {$ifdef arm}
-         ppcbin:='ppcarm';
-         processorname:='arm';
-    {$endif arm}
     {$ifdef aarch64}
          ppcbin:='ppca64';
          processorname:='aarch64';

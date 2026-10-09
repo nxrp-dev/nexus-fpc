@@ -171,9 +171,6 @@ implementation
        optloadmodifystore,
        optcall,
        optutils
-{$ifdef arm}
-       ,cpuinfo
-{$endif arm}
        {$ifndef NOOPT}
        ,aopt
        {$endif}
@@ -1021,7 +1018,7 @@ implementation
       end;
 
 
-{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
     const
       exception_flags: array[boolean] of tprocinfoflags = (
         [],
@@ -1033,17 +1030,7 @@ implementation
       begin
         tg:=tgobjclass.create;
 
-{$if defined(i386) or defined(x86_64) or defined(arm) or defined(aarch64)}
-{$if defined(arm)}
-        { frame and stack pointer must be always the same on arm thumb so it makes no
-          sense to fiddle with a frame pointer }
-        if GenerateThumbCode then
-          begin
-            framepointer:=NR_STACK_POINTER_REG;
-            tg.direction:=1;
-          end
-        else
-{$endif defined(arm)}
+{$if defined(i386) or defined(x86_64) or defined(aarch64)}
           begin
             { try to strip the stack frame }
             { set the framepointer to esp if:
@@ -1118,30 +1105,9 @@ implementation
                     tg.direction:=1;
                     Include(flags,pi_no_framepointer_needed)
                   end
-{$if defined(arm)}
-                { On arm, the stack frame size can be estimated to avoid using an extra frame pointer,
-                  in case parameters are passed on the stack.
-
-                  However, the draw back is, if the estimation fails, compilation will break later on
-                  with an internal error, so this switch is not enabled by default yet. To overcome this,
-                  multipass compilation of subroutines must be supported
-                }
-                else if (cs_opt_forcenostackframe in current_settings.optimizerswitches) and
-                   not(has_assembler_child) then
-                  begin
-                    { Only need to set the framepointer }
-                    framepointer:=NR_STACK_POINTER_REG;
-                    tg.direction:=1;
-                    include(flags,pi_estimatestacksize);
-                    set_first_temp_offset;
-                    procdef.has_paraloc_info:=callnoside;
-                    generate_parameter_info;
-                    exit;
-                  end;
-{$endif defined(arm)}
               end;
           end;
-{$endif defined(x86) or defined(arm) or defined(m68k)}
+{$endif}
 {$if defined(xtensa)}
         { On xtensa, the stack frame size can be estimated to avoid using an extra frame pointer,
           in case parameters are passed on the stack.

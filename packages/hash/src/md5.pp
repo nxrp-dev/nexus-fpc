@@ -353,9 +353,6 @@ end;
       {$i md5x64_sysv.inc}
       {$define MD5ASM}
     {$endif MSWINDOWS}
-  {$elseif defined(CPUARM) and not (defined(CPUTHUMB)) and not (defined(CPUTHUMB2))}
-    {$i md5arm.inc}
-    {$define MD5ASM}
   {$endif}
 {$endif not MD5PASCAL}
 

@@ -1899,7 +1899,7 @@ implementation
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER :
           begin
-{$if defined(sparc) or defined(arm)}
+{$if defined(sparc)}
             { Arm and Sparc passes floats in int registers, when loading to fpu register
               we need a temp }
             sizeleft := TCGSize2Size[destloc.size];
@@ -1923,7 +1923,7 @@ implementation
             cg.a_load_cgparaloc_anyreg(list,destloc.size,paraloc^,destloc.register,0);
             if assigned(paraloc^.next) then
               internalerror(200410109);
-{$endif defined(sparc) or defined(arm)}
+{$endif}
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER :

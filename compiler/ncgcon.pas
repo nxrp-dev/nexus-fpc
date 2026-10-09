@@ -106,17 +106,11 @@ implementation
          realait : tairealconsttype;
          entry : PHashSetItem;
          key: tfloatkey;
-{$ifdef ARM}
-         hiloswapped : boolean;
-{$endif ARM}
 
       begin
         location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),const_align(resultdef.alignment),[]);
         lastlabel:=nil;
         realait:=floattype2ait[tfloatdef(resultdef).floattype];
-{$ifdef ARM}
-        hiloswapped:=is_double_hilo_swapped;
-{$endif ARM}
         { const already used ? }
         if not assigned(lab_real) then
           begin
@@ -124,9 +118,6 @@ implementation
             fillchar(key,sizeof(key),0);
             key.value:=value_real;
             key.typ:=tfloatdef(resultdef).floattype;
-{$ifdef ARM}
-            key.swapped:=hiloswapped;
-{$endif ARM}
             entry := current_asmdata.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
 
             lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
@@ -148,11 +139,6 @@ implementation
 
                     aitrealconst_s64bit :
                       begin
-{$ifdef ARM}
-                        if hiloswapped then
-                          current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64real_hiloswapped(ts64real(value_real)))
-                        else
-{$endif ARM}
                           current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(ts64real(value_real)));
                      end;
 

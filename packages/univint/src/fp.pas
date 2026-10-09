@@ -133,17 +133,6 @@ interface
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
 {$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __arm__ and __arm__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := TRUE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := TRUE}
 {$elifc defined __arm64__ and __arm64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := FALSE}
@@ -245,7 +234,7 @@ uses MacTypes,ConditionalMacros;
 *    x86              double(64)                   double(64)                   *
 *                                                                               *
 *******************************************************************************}
-{$ifc TARGET_CPU_PPC or TARGET_CPU_PPC64 or TARGET_CPU_ARM or TARGET_CPU_ARM64}
+{$ifc TARGET_CPU_PPC or TARGET_CPU_PPC64 or TARGET_CPU_ARM64}
 
 type
 	float_t								= Float32;

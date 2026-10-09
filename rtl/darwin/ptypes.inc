@@ -23,7 +23,7 @@
 {$packrecords c}
 
 
-{$if defined(darwin) and (defined(cpuarm) or defined(cpuaarch64) or defined(iphonesim) or (defined(MAC_OS_X_VERSION_MIN_REQUIRED) and (MAC_OS_X_VERSION_MIN_REQUIRED >= 1060)))}
+{$if defined(darwin) and (defined(cpuaarch64) or defined(iphonesim) or (defined(MAC_OS_X_VERSION_MIN_REQUIRED) and (MAC_OS_X_VERSION_MIN_REQUIRED >= 1060)))}
   {$define darwin_new_iostructs}
 {$endif}
 
@@ -151,7 +151,7 @@ type
           val: array[0..1] of cint32;
      end;
 
-{$if defined(cpuarm) or defined(cpuaarch64) or defined(iphonesim)}
+{$if defined(cpuaarch64) or defined(iphonesim)}
      { structure used on iPhoneOS and available on Mac OS X 10.6 and later }
      tstatfs = record
           bsize : cuint32;

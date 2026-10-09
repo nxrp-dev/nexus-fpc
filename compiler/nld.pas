@@ -839,14 +839,6 @@ implementation
                 and (use_vectorfpu(left.resultdef) or not(use_vectorfpu(right.resultdef)))
 {$endif}
 
-{$ifdef arm}
-                { the assignment node code can't convert a single in
-                  an integer register to a double in an mmregister or
-                  vice versa }
-                and (use_vectorfpu(left.resultdef) and
-                     use_vectorfpu(right.resultdef) and
-                     (tfloatdef(left.resultdef).floattype=tfloatdef(right.resultdef).floattype))
-{$endif arm}
 {$ifdef xtensa}
                 and not((FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) xor
                   (FPUXTENSA_DOUBLE in fpu_capabilities[current_settings.fputype]))

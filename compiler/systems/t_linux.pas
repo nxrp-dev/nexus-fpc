@@ -129,20 +129,6 @@ begin
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib;=/usr/lib;=/usr/X11R6/lib',true);
 {$endif x86_64}
 
-{$ifdef arm}
-  { some newer Debian have the crt*.o files at uncommon locations,
-    for other arm flavours, this cannot hurt }
-    if target_info.abi=abi_eabihf then
-      begin
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/arm-linux-gnueabihf',true);
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/arm-linux-gnueabihf',true);
-      end;
-    if target_info.abi=abi_eabi then
-      begin
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/arm-linux-gnueabi',true);
-        LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/arm-linux-gnueabi',true);
-      end;
-{$endif arm}
 {$ifdef x86_64}
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/usr/lib/x86_64-linux-gnu',true);
       LibrarySearchPath.AddLibraryPath(sysrootpath,'=/lib/x86_64-linux-gnu',true);
@@ -278,12 +264,9 @@ begin
   target_opt:=' -b elf64-x86-64';
   emulation_opt:=' -m elf_x86_64';
 {$endif}
-{$ifdef arm}       target_opt:='';{$endif} {unknown :( }
+ {unknown :( }
 {$ifdef aarch64}   target_opt:='';{$endif} {unknown :( }
 
-{$ifdef arm}
-  platformopt:=' -z noexecstack';
-{$endif arm}
   if cs_link_lld in current_settings.globalswitches then
     begin
       LdProgram:='ld.lld';

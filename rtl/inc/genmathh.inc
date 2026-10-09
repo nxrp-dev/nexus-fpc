@@ -67,21 +67,13 @@ type
   float64 = record
     case byte of
       1: (dummy : double);
- {$ifndef FPC_DOUBLE_HILO_SWAPPED}
       2: (low,high: longword);
-{$else}
-      2: (high,low: longword);
-{$endif FPC_DOUBLE_HILO_SWAPPED}
   end;
 {$else}
   float64 = record
     case byte of
       1: (dummy : double);
-{$ifndef FPC_DOUBLE_HILO_SWAPPED}
       2: (high,low: longword);
-{$else}
-      2: (low,high: longword);
-{$endif FPC_DOUBLE_HILO_SWAPPED}
   end;
 {$endif}
 {$define FPC_SYSTEM_HAS_float64}

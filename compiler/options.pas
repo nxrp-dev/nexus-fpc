@@ -922,9 +922,6 @@ begin
 {$ifdef aarch64}
       'a',
 {$endif}
-{$ifdef arm}
-      'A',
-{$endif}
       '*' : show:=true;
      end;
      if show then
@@ -2292,20 +2289,6 @@ begin
            exclude(init_settings.localswitches,cs_check_io)
          else
            include(init_settings.localswitches,cs_check_io);
-{$ifdef arm}
-       'I' :
-         begin
-           if (upper(copy(more,j+1))='THUMB') and
-             { does selected CPU really understand thumb? }
-             (init_settings.cputype in cpu_has_thumb) then
-             init_settings.instructionset:=is_thumb
-           else if upper(copy(more,j+1))='ARM' then
-             init_settings.instructionset:=is_arm
-           else
-             IllegalPara(opt);
-           break;
-         end;
-{$endif arm}
 
        'n' :
          If UnsetBool(More, j, opt, false) then
@@ -3998,12 +3981,6 @@ procedure read_arguments(cmd:TCmdStr);
 
 
 
-      {$ifdef arm}
-        def_system_macro('CPUARM');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif arm}
 
 
       {$ifdef jvm}
@@ -4475,61 +4452,6 @@ begin
   end;
 {$endif i386}
 
-{$ifdef arm}
-  { set ABI defaults }
-  case target_info.abi of
-    abi_eabihf:
-      { set default cpu type to ARMv7a for ARMHF unless specified otherwise }
-      begin
-{$ifdef CPUARMV6}
-        { if the compiler is built for armv6, then
-          inherit this setting, e.g. Raspian is armhf but
-          only armv6, this makes rebuilds of the compiler
-          easier }
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_armv6;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_armv6;
-{$else CPUARMV6}
-        if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_armv7a;
-        if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_armv7a;
-{$endif CPUARMV6}
-
-        { Set FPU type }
-        if not(option.FPUSetExplicitly) then
-          begin
-            if init_settings.cputype < cpu_armv7 then
-              init_settings.fputype:=fpu_vfpv2
-            else
-              init_settings.fputype:=fpu_vfpv3_d16;
-          end
-        else
-          begin
-            if (not(FPUARM_HAS_VFP_EXTENSION in fpu_capabilities[init_settings.fputype])) then
-              begin
-                Message(option_illegal_fpu_eabihf);
-                StopOptions(1);
-              end;
-          end;
-      end;
-    else
-      ;
-  end;
-
-  if (init_settings.instructionset=is_thumb) and not(CPUARM_HAS_THUMB2 in cpu_capabilities[init_settings.cputype]) then
-    begin
-      def_system_macro('CPUTHUMB');
-      if not option.FPUSetExplicitly then
-        init_settings.fputype:=fpu_soft;
-      if not(init_settings.fputype in [fpu_none,fpu_soft,fpu_libgcc]) then
-        Message2(option_unsupported_fpu,fputypestr[init_settings.fputype],'Thumb');
-    end;
-
-  if (init_settings.instructionset=is_thumb) and (CPUARM_HAS_THUMB2 in cpu_capabilities[init_settings.cputype]) then
-    def_system_macro('CPUTHUMB2');
-{$endif arm}
 
 {$ifdef aarch64}
   case target_info.system of
@@ -4625,11 +4547,6 @@ begin
       def_system_macro('FPC_USE_WIN32_SEH');
 {$endif not DISABLE_WIN32_SEH}
 
-{$ifdef ARM}
-  { define FPC_DOUBLE_HILO_SWAPPED if needed to properly handle doubles in RTL }
-   if init_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11] then
-    def_system_macro('FPC_DOUBLE_HILO_SWAPPED');
-{$endif ARM}
 
 { inline bsf/bsr implementation }
 {$if defined(i386) or defined(x86_64) or defined(aarch64)}
@@ -4646,19 +4563,6 @@ begin
     end;
 {$endif defined(i386) or defined(x86_64)}
 
-{$if defined(arm)}
-  { it is determined during system unit compilation if clz is used for bsf or not,
-    this is not perfect but the current implementation bsf/bsr does not allow another
-    solution }
-  if (CPUARM_HAS_CLZ in cpu_capabilities[init_settings.cputype]) and
-     ((init_settings.instructionset=is_arm) or
-      (CPUARM_HAS_THUMB2 in cpu_capabilities[init_settings.cputype])) then
-    begin
-      def_system_macro('FPC_HAS_INTERNAL_BSR');
-      if CPUARM_HAS_RBIT in cpu_capabilities[init_settings.cputype] then
-        def_system_macro('FPC_HAS_INTERNAL_BSF');
-    end;
-{$endif}
 
 {$if defined(xtensa)}
   { it is determined during system unit compilation if nsau is used for bsr or not,
@@ -4694,15 +4598,6 @@ begin
     4. override with the user specified -Oa }
   UpdateAlignment(init_settings.alignment,target_info.alignment);
 
-{$ifdef arm}
-  if (init_settings.instructionset=is_thumb) and not(CPUARM_HAS_THUMB2 in cpu_capabilities[init_settings.cputype]) then
-   begin
-     init_settings.alignment.procalign:=2;
-     init_settings.alignment.jumpalign:=2;
-     init_settings.alignment.coalescealign:=2;
-     init_settings.alignment.loopalign:=2;
-   end;
-{$endif arm}
 
   if (cs_opt_size in init_settings.optimizerswitches) then
    begin

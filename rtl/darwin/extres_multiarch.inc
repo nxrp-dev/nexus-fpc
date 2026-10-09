@@ -34,8 +34,6 @@ const
     '.i386';
     {$elseif defined(cpux86_64)}
     '.x86_64';
-    {$elseif defined(cpuarm)}
-    '.arm';
     {$elseif defined(cpuaarch64)}
     '.aarch64';
     {$else}

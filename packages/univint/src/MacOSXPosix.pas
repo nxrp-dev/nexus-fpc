@@ -130,17 +130,6 @@ interface
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
 {$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __arm__ and __arm__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := TRUE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := TRUE}
 {$elifc defined __arm64__ and __arm64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := FALSE}
@@ -224,11 +213,7 @@ type
 	gid_t_ptr = ^gid_t;
 	in_addr_t = UInt32;	{ base type for internet address }
 	in_port_t = UInt16;
-{$ifc TARGET_CPU_ARM}
-	ino_t = UInt64;		{ inode number }
-{$elsec}
 	ino_t = UInt32;		{ inode number }
-{$endc}
 	key_t = SInt32;		{ IPC key (for Sys V IPC) }
 	mode_t = UInt16;		{ permissions }
 	nlink_t = UInt16;	{ link count }

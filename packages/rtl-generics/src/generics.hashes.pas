@@ -1388,14 +1388,7 @@ begin
   Result := Int32(c);
 end;
 
-{$ifdef CPUARM} // circumvent FPC issue on ARM
-function ToByte(value: cardinal): cardinal; inline;
-begin
-  result := value and $ff;
-end;
-{$else}
 type ToByte = byte;
-{$endif}
 
 {$ifdef CPUINTEL} // use optimized x86/x64 asm versions for xxHash32
 

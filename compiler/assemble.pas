@@ -208,10 +208,6 @@ interface
 
       TInternalAssembler=class(TAssembler)
       private
-{$ifdef ARM}
-        { true, if thumb instructions are generated }
-        Code16 : Boolean;
-{$endif ARM}
         FCObjOutput : TObjOutputclass;
         FCInternalAr : TObjectWriterClass;
         { the aasmoutput lists that need to be processed }
@@ -1310,19 +1306,6 @@ Implementation
             index:=0;
             step:=1;
           end;
-{$ifdef ARM}
-        { ARM-specific: low and high dwords of a double may be swapped }
-        if tai_realconst(hp).formatoptions=fo_hiloswapped then
-          begin
-            { only supported for double }
-            if tai_realconst(hp).datasize<>8 then
-              internalerror(2014050605);
-            { switch bit of the index so that the words are written in
-              the opposite order }
-            swapmask:=4;
-          end
-        else
-{$endif ARM}
           swapmask:=0;
         repeat
 {$ifdef USE_SOFT_FLOATX80}
@@ -1436,9 +1419,6 @@ Implementation
         ObjOutput:=nil;
         ObjData:=nil;
         SmartAsm:=smart;
-{$ifdef ARM}
-        Code16:=current_settings.instructionset=is_thumb;
-{$endif ARM}
       end;
 
 
@@ -1872,21 +1852,6 @@ Implementation
                      { ignore for now, but should be added}
                      ;
 {$endif OMFOBJSUPPORT}
-{$ifdef ARM}
-                   asd_thumb_func:
-                     ObjData.ThumbFunc:=true;
-                   asd_force_thumb:
-                     begin
-                       ObjData.ThumbFunc:=true;
-                       Code16:=true;
-                     end;
-                   asd_code:
-                     begin
-                       { ai_directive(hp).name can be only 16 or 32, this is checked by the reader }
-                       ObjData.ThumbFunc:=tai_directive(hp).name='16';
-                       Code16:=tai_directive(hp).name='16';
-                     end
-{$endif ARM}
                    else
                      internalerror(2010011101);
                  end;
@@ -1916,12 +1881,6 @@ Implementation
                ObjData.alloc(Tai_string(hp).len);
              ait_instruction :
                begin
-{$ifdef arm}
-                 if code16 then
-                   include(taicpu(hp).flags,cf_thumb)
-                 else
-                   exclude(taicpu(hp).flags,cf_thumb);
-{$endif arm}
                  { reset instructions which could change in pass 2 }
                  Taicpu(hp).resetpass2;
                  ObjData.alloc(Taicpu(hp).Pass1(ObjData));
@@ -2493,23 +2452,6 @@ Implementation
                        ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_SECREL32);
                      end;
 
-{$ifdef arm}
-                   aitconst_got:
-                     ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_GOT32);
-{                   aitconst_gottpoff:
-                     ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_TPOFF); }
-                   aitconst_tpoff:
-                     ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_TPOFF);
-                   aitconst_tlsgd:
-                     ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_TLSGD);
-                   aitconst_tlsdesc:
-                     begin
-                       { must be a relative symbol, thus value being valid }
-                       if not(assigned(tai_const(hp).sym)) or not(assigned(tai_const(hp).endsym)) then
-                         Internalerror(2019092904);
-                       ObjData.writereloc(Tai_const(hp).value,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_TLSDESC);
-                     end;
-{$endif arm}
                    aitconst_dtpoff:
                      { so far, the size of dtpoff is fixed to 4 bytes }
                      ObjData.writereloc(Tai_const(hp).symofs,4,Objdata.SymbolRef(tai_const(hp).sym),RELOC_DTPOFF);
@@ -2603,9 +2545,6 @@ Implementation
 
                      objsym.offset:=ref.offset;
                      objsym.objsection:=ref.objsection;
-{$ifdef arm}
-                     objsym.ThumbFunc:=ref.ThumbFunc;
-{$endif arm}
                    end;
                end;
 {$ifndef DISABLE_WIN64_SEH}

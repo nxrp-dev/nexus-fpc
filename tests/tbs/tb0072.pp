@@ -24,13 +24,6 @@ asm
   move.l  y,d1
 end;
 {$endif CPU68K}
-{$ifdef CPUARM}
-{$define SUPPORTED}
-asm
-  mov r2,x
-  mov r3,y
-end;
-{$endif CPUARM}
 {$ifdef CPUX86_64}
 {$define SUPPORTED}
 asm

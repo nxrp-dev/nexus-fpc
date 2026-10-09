@@ -150,10 +150,6 @@ unit aoptbase;
       Case op.typ Of
         Top_Reg: RegInOp := RegistersInterfere(Reg,op.reg);
         Top_Ref: RegInOp := RegInRef(Reg, op.ref^);
-        {$ifdef arm}
-        Top_Shifterop: RegInOp := op.shifterop^.rs = Reg;
-        Top_RegSet: RegInOp := getsupreg(Reg) in op.regset^;
-        {$endif arm}
         Else RegInOp := False
       End
     End;

@@ -31,10 +31,5 @@ begin
      move.l  test.l,d0
   end;
 {$endif cpu68k}
-{$ifdef arm}
-  asm
-    ld  r0,test.l
-  end;
-{$endif arm}
 
 end.

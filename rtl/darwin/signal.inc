@@ -187,15 +187,11 @@
 {$ifdef cpux86_64}
     {$include x86_64/sig_cpu.inc}       { SigContextRec }
 {$else cpux86_64}
-{$ifdef cpuarm}
-    {$include arm/sig_cpu.inc}
-{$else cpuarm}
 {$ifdef cpuaarch64}
     {$include aarch64/sig_cpu.inc}
 {$else cpuaarch64}
     {$error Unsupported cpu type!}
 {$endif cpuaarch64}
-{$endif cpuarm}
 {$endif cpux86_64}
 {$endif cpui386}
 

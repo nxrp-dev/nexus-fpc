@@ -24,9 +24,9 @@ program tb0627b;
 {$define FPC_HAS_INTERNAL_ROX_WORD}
 {$endif defined(cpux86_64) or defined(cpui386) or defined(cpui8086)}
 
-{$if defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$if defined(cpux86_64) or defined(cpui386) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
 {$define FPC_HAS_INTERNAL_ROX_DWORD}
-{$endif defined(cpux86_64) or defined(cpui386) or defined(cpuarm) or defined(cpupowerpc) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
+{$endif}
 
 {$if defined(cpux86_64) or defined(cpupowerpc64) or defined(cpuaarch64) or defined(cpuwasm32)}
 {$define FPC_HAS_INTERNAL_ROX_QWORD}

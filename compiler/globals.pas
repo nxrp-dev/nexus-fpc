@@ -211,11 +211,11 @@ Const
    {$ifdef generic_cpu}   );{$endif}
 {$endif defined(generic_cpu)}
 
-{$if defined(ARM) or defined(generic_cpu)}
+{$if defined(generic_cpu)}
    {$ifdef generic_cpu} 2:({$endif}
          instructionset : tinstructionset;
    {$ifdef generic_cpu}   );{$endif}
-{$endif defined(ARM) or defined(generic_cpu)}
+{$endif}
 
        end;
 
@@ -297,12 +297,12 @@ Const
        { specified with -FW and -Fw }
        wpofeedbackinput,
        wpofeedbackoutput : TPathStr;
-{$if defined(XTENSA) or defined(ARM)}
+{$if defined(XTENSA)}
        { specified with -Ff }
        idfpath           : TPathStr;
        { specified with }
        idf_version       : longint;
-{$endif defined(XTENSA) or defined(ARM)}
+{$endif}
        { external assembler extra option }
        asmextraopt       : string;
 
@@ -450,11 +450,6 @@ Const
        { for error info in pp.pas }
        parser_current_file : string = '';
 
-{$ifdef arm}
-       { PalmOS resources }
-       palmos_applicationname : string = 'FPC Application';
-       palmos_applicationid : string[4] = 'FPCA';
-{$endif arm}
 
     const
        { default name of the C-style "main" procedure of the library/program }
@@ -563,9 +558,6 @@ Const
 {$if defined(GENERIC_CPU)}
         x86memorymodel : mm_small;
 {$endif defined(GENERIC_CPU)}
-{$if defined(ARM)}
-        instructionset : is_arm;
-{$endif defined(ARM)}
       );
 
       starttime  : real;
@@ -614,9 +606,6 @@ Const
        be placed in data/const segment, according to the current alignment requirements }
     function const_align(want_align: longint): shortint;
     function const_align_size(siz: asizeuint): shortint;
-{$ifdef ARM}
-    function is_double_hilo_swapped: boolean;{$ifdef USEINLINE}inline;{$endif}
-{$endif ARM}
     function floating_point_range_check_error : boolean;
 
   { hide Sysutils.ExecuteProcess in units using this one after SysUtils}
@@ -1049,12 +1038,8 @@ implementation
         p: pbyte;
       begin
         p := pbyte(@r);
-{$ifdef FPUARM_HAS_FPA}
-        inc(p,4);
-{$else}
 {$ifdef FPC_LITTLE_ENDIAN}
         inc(p,sizeof(r)-1);
-{$endif}
 {$endif}
         if (p^ and $80) = 0 then
           result := 1
@@ -1282,16 +1267,6 @@ implementation
               result:=true;
               break;
             end;
-{$ifdef arm}
-        { set default instruction set for arm }
-        if result then
-          begin
-            if a.cputype in [cpu_armv6m,cpu_armv6t2,cpu_armv7m,cpu_armv7em] then
-              a.instructionset:=is_thumb
-            else
-              a.instructionset:=is_arm;
-          end;
-{$endif arm}
       end;
 
 
@@ -1432,16 +1407,6 @@ implementation
       end;
 
 
-{$ifdef ARM}
-    function is_double_hilo_swapped: boolean;{$ifdef USEINLINE}inline;{$endif}
-      begin
-        result := current_settings.fputype in [fpu_fpa,fpu_fpa10,fpu_fpa11];
-{$ifdef FPC_DOUBLE_HILO_SWAPPED}
-        { inverse result if compiler was compiled with swapped hilo already }
-        result := not result;
-{$endif FPC_DOUBLE_HILO_SWAPPED}
-      end;
-{$endif ARM}
 
 
     function floating_point_range_check_error : boolean;

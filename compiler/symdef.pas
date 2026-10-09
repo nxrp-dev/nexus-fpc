@@ -1771,10 +1771,6 @@ implementation
             if (dllname<>'') then
               begin
                 Replace(result,'?','__q$$');
-    {$ifdef arm}
-                { @ symbol is not allowed in ARM assembler only }
-                Replace(result,'@','__a$$');
-    {$endif arm}
              end;
           end
         else
@@ -2571,10 +2567,6 @@ implementation
 {$ifdef xtensa}
          and (FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) and (tfloatdef(self).floattype=s32real)
 {$endif xtensa}
-{$ifdef arm}
-         and (((FPUARM_HAS_VFP_EXTENSION in fpu_capabilities[current_settings.fputype]) and (tfloatdef(self).floattype=s32real)) or
-              (FPUARM_HAS_VFP_DOUBLE in fpu_capabilities[current_settings.fputype]))
-{$endif arm}
          ;
 {$endif x86}
      end;
@@ -9634,10 +9626,6 @@ implementation
             )
           );
 {$endif x86}
-{$ifdef arm}
-{$define use_vectorfpuimplemented}
-        use_vectorfpu:=FPUARM_HAS_VFP_EXTENSION in fpu_capabilities[current_settings.fputype];
-{$endif arm}
 {$ifdef aarch64}
 {$define use_vectorfpuimplemented}
         use_vectorfpu:=true;

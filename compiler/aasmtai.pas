@@ -239,17 +239,12 @@ interface
     type
       { Types of operand }
       toptype=(top_none,top_reg,top_ref,top_const,top_bool,top_local
-{$ifdef arm}
-       { ARM only }
-       ,top_modeflags
-       ,top_specialreg
-{$endif arm}
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
        ,top_regset
        ,top_conditioncode
        ,top_shifterop
        ,top_realconst
-{$endif defined(arm) or defined(aarch64)}
+{$endif}
 {$ifdef aarch64}
        ,top_indexedreg
 {$endif}
@@ -461,16 +456,11 @@ interface
             top_bool   : (b:boolean);
             { local varsym that will be inserted in pass_generate_code }
             top_local  : (localoper:plocaloper);
-        {$ifdef arm}
-            top_regset : (regset:^tcpuregisterset; regtyp: tregistertype; subreg: tsubregister; usermode: boolean);
-            top_modeflags : (modeflags : tcpumodeflags);
-            top_specialreg : (specialreg:tregister; specialflags:tspecialregflags);
-        {$endif arm}
-        {$if defined(arm) or defined(aarch64)}
+        {$if defined(aarch64)}
             top_shifterop : (shifterop : pshifterop);
             top_conditioncode : (cc : TAsmCond);
             top_realconst : (val_real:bestreal);
-        {$endif defined(arm) or defined(aarch64)}
+        {$endif}
         {$ifdef aarch64}
             top_regset : (basereg: tregister; nregs, regsetindex: byte);
             top_indexedreg : (indexedreg: tregister; regindex: byte);
@@ -584,14 +574,6 @@ interface
        { Generates an assembler label }
        tai_label = class(tai)
           labsym    : tasmlabel;
-{$ifdef arm}
-          { set to true when the label has been moved by insertpcrelativedata to the correct location
-            so one label can be used multiple times }
-          moved     : boolean;
-          { true, if a label has been already inserted, this is important for arm thumb where no negative
-            pc relative offsets are allowed }
-          inserted  : boolean;
-{$endif arm}
           constructor Create(_labsym : tasmlabel);
           constructor ppuload(t:taitype;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
@@ -726,14 +708,8 @@ interface
               aitrealconst_s128bit: (s128val: ts128real);
               aitrealconst_s64comp: (s64compval: ts64comp);
           end;
-{$ifdef ARM}
-          formatoptions : tformatoptions;
-{$endif ARM}
           constructor create_s32real(val: ts32real);
           constructor create_s64real(val: ts64real);
-{$ifdef ARM}
-          constructor create_s64real_hiloswapped(val : ts64real);
-{$endif ARM}
           constructor create_s80real(val: ts80real; _savesize: byte);
           constructor create_s128real(val: ts128real);
           constructor create_s64compreal(val: ts64comp);
@@ -2090,18 +2066,6 @@ implementation
         value.s64val:=val;
       end;
 
-{$ifdef ARM}
-    constructor tai_realconst.create_s64real_hiloswapped(val : ts64real);
-      begin
-        inherited create;
-        typ:=ait_realconst;
-        realtyp:=aitrealconst_s64bit;
-        value.s64val:=val;
-        savesize:=8;
-        formatoptions:=fo_hiloswapped;
-      end;
-
-{$endif ARM}
 
     constructor tai_realconst.create_s80real(val: ts80real; _savesize: byte);
       begin
@@ -2137,9 +2101,6 @@ implementation
       begin
         inherited;
         realtyp:=tairealconsttype(ppufile.getbyte);
-{$ifdef ARM}
-        formatoptions:=tformatoptions(ppufile.getbyte);
-{$endif ARM}
         case realtyp of
           aitrealconst_s32bit:
             value.s32val:=ppufile.getreal;
@@ -2161,9 +2122,6 @@ implementation
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(realtyp));
-{$ifdef ARM}
-        ppufile.putbyte(byte(formatoptions));
-{$endif ARM}
         case realtyp of
           aitrealconst_s32bit:
             ppufile.putreal(value.s32val);
@@ -2188,9 +2146,6 @@ implementation
         tai_realconst(result).value:=value;
         tai_realconst(result).realtyp:=realtyp;
         tai_realconst(result).savesize:=savesize;
-{$ifdef ARM}
-        tai_realconst(result).formatoptions:=formatoptions;
-{$endif ARM}
       end;
 
 
@@ -2798,9 +2753,6 @@ implementation
               assigned(r.symbol) and
               not assigned(r.relsymbol) and
               (r.refaddr=addr_no)
-{$ifdef ARM}
-              and not(r.base=NR_R15)
-{$endif ARM}
 {$ifdef aarch64}
               and not(r.refaddr in [addr_full,addr_gotpageoffset,addr_gotpage])
 {$endif aarch64}
@@ -2834,14 +2786,6 @@ implementation
          end;
         if assigned(add_reg_instruction_hook) then
           add_reg_instruction_hook(self,r);
-{$ifdef ARM}
-        { R15 is the PC on the ARM thus moves to R15 are jumps.
-          Due to speed considerations we don't use a virtual overridden method here.
-          Because the pc/r15 isn't handled by the reg. allocator this should never cause
-          problems with iregs getting r15.
-        }
-        is_jmp:=(opcode=A_MOV) and (opidx=0) and (r=NR_R15);
-{$endif ARM}
       end;
 
 
@@ -2889,15 +2833,6 @@ implementation
                       add_reg_instruction_hook(self,ref^.index);
                     end;
                 end;
-{$ifdef ARM}
-              top_shifterop:
-                begin
-                  new(shifterop);
-                  shifterop^:=o.shifterop^;
-                  if assigned(add_reg_instruction_hook) then
-                    add_reg_instruction_hook(self,shifterop^.rs);
-                end;
-{$endif ARM}
               else
                 ;
              end;
@@ -2913,12 +2848,6 @@ implementation
                 dispose(ref);
               top_local:
                 dispose(localoper);
-{$ifdef ARM}
-              top_shifterop:
-                dispose(shifterop);
-              top_regset:
-                dispose(regset);
-{$endif ARM}
 {$ifdef jvm}
               top_string:
                 freemem(pcval);
@@ -2985,18 +2914,6 @@ implementation
                     p.oper[i]^.ref^.indexsymbol.increfs;
 {$endif jvm}
                 end;
-{$ifdef ARM}
-              top_regset:
-                begin
-                  new(p.oper[i]^.regset);
-                  p.oper[i]^.regset^:=oper[i]^.regset^;
-                end;
-              top_shifterop:
-                begin
-                  new(p.oper[i]^.shifterop);
-                  p.oper[i]^.shifterop^:=oper[i]^.shifterop^;
-                end;
-{$endif ARM}
               else
                 ;
             end;

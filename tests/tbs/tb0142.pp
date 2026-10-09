@@ -17,8 +17,5 @@ asm
 {$ifdef CPU68K}
         jsr {$ifdef dummy}free1{$else}free2{$endif}
 {$endif CPU68K}
-{$ifdef CPUARM}
-        bl {$ifdef dummy}free1{$else}free2{$endif}
-{$endif CPUARM}
 end;
 end.

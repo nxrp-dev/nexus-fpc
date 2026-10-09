@@ -159,7 +159,7 @@ end;
 
 procedure _exit(e:longint); cdecl; external name 'exit';
 
-procedure _haltproc(e:longint);cdecl; [public, alias: {$if defined(CPUARM) and defined(FPC_ABI_EABI)}  '_haltproc_eabi' {$else} '_haltproc' {$endif}];
+procedure _haltproc(e:longint);cdecl; [public, alias:  '_haltproc' ];
 begin
   _exit(e);
 end;

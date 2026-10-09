@@ -274,37 +274,6 @@ unit raatt;
               firsttoken:=true;
               exit;
             end;
-{$if defined(ARM)}
-           {
-             Thumb-2 instructions can have a .W postfix to indicate 32bit instructions,
-             Also in unified syntax sizes and types are indicated with something like a .<dt> prefix for example
-           }
-           case c of
-             '.':
-               begin
-                 if len>1 then
-                   begin
-                     while c in ['A'..'Z','a'..'z','0'..'9','_','.'] do
-                       begin
-                         inc(len);
-                         actasmpattern[len]:=c;
-                         c:=current_scanner.asmgetchar;
-                       end;
-                     actasmpattern[0]:=chr(len);
-                   end;
-                 {actasmpattern:=actasmpattern+c;
-                 c:=current_scanner.asmgetchar;
-
-                 if upcase(c) = 'W' then
-                   begin
-                     actasmpattern:=actasmpattern+c;
-                     c:=current_scanner.asmgetchar;
-                   end
-                 else
-                   internalerror(2010122301);}
-               end
-           end;
-{$endif ARM}
 {$ifdef aarch64}
            { b.cond, ldX.arrangement }
            case c of
@@ -663,7 +632,7 @@ unit raatt;
 
              '{' :
                begin
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
                  // the arm assembler uses { ... } for register sets
                  // but compiler directives {$... } are still allowed
                  c:=current_scanner.asmgetchar;
@@ -677,26 +646,18 @@ unit raatt;
 {$else arm or aarch64}
                  current_scanner.skipcomment(true);
                  GetToken;
-{$endif arm}
+{$endif}
                  exit;
                end;
 
-{$if defined(arm) or defined(aarch64)}
+{$if defined(aarch64)}
              '}' :
                begin
                  actasmtoken:=AS_RSBRACKET;
                  c:=current_scanner.asmgetchar;
                  exit;
                end;
-{$endif arm or aarch64}
-{$if defined(arm)}
-             '=' :
-               begin
-                 actasmtoken:=AS_EQUAL;
-                 c:=current_scanner.asmgetchar;
-                 exit;
-               end;
-{$endif arm or loongarch64}
+{$endif}
 
 
              ',' :

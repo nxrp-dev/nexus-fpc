@@ -74,18 +74,6 @@ interface
          RELOC_NTPOFF,
 {$endif i386}
 
-{$ifdef arm}
-         RELOC_RELATIVE_24,
-         RELOC_RELATIVE_CALL,
-         RELOC_RELATIVE_24_THUMB,
-         RELOC_RELATIVE_CALL_THUMB,
-         RELOC_GOT32,
-         RELOC_TPOFF,
-         RELOC_TLSGD,
-         RELOC_TLSDESC,
-         RELOC_TLS_CALL,
-         RELOC_ARM_CALL,
-{$endif arm}
 {$ifdef aarch64}
          RELOC_ABSOLUTE32,
          RELOC_RELATIVE_26,
@@ -234,9 +222,6 @@ interface
 
        { Used by the OMF object format and its complicated relocation records }
        group: TObjSectionGroup;
-{$ifdef ARM}
-       ThumbFunc : boolean;
-{$endif ARM}
 
        constructor create(AList:TFPHashObjectList;const AName:string);virtual;
        function  ToString:ansistring;override;
@@ -394,9 +379,6 @@ interface
      public
        CurrPass  : byte;
        ExecStack : boolean;
-{$ifdef ARM}
-       ThumbFunc : boolean;
-{$endif ARM}
        constructor create(const n:string);virtual;
        destructor  destroy;override;
        { Sections }
@@ -1380,9 +1362,6 @@ implementation
         { section class type for creating of new sections }
         FCObjSection:=TObjSection;
         FCObjSectionGroup:=TObjSectionGroup;
-{$ifdef ARM}
-        ThumbFunc:=false;
-{$endif ARM}
       end;
 
 
@@ -1644,10 +1623,6 @@ implementation
         if not assigned(result) then
           result:=CObjSymbol.Create(FObjSymbolList,aname);
 
-{$ifdef ARM}
-        result.ThumbFunc:=ThumbFunc;
-        ThumbFunc:=false;
-{$endif ARM}
       end;
 
 
@@ -2317,10 +2292,6 @@ implementation
         if target_info.system in systems_all_windows then
           begin
             Replace(FMangledName,'?','__q$$');
-{$ifdef arm}
-            { @ symbol is not allowed in ARM assembler only }
-            Replace(FMangledName,'@','__a$$');
-{$endif arm}
           end;
       end;
 

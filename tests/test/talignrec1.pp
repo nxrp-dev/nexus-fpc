@@ -25,7 +25,7 @@ var
   ThirdEntry: TAlignedRecord;
 begin
 { not all targets do a 32 byte alignment of variables or constants properly, if they don't, just halt with 0 }
-{$if defined(CPUX86_64) or defined(CPUAARCH64) or defined(CPUI386) or defined(CPUARM)}
+{$if defined(CPUX86_64) or defined(CPUAARCH64) or defined(CPUI386)}
 {$if defined(linux) or defined(darwin) or defined(win32) or defined(win64)}
 {$else}
   halt(0);

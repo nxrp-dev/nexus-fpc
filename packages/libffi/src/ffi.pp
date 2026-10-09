@@ -105,9 +105,6 @@ type
 {$if defined(CPUAARCH64) and defined(WIN64)}
     FFI_WIN64,
 {$endif}
-{$if defined(CPUARM)}
-    FFI_VFP,
-{$endif}
 {$if defined(CPUMIPS)}
     FFI_O32,
     FFI_N32,
@@ -178,9 +175,7 @@ const
 {$if defined(CPUX86_64) and not defined(WIN64)}
   FFI_EFI64 = FFI_WIN64;
 {$endif}
-{$if defined(CPUARMHF)}
-  FFI_DEFAULT_ABI = FFI_VFP;
-{$elseif defined(CPUMIPS)}
+{$if defined(CPUMIPS)}
   { ToDo: needs define for ABI }
   FFI_DEFAULT_ABI = FFI_N32;
 {$elseif defined(CPUX86_64)}
@@ -226,7 +221,7 @@ const
 
 const
   FFI_CLOSURES = true;
-{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
+{$if defined(DARWIN) and defined(CPUAARCH64)}
   FFI_EXEC_TRAMPOLINE_TABLE = True;
 {$else}
   FFI_EXEC_TRAMPOLINE_TABLE = False;
@@ -237,21 +232,13 @@ const
   FFI_NATIVE_RAW_API = False;
 {$endif}
 
-{$if defined(CPUARM) or defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not defined(DARWIN)) or (defined(CPUPOWERPC) and not defined(DARWIN))}
+{$if defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not (defined(DARWIN))) or (defined(CPUPOWERPC) and not (defined(DARWIN)))}
   FFI_GO_CLOSURES = True;
 {$else}
   FFI_GO_CLOSURES = False;
 {$endif}
 
-{$if defined(CPUARM)}
-  {$if defined(DARWIN)}
-  FFI_TRAMPOLINE_SIZE = 12;
-  FFI_TRAMPOLINE_CLOSURE_OFFSET = 8;
-  {$else}
-  FFI_TRAMPOLINE_SIZE = 12;
-  FFI_TRAMPOLINE_CLOSURE_OFFSET = FFI_TRAMPOLINE_SIZE;
-  {$endif}
-{$elseif defined(CPUAARCH64)}
+{$if defined(CPUAARCH64)}
   {$if defined(DARWIN)}
   FFI_TRAMPOLINE_SIZE =16;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = 16;
@@ -384,12 +371,7 @@ type
     rtype: pffi_type;
     bytes: cunsigned;
     flags: cunsigned;
-{$if defined(CPUARM)}
-    vfp_used: cint;
-    vfp_reg_free: cushort;
-    vfp_nargs: cushort;
-    vfp_args: array[0..15] of cchar;
-{$elseif defined(CPUAARCH64)}
+{$if defined(CPUAARCH64)}
   {$ifdef DARWIN}
     aarch64_nfixedargs: cuint;
   {$else}
@@ -453,7 +435,7 @@ type
 
   { ToDo: align 8 }
   ffi_closure = record
-{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
+{$if defined(DARWIN) and defined(CPUAARCH64)}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
@@ -489,7 +471,7 @@ type
 
   { ToDo: pack 8 for __sgi aka MIPS? }
   ffi_raw_closure = record
-{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
+{$if defined(DARWIN) and defined(CPUAARCH64)}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
@@ -510,7 +492,7 @@ type
 
   { ToDo: pack 8 for __sgi aka MIPS? }
   ffi_java_raw_closure = record
-{$if defined(DARWIN) and (defined(CPUARM) or defined(CPUAARCH64))}
+{$if defined(DARWIN) and defined(CPUAARCH64)}
     trampoline_table: Pointer;
     trampoline_table_entry: Pointer;
 {$else}
@@ -551,7 +533,7 @@ function ffi_prep_java_raw_closure_loc(clo: pffi_java_raw_closure;
                                   user_data: Pointer;
                                   codeloc: Pointer): ffi_status; cdecl; external ffilibrary name 'ffi_prep_java_raw_closure_loc';
 
-{$if defined(CPUARM) or defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not defined(DARWIN)) or (defined(CPUPOWERPC) and not defined(DARWIN))}
+{$if defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not (defined(DARWIN))) or (defined(CPUPOWERPC) and not (defined(DARWIN)))}
 type
   ffi_go_closure = record
     tramp: Pointer;

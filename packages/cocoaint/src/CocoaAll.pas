@@ -170,8 +170,6 @@
 // Mac OS X Version Requirements
 {$if defined(TARGET_CPU_PPC64) or defined(TARGET_CPU_X86) or defined(TARGET_CPU_X86_64)}
     {$define MAC_OS_X_VERSION_MIN_REQUIRED := MAC_OS_X_VERSION_10_4}
-{$elseif defined(TARGET_CPU_ARM)}
-    {$define MAC_OS_X_VERSION_MIN_REQUIRED := MAC_OS_X_VERSION_10_5}
 {$else}
     {$define MAC_OS_X_VERSION_MIN_REQUIRED := MAC_OS_X_VERSION_10_1}
 {$endif}

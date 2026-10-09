@@ -24,16 +24,6 @@ end ['EAX'];
 end ['D0'];
 {$define implemented}
 {$endif CPU68K}
-{$ifdef cpuarm}
-       ldr r0,.Lpstacksize
-       ldr r0,[r0]
-       b .Lend
-.Lpstacksize:
-       .long stacksize
-.Lend:
-end;
-{$define implemented}
-{$endif cpuarm}
 {$ifdef cpuaarch64}
   adrp x0,stacksize@PAGE
   ldr  x0,[x0,stacksize@PAGEOFF]

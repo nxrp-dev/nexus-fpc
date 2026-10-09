@@ -144,13 +144,7 @@ type
 var
     doublebits: TSplitFloat;
 begin
-  {$ifdef FPC_DOUBLE_HILO_SWAPPED}
-    // high and low dword are swapped when using the arm fpa
-    doublebits.d[0] := TSplitFloat(f).d[1];
-    doublebits.d[1] := TSplitFloat(f).d[0];
-  {$else not FPC_DOUBLE_HILO_SWAPPED}
     doublebits.f := f;
-  {$endif FPC_DOUBLE_HILO_SWAPPED}
   {$ifdef endian_big}
     minus := ( doublebits.b[0] and $80 <>0 );
     unpack_float.e := ( doublebits.w[0] shr 4 ) and $7FF;
@@ -210,13 +204,7 @@ begin
     if minus then
         doublebits.b[7] := doublebits.b[7] or $80;
   {$endif endian}
-  {$ifdef FPC_DOUBLE_HILO_SWAPPED}
-    // high and low dword are swapped when using the arm fpa
-    TSplitFloat(f).d[1] := doublebits.d[0];
-    TSplitFloat(f).d[0] := doublebits.d[1];
-  {$else not FPC_DOUBLE_HILO_SWAPPED}
     f := doublebits.f;
-  {$endif FPC_DOUBLE_HILO_SWAPPED}
 end;
 
 {$endif fpc_softfpu_implementation}

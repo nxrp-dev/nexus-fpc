@@ -138,14 +138,6 @@ var
     machine : mtppc64le;
     {$endif FPC_BIG_ENDIAN}
     submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUARM)}
-    {$IFDEF ENDIAN_LITTLE}
-    machine : mtarm;
-    submachine : (subarm: smtarm_all);
-    {$ELSE}
-    machine : mtarmeb;
-    submachine : (subarm: smtarm_all);
-    {$ENDIF}
   {$elseif defined(CPU68K)}
     machine : mtm68k;
     submachine : (subgen: smtgen_all);

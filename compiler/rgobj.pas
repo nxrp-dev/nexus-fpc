@@ -2040,9 +2040,6 @@ unit rgobj;
         p : tai;
         i : integer;
         supreg, u: tsuperregister;
-{$ifdef arm}
-        so: pshifterop;
-{$endif arm}
       begin
         { All allocations are available. Now we can generate the
           interference graph. Walk through all instructions, we can
@@ -2115,18 +2112,6 @@ unit rgobj;
 {$endif defined(x86)}
                                   end;
                             end;
-{$ifdef arm}
-                          Top_shifterop:
-                            begin
-                              if regtype=R_INTREGISTER then
-                                begin
-                                  so:=shifterop;
-                                  if (so^.rs<>NR_NO) and
-                                     (getregtype(so^.rs)=regtype) then
-                                    RecordUse(reginfo[getsupreg(so^.rs)]);
-                                end;
-                            end;
-{$endif arm}
                           else
                             ;
                         end;
@@ -2255,9 +2240,6 @@ unit rgobj;
         i:shortint;
         u:longint;
         s:string;
-{$ifdef arm}
-        so:pshifterop;
-{$endif arm}
 
       begin
         { Leave when no imaginary registers are used }
@@ -2385,18 +2367,6 @@ unit rgobj;
 {$endif defined(x86)}
                                   end;
                             end;
-{$ifdef arm}
-                          Top_shifterop:
-                            begin
-                              if regtype=R_INTREGISTER then
-                                begin
-                                  so:=shifterop;
-                                  if (so^.rs<>NR_NO) and
-                                     (getregtype(so^.rs)=regtype) then
-                                    setsupreg(so^.rs,reginfo[getsupreg(so^.rs)].colour);
-                                end;
-                            end;
-{$endif arm}
                           else
                             ;
                         end;
@@ -2719,14 +2689,6 @@ unit rgobj;
 {$endif defined(x86)}
                       end;
                 end;
-{$ifdef ARM}
-              top_shifterop:
-                begin
-                  if regtype in [R_INTREGISTER,R_ADDRESSREGISTER] then
-                    if shifterop^.rs<>NR_NO then
-                      result:=addreginfo(spregs,r,shifterop^.rs,operand_read);
-                end;
-{$endif ARM}
               else
                 ;
             end;
@@ -2783,13 +2745,6 @@ unit rgobj;
   {$endif defined(x86)}
                   end;
               end;
-  {$ifdef ARM}
-            top_shifterop:
-              begin
-                if regtype in [R_INTREGISTER, R_ADDRESSREGISTER] then
-                  try_replace_reg(spregs, shifterop^.rs, true { always read-only });
-              end;
-  {$endif ARM}
             else
               ;
           end;
@@ -2842,7 +2797,7 @@ unit rgobj;
               exit;
           end;
 
-{$if defined(x86) or defined(arm)}
+{$if defined(x86)}
         { Try replacing the register with the spilltemp. This is useful only
           for the i386,x86_64 that support memory locations for several instructions
 
@@ -2857,7 +2812,7 @@ unit rgobj;
                     mustbespilled:=false;
                 end;
             end;
-{$endif defined(x86) or defined(mips) or defined(sparcgen) or defined(arm) or defined(m68k)}
+{$endif}
 
         {
           There are registers that need are spilled. We generate the

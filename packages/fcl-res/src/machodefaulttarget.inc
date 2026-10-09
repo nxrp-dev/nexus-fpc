@@ -22,10 +22,6 @@
   fMachineType:=mmtx86_64;
   fSubMachineType.fX64SubType:=msmx64_all;
   {$ENDIF}
-  {$IFDEF CPUARM}
-  fMachineType:=mmtarm;
-  fSubMachineType.fArmSubType:=msmarm_all;
-  {$ENDIF}
   {$IFDEF CPUAARCH64}
   fMachineType:=mmtarm64;
   fSubMachineType.fArm64SubType:=msmaarch64_all;

@@ -20,13 +20,6 @@
   {$IFDEF CPUX86_64}
   fMachineType:=emtx86_64;
   {$ENDIF}
-  {$IFDEF CPUARM}
-    {$IFDEF ENDIAN_LITTLE}
-    fMachineType:=emtarm;
-    {$ELSE}
-    fMachineType:=emtarmeb;
-    {$ENDIF}
-  {$ENDIF}
   {$IFDEF CPUAARCH64}
   fMachineType:=emtaarch64;
   {$ENDIF}

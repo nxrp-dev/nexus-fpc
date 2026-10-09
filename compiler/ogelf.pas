@@ -651,16 +651,8 @@ implementation
            symaddr:=p.address;
            { Local ObjSymbols can be resolved already or need a section reloc }
            if (p.bind=AB_LOCAL) and
-              (reltype in [RELOC_RELATIVE,RELOC_ABSOLUTE{$ifdef x86_64},RELOC_ABSOLUTE32{$endif x86_64}{$ifdef arm},RELOC_RELATIVE_24,RELOC_RELATIVE_CALL{$endif arm}]) then
+              (reltype in [RELOC_RELATIVE,RELOC_ABSOLUTE{$ifdef x86_64},RELOC_ABSOLUTE32{$endif x86_64}]) then
              begin
-{$ifdef ARM}
-               if (reltype in [RELOC_RELATIVE_24,RELOC_RELATIVE_CALL]) and
-                  (p.objsection=CurrObjSec) then
-                 begin
-                   data:=aint((data and $ff000000) or (((((data and $ffffff) shl 2)+(symaddr-CurrObjSec.Size)) shr 2) and $FFFFFF)); // TODO: Check overflow
-                 end
-               else
-{$endif ARM}
                { For a reltype relocation in the same section the
                  value can be calculated }
                if (p.objsection=CurrObjSec) and
@@ -800,10 +792,6 @@ implementation
         elfsym.st_size:=objsym.size;
         elfsym.st_value:=objsym.address;
 
-{$ifdef ARM}
-        if objsym.ThumbFunc then
-          inc(elfsym.st_value);
-{$endif ARM}
         { hidden symbols should have been converted to local symbols in
           the linking pass in case we're writing an exe/library; don't
           convert them to local here as well, as that would potentially

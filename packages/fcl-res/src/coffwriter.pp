@@ -201,10 +201,6 @@ begin
   fMachineType:=cmtx8664;
   fSymStorageClass:=IMAGE_SYM_CLASS_STATIC;
   {$ENDIF}
-  {$IFDEF CPUARM}
-  fMachineType:=cmtarm;
-  fSymStorageClass:=IMAGE_SYM_CLASS_STATIC;
-  {$ENDIF}
 
   fOppositeEndianess:=false;
 end;

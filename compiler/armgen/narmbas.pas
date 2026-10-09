@@ -1,7 +1,7 @@
 {
     Copyright (c) 2024 by J. Gareth "Kit" Moreton
 
-    This unit implements the ARM and AArch64-specific assembly node
+    This unit implements the AArch64 assembly node
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -48,22 +48,12 @@ implementation
     cpubase,
     itcpugas,
     aasmcpu,
-{$ifdef arm}
-    agarmgas, { Needed for gas_shiftmode2str }
-{$endif arm}
-{$ifdef aarch64}
     agcpugas, { Needed for gas_shiftmode2str }
-{$endif aarch64}
     verbose;
 {$endif DEBUG_NODE_XML}
 
 {$ifdef DEBUG_NODE_XML}
   function TArmGenAsmNode.XMLFormatOp(const Oper: POper): string;
-  {$ifdef arm}
-    var
-      NotFirst: Boolean;
-      ThisSupReg: TSuperRegister;
-  {$endif arm}
     begin
       case Oper^.typ of
         top_const:
@@ -118,11 +108,6 @@ implementation
                     Result := Result + gas_regname(index)
                   else if (offset <> 0) or (shiftmode <> SM_None) or (addressmode = AM_POSTINDEXED) then
                     Result := Result + '#' + tostr(offset);
-{$ifdef arm}
-                  if shiftmode = SM_RRX then
-                    Result := Result + ', rrx' { Implicit value of 1 }
-                  else
-{$endif arm}
                   if shiftmode <> SM_None then
                     Result := Result + ', ' + gas_shiftmode2str[shiftmode] + ' #' + tostr(shiftimm);
 
@@ -136,41 +121,9 @@ implementation
                     end;
                 end;
             end;
-{$ifdef arm}
-        top_regset:
-          begin
-            Result := '{';
-            NotFirst := False;
-            for ThisSupReg in Oper^.regset^ do
-              begin
-                if NotFirst then
-                  Result := Result + ', ';
-                Result := Result + gas_regname(newreg(Oper^.regtyp, ThisSupReg, Oper^.subreg));
-
-                NotFirst := True;
-              end;
-            Result := Result + '}';
-          end;
-
-        top_specialreg:
-          with Oper^ do
-            begin
-              Result := gas_regname(specialreg) + '_';
-              if (srC in specialflags) then
-                Result := Result + 'c';
-              if (srX in specialflags) then
-                Result := Result + 'x';
-              if (srF in specialflags) then
-                Result := Result + 'f';
-              if (srS in specialflags) then
-                Result := Result + 's';
-            end;
-{$endif arm}
-{$ifdef aarch64}
         top_indexedreg:
           with Oper^ do
             Result := gas_regname(indexedreg)+'['+tostr(regindex)+']';
-{$endif aarch64}
         top_conditioncode:
           Result := cond2str[Oper^.cc];
 
@@ -180,21 +133,7 @@ implementation
         top_shifterop:
           with Oper^.shifterop^ do
             begin
-{$ifdef arm}
-              if shiftmode = SM_RRX then
-                begin
-                  Result := 'rrx'; { Implicit value of 1 }
-                  Exit;
-                end;
-              Result := gas_shiftmode2str[shiftmode] + ' ';
-              if rs <> NR_NO then
-                Result := Result + gas_regname(rs)
-              else
-                Result := Result + '#' + tostr(shiftimm);
-{$endif arm}
-{$ifdef aarch64}
               Result := gas_shiftmode2str[shiftmode] + ' #' + tostr(shiftimm);
-{$endif aarch64}
             end;
         else
           Result := inherited XMLFormatOp(Oper);

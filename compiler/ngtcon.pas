@@ -751,11 +751,6 @@ function get_next_varsym(def: tabstractrecorddef; const SymList:TFPHashObjectLis
            s32real :
              ftcb.emit_tai(tai_realconst.create_s32real(ts32real(value)),def);
            s64real :
-{$ifdef ARM}
-             if is_double_hilo_swapped then
-               ftcb.emit_tai(tai_realconst.create_s64real_hiloswapped(ts64real(value)),def)
-             else
-{$endif ARM}
                ftcb.emit_tai(tai_realconst.create_s64real(ts64real(value)),def);
            s80real :
              ftcb.emit_tai(tai_realconst.create_s80real(value,s80floattype.size),def);

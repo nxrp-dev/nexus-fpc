@@ -773,10 +773,6 @@ implementation
         global:=current_procinfo.procdef.needsglobalasmsym;
         while assigned(item) do
           begin
-  {$ifdef arm}
-            if GenerateThumbCode or GenerateThumb2Code then
-              list.concat(tai_directive.create(asd_thumb_func,''));
-  {$endif arm}
             { alias procedure entry symbols via ".set" on Darwin, otherwise
               they can be interpreted as all different starting symbols of
               subsections and be reordered }
@@ -5494,13 +5490,8 @@ implementation
              end;
            LOC_CMMREGISTER :
              begin
-{$ifdef ARM}
-               { Do not pass d0 (which uses f0 and f1) for arm single type variable }
-               mmreg:=tstaticvarsym(p).initialloc.register;
-{$else}
                { clear the whole register }
                mmreg:=newreg(R_MMREGISTER,getsupreg(tstaticvarsym(p).initialloc.register),R_SUBMMWHOLE);
-{$endif}
                a_opmm_reg_reg(TAsmList(arg),OP_XOR,tstaticvarsym(p).vardef, mmreg, mmreg,
                  { as we pass shuffle=nil, we have to pass a full register }
                  nil);

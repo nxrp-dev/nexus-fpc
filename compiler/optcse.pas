@@ -795,7 +795,7 @@ unit optcse;
             div 4
         else
           max_int_regs_assigned:=max(first_int_imreg div 4,1);
-{$if defined(x86) or defined(aarch64) or defined(arm)}
+{$if defined(x86) or defined(aarch64)}
         { x86, aarch64 and arm (neglecting fpa) use mm registers for floats }
         if pi_do_call in current_procinfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
@@ -808,7 +808,7 @@ unit optcse;
           max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(current_procinfo.procdef.proccalloption)) div 5
         else
           max_fpu_regs_assigned:=max(first_fpu_imreg div 5,1);
-{$endif defined(x86) or defined(aarch64) or defined(arm)}
+{$endif}
         fpu_regs_assigned:=0;
         int_regs_assigned:=0;
         if Length(constentries)>0 then

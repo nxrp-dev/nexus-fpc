@@ -1172,10 +1172,6 @@ implementation
 {$endif cpu64bitaddr}
                  aitconst_dtpoff:
                    begin
-{$ifdef arm}
-                     writer.AsmWrite(#9'.word'#9+tai_const(hp).sym.name+'(tlsldo)');
-                     writer.Asmln;
-{$endif arm}
 {$ifdef x86_64}
                      writer.AsmWrite(#9'.long'#9+tai_const(hp).sym.name+'@dtpoff');
                      writer.Asmln;
@@ -1358,11 +1354,6 @@ implementation
                          writer.AsmWrite(#9'.private_extern ');
                          writer.AsmWriteln(tai_label(hp).labsym.name);
                        end;
-{$ifdef arm}
-                     { do no change arm mode accidentally, .globl seems to reset the mode }
-                     if GenerateThumbCode or GenerateThumb2Code then
-                       writer.AsmWriteln(#9'.thumb_func'#9);
-{$endif arm}
                      writer.AsmWrite('.globl'#9);
                      if replaceforbidden then
                        writer.AsmWriteLn(ApplyAsmSymbolRestrictions(tai_label(hp).labsym.name))
