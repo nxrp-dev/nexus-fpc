@@ -17,7 +17,7 @@ sends the results to an SQL database
 
 When the tests are performed, first the units (e.g. rtl) needed by the
 tests are compiled in a clean determined way and put in the units
-directory. Then webtbs/webtbf/test/tbs/tbf are searched for t*.pp to be
+directory. Then tbs/tbf/webtbf/test are searched for t*.pp to be
 compiled and executed as tests.
 
 
@@ -36,16 +36,15 @@ Make sure to clean the test suite between two runs for the same platform.
 
 Directories
 -----------
-webtbs...........Tests for web-bug-database bugs (should compile/run)
-                   Digits in filename refer to bug database entry
 webtbf...........Tests for web-bug-database bugs (should not compile/run)
                    Digits in filename refer to bug database entry
 test.............Test suites for different aspects of the compiler/rtl etc
 test/packages....Tests depending on packages. The tests are sorted by package
                  though this is not mandatory because tests can depend on
                  multiple packages
-tbs..............Tests for other bugs, added by the fpc core team
-                   (success in compilation) Digits in filename is a serial no
+tbs..............Compiler/RTL regression tests (should compile/run)
+                   tw digits refer to bug database entries; tb digits are
+                   serial numbers. Feature tests retain original case IDs.
 tbf..............Tests for other bugs, added by the fpc core team
                    (fail compile) Digits in filename is a serial no
 units............Helper units for doing the tests

@@ -37,19 +37,121 @@ interface
   procedure add_package_unit_ref(package:tpackage);
   procedure add_package_libs(l:tlinker);
   procedure check_for_indirect_package_usages(modules:tlinkedlist);
+  procedure emit_package_descriptor;
 
 implementation
 
   uses
     sysutils,
-    globtype,systems,
+    globtype,systems,version,
     cutils,
     globals,verbose,
-    aasmbase,aasmdata,aasmcnst,
+    aasmbase,aasmdata,aasmcnst,aasmtai,
     symtype,symconst,symsym,symdef,symbase,symtable,
     psub,pdecsub,
     ppu,entfile,fpcp,
     export;
+
+  procedure emit_package_descriptor;
+    var
+      b: ttai_typedconstbuilder;
+      d: tdef;
+      u: tmodule;
+      entry: ppackageentry;
+      i,unitcount,depcount: longint;
+      name: TSymStr;
+
+    procedure start;
+      begin
+        b:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
+        b.begin_anonymous_record('',8,8,8);
+      end;
+
+    procedure finish(const s: TSymStr; section: TAsmSectiontype);
+      begin
+        d:=b.end_anonymous_record;
+        current_asmdata.asmlists[al_globals].concatlist(b.get_final_asmlist(
+          current_asmdata.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA,d),d,section,s,8));
+        b.free;
+      end;
+
+    procedure number(n: SizeInt);
+      begin
+        b.emit_tai(tai_const.create_sizeint(n),sizeuinttype);
+      end;
+
+    procedure address(const s: TSymStr);
+      begin
+        b.emit_tai(tai_const.createname(s,0),voidpointertype);
+      end;
+
+    begin
+      { Layout matches rtl/inc/fpcpackage.pp; only the experimental Win64
+        package path emits this ABI. Every field occupies one native word. }
+      if target_info.system<>system_x86_64_win64 then exit;
+      start;
+      for i:=1 to 6 do number(0);
+      finish('FPC_PACKAGE_CONTEXT',sec_data);
+      start;
+      number(0);
+      finish('FPC_PACKAGE_HANDLE',sec_data);
+      start;
+      unitcount:=0;
+      u:=tmodule(loaded_units.first);
+      while assigned(u) do
+        begin
+          if u.is_unit and not assigned(u.package) then
+            begin
+              b.emit_pooled_shortstring_const_ref(u.modulename^);
+              inc(unitcount);
+            end;
+          u:=tmodule(u.next);
+        end;
+      { Retain a valid address even for an empty owned-unit list. }
+      if unitcount=0 then number(0);
+      finish('FPC_PACKAGE_UNITS',sec_rodata);
+      start;
+      depcount:=0;
+      for i:=0 to packagelist.count-1 do
+        begin
+          entry:=ppackageentry(packagelist[i]);
+          if not entry^.direct then continue;
+          name:='FPC_PACKAGE_'+entry^.package.packagename^;
+          current_module.addexternalimport(entry^.package.pplfilename,
+            name,name+suffix_indirect,0,true,false);
+          b.emit_tai(tai_const.create_sym(
+            current_asmdata.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
+          inc(depcount);
+        end;
+      if depcount=0 then number(0);
+      finish('FPC_PACKAGE_DEPENDENCIES',sec_rodata);
+      start;
+      number($4e58504b);
+      number(1);
+      number(18*8);
+      number((wordversion shl 8) or CurrentPPULongVersion);
+      number(ord(target_info.system));
+      number(find_module_from_symtable(systemunit).crc);
+      b.emit_pooled_shortstring_const_ref(current_module.modulename^);
+      number(unitcount);
+      address('FPC_PACKAGE_UNITS');
+      number(depcount);
+      address('FPC_PACKAGE_DEPENDENCIES');
+      address('INITFINAL');
+      address('FPC_THREADVARTABLES');
+      address('FPC_RESOURCESTRINGTABLES');
+      address('FPC_WIDEINITTABLES');
+      address('FPC_RESSTRINITTABLES');
+      address('FPC_PACKAGE_CONTEXT');
+      address('FPC_PACKAGE_HANDLE');
+      if current_module.ispackage then
+        name:='FPC_PACKAGE_'+current_module.modulename^
+      else
+        name:='FPC_PACKAGE_ROOT';
+      finish(name,sec_rodata);
+      if current_module.ispackage then
+        export.exportname(name,[eo_name]);
+    end;
 
   procedure procexport(const s : string);
     var
@@ -243,6 +345,17 @@ implementation
       u.globalsymtable.symlist.ForEachCall(@insert_export,u.globalsymtable);
       { check localsymtable for exports too to get public symbols }
       u.localsymtable.symlist.ForEachCall(@insert_export,u.localsymtable);
+
+      { Public records can contain anonymous managed types with no typesym.
+        Their emitted metadata is nevertheless referenced by consumer cleanup
+        code, so include the unit's globally visible RTTI/init symbols. }
+      for i:=0 to u.publicasmsyms.count-1 do
+        begin
+          sym:=tasmsymbol(u.publicasmsyms[i]);
+          if (sym.bind=AB_GLOBAL) and (sym.typ=AT_DATA) and
+             ((copy(sym.name,1,5)='RTTI_') or (copy(sym.name,1,5)='INIT_')) then
+            varexport(sym.name);
+        end;
 
       { create special exports }
       if mf_init in u.moduleflags then

@@ -1227,7 +1227,7 @@ implementation
                         then
                         begin
                           { in case of an integer type, we need a new type which covers declaration range and index range,
-                            see tests/webtbs/tw38413.pp
+                            see tests/tbs/tw38413.pp
 
                             This matters only if we sign extend, if the type exceeds the sint range, we can fall back only
                             to the index type

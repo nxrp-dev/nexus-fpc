@@ -426,7 +426,11 @@ begin
         parser.compile_module(m);
       end;
     ms_compiled : ;
-    ms_compiling_wait : pmodules.proc_program_declarations(m,m.islibrary);
+    ms_compiling_wait :
+      if m.ispackage then
+        pmodules.finish_package(m)
+      else
+        pmodules.proc_program_declarations(m,m.islibrary);
     ms_compiling_waitintf : pmodules.parse_unit_interface_declarations(m);
     ms_compiling_waitimpl : pmodules.proc_unit_implementation(m);
     ms_compiling_waitfinish : pmodules.finish_compile_unit(m);

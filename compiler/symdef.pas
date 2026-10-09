@@ -7769,9 +7769,9 @@ implementation
             result:='procvar'
           else
             { we need the manglednames here, because nestedprocvars can be anonymous, e.g.
-              having not a type name or not an unique one, see webtbs/tw27515.pp
+              having not a type name or not an unique one, see tbs/tw27515.pp
 
-              Further, use $_ ... _$ delimiters to avoid ambiguous names, see webtbs/tw27515.pp }
+              Further, use $_ ... _$ delimiters to avoid ambiguous names, see tbs/tw27515.pp }
             result:='$_nestedprovar'+mangledprocparanames(0)+'_$'
         else
           result:='procvarofobj'

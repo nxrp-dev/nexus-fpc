@@ -372,7 +372,7 @@ implementation
 
             if pushaddr then
               begin
-                { objects or advanced records could be located in registers if they are the result of a type case, see e.g. webtbs\tw26075.pp }
+                { objects or advanced records could be located in registers if they are the result of a type case, see e.g. tbs\tw26075.pp }
                 if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
                   hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
                 push_addr_para
@@ -397,7 +397,7 @@ implementation
                    ) and
                 paramanager.push_addr_param(parasym.varspez,parasym.vardef,
                     callnode.procdefinition.proccalloption)) and
-                { dyn. arrays passed to an array of const must be passed by value, see tests/webtbs/tw4219.pp }
+                { dyn. arrays passed to an array of const must be passed by value, see tests/tbs/tw4219.pp }
                 not(
                     is_array_of_const(parasym.vardef) and
                     is_dynamic_array(left.resultdef)

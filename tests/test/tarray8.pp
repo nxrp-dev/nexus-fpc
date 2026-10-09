@@ -1,5 +1,5 @@
 { Test correct RTTI handling of open arrays with managed elements.
-  See also webtbs/tw18859.pp }
+  See also tbs/tw18859.pp }
 
 {$mode objfpc}{$h+}
 

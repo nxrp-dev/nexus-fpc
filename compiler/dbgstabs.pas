@@ -567,7 +567,7 @@ implementation
           stabchar := 't';
         { in case of writing the class record structure, we always have to
           use the class name (so it refers both to the struct and the
-          pointer to the struct), otherwise gdb crashes (see tests/webtbs/tw9766.pp) }
+          pointer to the struct), otherwise gdb crashes (see tests/tbs/tw9766.pp) }
         if is_class(def) and
            tobjectdef(def).writing_class_record_dbginfo then
           st:=def_stabstr_evaluate(def,'"${sym_name}:$1$2=',[stabchar,def_stab_classnumber(tobjectdef(def))])

@@ -339,7 +339,7 @@ implementation
          { "qword" was > high(int64) (JM)                                                 }
          { Additionally, do the same for cardinal/qwords and other positive types, but    }
          { always in a way that a smaller type is converted to a bigger type              }
-         { (webtbs/tw8870)                                                                }
+         { (tbs/tw8870)                                                                }
          if (rd.ordtype in [u8bit,u16bit,u32bit,u64bit]) and
             ((is_constintnode(left) and
               (tordconstnode(left).value >= 0) and

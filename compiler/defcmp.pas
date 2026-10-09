@@ -866,7 +866,7 @@ implementation
                                can overflow shortstrings; don't use l1/l2/l3
                                because then pchar -> ansistring has the same
                                preference as conststring -> pchar, and this
-                               breaks webtbs/tw3328.pp }
+                               breaks tbs/tw3328.pp }
                              if is_ansistring(def_to) then
                                eq:=te_convert_l2
                              else if is_wide_or_unicode_string(def_to) then
@@ -1113,7 +1113,7 @@ implementation
                                      but it might happen that the end of the convert levels is reached :/ }
                                    subeq:=compare_defs_ext(tarraydef(def_from).elementdef,
                                                         tarraydef(def_to).elementdef,
-                                                        { reason for cdo_allow_variant: see webtbs/tw7070a and webtbs/tw7070b }
+                                                        { reason for cdo_allow_variant: see tbs/tw7070a and tbs/tw7070b }
                                                         arrayconstructorn,hct,hpd,[cdo_check_operator,cdo_allow_variant]);
                                    if (subeq>=te_equal) then
                                      begin
@@ -1170,7 +1170,7 @@ implementation
                                 begin
                                   subeq:=compare_defs_ext(tarraydef(def_from).elementdef,
                                                        tarraydef(def_to).elementdef,
-                                                       { reason for cdo_allow_variant: see webtbs/tw7070a and webtbs/tw7070b }
+                                                       { reason for cdo_allow_variant: see tbs/tw7070a and tbs/tw7070b }
                                                        arrayconstructorn,hct,hpd,[cdo_check_operator,cdo_allow_variant]);
                                   if (subeq>=te_equal) then
                                     begin

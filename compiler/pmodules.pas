@@ -31,6 +31,7 @@ uses fmodule;
     function parse_unit_interface_declarations(curr : tmodule) : boolean;
     function proc_unit_implementation(curr: tmodule):boolean;
     function proc_package(curr: tmodule) : boolean;
+    function finish_package(curr: tmodule) : boolean;
     function proc_program(curr: tmodule; islibrary : boolean) : boolean;
     function proc_program_declarations(curr : tmodule; islibrary : boolean) : boolean;
     function finish_compile_unit(module:tmodule): boolean;
@@ -385,6 +386,11 @@ implementation
       Return true if all units were loaded, no recompilation needed. }
     function loaddefaultunits(curr :tmodule) : boolean;
 
+      var
+        profileunit : tppumodule;
+        profilesym : tunitsym;
+        isnew : boolean;
+
       Procedure CheckAddUnit(s: string);
 
         var
@@ -437,12 +443,21 @@ implementation
         if m_objpas in current_settings.modeswitches then
           CheckAddUnit('objpas');
 
-        { The profiling trace runtime is compiler-owned and linked into the
-          profiled executable. }
+        { The profiling runtime can require a source rebuild, including when a
+          cached dependency changes. Register it as an implicit uses entry so
+          loadunits and the normal sequential continuation can finish it. The
+          synchronous AddUnit path only supports loading already usable PPUs. }
         if not curr.is_unit and not curr.islibrary and
            (target_info.system=system_x86_64_win64) and
            (cs_nexus_profile in current_settings.moduleswitches) then
-          CheckAddUnit('nxprofilerruntime');
+          begin
+            profileunit:=registerunit(curr,'nxprofilerruntime','',isnew);
+            if isnew then
+              usedunits.concat(tused_unit.create(profileunit,false,true,nil));
+            profilesym:=cunitsym.create('NXPROFILERRUNTIME',nil);
+            inc(profilesym.refs);
+            curr.addusedunit(profileunit,true,profilesym);
+          end;
 
         { Macpas unit? }
         if m_mac in current_settings.modeswitches then
@@ -504,7 +519,7 @@ implementation
         until false;
       end;
 
-    procedure parseusesclause(curr: tmodule);
+    procedure parseusesclause(curr: tmodule; iscontains:boolean=false);
 
       var
          s,sorg  : ansistring;
@@ -517,7 +532,10 @@ implementation
 
 
       begin
-        consume(_USES);
+        if iscontains then
+          consume(_ID)
+        else
+          consume(_USES);
         repeat
           s:=current_scanner.pattern;
           sorg:=current_scanner.orgpattern;
@@ -1323,6 +1341,8 @@ type
 
          { load default system unit, it must be loaded before interface is parsed
            else we cannot use e.g. feature switches before the next real token }
+         if curr.is_initial then
+           load_packages;
          load_ok:=loadsystemunit(curr);
 
          { system unit is loaded, now insert feature defines }
@@ -1797,25 +1817,23 @@ type
     function proc_package(curr: tmodule) : boolean;
       var
         main_file : tinputfile;
-        hp,hp2    : tmodule;
-        pkg : tpcppackage;
-        main_procinfo : tcgprocinfo;
-        force_init_final : boolean;
-        uu : tused_unit;
         module_name: ansistring;
-        pentry: ppackageentry;
         feature : tfeature;
       begin
          Result:=True;
          Status.IsPackage:=true;
          Status.IsExe:=true;
          parse_only:=false;
-         main_procinfo:=nil;
          {InitializationProcedure:=nil;
          FinalizationProcedure:=nil;}
 
          if not (tf_supports_packages in target_info.flags) then
-           message1(parser_e_packages_not_supported,target_info.name);
+           begin
+             message1(parser_e_packages_not_supported,target_info.name);
+             curr.state:=ms_moduleerror;
+             status.skip_error:=true;
+             exit(false);
+           end;
 
          if not RelocSectionSetExplicitly then
            RelocSection:=true;
@@ -1842,7 +1860,6 @@ type
          curr.setmodulename(module_name);
          curr.ispackage:=true;
          exportlib.preparelib(module_name);
-         pkg:=tpcppackage.create(module_name);
 
          if tf_library_needs_pic in target_info.flags then
            include(current_settings.moduleswitches,cs_create_pic);
@@ -1925,42 +1942,57 @@ type
                  def_system_macro('FPC_HAS_FEATURE_'+featurestr[feature]);
            end;
 
-         { Load the units used by the program we compile. }
+         { Register contained units before yielding to the existing scheduler. }
+         curr.consume_semicolon_after_uses:=false;
          if (current_scanner.token=_ID) and (current_scanner.idtoken=_CONTAINS) then
            begin
-             { consume _CONTAINS word }
-             consume(_ID);
-             while true do
-               begin
-                 if current_scanner.token=_ID then
-                   begin
-                     module_name:=current_scanner.orgpattern;
-                     consume(_ID);
-                     while current_scanner.token=_POINT do
-                       begin
-                         consume(_POINT);
-                         module_name:=module_name+'.'+current_scanner.orgpattern;
-                         consume(_ID);
-                       end;
-                     hp:=AddUnit(curr,module_name);
-                     if (hp.modulename^='SYSTEM') and not assigned(systemunit) then
-                       begin
-                         systemunit:=tglobalsymtable(hp.globalsymtable);
-                         load_intern_types;
-                         checksystemcharwidth;
-                       end;
-                   end
-                 else
-                   consume(_ID);
-                 if current_scanner.token=_COMMA then
-                   consume(_COMMA)
-                 else break;
-               end;
-             consume(_SEMICOLON);
+             { Cached contained units can dereference built-in types while
+               loading their dependencies, before finish_package is reached. }
+             if not assigned(systemunit) then
+               loadsystemunit(curr);
+             parseusesclause(curr,true);
+             loadunits(curr,false);
+             curr.consume_semicolon_after_uses:=true;
            end;
+         curr.state:=ms_compiling_wait;
+         result:=false;
+      end;
 
+    function finish_package(curr: tmodule) : boolean;
+      var
+        hp,hp2 : tmodule;
+        pkg : tpcppackage;
+        main_procinfo : tcgprocinfo;
+        force_init_final : boolean;
+        uu : tused_unit;
+        pentry : ppackageentry;
+      begin
+         result:=true;
+         set_current_module(curr);
+         main_procinfo:=nil;
+         { A package without requirements can provide System itself. }
+         hp:=tmodule(loaded_units.first);
+         while assigned(hp) do
+           begin
+             if (hp.modulename^='SYSTEM') and not assigned(systemunit) then
+               begin
+                 systemunit:=tglobalsymtable(hp.globalsymtable);
+                 load_intern_types;
+                 checksystemcharwidth;
+               end;
+             hp:=tmodule(hp.next);
+           end;
+         if not assigned(systemunit) then
+           Comment(V_Fatal,'Package '+curr.realmodulename^+' does not contain or require the System unit');
+         pkg:=tpcppackage.create(curr.realmodulename^);
          { All units are read, now give them a number }
          curr.updatemaps;
+         connect_loaded_units(curr,nil);
+         if curr.consume_semicolon_after_uses then
+           begin
+             consume(_SEMICOLON);
+             curr.consume_semicolon_after_uses:=false;
+           end;
 
          hp:=tmodule(loaded_units.first);
          while assigned(hp) do
@@ -2041,10 +2073,12 @@ type
 
          if target_info.system in systems_all_windows then
            begin
+             symtablestack.push(curr.localsymtable);
              main_procinfo:=create_main_proc('_PkgEntryPoint',potype_pkgstub,curr.localsymtable);
              main_procinfo.procdef.aliasnames.concat('_DLLMainCRTStartup');
              main_procinfo.code:=generate_pkg_stub(main_procinfo.procdef);
              main_procinfo.generate_code;
+             symtablestack.pop(curr.localsymtable);
            end;
 
 {$ifdef DEBUG_NODE_XML}
@@ -2077,6 +2111,16 @@ type
           end;
 
          exportlib.ignoreduplicates:=true;
+
+         if target_info.system=system_x86_64_win64 then
+           begin
+             cnodeutils.InsertInitFinalTable(curr);
+             cnodeutils.InsertThreadvarTablesTable;
+             cnodeutils.InsertResourceTablesTable;
+             cnodeutils.InsertWideInitsTablesTable;
+             cnodeutils.InsertResStrTablesTable;
+             emit_package_descriptor;
+           end;
 
          { force exports }
          uu:=tused_unit(usedunits.first);
@@ -2181,6 +2225,11 @@ type
 
                  if DrainClangAssemblerQueue then
                    begin
+                     { The sequential continuation still visits the package
+                       after linking. Remove its dependency edges before freeing
+                       their modules, as proc_create_executable does. }
+                     curr.used_units.free;
+                     curr.used_units:=TLinkedList.Create;
                      { insert all .o files from all loaded units and
                        unload the units, we don't need them anymore.
                        Keep the curr because that is still needed }
@@ -2220,6 +2269,11 @@ type
              pkg.free;
              pkg := nil;
           end;
+         if result then
+           begin
+             curr.crc_final:=true;
+             curr.state:=ms_compiled;
+           end;
       end;
 
     procedure proc_create_executable(curr, sysinitmod: tmodule; islibrary : boolean);
@@ -2353,6 +2407,9 @@ type
         resources_used:=MaybeRemoveResUnit(curr);
 
         linker.initsysinitunitname;
+        if (target_info.system=system_x86_64_win64) and
+           assigned(find_module_from_symtable(systemunit).package) then
+          linker.sysinitunit:='sysinitpkg';
         if target_info.system in systems_internal_sysinit then
         begin
           { add start/halt unit }
@@ -2396,6 +2453,10 @@ type
         cnodeutils.InsertWideInitsTablesTable;
         cnodeutils.InsertResStrTablesTable;
         cnodeutils.InsertMemorySizes;
+
+        if (target_info.system=system_x86_64_win64) and
+           assigned(find_module_from_symtable(systemunit).package) then
+          emit_package_descriptor;
 
         { Insert symbol to resource info }
         cnodeutils.InsertResourceInfo(resources_used);
@@ -2867,7 +2928,6 @@ type
              else
                current_namespacelist:=Nil;
              parseusesclause(curr);
-             load_ok:=loadunits(curr,false) and load_ok;
              curr.consume_semicolon_after_uses:=true;
            end
          else begin
@@ -2875,6 +2935,9 @@ type
            if tmodule.ctask_fast_backtrack then
              load_ok:=false; { some used units are not fully compiled }
          end;
+
+         { Also load compiler-injected dependencies when there is no uses clause. }
+         load_ok:=loadunits(curr,false) and load_ok;
 
          if curr.is_initial then
            load_ok:=false; { delay program, so ctask can finish all units }

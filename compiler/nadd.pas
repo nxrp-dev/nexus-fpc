@@ -1012,7 +1012,7 @@ const
             }
             else if (left.nodetype=nodetype) and
               { there might be a mul operation e.g. longint*longint => int64 in this case
-                we cannot do this optimization, see e.g. tests/webtbs/tw36587.pp on arm }
+                we cannot do this optimization, see e.g. tests/tbs/tw36587.pp on arm }
               (compare_defs(resultdef,ld,nothingn)=te_exact) then
               begin
                 if is_constintnode(taddnode(left).left) then
@@ -1963,7 +1963,7 @@ const
               compile x < length(arr) as x <= high(arr)
               compile x >= length(arr) as x > high(arr)
 
-              tested by tests/webtbs/tw40292.pp
+              tested by tests/tbs/tw40292.pp
             }
             if (nodetype in [ltn,gten]) and
               (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_length_x) and
@@ -1988,7 +1988,7 @@ const
               compile length(arr) > x as high(arr) >= x
               compile length(arr) <= x as high(arr) < x
 
-              tested by tests/webtbs/tw40292.pp
+              tested by tests/tbs/tw40292.pp
             }
             if (nodetype in [lten,gtn]) and
               (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_length_x) and

@@ -2,7 +2,7 @@
 
 program tw37272b;
 
-{ note: there is a tw37272a in webtbs }
+{ note: there is a tw37272a in tbs }
 
 {$mode objfpc}
 

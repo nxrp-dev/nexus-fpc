@@ -2196,14 +2196,30 @@ implementation
 
 
   function generate_pkg_stub(pd:tprocdef):tnode;
+    var
+      stat: tstatementnode;
+      handlevar: tstaticvarsym;
+      instance: tsym;
     begin
       if target_info.system in systems_all_windows then
         begin
           insert_funcret_local(pd);
-          result:=cassignmentnode.create(
+          result:=internalstatements(stat);
+          if target_info.system=system_x86_64_win64 then
+            begin
+              handlevar:=cstaticvarsym.create_C('FPC_PACKAGE_HANDLE','FPC_PACKAGE_HANDLE',
+                vs_value,sizeuinttype);
+              include(handlevar.varoptions,vo_is_external);
+              current_module.localsymtable.insertsym(handlevar);
+              instance:=tsym(pd.parast.find('HINSTANCE'));
+              addstatement(stat,cassignmentnode.create(
+                cloadnode.create(handlevar,handlevar.owner),
+                cloadnode.create(instance,pd.parast)));
+            end;
+          addstatement(stat,cassignmentnode.create(
                       cloadnode.create(pd.funcretsym,pd.localst),
                       cordconstnode.create(1,bool32type,false)
-                    );
+                    ));
         end
       else
         result:=cnothingnode.create;

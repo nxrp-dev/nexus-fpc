@@ -88,6 +88,21 @@ begin
   WStrInitTablesTable := info.OS.WideInitTables;
 end;
 
+procedure PreparePackageHost(var Info: TEntryInformation);
+begin
+  SetupEntryInformation(Info);
+  IsLibrary:=false;
+  InitHeap;
+  { Assemble the startup metadata of every owner before the existing main-thread
+    storage setup. No new threading mechanism is involved. }
+  if Assigned(PackagePrepareProc) then
+    begin
+      PackagePrepareProc(Info);
+      SetupEntryInformation(Info);
+    end;
+  InitSystemThreads;
+end;
+
 Procedure system_exit;
 begin
   { see comments in win32/system.pp about this logic }

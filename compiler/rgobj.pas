@@ -1354,7 +1354,7 @@ unit rgobj;
        especially machine registers can get very large because of moves
        generated during calls) we need to go into disgusting complexity.
 
-       (See webtbs/tw2242 for an example that stresses this.)
+       (See tbs/tw2242 for an example that stresses this.)
 
        We want to sort the movelist to be able to search logarithmically.
        Unfortunately, sorting the movelist every time before searching

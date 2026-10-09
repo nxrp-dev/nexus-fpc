@@ -309,7 +309,7 @@ implementation
                              (treetyp in (order_theoretic_operators+[addn, subn]))
                            ) or
                            (
-                             { for enum definitions, see webtbs/tw22860.pp }
+                             { for enum definitions, see tbs/tw22860.pp }
                              is_integer(rd) and
                              (treetyp in (order_theoretic_operators+bit_manipulation_operators+arithmetic_operators))
                            )
@@ -3154,7 +3154,7 @@ implementation
 
                { when a procvar was changed to a call an exact match is
                 downgraded to equal. This way an overload call with the
-                procvar is choosen. See tb0471 (PFV) }
+                procvar is choosen. See tb_procvar_calls_delphi, case tb0471 (PFV) }
               if (pt<>currpt) and (eq=te_exact) then
                 eq:=te_equal;
               { if var or out parameter type but paranode not is_valid_for_var }

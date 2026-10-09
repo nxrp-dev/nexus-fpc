@@ -2438,7 +2438,7 @@ Unit Rax86int;
                   end;
                 Consume(AS_PTR);
                 { in delphi mode, allow e.g. call dword ptr eax,
-                  see also webtbs/tw18225.pp }
+                  see also tbs/tw18225.pp }
                 if not(m_delphi in current_settings.modeswitches) then
                   oper.InitRef;
                 { if the operand subscripts a record, the typesize will be

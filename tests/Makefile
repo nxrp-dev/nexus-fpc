@@ -1615,7 +1615,7 @@ export TEST_SEPLOG:=$(TEST_OUTPUTDIR)/seplog
 endif
 endif
 LOGFILES=$(TEST_LOG) $(TEST_LONGLOG) $(TEST_FAILLIST) $(TEST_SEPLOG)
-LOGEXT=.testlog .tbslog .tbflog .webtbslog .webtbflog
+LOGEXT=.testlog .tbslog .tbflog .webtbflog
 TESTUNITDIRS=system dos crt objects strings sysutils math sharemem strutils matrix lineinfo ucomplex fpwidestring cpu fmtbcd windows classes character dateutil fpcunit softfpu variants sortbase sortalgs linux unixutil types nullable contnrs convutils
 TESTDIRECTDIRS=
 TESTSUBDIRS=cg cg/variants cg/cdecl cpu16 library opt $(addprefix units/,$(TESTUNITDIRS))
@@ -1790,20 +1790,18 @@ override DOTESTENV:=$(DOTESTOPT)
 override DOTESTOPT=!DOTESTENV
 export DOTESTENV
 endif
-DIRS=webtbs webtbf tbs tbf $(TESTDIRS)
+DIRS=webtbf tbs tbf $(TESTDIRS)
 vpath %.log $(TEST_OUTPUTDIR)
 vpath %.elg $(TEST_OUTPUTDIR)
 vpath %.o $(C_SUBDIR)
 ifdef SINGLEDOTESTRUNS
 TBSREQ=$(patsubst %.pp,%.elg,$(sort $(wildcard tbs/t*.pp)))
 TBFREQ=$(patsubst %.pp,%.elg,$(sort $(wildcard tbf/t*.pp)))
-WEBTBSREQ=$(patsubst %.pp,%.elg,$(sort $(wildcard webtbs/t*.pp)))
 WEBTBFREQ=$(patsubst %.pp,%.elg,$(sort $(wildcard webtbf/t*.pp)))
 TESTREQ=$(patsubst %.pp,%.elg,$(sort $(wildcard $(addsuffix /t*.pp,$(TESTDIRS)))))
 else
 TBSREQ=$(TEST_OUTPUTDIR)/tbsdir-stamp.$(TEST_FULL_TARGET)
 TBFREQ=$(TEST_OUTPUTDIR)/tbfdir-stamp.$(TEST_FULL_TARGET)
-WEBTBSREQ=$(TEST_OUTPUTDIR)/webtbsdir-stamp.$(TEST_FULL_TARGET)
 WEBTBFREQ=$(TEST_OUTPUTDIR)/webtbfdir-stamp.$(TEST_FULL_TARGET)
 TESTREQ=$(TEST_OUTPUTDIR)/testdir-stamp.$(TEST_FULL_TARGET)
 endif
@@ -1819,29 +1817,27 @@ ifdef TEST_CCOMPILER
 %.o : %.cc
 	$(TEST_CCOMPILER) -c $< -o $(@D)/$(C_SUBDIR)/$(@F)
 endif
-.PHONY: alltbs alltbf allwebtbs allwebtbf alltest alltests
+.PHONY: alltbs alltbf allwebtbf alltest alltests
 alltbs : testprep $(patsubst %.pp,%.log,$(sort $(wildcard tbs/t*.pp)))
 alltbf : testprep $(patsubst %.pp,%.log,$(sort $(wildcard tbf/t*.pp)))
-allwebtbs : testprep $(patsubst %.pp,%.log,$(sort $(wildcard webtbs/t*.pp)))
 allwebtbf : testprep $(patsubst %.pp,%.log,$(sort $(wildcard webtbf/t*.pp)))
 alltest : testprep $(patsubst %.pp,%.log,$(sort $(wildcard $(addsuffix /t*.pp,$(TESTDIRS)))))
 ifndef SINGLEDOTESTRUNS
 	$(Q)$(DOTEST) $(DOTESTOPT) -e $(wildcard $(addsuffix /t*.pp,$(TESTDIRS)))
 endif
-alltests: alltest alltbs alltbf allwebtbs allwebtbf
+alltests: alltest alltbs alltbf allwebtbf
 test_c_objects: testprep
 	$(MAKE) $(patsubst %.pp,%.log, $(wildcard test/cg/cdecl/tcalext*.pp))
 	$(MAKE) $(patsubst %.pp,%.elg, $(wildcard test/cg/cdecl/tcalext*.pp))
 	$(MAKE) $(patsubst %.pp,%.log, $(wildcard test/cg/cdecl/tcppcl*.pp))
 	$(MAKE) $(patsubst %.pp,%.elg, $(wildcard test/cg/cdecl/tcppcl*.pp))
 ifdef SINGLEDOTESTRUNS
-.PHONY: allexectbs allexectbf allexecwebtbs allexecwebtbf allexectest allexectests
+.PHONY: allexectbs allexectbf allexecwebtbf allexectest allexectests
 allexectbs: $(addsuffix .tbslog, $(LOGFILES))
 allexectbf: $(addsuffix .tbflog, $(LOGFILES))
-allexecwebtbs: $(addsuffix .webtbslog, $(LOGFILES))
 allexecwebtbf: $(addsuffix .webtbflog, $(LOGFILES))
 allexectest: $(addsuffix .testlog, $(LOGFILES))
-$(TEST_OUTPUTDIR)/%.mergedlog : $(TEST_OUTPUTDIR)/%.testlog $(TEST_OUTPUTDIR)/%.tbslog $(TEST_OUTPUTDIR)/%.tbflog $(TEST_OUTPUTDIR)/%.webtbslog $(TEST_OUTPUTDIR)/%.webtbflog
+$(TEST_OUTPUTDIR)/%.mergedlog : $(TEST_OUTPUTDIR)/%.testlog $(TEST_OUTPUTDIR)/%.tbslog $(TEST_OUTPUTDIR)/%.tbflog $(TEST_OUTPUTDIR)/%.webtbflog
 	$(Q)$(CONCAT) $^ $@
 	$(Q)$(COPY) $@ $(basename $@)
 $(TEST_OUTPUTDIR)/%.tbslog : $(TBSREQ)
@@ -1850,9 +1846,6 @@ $(TEST_OUTPUTDIR)/%.tbslog : $(TBSREQ)
 $(TEST_OUTPUTDIR)/%.tbflog : $(TBFREQ)
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/faillist.tbflog
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/longlog.tbflog
-$(TEST_OUTPUTDIR)/%.webtbslog : $(WEBTBSREQ)
-	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/faillist.webtbslog
-	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/longlog.webtbslog
 $(TEST_OUTPUTDIR)/%.webtbflog : $(WEBTBFREQ)
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/faillist.webtbflog
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/longlog.webtbflog
@@ -1860,7 +1853,7 @@ $(TEST_OUTPUTDIR)/%.testlog : $(TESTREQ)
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/faillist.testlog
 	$(Q)$(ECHO) -n >> $(TEST_OUTPUTDIR)/longlog.testlog
 allexectests:  $(TEST_OUTPUTDIR)/log.testlog $(TEST_OUTPUTDIR)/log.tbslog \
-	$(TEST_OUTPUTDIR)/log.tbflog $(TEST_OUTPUTDIR)/log.webtbslog \
+	$(TEST_OUTPUTDIR)/log.tbflog \
 	$(TEST_OUTPUTDIR)/log.webtbflog \
 	$(addprefix $(TEST_OUTPUTDIR)/,$(foreach EXT, $(LOGEXT), $(addsuffix $(EXT), faillist longlog))) \
 	$(addsuffix .mergedlog, $(LOGFILES))
@@ -1886,8 +1879,6 @@ $(MAKEINC): $(GPARMAKE) $(CREATELST)
 	$(Q)$(GPARMAKE) -a $(GPARMAKE_OPT) $(MAKEINC) tbs 10000 $(CHUNKSIZE) @filelisttbs.lst
 	$(Q)$(CREATELST) filelisttbf.lst tbf
 	$(Q)$(GPARMAKE) -a $(GPARMAKE_OPT) $(MAKEINC) tbf 15000 $(CHUNKSIZE) @filelisttbf.lst
-	$(Q)$(CREATELST) filelistwebtbs.lst webtbs
-	$(Q)$(GPARMAKE) -a $(GPARMAKE_OPT) $(MAKEINC) webtbs 20000 $(CHUNKSIZE) @filelistwebtbs.lst
 	$(Q)$(CREATELST) filelistwebtbf.lst webtbf
 	$(Q)$(GPARMAKE) -a $(GPARMAKE_OPT) $(MAKEINC) webtbf 30000 $(CHUNKSIZE) @filelistwebtbf.lst
 ifeq (,$(findstring clean,$(firstword $(MAKECMDGOALS))))
@@ -1909,7 +1900,7 @@ clean_test:
 clean: clean_sources fpc_clean
 	$(MAKE) clean_test CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)
 	$(MAKE) -C tstunits clean CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)
-	-$(DEL) filelisttest.lst filelisttbs.lst filelisttbf.lst filelistwebtbs.lst filelistwebtbf.lst
+	-$(DEL) filelisttest.lst filelisttbs.lst filelisttbf.lst filelistwebtbf.lst
 distclean: clean fpc_distclean
 	$(DELTREE) output
 	$(MAKE) -C utils distclean
@@ -2024,7 +2015,6 @@ else
 endif
 endif
 endif
-
 all : allexectests
 full :
 	$(MAKE) clean
@@ -2037,11 +2027,9 @@ fulldb :
 	$(MAKE) digest
 	$(MAKE) uploadrun
 endif
-
 ifndef inWinDOS
 tarfile : $(TEST_OUTPUTDIR)/$(DB_TARGZ)
 endif
-
 onlyknown :
 	$(MAKE) full "DOTESTOPT= $(DOTESTOPT) -k-"
 onlygraph :

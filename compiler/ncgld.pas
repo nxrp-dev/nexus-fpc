@@ -1115,7 +1115,7 @@ implementation
               LOC_FLAGS :
                 begin
                   { check for cbool here as booleans converted to other types shall be handled as pas booleans,
-                    see also tests/webtbs/tw40908.pp }
+                    see also tests/tbs/tw40908.pp }
                   if is_cbool(left.resultdef) then
                     begin
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}

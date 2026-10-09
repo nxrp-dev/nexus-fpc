@@ -4,9 +4,9 @@ Date: 2026-10-09
 
 ## Assessment and scope
 
-FPC's historical dynamic-package work provides a substantial compiler foundation, but this NexusFPC checkout does not yet implement a functioning Delphi-style runtime-package system. The largest remaining work is shared RTL ownership and package lifecycle management. Enabling the existing compiler capability flag alone would expose these gaps.
+FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has an experimental Win64 shared RTL with explicit EXE startup activation, per-image contexts, and package lifecycle rollback. It is not a complete Delphi-style runtime-package system: general LoadPackage/UnloadPackage, reference accounting, registry cleanup, late-loaded TLS, and full binary compatibility remain open.
 
-This document consolidates the two source-based gap analyses and the subsequent compatibility clarification. Items 1-4 have now been implemented and tested as described below. Runtime packages remain unimplemented.
+This document consolidates the source-based gap analyses, compatibility clarification, and implementation results. Items 1-4 are committed. Items 5-10 are implemented and validated in the working tree for the approved experimental Win64 contract, including the minimum item 11 EXE startup needed to validate item 10. The runtime suite, ordinary regressions, profiler smoke, and full bootstrap/cross matrix pass together.
 
 The source inspection was made against NexusFPC at commit `471e676d`, including its working tree. At inspection time there were existing uncommitted changes in `compiler/entfile.pas`, `compiler/export.pas`, `compiler/expunix.pas`, `compiler/fpcdefs.inc`, `compiler/fppu.pas`, `compiler/pmodules.pas`, `compiler/systems/t_linux.pas`, and `compiler/systems/t_win.pas`, plus an untracked `tests/unit-exports/` suite. Those changes were not treated as validated dynamic-package support. Recheck the working tree and source locations before implementation.
 
@@ -37,7 +37,7 @@ Validation now covers valid v3 fixtures, intended invalid-input diagnostics, sou
 
 ## Implementation results: items 1-4
 
-Implemented on 2026-10-09 against commit `10eb65ae` plus the working tree. Changes are uncommitted; unrelated existing deletions under `nexus/` were preserved.
+Implemented on 2026-10-09 against commit `10eb65ae` plus the working tree, then committed by the user in `d4002ae8`. Unrelated existing deletions under `nexus/` were preserved.
 
 | Item | Implemented behavior | Validation |
 |---|---|---|
@@ -60,6 +60,154 @@ Validation results:
 The reproducible suite and invocation are in [tests/dynamic-packages/README.md](tests/dynamic-packages/README.md). Log directories are local temporary artifacts, not committed fixtures.
 
 The source-free test compiles with `-Cn`, using a PCP after hiding the unit's source, original PPU, and object file. It does **not** prove package linking or runtime behavior; that portion of item 4's original end-to-end acceptance depends on items 5 onward. No historical PCP corpus was available: compatibility was checked with independently encoded v3 metadata and real generated PPUs, including opposite-endian metadata. Runtime shared identity, loading, unloading, and package-specific behavior on non-Win64 platforms remain outside this validation; ordinary cross-target compiler/RTL builds are covered by the full matrix above.
+
+## Initial implementation results: items 5-6
+
+Implemented after `d4002ae8` on 2026-10-09, with experimental activation confined
+to the test driver. Production changes are in [pmodules.pas](compiler/pmodules.pas)
+and [ctask.pas](compiler/ctask.pas):
+
+- Parse and register `contains` units, let the existing sequential compiler loop
+  finish those units, then resume package emission. This supports fresh source
+  builds and cached units without a synchronous-loader internal error.
+- Keep package entry-point definitions in the package's own symbol table.
+- Load command-line package metadata before compiling an initial standalone unit.
+- Reject unsupported targets and packages lacking System with clean diagnostics.
+
+The continuation is ordinary sequential compiler state handling. No threads,
+parallel execution, or prototype code from the removed `nexus/` folder were added.
+
+The [link suite](tests/dynamic-packages/run_package_link_tests.py) builds a provider
+and a dependent package DLL, distributes only their PCP/DLL artifacts, inspects
+PE imports/exports, and runs native probes. Four configurations pass: fresh and
+cached units with smart linking off and on. The provider's original source, PPU,
+and object files are hidden before building the consumer.
+
+Verified across the two images: writable-global identity and updates; VMT and
+class/enum/record RTTI identity; resource-string record identity; public aliases;
+procedure and procedure-pointer calls; parent VMT references, inheritance, virtual
+dispatch, and inherited calls; managed-record initialization metadata and helper
+imports; Win64 exception-handler symbol resolution; and inline references to an
+implementation-only helper. Imported procedure pointers may be import thunks;
+the suite verifies that both pointers call the same provider and update its data.
+
+Validation:
+
+- **70/70 metadata steps** plus **27/27 linking, symbol, and diagnostic checks**
+  passed. The runner reports 28 top-level steps because the metadata suite is one
+  step. [Test instructions](tests/dynamic-packages/README.md). Local logs:
+  `C:\Users\kcollins\AppData\Local\Temp\nxpkg-link-3ixe3sii`.
+- **32/32 ordinary EXE/DLL export regressions** passed with the candidate compiler.
+  Local logs: `C:\Users\kcollins\AppData\Local\Temp\nx-unit-exports-d57e76f5`.
+- The existing **profiler smoke program** compiled and ran successfully: eight
+  completed calls, one exception unwind, no unmatched/lost events, and a complete
+  trace. Local logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-profiler-38912e07`.
+- **Clean native bootstrap passed**, including the compiler cycle, RTL, packages,
+  utilities, compiler-version check (3.3.1), and all six option/directive regression
+  suites: nine top-level steps, all successful. The run recorded the same 14
+  nonfatal warnings as the earlier bootstrap: 13 dependency-cycle warnings and
+  one missing `winmanutf8lfn` source warning.
+  [Run logs](output/NexusFPCBootstrap/20261009-090805-20bae512/steps.json).
+  This run was native Win64 only; the earlier cross matrix validates items 1-4,
+  not these subsequent changes.
+
+At this earlier checkpoint, the standalone Pascal EXE acceptance case was blocked by shared RTL startup:
+ordinary `SysInit`/resource objects directly reference `System` data now owned by
+the provider, including `U_$SYSTEM_$$_STARTUPCONSOLEMODE` and `_FPC_SysInstance`.
+The historical run recorded this in `known-limitations.json` and
+`application-startup.log`, excluded from passing-build counts. Items 7-10 now
+resolve this failure with the approved explicit startup path; the old expected
+failure was removed from the link runner and replaced by the real EXE runtime suite.
+
+The successful runtime probes use static storage and nil managed values. They
+establish symbol sharing between packages, not automatic initialization,
+allocation across modules, exception unwinding across modules, or unload safety.
+The provider includes System/ObjPas through existing implicit ownership; it is
+not the foundational shared RTL package used by the newer runtime suite. PCP/PPU
+versions, production target flags, and RTL ABI were unchanged at that checkpoint.
+
+## Implementation results: items 6-10
+
+The [approved runtime contract](nexusfpc-dynamic-packages-runtime-design.md) uses
+one shared System/ObjPas/SysUtils owner, immutable descriptors, mutable per-image
+contexts, and explicit sequential activation from generated EXE startup. Windows
+package entry only records the native handle. No threads, asynchronous startup,
+new locks, or parallel compilation were introduced.
+
+| Item | Implemented behavior | Evidence |
+|---|---|---|
+| 6 | Export generated anonymous managed-type RTTI as well as named public symbols; exercise real managed values and exception unwinding. | Provider and host allocate/free objects across images, exchange strings/dynamic arrays/interfaces, agree on VMT/RTTI, and catch the declared exception type. PE import/export checks pass. |
+| 7 | Emit exported version-1 descriptors with compiler/target/System identity, owned units, dependencies, and owner table references. | Native inspection checks the 144-byte layout, image handle, dependency closure and zero activation, including smart-linked DLLs. |
+| 8 | Give each image a six-word mutable context separate from shared System entry state. | Distinct handles/descriptors/progress survive registration; owned resource and main-thread metadata remain attached to their image. |
+| 9 | Filter imported owners out of generated tables; initialize dependencies once; reverse finalization; rollback completed prefixes after failure. | Real diamond order, otherwise-unused contained unit, typed initialization failure, preserved active dependencies, synthetic cleanup exceptions, and resumed finalization pass. |
+| 10 | Build a matching shared RTL foundation and use SysInitPkg for a real host EXE. | Fresh/cached and normal/smart configurations all link and run with one System owner. Provider source/PPU/object files are hidden before consumption. |
+
+The runtime harness builds its compiler and RTL in an isolated temporary directory.
+The contained-unit continuation also clears dependency edges before releasing
+modules, and loads System's intrinsic types before reading cached contained units.
+These corrections address fresh multi-unit and cached foundation failures exposed
+by the expanded acceptance cases.
+
+Final validation on 2026-10-09:
+
+- **99/99 runtime steps passed**, including all four fresh/cached and normal/smart
+  configurations, native import/export inspection, and host-side finalization of
+  provider-created managed values. Logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-runtime-tbns3jyv`.
+- **70/70 metadata steps and 27/27 link/symbol/diagnostic checks passed** (28
+  top-level link-runner steps). Logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-link-7oh1gfgu`.
+- **32/32 ordinary EXE/DLL export checks passed** with the freshly bootstrapped
+  compiler. Logs: `C:\Users\kcollins\AppData\Local\Temp\nx-unit-exports-8c2c2304`.
+- **Profiler smoke passed** using the existing fixture and its isolated runtime
+  unit paths: eight calls, seven normal returns, one unwind, zero unmatched/lost
+  events, one trace-end record, and no truncation. Five build/run/probe steps passed.
+  Logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-profiler-final-0j_4xax6`.
+- **Full clean bootstrap passed**, including the optimized native compiler cycle,
+  RTL, packages, utilities, six option/directive regression suites, cross compilers,
+  all **13 retained RTL targets**, Linux FmtBCD, and isolated `heaptrc -CfNONE`:
+  **27/27 top-level steps**. Native compiler: 3.3.1. The same 14 nonfatal native
+  warnings remain: 13 dependency-cycle warnings and one missing `winmanutf8lfn`
+  source warning. [Bootstrap records](output/NexusFPCBootstrap/20261009-100746-283f9bb9/steps.json).
+  Cross-target results establish compilation, not runtime execution on those platforms.
+
+These checks establish a known-good milestone for the approved experimental
+Win64 startup contract alongside ordinary builds. They do not establish complete
+BPL compatibility or safe unload. The reproducible commands are in
+[the test README](tests/dynamic-packages/README.md).
+
+The separate profiler cache issue found during validation is now corrected.
+Mixing the unprofiled trace probe's units with profiler runtime sources exposed
+internal error `2026032615`: the compiler loaded NXProfilerRuntime through a
+synchronous path that prohibited recompilation. A compiler built from committed
+`d4002ae8` reproduces it. Comparison records:
+`C:\Users\kcollins\AppData\Local\Temp\nxpkg-profiler-cache-qese6719`.
+
+The correction in `pmodules.pas` registers the profiler runtime as an implicit
+uses dependency, loads it even when the program has no uses clause, and lets the
+existing sequential continuation load or rebuild it before program declarations.
+No runtime implementation or threading mechanism changed. The new
+[profiler cache regression suite](tests/nexusprofiler/README.md) passes 41 checks
+with the candidate compiler, including source-only startup, normal/smart linking,
+cache reuse, profile-mode transitions, and missing-source diagnostics. Candidate
+records: `C:\Users\kcollins\AppData\Local\Temp\nx-profile-cache-p9tg7n2o`.
+
+The freshly bootstrapped optimized compiler also passes **41/41 cache checks**:
+`C:\Users\kcollins\AppData\Local\Temp\nx-profile-cache-hhj3qvyh`. The correction
+retains **99/99 package runtime checks** (`nxpkg-runtime-a_cu8h_y`), **70/70 metadata
+and 27/27 link checks** (`nxpkg-link-5hbbxomy`), and **32/32 ordinary EXE/DLL export
+checks** (`nx-unit-exports-55e3af53`), all under the same local temporary-directory
+root. The clean native bootstrap and six option/directive suites pass with the
+same 14 nonfatal warnings. The refreshed cross matrix also passes all **13 RTL
+targets**, Linux FmtBCD, and isolated `heaptrc -CfNONE`: **27/27 bootstrap steps**.
+[Correction bootstrap records](output/NexusFPCBootstrap/20261009-104405-2ae70066/steps.json).
+The mixed-profile cache defect is resolved for the tested source-available and
+missing-source cases; it is no longer an outstanding limitation of this milestone.
+
+Production target package flags remain disabled. PCP v3 and PPU v208/long 33
+serialization formats are unchanged. New System startup hooks require matching
+rebuilt RTL units; the runtime runner supplies them. The descriptor's preliminary
+System checksum is not a complete mixed-build compatibility policy (item 16).
+Native package resources, late-loaded TLS, loader reference accounting and unload
+remain outside this milestone. Every registered image must remain mapped.
 
 ## Existing implementation
 
@@ -95,25 +243,25 @@ Each image also needs its own module descriptor for initialization tables, resou
 
 [`TObject.InheritsFrom`](rtl/inc/objpas.inc), approximately line 868, compares VMT addresses. Independently compiling identical class declarations into different images does not establish common type identity. This affects typed exceptions as well as class checks, RTTI, globals, and registries. Sven Barth describes the typed-exception problem in [this 2021 FPC explanation](https://lists.freepascal.org/fpc-pascal/2021-August/059900.html).
 
-## Concrete implementation gaps
+## Original implementation gaps and current disposition
 
 ### Package entry and generated tables
 
-[`generate_pkg_stub`](compiler/symcreat.pas), approximately line 2198, returns success on Windows; it does not perform package initialization.
+[`generate_pkg_stub`](compiler/symcreat.pas) originally returned success without lifecycle work. It now records the native handle; generated EXE startup owns activation.
 
-The `proc_package` path lacks the initialization/TLS/resource table-emission sequence used by ordinary programs and libraries. Compare it with `pmodules.pas`, approximately line 2393, where those tables are emitted.
+The Win64 package path now emits owner-only initialization, existing main-thread storage, resource-string, and managed-constant tables plus the runtime descriptor.
 
 ### Module-specific RTL state
 
 [`SetupEntryInformation`](rtl/inc/system.inc), approximately line 83, overwrites the single `EntryInformation` record and resource pointers. Reusing that startup path unchanged for multiple images sharing `System` would overwrite an earlier module's state.
 
-The runtime needs an explicit distinction between shared process services and module-owned startup/lifecycle information. Windows startup and TLS code also use this information and must participate in the correction.
+The new descriptor/context split preserves module-owned tables and handles. Startup aggregates existing main-thread and resource-string metadata before the existing RTL setup. General package resource lookup and late TLS support remain open.
 
 ### Initialization ownership and failure handling
 
-The compiler's [`get_init_final_list`](compiler/ngenutil.pas), approximately line 988, walks used units without a package-ownership boundary. The RTL's initialization machinery executes one table and tracks its completed prefix.
+The compiler's [`get_init_final_list`](compiler/ngenutil.pas) now excludes imported package owners. The package runtime tracks a completed prefix per context; ordinary builds retain the existing single-table path.
 
-Packages require owned-unit tables, dependency ordering, initialization-once behavior, reverse finalization, and rollback after partial failure. Previously loaded dependencies must survive a failed new load.
+Owned-unit tables, dependency ordering, initialization once, reverse finalization, and partial-failure rollback are implemented and tested. General loader registration/reference cleanup remains separate.
 
 ### Runtime registration and cleanup
 
@@ -139,13 +287,13 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 | 2 | **Implemented.** Validate package dependency cycles with a diagnostic dependency chain. | `pkgutil.load_packages`, `fpcp`; no runtime prerequisite. | Reject `A -> A` and `A -> B -> A`; accept a diamond and load its shared dependency once. |
 | 3 | **Implemented.** Enforce unique unit ownership across the full required-package closure before package-unit lookup selects a provider. | `pkgutil`, `fppu.loadfrompackage`; items 1-2. | Conflicting package ownership fails regardless of search order; containing a unit already supplied by a requirement gets a precise diagnostic. |
 | 4 | **Implemented for metadata and compile-time consumption.** Harden and regression-test PCP serialization and consumption without changing the format. | `pcp`, `fpcp`, package use of `RewritePPU`, package-specific `fppu` loading. | Compile-only source-free consumption and malformed-container checks pass. Full linked consumption still depends on items 5 onward. |
-| 5 | Establish an experimental Win64 package build and regression harness. Exercise the existing parser, PCP writer, and linker without claiming general support. | Target flags, compiler build configuration, new package tests. | Minimal package/consumer builds are reproducible; ordinary EXE/DLL regression coverage remains passing. |
-| 6 | Complete and validate the Win64 package symbol contract: procedures, writable data, VMTs, RTTI, compiler helpers, and references embedded in generated tables. | `pkgutil`, `aasmdef`, `ncgld`, `ncgmem`, `ncgcnv`, `cgexcept`, Windows import/export code; item 5. | Fresh/cached consumers resolve each symbol category with smart linking on/off; shared data/type pointers agree across images. |
-| 7 | Define and emit a versioned runtime package descriptor containing identity, dependencies, owned units, compatibility identity, and lifecycle/table references. | New compiler emitter and matching RTL record; items 2-4. | An inspector enumerates units and requirements without executing Pascal unit initialization. |
-| 8 | Introduce per-module RTL context for handles, table pointers, initialization progress, and TLS/resource metadata, separate from shared process services. | `systemh.inc`, `system.inc`, platform startup code; item 7. | Registering a second synthetic module context does not overwrite the first. |
-| 9 | Implement package-owned initialization/finalization and partial-initialization rollback. Emit the owner's lifecycle table, initialize dependencies first, and finalize in reverse order. | `pmodules`, `ngenutil`, RTL lifecycle code; items 7-8. | Diamond dependencies initialize each unit once; an initialization exception finalizes only completed units and preserves previously loaded packages. |
-| 10 | Build the foundational shared RTL package and correct bootstrap behavior. Establish one `System` owner and shared identity for selected RTL units; retain per-image startup code where needed. | RTL package definitions, build scripts, compiler special handling of `System`; items 6-9. | Host/package class and exception identity agree; shared RTL state agrees; managed values can be created in one image and released in another. |
-| 11 | Complete startup-linked package consumption using the same ownership and lifecycle model. | Program startup, package imports, RTL package manager; item 10. | An EXE starts with dependent packages, sees initialized globals, and finalizes them once in dependency order. |
+| 5 | **Implemented.** Experimental Win64 builds exercise the parser, PCP writer, and linker. | Test-only target activation, `pmodules`, sequential continuation in `ctask`, new package tests. | Fresh/cached package builds, source-free dependent linking, and ordinary EXE/DLL regressions pass. Items 7-10 add the real package-backed EXE. |
+| 6 | **Implemented for experimental Win64.** Named/anonymous symbols, managed values, allocation and typed exceptions. | Import/export paths and both package suites. | Four fresh/cached and smart-link configurations pass with shared data/type identity and real managed ownership crossing images. |
+| 7 | **Implemented for experimental Win64.** Versioned runtime descriptor with identity, dependencies, owned units and table references. | `pkgutil.emit_package_descriptor`, `FPCPackage`; items 2-4. | Native inspector reads descriptors without Pascal initialization; layout and preliminary compatibility checks pass. |
+| 8 | **Implemented for the approved startup contract.** Separate mutable image context and immutable table references. | `FPCPackage`, System hooks, SysInitPkg; item 7. | Multiple contexts retain distinct handles, tables and progress without replacing host entry state. |
+| 9 | **Implemented.** Owner-only tables, sequential dependency activation, reverse finalization and partial-initialization rollback. | `pmodules`, `ngenutil`, `FPCPackage`; items 7-8. | Diamond, failure rollback, preservation of active dependencies, cleanup failures and resumed shutdown pass. |
+| 10 | **Implemented as an isolated experimental build.** Foundational shared System/ObjPas/SysUtils closure and per-image startup. | Runtime test build recipe, SysInitPkg, System preparation; items 6-9. | Real host/package identity, managed values, resources and typed exceptions pass. |
+| 11 | **Minimum Win64 EXE path included in item 10.** Broaden startup-linked consumption and installation/build integration. | Program startup, package imports, RTL package manager; item 10. | Existing real EXE diamond passes; production packaging and broader host/startup configurations remain. |
 | 12 | Implement explicit `LoadPackage` and runtime registration: dependency retention, descriptor validation, duplicate-unit checks, repeat-load behavior, and rollback. | New low-level RTL package manager, public `SysUtils` facade, platform loader adapter; items 7-11. | Late loading works; repeat loading reuses initialized state; ownership conflicts fail before user initialization. |
 | 13 | Implement `UnloadPackage` and reference accounting. Distinguish startup-held and explicit references; finalize before unmapping and retain dependencies while needed. | RTL package manager; item 12. | Unloading one diamond branch preserves the shared dependency; releasing its last eligible reference finalizes it once. |
 | 14 | Complete module registration cleanup, including class unregistration and package-owned resource/RTTI registrations and cached references. | `classes/cregist.inc`, resource/RTTI registries, module lookup; items 8 and 13. | Load/register/unload/reload leaves no stale class or metadata pointer into an unmapped image. |
@@ -153,6 +301,9 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 | 16 | Enforce runtime ABI compatibility and artifact publication consistency. Match PCP/runtime build identities and reject incompatible RTL/compiler/target/text-model combinations. | PCP metadata, runtime descriptor, build tooling; items 4, 7, and 12. | Mismatched runtime images fail before unit initialization; failed linking cannot publish a new usable-looking PCP paired with an old image. |
 
 Items 1-4 improve existing dormant package infrastructure without requiring the full runtime. Item 5 and the symbol work in item 6 expose the compiler/linker integration requirements. The descriptor and module-context contract in items 7-8 should anchor the runtime implementation.
+
+The [runtime contract](nexusfpc-dynamic-packages-runtime-design.md) was approved
+with explicit startup activation and implemented without threading changes.
 
 ## Unload contract
 
@@ -193,6 +344,10 @@ This demonstrates the central BPL-like behavior. A successful native DLL load or
 
 ## Evidence and implementation limits
 
-Runtime-gap conclusions above remain source-inspection findings. Items 1-4 now have the implementation and targeted validation recorded above; no package runtime behavior has been demonstrated.
+Items 1-10 have the scoped implementation and validation recorded above. The
+experimental Win64 EXE demonstrates shared RTL startup and sequential package
+lifecycle. General BPL-style load/unload behavior and non-Win64 package runtime
+support remain unimplemented; cross-target builds validate ordinary compilation,
+not package execution on those platforms.
 
 The repository source links are relative so the document can be browsed within the checkout. Approximate line numbers describe the inspected snapshot and may move. Revalidate the target flags, working-tree changes, and source paths when beginning an implementation item.

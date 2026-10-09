@@ -127,9 +127,9 @@ end;
 
 begin
   try
-    if ParamStr(1)='consume' then
+    if (ParamStr(1)='consume') or (ParamStr(1)='compile') then
       begin
-        { Exercise compile-time PCP consumption only, in this test process.
+        { Enable experimental package compilation only in this test process.
           The production target definition remains unchanged. }
         Include(targetinfos[Ord(system_x86_64_win64)]^.flags,tf_supports_packages);
         Halt(compiler.Compile(ParamStr(2)));

@@ -1511,3 +1511,11 @@ type
   by the compiler to generate code for any routine containing
   implicit or explicit exceptions }
 {$i excepth.inc}
+
+{$ifdef win64}
+{ Explicit shared-RTL package startup. Ordinary images leave these hooks nil. }
+var
+  PackageInitializeProc, PackageFinalizeProc: TProcedure;
+  PackagePrepareProc: procedure(var Info: TEntryInformation);
+procedure PreparePackageHost(var Info: TEntryInformation);
+{$endif win64}

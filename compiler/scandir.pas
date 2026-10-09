@@ -1260,7 +1260,7 @@ unit scandir;
         Message(scan_e_too_many_push);
 
       { do not flush here as we might have read directives which shall not be active yet,
-        see e.g. tests/webtbs/tw22744b.pp }
+        see e.g. tests/tbs/tw22744b.pp }
       if psf_alignment_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].alignment:=pendingstate.nextalignment
       else

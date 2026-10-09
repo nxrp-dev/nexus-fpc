@@ -775,7 +775,7 @@ implementation
               { main reason for the next one: we can't take the address of }
               { loadparentfpnode, so replacing it by a temp which is the   }
               { address of this node's location and then dereferencing     }
-              { doesn't work. If changed, check whether webtbs/tw0935      }
+              { doesn't work. If changed, check whether tbs/tw0935      }
               { still works with nodeinlining (JM)                         }
               loadparentfpn:
                 begin

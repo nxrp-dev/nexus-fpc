@@ -998,6 +998,13 @@ var
 begin
   { call cpu/fpu initialisation routine }
   fpc_cpuinit;
+{$ifdef win64}
+  if Assigned(PackageInitializeProc) then
+    begin
+      PackageInitializeProc();
+      exit;
+    end;
+{$endif win64}
 {$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}
   pt := PInitFinalTable(EntryInformation.InitFinalTable);
 {$else FPC_HAS_INDIRECT_ENTRY_INFORMATION}
@@ -1043,6 +1050,13 @@ procedure FinalizeUnits; external name 'FPC_FINALIZE_FUNC_TABLE';
 {$else FPC_INIT_FINAL_UNITS_BY_CALLS}
 procedure FinalizeUnits;[public,alias:'FPC_FINALIZEUNITS'];
 begin
+{$ifdef win64}
+  if Assigned(PackageFinalizeProc) then
+    begin
+      PackageFinalizeProc();
+      exit;
+    end;
+{$endif win64}
 {$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}
   with PInitFinalTable(EntryInformation.InitFinalTable)^ do
 {$else FPC_HAS_INDIRECT_ENTRY_INFORMATION}

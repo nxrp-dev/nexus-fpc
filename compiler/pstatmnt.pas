@@ -1871,7 +1871,7 @@ implementation
                even if we read an expression, the current_scanner.pattern is still valid if it's really
                a label (FK)
                if you want to mess here, take care of
-               tests/webtbs/tw3546.pp
+               tests/tbs/tw3546.pp
              }
              s:=current_scanner.pattern;
 

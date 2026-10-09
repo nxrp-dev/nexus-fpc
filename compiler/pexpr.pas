@@ -668,7 +668,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\webtbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
@@ -684,7 +684,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\webtbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
@@ -701,7 +701,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\webtbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=geninlinenode(in_seg_x,false,p1);
@@ -4275,7 +4275,7 @@ implementation
                  if try_to_consume(_LKLAMMER) then
                   begin
                     p1:=factor(true,[]);
-                    { inside parentheses a full expression is allowed, see also tests\webtbs\tb27517.pp }
+                    { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
                     if current_scanner.token<>_RKLAMMER then
                       p1:=sub_expr(opcompare,[ef_accept_equal],p1);
                     consume(_RKLAMMER);

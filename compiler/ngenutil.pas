@@ -1000,7 +1000,8 @@ implementation
            begin
            hp.u.initfinalchecked:=True;
            addusedunits(hp.u);
-           if ((hp.u.moduleflags * [mf_init,mf_finalize])<>[]) then
+           if not assigned(hp.u.package) and
+              ((hp.u.moduleflags * [mf_init,mf_finalize])<>[]) then
              begin
                new(entry);
                entry^.module:=hp.u;
@@ -1249,7 +1250,7 @@ implementation
       hp:=tused_unit(usedunits.first);
       while assigned(hp) do
        begin
-         if mf_threadvars in hp.u.moduleflags then
+         if not assigned(hp.u.package) and (mf_threadvars in hp.u.moduleflags) then
            begin
              sym:=current_asmdata.RefAsmSymbol(make_mangledname('THREADVARLIST',hp.u.globalsymtable,''),AT_DATA,true);
              tcb.emit_tai(
@@ -1360,7 +1361,7 @@ implementation
       hp:=tused_unit(usedunits.first);
       while assigned(hp) do
        begin
-         if unitflag in hp.u.moduleflags then
+         if not assigned(hp.u.package) and (unitflag in hp.u.moduleflags) then
           begin
             tcb.emit_tai(
               Tai_const.Createname(make_mangledname(prefix,hp.u.globalsymtable,''),0),
@@ -1477,7 +1478,7 @@ implementation
       countplaceholder:=tcb.emit_placeholder(sizesinttype);
       while assigned(hp) do
         begin
-          if mf_has_resourcestrings in hp.moduleflags then
+          if not assigned(hp.package) and (mf_has_resourcestrings in hp.moduleflags) then
             begin
               tcb.emit_tai(Tai_const.Create_sym(
                 ctai_typedconstbuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',hp.localsymtable,[tcdssso_register_asmsym,tcdssso_use_indirect])),
