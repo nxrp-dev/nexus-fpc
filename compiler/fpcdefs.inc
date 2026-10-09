@@ -12,6 +12,12 @@
 {$endif}
 {$interfaces corba}
 
+{ An x86-64 compiler can target Linux's 80-bit extended type even when
+  its host RTL (for example Win64) only provides double precision. }
+{$if defined(x86_64) and not defined(FPC_HAS_TYPE_EXTENDED)}
+  {$define FPC_SOFT_FPUX80}
+{$endif}
+
 { This reduces the memory requirements a lot }
 {$PACKENUM 1}
 {$PACKSET 1}

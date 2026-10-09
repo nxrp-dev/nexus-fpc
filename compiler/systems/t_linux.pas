@@ -37,6 +37,7 @@ interface
     end;
 
     texportliblinux=class(texportlibunix)
+      procedure generatelib; override;
       procedure setfininame(list: TAsmList; const s: string); override;
     end;
 
@@ -95,6 +96,82 @@ implementation
 {*****************************************************************************
                                TEXPORTLIBLINUX
 *****************************************************************************}
+
+    procedure texportliblinux.generatelib;
+      var
+        hp : texported_item;
+        unitmodule : tmodule;
+        asmsym : TAsmSymbol;
+
+      procedure retainexport(hp : texported_item);
+        begin
+          { The linker script keeps .fpc.n_links. References here retain
+            otherwise unused smartlink exports. }
+          new_section(current_asmdata.asmlists[al_globals],sec_fpc,'links',0);
+          if hp.is_var then
+            current_asmdata.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_DATA,0))
+          else
+            current_asmdata.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_FUNCTION,0));
+        end;
+
+      begin
+        hp:=texported_item(current_module._exports.first);
+        while assigned(hp) do
+          begin
+            asmsym:=current_asmdata.getasmsymbol(hp.name^);
+            if assigned(asmsym) and (asmsym.bind=AB_PRIVATE_EXTERN) then
+              begin
+                { A version script cannot export an ELF HIDDEN symbol.
+                  This includes procedures exported under their own name. }
+                asmsym.bind:=AB_GLOBAL;
+                current_module.add_public_asmsym(asmsym);
+              end;
+            hp:=texported_item(hp.next);
+          end;
+        inherited generatelib;
+        if current_module.is_unit then
+          begin
+            hp:=texported_item(current_module._exports.first);
+            while assigned(hp) do
+              begin
+                { The alias now lives in the unit object. Only its name is
+                  needed by subsequent links and by the PPU cache. }
+                hp.internalname:=hp.name^;
+                hp.sym:=nil;
+                hp:=texported_item(hp.next);
+              end;
+            exit;
+          end;
+
+        hp:=texported_item(current_module._exports.first);
+        while assigned(hp) do
+          begin
+            retainexport(hp);
+            hp:=texported_item(hp.next);
+          end;
+
+        unitmodule:=tmodule(loaded_units.first);
+        while assigned(unitmodule) do
+          begin
+            if unitmodule.is_unit then
+              begin
+                hp:=texported_item(unitmodule._exports.first);
+                while assigned(hp) do
+                  begin
+                    if assigned(exportedsymnames.FindCase(hp.name^)) then
+                      duplicatesymbol(hp.name^)
+                    else
+                      begin
+                        exportedsymnames.insert(hp.name^);
+                        retainexport(hp);
+                      end;
+                    hp:=texported_item(hp.next);
+                  end;
+              end;
+            unitmodule:=tmodule(unitmodule.next);
+          end;
+      end;
+
 
     procedure texportliblinux.setfininame(list: TAsmList; const s: string);
       begin

@@ -47,6 +47,8 @@ type
       sym : tsym;
       index : longint;
       name : pshortstring;
+      { Stable assembler name for exports that outlive the unit's symbols. }
+      internalname : string;
       options : texportoptions;
       is_var : boolean;
       constructor create;
@@ -176,6 +178,7 @@ begin
   sym:=nil;
   index:=-1;
   name:=nil;
+  internalname:='';
   options:=[];
   is_var:=false;
 end;

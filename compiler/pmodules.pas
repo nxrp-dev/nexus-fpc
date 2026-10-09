@@ -1607,6 +1607,11 @@ type
          if (cs_debuginfo in current_settings.moduleswitches) then
            current_debuginfo.inserttypeinfo;
 
+         { Linux unit aliases must be emitted before implementation symbols
+           are released, and become part of the unit's cached object file. }
+         if (target_info.system in systems_linux) and assigned(module._exports.first) then
+           exportlib.generatelib;
+
          { generate imports }
          if module.ImportLibraryList.Count>0 then
            importlib.generatelib;

@@ -200,14 +200,15 @@ begin
         if not anyhasalias then
           hlcg.g_external_wrapper(current_asmdata.asmlists[al_procedures],pd,hp2.name^,pd.mangledname,true);
 {$endif cpuhighleveltarget}
-        exportedsymnames.insert(hp2.name^);
+        if not (current_module.is_unit and (target_info.system in systems_linux)) then
+          exportedsymnames.insert(hp2.name^);
       end
      else
        begin
          if assigned(hp2.sym) and
             (hp2.name^<>hp2.sym.mangledname) then
            Message2(parser_e_cant_export_var_different_name,hp2.sym.realname,hp2.sym.mangledname)
-         else
+         else if not (current_module.is_unit and (target_info.system in systems_linux)) then
            exportedsymnames.insert(hp2.name^);
        end;
      hp2:=texported_item(hp2.next);

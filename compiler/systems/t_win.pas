@@ -635,7 +635,26 @@ implementation
         if (eo_index in hp.options) and ((hp.index<=0) or (hp.index>$ffff)) then
           begin
            message1(parser_e_export_invalid_index,tostr(hp.index));
+           hp.free;
            exit;
+          end;
+        if assigned(hp.sym) and not (eo_no_sym_name in hp.options) then
+          begin
+            case hp.sym.typ of
+              staticvarsym:
+                hp.internalname:=tstaticvarsym(hp.sym).mangledname;
+              procsym:
+                hp.internalname:=tprocdef(tprocsym(hp.sym).ProcdefList[0]).mangledname;
+              else
+                internalerror(200709272);
+            end;
+          end;
+        { Unit cleanup may release the implementation-only symbol. }
+        hp.sym:=nil;
+        if current_module.is_unit then
+          begin
+            current_module._exports.concat(hp);
+            exit;
           end;
         if eo_index in hp.options then
           EList_indexed.Add(hp)
@@ -663,6 +682,7 @@ implementation
               begin
                 { this is not allowed !! }
                 duplicatesymbol(hp.name^);
+                hp.free;
                 exit;
               end;
             current_module._exports.insertbefore(hp,hp2);
@@ -684,7 +704,29 @@ implementation
          i,autoindex,ni_high : longint;
          hole : boolean;
          asmsym : TAsmSymbol;
+         unitmodule : tmodule;
       begin
+         { Both source-built and cached units own their export declarations. }
+         unitmodule:=tmodule(loaded_units.first);
+         while assigned(unitmodule) do
+           begin
+             if unitmodule.is_unit then
+               begin
+                 hp:=texported_item(unitmodule._exports.first);
+                 while assigned(hp) do
+                   begin
+                     hp2:=texported_item.create;
+                     hp2.name:=stringdup(hp.name^);
+                     hp2.internalname:=hp.internalname;
+                     hp2.index:=hp.index;
+                     hp2.options:=hp.options;
+                     hp2.is_var:=hp.is_var;
+                     exportprocedure(hp2);
+                     hp:=texported_item(hp.next);
+                   end;
+               end;
+             unitmodule:=tmodule(unitmodule.next);
+           end;
          Gl_DoubleIndex:=false;
          ELIst_indexed.Sort(@IdxCompare);
 
@@ -845,15 +887,12 @@ implementation
                    inc(current_index);
                 end;
 
-              { symbol known? then get a new name }
-              if assigned(hp.sym) and not (eo_no_sym_name in hp.options) then
-                case hp.sym.typ of
-                  staticvarsym :
-                    asmsym:=current_asmdata.RefAsmSymbol(tstaticvarsym(hp.sym).mangledname,AT_DATA);
-                  procsym :
-                    asmsym:=current_asmdata.RefAsmSymbol(tprocdef(tprocsym(hp.sym).ProcdefList[0]).mangledname,AT_FUNCTION)
+              if hp.internalname<>'' then
+                begin
+                  if hp.is_var then
+                    asmsym:=current_asmdata.RefAsmSymbol(hp.internalname,AT_DATA)
                   else
-                    internalerror(200709272);
+                    asmsym:=current_asmdata.RefAsmSymbol(hp.internalname,AT_FUNCTION);
                 end
               else
                 asmsym:=current_asmdata.RefAsmSymbol(hp.name^,AT_DATA);

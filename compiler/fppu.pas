@@ -103,6 +103,7 @@ interface
           procedure writeImportSymbols;
           procedure writeResources;
           procedure writeOrderedSymbols;
+          procedure writeUnitExports;
           procedure writeunitimportsyms;
           procedure writeasmsyms(kind:tunitasmlisttype;list:tfphashobjectlist);
           procedure writeextraheader;
@@ -114,6 +115,7 @@ interface
           procedure readImportSymbols;
           procedure readResources;
           procedure readOrderedSymbols;
+          procedure readUnitExports;
           procedure readwpofile;
           procedure readunitimportsyms;
           procedure readasmsyms;
@@ -139,7 +141,7 @@ uses
   scanner,
   aasmbase,ogbase,
   comphook,
-  entfile,fpkg,fpcp;
+  entfile,fpkg,fpcp,export;
 
 
 var
@@ -1047,6 +1049,34 @@ var
       end;
 
 
+    procedure tppumodule.writeUnitExports;
+      var
+        hp : texported_item;
+        option : texportoption;
+        flags : byte;
+      begin
+        { Optional metadata: units without exports retain the existing format. }
+        if not (target_info.system in (systems_windows+systems_linux)) or
+           not assigned(_exports.first) then
+          exit;
+        hp:=texported_item(_exports.first);
+        while assigned(hp) do
+          begin
+            ppufile.putstring(hp.name^);
+            ppufile.putstring(hp.internalname);
+            ppufile.putlongint(hp.index);
+            flags:=0;
+            for option:=low(texportoption) to high(texportoption) do
+              if option in hp.options then
+                flags:=flags or (1 shl ord(option));
+            ppufile.putbyte(flags);
+            ppufile.putbyte(ord(hp.is_var));
+            hp:=texported_item(hp.next);
+          end;
+        ppufile.writeentry(ibunitexports);
+      end;
+
+
     procedure tppumodule.writeunitimportsyms;
       var
         i : longint;
@@ -1427,6 +1457,28 @@ var
       end;
 
 
+    procedure tppumodule.readUnitExports;
+      var
+        hp : texported_item;
+        option : texportoption;
+        flags : byte;
+      begin
+        while not ppufile.endofentry do
+          begin
+            hp:=texported_item.create;
+            hp.name:=stringdup(ppufile.getstring);
+            hp.internalname:=ppufile.getstring;
+            hp.index:=ppufile.getlongint;
+            flags:=ppufile.getbyte;
+            for option:=low(texportoption) to high(texportoption) do
+              if flags and (1 shl ord(option))<>0 then
+                include(hp.options,option);
+            hp.is_var:=ppufile.getbyte<>0;
+            _exports.concat(hp);
+          end;
+      end;
+
+
     procedure tppumodule.readwpofile;
       var
         orgwpofilename: string;
@@ -1574,6 +1626,8 @@ var
                readResources;
              iborderedsymbols:
                readOrderedSymbols;
+             ibunitexports:
+               readUnitExports;
              ibwpofile:
                readwpofile;
              ibendinterface :
@@ -1694,6 +1748,7 @@ var
          writeImportSymbols;
          writeResources;
          writeOrderedSymbols;
+         writeUnitExports;
          ppufile.do_crc:=true;
 
          { generate implementation deref data, the interface deref data is
