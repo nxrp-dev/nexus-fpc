@@ -76,3 +76,5 @@ Const
 	value
   }
   fmShareDenyNoneFlags : DWord = 3;
+{ Classify static data by its owning PE image, including loaded DLLs. }
+function IsImageDataPointer(AValue: Pointer): Boolean;

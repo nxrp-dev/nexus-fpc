@@ -2606,8 +2606,10 @@ var
 
 {$ifdef windows}
 var
+{$if not (defined(win32) or defined(win64))}
    sdata : ptruint; external name '__data_start__';
    ebss : ptruint; external name '__bss_end__';
+{$endif}
    TLSKey : PDWord; external name '_FPC_TlsKey';
    TLSSize : DWord; external name '_FPC_TlsSize';
 
@@ -2664,9 +2666,15 @@ begin
   if (ptruint(p)>ptruint(get_frame)) and
      (p<StackTop) then
     exit;
+{$if defined(win32) or defined(win64)}
+  { Initialized, read-only and zero-filled data in the owning PE image. }
+  if System.IsImageDataPointer(p) then
+    exit;
+{$else}
   { inside data, rdata ... bss }
   if (ptruint(p)>=ptruint(@sdata)) and (ptruint(p)<ptruint(@ebss)) then
     exit;
+{$endif}
   { is program multi-threaded and p inside Threadvar range? }
   if TlsKey^<>dword(-1) then
     begin

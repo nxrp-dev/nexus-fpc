@@ -210,6 +210,137 @@ begin
 end;
 
 {*****************************************************************************
+                         PE image storage
+*****************************************************************************}
+
+{$push}
+{$packrecords C}
+type
+  TWinImageMemoryInfo = record
+    BaseAddress, AllocationBase: Pointer;
+    AllocationProtect: DWord;
+{$ifdef CPU64}
+    Alignment1: DWord;
+{$endif}
+    RegionSize: SizeUInt;
+    State, Protect, MemoryType: DWord;
+{$ifdef CPU64}
+    Alignment2: DWord;
+{$endif}
+  end;
+  PWinImageSection = ^TWinImageSection;
+  TWinImageSection = packed record
+    Name: array[0..7] of AnsiChar;
+    VirtualSize, VirtualAddress, SizeOfRawData, PointerToRawData: DWord;
+    PointerToRelocations, PointerToLineNumbers: DWord;
+    NumberOfRelocations, NumberOfLineNumbers: Word;
+    Characteristics: DWord;
+  end;
+{$pop}
+
+function WinImageVirtualQuery(AAddress: Pointer; var AInfo: TWinImageMemoryInfo;
+  ASize: SizeUInt): SizeUInt; stdcall; external KernelDLL name 'VirtualQuery';
+
+function WinImageReadable(const AInfo: TWinImageMemoryInfo): Boolean;
+begin
+  Result:=(AInfo.State=MEM_COMMIT) and ((AInfo.Protect and $100)=0);
+  if Result then
+    case AInfo.Protect and $ff of
+      $02,$04,$08,$20,$40,$80: ; { readable PAGE_* protections }
+      else Result:=false;
+    end;
+end;
+
+function WinIsImageDataPointer(AValue: Pointer): Boolean;
+const
+  cMemoryImage = $1000000;
+  cImageData = $000000c0; { initialized or uninitialized data }
+  cImageRead = $40000000;
+  cImageExecute = $20000000;
+var
+  lMemory, lHeaders: TWinImageMemoryInfo;
+  lBase, lRVA, lNTOffset, lOptionalOffset, lTableOffset: PtrUInt;
+  lOptionalSize, lSectionCount: Word;
+  lImageSize, lHeaderSize: DWord;
+  lSection: PWinImageSection;
+  lIndex: SizeUInt;
+  lSignedNTOffset: LongInt;
+begin
+  Result:=false;
+  if AValue=nil then
+    exit;
+  if WinImageVirtualQuery(AValue,lMemory,SizeOf(lMemory))<>SizeOf(lMemory) then
+    exit;
+  if (lMemory.MemoryType<>cMemoryImage) or not WinImageReadable(lMemory) then
+    exit;
+
+  { AllocationBase is the actual loaded image base, not its preferred base.
+    Require readable image headers before inspecting their PE structures. }
+  lBase:=PtrUInt(lMemory.AllocationBase);
+  if WinImageVirtualQuery(Pointer(lBase),lHeaders,SizeOf(lHeaders))<>SizeOf(lHeaders) then
+    exit;
+  if (lHeaders.MemoryType<>cMemoryImage) or not WinImageReadable(lHeaders) or
+     (lHeaders.RegionSize<64) then
+    exit;
+  if PWord(lBase)^<>$5a4d then
+    exit;
+  lSignedNTOffset:=PLongInt(lBase+$3c)^;
+  if lSignedNTOffset<64 then
+    exit;
+  lNTOffset:=PtrUInt(lSignedNTOffset);
+  if lNTOffset>lHeaders.RegionSize-24 then
+    exit;
+  if PDWord(lBase+lNTOffset)^<>$00004550 then
+    exit;
+  lSectionCount:=PWord(lBase+lNTOffset+6)^;
+  lOptionalSize:=PWord(lBase+lNTOffset+20)^;
+  if (lOptionalSize<64) or (lOptionalSize>lHeaders.RegionSize-lNTOffset-24) then
+    exit;
+  lOptionalOffset:=lNTOffset+24;
+  if (PWord(lBase+lOptionalOffset)^<>$10b) and
+     (PWord(lBase+lOptionalOffset)^<>$20b) then
+    exit;
+  { SizeOfImage and SizeOfHeaders have the same offsets in PE32 and PE32+. }
+  lImageSize:=PDWord(lBase+lOptionalOffset+56)^;
+  lHeaderSize:=PDWord(lBase+lOptionalOffset+60)^;
+  lTableOffset:=lOptionalOffset+lOptionalSize;
+  if (lHeaderSize>lHeaders.RegionSize) or (lHeaderSize>lImageSize) or
+     (lTableOffset>lHeaderSize) then
+    exit;
+  if SizeUInt(lSectionCount)*SizeOf(TWinImageSection)>lHeaderSize-lTableOffset then
+    exit;
+  if PtrUInt(AValue)<lBase then
+    exit;
+  lRVA:=PtrUInt(AValue)-lBase;
+  if (lRVA<lHeaderSize) or (lRVA>=lImageSize) then
+    exit;
+
+  lSection:=PWinImageSection(lBase+lTableOffset);
+  for lIndex:=1 to lSectionCount do
+    begin
+      if ((lSection^.Characteristics and cImageData)<>0) and
+         ((lSection^.Characteristics and cImageRead)<>0) and
+         ((lSection^.Characteristics and cImageExecute)=0) and
+         (lSection^.VirtualAddress<lImageSize) then
+        if lSection^.VirtualSize<=lImageSize-lSection^.VirtualAddress then
+          if lRVA>=lSection^.VirtualAddress then
+            if lRVA-lSection^.VirtualAddress<lSection^.VirtualSize then
+              exit(true);
+      inc(lSection);
+    end;
+end;
+
+function IsImageDataPointer(AValue: Pointer): Boolean;
+var
+  lError: DWord;
+begin
+  { Pointer checking must not disturb the caller's Windows API error state. }
+  lError:=GetLastError;
+  Result:=WinIsImageDataPointer(AValue);
+  SetLastError(lError);
+end;
+
+{*****************************************************************************
                               Parameter Handling
 *****************************************************************************}
 
