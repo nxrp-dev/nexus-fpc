@@ -306,30 +306,6 @@ endif
 override PACKAGE_NAME=fcl-db
 PACKAGEDIR_MAIN:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /fcl-db/Makefile.fpc,$(PACKAGESDIR))))))
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_DIRS+=sqlite
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-linux)
 override TARGET_UNITS+=sqldb
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
@@ -966,22 +942,18 @@ override REQUIRE_PACKAGES=rtl fcl-xml
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
 REQUIRE_PACKAGES_RTL=1
@@ -990,22 +962,18 @@ endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
 REQUIRE_PACKAGES_RTL=1
@@ -1101,50 +1069,6 @@ override COMPILER_UNITDIR+=$(UNITDIR_FCL-XML)
 endif
 ifdef UNITDIR_FPMAKE_FCL-XML
 override COMPILER_FPMAKE_UNITDIR+=$(UNITDIR_FPMAKE_FCL-XML)
-endif
-endif
-ifdef REQUIRE_PACKAGES_SQLITE
-PACKAGEDIR_SQLITE:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /sqlite/Makefile.fpc,$(PACKAGESDIR))))))
-ifeq ($(PACKAGEDIR_SQLITE),)
-PACKAGEDIR_SQLITE:=$(firstword $(subst /Makefile,,$(strip $(wildcard $(addsuffix /sqlite/Makefile,$(PACKAGESDIR))))))
-ifneq ($(PACKAGEDIR_SQLITE),)
-PACKAGEDIR_SQLITE:=$(firstword $(subst /fpmake.pp,,$(strip $(wildcard $(addsuffix /sqlite/fpmake.pp,$(PACKAGESDIR))))))
-endif
-endif
-ifneq ($(PACKAGEDIR_SQLITE),)
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units/$(TARGETSUFFIX)),)
-UNITDIR_SQLITE=$(PACKAGEDIR_SQLITE)/units/$(TARGETSUFFIX)
-else
-UNITDIR_SQLITE=$(PACKAGEDIR_SQLITE)
-endif
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units/$(SOURCESUFFIX)),)
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)/units/$(SOURCESUFFIX)
-else
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units_bs/$(SOURCESUFFIX)),)
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)/units_bs/$(SOURCESUFFIX)
-else
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)
-endif
-endif
-ifdef CHECKDEPEND
-$(PACKAGEDIR_SQLITE)/$(FPCMADE):
-	$(MAKE) -C $(PACKAGEDIR_SQLITE) $(FPCMADE)
-override ALLDEPENDENCIES+=$(PACKAGEDIR_SQLITE)/$(FPCMADE)
-endif
-else
-PACKAGEDIR_SQLITE=
-UNITDIR_SQLITE:=$(subst /Package.fpc,,$(strip $(wildcard $(addsuffix /sqlite/Package.fpc,$(UNITSDIR)))))
-ifneq ($(UNITDIR_SQLITE),)
-UNITDIR_SQLITE:=$(firstword $(UNITDIR_SQLITE))
-else
-UNITDIR_SQLITE=
-endif
-endif
-ifdef UNITDIR_SQLITE
-override COMPILER_UNITDIR+=$(UNITDIR_SQLITE)
-endif
-ifdef UNITDIR_FPMAKE_SQLITE
-override COMPILER_FPMAKE_UNITDIR+=$(UNITDIR_FPMAKE_SQLITE)
 endif
 endif
 ifndef NOCPUDEF
@@ -1685,93 +1609,24 @@ endif
 fpc_makefile_sub2: $(addsuffix _makefile_dirs,$(TARGET_DIRS) $(TARGET_EXAMPLEDIRS))
 fpc_makefile_dirs: fpc_makefile_sub1 fpc_makefile_sub2
 fpc_makefiles: fpc_makefile fpc_makefile_dirs
-ifeq ($(CPU_OS_TARGET),x86_64-linux)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-win64)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-linux)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-win64)
-TARGET_DIRS_SQLITE=1
-endif
-ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-TARGET_DIRS_SQLITE=1
-endif
-ifdef TARGET_DIRS_SQLITE
-sqlite_all:
-	$(MAKE) -C sqlite all
-sqlite_debug:
-	$(MAKE) -C sqlite debug
-sqlite_smart:
-	$(MAKE) -C sqlite smart
-sqlite_release:
-	$(MAKE) -C sqlite release
-sqlite_units:
-	$(MAKE) -C sqlite units
-sqlite_examples:
-	$(MAKE) -C sqlite examples
-sqlite_shared:
-	$(MAKE) -C sqlite shared
-sqlite_install:
-	$(MAKE) -C sqlite install
-sqlite_sourceinstall:
-	$(MAKE) -C sqlite sourceinstall
-sqlite_exampleinstall:
-	$(MAKE) -C sqlite exampleinstall
-sqlite_distinstall:
-	$(MAKE) -C sqlite distinstall
-sqlite_zipinstall:
-	$(MAKE) -C sqlite zipinstall
-sqlite_zipsourceinstall:
-	$(MAKE) -C sqlite zipsourceinstall
-sqlite_zipexampleinstall:
-	$(MAKE) -C sqlite zipexampleinstall
-sqlite_zipdistinstall:
-	$(MAKE) -C sqlite zipdistinstall
-sqlite_clean:
-	$(MAKE) -C sqlite clean
-sqlite_distclean:
-	$(MAKE) -C sqlite distclean
-sqlite_cleanall:
-	$(MAKE) -C sqlite cleanall
-sqlite_info:
-	$(MAKE) -C sqlite info
-sqlite_makefiles:
-	$(MAKE) -C sqlite makefiles
-sqlite:
-	$(MAKE) -C sqlite all
-.PHONY: sqlite_all sqlite_debug sqlite_smart sqlite_release sqlite_units sqlite_examples sqlite_shared sqlite_install sqlite_sourceinstall sqlite_exampleinstall sqlite_distinstall sqlite_zipinstall sqlite_zipsourceinstall sqlite_zipexampleinstall sqlite_zipdistinstall sqlite_clean sqlite_distclean sqlite_cleanall sqlite_info sqlite_makefiles sqlite
-endif
-all: fpc_all $(addsuffix _all,$(TARGET_DIRS))
+all: fpc_all
 debug: fpc_debug
 smart: fpc_smart
 release: fpc_release
-units: fpc_units $(addsuffix _units,$(TARGET_DIRS))
-examples: $(addsuffix _examples,$(TARGET_DIRS))
+units: fpc_units
+examples:
 shared: fpc_shared
-install: fpc_install $(addsuffix _install,$(TARGET_DIRS))
+install: fpc_install
 sourceinstall: fpc_sourceinstall
-exampleinstall: fpc_exampleinstall $(addsuffix _exampleinstall,$(TARGET_DIRS))
-distinstall: $(addsuffix _distinstall,$(TARGET_DIRS))
+exampleinstall: fpc_exampleinstall
+distinstall:
 zipinstall:
 zipsourceinstall:
-zipexampleinstall: $(addsuffix _zipexampleinstall,$(TARGET_DIRS))
-zipdistinstall: $(addsuffix _zipdistinstall,$(TARGET_DIRS))
-clean: fpc_clean $(addsuffix _clean,$(TARGET_DIRS))
-distclean: fpc_distclean $(addsuffix _distclean,$(TARGET_DIRS))
-cleanall: fpc_cleanall $(addsuffix _cleanall,$(TARGET_DIRS))
+zipexampleinstall:
+zipdistinstall:
+clean: fpc_clean
+distclean: fpc_distclean
+cleanall: fpc_cleanall
 info: fpc_info
 makefiles: fpc_makefiles
 .PHONY: all debug smart release units examples shared install sourceinstall exampleinstall distinstall zipinstall zipsourceinstall zipexampleinstall zipdistinstall clean distclean cleanall info makefiles

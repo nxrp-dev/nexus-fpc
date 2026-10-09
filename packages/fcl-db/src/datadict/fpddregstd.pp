@@ -42,11 +42,11 @@ uses
 {$ENDIF FPC_DOTTEDUNITS}
 
 Type
-  TDataDictEngine = (teDBF,teSQLite3);
+  TDataDictEngine = (teDBF);
   TDataDictEngines = set of TDataDictEngine;
 
 Const
-  AllStdDDEngines = [teDBF,teSQLite3];
+  AllStdDDEngines = [teDBF];
 
 Type
 
@@ -76,23 +76,21 @@ implementation
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-  Data.Dict.Dbf,
-  Data.Dict.Sqlite3;
+  Data.Dict.Dbf;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-  fpdddbf,
-  fpddsqlite3;
+  fpdddbf;
 {$ENDIF FPC_DOTTEDUNITS}
 
 Const
   StdEngineClasses : Array [TDataDictEngine] of TFPDDEngineClass
-                   = (TDBFDDEngine, TSQLDBSQLite3DDEngine);
+                   = (TDBFDDEngine);
 
   StdEngineRegs : Array [TDataDictEngine] of procedure
-                = (@InitDBFImporter, @RegisterSQLite3DDEngine);
+                = (@InitDBFImporter);
 
   StdEngineUnRegs : Array [TDataDictEngine] of procedure
-                = (@DoneDBFImporter, @UnRegisterSQLite3DDEngine);
+                = (@DoneDBFImporter);
 
 function RegisterStdDDEngines(Engines: TDataDictEngines): TDataDictEngines;
 

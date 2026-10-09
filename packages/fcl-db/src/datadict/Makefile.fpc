@@ -7,31 +7,20 @@ main=fcl-db
 
 [require]
 packages=fcl-base fcl-xml
-packages_linux=sqlite
-packages_darwin=sqlite
-packages_iphonesim=sqlite
-packages_win32=sqlite
-packages_wince=sqlite
-packages_win64=sqlite
-packages_aix=sqlite
 
 [target]
 units=fpdatadict fpdddiff fpdddbf fpddsqldb
-units_linux=fpddsqlite3 fpddregstd
-units_darwin=fpddsqlite3 fpddregstd
-units_iphonesim=fpddsqlite3 fpddregstd
-units_win32=fpddsqlite3 fpddregstd
-units_wince=fpddsqlite3
-units_win64=fpddsqlite3
-units_aix=fpddsqlite3 fpddregstd
+units_linux=fpddregstd
+units_darwin=fpddregstd
+units_iphonesim=fpddregstd
+units_win32=fpddregstd
+units_aix=fpddregstd
 rsts=fpdatadict fpddsqldb fpdddiff
-rsts_linux=fpddsqlite3 fpddregstd
-rsts_darwin=fpddsqlite3 fpddregstd
-rsts_iphonesim=fpddsqlite3 fpddregstd
-rsts_win32=fpddsqlite3 fpddregstd
-rsts_wince=fpddsqlite3
-rsts_win64=fpddsqlite3
-rsts_aix=fpddsqlite3 fpddregstd
+rsts_linux=fpddregstd
+rsts_darwin=fpddregstd
+rsts_iphonesim=fpddregstd
+rsts_win32=fpddregstd
+rsts_aix=fpddregstd
 
 [compiler]
 options=-S2h

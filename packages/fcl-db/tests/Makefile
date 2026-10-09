@@ -306,70 +306,70 @@ endif
 override PACKAGE_NAME=fcl
 PACKAGEDIR_MAIN:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /fcl/Makefile.fpc,$(PACKAGESDIR))))))
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-ios)
-override TARGET_UNITS+=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+override TARGET_UNITS+=toolsunit dbftoolsunit
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-ios)
-override TARGET_EXAMPLES+=dbtestframework testsqlfiles
+override TARGET_EXAMPLES+=testsqlfiles
 endif
 override INSTALL_FPCPACKAGE=y
 ifdef REQUIRE_UNITSDIR

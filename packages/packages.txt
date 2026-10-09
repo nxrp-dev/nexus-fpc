@@ -16,7 +16,7 @@ COPYING.FPC            [ibase]                regenmakefiles.sh
 [fcl-async]            [jni]                  [rtl-generics]
 [fcl-base]             [libc]                 [rtl-objpas]
 [fcl-db]               [libcurl]              [sdl]
-[fcl-ebnf]             [libffi]               [sqlite]
+[fcl-ebnf]             [libffi]
 [fcl-extra]            [libfontconfig]        [tplylib]
 [fcl-fpcunit]          [libgc]                [univint]
 [fcl-hash]             [libpcre]              [unixutil]

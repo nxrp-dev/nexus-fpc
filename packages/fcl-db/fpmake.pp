@@ -10,7 +10,6 @@ procedure add_fcl_db(const ADirectory: string);
 const
   DatadictOSes        = [aix,darwin,linux,win32,win64,android];
   SqldbConnectionOSes = [aix,linux,darwin,iphonesim,ios,win32,win64,android];
-  SqliteOSes          = [aix,linux,darwin,iphonesim,ios,win32,win64,android];
   DBaseOSes           = [aix,linux,darwin,iphonesim,ios,win32,win64,android];
   MSSQLOSes           = [linux,win32,win64,android];
 
@@ -40,20 +39,17 @@ begin
     P.SourcePath.Add('src');
     P.SourcePath.Add('src/base');
     P.SourcePath.Add('src/sqldb');
-    P.SourcePath.Add('src/sqldb/sqlite', SqldbConnectionOSes);
     P.SourcePath.Add('src/sdf');
     P.SourcePath.Add('src/json');
     P.SourcePath.Add('src/datadict', DatadictOSes);
     P.SourcePath.Add('src/memds');
     P.SourcePath.Add('src/codegen', DatadictOSes);
     P.SourcePath.Add('src/export', DatadictOSes);
-    P.SourcePath.Add('src/sqlite', SqliteOSes);
     P.SourcePath.Add('src/dbase');
     P.IncludePath.Add('src/base');
     P.IncludePath.Add('src/sqldb');
     P.IncludePath.Add('src/sdf');
     P.IncludePath.Add('src/memds');
-    P.IncludePath.Add('src/sqlite',SqliteOSes);
     P.IncludePath.Add('src/dbase');
     P.SourcePath.Add('src/sql');
 
@@ -61,7 +57,6 @@ begin
     P.Dependencies.Add('fcl-xml');
     P.Dependencies.Add('rtl-objpas');
     P.Dependencies.Add('rtl-extra'); // clocale
-    P.Dependencies.Add('sqlite', SqldbConnectionOSes+SqliteOSes);
     P.Dependencies.Add('fcl-json');
 
 //    P.Options.Add('-S2h');
@@ -394,15 +389,7 @@ begin
         begin
           AddUnit('fpdatadict');
           AddUnit('fpdddbf');
-          AddUnit('fpddsqlite3');
         end;
-    T:=P.Targets.AddUnit('customsqliteds.pas', SqliteOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('db');
-          AddUnit('dbconst');
-        end;
-
     T:=P.Targets.AddUnit('fpddsqldb.pp', DatadictOSes);
     T.ResourceStrings:=true;
       with T.Dependencies do
@@ -411,14 +398,6 @@ begin
           AddUnit('sqldb');
           AddUnit('sqltypes');
           AddUnit('fpdatadict');
-        end;
-    T:=P.Targets.AddUnit('fpddsqlite3.pp', DatadictOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('sqldb');
-          AddUnit('fpdatadict');
-          AddUnit('fpddsqldb');
-          AddUnit('sqlite3conn');
         end;
     T:=P.Targets.AddUnit('fpfixedexport.pp', DatadictOSes);
     T.ResourceStrings:=true;
@@ -514,31 +493,6 @@ begin
         begin
           AddUnit('sqldb');
         end;
-    T:=P.Targets.AddUnit('sqlite3conn.pp', SqldbConnectionOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('db');
-          AddUnit('bufdataset');
-          AddUnit('sqldb');
-          AddUnit('dbconst');
-        end;
-    T:=P.Targets.AddUnit('sqlite3ds.pas', SqliteOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('customsqliteds');
-          AddUnit('db');
-        end;
-    T:=P.Targets.AddUnit('sqliteds.pas', SqliteOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('customsqliteds');
-          AddUnit('db');
-        end;
-    T:=P.Targets.AddUnit('sqlite3backup.pas', SqldbConnectionOSes);
-      with T.Dependencies do
-        begin
-          AddUnit('sqlite3conn');
-        end;
     // SQL
     T:=P.Targets.AddUnit('fpsqltree.pp');
     T:=P.Targets.AddUnit('fpsqlscanner.pp');
@@ -565,18 +519,9 @@ begin
 
     P.ExamplePath.Add('tests');
     T:=P.Targets.AddExampleProgram('dbftoolsunit.pas', DBaseOSes);
-    T:=P.Targets.AddExampleProgram('dbtestframework.pas');
-    T:=P.Targets.AddExampleProgram('memdstoolsunit.pas');
-    T:=P.Targets.AddExampleProgram('sdfdstoolsunit.pas');
-    T:=P.Targets.AddExampleProgram('sqldbtoolsunit.pas');
-    T:=P.Targets.AddExampleProgram('testbasics.pas');
-    T:=P.Targets.AddExampleProgram('testdatasources.pas');
-    T:=P.Targets.AddExampleProgram('testdbbasics.pas');
     T:=P.Targets.AddExampleProgram('testdddiff.pp');
-    T:=P.Targets.AddExampleProgram('testfieldtypes.pas');
     T:=P.Targets.AddExampleProgram('testsqlscript.pas');
     T:=P.Targets.AddExampleProgram('toolsunit.pas');
-    // database.ini.txt
     // README.txt
     P.NamespaceMap:='namespaces.lst';
 

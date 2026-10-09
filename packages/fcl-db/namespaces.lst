@@ -4,7 +4,6 @@ src/sdf/sdfdata.pp=namespaced/Data.SdfDataset.pp
 src/datadict/fpddsqldb.pp=namespaced/Data.Dict.Sqldb.pp
 {s*:src/datadict/}=namespaced/
 {i+:src/datadict/}
-src/datadict/fpddsqlite3.pp=namespaced/Data.Dict.Sqlite3.pp
 src/datadict/fpdddiff.pp=namespaced/Data.Dict.Diff.pp
 src/datadict/fpdatadict.pp=namespaced/Data.Dict.Base.pp
 src/datadict/fpdddbf.pp=namespaced/Data.Dict.Dbf.pp
@@ -58,10 +57,6 @@ src/sqldb/sqldblib.pp=namespaced/Data.SqlDb.Lib.pp
 {s*:src/sqldb/interbase/}=namespaced/
 {i+:src/sqldb/interbase/}
 src/sqldb/sqldbini.pp=namespaced/Data.SqlDb.Ini.pp
-src/sqldb/sqlite/sqlite3backup.pas=namespaced/Data.SqlDb.Sqlite3backup.pas
-{s*:src/sqldb/sqlite/}=namespaced/
-{i+:src/sqldb/sqlite/}
-src/sqldb/sqlite/sqlite3conn.pp=namespaced/Data.SqlDb.Sqlite3.pp
 src/codegen/fpcgtypesafedataset.pp=namespaced/Data.CodeGen.TypeSafeDataset.pp
 {s*:src/codegen/}=namespaced/
 {i+:src/codegen/}
@@ -104,8 +99,3 @@ src/dbase/dbf_collate.pas=namespaced/Data.Dbf.Collate.pas
 src/memds/memds.pp=namespaced/Data.MemoryDataset.pp
 {s*:src/memds/}=namespaced/
 {i+:src/memds/}
-src/sqlite/sqliteds.pas=namespaced/Data.SQLite.Sqliteds.pas
-{s*:src/sqlite/}=namespaced/
-{i+:src/sqlite/}
-src/sqlite/customsqliteds.pas=namespaced/Data.SQLite.Customsqliteds.pas
-src/sqlite/sqlite3ds.pas=namespaced/Data.SQLite.Sqlite3ds.pas

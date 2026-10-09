@@ -8,19 +8,19 @@ version=3.3.1
 
 [target]
 dirs=src/sdf src/memds src/sqldb src/base src/sql src/json
-dirs_beos=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_haiku=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_linux=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_freebsd=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_darwin=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_iphonesim=src/dbase src/sqlite
-dirs_solaris=src/dbase src/sqlite
-dirs_netbsd=src/dbase src/sqlite
-dirs_openbsd=src/dbase src/sqlite
+dirs_beos=src/dbase src/export src/datadict src/codegen
+dirs_haiku=src/dbase src/export src/datadict src/codegen
+dirs_linux=src/dbase src/export src/datadict src/codegen
+dirs_freebsd=src/dbase src/export src/datadict src/codegen
+dirs_darwin=src/dbase src/export src/datadict src/codegen
+dirs_iphonesim=src/dbase
+dirs_solaris=src/dbase
+dirs_netbsd=src/dbase
+dirs_openbsd=src/dbase
 dirs_os2=src/dbase src/export
-dirs_win32=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_win64=src/dbase src/sqlite src/export src/datadict src/codegen
-dirs_wince=src/dbase src/sqlite src/export src/datadict src/codegen
+dirs_win32=src/dbase src/export src/datadict src/codegen
+dirs_win64=src/dbase src/export src/datadict src/codegen
+dirs_wince=src/dbase src/export src/datadict src/codegen
 
 [require]
 packages=fcl-base fcl-xml fcl-json

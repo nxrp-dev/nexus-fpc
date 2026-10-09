@@ -306,31 +306,31 @@ endif
 override PACKAGE_NAME=fcl-db
 PACKAGEDIR_MAIN:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /fcl-db/Makefile.fpc,$(PACKAGESDIR))))))
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
 override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddsqlite3 fpddregstd
+override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
 override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb
@@ -339,31 +339,31 @@ ifeq ($(CPU_OS_TARGET),aarch64-ios)
 override TARGET_UNITS+=fpdatadict fpdddiff fpdddbf fpddsqldb
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
 override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddsqlite3 fpddregstd
+override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff  fpddregstd
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
 override TARGET_RSTS+=fpdatadict fpddsqldb fpdddiff
@@ -943,25 +943,21 @@ ifeq ($(CPU_OS_TARGET),x86_64-linux)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
 REQUIRE_PACKAGES_RTL=1
@@ -972,25 +968,21 @@ ifeq ($(CPU_OS_TARGET),aarch64-linux)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
 REQUIRE_PACKAGES_RTL=1
 REQUIRE_PACKAGES_FCL-BASE=1
 REQUIRE_PACKAGES_FCL-XML=1
-REQUIRE_PACKAGES_SQLITE=1
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
 REQUIRE_PACKAGES_RTL=1
@@ -1132,50 +1124,6 @@ override COMPILER_UNITDIR+=$(UNITDIR_FCL-XML)
 endif
 ifdef UNITDIR_FPMAKE_FCL-XML
 override COMPILER_FPMAKE_UNITDIR+=$(UNITDIR_FPMAKE_FCL-XML)
-endif
-endif
-ifdef REQUIRE_PACKAGES_SQLITE
-PACKAGEDIR_SQLITE:=$(firstword $(subst /Makefile.fpc,,$(strip $(wildcard $(addsuffix /sqlite/Makefile.fpc,$(PACKAGESDIR))))))
-ifeq ($(PACKAGEDIR_SQLITE),)
-PACKAGEDIR_SQLITE:=$(firstword $(subst /Makefile,,$(strip $(wildcard $(addsuffix /sqlite/Makefile,$(PACKAGESDIR))))))
-ifneq ($(PACKAGEDIR_SQLITE),)
-PACKAGEDIR_SQLITE:=$(firstword $(subst /fpmake.pp,,$(strip $(wildcard $(addsuffix /sqlite/fpmake.pp,$(PACKAGESDIR))))))
-endif
-endif
-ifneq ($(PACKAGEDIR_SQLITE),)
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units/$(TARGETSUFFIX)),)
-UNITDIR_SQLITE=$(PACKAGEDIR_SQLITE)/units/$(TARGETSUFFIX)
-else
-UNITDIR_SQLITE=$(PACKAGEDIR_SQLITE)
-endif
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units/$(SOURCESUFFIX)),)
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)/units/$(SOURCESUFFIX)
-else
-ifneq ($(wildcard $(PACKAGEDIR_SQLITE)/units_bs/$(SOURCESUFFIX)),)
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)/units_bs/$(SOURCESUFFIX)
-else
-UNITDIR_FPMAKE_SQLITE=$(PACKAGEDIR_SQLITE)
-endif
-endif
-ifdef CHECKDEPEND
-$(PACKAGEDIR_SQLITE)/$(FPCMADE):
-	$(MAKE) -C $(PACKAGEDIR_SQLITE) $(FPCMADE)
-override ALLDEPENDENCIES+=$(PACKAGEDIR_SQLITE)/$(FPCMADE)
-endif
-else
-PACKAGEDIR_SQLITE=
-UNITDIR_SQLITE:=$(subst /Package.fpc,,$(strip $(wildcard $(addsuffix /sqlite/Package.fpc,$(UNITSDIR)))))
-ifneq ($(UNITDIR_SQLITE),)
-UNITDIR_SQLITE:=$(firstword $(UNITDIR_SQLITE))
-else
-UNITDIR_SQLITE=
-endif
-endif
-ifdef UNITDIR_SQLITE
-override COMPILER_UNITDIR+=$(UNITDIR_SQLITE)
-endif
-ifdef UNITDIR_FPMAKE_SQLITE
-override COMPILER_FPMAKE_UNITDIR+=$(UNITDIR_FPMAKE_SQLITE)
 endif
 endif
 ifndef NOCPUDEF

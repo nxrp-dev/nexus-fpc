@@ -1,6 +1,6 @@
 ﻿<#
 .SYNOPSIS
-Clean native Windows x86-64 NexusFPC bootstrap using FPC 3.2.2.
+Clean or bootstrap native Windows x86-64 NexusFPC using FPC 3.2.2.
 .DESCRIPTION
 Uses GNU make explicitly and follows the Free Pascal source tree's documented
 clean/all bootstrap flow. Use -RegenerateMakefiles after changing build definitions
@@ -8,12 +8,15 @@ or pruning targets so FPC's generated package/utility registration and Makefiles
 refreshed from the current source tree before bootstrapping.
 RTL generation includes Makefile.rtl; Makefile.pkg generation uses -s.
 Existing target scopes are retained, excluding targets removed from the generator.
+Use -CleanOnly to run the clean step without rebuilding.
 By default only the native bootstrap is built. -FullMatrix additionally builds
 the retained cross-target RTL matrix and checks heaptrc with -CfNONE.
 .EXAMPLE
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -RegenerateMakefiles
 .EXAMPLE
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -FullMatrix -NdkRoot C:\android\ndk\25.2.9519653
+.EXAMPLE
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -CleanOnly
 #>
 [CmdletBinding()]
 param(
@@ -23,6 +26,7 @@ param(
     [string]$NdkRoot,
     [switch]$RegenerateMakefiles,
     [switch]$FullMatrix,
+    [switch]$CleanOnly,
     [switch]$CheckOnly
 )
 
@@ -51,6 +55,7 @@ $makeVersion = & $make --version
 if ($LASTEXITCODE -ne 0 -or ($makeVersion -join "`n") -notmatch '^GNU Make') {
     throw "Not GNU make: $make"
 }
+if ($CleanOnly -and $FullMatrix) { throw '-CleanOnly cannot be combined with -FullMatrix.' }
 if ($FullMatrix) {
     foreach ($tool in @('clang.exe', 'ld.lld.exe')) {
         if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
@@ -74,7 +79,7 @@ if ($FullMatrix) {
 Write-Host "Source: $SourceRoot"
 Write-Host "Bootstrap: $compiler"
 Write-Host "Make: $make"
-Write-Host "Mode: $(if ($FullMatrix) { 'full RTL matrix' } else { 'native bootstrap only' })"
+Write-Host "Mode: $(if ($CleanOnly) { 'clean only' } elseif ($FullMatrix) { 'full RTL matrix' } else { 'native bootstrap only' })"
 if ($CheckOnly) { Write-Host 'Preflight passed. No files changed.'; return }
 
 $runRoot = Join-Path ([IO.Path]::GetFullPath($LogRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
@@ -148,7 +153,7 @@ rm fpmake_proc.inc fpmake_add.inc ; /bin/ls -1 */fpmake.pp| while read file; do 
 }
 
 function Get-GeneratedTargets([string]$Path) {
-    $line = [IO.File]::ReadLines($Path) | Where-Object { $_ -like 'MAKEFILETARGETS=*' } | Select-Object -First 1
+    $line = [IO.File]::ReadAllLines($Path) | Where-Object { $_ -like 'MAKEFILETARGETS=*' } | Select-Object -First 1
     if (-not $line) { throw "Missing MAKEFILETARGETS: $Path" }
     return ($line.Substring('MAKEFILETARGETS='.Length) -split ' ' | Where-Object { $_ })
 }
@@ -368,6 +373,11 @@ try {
     Invoke-BootstrapStep 'clean' $SourceRoot $make (@('clean') + $makeArguments)
     foreach ($stamp in @('build-stamp.x86_64-win64', 'base.build-stamp.x86_64-win64')) {
         if (Test-Path -LiteralPath "$SourceRoot\$stamp") { throw "Clean left a stale build stamp: $stamp" }
+    }
+    if ($CleanOnly) {
+        Write-Host 'Clean passed. No rebuild performed.'
+        Write-Host "Logs: $runRoot"
+        return
     }
     Invoke-BootstrapStep 'bootstrap' $SourceRoot $make (@('all') + $makeArguments)
     foreach ($artifact in @('compiler\ppcx64.exe', 'build-stamp.x86_64-win64', 'base.build-stamp.x86_64-win64')) {

@@ -25,7 +25,6 @@
   add_rtl_extra(ADirectory+IncludeTrailingPathDelimiter('rtl-extra'));
   add_rtl_generics(ADirectory+IncludeTrailingPathDelimiter('rtl-generics'));
   add_rtl_objpas(ADirectory+IncludeTrailingPathDelimiter('rtl-objpas'));
-  add_sqlite(ADirectory+IncludeTrailingPathDelimiter('sqlite'));
   add_tplylib(ADirectory+IncludeTrailingPathDelimiter('tplylib'));
   add_univint(ADirectory+IncludeTrailingPathDelimiter('univint'));
   add_winunits_base(ADirectory+IncludeTrailingPathDelimiter('winunits-base'));

@@ -1,13 +1,13 @@
 #
-#   Makefile.fpc for DB TestFramework 
+#   Makefile.fpc for retained FCL database tests
 #
 
 [package]
 main=fcl
 
 [target]
-examples=dbtestframework testsqlfiles 
-units=toolsunit dbftoolsunit memdstoolsunit sqldbtoolsunit sdfdstoolsunit
+examples=testsqlfiles
+units=toolsunit dbftoolsunit
 
 [install]
 fpcpackage=y

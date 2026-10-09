@@ -6,13 +6,6 @@
 main=fcl-db
 
 [target]
-dirs_linux=sqlite
-dirs_darwin=sqlite
-dirs_iphonesim=sqlite
-dirs_win32=sqlite
-dirs_win64=sqlite
-dirs_wince=sqlite
-dirs_aix=sqlite
 units=sqldb
 rsts=sqldb
 

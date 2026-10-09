@@ -144,12 +144,6 @@ end;
 
 {$include rtl-objpas/fpmake.pp}
 
-procedure add_sqlite(const ADirectory: string);
-begin
-  with Installer do
-{$include sqlite/fpmake.pp}
-end;
-
 procedure add_tplylib(const ADirectory: string);
 begin
   with Installer do
