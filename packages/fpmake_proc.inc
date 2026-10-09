@@ -108,12 +108,6 @@ begin
 {$include libffi/fpmake.pp}
 end;
 
-procedure add_libtar(const ADirectory: string);
-begin
-  with Installer do
-{$include libtar/fpmake.pp}
-end;
-
 procedure add_pasjpeg(const ADirectory: string);
 begin
   with Installer do

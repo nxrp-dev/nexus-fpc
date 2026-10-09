@@ -304,37 +304,37 @@ FPCFPMAKE=$(FPC)
 endif
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-linux)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-darwin)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-android)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-linux)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-darwin)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85  sockcli isockcli dsockcli socksvr isocksvr dsocksvr testhres testnres testsres testrhre testrnre testrsre testur ipcserver ipcclient debugtest dbugsrv asiotest testtimer
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-android)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-ios)
-override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 tarmakercons tarmakerconsgzip avltreetest decodeascii85 encodeascii85
+override TARGET_PROGRAMS+=stringl dparser fstream mstream list threads testrtf cfgtest xmldump htdump tidea b64test b64test2 b64enc b64dec restest testz testz2 istream doecho testol testcont txmlreg testreg tstelcmd testapp testbs testbf cachetest poolmm1 poolmm2 avltreetest decodeascii85 encodeascii85
 endif
 override INSTALL_FPCPACKAGE=y
 ifdef REQUIRE_UNITSDIR

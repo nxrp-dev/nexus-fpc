@@ -40,7 +40,6 @@ begin
     D:=P.Dependencies.Add('hash');
     D:=P.Dependencies.Add('paszlib');
     D:=P.Dependencies.Add('fcl-process',AllOSes-[go32v2]);
-    D:=P.Dependencies.Add('libtar');
 
     with P.Targets.AddUnit('src/fpmkunit.pp') do
       ResourceStrings:=true;

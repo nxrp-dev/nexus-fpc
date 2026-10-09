@@ -41,7 +41,6 @@ Interface
 {$ENDIF NETBSD}
 
 { $define NO_UNIT_PROCESS}
-{ $define NO_TAR_SUPPORT}
 { $define NO_UNIT_ZIPPER}
 
 {$ifndef NO_UNIT_PROCESS}
@@ -51,16 +50,6 @@ Interface
 {$ifndef NO_UNIT_ZIPPER}
   {$define HAS_UNIT_ZIPPER}
 {$endif NO_UNIT_ZIPPER}
-
-{$ifndef NO_TAR_SUPPORT}
-  {$define HAS_TAR_SUPPORT}
-{$endif NO_TAR_SUPPORT}
-
-{$ifdef unix}
-  {$ifdef HAS_TAR_SUPPORT}
-    {$define CREATE_TAR_FILE}
-  {$endif HAS_TAR_SUPPORT}
-{$endif unix}
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
@@ -80,11 +69,8 @@ uses
 {$ifdef HAS_UNIT_PROCESS}
   ,System.Process
 {$endif HAS_UNIT_PROCESS}
-{$ifdef HAS_TAR_SUPPORT}
-  ,Libx.Libtar
-{$endif HAS_TAR_SUPPORT}
 {$ifdef HAS_UNIT_ZIPPER}
-  ,System.ZLib.Zipper, System.ZLib.Zstream
+  ,System.ZLib.Zipper
 {$endif HAS_UNIT_ZIPPER}
   ;
 {$ELSE FPC_DOTTEDUNITS}
@@ -100,11 +86,8 @@ uses
 {$ifdef HAS_UNIT_PROCESS}
   ,process
 {$endif HAS_UNIT_PROCESS}
-{$ifdef HAS_TAR_SUPPORT}
-  ,libtar
-{$endif HAS_TAR_SUPPORT}
 {$ifdef HAS_UNIT_ZIPPER}
-  ,zipper, zstream
+  ,zipper
 {$endif HAS_UNIT_ZIPPER}
   ;
 {$ENDIF FPC_DOTTEDUNITS}
@@ -1319,11 +1302,7 @@ Type
 {$endif NO_THREADING}
 {$ifdef HAS_UNIT_ZIPPER}
     FZipper: TZipper;
-    FGZFileStream: TGZFileStream;
 {$endif HAS_UNIT_ZIPPER}
-{$ifdef HAS_TAR_SUPPORT}
-    FTarWriter: TTarWriter;
-{$endif HAS_TAR_SUPPORT}
     procedure AddFileToArchive(const APackage: TPackage; Const ASourceFileName, ADestFileName : String);
     procedure FinishArchive(Sender: TObject);
   Protected
@@ -1666,15 +1645,7 @@ uses typinfo, rtlconsts;
 {$ENDIF FPC_DOTTEDUNITS}
 
 const
-{$ifdef CREATE_TAR_FILE}
-  {$ifdef HAS_UNIT_ZIPPER}
-  ArchiveExtension = '.tar.gz';
-  {$else }
-  ArchiveExtension = '.tar';
-  {$endif HAS_UNIT_ZIPPER}
-{$else CREATE_TAR_FILE}
   ArchiveExtension = '.zip';
-{$endif CREATE_TAR_FILE}
 
 var
   GPluginManager: TfpmPluginManager;
@@ -6642,47 +6613,7 @@ procedure TBuildEngine.AddFileToArchive(const APackage: TPackage; const ASourceF
     result := result + MakeZipSuffix(Defaults.CPU, Defaults.OS);
   end;
 
-{$ifdef UNIX}
-var
-  FileStat: stat;
-{$endif UNIX}
 begin
-{$ifdef CREATE_TAR_FILE}
-  {$ifdef HAS_TAR_SUPPORT}
-  if not assigned(FTarWriter) then
-    begin
-    {$ifdef HAS_UNIT_ZIPPER}
-      FGZFileStream := TGZFileStream.create(GetArchiveName + ArchiveExtension, gzopenwrite);
-      try
-        FTarWriter := TTarWriter.Create(FGZFileStream);
-      except
-        FGZFileStream.Free;
-      end;
-    {$else}
-    FTarWriter := TTarWriter.Create(GetArchiveName + ArchiveExtension);
-    {$endif HAS_UNIT_ZIPPER}
-    FTarWriter.Permissions := [tpReadByOwner, tpWriteByOwner, tpReadByGroup, tpReadByOther];
-    FTarWriter.UserName := 'root';
-    FTarWriter.GroupName := 'root';
-    end;
-{$ifdef unix}
-  filestat:=Default(stat);
-  if (FpStat(ASourceFileName, FileStat) = 0) and (FileStat.st_mode and S_IXUSR = S_IXUSR) then
-    begin
-    FTarWriter.Permissions := FTarWriter.Permissions + [tpExecuteByGroup];
-    FTarWriter.Permissions := FTarWriter.Permissions + [tpExecuteByOwner];
-    FTarWriter.Permissions := FTarWriter.Permissions + [tpExecuteByOther];
-    end
-  else
-    begin
-    FTarWriter.Permissions := FTarWriter.Permissions - [tpExecuteByGroup];
-    FTarWriter.Permissions := FTarWriter.Permissions - [tpExecuteByOwner];
-    FTarWriter.Permissions := FTarWriter.Permissions - [tpExecuteByOther];
-    end;
-{$endif unix}
-  FTarWriter.AddFile(ASourceFileName, ADestFileName);
-  {$endif HAS_TAR_SUPPORT}
-{$else CREATE_TAR_FILE}
   {$ifdef HAS_UNIT_ZIPPER}
   if not assigned(FZipper) then
     begin
@@ -6692,20 +6623,10 @@ begin
 
   FZipper.Entries.AddFileEntry(ASourceFileName, ADestFileName);
   {$endif HAS_UNIT_ZIPPER}
-{$ENDIF CREATE_TAR_FILE}
 end;
 
 procedure TBuildEngine.FinishArchive(Sender: TObject);
 begin
-  {$ifdef HAS_TAR_SUPPORT}
-  if assigned(FTarWriter) then
-    begin
-      FreeAndNil(FTarWriter);
-      {$ifdef HAS_UNIT_ZIPPER}
-      FGZFileStream.Free;
-      {$endif HAS_UNIT_ZIPPER}
-    end;
-  {$endif HAS_TAR_SUPPORT}
   {$ifdef HAS_UNIT_ZIPPER}
   if assigned(FZipper) then
     begin

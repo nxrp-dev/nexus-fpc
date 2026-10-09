@@ -17,7 +17,6 @@
   add_iosxlocale(ADirectory+IncludeTrailingPathDelimiter('iosxlocale'));
   add_jni(ADirectory+IncludeTrailingPathDelimiter('jni'));
   add_libffi(ADirectory+IncludeTrailingPathDelimiter('libffi'));
-  add_libtar(ADirectory+IncludeTrailingPathDelimiter('libtar'));
   add_pasjpeg(ADirectory+IncludeTrailingPathDelimiter('pasjpeg'));
   add_paszlib(ADirectory+IncludeTrailingPathDelimiter('paszlib'));
   add_pthreads(ADirectory+IncludeTrailingPathDelimiter('pthreads'));

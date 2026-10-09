@@ -21,7 +21,6 @@ begin
     P.Dependencies.Add('paszlib');
     P.Dependencies.Add('fcl-base');
     P.Dependencies.Add('fcl-xml');
-    P.Dependencies.Add('libtar');
     P.Dependencies.Add('univint',[Darwin,iPhoneSim,ios]);
 
     P.Author := ' Dean Zobec, Michael van Canneyt';
@@ -37,14 +36,6 @@ begin
     P.SourcePath.Add('src');
     P.IncludePath.Add('src');
 
-    T:=P.Targets.AddUnit('digesttestreport.pp');
-    T.OSes := P.OSes - [wasip1,wasip1threads];
-      with T.Dependencies do
-        begin
-          AddUnit('fpcunit');
-          AddUnit('fpcunitreport');
-          AddUnit('testutils');
-        end;
     T:=P.Targets.AddUnit('fpcunit.pp');
       T.ResourceStrings:=true;
       with T.Dependencies do

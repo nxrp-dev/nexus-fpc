@@ -14,7 +14,7 @@ packages_iphonesim=univint
 units=contnrs inifiles rtfpars idea base64 gettext \
       iostream cachecls avl_tree uriparser \
       eventlog custapp wformat whtml wtex rttiutils bufstream \
-      streamex blowfish streamio inicol pooledmm libtar streamcoll \
+      streamex blowfish streamio inicol pooledmm streamcoll \
       maskutils fpexprpars ascii85 fptemplate
 units_beos=syncobjs
 units_haiku=syncobjs

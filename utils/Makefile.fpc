@@ -2,7 +2,7 @@
 #   Makefile.fpc for running fpmake
 #
 [require]
-packages=rtl fpmkunit fcl-json fcl-process libtar paszlib
+packages=rtl fpmkunit fcl-json fcl-process paszlib
 
 [install]
 fpcpackage=y

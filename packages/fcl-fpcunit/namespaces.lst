@@ -20,4 +20,3 @@ src/simpletestrunner.pas=namespaced/FpcUnit.Runners.Simple.pas
 src/plaintestreport.pp=namespaced/FpcUnit.Reports.Plain.pp
 src/xmlreporter.pas=namespaced/FpcUnit.Reports.XML.pas
 src/ubmockobject.pp=namespaced/FpcUnit.Ubmockobject.pp
-src/digesttestreport.pp=namespaced/FpcUnit.Reports.Digest.pp

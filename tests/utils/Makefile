@@ -310,7 +310,7 @@ ifeq ($(CPU_OS_TARGET),x86_64-darwin)
 override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-win64)
-override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat  prepup
+override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat
 endif
 ifeq ($(CPU_OS_TARGET),x86_64-iphonesim)
 override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat
@@ -325,7 +325,7 @@ ifeq ($(CPU_OS_TARGET),aarch64-darwin)
 override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-win64)
-override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat  prepup
+override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat
 endif
 ifeq ($(CPU_OS_TARGET),aarch64-iphonesim)
 override TARGET_PROGRAMS+=dotest fptime fail testfail digest concat

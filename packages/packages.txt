@@ -21,7 +21,7 @@ COPYING.FPC            [ibase]                regenmakefiles.sh
 [fcl-fpcunit]          [libgc]                [univint]
 [fcl-hash]             [libpcre]              [unixutil]
 [fcl-image]            [libpng]               [unzip]
-[fcl-json]             [libtar]               [uuid]
+[fcl-json]                                    [uuid]
 [fcl-jsonschema]       [libxml]               [winunits-base]
 [fcl-net]              Makefile               [x11]
 [fcl-process]          Makefile.fpc           [zlib]

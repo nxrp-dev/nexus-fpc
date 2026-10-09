@@ -1621,7 +1621,7 @@ TESTDIRECTDIRS=
 TESTSUBDIRS=cg cg/variants cg/cdecl cpu16 library opt $(addprefix units/,$(TESTUNITDIRS))
 TESTPACKAGESDIRS=bzip2 cocoaint fcl-base fcl-db fcl-image fcl-registry fcl-xml hash rtl-objpas univint webtbs win-base zlib
 TESTPACKAGESUBDIRS=$(addprefix packages/,$(TESTPACKAGESDIRS))
-TESTPACKAGESDIRECTDIRS=rtl-objpas rtl-generics hash regexpr fcl-registry fcl-json fcl-image fcl-process libtar
+TESTPACKAGESDIRECTDIRS=rtl-objpas rtl-generics hash regexpr fcl-registry fcl-json fcl-image fcl-process
 TESTPACKAGESDIRECTSUBDIRS=$(addprefix ../packages/,$(addsuffix /tests,$(TESTPACKAGESDIRECTDIRS)))
 ifdef QUICKTEST
 export QUICKTEST
@@ -1649,9 +1649,6 @@ CONCAT=utils/concat
 endif
 ifndef GPARMAKE
 GPARMAKE=./gparmake$(SRCEXEEXT)
-endif
-ifndef PREPUP
-PREPUP=utils/prepup
 endif
 ifndef CREATELST
 CREATELST=./createlst$(SRCEXEEXT)
@@ -1908,7 +1905,7 @@ clean_sources:
 	-$(DEL) $(wildcard $(patsubst %.pp,%$(PPUEXT),$(wildcard $(addsuffix /*.pp,$(DIRS)))))
 clean_test:
 	-$(DELTREE) $(TEST_OUTPUTDIR)
-	-$(DEL) core testprep-stamp.$(TEST_FULL_TARGET) dotgz$(SRCBATCHEXT)
+	-$(DEL) core testprep-stamp.$(TEST_FULL_TARGET)
 clean: clean_sources fpc_clean
 	$(MAKE) clean_test CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)
 	$(MAKE) -C tstunits clean CPU_TARGET=$(TEST_CPU_TARGET) OS_TARGET=$(TEST_OS_TARGET) SUBARCH=$(TEST_SUBARCH)
@@ -1978,11 +1975,6 @@ TARFROM=-I tar.lst
 else
 TARFROM=--files-from=tar.lst
 endif
-ifneq ($(TEST_USE_LONGLOG),)
-PREPUP_OPT=-ll
-else
-PREPUP_OPT=
-endif
 ifndef inWinDOS
 $(TEST_OUTPUTDIR)/tar.lst:
 ifdef inOS2
@@ -2012,28 +2004,13 @@ ifdef inOS2
 else
 	cd $(TEST_OUTPUTDIR) && $(TARPROG) czf $(DB_TARGZ) $(TARFROM)
 endif
-else
-$(TEST_OUTPUTDIR)/$(DB_TARGZ): $(TEST_OUTPUTDIR)/dbdigest.cfg
-ifdef inDOS
-	$(ECHOREDIR) @echo off > dotgz$(SRCBATCHEXT)
-	$(ECHOREDIR) cd $(subst /,\,$(TEST_OUTPUTDIR)) >> dotgz$(SRCBATCHEXT)
-	$(ECHOREDIR) $(subst /,\,../../$(PREPUP)) $(PREPUP_OPT) $(DB_TARGZ) >> dotgz$(SRCBATCHEXT)
-	$(ECHOREDIR) if errorlevel 1 $(DEL) $(DB_TARGZ) >> dotgz$(SRCBATCHEXT)
-	$(ECHOREDIR) cd $(subst /,\,../../) >> dotgz$(SRCBATCHEXT)
-	$(RUNBATCH) dotgz$(SRCBATCHEXT)
-else
-ifdef inOS2
-	cd "$(subst /,\,$(TEST_OUTPUTDIR))" && "$(subst /,\,../../$(PREPUP))" $(PREPUP_OPT) $(DB_TARGZ)
-else
-	cd "$(TEST_OUTPUTDIR)" && "../../$(PREPUP)" $(PREPUP_OPT) $(DB_TARGZ)
-endif
-endif
 endif
 ifndef DB_USE_SSH
 ifdef inWinDOS
 UsePutty=1
 endif
 endif
+ifndef inWinDOS
 uploadrun: $(TEST_OUTPUTDIR)/$(DB_TARGZ)
 ifdef UsePutty
 	pscp -load "fpc@www.freepascal.org" $(TEST_OUTPUTDIR)/$(DB_TARGZ) $(DB_HOST):$(DB_UPLOADDIR)/$(DB_TARGZ).part $(SSH_EXTRA)
@@ -2046,17 +2023,25 @@ else
 	ssh $(DB_SSH_EXTRA) $(DB_HOST) "mv $(DB_UPLOADDIR)/$(DB_TARGZ).part $(DB_UPLOADDIR)/$(DB_TARGZ)"
 endif
 endif
+endif
+
 all : allexectests
 full :
 	$(MAKE) clean
 	$(MAKE) allexectests
 	$(MAKE) digest
+ifndef inWinDOS
 fulldb :
 	$(MAKE) clean
 	$(MAKE) allexectests
 	$(MAKE) digest
 	$(MAKE) uploadrun
+endif
+
+ifndef inWinDOS
 tarfile : $(TEST_OUTPUTDIR)/$(DB_TARGZ)
+endif
+
 onlyknown :
 	$(MAKE) full "DOTESTOPT= $(DOTESTOPT) -k-"
 onlygraph :

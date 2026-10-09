@@ -188,8 +188,6 @@ begin
       T:=P.Targets.AddExampleProgram('socksvr.pp');
       T:=P.Targets.AddExampleProgram('sstream.pp');
       T:=P.Targets.AddExampleProgram('stringl.pp');
-      T:=P.Targets.AddExampleProgram('tarmakerconsgzip.pas');
-      T:=P.Targets.AddExampleProgram('tarmakercons.pas');
       T:=P.Targets.AddExampleProgram('testapp.pp');
       T:=P.Targets.AddExampleProgram('testbf.pp');
       T:=P.Targets.AddExampleProgram('testbs.pp');

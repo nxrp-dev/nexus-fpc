@@ -14,8 +14,6 @@ nortl=y
 
 [target]
 programs=dotest fptime fail testfail digest concat
-programs_win32=prepup
-programs_win64=prepup
 
 [rules]
 .NOTPARALLEL:

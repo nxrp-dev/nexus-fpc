@@ -32,5 +32,5 @@ else
   FPMAKEOPT="-d $PACKAGESDIR"
 fi
 
-eval $(find */Makefile.fpc -printf 'if [ %h = "paszlib" -o %h = "fcl-process" -o %h = "libtar" -o %h = "hash" ] ; then "$TEMPLATEDIR"convert_fpmake.sh -T "$TEMPLATEDIR"Makefile.fpmake.bs.template $FPMAKEOPT %h ; elif [ ! %h = "fpmkunit" ] ; then "$TEMPLATEDIR"convert_fpmake.sh -T "$TEMPLATEDIR"Makefile.fpmake.template $FPMAKEOPT %h ; fi ;' )
+eval $(find */Makefile.fpc -printf 'if [ %h = "paszlib" -o %h = "fcl-process" -o %h = "hash" ] ; then "$TEMPLATEDIR"convert_fpmake.sh -T "$TEMPLATEDIR"Makefile.fpmake.bs.template $FPMAKEOPT %h ; elif [ ! %h = "fpmkunit" ] ; then "$TEMPLATEDIR"convert_fpmake.sh -T "$TEMPLATEDIR"Makefile.fpmake.template $FPMAKEOPT %h ; fi ;' )
 
