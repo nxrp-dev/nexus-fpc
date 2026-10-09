@@ -380,7 +380,7 @@ interface
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE,
-          { tricky type casting of parameters can cause these locations, see tb0593.pp on x86_64-linux }
+          { tricky type casting of parameters can cause these locations, see tb0593 (case in tb_records_objfpc_run_01.pp).pp on x86_64-linux }
           LOC_SUBSETREG,
           LOC_CSUBSETREG,
           LOC_SUBSETREF,

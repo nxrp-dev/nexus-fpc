@@ -6,7 +6,7 @@ Date: 2026-10-09
 
 FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has an experimental Win64 shared RTL with explicit EXE startup activation, per-image contexts, and package lifecycle rollback. It is not a complete Delphi-style runtime-package system: general LoadPackage/UnloadPackage, reference accounting, registry cleanup, late-loaded TLS, and full binary compatibility remain open.
 
-This document consolidates the source-based gap analyses, compatibility clarification, and implementation results. Items 1-4 are committed. Items 5-10 are implemented and validated in the working tree for the approved experimental Win64 contract, including the minimum item 11 EXE startup needed to validate item 10. The runtime suite, ordinary regressions, profiler smoke, and full bootstrap/cross matrix pass together.
+This document consolidates the source-based gap analyses, compatibility clarification, and implementation results. Items 1-10 and the profiler cache correction are committed. Item 11 now provides a tested, isolated Win64 package SDK and console/GUI build workflow. Its source-only and relocated builds, the runtime suite, and ordinary regressions pass. The preceding compiler/RTL milestone also passed profiler checks and the full bootstrap/cross matrix; item 11 changes build tooling and the experimental entry point without changing that runtime implementation.
 
 The source inspection was made against NexusFPC at commit `471e676d`, including its working tree. At inspection time there were existing uncommitted changes in `compiler/entfile.pas`, `compiler/export.pas`, `compiler/expunix.pas`, `compiler/fpcdefs.inc`, `compiler/fppu.pas`, `compiler/pmodules.pas`, `compiler/systems/t_linux.pas`, and `compiler/systems/t_win.pas`, plus an untracked `tests/unit-exports/` suite. Those changes were not treated as validated dynamic-package support. Recheck the working tree and source locations before implementation.
 
@@ -209,6 +209,43 @@ System checksum is not a complete mixed-build compatibility policy (item 16).
 Native package resources, late-loaded TLS, loader reference accounting and unload
 remain outside this milestone. Every registered image must remain mapped.
 
+## Implementation results: item 11
+
+The [SDK build script](scripts/Build-NexusFPCPackageSDK.ps1) builds a dedicated
+experimental `ppcpkg` compiler from FPC 3.2.2, a matching RTL, the checked-in
+`nxrtl.ppk` foundation, and per-image startup/resource adapters into an isolated
+SDK. It generates compiler message includes itself and requires no prior ordinary
+bootstrap. The normal compiler and installation outputs remain separate.
+
+The distributed [compile helper](scripts/Invoke-NexusFPCPackageCompile.ps1)
+builds packages or console/GUI applications. Packages declare their requirements;
+hosts select package names and directories explicitly. PCP/DLL pairs provide
+package units without standalone provider PPUs, objects or source files. Commands
+and diagnostics are retained in logs. The [example guide](examples/dynamic-packages/README.md)
+documents the one-command build/test workflow and distribution layout.
+
+Validation on 2026-10-09:
+
+- **19/19 SDK workflow checks**, covering fresh source-only builds, console and
+  GUI startup, normal and smart linking, unchanged input sources, and relocated
+  SDK/PCP/DLL consumption with the original source/build paths unavailable.
+  Both host types preserve shared identity, cross-image managed ownership, and
+  the exact diamond initialization/reverse-finalization order. Distributed SDK
+  artifacts retain their hashes after host builds.
+  Logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-sdk-1ej_6isf`.
+- **99/99 existing runtime checks** using the same experimental compiler entry
+  point: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-runtime-8lbtxg5y`.
+- **32/32 ordinary EXE/DLL checks**:
+  `C:\Users\kcollins\AppData\Local\Temp\nx-unit-exports-c9ecfb9a`.
+- A freshly built ordinary compiler still rejects dynamic package declarations;
+  recorded in `production-package-rejection.log` under the runtime results.
+
+The GUI example tests the GUI PE subsystem and startup using a result file; it
+does not exercise a GUI toolkit. This SDK contains the minimal shared RTL closure,
+not all FPC library packages. General loading/unloading, registry cleanup, TLS
+extensions and full mixed-build compatibility remain items 12-16. No runtime
+threading changes or production target capability changes were introduced.
+
 ## Existing implementation
 
 | Area | Current implementation | Assessment and source |
@@ -293,7 +330,7 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 | 8 | **Implemented for the approved startup contract.** Separate mutable image context and immutable table references. | `FPCPackage`, System hooks, SysInitPkg; item 7. | Multiple contexts retain distinct handles, tables and progress without replacing host entry state. |
 | 9 | **Implemented.** Owner-only tables, sequential dependency activation, reverse finalization and partial-initialization rollback. | `pmodules`, `ngenutil`, `FPCPackage`; items 7-8. | Diamond, failure rollback, preservation of active dependencies, cleanup failures and resumed shutdown pass. |
 | 10 | **Implemented as an isolated experimental build.** Foundational shared System/ObjPas/SysUtils closure and per-image startup. | Runtime test build recipe, SysInitPkg, System preparation; items 6-9. | Real host/package identity, managed values, resources and typed exceptions pass. |
-| 11 | **Minimum Win64 EXE path included in item 10.** Broaden startup-linked consumption and installation/build integration. | Program startup, package imports, RTL package manager; item 10. | Existing real EXE diamond passes; production packaging and broader host/startup configurations remain. |
+| 11 | **Implemented for experimental Win64.** Reusable isolated SDK and startup-linked console/GUI consumption. | `ppcpkg`, PowerShell SDK/build helpers, checked-in examples; item 10. | Fresh source-only build plus relocated PCP/DLL consumption passes in normal/smart modes with shared identity and ordered lifecycle. Ordinary builds remain separate. |
 | 12 | Implement explicit `LoadPackage` and runtime registration: dependency retention, descriptor validation, duplicate-unit checks, repeat-load behavior, and rollback. | New low-level RTL package manager, public `SysUtils` facade, platform loader adapter; items 7-11. | Late loading works; repeat loading reuses initialized state; ownership conflicts fail before user initialization. |
 | 13 | Implement `UnloadPackage` and reference accounting. Distinguish startup-held and explicit references; finalize before unmapping and retain dependencies while needed. | RTL package manager; item 12. | Unloading one diamond branch preserves the shared dependency; releasing its last eligible reference finalizes it once. |
 | 14 | Complete module registration cleanup, including class unregistration and package-owned resource/RTTI registrations and cached references. | `classes/cregist.inc`, resource/RTTI registries, module lookup; items 8 and 13. | Load/register/unload/reload leaves no stale class or metadata pointer into an unmapped image. |
@@ -344,9 +381,9 @@ This demonstrates the central BPL-like behavior. A successful native DLL load or
 
 ## Evidence and implementation limits
 
-Items 1-10 have the scoped implementation and validation recorded above. The
-experimental Win64 EXE demonstrates shared RTL startup and sequential package
-lifecycle. General BPL-style load/unload behavior and non-Win64 package runtime
+Items 1-11 have the scoped implementation and validation recorded above. The
+experimental Win64 SDK supports console/GUI shared RTL startup and sequential
+package lifecycle. General BPL-style load/unload behavior and non-Win64 package runtime
 support remain unimplemented; cross-target builds validate ordinary compilation,
 not package execution on those platforms.
 

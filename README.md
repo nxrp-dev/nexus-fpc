@@ -11,6 +11,18 @@ It contains
 * Several utilities in the directory *utils*.
 * The compiler testsuite in the directory *tests*.
 
+## Experimental Win64 dynamic packages
+
+Build an isolated package SDK and validate console/GUI examples from a fresh checkout:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
+```
+
+See the [package SDK guide](examples/dynamic-packages/README.md) for prerequisites,
+distribution, and application build commands. This is an opt-in experimental
+compiler; ordinary builds retain their existing target capabilities.
+
 ## License
 The compiler is licensed under GPL v2, the run-time files are licensed under modified LGPL. 
 Both can be found in the LICENSE file, and the file rtl/COPYING.txt

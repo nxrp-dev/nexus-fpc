@@ -210,7 +210,7 @@ implementation
            { on x86_64-win64, array of chars can be returned in registers, however,
              when passing these arrays to other functions, the compiler wants to take
              the address of the array so when the addrnode has been created internally,
-             we have to force the data into memory, see also tw14388.pp
+             we have to force the data into memory, see also tw14388 (case in tb_arrays_objfpc_run_03.pp).pp
            }
            if nf_internal in flags then
              hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef)
@@ -379,7 +379,7 @@ implementation
                       end;
                     LOC_CREFERENCE,
                     LOC_REFERENCE,
-                    { tricky type casting of parameters can cause these locations, see tb0592.pp on x86_64-linux }
+                    { tricky type casting of parameters can cause these locations, see tb0592 (case in tb_classes_objfpc_run_01.pp).pp on x86_64-linux }
                     LOC_SUBSETREG,
                     LOC_CSUBSETREG,
                     LOC_SUBSETREF,

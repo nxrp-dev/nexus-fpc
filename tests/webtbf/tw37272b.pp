@@ -2,7 +2,7 @@
 
 program tw37272b;
 
-{ note: there is a tw37272a in tbs }
+{ note: there is a tw37272a in tbs/tb_arrays_objfpc_run_02.pp }
 
 {$mode objfpc}
 

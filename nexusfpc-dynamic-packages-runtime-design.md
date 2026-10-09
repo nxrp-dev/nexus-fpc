@@ -110,6 +110,14 @@ ObjPas, SysUtils dependency closure. It compiles SysInitPkg against that provide
 before linking the EXE. This is the reproducible experimental build recipe;
 ordinary installation/build rules do not publish package-enabled RTL artifacts.
 
+Item 11 adds a reusable [PowerShell SDK workflow](examples/dynamic-packages/README.md).
+It builds the dedicated `ppcpkg` entry point, matching RTL, checked-in `nxrtl.ppk`,
+and per-image startup adapters into a separate directory. Both console and GUI
+hosts use the existing approved startup sequence. Consumers need the distributed
+compiler, startup units and PCP/DLL pairs; the original source/build tree is not
+part of that build contract. Production target flags and ordinary bootstrap
+outputs remain separate.
+
 Startup gathers every owner's existing main-thread storage and resource-string
 tables before the existing RTL storage setup. It does not change that mechanism
 or create threads. An otherwise unused contained unit is covered by the runtime

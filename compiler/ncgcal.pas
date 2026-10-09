@@ -397,7 +397,7 @@ implementation
                    ) and
                 paramanager.push_addr_param(parasym.varspez,parasym.vardef,
                     callnode.procdefinition.proccalloption)) and
-                { dyn. arrays passed to an array of const must be passed by value, see tests/tbs/tw4219.pp }
+                { dyn. arrays passed to an array of const must be passed by value, see tests/tbs/tb_arrays_objfpc_run_02.pp (case tw4219.pp) }
                 not(
                     is_array_of_const(parasym.vardef) and
                     is_dynamic_array(left.resultdef)

@@ -44,7 +44,9 @@ test/packages....Tests depending on packages. The tests are sorted by package
                  multiple packages
 tbs..............Compiler/RTL regression tests (should compile/run)
                    tw digits refer to bug database entries; tb digits are
-                   serial numbers. Feature tests retain original case IDs.
+                   serial numbers. Compatible cases are grouped by feature,
+                   compiler mode and settings. Case comments retain original
+                   IDs, including equivalent cases tested once.
 tbf..............Tests for other bugs, added by the fpc core team
                    (fail compile) Digits in filename is a serial no
 units............Helper units for doing the tests

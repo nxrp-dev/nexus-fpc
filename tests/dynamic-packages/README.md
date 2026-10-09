@@ -107,7 +107,7 @@ Production targets remain package-disabled, and PCP/PPU formats are unchanged.
 python tests\dynamic-packages\run_package_runtime_tests.py
 ```
 
-This builds an isolated compiler, test-only package compiler front end, and
+This builds an isolated compiler, experimental package compiler front end, and
 matching package-enabled RTL from source. It needs the default FPC 3.2.2 bootstrap,
 64-bit Python, and LLVM tools on PATH. It does not change production target flags.
 Outputs, command records (`steps.json`), PE import/export reports, descriptor JSON,
@@ -143,3 +143,33 @@ Final 2026-10-09 runtime validation passed **99/99 steps** from a fresh director
 `C:\Users\kcollins\AppData\Local\Temp\nxpkg-runtime-tbns3jyv`. The corresponding
 ordinary/full-cross build results are recorded in the
 [gap analysis](../../nexusfpc-dynamic-packages-gap-analysis.md#implementation-results-items-6-10).
+
+## Package SDK workflow (item 11)
+
+The [SDK guide](../../examples/dynamic-packages/README.md) documents the reusable
+PowerShell build and compile helpers and checked-in console/GUI examples.
+The existing test driver now includes `compiler/ppcpkg.pas`, so both workflows
+use the same opt-in compiler entry point.
+
+```powershell
+python tests\dynamic-packages\run_package_sdk_tests.py
+```
+
+This runner copies tracked and new, non-ignored compiler/RTL/script/example files
+into a source-only snapshot, without compiler message includes or prebuilt RTL
+units. It builds and runs the examples in normal and smart-link modes, checks
+that the source snapshot is unchanged, and copies only the SDK distribution and
+provider PCP/DLL pairs. It then hides the original source and SDK directories and
+rebuilds/runs both hosts from the relocated distribution. Checks include PE
+subsystem selection, shared identity, cross-image managed ownership, dependency
+initialization once, reverse finalization, and unchanged SDK artifacts.
+
+Requirements: Python 3.9+, Git, Windows PowerShell, the FPC 3.2.2 Win64 bootstrap,
+and LLVM Clang/LLD on PATH. `--bootstrap-bin` selects another bootstrap location;
+`--output-root` must be empty. All commands and results are recorded under the
+printed output directory.
+
+Validation on 2026-10-09 passed **19/19 workflow checks**:
+`C:\Users\kcollins\AppData\Local\Temp\nxpkg-sdk-1ej_6isf`. The shared-entry-point
+runtime suite also passed **99/99**, and ordinary EXE/DLL coverage passed **32/32**;
+see the [item 11 results](../../nexusfpc-dynamic-packages-gap-analysis.md#implementation-results-item-11).

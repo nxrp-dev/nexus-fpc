@@ -5,7 +5,7 @@
 {$ifdef fpc}{$mode delphi}{$endif}
 
 { These should give an error, as also done in tp,delphi.
-  See tbs/tb0273.pp for a test with class which should compile in
+  See tbs/tb_classes_delphi_run_01.pp (case tb0273.pp) for a test with class which should compile in
   delphi mode }
 
 type

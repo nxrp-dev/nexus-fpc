@@ -596,7 +596,7 @@ implementation
                    1. Check for mapped name
                    2. Use symbol name, but only if there's no mapping,
                       or we're processing ancestor of interface.
-                  When modifying this code, ensure that tbs/tw11862, tbs/tw4950
+                  When modifying this code, ensure that tbs/tb_interfaces_delphi_run_01.pp (case tw11862.pp), tbs/tw4950
                   and webtbf/tw19591 stay correct. }
                 implprocdef:=nil;
                 hs:=prefix+tprocdef(def).procsym.name;

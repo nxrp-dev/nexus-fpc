@@ -1625,7 +1625,7 @@ implementation
                           { all pointers can be assigned from void-pointer }
                           if is_void(tpointerdef(def_from).pointeddef) or
                           { all pointers can be assigned from void-pointer or formaldef pointer, check
-                            tw3777.pp if you change this }
+                            tw3777 (case in tb_records_delphi_run_01.pp).pp if you change this }
                             (tpointerdef(def_from).pointeddef.typ=formaldef) then
                            begin
                              doconv:=tc_equal;
