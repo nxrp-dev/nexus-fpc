@@ -114,12 +114,6 @@ begin
 {$include libtar/fpmake.pp}
 end;
 
-procedure add_openssl(const ADirectory: string);
-begin
-  with Installer do
-{$include openssl/fpmake.pp}
-end;
-
 procedure add_pasjpeg(const ADirectory: string);
 begin
   with Installer do

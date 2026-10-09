@@ -15,24 +15,24 @@ dirs_arm_linux=
 dirs_m68k_linux=
 dirs_beos=fcl-async zlib pthreads \
                libpng x11 cairo bfd \
-                openssl gtk2  \
+                gtk2  \
                iconvenc
 dirs_haiku=fcl-async zlib pthreads \
                libpng x11 cairo bfd \
-                openssl gtk2  \
+                gtk2  \
                iconvenc
 dirs_freebsd=fcl-async zlib pthreads \
                libpng x11 cairo  bfd \
-                openssl gtk2  \
+                gtk2  \
                iconvenc
 dirs_dragonfly=fcl-async zlib pthreads \
                libpng x11 cairo  bfd \
-                openssl gtk2  \
+                gtk2  \
                iconvenc
 dirs_darwin=fcl-async zlib pthreads \
-               libpng bfd openssl iconvenc univint iosxlocale
+               libpng bfd iconvenc univint iosxlocale
 dirs_iphonesim=fcl-async zlib pthreads \
-               libpng bfd openssl iconvenc univint iosxlocale
+               libpng bfd iconvenc univint iosxlocale
 dirs_i386_darwin=x11 cairo gtk2 objcrtl cocoaint
 dirs_powerpc_darwin=x11 cairo gtk2 objcrtl cocoaint
 dirs_x86_64_darwin=x11 cairo gtk2 cocoaint objcrtl
@@ -41,23 +41,19 @@ dirs_arm_darwin=opengles objcrtl
 dirs_i386_iphonesim= opengles objcrtl
 dirs_solaris=fcl-async zlib pthreads \
                libpng x11 cairo bfd \
-                openssl iconvenc gtk2 cairo
+                iconvenc gtk2 cairo
 dirs_netbsd=fcl-async zlib pthreads \
-               libpng x11 cairo gtk2 bfd \
-                openssl
+               libpng x11 cairo gtk2 bfd
 dirs_openbsd=fcl-async zlib  pthreads \
-               libpng x11 cairo gtk2 bfd \
-                openssl
+               libpng x11 cairo gtk2 bfd
 dirs_linux=fcl-async unzip zlib pthreads \
                libpng x11  cairo gtk2 \
-               bfd  iconvenc \
-                openssl
+               bfd  iconvenc
 dirs_win32=winunits-base zlib \
                libpng gtk2 \
-               openssl  cairo
-dirs_win64=winunits-base zlib \
-                openssl
-dirs_wince=unzip zlib openssl
+                cairo
+dirs_win64=winunits-base zlib
+dirs_wince=unzip zlib
 dirs_palmos=
 dirs_go32v2=unzip
 dirs_wii=
@@ -428,11 +424,6 @@ opengles_smart: fpmkunit_smart
 opengles_debug: fpmkunit_debug
 opengles_release: fpmkunit_release
 
-openssl_all: fpmkunit_all
-openssl_shared: fpmkunit_shared
-openssl_smart: fpmkunit_smart
-openssl_debug: fpmkunit_debug
-openssl_release: fpmkunit_release
 
 
 rexx_all: fpmkunit_all

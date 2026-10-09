@@ -4,7 +4,7 @@
  Directory of c:\gitdev\tools\NexusFPC\packages
 
 [.]                    [fcl-yaml]             [opengles]
-[..]                   fpmake.pp              [openssl]
+[..]                   fpmake.pp
 [bfd]                  fpmake_add.inc         packages.txt
 [build]                fpmake_proc.inc        [pasjpeg]
 [bzip2]                [fpmkunit]             [paszlib]
