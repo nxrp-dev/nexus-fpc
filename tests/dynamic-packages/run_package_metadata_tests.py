@@ -96,7 +96,7 @@ def main():
     ppu_offset, ppu_size = struct.unpack_from('<ii', seed, table)
     embedded = seed[ppu_offset:ppu_offset + ppu_size]
     assert len(embedded) == ppu_size and embedded[:3] == b'PPU'
-    # Independently encode the existing version-3 format, rather than validating
+    # Independently encode the existing version-4 format, rather than validating
     # the new reader solely against the new writer.
     def short(value):
         data = value.encode('ascii')
@@ -104,9 +104,9 @@ def main():
         return bytes([len(data)]) + data
 
     def fixture(name, requirements=(), contained=(), endian='<'):
-        payloads = [(93, short(name)), (92, short(name + '.dll')),
+        payloads = [(93, short(name)), (92, short(name + '.dll') + short('') + short('A'*32)),
                     (244, struct.pack(endian + 'i', len(requirements))),
-                    (245, b''.join(short(n) for n in requirements)),
+                    (245, b''.join(short(n) + short('A'*32) for n in requirements)),
                     (246, struct.pack(endian + 'i', len(contained))),
                     (247, b''.join(short(n) + short(n + '.ppu') for n in contained))]
         crc = 0
@@ -118,7 +118,7 @@ def main():
         body += struct.pack(endian + 'iBB', len(contained) * 8, 1, 243)
         body += bytes(len(contained) * 8)
         body += struct.pack(endian + 'iBB', 0, 1, 255)
-        header = struct.pack('<3s3sHHHIIIII', b'PCP', b'003', compiler_id, cpu, target,
+        header = struct.pack('<3s3sHHHIIIII', b'PCP', b'004', compiler_id, cpu, target,
                              4 if endian == '>' else 4096, len(body), crc,
                              len(requirements), len(contained))
         data = bytearray(header + body)
@@ -139,9 +139,9 @@ def main():
         (fixtures / 'Case.pcp').write_bytes(data)
         run(label, [driver, 'read', fixtures, 'Case'], expected=expected, text=text)
 
-    read_case('independent-empty-v3', fixture('Case'))
-    read_case('independent-two-units-v3', fixture('Case', contained=['UX', 'UY']))
-    read_case('opposite-endian-metadata-v3', fixture('Case', contained=['UX'], endian='>'))
+    read_case('independent-empty-v4', fixture('Case'))
+    read_case('independent-two-units-v4', fixture('Case', contained=['UX', 'UY']))
+    read_case('opposite-endian-metadata-v4', fixture('Case', contained=['UX'], endian='>'))
     large = fixture('Case', requirements=[f'Required{i:04}' for i in range(1600)])
     read_case('metadata-over-buffer-boundary', large)
 

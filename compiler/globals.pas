@@ -357,6 +357,7 @@ Const
        current_namespacelist : TCmdStrList;        // Set when parsing module to the current module's namespace.
        { contains tpackageentry entries }
        packagelist : TFPHashList;
+       package_sdk_identity, package_build_identity: shortstring;
        autoloadunits      : string;
 
        { linking }
@@ -1565,6 +1566,8 @@ implementation
         objectsearchpath:=TSearchPathList.Create;
         frameworksearchpath:=TSearchPathList.Create;
         packagesearchpath:=TSearchPathList.Create;
+        package_sdk_identity:='';
+        package_build_identity:='';
         namespacelist:=TCmdStrList.Create;
         premodule_namespacelist:=TCmdStrList.Create;
         current_namespacelist:=Nil;

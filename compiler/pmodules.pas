@@ -182,7 +182,7 @@ implementation
         found:=mf_has_resourcefiles in curr.moduleflags;
         while Assigned(hp) and not found do
           begin
-            found:=mf_has_resourcefiles in hp.u.moduleflags;
+            found:=not assigned(hp.u.package) and (mf_has_resourcefiles in hp.u.moduleflags);
             hp:=tused_unit(hp.next);
           end;
         CheckResourcesUsed:=found;

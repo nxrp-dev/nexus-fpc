@@ -46,6 +46,8 @@ interface
       packagename : pshortstring;
       containedmodules : TFPHashList;
       requiredpackages : TFPHashObjectList;
+      requiredidentities : TFPHashList;
+      sdkidentity, buildidentity: shortstring;
       pcpfilename,
       ppafilename,
       pplfilename : tpathstr;
@@ -61,6 +63,8 @@ interface
     end;
     ppackageentry=^tpackageentry;
 
+  function current_package_build_identity: shortstring;
+
 implementation
 
   uses
@@ -68,12 +72,26 @@ implementation
 
   { tpackage }
 
+  function current_package_build_identity: shortstring;
+    var g: System.TGuid;
+    begin
+      if package_build_identity='' then
+        begin
+          if CreateGUID(g)<>0 then
+            raise Exception.Create('Cannot create package build identity');
+          package_build_identity:=StringReplace(StringReplace(
+            Copy(GUIDToString(g),2,36),'-','',[rfReplaceAll]),'}','',[]);
+        end;
+      result:=package_build_identity;
+    end;
+
   constructor tpackage.create(const pn: string);
     begin
       realpackagename:=stringdup(pn);
       packagename:=stringdup(upper(pn));
       containedmodules:=TFPHashList.Create;
       requiredpackages:=TFPHashObjectList.Create(false);
+      requiredidentities:=TFPHashList.Create;
     end;
 
   destructor tpackage.destroy;
@@ -91,6 +109,9 @@ implementation
       containedmodules := nil;
       requiredpackages.free;
       requiredpackages := nil;
+      for i:=0 to requiredidentities.Count-1 do
+        freemem(requiredidentities[i]);
+      requiredidentities.Free;
       inherited destroy;
     end;
 

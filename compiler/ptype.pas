@@ -1420,7 +1420,8 @@ implementation
                  end;
                { generic parameter? }
                undefineddef:
-                ;
+                 { The element bounds are determined when specializing. }
+                 def:=csetdef.create(tt2,0,255,true);
                else
                  Message(sym_e_ill_type_decl_set);
              end;

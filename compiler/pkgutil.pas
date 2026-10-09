@@ -126,9 +126,18 @@ implementation
       if depcount=0 then number(0);
       finish('FPC_PACKAGE_DEPENDENCIES',sec_rodata);
       start;
+      for i:=0 to packagelist.count-1 do
+        begin
+          entry:=ppackageentry(packagelist[i]);
+          if entry^.direct then
+            b.emit_pooled_shortstring_const_ref(entry^.package.buildidentity);
+        end;
+      if depcount=0 then number(0);
+      finish('FPC_PACKAGE_DEPENDENCY_IDS',sec_rodata);
+      start;
       number($4e58504b);
-      number(1);
-      number(18*8);
+      number(2);
+      number(21*8);
       number((wordversion shl 8) or CurrentPPULongVersion);
       number(ord(target_info.system));
       number(find_module_from_symtable(systemunit).crc);
@@ -144,13 +153,22 @@ implementation
       address('FPC_RESSTRINITTABLES');
       address('FPC_PACKAGE_CONTEXT');
       address('FPC_PACKAGE_HANDLE');
+      b.emit_pooled_shortstring_const_ref(package_sdk_identity);
+      b.emit_pooled_shortstring_const_ref(current_package_build_identity);
+      address('FPC_PACKAGE_DEPENDENCY_IDS');
       if current_module.ispackage then
         name:='FPC_PACKAGE_'+current_module.modulename^
       else
         name:='FPC_PACKAGE_ROOT';
       finish(name,sec_rodata);
       if current_module.ispackage then
-        export.exportname(name,[eo_name]);
+        begin
+          export.exportname(name,[eo_name]);
+          start;
+          address(name);
+          finish('FPC_PACKAGE_INFO',sec_rodata);
+          export.exportname('FPC_PACKAGE_INFO',[eo_name]);
+        end;
     end;
 
   procedure procexport(const s : string);
@@ -601,6 +619,10 @@ implementation
               add_package(pcp.requiredpackages.NameOfIndex(i),true,false);
               required:=ppackageentry(packagelist.Find(upper(pcp.requiredpackages.NameOfIndex(i))));
               load_package(required);
+              if pshortstring(pcp.requiredidentities.Find(upper(pcp.requiredpackages.NameOfIndex(i))))^<>
+                 required^.package.buildidentity then
+                Comment(V_Fatal,'Package dependency build differs: '+
+                  pcp.realpackagename^+' requires '+required^.realpkgname);
               pcp.requiredpackages[i]:=required^.package;
             end;
         finally

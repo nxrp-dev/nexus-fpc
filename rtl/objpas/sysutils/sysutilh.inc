@@ -472,3 +472,18 @@ Type
 const
   INVALID_HANDLE_VALUE = DWORD(-1);
 {$ENDIF}
+
+{$ifdef win64}
+{ Installed by the shared package runtime; ordinary applications leave hooks nil. }
+var
+  PackageLoadProc: function(const Name: string): HMODULE;
+  PackageUnloadProc: procedure(Module: HMODULE);
+  PackageCleanupProc: procedure(Module: HMODULE; Callback: TProcedure; Add: Boolean);
+function LoadPackage(const Name: string): HMODULE;
+procedure UnloadPackage(Module: HMODULE);
+procedure RegisterPackageCleanup(Module: HMODULE; Callback: TProcedure);
+procedure UnregisterPackageCleanup(Module: HMODULE; Callback: TProcedure);
+function PackageModuleFromAddress(Address: Pointer): HMODULE;
+function FindClassHInstance(AClass: TClass): HMODULE;
+function FindResourceHInstance(Instance: HMODULE): HMODULE;
+{$endif win64}

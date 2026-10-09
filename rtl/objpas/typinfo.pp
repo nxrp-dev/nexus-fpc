@@ -33,6 +33,10 @@ unit TypInfo;
   uses SysUtils;
 {$ENDIF FPC_DOTTEDUNITS}
 
+{$ifdef win64}
+procedure UnregisterModuleTypeInfo(Module: HMODULE);
+{$endif}
+
 
 // temporary types:
 
@@ -4992,6 +4996,20 @@ type
 
 Var
   EnumeratedAliases : TEnumeratedAliasesArray;
+
+{$ifdef win64}
+procedure UnregisterModuleTypeInfo(Module: HMODULE);
+var I: Integer;
+begin
+  if Module=0 then Exit;
+  for I:=High(EnumeratedAliases) downto 0 do
+    if PackageModuleFromAddress(EnumeratedAliases[I].TypeInfo)=Module then
+      begin
+        EnumeratedAliases[I]:=EnumeratedAliases[High(EnumeratedAliases)];
+        SetLength(EnumeratedAliases,Length(EnumeratedAliases)-1);
+      end;
+end;
+{$endif win64}
 
 Function IndexOfEnumeratedAliases(aTypeInfo : PTypeInfo) : integer;
 

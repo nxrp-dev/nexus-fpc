@@ -10,13 +10,14 @@ uses SysUtils;
 
 const
   FPCPackageMagic = $4e58504b;
-  FPCPackageVersion = 1;
+  FPCPackageVersion = 2;
   psUnregistered = 0;
   psChecking = 1;
   psRegistered = 2;
   psInitializing = 3;
   psActive = 4;
   psFinalized = 5;
+  psFailed = 6;
 
 type
   PPackageDescriptor = ^TPackageDescriptor;
@@ -43,8 +44,10 @@ type
     WideInitTable, ResStrInitTable: Pointer;
     Context: PPackageContext;
     ModuleHandle: PSizeUInt;
+    SDKIdentity, BuildIdentity: PShortString;
+    DependencyIdentities: PPackageUnitNames;
   end;
-  EPackageError = class(Exception);
+  EPackageError = SysUtils.EPackageError;
 
 procedure RegisterPackage(Descriptor: PPackageDescriptor);
 procedure InitializePackage(Descriptor: PPackageDescriptor);
@@ -52,6 +55,10 @@ procedure FinalizePackages;
 procedure PreparePackageStartup(Descriptor: PPackageDescriptor);
 
 implementation
+
+{$ifdef win64}
+uses Classes, TypInfo, Windows;
+{$endif}
 
 type
   TUnitLifecycle = record
@@ -78,6 +85,7 @@ var
   Registered, Active: PPackageContext;
   Startup: PPackageDescriptor;
   StartupThreadvars, StartupResources: Pointer;
+  LifecycleBusy, ShuttingDown: Boolean;
 
 procedure ManagedTables(Descriptor: PPackageDescriptor; Initialize: Boolean);
 var
@@ -157,6 +165,11 @@ begin
         if Descriptor^.Dependencies^[I]=nil then
           raise EPackageError.Create('Missing package dependency');
         RegisterPackage(Descriptor^.Dependencies^[I]^);
+        if (Descriptor^.DependencyIdentities<>nil) and
+           (Descriptor^.Dependencies^[I]^^.BuildIdentity<>nil) and
+           ((Descriptor^.DependencyIdentities^[I]=nil) or
+            (Descriptor^.DependencyIdentities^[I]^<>Descriptor^.Dependencies^[I]^^.BuildIdentity^)) then
+          raise EPackageError.Create('Package dependency build differs: '+Descriptor^.Name^);
       end;
     { Dependencies may have registered new owners while this descriptor was
       being checked. Recheck this image against the complete registered set. }
@@ -167,6 +180,9 @@ begin
            (Other^.Descriptor^.TargetIdentity<>Descriptor^.TargetIdentity) or
            (Other^.Descriptor^.RTLIdentity<>Descriptor^.RTLIdentity) then
           raise EPackageError.Create('Incompatible package build: '+Descriptor^.Name^);
+        if (Other^.Descriptor^.SDKIdentity<>nil) and (Descriptor^.SDKIdentity<>nil) and
+           (Other^.Descriptor^.SDKIdentity^<>Descriptor^.SDKIdentity^) then
+          raise EPackageError.Create('Incompatible package SDK: '+Descriptor^.Name^);
         if Other^.Descriptor^.Name^=Descriptor^.Name^ then
           raise EPackageError.Create('Duplicate package image: '+Descriptor^.Name^);
         for I:=0 to SizeInt(Descriptor^.UnitCount)-1 do
@@ -228,10 +244,18 @@ begin
     end;
 end;
 
+{$ifdef win64}
+{$i fpcpackageloader.inc}
+{$endif}
+
 procedure InitializePackage(Descriptor: PPackageDescriptor);
 var
   Saved, Context: PPackageContext;
 begin
+  if LifecycleBusy or ShuttingDown then
+    raise EPackageError.Create('Nested package lifecycle operation');
+  LifecycleBusy:=true;
+  try
   RegisterPackage(Descriptor);
   Saved:=Active;
   try
@@ -254,29 +278,47 @@ begin
       end;
     raise;
   end;
+  finally
+    LifecycleBusy:=false;
+  end;
 end;
 
 procedure FinalizePackages;
 var
   Context: PPackageContext;
 begin
+  if LifecycleBusy then raise EPackageError.Create('Nested package lifecycle operation');
+  ShuttingDown:=true;
   while Active<>nil do
     begin
       Context:=Active;
+{$ifdef win64}
+      BeforePackageFinalization(Context);
+{$endif}
       { Keep an interrupted owner on the stack. FinalizeOne advances before each
         callback, so a subsequent shutdown attempt resumes the remaining prefix. }
       FinalizeOne(Context);
       ManagedTables(Context^.Descriptor,false);
+{$ifdef win64}
+      AfterPackageFinalization(Context);
+{$endif}
       Active:=Context^.PreviousActive;
       Context^.PreviousActive:=nil;
       Context^.State:=psFinalized;
     end;
   FreeMem(StartupThreadvars); StartupThreadvars:=nil;
   FreeMem(StartupResources); StartupResources:=nil;
+{$ifdef win64}
+  ShutdownPackageManager;
+{$endif}
+  ShuttingDown:=false;
 end;
 
 procedure InitializeStartup;
 begin
+{$ifdef win64}
+  StartPackageManager;
+{$endif}
   InitializePackage(Startup);
 end;
 
@@ -340,6 +382,9 @@ begin
   PackagePrepareProc:=@PrepareStartupMetadata;
   PackageInitializeProc:=@InitializeStartup;
   PackageFinalizeProc:=@FinalizePackages;
+  PackageLoadProc:=@LoadRuntimePackage;
+  PackageUnloadProc:=@UnloadRuntimePackage;
+  PackageCleanupProc:=@ManagePackageCleanup;
 {$else}
   raise EPackageError.Create('Package startup requires Win64');
 {$endif}

@@ -30,7 +30,7 @@ The suite records each command, exit code, and log path in `steps.json`. It chec
 - Conflicting owners in both dependency orders and the existing parser diagnostic
   for containing a unit already supplied by a required package.
 - Real writer/reader round-trip, unchanged original PPU, repeated loading,
-  independent bounded unit streams, and independently encoded version-3 metadata.
+  independent bounded unit streams, and independently encoded version-4 metadata.
 - Empty/multiple-unit containers, opposite-endian metadata, metadata crossing the
   entry buffer boundary, and malformed headers, counts, names, entries, checksums,
   offset tables, overlapping ranges, and embedded PPU headers.
@@ -43,8 +43,9 @@ separate ordinary EXE/DLL build, export, runtime, cached-unit, and smart-link co
 
 The source-free consumer uses `-Cn`: this proves compile-time PCP consumption,
 not package linking, shared RTL identity, or runtime loading/unloading. There is
-no historical PCP corpus here; compatibility evidence consists of the unchanged
-v3 layout plus independently encoded fixtures and real compiler-generated PPUs.
+no historical PCP corpus here; current coverage uses independently encoded v4
+fixtures and real compiler-generated PPUs. Item 16 deliberately replaces the
+experimental v3 format; old package containers must be rebuilt.
 
 ## Experimental Win64 linking and symbols
 
@@ -99,7 +100,8 @@ Exception-handler coverage verifies linking, not cross-image exception unwinding
 The earlier standalone EXE startup failure is covered by the shared RTL suite
 below. The symbol-only runner no longer expects or counts that historical failure.
 
-Production targets remain package-disabled, and PCP/PPU formats are unchanged.
+Production targets remain package-disabled. Current experimental metadata uses
+PCP v4; ordinary PPU format is unchanged.
 
 ## Shared RTL and explicit startup activation (items 6-10)
 
@@ -134,10 +136,10 @@ are hidden. Cached artifacts must retain their hashes. Checks include:
 
 The approved contract is in [the runtime design](../../nexusfpc-dynamic-packages-runtime-design.md).
 The foundation owns System/ObjPas/SysUtils; generated EXE startup explicitly
-activates packages. Native LoadLibrary only maps them. Registered images remain
-mapped for the process lifetime. LoadPackage/UnloadPackage, reference accounting,
-registry cleanup, general late-loaded TLS, and full mixed-build compatibility
-are later milestones. No worker threads or new synchronization were introduced.
+activates packages. Native LoadLibrary only maps them. This low-level suite uses
+caller-held mappings; the managed LoadPackage/UnloadPackage suite below exercises
+native release and registry cleanup. General late-loaded TLS remains deferred.
+No worker threads or new synchronization were introduced.
 
 Final 2026-10-09 runtime validation passed **99/99 steps** from a fresh directory:
 `C:\Users\kcollins\AppData\Local\Temp\nxpkg-runtime-tbns3jyv`. The corresponding
@@ -166,10 +168,41 @@ initialization once, reverse finalization, and unchanged SDK artifacts.
 
 Requirements: Python 3.9+, Git, Windows PowerShell, the FPC 3.2.2 Win64 bootstrap,
 and LLVM Clang/LLD on PATH. `--bootstrap-bin` selects another bootstrap location;
-`--output-root` must be empty. All commands and results are recorded under the
+`--output-root` must be empty. `--build-timeout` controls the allowance for each
+fresh SDK build (default 1800 seconds); other steps retain their shorter timeout.
+All commands and results are recorded under the
 printed output directory.
 
 Validation on 2026-10-09 passed **19/19 workflow checks**:
 `C:\Users\kcollins\AppData\Local\Temp\nxpkg-sdk-1ej_6isf`. The shared-entry-point
 runtime suite also passed **99/99**, and ordinary EXE/DLL coverage passed **32/32**;
 see the [item 11 results](../../nexusfpc-dynamic-packages-gap-analysis.md#implementation-results-item-11).
+
+## Late loading, unloading and publication (items 12-14 and 16)
+
+```powershell
+python tests\dynamic-packages\run_package_loader_tests.py
+python tests\dynamic-packages\run_package_loader_tests.py --smart
+```
+
+Each run builds a fresh SDK unless `--sdk-root` selects an existing matching
+normal/smart SDK. `--output-root` must be new or empty. LLVM RC and readobj are
+required in addition to the SDK prerequisites. Commands and output are recorded
+in `steps.json` and per-check logs.
+
+Console/GUI hosts prove implementation DLLs are absent from startup imports and
+run from relocated directories containing only runtime EXEs/DLLs. Coverage includes
+repeated loads, diamond retention, class/RTTI identity, factories and managed
+strings, typed exceptions, native/string resources, image-owned registry and
+callback cleanup, restoration of overridden component initialization handlers,
+native unmapping, reload and startup pinning.
+
+Separate processes inject initialization/finalization/cleanup failures, exercise
+new and already active dependencies, reject new TLS, nested lifecycle calls,
+missing/non-package images, duplicate images, SDK/ABI/dependency mismatches, and
+verify exception destruction before rollback releases the DLL. Failed compiler
+and linker invocations preserve the previous generation, as do rejected stale
+consumers. Artifact checks reject mismatched PCP/DLL pairs and manifest tampering.
+
+The [load/unload design](../../nexusfpc-dynamic-packages-load-unload-design.md)
+records the current contract, tradeoffs and final validation results.

@@ -2709,6 +2709,15 @@ begin
         else
           includesearchpath.AddPath(More,true);
       end;
+    'j','k' :
+      begin
+        { Explicit experimental package identities, supplied by the SDK tools. }
+        if (length(more)<1) or (length(more)>64) then IllegalPara(opt);
+        for j:=1 to length(more) do
+          if not (more[j] in ['0'..'9','a'..'f','A'..'F']) then IllegalPara(opt);
+        if c='j' then package_sdk_identity:=upper(more)
+        else package_build_identity:=upper(more);
+      end;
     'm' :
       begin
         if TryStrToInt(ExtractFileName(more),j) then

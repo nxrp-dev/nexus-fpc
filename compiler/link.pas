@@ -399,7 +399,7 @@ Implementation
       begin
         with hp do
          begin
-           if mf_has_resourcefiles in moduleflags then
+           if not assigned(hp.package) and (mf_has_resourcefiles in moduleflags) then
              HasResources:=true;
            if mf_has_exports in moduleflags then
              HasExports:=true;

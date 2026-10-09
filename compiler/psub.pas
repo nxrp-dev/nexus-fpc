@@ -1979,7 +1979,9 @@ implementation
         if paraprintnodetree <> 0 then
           printproc( 'after the firstpass');
 
-        TransformNodeTree;
+        { A failed first pass can leave unresolved helper calls in the tree. }
+        if ErrorCount=0 then
+          TransformNodeTree;
 
         { unit static/global symtables might contain threadvars which are not explicitly used but which might
           require a tls register, so check for such variables }

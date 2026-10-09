@@ -13,6 +13,13 @@ def quote(value):
     return "'" + str(value).replace("'", "''") + "'"
 
 
+def selected(directory):
+    current = directory / 'current.json'
+    if current.exists():
+        return directory / json.loads(current.read_text(encoding='utf-8-sig'))['Generation']
+    return directory
+
+
 def digest_tree(directory):
     return {str(p.relative_to(directory)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in directory.rglob('*') if p.is_file()}
@@ -21,6 +28,8 @@ def digest_tree(directory):
 def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--output-root', type=Path)
+    parser.add_argument('--build-timeout', type=int, default=1800,
+                        help='Seconds allowed for each fresh compiler/RTL/SDK build (default: 1800)')
     parser.add_argument('--bootstrap-bin', type=Path,
                         default=Path(r'C:\lazarus\fpc\3.2.2\bin\x86_64-win64'))
     args = parser.parse_args()
@@ -41,7 +50,8 @@ def main():
         log = out / (name + '.log')
         with log.open('w') as stream:
             process = subprocess.run([str(x) for x in command], cwd=cwd, stdout=stream,
-                                     stderr=subprocess.STDOUT, timeout=600)
+                                     stderr=subprocess.STDOUT,
+                                     timeout=args.build_timeout if name.endswith('-build-and-run') else 600)
         if process.returncode:
             raise RuntimeError(f'{name}: exit {process.returncode}; details: {log}')
         record(name, command=[str(x) for x in command], log=str(log), exit_code=0)
@@ -91,10 +101,10 @@ def main():
         shutil.copy2(sdk / 'sdk.json', relocated)
         providers = case / 'package-distribution'
         providers.mkdir()
-        for file in (sdk / 'examples/packages').iterdir():
+        for file in selected(sdk / 'examples/packages').iterdir():
             if file.suffix in ('.pcp', '.dll'):
                 shutil.copy2(file, providers)
-        assert len(list(providers.iterdir())) == 6
+        assert len(list(providers.iterdir())) == 8
         host_source = case / 'host-source'
         shutil.copytree(source / 'examples/dynamic-packages/host', host_source)
         assert {p.suffix for p in host_source.iterdir()} == {'.pas'}
@@ -114,6 +124,7 @@ def main():
                            ' -Kind ' + kind + ' -PackagePath ' + quote(providers) +
                            " -RequiredPackages @('demotypes','demoleft','demoright')" + smart_flag)
                 # Execute from an unrelated directory with only application-side DLLs.
+                app = selected(app)
                 result = app / 'result.log'
                 run(mode + '-relocated-run-' + kind, [app / (name + '.exe'), result])
                 assert result.read_text().splitlines() == [

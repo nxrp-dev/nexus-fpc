@@ -23,6 +23,15 @@ See the [package SDK guide](examples/dynamic-packages/README.md) for prerequisit
 distribution, and application build commands. This is an opt-in experimental
 compiler; ordinary builds retain their existing target capabilities.
 
+Build and run real late-loading console/GUI examples against that SDK:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot C:\temp\nxpkg-sdk -OutputRoot C:\temp\nxpkg-late -RunExamples
+```
+
+Use the SDK path printed by the first command. Late loading is synchronous and
+rejects new package TLS; see the guide for unload lifetimes and build identities.
+
 ## License
 The compiler is licensed under GPL v2, the run-time files are licensed under modified LGPL. 
 Both can be found in the LICENSE file, and the file rtl/COPYING.txt

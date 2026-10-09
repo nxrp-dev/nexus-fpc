@@ -16,7 +16,7 @@ def inspect(directory):
         _fields_ = [(name, ctypes.c_size_t) for name in (
             'magic', 'version', 'size', 'compiler', 'target', 'rtl', 'name', 'unit_count', 'units',
             'dependency_count', 'dependencies', 'init_final', 'threadvars', 'resources',
-            'wide', 'resrefs', 'context', 'handle')]
+            'wide', 'resrefs', 'context', 'handle', 'sdk_identity', 'build_identity', 'dependency_ids')]
 
     def short(address):
         count = ctypes.c_ubyte.from_address(address).value
@@ -29,8 +29,8 @@ def inspect(directory):
         library = ctypes.CDLL(str(directory / (name + '.dll')))
         libraries.append(library)
         descriptor = Descriptor.in_dll(library, 'FPC_PACKAGE_' + name.upper())
-        assert descriptor.magic == 0x4e58504b and descriptor.version == 1
-        assert descriptor.size == ctypes.sizeof(Descriptor) == 144
+        assert descriptor.magic == 0x4e58504b and descriptor.version == 2
+        assert descriptor.size == ctypes.sizeof(Descriptor) == 168
         assert descriptor.rtl != 0
         identities.add((descriptor.compiler, descriptor.target, descriptor.rtl))
         assert short(descriptor.name) == name.upper()
@@ -124,7 +124,7 @@ def main():
                 directory.mkdir(exist_ok=True)
                 for unit, text in contents.items():
                     (directory / (unit + '.pas')).write_text(text)
-                command = [driver, *package_opts, *searches, f'-Fu{directory}',
+                command = [driver, *package_opts, *searches, f'-Fu{directory}', f'-Fi{root / "rtl/inc"}',
                            f'-FU{directory}', f'-FE{directory}']
                 snapshots = {}
                 if cached:

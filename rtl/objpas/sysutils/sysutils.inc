@@ -1,4 +1,59 @@
 {%MainUnit sysutils.pp}
+{$ifdef win64}
+function PackageGetModuleHandleEx(Flags: DWord; Address: Pointer; var Module: HMODULE): LongBool;
+  stdcall; external 'kernel32' name 'GetModuleHandleExW';
+
+function PackageModuleFromAddress(Address: Pointer): HMODULE;
+begin
+  Result:=0;
+  if Address<>nil then PackageGetModuleHandleEx(6,Address,Result);
+end;
+
+function LoadPackage(const Name: string): HMODULE;
+begin
+  if not Assigned(PackageLoadProc) then
+    raise EPackageError.Create('LoadPackage requires the shared package RTL');
+  Result:=PackageLoadProc(Name);
+end;
+
+function FindClassHInstance(AClass: TClass): HMODULE;
+begin
+  Result:=PackageModuleFromAddress(Pointer(AClass));
+end;
+
+function FindResourceHInstance(Instance: HMODULE): HMODULE;
+var Module: PLibModule;
+begin
+  Module:=LibModuleList;
+  while Module<>nil do
+    begin
+      if Module^.Instance=Instance then Exit(Module^.ResInstance);
+      Module:=Module^.Next;
+    end;
+  Result:=Instance;
+end;
+
+procedure UnloadPackage(Module: HMODULE);
+begin
+  if not Assigned(PackageUnloadProc) then
+    raise EPackageError.Create('UnloadPackage requires the shared package RTL');
+  PackageUnloadProc(Module);
+end;
+
+procedure RegisterPackageCleanup(Module: HMODULE; Callback: TProcedure);
+begin
+  if not Assigned(PackageCleanupProc) then
+    raise EPackageError.Create('Package cleanup requires the shared package RTL');
+  PackageCleanupProc(Module,Callback,true);
+end;
+
+procedure UnregisterPackageCleanup(Module: HMODULE; Callback: TProcedure);
+begin
+  if not Assigned(PackageCleanupProc) then
+    raise EPackageError.Create('Package cleanup requires the shared package RTL');
+  PackageCleanupProc(Module,Callback,false);
+end;
+{$endif win64}
 {
     This file is part of the Free Pascal run time library.
     Copyright (c) 1999-2000 by Florian Klaempfl

@@ -1442,6 +1442,10 @@ Type
   TInitHandler = Class(TObject)
     AHandler : TInitComponentHandler;
     AClass : TComponentClass;
+{$ifdef win64}
+    Previous: TInitHandler;
+    destructor Destroy; override;
+{$endif}
   end;
 
 
@@ -1452,6 +1456,14 @@ type
 Var
   InitHandlerList : TList;
   FindGlobalComponentList : TCodePtrList;
+
+{$ifdef win64}
+destructor TInitHandler.Destroy;
+begin
+  Previous.Free;
+  inherited Destroy;
+end;
+{$endif}
 
 procedure RegisterFindGlobalComponentProc(AFindGlobalComponent: TFindGlobalComponent);
   begin
@@ -1513,8 +1525,18 @@ begin
         { override? }
         if (I<Count) and (TInitHandler(Items[I]).AClass=H.AClass) then
           begin
+{$ifdef win64}
+            if Assigned(PackageUnloadProc) then
+              begin
+                H.Previous:=TInitHandler(Items[I]);
+                Items[I]:=H;
+              end
+            else
+{$endif}
+              begin
             TInitHandler(Items[I]).AHandler:=Handler;
             H.Free;
+              end;
           end
         else
           InitHandlerList.Insert(I,H);
@@ -1525,6 +1547,60 @@ begin
   end;
 end;
 
+
+{$ifdef win64}
+procedure UnRegisterModuleHandlers(Module: HMODULE);
+var
+  I: Integer;
+  IntConst: TIntConst;
+  Head, Handler: TInitHandler;
+  Link: ^TInitHandler;
+begin
+  with IntConstList.LockList do
+    try
+      for I:=Count-1 downto 0 do
+        begin
+          IntConst:=TIntConst(Items[I]);
+          if (PackageModuleFromAddress(IntConst.IntegerType)=Module) or
+             (PackageModuleFromAddress(CodePointer(IntConst.IdentToIntFn))=Module) or
+             (PackageModuleFromAddress(CodePointer(IntConst.IntToIdentFn))=Module) then
+            begin Delete(I); IntConst.Free; end;
+        end;
+    finally
+      IntConstList.UnlockList;
+    end;
+  if Assigned(InitHandlerList) then
+    for I:=InitHandlerList.Count-1 downto 0 do
+      begin
+        Head:=TInitHandler(InitHandlerList[I]);
+        Link:=@Head;
+        while Link^<>nil do
+          begin
+            Handler:=Link^;
+            if (PackageModuleFromAddress(Pointer(Handler.AClass))=Module) or
+               (PackageModuleFromAddress(CodePointer(Handler.AHandler))=Module) then
+              begin
+                Link^:=Handler.Previous;
+                Handler.Previous:=nil;
+                Handler.Free;
+              end
+            else Link:=@Handler.Previous;
+          end;
+        if Head=nil then InitHandlerList.Delete(I)
+        else InitHandlerList[I]:=Head;
+      end;
+  if Assigned(FindGlobalComponentList) then
+    for I:=FindGlobalComponentList.Count-1 downto 0 do
+      if PackageModuleFromAddress(FindGlobalComponentList[I])=Module then
+        FindGlobalComponentList.Delete(I);
+  if PackageModuleFromAddress(CodePointer(IsUniqueGlobalComponentNameProc))=Module then
+    IsUniqueGlobalComponentNameProc:=nil;
+  if PackageModuleFromAddress(TMethod(AddDataModule).Code)=Module then AddDataModule:=nil;
+  if PackageModuleFromAddress(TMethod(RemoveDataModule).Code)=Module then RemoveDataModule:=nil;
+  if PackageModuleFromAddress(TMethod(ApplicationHandleException).Code)=Module then ApplicationHandleException:=nil;
+  if PackageModuleFromAddress(TMethod(ApplicationShowException).Code)=Module then ApplicationShowException:=nil;
+end;
+{$endif win64}
 
 { all targets should at least include the sysres.inc dummy in the system unit to compile this }
 function CreateComponentfromRes(const res : string;Inst : THandle;var Component : TComponent) : Boolean;

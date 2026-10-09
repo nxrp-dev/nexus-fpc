@@ -4,7 +4,7 @@ Date: 2026-10-09
 
 ## Assessment and scope
 
-FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has an experimental Win64 shared RTL with explicit EXE startup activation, per-image contexts, and package lifecycle rollback. It is not a complete Delphi-style runtime-package system: general LoadPackage/UnloadPackage, reference accounting, registry cleanup, late-loaded TLS, and full binary compatibility remain open.
+FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has an experimental Win64 shared RTL with explicit EXE startup activation, per-image contexts, and synchronous LoadPackage/UnloadPackage. The current pass adds reference accounting, rollback, image-owned RTL registration cleanup and strict SDK/package identities. Late-loaded TLS, non-Win64 runtimes, IDE integration and Delphi binary compatibility remain outside this scope.
 
 This document consolidates the source-based gap analyses, compatibility clarification, and implementation results. Items 1-10 and the profiler cache correction are committed. Item 11 now provides a tested, isolated Win64 package SDK and console/GUI build workflow. Its source-only and relocated builds, the runtime suite, and ordinary regressions pass. The preceding compiler/RTL milestone also passed profiler checks and the full bootstrap/cross matrix; item 11 changes build tooling and the experimental entry point without changing that runtime implementation.
 
@@ -245,6 +245,30 @@ does not exercise a GUI toolkit. This SDK contains the minimal shared RTL closur
 not all FPC library packages. General loading/unloading, registry cleanup, TLS
 extensions and full mixed-build compatibility remain items 12-16. No runtime
 threading changes or production target capability changes were introduced.
+The subsequent items 12-14 and 16 implementation is recorded in the load/unload
+report below; item 15 remains deferred.
+
+## Implementation results: items 12-14 and 16
+
+Synchronous Win64 loading/unloading, dependency/reference ownership, rollback,
+RTL registration/resource cleanup and strict package artifact identities are
+implemented and validated. Console and GUI examples obtain factories from genuinely
+late-loaded implementations, release and unmap them, and load them again.
+The compiler also keeps imported owners' native resources out of consumer linking.
+
+Validation passed: 49 normal and 50 smart loader/publication checks, 99 runtime
+steps, 19 source-only/relocated SDK checks, 70 metadata checks and 28 link-suite
+steps (including the metadata invocation). The fresh optimized compiler passed
+32 ordinary EXE/DLL checks and 41 profiler-cache checks. The full clean bootstrap
+passed all 13 RTL targets, Linux FmtBCD and heaptrc `-CfNONE`, with the same 14
+nonfatal warnings as the previous run.
+
+See [the load/unload report](nexusfpc-dynamic-packages-load-unload-design.md) for
+exact evidence paths, the API/lifetime contract and recorded tradeoffs. PCP v4
+and descriptor v2 require rebuilding experimental package artifacts. Ordinary
+PPU layout and production package target capabilities are unchanged. Item 15
+remains excluded; newly introduced late-loaded TLS is rejected.
+Earlier result sections above describe their historical milestones and formats.
 
 ## Existing implementation
 
@@ -292,17 +316,17 @@ The Win64 package path now emits owner-only initialization, existing main-thread
 
 [`SetupEntryInformation`](rtl/inc/system.inc), approximately line 83, overwrites the single `EntryInformation` record and resource pointers. Reusing that startup path unchanged for multiple images sharing `System` would overwrite an earlier module's state.
 
-The new descriptor/context split preserves module-owned tables and handles. Startup aggregates existing main-thread and resource-string metadata before the existing RTL setup. General package resource lookup and late TLS support remain open.
+The descriptor/context split preserves module-owned tables and handles. Startup aggregates existing main-thread and resource-string metadata before the existing RTL setup. The managed loader now registers native image/resource handles and updates resource-string tables for load/unload. Late TLS support remains deferred.
 
 ### Initialization ownership and failure handling
 
 The compiler's [`get_init_final_list`](compiler/ngenutil.pas) now excludes imported package owners. The package runtime tracks a completed prefix per context; ordinary builds retain the existing single-table path.
 
-Owned-unit tables, dependency ordering, initialization once, reverse finalization, and partial-failure rollback are implemented and tested. General loader registration/reference cleanup remains separate.
+Owned-unit tables, dependency ordering, initialization once, reverse finalization, partial-failure rollback and managed-loader reference cleanup are implemented. Cleanup failures retain affected images until exit.
 
 ### Runtime registration and cleanup
 
-Windows has a skeletal `TLibModule` declaration in [sysosh.inc](rtl/win/sysosh.inc). This is not a complete runtime package registry. [`UnRegisterModuleClasses`](rtl/objpas/classes/cregist.inc), approximately line 97, has an empty implementation.
+Windows' `TLibModule` declaration in [sysosh.inc](rtl/win/sysosh.inc) is now populated by the managed package registry. [`UnRegisterModuleClasses`](rtl/objpas/classes/cregist.inc) removes image-owned classes, aliases and component/callback registrations on Win64. TypInfo removes image-owned enum aliases; returned custom-attribute objects remain caller-owned.
 
 Loading needs package identity and compatibility checks, unit-ownership validation, dependency retention, and lifecycle execution. Unloading needs reference accounting, finalization before unmapping, and removal of registrations and caches that refer into the image.
 
@@ -331,11 +355,11 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 | 9 | **Implemented.** Owner-only tables, sequential dependency activation, reverse finalization and partial-initialization rollback. | `pmodules`, `ngenutil`, `FPCPackage`; items 7-8. | Diamond, failure rollback, preservation of active dependencies, cleanup failures and resumed shutdown pass. |
 | 10 | **Implemented as an isolated experimental build.** Foundational shared System/ObjPas/SysUtils closure and per-image startup. | Runtime test build recipe, SysInitPkg, System preparation; items 6-9. | Real host/package identity, managed values, resources and typed exceptions pass. |
 | 11 | **Implemented for experimental Win64.** Reusable isolated SDK and startup-linked console/GUI consumption. | `ppcpkg`, PowerShell SDK/build helpers, checked-in examples; item 10. | Fresh source-only build plus relocated PCP/DLL consumption passes in normal/smart modes with shared identity and ordered lifecycle. Ordinary builds remain separate. |
-| 12 | Implement explicit `LoadPackage` and runtime registration: dependency retention, descriptor validation, duplicate-unit checks, repeat-load behavior, and rollback. | New low-level RTL package manager, public `SysUtils` facade, platform loader adapter; items 7-11. | Late loading works; repeat loading reuses initialized state; ownership conflicts fail before user initialization. |
-| 13 | Implement `UnloadPackage` and reference accounting. Distinguish startup-held and explicit references; finalize before unmapping and retain dependencies while needed. | RTL package manager; item 12. | Unloading one diamond branch preserves the shared dependency; releasing its last eligible reference finalizes it once. |
-| 14 | Complete module registration cleanup, including class unregistration and package-owned resource/RTTI registrations and cached references. | `classes/cregist.inc`, resource/RTTI registries, module lookup; items 8 and 13. | Load/register/unload/reload leaves no stale class or metadata pointer into an unmapped image. |
-| 15 | Complete package TLS behavior for existing threads, newly created threads, and teardown; explicitly define whether direct cross-package `threadvar` access is supported. | `threadvr.inc`, platform TLS/thread code, generated TLS tables; items 8 and 12-13. | A package loaded into a multithreaded host provides isolated TLS to old/new threads and cleans it up correctly. |
-| 16 | Enforce runtime ABI compatibility and artifact publication consistency. Match PCP/runtime build identities and reject incompatible RTL/compiler/target/text-model combinations. | PCP metadata, runtime descriptor, build tooling; items 4, 7, and 12. | Mismatched runtime images fail before unit initialization; failed linking cannot publish a new usable-looking PCP paired with an old image. |
+| 12 | **Implemented for experimental Win64.** Explicit `LoadPackage`, dependency retention, descriptor/ownership checks, repeat loads and rollback. | `FPCPackage`, `fpcpackageloader.inc`, SysUtils facade; items 7-11. | Genuine late loading and clean/failed rollback checks; no new TLS or lifecycle reentrancy. |
+| 13 | **Implemented for the synchronous lifetime contract.** Separate explicit/dependency refs, startup pinning and finalization before unmapping. | RTL package manager; item 12. | A diamond retains its shared dependency until the last branch releases it; cleanup failure retains images. |
+| 14 | **Implemented for RTL-owned registrations.** Classes, aliases, component and conversion callbacks, enum aliases, native/string resources and application cleanup hooks. | Classes, TypInfo, SysUtils, loader; items 8 and 13. | Unload/reload clears stale RTL pointers and restores component initialization overrides. Application-held references remain caller-owned. |
+| 15 | **Deferred by user instruction.** Package TLS for existing/new threads and teardown requires joint design. New late-loaded threadvars are currently rejected. | `threadvr.inc`, platform TLS/thread code, generated TLS tables; items 8 and 12-13. | No threaded solution is included in this pass. |
+| 16 | **Implemented within the matching SDK contract.** PCP v4/descriptor v2, SDK/package/required-build identities and immutable bundle publication. | Compiler metadata/descriptor, runtime checks, SDK/build helpers. | Incompatible images fail before initialization; failed compilation/linking and stale-consumer updates preserve the selected generation. |
 
 Items 1-4 improve existing dormant package infrastructure without requiring the full runtime. Item 5 and the symbol work in item 6 expose the compiler/linker integration requirements. The descriptor and module-context contract in items 7-8 should anchor the runtime implementation.
 
@@ -381,10 +405,11 @@ This demonstrates the central BPL-like behavior. A successful native DLL load or
 
 ## Evidence and implementation limits
 
-Items 1-11 have the scoped implementation and validation recorded above. The
-experimental Win64 SDK supports console/GUI shared RTL startup and sequential
-package lifecycle. General BPL-style load/unload behavior and non-Win64 package runtime
-support remain unimplemented; cross-target builds validate ordinary compilation,
-not package execution on those platforms.
+Items 1-14 and 16 now have scoped implementations; the
+[load/unload report](nexusfpc-dynamic-packages-load-unload-design.md) records current
+validation and limits. The experimental Win64 SDK supports console/GUI shared RTL
+startup and synchronous late loading/unloading. Item 15 and non-Win64 package
+runtimes remain deferred; cross-target builds validate ordinary compilation,
+not package execution on those platforms. This is not full Delphi BPL parity.
 
 The repository source links are relative so the document can be browsed within the checkout. Approximate line numbers describe the inspected snapshot and may move. Revalidate the target flags, working-tree changes, and source paths when beginning an implementation item.

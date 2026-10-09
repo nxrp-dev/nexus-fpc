@@ -516,6 +516,8 @@ var
     res : TCmdStrListItem;
     s   : TCmdStr;
   begin
+    { An imported unit's native resources belong to its provider image. }
+    if assigned(u.package) then exit;
     res:=TCmdStrListItem(u.ResourceFiles.First);
     while assigned(res) do
       begin

@@ -3,6 +3,18 @@
 Date: 2026-10-09
 Status: explicit startup activation approved, implemented, and validated on 2026-10-09.
 
+Items 12-14 and 16 extend this historical milestone with the approved
+[load/unload contract](nexusfpc-dynamic-packages-load-unload-design.md).
+Current artifacts use PCP v4 and descriptor v2 (21 native words, 168 bytes on
+Win64), appending SDK, package build and required-build identities. The stable
+`FPC_PACKAGE_INFO` export contains a pointer to the descriptor. The context
+remains six native words. Shared Classes and TypInfo now belong to nxrtl.
+Startup owners remain pinned; successfully unloaded late owners are removed.
+The low-level caller-mapped API retains its original exception semantics;
+LoadPackage wraps diagnostics before releasing package-defined exception images.
+The limitations below describe items 6-10 at their completion, not the later
+loader implementation. Item 15 remains excluded.
+
 ## Completion boundary
 
 The experimental EXE now links and runs against a package-owned System using

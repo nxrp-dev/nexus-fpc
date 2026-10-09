@@ -241,6 +241,8 @@ implementation
   procedure tpcppackage.writecontainernames;
     begin
       pcpfile.putstring(pplfilename);
+      pcpfile.putstring(sdkidentity);
+      pcpfile.putstring(buildidentity);
       //pcpfile.putstring(ppafilename);
       pcpfile.writeentry(ibpackagefiles);
     end;
@@ -271,6 +273,7 @@ implementation
       for i:=0 to requiredpackages.count-1 do
         begin
           pcpfile.putstring(requiredpackages.NameOfIndex(i));
+          pcpfile.putstring(tpackage(requiredpackages[i]).buildidentity);
         end;
       pcpfile.writeentry(ibendrequireds);
     end;
@@ -340,9 +343,15 @@ implementation
     begin
       readentry(ibpackagefiles);
       pplfilename:=pcpfile.getstring;
+      sdkidentity:=pcpfile.getstring;
+      buildidentity:=pcpfile.getstring;
       endentry;
       if pplfilename='' then
         invalidpcp('empty library filename');
+      if (length(sdkidentity)>64) or (length(buildidentity)>64) then
+        invalidpcp('invalid build identity');
+      if sdkidentity<>package_sdk_identity then
+        invalidpcp('package SDK identity differs from compiler invocation');
 
       message1(package_u_ppl_filename,pplfilename);
     end;
@@ -408,6 +417,7 @@ implementation
             { Hash lookup ignores entries with nil data. }
             names.Add(upper(name),self);
             requiredpackages.add(name,nil);
+            requiredidentities.Add(upper(name),stringdup(pcpfile.getstring));
             message1(package_u_required_package,name);
           end;
       finally
@@ -549,6 +559,8 @@ implementation
       module : pcontainedunit;
     begin
       { create new ppufile }
+      sdkidentity:=package_sdk_identity;
+      buildidentity:=current_package_build_identity;
       pcpfile:=tpcpfile.create(pcpfilename);
       if not pcpfile.createfile then
         Message2(package_f_cant_create_pcp,realpackagename^,pcpfilename);

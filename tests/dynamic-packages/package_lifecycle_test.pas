@@ -72,7 +72,7 @@ begin
 end;
 
 begin
-  Check(SizeOf(TPackageDescriptor)=18*SizeOf(Pointer),'descriptor layout');
+  Check(SizeOf(TPackageDescriptor)=21*SizeOf(Pointer),'descriptor layout');
   Check(SizeOf(TPackageContext)=6*SizeOf(Pointer),'context layout');
   for I:=0 to High(D) do
     begin

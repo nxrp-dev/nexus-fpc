@@ -31,7 +31,7 @@ interface
     cstreams,entfile;
 
   const
-    CurrentPCPVersion=3;
+    CurrentPCPVersion=4;
 
     { unit flags }
     pf_big_endian          = $000004;

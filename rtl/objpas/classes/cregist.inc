@@ -94,8 +94,32 @@ begin
 end;
 
 
+{$ifdef win64}
+procedure UnRegisterModuleComponents(Module: HMODULE); forward;
+procedure UnRegisterModuleHandlers(Module: HMODULE); forward;
+{$endif}
+
 procedure UnRegisterModuleClasses(Module: HMODULE);
+{$ifdef win64}
+var I: Integer;
+{$endif}
 begin
+{$ifdef win64}
+  if Module=0 then Exit;
+  with ClassList.LockList do
+    try
+      for I:=Count-1 downto 0 do
+        if PackageModuleFromAddress(Items[I])=Module then Delete(I);
+      if Assigned(ClassAliasList) then
+        for I:=ClassAliasList.Count-1 downto 0 do
+          if PackageModuleFromAddress(Pointer(ClassAliasList.Objects[I]))=Module then
+            ClassAliasList.Delete(I);
+    finally
+      ClassList.UnlockList;
+    end;
+  UnRegisterModuleComponents(Module);
+  UnRegisterModuleHandlers(Module);
+{$endif win64}
 end;
 
 function FindClass(const AClassName: string): TPersistentClass;
@@ -200,6 +224,26 @@ end;
 
 var
   ComponentPages: TCollection;
+
+{$ifdef win64}
+procedure UnRegisterModuleComponents(Module: HMODULE);
+var I,J: Integer; Page: TComponentPage;
+begin
+  if ComponentPages<>nil then
+    for I:=0 to ComponentPages.Count-1 do
+      begin
+        Page:=TComponentPage(ComponentPages.Items[I]);
+        if Page.Classes<>nil then
+          for J:=Page.Classes.Count-1 downto 0 do
+            if PackageModuleFromAddress(Page.Classes[J])=Module then
+              Page.Classes.Delete(J);
+      end;
+  if PackageModuleFromAddress(Pointer(RegisterComponentsProc))=Module then
+    RegisterComponentsProc:=nil;
+  if PackageModuleFromAddress(Pointer(RegisterNoIconProc))=Module then
+    RegisterNoIconProc:=nil;
+end;
+{$endif win64}
 
 procedure InitComponentPages;
 begin

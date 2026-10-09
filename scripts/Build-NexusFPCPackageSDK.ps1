@@ -14,6 +14,7 @@ param(
     [switch]$SmartLink
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $BootstrapBin = (Resolve-Path -LiteralPath $BootstrapBin).Path
@@ -94,7 +95,17 @@ try {
         "COMPILER_UNITTARGETDIR=$($rtl.Replace('\','/'))","COMPILER_TARGETDIR=$($rtlBin.Replace('\','/'))",
         "FPCMADE=$($work.Replace('\','/'))/rtl.fpcmade",'OPT=-n')
 } finally { $env:PATH = $oldPath }
-$packageOptions = @('-n','-Mobjfpc',"-Fu$rtl")
+# One conservative SDK identity binds this compiler and its complete RTL sources.
+$identityParts = @((Get-FileHash -LiteralPath $compiler).Hash,('SmartLink='+[bool]$SmartLink))
+foreach ($file in Get-ChildItem -LiteralPath "$SourceRoot\rtl" -Recurse -File | Sort-Object FullName) {
+    if ($file.Extension -in @('.pp','.pas','.inc')) {
+        $identityParts += $file.FullName.Substring($SourceRoot.Length) + ':' + (Get-FileHash -LiteralPath $file.FullName).Hash
+    }
+}
+$hash = [Security.Cryptography.SHA256]::Create()
+try { $sdkIdentity = [BitConverter]::ToString($hash.ComputeHash([Text.Encoding]::UTF8.GetBytes(($identityParts -join "`n")))).Replace('-','') }
+finally { $hash.Dispose() }
+$packageOptions = @('-n','-Mobjfpc',"-Fj$sdkIdentity",('-Fk'+[guid]::NewGuid().ToString('N')), "-Fu$rtl")
 if ($SmartLink) { $packageOptions += @('-CX','-XX') }
 # Compile the declaration away from rtl/win64: a source beside the input file
 # takes precedence over a cached System PPU in a later unit search directory.
@@ -106,13 +117,15 @@ Copy-Item -LiteralPath "$foundation\nxrtl.pcp","$foundation\nxrtl.dll" -Destinat
 Copy-Item -LiteralPath "$rtl\fpintres.ppu","$rtl\fpintres.o","$rtl\libimpfpintres.a" -Destination $units
 Copy-Item -LiteralPath "$SourceRoot\rtl\win64\sysinitpkg.pp" -Destination $work
 Invoke-PackageStep 'host-startup' $compiler @('-n','-Mobjfpc',"-Fu$units","-Fp$packages","-Fl$packages",
-    '-FPnxrtl',"-FU$units","$work\sysinitpkg.pp")
-Copy-Item -LiteralPath "$SourceRoot\scripts\Invoke-NexusFPCPackageCompile.ps1" -Destination $bin
-[pscustomobject]@{Format=1;Target='x86_64-win64';Experimental=$true;Foundation='nxrtl';
-    CompilerVersion=(& $compiler -iV);SmartLink=[bool]$SmartLink;
-    CompilerSHA256=(Get-FileHash -LiteralPath $compiler).Hash;
-    FoundationSHA256=(Get-FileHash -LiteralPath "$packages\nxrtl.dll").Hash} |
-    ConvertTo-Json | Set-Content "$OutputRoot\sdk.json" -Encoding UTF8
+    '-FPnxrtl',"-Fj$sdkIdentity","-FU$units","$work\sysinitpkg.pp")
+Copy-Item -LiteralPath "$SourceRoot\scripts\Invoke-NexusFPCPackageCompile.ps1","$SourceRoot\scripts\NexusFPCPackageArtifacts.ps1" -Destination $bin
+$artifacts = @()
+foreach ($file in @((Get-Item -LiteralPath $compiler)) + @(Get-ChildItem -LiteralPath $units,$packages -File)) {
+    $artifacts += [pscustomobject]@{Path=$file.FullName.Substring($OutputRoot.Length+1);SHA256=(Get-FileHash -LiteralPath $file.FullName).Hash}
+}
+[pscustomobject]@{Format=2;Target='x86_64-win64';Experimental=$true;Foundation='nxrtl';
+    CompilerVersion=(& $compiler -iV);SmartLink=[bool]$SmartLink;SDKIdentity=$sdkIdentity;Artifacts=$artifacts} |
+    ConvertTo-Json -Depth 5 | Set-Content "$OutputRoot\sdk.json" -Encoding UTF8
 Write-Host "Package SDK ready: $OutputRoot"
 
 if ($BuildExamples -or $RunExamples) {
@@ -130,7 +143,7 @@ if ($BuildExamples -or $RunExamples) {
             -RequiredPackages demotypes,demoleft,demoright -PackagePath $examplePackages `
             -OutputDirectory "$OutputRoot\examples\$name" -SmartLink:$SmartLink
         if ($RunExamples) {
-            $directory = Join-Path $OutputRoot "examples\$name"
+            $directory = Get-NexusPackageBundle (Join-Path $OutputRoot "examples\$name")
             $result = Join-Path $directory 'result.log'
             $process = Start-Process -FilePath "$directory\$name.exe" -ArgumentList $result `
                 -WorkingDirectory $directory -WindowStyle Hidden -PassThru

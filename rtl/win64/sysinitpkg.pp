@@ -6,7 +6,7 @@ interface
 
 implementation
 
-uses FPCPackage;
+uses FPCPackage, SysUtils;
 
 var
   SysInstance: QWord;
@@ -25,6 +25,11 @@ var
 procedure ExeEntry(constref Info: TEntryInformation); external name '_FPC_EXE_Entry';
 procedure PascalMain; external name 'PASCALMAIN';
 function GetModuleHandle(Name: PChar): QWord; stdcall; external 'kernel32' name 'GetModuleHandleA';
+function GetStdHandle(Kind: LongInt): QWord; stdcall; external 'kernel32' name 'GetStdHandle';
+function WriteFile(Handle: QWord; Buffer: Pointer; Count: DWord; var Written: DWord;
+  Overlapped: Pointer): LongBool; stdcall; external 'kernel32' name 'WriteFile';
+procedure OutputDebugString(Text: PAnsiChar); stdcall; external 'kernel32' name 'OutputDebugStringA';
+procedure ExitProcess(Code: DWord); stdcall; external 'kernel32' name 'ExitProcess';
 
 const
   Info: TEntryInformation = (
@@ -38,13 +43,28 @@ const
     OS: (TlsKeyAddr: @TlsKeyVar; SysInstance: @SysInstance; WideInitTables: @WideInitTables)
   );
 
+procedure StartupFailure(const Message: AnsiString);
+var Text: AnsiString; Written: DWord;
+begin
+  { Unit initialization and RTL text I/O may not yet be available. }
+  Text:='Package startup failed: '+Message+#13#10;
+  WriteFile(GetStdHandle(-12),PAnsiChar(Text),Length(Text),Written,nil);
+  OutputDebugString(PAnsiChar(Text));
+  ExitProcess(217);
+end;
+
 procedure Start(Console: Boolean);
 begin
   SysInstance:=GetModuleHandle(nil);
   ImageHandle:=SysInstance;
   IsConsole:=Console;
-  PreparePackageStartup(@Root);
-  PreparePackageHost(Info);
+  try
+    PreparePackageStartup(@Root);
+    PreparePackageHost(Info);
+  except
+    on E: Exception do StartupFailure(E.ClassName+': '+E.Message);
+    else StartupFailure('Non-Exception object during package preparation');
+  end;
   ExeEntry(Info);
 end;
 
