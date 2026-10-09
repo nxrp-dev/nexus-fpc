@@ -448,84 +448,106 @@ implementation
 
   procedure load_packages;
     var
+      active : TFPList;
+      owners : TFPHashList;
       i,j : longint;
-      pcp: tpcppackage;
-      entry,
-      entryreq : ppackageentry;
-      name,
-      uname : string;
+      entry : ppackageentry;
+      owner : tpackage;
+      name : string;
+
+    procedure load_package(entry:ppackageentry);
+      var
+        i : longint;
+        required : ppackageentry;
+        pcp : tpcppackage;
+        chain : ansistring;
+        buildingpackage : boolean;
+      begin
+        buildingpackage:=assigned(current_module) and current_module.ispackage;
+        if (active.IndexOf(entry)>=0) or
+           (buildingpackage and (upper(entry^.realpkgname)=current_module.modulename^)) then
+          begin
+            chain:='';
+            if buildingpackage then
+              chain:=current_module.realmodulename^+' -> ';
+            for i:=0 to active.count-1 do
+              chain:=chain+ppackageentry(active[i])^.realpkgname+' -> ';
+            Comment(V_Fatal,'Circular package dependency: '+chain+entry^.realpkgname);
+          end;
+        if assigned(entry^.package) then
+          exit;
+        active.Add(entry);
+        try
+          Comment(V_Info,'Loading package: '+entry^.realpkgname);
+          pcp:=tpcppackage.create(entry^.realpkgname);
+          { Give the package list ownership even if loading aborts. }
+          entry^.package:=pcp;
+          pcp.loadpcp;
+          for i:=0 to pcp.requiredpackages.count-1 do
+            begin
+              add_package(pcp.requiredpackages.NameOfIndex(i),true,false);
+              required:=ppackageentry(packagelist.Find(upper(pcp.requiredpackages.NameOfIndex(i))));
+              load_package(required);
+              pcp.requiredpackages[i]:=required^.package;
+            end;
+        finally
+          active.Delete(active.count-1);
+        end;
+      end;
+
     begin
       if not (tf_supports_packages in target_info.flags) then
         exit;
-      i:=0;
-      while i<packagelist.count do
-        begin
-          entry:=ppackageentry(packagelist[i]);
-          if assigned(entry^.package) then
-            internalerror(2013053104);
-          Comment(V_Info,'Loading package: '+entry^.realpkgname);
-          pcp:=tpcppackage.create(entry^.realpkgname);
-          pcp.loadpcp;
-          entry^.package:=pcp;
-
-          { add all required packages that are not yet part of packagelist }
-          for j:=0 to pcp.requiredpackages.count-1 do
-            begin
-              name:=pcp.requiredpackages.NameOfIndex(j);
-              uname:=upper(name);
-              if not assigned(packagelist.Find(uname)) then
-                begin
-                  New(entryreq);
-                  entryreq^.realpkgname:=name;
-                  entryreq^.package:=nil;
-                  entryreq^.usedunits:=0;
-                  entryreq^.direct:=false;
-                  packagelist.add(uname,entryreq);
-                end;
-            end;
-
-          Inc(i);
-        end;
-
-      { all packages are now loaded, so we can fill in the links of the required packages }
-      for i:=0 to packagelist.count-1 do
-        begin
-          entry:=ppackageentry(packagelist[i]);
-          if not assigned(entry^.package) then
-            internalerror(2015111301);
-          for j:=0 to entry^.package.requiredpackages.count-1 do
-            begin
-              if assigned(entry^.package.requiredpackages[j]) then
-                internalerror(2015111303);
-              entryreq:=packagelist.find(upper(entry^.package.requiredpackages.NameOfIndex(j)));
-              if not assigned(entryreq) then
-                internalerror(2015111302);
-              entry^.package.requiredpackages[j]:=entryreq^.package;
-            end;
-        end;
+      active:=TFPList.Create;
+      owners:=TFPHashList.Create;
+      try
+        i:=0;
+        while i<packagelist.count do
+          begin
+            load_package(ppackageentry(packagelist[i]));
+            inc(i);
+          end;
+        { Check the complete closure before unit lookup can choose a provider. }
+        for i:=0 to packagelist.count-1 do
+          begin
+            entry:=ppackageentry(packagelist[i]);
+            for j:=0 to entry^.package.containedmodules.count-1 do
+              begin
+                name:=upper(entry^.package.containedmodules.NameOfIndex(j));
+                owner:=tpackage(owners.Find(name));
+                if assigned(owner) then
+                  Comment(V_Fatal,'Unit '+name+' is contained in both packages '+
+                    owner.realpackagename^+' and '+entry^.package.realpackagename^);
+                owners.Add(name,entry^.package);
+              end;
+          end;
+      finally
+        owners.Free;
+        active.Free;
+      end;
     end;
 
 
   procedure add_package(const name:string;ignoreduplicates:boolean;direct:boolean);
     var
       entry : ppackageentry;
-      i : longint;
+      key : string;
     begin
-      for i:=0 to packagelist.count-1 do
+      key:=upper(name);
+      entry:=ppackageentry(packagelist.Find(key));
+      if assigned(entry) then
         begin
-          if packagelist.nameofindex(i)=name then
-            begin
-              if not ignoreduplicates then
-                Message1(package_e_duplicate_package,name);
-              exit;
-            end;
+          if not ignoreduplicates then
+            Message1(package_e_duplicate_package,name);
+          entry^.direct:=entry^.direct or direct;
+          exit;
         end;
       new(entry);
       entry^.package:=nil;
       entry^.realpkgname:=name;
       entry^.usedunits:=0;
       entry^.direct:=direct;
-      packagelist.add(upper(name),entry);
+      packagelist.add(key,entry);
     end;
 
 

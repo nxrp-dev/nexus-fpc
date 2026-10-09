@@ -49,6 +49,10 @@ interface
       procedure readcontainedunits;
       procedure readrequiredpackages;
       procedure readpputable;
+      procedure invalidpcp(const reason:ansistring);
+      procedure readentry(expected:byte);
+      procedure endentry;
+      procedure checkppudata;
     public
       constructor create(const pn:string);
       destructor destroy; override;
@@ -67,9 +71,26 @@ implementation
     cfileutl,cutils,
     systems,globals,version,
     verbose,
-    entfile,pkgutil;
+    entfile,ppu,pkgutil;
 
 { tpcppackage }
+
+  procedure tpcppackage.invalidpcp(const reason:ansistring);
+    begin
+      Comment(V_Fatal,'Invalid PCP file '+pcpfilename+': '+reason);
+    end;
+
+  procedure tpcppackage.readentry(expected:byte);
+    begin
+      if not pcpfile.readpackageentry(expected) then
+        invalidpcp('invalid or truncated metadata entry '+tostr(expected));
+    end;
+
+  procedure tpcppackage.endentry;
+    begin
+      if not pcpfile.packageentrydone then
+        invalidpcp('invalid metadata entry length');
+    end;
 
   function tpcppackage.openpcp: boolean;
     var
@@ -277,7 +298,7 @@ implementation
       pos,
       rem : longint;
       module : pcontainedunit;
-      stream : TCStream;
+      stream : TCMemoryStream;
     begin
       pcpfile.flush;
 
@@ -293,12 +314,19 @@ implementation
           pcpfile.flush;
           module^.offset:=pcpfile.position;
 
-          { retrieve substream for the current position }
-          stream:=pcpfile.substream(module^.offset,-1);
-          rewriteppu(module^.module.ppufilename,stream);
-          module^.size:=stream.position;
-          stream.free;
-          stream := nil;
+          { Rewrite into an independent stream: the entry writer must not
+            share buffered state with direct writes to the PCP stream. }
+          stream:=TCMemoryStream.Create;
+          try
+            if not rewriteppu(module^.module.ppufilename,stream) then
+              Comment(V_Fatal,'Failed to package unit '+module^.module.modulename^);
+            module^.size:=stream.Size;
+            stream.Position:=0;
+            if pcpfile.stream.CopyFrom(stream,stream.Size)<>stream.Size then
+              Message(package_f_pcp_cannot_write);
+          finally
+            stream.Free;
+          end;
         end;
 
       pos:=pcpfile.position;
@@ -310,12 +338,11 @@ implementation
 
   procedure tpcppackage.readcontainernames;
     begin
-      if pcpfile.readentry<>ibpackagefiles then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2020100818);
-        end;
+      readentry(ibpackagefiles);
       pplfilename:=pcpfile.getstring;
+      endentry;
+      if pplfilename='' then
+        invalidpcp('empty library filename');
 
       message1(package_u_ppl_filename,pplfilename);
     end;
@@ -326,21 +353,23 @@ implementation
       name,path : string;
       p : pcontainedunit;
     begin
-      if pcpfile.readentry<>ibstartcontained then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2020100819);
-        end;
+      readentry(ibstartcontained);
       cnt:=pcpfile.getlongint;
-      if pcpfile.readentry<>ibendcontained then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2020100820);
-        end;
+      endentry;
+      if (cnt<0) or (cnt<>pcpfile.header.ppulistsize) then
+        invalidpcp('contained-unit count does not match header');
+      readentry(ibendcontained);
+      if cnt>pcpfile.entrysize div 2 then
+        invalidpcp('contained-unit count exceeds entry size');
       for i:=0 to cnt-1 do
         begin
           name:=pcpfile.getstring;
           path:=pcpfile.getstring;
+          if pcpfile.error or (name='') or (path='') then
+            invalidpcp('invalid contained-unit name or filename');
+          name:=upper(name);
+          if containedmodules.FindIndexOf(name)>=0 then
+            invalidpcp('duplicate contained unit '+name);
           new(p);
           p^.module:=nil;
           p^.ppufile:=path;
@@ -349,30 +378,42 @@ implementation
           containedmodules.add(name,p);
           message1(package_u_contained_unit,name);
         end;
+      endentry;
     end;
 
   procedure tpcppackage.readrequiredpackages;
     var
       cnt,i : longint;
       name : string;
+      names : TFPHashList;
     begin
-      if pcpfile.readentry<>ibstartrequireds then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2014110901);
-        end;
+      readentry(ibstartrequireds);
       cnt:=pcpfile.getlongint;
-      if pcpfile.readentry<>ibendrequireds then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2014110902);
-        end;
-      for i:=0 to cnt-1 do
-        begin
-          name:=pcpfile.getstring;
-          requiredpackages.add(name,nil);
-          message1(package_u_required_package,name);
-        end;
+      endentry;
+      if (cnt<0) or (cnt<>pcpfile.header.requiredlistsize) then
+        invalidpcp('required-package count does not match header');
+      readentry(ibendrequireds);
+      if cnt>pcpfile.entrysize then
+        invalidpcp('required-package count exceeds entry size');
+      names:=TFPHashList.Create;
+      try
+        for i:=0 to cnt-1 do
+          begin
+            name:=pcpfile.getstring;
+            if pcpfile.error or (name='') then
+              invalidpcp('invalid required-package name');
+            { Keep the spelling for filesystem lookup and diagnostics. }
+            if names.FindIndexOf(upper(name))>=0 then
+              invalidpcp('duplicate required package '+name);
+            { Hash lookup ignores entries with nil data. }
+            names.Add(upper(name),self);
+            requiredpackages.add(name,nil);
+            message1(package_u_required_package,name);
+          end;
+      finally
+        names.Free;
+      end;
+      endentry;
     end;
 
   procedure tpcppackage.readpputable;
@@ -380,17 +421,73 @@ implementation
       module : pcontainedunit;
       i : longint;
     begin
-      if pcpfile.readentry<>ibpputable then
-        begin
-          message(package_f_pcp_read_error);
-          internalerror(2015103001);
-        end;
+      readentry(ibpputable);
+      if (pcpfile.entrysize mod (2*sizeof(longint))<>0) or
+         (pcpfile.entrysize div (2*sizeof(longint))<>containedmodules.count) then
+        invalidpcp('invalid PPU table size');
       for i:=0 to containedmodules.count-1 do
         begin
           module:=pcontainedunit(containedmodules[i]);
           module^.offset:=pcpfile.getlongint;
           module^.size:=pcpfile.getlongint;
         end;
+      endentry;
+    end;
+
+  function compareppuoffsets(p1,p2:pointer):longint;
+    begin
+      if pcontainedunit(p1)^.offset<pcontainedunit(p2)^.offset then
+        result:=-1
+      else if pcontainedunit(p1)^.offset>pcontainedunit(p2)^.offset then
+        result:=1
+      else
+        result:=0;
+    end;
+
+  procedure tpcppackage.checkppudata;
+    var
+      ranges : TFPList;
+      i,lastend,filesize : longint;
+      module : pcontainedunit;
+      data : TCMemoryStream;
+      ppufile : tppufile;
+    begin
+      ranges:=TFPList.Create;
+      try
+        filesize:=pcpfile.stream.Size;
+        for i:=0 to containedmodules.count-1 do
+          ranges.Add(containedmodules[i]);
+        ranges.Sort(@compareppuoffsets);
+        lastend:=pcpfile.metadataend;
+        for i:=0 to ranges.count-1 do
+          begin
+            module:=pcontainedunit(ranges[i]);
+            if (module^.offset<lastend) or (module^.offset>filesize) or
+               (module^.size<sizeof(tppuheader)) or
+               (module^.size>filesize-module^.offset) then
+              invalidpcp('overlapping or out-of-bounds embedded PPU');
+            lastend:=module^.offset+module^.size;
+            data:=TCMemoryStream.Create;
+            ppufile:=tppufile.Create('');
+            try
+              pcpfile.stream.Position:=module^.offset;
+              if data.CopyFrom(pcpfile.stream,sizeof(tppuheader))<>sizeof(tppuheader) then
+                invalidpcp('truncated embedded PPU header');
+              data.Position:=0;
+              if not ppufile.openstream(data) or not ppufile.CheckPPUId or
+                 (ppufile.getversion<>CurrentPPUVersion) or
+                 (ppufile.header.common.cpu<>pcpfile.header.common.cpu) or
+                 (ppufile.header.common.target<>pcpfile.header.common.target) or
+                 (ppufile.header.common.size<>dword(module^.size-sizeof(tppuheader))) then
+                invalidpcp('incompatible or inconsistent embedded PPU header');
+            finally
+              ppufile.Free;
+              data.Free;
+            end;
+          end;
+      finally
+        ranges.Free;
+      end;
     end;
 
     constructor tpcppackage.create(const pn: string);
@@ -425,11 +522,11 @@ implementation
       if not assigned(pcpfile) then
         internalerror(2013053101);
 
-      if pcpfile.readentry<>ibpackagename then
-        Message1(package_f_cant_read_pcp,realpackagename^);
+      readentry(ibpackagename);
       newpackagename:=pcpfile.getstring;
+      endentry;
       if upper(newpackagename)<>packagename^ then
-        Comment(V_Error,'Package was renamed: '+realpackagename^);
+        invalidpcp('package name does not match '+realpackagename^);
 
       readcontainernames;
 
@@ -438,84 +535,111 @@ implementation
       readcontainedunits;
 
       readpputable;
+      readentry(ibend);
+      if not pcpfile.metadatadone then
+        invalidpcp('invalid metadata size or checksum');
+      checkppudata;
+      loaded:=true;
     end;
 
   procedure tpcppackage.savepcp;
     var
       tablepos,
-      oldpos : longint;
+      oldpos,i : longint;
+      module : pcontainedunit;
     begin
       { create new ppufile }
       pcpfile:=tpcpfile.create(pcpfilename);
       if not pcpfile.createfile then
         Message2(package_f_cant_create_pcp,realpackagename^,pcpfilename);
+      try
+        pcpfile.putstring(realpackagename^);
+        pcpfile.writeentry(ibpackagename);
 
-      pcpfile.putstring(realpackagename^);
-      pcpfile.writeentry(ibpackagename);
+        writecontainernames;
 
-      writecontainernames;
+        writerequiredpackages;
 
-      writerequiredpackages;
+        writecontainedunits;
 
-      writecontainedunits;
+        { the offsets and the contents of the ppus are not crc'd }
+        pcpfile.do_crc:=false;
 
-      { the offsets and the contents of the ppus are not crc'd }
-      pcpfile.do_crc:=false;
+        pcpfile.flush;
+        tablepos:=pcpfile.position;
 
-      pcpfile.flush;
-      tablepos:=pcpfile.position;
+        { this will write a table with empty entries }
+        writepputable;
 
-      { this will write a table with empty entries }
-      writepputable;
+        pcpfile.do_crc:=true;
 
-      pcpfile.do_crc:=true;
+        { the last entry ibend is written automatically }
 
-      { the last entry ibend is written automatically }
+        { flush to be sure }
+        pcpfile.flush;
+        { create and write header }
+        pcpfile.header.common.size:=pcpfile.size;
+        pcpfile.header.checksum:=pcpfile.crc;
+        pcpfile.header.common.compiler:=wordversion;
+        pcpfile.header.common.cpu:=word(target_cpu);
+        pcpfile.header.common.target:=word(target_info.system);
+        //pcpfile.header.flags:=flags;
+        pcpfile.header.ppulistsize:=containedmodules.count;
+        pcpfile.header.requiredlistsize:=requiredpackages.count;
+        pcpfile.writeheader;
 
-      { flush to be sure }
-      pcpfile.flush;
-      { create and write header }
-      pcpfile.header.common.size:=pcpfile.size;
-      pcpfile.header.checksum:=pcpfile.crc;
-      pcpfile.header.common.compiler:=wordversion;
-      pcpfile.header.common.cpu:=word(target_cpu);
-      pcpfile.header.common.target:=word(target_info.system);
-      //pcpfile.header.flags:=flags;
-      pcpfile.header.ppulistsize:=containedmodules.count;
-      pcpfile.header.requiredlistsize:=requiredpackages.count;
-      pcpfile.writeheader;
+        { write the ppu table which will also fill the offsets/sizes }
+        writeppudata;
 
-      { write the ppu table which will also fill the offsets/sizes }
-      writeppudata;
+        pcpfile.flush;
+        oldpos:=pcpfile.position;
 
-      pcpfile.flush;
-      oldpos:=pcpfile.position;
+        { tablepos is the payload position, after the preallocated entry header.
+          All buffers are flushed; patch only the fixed-size payload directly. }
+        pcpfile.stream.Position:=tablepos;
+        for i:=0 to containedmodules.count-1 do
+          begin
+            module:=pcontainedunit(containedmodules[i]);
+            if (pcpfile.stream.Write(module^.offset,sizeof(longint))<>sizeof(longint)) or
+               (pcpfile.stream.Write(module^.size,sizeof(longint))<>sizeof(longint)) then
+              Message(package_f_pcp_cannot_write);
+          end;
 
-      { now write the filled PPU table at the previously stored position }
-      pcpfile.position:=tablepos;
-      writepputable;
+        pcpfile.position:=oldpos;
 
-      pcpfile.position:=oldpos;
+        { save crc in current module also }
+        //crc:=pcpfile.crc;
 
-      { save crc in current module also }
-      //crc:=pcpfile.crc;
-
-      pcpfile.closefile;
-      pcpfile.free;
-      pcpfile:=nil;
+      finally
+        pcpfile.free;
+        pcpfile:=nil;
+      end;
     end;
 
   function tpcppackage.getmodulestream(module:tmodulebase):tcstream;
     var
       i : longint;
       contained : pcontainedunit;
+      data : TCMemoryStream;
     begin
       for i:=0 to containedmodules.count-1 do
         begin
           contained:=pcontainedunit(containedmodules[i]);
           if contained^.module=module then
             begin
-              result:=pcpfile.substream(contained^.offset,contained^.size);
+              { An independent bounded stream cannot read into the next PPU,
+                and interleaved unit loads cannot disturb each other's cursor. }
+              data:=TCMemoryStream.Create;
+              try
+                pcpfile.stream.Position:=contained^.offset;
+                if data.CopyFrom(pcpfile.stream,contained^.size)<>contained^.size then
+                  invalidpcp('truncated embedded PPU');
+                data.Position:=0;
+              except
+                data.Free;
+                raise;
+              end;
+              result:=data;
               exit;
             end;
         end;

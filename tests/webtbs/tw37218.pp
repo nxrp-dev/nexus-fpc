@@ -1,6 +1,5 @@
 { %CPU=aarch64}
 program project1;
-uses crt;
 procedure test;
 var a:uint64;
 begin

@@ -1,4 +1,3 @@
-{ %GRAPH }
 
 USES uw0809;
 

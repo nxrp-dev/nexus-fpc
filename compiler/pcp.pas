@@ -52,6 +52,8 @@ interface
     end;
 
     tpcpfile=class(tentryfile)
+    private
+      headerread : boolean;
     public
       header : tpcpheader;
       { crc for the entire package }
@@ -67,6 +69,10 @@ interface
     public
       procedure writeheader;override;
       function checkpcpid:boolean;
+      function readpackageentry(expected:byte):boolean;
+      function packageentrydone:boolean;
+      function metadataend:longint;
+      function metadatadone:boolean;
       procedure putdata(const b;len:integer);override;
     end;
 
@@ -114,9 +120,14 @@ uses
 
   function tpcpfile.readheader: longint;
     begin
+      headerread:=false;
+      crc:=0;
       if fsize<sizeof(tpcpheader) then
         exit(0);
       result:=f.Read(header,sizeof(tpcpheader));
+      if result<>sizeof(tpcpheader) then
+        exit;
+      headerread:=true;
       { The header is always stored in little endian order }
       { therefore swap if on a big endian machine          }
     {$IFDEF ENDIAN_BIG}
@@ -188,9 +199,74 @@ uses
 
   function tpcpfile.checkpcpid:boolean;
     begin
-      result:=((Header.common.Id[1]='P') and
+      result:=headerread and
+               (header.common.size<=dword(fsize-sizeof(tpcpheader))) and
+               (header.requiredlistsize>=0) and (header.ppulistsize>=0) and
+               (((header.common.flags and (pf_big_endian or pf_little_endian))=pf_big_endian) or
+                ((header.common.flags and (pf_big_endian or pf_little_endian))=pf_little_endian)) and
+               ((Header.common.Id[1]='P') and
                 (Header.common.Id[2]='C') and
                 (Header.common.Id[3]='P'));
+    end;
+
+
+  function tpcpfile.metadataend:longint;
+    begin
+      { Version 3 stores the metadata size, excluding embedded PPU data. }
+      result:=sizeof(tpcpheader)+longint(header.common.size);
+    end;
+
+
+  function tpcpfile.packageentrydone:boolean;
+    begin
+      result:=not error and (entryleft=0);
+    end;
+
+
+  function tpcpfile.readpackageentry(expected:byte):boolean;
+    var
+      savedpos,left,count : longint;
+      buffer : array[0..4095] of byte;
+    begin
+      result:=false;
+      { Do not allow readentry to skip unread fields or read a partial header.
+        Keep these stricter checks local to PCP consumers. }
+      if not packageentrydone or
+         (BufferedPosition>metadataend-sizeof(tentry)) then
+        exit;
+      if (readentry<>expected) or (entry.id<>mainentryid) or
+         (entry.size<0) or (entry.size>metadataend-BufferedPosition) then
+        exit;
+      { The existing checksum covers metadata payloads, not entry headers,
+        the PPU offset table, or embedded PPUs. Preserve that definition. }
+      if not (expected in [ibpputable,ibend]) then
+        begin
+          savedpos:=f.Position;
+          try
+            f.Position:=BufferedPosition;
+            left:=entry.size;
+            while left>0 do
+              begin
+                count:=left;
+                if count>sizeof(buffer) then
+                  count:=sizeof(buffer);
+                if f.Read(buffer,count)<>count then
+                  exit;
+                crc:=UpdateCrc32(crc,buffer,count);
+                dec(left,count);
+              end;
+          finally
+            f.Position:=savedpos;
+          end;
+        end;
+      result:=true;
+    end;
+
+
+  function tpcpfile.metadatadone:boolean;
+    begin
+      result:=packageentrydone and (entry.nr=ibend) and
+        (BufferedPosition=metadataend) and (crc=header.checksum);
     end;
 
 

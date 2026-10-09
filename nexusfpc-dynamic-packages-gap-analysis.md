@@ -6,7 +6,7 @@ Date: 2026-10-09
 
 FPC's historical dynamic-package work provides a substantial compiler foundation, but this NexusFPC checkout does not yet implement a functioning Delphi-style runtime-package system. The largest remaining work is shared RTL ownership and package lifecycle management. Enabling the existing compiler capability flag alone would expose these gaps.
 
-This document consolidates the two source-based gap analyses and the subsequent compatibility clarification. It records findings and proposed work; it does not record completed package implementation or successful runtime tests.
+This document consolidates the two source-based gap analyses and the subsequent compatibility clarification. Items 1-4 have now been implemented and tested as described below. Runtime packages remain unimplemented.
 
 The source inspection was made against NexusFPC at commit `471e676d`, including its working tree. At inspection time there were existing uncommitted changes in `compiler/entfile.pas`, `compiler/export.pas`, `compiler/expunix.pas`, `compiler/fpcdefs.inc`, `compiler/fppu.pas`, `compiler/pmodules.pas`, `compiler/systems/t_linux.pas`, and `compiler/systems/t_win.pas`, plus an untracked `tests/unit-exports/` suite. Those changes were not treated as validated dynamic-package support. Recheck the working tree and source locations before implementation.
 
@@ -20,7 +20,7 @@ The numbered backlog below follows the latest analysis: items 1-4 are package-na
 
 These are improvements to existing compiler package infrastructure. With their scope kept narrow, they should leave ordinary application, static-unit, and conventional DLL/shared-library builds unchanged. They primarily improve the currently disabled dynamic-package path, so they should not be presented as general performance or functionality improvements for current ordinary builds.
 
-That is an intended compatibility boundary, not a tested guarantee. There are deliberate behavior changes for invalid or inconsistent package input:
+That boundary now has targeted Win64 regression coverage, not a universal compatibility guarantee. There are deliberate behavior changes for invalid or inconsistent package input:
 
 | Item | Expected effect on ordinary builds | Intended package behavior change | Compatibility constraint |
 |---|---|---|---|
@@ -33,7 +33,33 @@ At the clarification check, `CurrentPCPVersion` was `3`; no target definition en
 
 Implementation of items 1-4 should not enable package target support, change the PPU or PCP schema, alter symbol mangling or calling conventions, modify ordinary unit-search semantics, or change the RTL ABI. A need to do any of those would be a separate scope decision. Item 16 covers runtime compatibility identity and any metadata extensions needed for a complete runtime system.
 
-Validation should establish that valid existing package metadata still works, intended invalid cases get the new diagnostics, and ordinary builds remain unaffected. No such compatibility validation has yet been performed for these proposed changes.
+Validation now covers valid v3 fixtures, intended invalid-input diagnostics, source-free compile-time consumption, and ordinary EXE/DLL builds. See the implementation results below for the evidence and its limits.
+
+## Implementation results: items 1-4
+
+Implemented on 2026-10-09 against commit `10eb65ae` plus the working tree. Changes are uncommitted; unrelated existing deletions under `nexus/` were preserved.
+
+| Item | Implemented behavior | Validation |
+|---|---|---|
+| 1. Package identity | `add_package` uses a canonical uppercase key, preserves the first display/filesystem spelling, retains duplicate policy, and promotes an indirect reference when it is later explicitly required. | Mixed-case references resolve to one entry; ignored duplicates stay silent; explicit duplicates produce one error. |
+| 2. Dependency cycles | Package loading walks the required-package closure with an active stack and reports a dependency chain. The package being built participates even before its PCP exists. | Diamonds pass; direct, indirect, and building-root cycles fail with the expected chains. |
+| 3. Unit ownership | After loading the entire closure, a canonical unit-owner index rejects conflicting packages before unit lookup chooses a provider. | Both dependency orders reject duplicate owners; the existing `contains` check rejects a unit supplied by a requirement. |
+| 4. PCP hardening | Validate complete headers, endian flags, metadata bounds/order/lengths, counts, identity, duplicate names, checksum, PPU ranges, and embedded PPU headers. Preserve metadata-only v3 size semantics. Correct writer table patching, honor PPU rewrite failure, and return independent bounded unit streams. | Real serialization round-trip, independent v3 fixtures, malformed-input cases, idempotent loading, and source-free consumer compilation pass. |
+
+Production changes are in [pkgutil.pas](compiler/pkgutil.pas), [pcp.pas](compiler/pcp.pas), [fpcp.pas](compiler/fpcp.pas), and the package-specific loading path in [fppu.pas](compiler/fppu.pas). The latter now uses the existing resumable PPU loader and retains the owned package stream until loading completes. The test exposed an obsolete synchronous-loading assumption that otherwise raised internal error `2026020415`.
+
+PCP-specific stream copies avoid the existing shared range-stream boundary/cursor problems without changing `cstreams` or shared entry-file serialization. Each active package PPU load uses a memory copy of that embedded PPU, freed when discarded; this is a memory cost to revisit if large-package profiling warrants it. The writer likewise buffers one rewritten PPU at a time.
+
+Validation results:
+
+- **70/70 package-suite steps passed**, including isolated compiler/driver builds, the tests above, and confirmation that the production target still rejects packages. Final logs: `C:\Users\kcollins\AppData\Local\Temp\nxpkg-tests-rd0ewpcv\steps.json`.
+- **32/32 existing unit-export steps passed** using the final candidate compiler: ordinary EXE/DLL builds, export inspection, runtime calls, source-hidden cached units, and smart linking. Final logs: `C:\Users\kcollins\AppData\Local\Temp\nx-unit-exports-fc1ad23a\steps.json`.
+- **Full clean bootstrap and cross matrix passed** on 2026-10-09 using `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -FullMatrix -NdkRoot C:\android\ndk\25.2.9519653`. This rebuilt the native compiler, RTL, packages, and utilities; ran all six included native option/directive regression suites; built the retained cross compilers and all 13 RTL targets; verified fresh `System`/`heaptrc` outputs; and passed Linux FmtBCD and `heaptrc -CfNONE` checks. The native compiler reports 3.3.1. The native build recorded 14 nonfatal warnings: 13 dependency-cycle warnings and one missing `winmanutf8lfn` source warning. [Run logs](output/NexusFPCBootstrap/20261009-083156-353d2c79/steps.json). Cross-target results prove compilation, not execution on those platforms.
+- PCP version remains **3**; PPU version remains **208**, long version **33**. No target capability, symbol mangling, calling convention, or RTL ABI was changed.
+
+The reproducible suite and invocation are in [tests/dynamic-packages/README.md](tests/dynamic-packages/README.md). Log directories are local temporary artifacts, not committed fixtures.
+
+The source-free test compiles with `-Cn`, using a PCP after hiding the unit's source, original PPU, and object file. It does **not** prove package linking or runtime behavior; that portion of item 4's original end-to-end acceptance depends on items 5 onward. No historical PCP corpus was available: compatibility was checked with independently encoded v3 metadata and real generated PPUs, including opposite-endian metadata. Runtime shared identity, loading, unloading, and package-specific behavior on non-Win64 platforms remain outside this validation; ordinary cross-target compiler/RTL builds are covered by the full matrix above.
 
 ## Existing implementation
 
@@ -109,10 +135,10 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 
 | ID | Targeted implementation | Main locations and dependencies | Acceptance criterion |
 |---|---|---|---|
-| 1 | Normalize package names consistently. `add_package` currently compares stored uppercase names against original input and then stores `upper(name)`. | `pkgutil.add_package`; no runtime prerequisite. | `Foo`, `FOO`, and `foo` resolve consistently and follow the intended duplicate-reference policy. |
-| 2 | Validate package dependency cycles with a diagnostic dependency chain. | `pkgutil.load_packages`, `fpcp`; no runtime prerequisite. | Reject `A -> A` and `A -> B -> A`; accept a diamond and load its shared dependency once. |
-| 3 | Enforce unique unit ownership across the full required-package closure. Current package-unit lookup stops at the first matching provider. | `pkgutil`, `fppu.loadfrompackage`; items 1-2. | Conflicting package ownership fails regardless of search order; containing a unit already supplied by a requirement gets a precise diagnostic. |
-| 4 | Harden and regression-test PCP serialization and consumption without changing the format. Cover embedded PPU offsets, truncation, target/format validation, and metadata consistency. | `pcp`, `fpcp`, package use of `RewritePPU`; no runtime prerequisite. | A consumer builds using only distributed PCP/link artifacts; malformed or incompatible containers fail cleanly and valid existing containers remain accepted. |
+| 1 | **Implemented.** Normalize package names consistently using canonical lookup keys. | `pkgutil.add_package`; no runtime prerequisite. | `Foo`, `FOO`, and `foo` resolve consistently and follow the intended duplicate-reference policy. |
+| 2 | **Implemented.** Validate package dependency cycles with a diagnostic dependency chain. | `pkgutil.load_packages`, `fpcp`; no runtime prerequisite. | Reject `A -> A` and `A -> B -> A`; accept a diamond and load its shared dependency once. |
+| 3 | **Implemented.** Enforce unique unit ownership across the full required-package closure before package-unit lookup selects a provider. | `pkgutil`, `fppu.loadfrompackage`; items 1-2. | Conflicting package ownership fails regardless of search order; containing a unit already supplied by a requirement gets a precise diagnostic. |
+| 4 | **Implemented for metadata and compile-time consumption.** Harden and regression-test PCP serialization and consumption without changing the format. | `pcp`, `fpcp`, package use of `RewritePPU`, package-specific `fppu` loading. | Compile-only source-free consumption and malformed-container checks pass. Full linked consumption still depends on items 5 onward. |
 | 5 | Establish an experimental Win64 package build and regression harness. Exercise the existing parser, PCP writer, and linker without claiming general support. | Target flags, compiler build configuration, new package tests. | Minimal package/consumer builds are reproducible; ordinary EXE/DLL regression coverage remains passing. |
 | 6 | Complete and validate the Win64 package symbol contract: procedures, writable data, VMTs, RTTI, compiler helpers, and references embedded in generated tables. | `pkgutil`, `aasmdef`, `ncgld`, `ncgmem`, `ncgcnv`, `cgexcept`, Windows import/export code; item 5. | Fresh/cached consumers resolve each symbol category with smart linking on/off; shared data/type pointers agree across images. |
 | 7 | Define and emit a versioned runtime package descriptor containing identity, dependencies, owned units, compatibility identity, and lifecycle/table references. | New compiler emitter and matching RTL record; items 2-4. | An inspector enumerates units and requirements without executing Pascal unit initialization. |
@@ -167,6 +193,6 @@ This demonstrates the central BPL-like behavior. A successful native DLL load or
 
 ## Evidence and implementation limits
 
-All current-state conclusions above are source-inspection findings. No package runtime behavior, proposed compatibility preservation, or acceptance test in this document has been demonstrated by implementation during this analysis.
+Runtime-gap conclusions above remain source-inspection findings. Items 1-4 now have the implementation and targeted validation recorded above; no package runtime behavior has been demonstrated.
 
 The repository source links are relative so the document can be browsed within the checkout. Approximate line numbers describe the inspected snapshot and may move. Revalidate the target flags, working-tree changes, and source paths when beginning an implementation item.

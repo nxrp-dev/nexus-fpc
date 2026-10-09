@@ -70,6 +70,7 @@ interface
           procedure setdefgeneration;
           procedure end_of_parsing;override;
        private
+          packageppustream : TCStream; { owned while a package PPU is loaded }
           unitimportsymsderefs : tfplist;
          { Each time a unit's defs are (re)created, its defsgeneration is
            set to the value of a global counter, and the global counter is
@@ -736,7 +737,6 @@ var
         pkg : ppackageentry;
         pkgunit : pcontainedunit;
         i,idx : longint;
-        strm : TCStream;
       begin
         result:=false;
         for i:=0 to packagelist.count-1 do
@@ -755,19 +755,19 @@ var
                 {filename:=pkgunit^.ppufile;
                 if not SearchPathList(unitsearchpath) then
                   exit};
-                strm:=tpcppackage(pkg^.package).getmodulestream(self);
-                if not assigned(strm) then
+                packageppustream:=tpcppackage(pkg^.package).getmodulestream(self);
+                if not assigned(packageppustream) then
                   internalerror(2015103002);
-                if not openppustream(strm) then
+                if not openppustream(packageppustream) then
                   exit;
                 package:=pkg^.package;
                 Message2(unit_u_loading_from_package,modulename^,pkg^.package.packagename^);
 
-                { now load the unit and all used units }
+                { Package PPUs use the same resumable dependency loading as
+                  ordinary PPUs. Dependencies need not be ready yet. }
+                state:=ms_load;
+                fromppu:=true;
                 load_interface;
-                if not load_usedunits then
-                  internalerror(2026020415);
-                Message1(unit_u_finished_loading_unit,modulename^);
 
                 result:=true;
                 break;
@@ -2300,12 +2300,6 @@ var
         if Result then
           begin
             do_reload:=false;
-            state:=ms_compiled;
-            { PPU is not needed anymore }
-            if assigned(ppufile) then
-             begin
-               discardppu;
-             end;
             { add the unit to the used units list of the program }
             usedunits.concat(tused_unit.create(self,true,false,nil));
           end;
@@ -2432,12 +2426,12 @@ var
 
         if check_loadfrompackage then
         begin
-          { No need to do anything, restore situation and exit. }
+          Result:=continueloadppu;
           set_current_module(old_module);
           {$IFDEF DEBUG_PPU_CYCLES}
           writeln('PPUALGO tppumodule.loadppu from package: ',modulename^,' (',statestr,') used by "',from_module.modulename^,'" (',from_module.statestr,')');
           {$ENDIF}
-          exit(state in [ms_compiled,ms_processed]);
+          exit;
         end;
 
 
@@ -2600,6 +2594,7 @@ var
         ppufile.closefile;
         ppufile.free;
         ppufile:=nil;
+        FreeAndNil(packageppustream);
       end;
 
 {*****************************************************************************
