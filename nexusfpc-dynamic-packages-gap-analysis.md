@@ -1,5 +1,11 @@
 # NexusFPC dynamic packages: gap analysis and implementation backlog
 
+The [standard package support integration](nexusfpc-standard-package-support.md)
+supersedes this document's historical opt-in and package-disabled compiler notes.
+The normal compiler supports packages on Windows x64 and Linux x86-64/glibc;
+developers retain the choice of static or runtime package linking. Rebuild with
+Nexus unit compatibility revision 35 and runtime descriptor v4.
+
 2026-10-10 update: the [unified threadvar design](nexusfpc-threadvar-design.md)
 supersedes the earlier late-TLS rejection and unchanged-PPU statements below.
 Startup and late images use one model. Rebuild all artifacts for descriptor v3

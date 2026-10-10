@@ -110,8 +110,8 @@ begin
   try
     for I:=First to ParamCount do
       add_package(ParamStr(I),true,true);
-    if ParamStr(1)<>'disabled' then
-      Include(target_info.flags,tf_supports_packages);
+    if ParamStr(1)='disabled' then
+      Exclude(target_info.flags,tf_supports_packages);
     load_packages;
     if ParamStr(1)='disabled' then
       Check(not Assigned(ppackageentry(packagelist[0])^.package),'disabled loader ran')
@@ -129,9 +129,6 @@ begin
   try
     if (ParamStr(1)='consume') or (ParamStr(1)='compile') then
       begin
-        { Enable experimental package compilation only in this test process.
-          The production target definition remains unchanged. }
-        Include(targetinfos[Ord(system_x86_64_win64)]^.flags,tf_supports_packages);
         Halt(compiler.Compile(ParamStr(2)));
       end;
     InitSystems;

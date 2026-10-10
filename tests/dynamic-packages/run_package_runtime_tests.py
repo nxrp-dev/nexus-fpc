@@ -30,7 +30,7 @@ def inspect(directory):
         libraries.append(library)
         descriptor = Descriptor.in_dll(library, 'FPC_PACKAGE_' + name.upper())
         assert descriptor.magic == 0x4e58504b and descriptor.version == 4
-        assert descriptor.compiler == (208 << 48) | (0xc181 << 32) | 34
+        assert descriptor.compiler == (208 << 48) | (0xc181 << 32) | 35
         assert descriptor.size == ctypes.sizeof(Descriptor) == 168
         assert descriptor.rtl != 0
         identities.add((descriptor.compiler, descriptor.target, descriptor.rtl))
@@ -90,8 +90,7 @@ def main():
     for part in ('', 'x86_64', 'x86', 'systems'):
         opts += [f'-Fu{root / "compiler" / part}', f'-Fi{root / "compiler" / part}']
     run('compiler', [bootstrap, *opts, '-oppcx64.exe', root / 'compiler/pp.pas'])
-    run('driver', [bootstrap, *opts, root / 'tests/dynamic-packages/package_compiler.pas'])
-    driver = build / 'package_compiler.exe'
+    driver = build / 'ppcx64.exe'
     rtl = out / 'rtl-packaged'
     rtl.mkdir(exist_ok=True)
     rtl_bin = out / 'rtl-bin'

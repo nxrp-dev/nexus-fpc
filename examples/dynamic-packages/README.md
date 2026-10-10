@@ -1,5 +1,11 @@
 # Experimental Win64 package SDK
 
+Package support is standard in the normal `ppcx64` compiler on Windows x64 and
+Linux x86-64. Static linking remains available; declaring package dependencies
+selects runtime package consumption. The SDK supplies the matching shared RTL,
+startup units and publication tools. See the
+[standard compiler integration](../../nexusfpc-standard-package-support.md).
+
 The [Linux SDK guide](../../nexusfpc-dynamic-packages-linux.md) covers the x86-64
 glibc implementation, WSL wrapper, native Python tools and Linux regression suite.
 The console and late-loading examples are shared between the two platforms.
@@ -33,7 +39,7 @@ The required log is initialization `BLRH`, success, then finalization `h,r,l,b`.
 
 | Path | Purpose |
 | --- | --- |
-| `bin\ppcpkg.exe` | Explicitly opted-in package compiler. The normal compiler remains package-disabled. |
+| `bin\ppcx64.exe` | Standard compiler, supporting both static and runtime package builds. |
 | `bin\Invoke-NexusFPCPackageCompile.ps1` | Reusable package/application build helper. |
 | `bin\NexusFPCPackageArtifacts.ps1` | Metadata/image checks and atomic bundle publication used by the helper. |
 | `packages\nxrtl.pcp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
@@ -49,7 +55,7 @@ inputs. Build helpers verify SDK and bundle hashes and paired PCP/DLL identities
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
 the compiler, RTL, units and packages together for `NXP004` package metadata,
-descriptor v4 and `NXU208` units with long revision 34. These
+descriptor v4 and `NXU208` units with long revision 35. These
 [artifact identities](../../nexusfpc-artifact-identity.md) belong to NexusFPC;
 upstream and previous Nexus binary artifacts must be rebuilt.
 
@@ -160,7 +166,7 @@ native loading. Native LoadLibrary alone does not activate Pascal packages.
 Startup and late-loaded `threadvar` declarations use one image-owned storage
 model. TLS-bearing load/unload requires `IsMultiThread=False`; coordinating
 package storage across live threads remains deferred. See the
-[threadvar design](../../nexusfpc-threadvar-design.md). Non-Win64 package runtimes, IDE packages,
+[threadvar design](../../nexusfpc-threadvar-design.md). Targets beyond Win64 and Linux x86-64/glibc, IDE packages,
 Delphi binary compatibility and arbitrary compiler/text-model combinations are
 outside this experimental SDK contract. The recorded
 [tradeoffs](../../nexusfpc-dynamic-packages-load-unload-design.md) explain the limits.

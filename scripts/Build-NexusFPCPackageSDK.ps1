@@ -31,7 +31,7 @@ if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $Outpu
 $bootstrap = Join-Path $BootstrapBin 'ppcx64.exe'
 $make = Join-Path $BootstrapBin 'make.exe'
 $bootstrapRtl = [IO.Path]::GetFullPath((Join-Path $BootstrapBin '..\..\units\x86_64-win64\rtl'))
-foreach ($inputPath in @($bootstrap,$make,"$SourceRoot\compiler\ppcpkg.pas","$bootstrapRtl\system.ppu")) {
+foreach ($inputPath in @($bootstrap,$make,"$SourceRoot\compiler\pp.pas","$bootstrapRtl\system.ppu")) {
     if (-not (Test-Path -LiteralPath $inputPath)) { throw "Missing build input: $inputPath" }
 }
 if ((& $bootstrap -iV) -ne '3.2.2' -or (& $bootstrap -iTP) -ne 'x86_64' -or (& $bootstrap -iTO) -ne 'win64') {
@@ -85,8 +85,8 @@ foreach ($part in @('','x86_64','x86','systems')) {
     $directory = Join-Path $compilerSource $part
     $compilerOptions += @("-Fu$directory","-Fi$directory")
 }
-Invoke-PackageStep 'package-compiler' $bootstrap ($compilerOptions + @("$compilerSource\ppcpkg.pas"))
-$compiler = Join-Path $bin 'ppcpkg.exe'
+Invoke-PackageStep 'compiler' $bootstrap ($compilerOptions + @('-oppcx64.exe',"$compilerSource\pp.pas"))
+$compiler = Join-Path $bin 'ppcx64.exe'
 $oldPath = $env:PATH
 try {
     $env:PATH = "$BootstrapBin;$oldPath"

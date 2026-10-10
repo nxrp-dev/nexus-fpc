@@ -55,7 +55,7 @@ def main():
         'examples', 'tests/dynamic-packages', 'tests/unit-exports'], cwd=root, env=environment)
     source = out / 'source'
     for name in set(names.decode().split('\0')) - {''}:
-        if '__pycache__' in Path(name).parts:
+        if '__pycache__' in Path(name).parts or not (root / name).is_file():
             continue
         destination = source / name
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -84,7 +84,7 @@ def main():
             rtl = sdk / 'work/rtl-units'
             lifecycle = case / 'lifecycle'
             lifecycle.mkdir()
-            run('lifecycle-build', [sdk / 'bin/ppcpkg', '-n', '-Mobjfpc', '-Cg',
+            run('lifecycle-build', [sdk / 'bin/ppcx64', '-n', '-Mobjfpc', '-Cg',
                 '-Fu' + str(rtl), '-Fu' + str(source / 'rtl/inc'), '-FU' + str(lifecycle),
                 '-FE' + str(lifecycle), source / 'tests/dynamic-packages/package_lifecycle_test.pas'])
             run('lifecycle-runtime', [lifecycle / 'package_lifecycle_test'], marker='PASS lifecycle:')
@@ -101,7 +101,7 @@ end.
 ''')
             (gas / 'gasprobe.ppk').write_text('package gasprobe; requires nxrtl; contains GasUnit; end.\n')
             identity = json.loads((sdk / 'sdk.json').read_text())['sdk_identity']
-            run('external-assembler-package', [sdk / 'bin/ppcpkg', '-n', '-Cg', '-Aas', '-Mobjfpc',
+            run('external-assembler-package', [sdk / 'bin/ppcx64', '-n', '-Cg', '-Aas', '-Mobjfpc',
                 '-Fj' + identity, '-Fk' + 'a' * 32, '-Fu' + str(sdk / 'units'),
                 '-Fp' + str(sdk / 'packages'), '-Fl' + str(sdk / 'packages'),
                 '-FU' + str(gas), '-FE' + str(gas), '-k-rpath', '-k$ORIGIN', gas / 'gasprobe.ppk'])
@@ -117,8 +117,8 @@ begin Value:=MakeGasValue; if (Value.ClassType<>TGasValue) or
                 '--package-path', gas, '--require', 'gasprobe'])
             generation = gas_host / json.loads((gas_host / 'current.json').read_text())['generation']
             run('external-assembler-runtime', [generation / 'gas_host'], marker='PASS GNU assembler package')
-            # Rebuild the ordinary entry point against the matching RTL. It must
-            # retain ordinary behavior and must not opt into package targets.
+            # Rebuild the same standard entry point against the matching RTL.
+            # Both it and the SDK compiler must support static and package builds.
             production = case / 'production'
             production.mkdir()
             compiler_source = sdk / 'work/compiler-source'
@@ -126,15 +126,38 @@ begin Value:=MakeGasValue; if (Value.ClassType<>TGasValue) or
                        '-FU' + str(production), '-FE' + str(production)]
             for directory in ('', 'x86_64', 'x86', 'systems'):
                 options += ['-Fu' + str(compiler_source / directory), '-Fi' + str(compiler_source / directory)]
-            run('ordinary-compiler-build', [sdk / 'bin/ppcpkg', *options, compiler_source / 'pp.pas'])
-            probe = production / 'unsupported.ppk'
-            probe.write_text('package unsupported; end.\n')
-            run('ordinary-rejects-packages', [production / 'pp', '-n', '-Fu' + str(rtl), probe],
-                expected=1, marker='not supported')
+            run('standard-compiler-rebuild', [sdk / 'bin/ppcx64', *options, compiler_source / 'pp.pas'])
+            (production / 'standardunit.pas').write_text('unit standardunit; interface\n'
+                                                       'const Value=37; implementation end.\n')
+            probe = production / 'supported.ppk'
+            probe.write_text('package supported;\n'
+                             '{$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif}\n'
+                             'contains standardunit; end.\n')
+            run('standard-compiler-package', [production / 'pp', '-n', '-Cg', '-Cn',
+                '-Fu' + str(rtl), '-FU' + str(production), '-FE' + str(production), probe])
+            assert (production / 'supported.pcp').read_bytes()[:6] == b'NXP004'
+            static = production / 'static_host.pas'
+            static.write_text('''program static_host;
+{$mode objfpc}{$H+}
+{$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif}
+uses SysUtils, Classes;
+var Values: TStringList;
+begin
+  Values:=TStringList.Create;
+  try Values.Add(IntToStr(37)); if Values[0]<>'37' then Halt(1);
+  finally Values.Free; end;
+  WriteLn('PASS static host');
+end.
+''')
+            run('static-build', [production / 'pp', '-n', '-O2', '-Fu' + str(rtl),
+                '-FU' + str(production), '-FE' + str(production), static])
+            run('static-runtime', [production / 'static_host'], marker='PASS static host')
+            run('static-imports', ['readelf', '-d', production / 'static_host'])
+            assert 'libnxrtl.so' not in (out / 'static-imports.log').read_text()
             run('ordinary-linux-exports', [sys.executable, source / 'tests/unit-exports/Run-NXLinuxUnitExports.py',
                 '--compiler', production / 'pp', '--rtl', rtl, '--output', case / 'ordinary-exports'])
-            run('experimental-linux-exports', [sys.executable, source / 'tests/unit-exports/Run-NXLinuxUnitExports.py',
-                '--compiler', sdk / 'bin/ppcpkg', '--rtl', rtl, '--output', case / 'experimental-exports'])
+            run('sdk-linux-exports', [sys.executable, source / 'tests/unit-exports/Run-NXLinuxUnitExports.py',
+                '--compiler', sdk / 'bin/ppcx64', '--rtl', rtl, '--output', case / 'sdk-exports'])
 
         relocated = case / 'relocated SDK'
         relocated.mkdir()

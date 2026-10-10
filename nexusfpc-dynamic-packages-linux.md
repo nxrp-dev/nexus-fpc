@@ -9,8 +9,11 @@ package model. Startup-linked packages and synchronous `LoadPackage`/`UnloadPack
 use the same Pascal lifecycle manager as Win64. This is source-level runtime
 package functionality for matching NexusFPC builds, not Delphi binary BPL support.
 
-The normal compiler remains package-disabled. `ppcpkg` and its matching SDK are
-explicit opt-ins. The 2026-10-10 [unified threadvar update](nexusfpc-threadvar-design.md)
+The normal `ppcx64` compiler supports both static applications and runtime
+packages. The matching SDK supplies the shared RTL and per-image startup units;
+applications select runtime packages through their declared dependencies. See
+[standard compiler integration](nexusfpc-standard-package-support.md).
+The 2026-10-10 [unified threadvar update](nexusfpc-threadvar-design.md)
 adds late-loaded storage using the same model as startup storage. TLS-bearing
 load/unload requires `IsMultiThread=False`. No workers or asynchronous lifecycle
 are introduced. The application must release objects, interfaces, callbacks
@@ -21,7 +24,7 @@ and other references into a package before unloading it.
 | Area | Linux implementation |
 | --- | --- |
 | Shared unit ownership | One `libnxrtl.so` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through `nxrtl.pcp`. |
-| Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 34), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
+| Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 35), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
 | Linking and identity | All provider units use PIC. Relocatable constant tables go into `.data.rel.ro`; the package linker requires defined imports, prohibits text relocations, enables RELRO/eager binding, and binds owned definitions locally with `-Bsymbolic`. Hosts use PIE and prohibit COPY relocations. |
 | Explicit startup | `rtl/linux/sysinitpkg.pp` reuses the existing glibc `si_c.inc` entry path. Activation runs from generated host startup after the native loader. Shared System initialization preserves the already active exception stack needed for rollback. |
 | Native loading | `dlopen(RTLD_NOW | RTLD_LOCAL)`, explicit `DT_NEEDED` dependencies, and `dlclose`. Each managed late image has an independent native reference. No `dlmopen` namespace or global plugin-symbol publication is used. |

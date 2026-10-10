@@ -23,7 +23,7 @@ $ErrorActionPreference = 'Stop'
 $SdkRoot = (Resolve-Path -LiteralPath $SdkRoot).Path
 $Source = (Resolve-Path -LiteralPath $Source).Path
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
-$compiler = Join-Path $SdkRoot 'bin\ppcpkg.exe'
+$compiler = Join-Path $SdkRoot 'bin\ppcx64.exe'
 $sdkUnits = Join-Path $SdkRoot 'units'
 foreach ($inputPath in @($compiler, "$SdkRoot\sdk.json", "$sdkUnits\sysinitpkg.ppu")) {
     if (-not (Test-Path -LiteralPath $inputPath -PathType Leaf)) { throw "Missing SDK input: $inputPath" }

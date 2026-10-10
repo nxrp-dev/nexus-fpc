@@ -73,6 +73,8 @@ def main():
     paths = subprocess.check_output(['git', 'ls-files', '-z', '-c', '-o', '--exclude-standard',
                                      'compiler', 'rtl', 'scripts', 'examples'], cwd=root)
     for name in set(paths.decode().split('\0')) - {''}:
+        if not (root / name).is_file():
+            continue
         destination = source / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(root / name, destination)
@@ -93,6 +95,29 @@ def main():
                    ' -BootstrapBin ' + quote(args.bootstrap_bin) + ' -RunExamples' + smart_flag)
         assert digest_tree(source) == before, 'SDK build modified its input source tree'
         record(mode + '-source-unchanged')
+
+        # The very same compiler must still produce a standalone static host.
+        static = case / 'static'
+        static.mkdir()
+        program = static / 'static_host.pas'
+        program.write_text('''program static_host;
+{$mode objfpc}{$H+}
+{$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif}
+uses SysUtils, Classes;
+var Values: TStringList;
+begin
+  Values:=TStringList.Create;
+  try Values.Add(IntToStr(37)); if Values[0]<>'37' then Halt(1);
+  finally Values.Free; end;
+  WriteLn('PASS static host');
+end.
+''')
+        run(mode + '-static-build', [sdk / 'bin/ppcx64.exe', '-n', '-O2',
+            '-Fu' + str(sdk / 'work/rtl-units'), '-FU' + str(static), '-FE' + str(static), program])
+        run(mode + '-static-runtime', [static / 'static_host.exe'])
+        assert (out / (mode + '-static-runtime.log')).read_text().strip() == 'PASS static host'
+        run(mode + '-static-imports', ['llvm-readobj.exe', '--coff-imports', static / 'static_host.exe'])
+        assert 'nxrtl.dll' not in (out / (mode + '-static-imports.log')).read_text().lower()
 
         relocated = case / 'relocated-sdk'
         relocated.mkdir()

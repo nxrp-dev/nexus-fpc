@@ -31,7 +31,7 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     work = output / ('work-' + uuid.uuid4().hex)
     work.mkdir()
-    compiler = sdk / 'bin/ppcpkg'
+    compiler = sdk / 'bin/ppcx64'
     command = [str(compiler), '-n', '-Mobjfpc', '-Cg', '-Fj' + manifest['sdk_identity'],
                '-Fk' + uuid.uuid4().hex, '-Fu' + str(sdk / 'units'), '-FU' + str(work), '-FE' + str(work),
                '-k-rpath', '-k$ORIGIN', '-k-z', '-korigin']

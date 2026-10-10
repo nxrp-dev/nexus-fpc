@@ -1,4 +1,4 @@
-"""Win64 compiler package-metadata regressions; no production target is enabled."""
+"""Win64 package-metadata regressions using the standard compiler entry point."""
 
 import argparse
 import hashlib
@@ -261,11 +261,15 @@ def main():
         [driver, 'consume', '-n @consumer.rsp conflict.ppk'], cwd=fixtures,
         expected=1, text='is already contained in package Fixture')
 
-    # The shipped compiler must still refuse package declarations.
-    package_source = fixtures / 'unsupported.ppk'
-    package_source.write_text('package unsupported; end.\n')
-    run('target-remains-disabled', [candidate, *common, package_source], expected=1,
-        text='not supported')
+    # Package declarations are supported by the normal compiler entry point.
+    (fixtures / 'standardunit.pas').write_text('unit standardunit; interface\n'
+                                             'const Value=37; implementation end.\n')
+    package_source = fixtures / 'supported.ppk'
+    package_source.write_text('package supported;\n'
+                              '{$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif}\n'
+                              'contains standardunit; end.\n')
+    run('standard-compiler-package', [candidate, *common, '-Cn', package_source])
+    assert (fixtures / 'supported.pcp').read_bytes()[:6] == b'NXP004'
     print(f'PASS {len(steps)} steps. Results: {out}', flush=True)
 
 

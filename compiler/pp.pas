@@ -118,6 +118,11 @@ uses
 {$ifdef cmem}
   cmem,
 {$endif cmem}
+{$ifdef linux}
+  { The bootstrap RTL needs a native Unicode fallback when no collation table
+    is installed, including during package resource lookup. }
+  cwstring,
+{$endif linux}
 {$ifdef profile}
   profile,
 {$endif profile}

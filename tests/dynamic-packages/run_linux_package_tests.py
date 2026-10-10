@@ -26,7 +26,7 @@ def inspect(directory):
         address = ctypes.c_void_p.in_dll(lib, 'FPC_PACKAGE_INFO').value
         words = Descriptor.from_address(address).w
         assert tuple(words[:3]) == (0x4e58504b, 4, 168)
-        assert words[3] == (208 << 48) | (0xc181 << 32) | 34
+        assert words[3] == (208 << 48) | (0xc181 << 32) | 35
         assert list((ctypes.c_size_t * 6).from_address(words[16])) == [0] * 6
     print('PASS native mapping does not activate Pascal packages')
 
@@ -92,7 +92,7 @@ def main():
             declaration = source.read_text()
             units = re.search(r'contains\s+(.*?);', declaration, re.I | re.S)[1].split(',')
             requirements = re.search(r'requires\s+(.*?);', declaration, re.I | re.S)[1].split(',')
-            unit_command = [sdk / 'bin/ppcpkg', '-n', '-Mobjfpc', '-Cg',
+            unit_command = [sdk / 'bin/ppcx64', '-n', '-Mobjfpc', '-Cg',
                 '-Fj' + sdk_manifest['sdk_identity'], '-Fu' + str(sdk / 'units'),
                 '-Fu' + str(source.parent), '-FU' + str(source.parent), '-FE' + str(source.parent)]
             for directory in (sdk / 'packages', bundle(providers)):

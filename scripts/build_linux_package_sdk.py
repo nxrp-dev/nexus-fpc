@@ -82,8 +82,8 @@ def main():
     options = [*base, '-O2', '-dx86_64', '-Fu' + str(compiler_units), '-FE' + str(binary)]
     for part in ('', 'x86_64', 'x86', 'systems'):
         options += ['-Fu' + str(source / part), '-Fi' + str(source / part)]
-    run('package-compiler', [bootstrap, *options, source / 'ppcpkg.pas'])
-    compiler = binary / 'ppcpkg'
+    run('compiler', [bootstrap, *options, '-oppcx64', source / 'pp.pas'])
+    compiler = binary / 'ppcx64'
     # All RTL artifacts are private to this SDK; -Cg applies to every provider unit.
     run('matching-rtl', ['make', '-s', '-B', '-C', root / 'rtl/linux', 'all', f'FPC={compiler}',
         'CPU_TARGET=x86_64', 'OS_TARGET=linux', f'COMPILER_UNITTARGETDIR={rtl}',

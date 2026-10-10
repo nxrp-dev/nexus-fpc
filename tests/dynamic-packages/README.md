@@ -108,8 +108,8 @@ Exception-handler coverage verifies linking, not cross-image exception unwinding
 The earlier standalone EXE startup failure is covered by the shared RTL suite
 below. The symbol-only runner no longer expects or counts that historical failure.
 
-Production targets remain package-disabled. Current experimental metadata uses
-PCP v4; ordinary PPU format is unchanged.
+The standard Win64 and Linux x86-64 compilers now support packages. Metadata uses
+NXP v4 and NXU header 208 with compatibility revision 35; rebuild existing units.
 
 ## Shared RTL and explicit startup activation (items 6-10)
 
@@ -117,9 +117,9 @@ PCP v4; ordinary PPU format is unchanged.
 python tests\dynamic-packages\run_package_runtime_tests.py
 ```
 
-This builds an isolated compiler, experimental package compiler front end, and
+This builds an isolated standard compiler and
 matching package-enabled RTL from source. It needs the default FPC 3.2.2 bootstrap,
-64-bit Python, and LLVM tools on PATH. It does not change production target flags.
+64-bit Python, and LLVM tools on PATH. It uses the checked-in target capabilities.
 Outputs, command records (`steps.json`), PE import/export reports, descriptor JSON,
 and application output go to a new temporary directory. `--output-root` can reuse
 a development output directory; omit it for a fresh validation build.
@@ -159,8 +159,10 @@ ordinary/full-cross build results are recorded in the
 
 The [SDK guide](../../examples/dynamic-packages/README.md) documents the reusable
 PowerShell build and compile helpers and checked-in console/GUI examples.
-The existing test driver now includes `compiler/ppcpkg.pas`, so both workflows
-use the same opt-in compiler entry point.
+Both workflows now build `compiler/pp.pas`, the standard compiler entry point.
+Package support is enabled by the normal Win64/Linux x86-64 target definitions.
+SDK regressions also build and run static hosts and verify that they have no
+shared-RTL imports. Older validation records below describe their original runs.
 
 ```powershell
 python tests\dynamic-packages\run_package_sdk_tests.py

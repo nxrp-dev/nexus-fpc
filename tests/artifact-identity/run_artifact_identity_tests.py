@@ -44,7 +44,7 @@ def main():
         return output
 
     bootstrap_rtl = args.bootstrap.parents[2] / 'units/x86_64-win64/rtl'
-    candidate = sdk / 'bin/ppcpkg.exe'
+    candidate = sdk / 'bin/ppcx64.exe'
     rtl = sdk / 'work/rtl-units'
     build = out / 'tools'
     build.mkdir()
@@ -106,6 +106,9 @@ def main():
     assert bad_long[45] == 242  # Fixed header + entry header: ibextraheader.
     struct.pack_into('<I', bad_long, 46, 256)
     consume('nexus-long-revision-rejected', bad_long, text='Version')
+    assert struct.unpack_from('<I', generated['nexus'], 46)[0] == 35
+    struct.pack_into('<I', bad_long, 46, 34)
+    consume('pre-standard-package-units-rejected', bad_long, text='Version')
 
     fallback = out / 'source-fallback'
     fallback.mkdir()

@@ -110,7 +110,7 @@ unit i_linux;
 {$ifdef psabieh}
                             ,tf_use_psabieh
 {$endif psabieh}
-                            ,tf_supports_hidden_symbols
+                            ,tf_supports_hidden_symbols,tf_supports_packages
                             ];
             cpu          : cpu_x86_64;
             unit_env     : 'LINUXUNITS';
