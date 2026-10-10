@@ -67,6 +67,25 @@ CONST tb0152_p1:POINTER = @tb0152_s;    { Works fine }
       tb0152_p4:tb0152_plongint = @tb0152_rr.tb0152_s.tb0152_y;
 {$pop}
 
+{ Case tb0323.pp }
+{$push}
+// checks type cast of nil in const statement
+   type
+      tb0323_thandle = longint;
+      tb0323_wsaevent = tb0323_thandle;
+   const
+      tb0323_wsa_invalid_event = tb0323_wsaevent(nil);
+
+   var
+     tb0323_l : longint;
+{$pop}
+
+{ Case tb0348.pp }
+{$push}
+const
+     tb0348_guid_null : TGUID = '{00000000-0000-0000-0000-000000000000}';
+{$pop}
+
 begin
   { Case tb0143.pp }
   {$push}
@@ -102,6 +121,19 @@ BEGIN
         Halt(1);
      End;
 END;
+  {$pop}
+
+  { Case tb0323.pp }
+  {$push}
+begin
+   tb0323_l:=tb0323_wsa_invalid_event*1;
+end;
+  {$pop}
+
+  { Case tb0348.pp }
+  {$push}
+begin
+end;
   {$pop}
 
 end.
