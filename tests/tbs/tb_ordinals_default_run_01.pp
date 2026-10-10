@@ -77,6 +77,13 @@ const
   tb0079_o = ptr(0,0);
 {$pop}
 
+{ Case tb0715.pp }
+{$push}
+var
+	tb0715_e: (ab, abcd);
+	tb0715_code: int32;
+{$pop}
+
 begin
   { Case tb0023.pp }
   {$push}
@@ -147,6 +154,16 @@ end;
   { Case tb0079.pp }
   {$push}
 Begin
+end;
+  {$pop}
+
+  { Case tb0715.pp }
+  {$push}
+begin
+	val('ab'#4'd', tb0715_e, tb0715_code);
+	if tb0715_code = 0 then writeln('matches ', tb0715_e) else writeln('matches nothing, code ', tb0715_code);
+    if tb0715_code <> 3 then
+      halt(1);
 end;
   {$pop}
 
