@@ -32,6 +32,39 @@ var
    tb0365_t : textfile;
 {$pop}
 
+{ Case tb0317.pp }
+{$push}
+const
+  tb0317_exceptioncount = 18;
+  tb0317_exception_names : array[0..tb0317_exceptioncount-1] of pchar = (
+   'Division by Zero',
+   'Debug',
+   'NMI',
+   'Breakpoint',
+   'Overflow',
+   'Bounds Check',
+   'Invalid Opcode',
+   'Coprocessor not available',
+   'Double Fault',
+   'Coprocessor overrun',
+   'Invalid TSS',
+   'Segment Not Present',
+   'Stack Fault',
+   'General Protection Fault',
+   'Page fault',
+   ' ',
+   'Coprocessor Error',
+   'Alignment Check');
+
+    tb0317_single_pchar : pchar = 'Alone test';
+
+const tb0317_filename  = 'ts010022.tmp';
+
+var tb0317_en : pchar;
+    tb0317_f : text;
+    tb0317_st : string;
+{$pop}
+
 begin
   { Case tb0084.pp }
   {$push}
@@ -106,6 +139,26 @@ end;
   {$push}
 begin
    assign(tb0365_t,'test');
+end;
+  {$pop}
+
+  { Case tb0317.pp }
+  {$push}
+begin
+   assign(tb0317_f,tb0317_filename);
+   rewrite(tb0317_f);
+   tb0317_en:=tb0317_single_pchar;
+   Writeln(tb0317_f,tb0317_en);
+   tb0317_en:=tb0317_exception_names[6];
+   writeln(tb0317_f,tb0317_en);
+   close(tb0317_f);
+   reset(tb0317_f);
+   readln(tb0317_f,tb0317_st);
+   if tb0317_st<>'Alone test' then halt(1);
+   readln(tb0317_f,tb0317_st);
+   if tb0317_st<>'Invalid Opcode' then halt(1);
+   close(tb0317_f);
+   erase(tb0317_f);
 end;
   {$pop}
 
