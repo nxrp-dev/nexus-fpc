@@ -5,7 +5,7 @@ var
   ft : text;
   f : file of word;
   i : word;
-  buf : string;
+  buf : shortstring;
 begin
   assign(ft,'tbs0111.tmp');
   rewrite(ft);
