@@ -1,5 +1,9 @@
 # Experimental Win64 package SDK
 
+The [Linux SDK guide](../../nexusfpc-dynamic-packages-linux.md) covers the x86-64
+glibc implementation, WSL wrapper, native Python tools and Linux regression suite.
+The console and late-loading examples are shared between the two platforms.
+
 Build a matching compiler, shared RTL package, and per-image startup units, then
 build and run both example applications:
 

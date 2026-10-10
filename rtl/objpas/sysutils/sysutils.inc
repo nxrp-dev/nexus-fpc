@@ -1,12 +1,18 @@
 {%MainUnit sysutils.pp}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 {$ifdef win64}
 function PackageGetModuleHandleEx(Flags: DWord; Address: Pointer; var Module: HMODULE): LongBool;
   stdcall; external 'kernel32' name 'GetModuleHandleExW';
+{$endif}
 
 function PackageModuleFromAddress(Address: Pointer): HMODULE;
 begin
   Result:=0;
+{$ifdef win64}
   if Address<>nil then PackageGetModuleHandleEx(6,Address,Result);
+{$else}
+  if (Address<>nil) and Assigned(PackageAddressProc) then Result:=PackageAddressProc(Address);
+{$endif}
 end;
 
 function LoadPackage(const Name: string): HMODULE;

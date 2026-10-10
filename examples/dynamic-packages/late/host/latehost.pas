@@ -3,7 +3,7 @@ unit LateHost;
 interface
 procedure RunLateDemo(Console: Boolean);
 implementation
-uses SysUtils, Classes, TypInfo, Windows, PkgContracts;
+uses SysUtils, Classes, TypInfo, PackageNative, PkgContracts;
 type
   TResourceProbe = function: string; cdecl;
   TEnumProbe = function: PTypeInfo; cdecl;
@@ -24,27 +24,27 @@ var Left,Again,Right,Base,RTL: HMODULE;
 begin
   Check(IsConsole=Console,'subsystem');
   Check(Trace='C','implementation was startup-linked');
-  Check(Windows.GetModuleHandleA('pluginbase.dll')=0,'base was already mapped');
-  Left:=LoadPackage('pluginleft.dll');
-  Again:=LoadPackage('pluginleft.dll');
-  Right:=LoadPackage('pluginright.dll');
+  Check(NativePackageHandle(PackageFileName('pluginbase'))=0,'base was already mapped');
+  Left:=LoadPackage(PackageFileName('pluginleft'));
+  Again:=LoadPackage(PackageFileName('pluginleft'));
+  Right:=LoadPackage(PackageFileName('pluginright'));
   Check((Again=Left) and (Trace='CBLR') and (BaseInitializations=1),'repeat load/diamond');
-  Base:=Windows.GetModuleHandleA('pluginbase.dll');
+  Base:=NativePackageHandle(PackageFileName('pluginbase'));
   Check((Base<>0) and (GetClass('LatePluginAlias')<>nil),'class registration');
   { Add another alias after initialization: ownership follows the class image. }
   RegisterClassAlias(GetClass('LatePluginAlias'),'HostAddedAlias');
   Check(FindClassHInstance(GetClass('LatePluginAlias'))=Base,'class image ownership');
   Check(FindResourceHInstance(Base)=Base,'resource image ownership');
-  Check(Windows.FindResourceW(Base,PWideChar(101),PWideChar(10))<>0,'package native resource');
-  Factory:=TCreatePlugin(Windows.GetProcAddress(Left,'CreatePlugin'));
+  Check(PackageResourceExists(Base,101),'package native resource');
+  Factory:=TCreatePlugin(PackageSymbol(Left,'CreatePlugin'));
   Check(Assigned(Factory),'factory export');
   Obj:=Factory();
   Check((Obj is TPluginValue) and (Obj.Text=StringOfChar('L',80)),'shared contract/managed return');
   Obj.Free;
   Check((ObjectsCreated=1) and (ObjectsDestroyed=1),'cross-image destruction');
-  ResourceProbe:=TResourceProbe(Windows.GetProcAddress(Base,'PluginResource'));
-  EnumProbe:=TEnumProbe(Windows.GetProcAddress(Base,'PluginEnum'));
-  RaiseProbe:=TRaiseProbe(Windows.GetProcAddress(Base,'PluginRaise'));
+  ResourceProbe:=TResourceProbe(PackageSymbol(Base,'PluginResource'));
+  EnumProbe:=TEnumProbe(PackageSymbol(Base,'PluginEnum'));
+  RaiseProbe:=TRaiseProbe(PackageSymbol(Base,'PluginRaise'));
   Check(ResourceProbe()='late package resource','resource value');
   SetResourceStrings(@Translate,nil);
   Check(ResourceProbe()='translated late resource','late resource translation');
@@ -69,12 +69,12 @@ begin
   UnloadPackage(Left);
   Check(Trace='CBLR','repeat reference finalized early');
   UnloadPackage(Again);
-  Check((Trace='CBLRl') and (Windows.GetModuleHandleA('pluginbase.dll')=Base),'live branch lost dependency');
+  Check((Trace='CBLRl') and (NativePackageHandle(PackageFileName('pluginbase'))=Base),'live branch lost dependency');
   UnloadPackage(Right);
   Check(Trace='CBLRlrb','reverse dependency finalization');
-  Check((Windows.GetModuleHandleA('pluginbase.dll')=0) and
-    (Windows.GetModuleHandleA('pluginleft.dll')=0) and
-    (Windows.GetModuleHandleA('pluginright.dll')=0),'native references leaked');
+  Check((NativePackageHandle(PackageFileName('pluginbase'))=0) and
+    (NativePackageHandle(PackageFileName('pluginleft'))=0) and
+    (NativePackageHandle(PackageFileName('pluginright'))=0),'native references leaked');
   Check((GetClass('LatePluginAlias')=nil) and (GetClass('HostAddedAlias')=nil),'stale class alias');
   { This lookup compares stored addresses; it must not dereference the old type. }
   Check(GetEnumeratedAliasValue(EnumInfo,'late-green')=-1,'stale RTTI alias');
@@ -92,13 +92,13 @@ begin
   EnumInfo:=nil;
   Check(ApplicationCallback=nil,'application cleanup callback');
   SetResourceStrings(@Translate,nil); { Must not visit unmapped resource tables. }
-  Left:=LoadPackage('pluginleft.dll');
+  Left:=LoadPackage(PackageFileName('pluginleft'));
   Check((Trace='CBLRlrbBL') and (BaseInitializations=2),'clean reload');
   UnloadPackage(Left);
   Check(Trace='CBLRlrbBLlb','reload finalization');
-  RTL:=LoadPackage('nxrtl.dll');
+  RTL:=LoadPackage(PackageFileName('nxrtl'));
   UnloadPackage(RTL);
-  Check(Windows.GetModuleHandleA('nxrtl.dll')=RTL,'startup owner was unpinned');
+  Check(NativePackageHandle(PackageFileName('nxrtl'))=RTL,'startup owner was unpinned');
   Caught:=false;
   try UnloadPackage(RTL); except on E: EPackageError do Caught:=true; end;
   Check(Caught,'unbalanced startup unload accepted');

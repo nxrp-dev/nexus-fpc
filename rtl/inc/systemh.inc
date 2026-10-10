@@ -1512,7 +1512,7 @@ type
   implicit or explicit exceptions }
 {$i excepth.inc}
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 { Explicit shared-RTL package startup. Ordinary images leave these hooks nil. }
 var
   PackageInitializeProc, PackageFinalizeProc: TProcedure;

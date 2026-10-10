@@ -94,17 +94,17 @@ begin
 end;
 
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure UnRegisterModuleComponents(Module: HMODULE); forward;
 procedure UnRegisterModuleHandlers(Module: HMODULE); forward;
 {$endif}
 
 procedure UnRegisterModuleClasses(Module: HMODULE);
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 var I: Integer;
 {$endif}
 begin
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   if Module=0 then Exit;
   with ClassList.LockList do
     try
@@ -119,7 +119,7 @@ begin
     end;
   UnRegisterModuleComponents(Module);
   UnRegisterModuleHandlers(Module);
-{$endif win64}
+{$endif}
 end;
 
 function FindClass(const AClassName: string): TPersistentClass;
@@ -225,7 +225,7 @@ end;
 var
   ComponentPages: TCollection;
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure UnRegisterModuleComponents(Module: HMODULE);
 var I,J: Integer; Page: TComponentPage;
 begin
@@ -243,7 +243,7 @@ begin
   if PackageModuleFromAddress(Pointer(RegisterNoIconProc))=Module then
     RegisterNoIconProc:=nil;
 end;
-{$endif win64}
+{$endif}
 
 procedure InitComponentPages;
 begin

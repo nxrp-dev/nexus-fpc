@@ -1,4 +1,4 @@
-{ Shared-RTL Win64 package manager. All mutations occur synchronously on the
+{ Shared-RTL package manager. All mutations occur synchronously on the
   application thread; callbacks may not reenter load/unload. Native references
   are independent of explicit API references and package dependency edges. }
 type
@@ -33,8 +33,77 @@ var
   AllResourceTables: Pointer; external name '_FPC_ResourceStringTables';
   AllResourceRefs: Pointer; external name '_FPC_ResStrInitTables';
 
+{$ifdef win64}
 function RetainNativeModule(Flags: DWord; Address: Pointer; var Module: HMODULE): LongBool;
   stdcall; external 'kernel32' name 'GetModuleHandleExW';
+
+function NativeLoadPackage(const Filename: UnicodeString): HMODULE;
+begin
+  Result:=Windows.LoadLibraryExW(PWideChar(Filename),0,$100 or $200 or $800);
+  if Result=0 then
+    raise EPackageError.CreateFmt('Cannot load package %s (Windows error %d)',[Filename,Windows.GetLastError]);
+end;
+
+function NativePackageInfo(Handle: HMODULE): PPPackageDescriptor;
+begin
+  Result:=PPPackageDescriptor(Windows.GetProcAddress(Handle,'FPC_PACKAGE_INFO'));
+end;
+
+function NativeReleasePackage(Handle: HMODULE): Boolean;
+begin
+  Result:=Windows.FreeLibrary(Handle);
+end;
+{$else}
+function RetainNativeModule(Flags: DWord; Address: Pointer; var Module: HMODULE): Boolean;
+begin
+  Module:=NativeModuleFromAddress(Address,true);
+  Result:=Module<>0;
+end;
+
+function NativeLoadPackage(const Filename: UnicodeString): HMODULE;
+var Error: PAnsiChar;
+begin
+  { Explicit DT_NEEDED edges provide the symbol scope. Resolve all imports now,
+    before Pascal initialization, without exporting plugin symbols globally. }
+  Result:=HMODULE(dlopen(PAnsiChar(UTF8Encode(Filename)),RTLD_NOW or RTLD_LOCAL));
+  if Result=0 then
+    begin
+      Error:=dlerror();
+      if Error=nil then raise EPackageError.Create('Cannot load package');
+      raise EPackageError.Create('Cannot load package: '+string(Error));
+    end;
+end;
+
+function NativePackageInfo(Handle: HMODULE): PPPackageDescriptor;
+var Info: dl_info; Map: plink_map;
+begin
+  Result:=PPPackageDescriptor(dlsym(Pointer(Handle),'FPC_PACKAGE_INFO'));
+  { dlsym searches dependencies too. A plain SO requiring a package must not
+    masquerade as that package merely by inheriting its descriptor export. }
+  if Result=nil then Exit;
+  Map:=nil;
+  if (dlinfo(Pointer(Handle),RTLD_DI_LINKMAP,@Map)<>0) or (Map=nil) or
+     (dladdr(Result,@Info)=0) or (Map^.l_addr<>Info.dli_fbase) then Result:=nil;
+end;
+
+function NativeReleasePackage(Handle: HMODULE): Boolean;
+begin
+  Result:=dlclose(Pointer(Handle))=0;
+end;
+
+function ManagedModuleFromAddress(Address: Pointer): HMODULE;
+var Info: dl_info; P: PLoadedPackage;
+begin
+  Result:=0;
+  if dladdr(Address,@Info)=0 then Exit;
+  P:=LoadedPackages;
+  while P<>nil do
+    begin
+      if P^.Module.CodeInstance=HMODULE(Info.dli_fbase) then Exit(P^.Module.Instance);
+      P:=P^.Next;
+    end;
+end;
+{$endif}
 
 function FindLoaded(Context: PPackageContext): PLoadedPackage;
 begin
@@ -158,6 +227,9 @@ end;
 
 procedure AddLoaded(C: PPackageContext; Pinned: Boolean);
 var P: PLoadedPackage; Handle: HMODULE;
+{$ifdef linux}
+    Info: dl_info;
+{$endif}
 begin
   New(P); FillChar(P^,SizeOf(P^),0);
   try
@@ -171,6 +243,10 @@ begin
       end;
     P^.Module.Instance:=Handle; P^.Module.CodeInstance:=Handle;
     P^.Module.DataInstance:=Handle; P^.Module.ResInstance:=Handle;
+{$ifdef linux}
+    if dladdr(C^.Descriptor,@Info)<>0 then
+      P^.Module.CodeInstance:=HMODULE(Info.dli_fbase);
+{$endif}
     P^.Module.Next:=LibModuleList; LibModuleList:=@P^.Module;
     P^.Next:=LoadedPackages; LoadedPackages:=P;
   except Dispose(P); raise; end;
@@ -287,9 +363,8 @@ begin
   SavedRegistered:=Registered; SavedActive:=Active;
   try
     try
-      Handle:=Windows.LoadLibraryExW(PWideChar(Filename),0,$100 or $200 or $800);
-      if Handle=0 then raise EPackageError.CreateFmt('Cannot load package %s (Windows error %d)',[Name,Windows.GetLastError]);
-      Info:=PPPackageDescriptor(Windows.GetProcAddress(Handle,'FPC_PACKAGE_INFO'));
+      Handle:=NativeLoadPackage(Filename);
+      Info:=NativePackageInfo(Handle);
       if Info=nil then raise EPackageError.Create('Missing package descriptor: '+Name);
       D:=Info^;
       RegisterPackage(D);
@@ -359,14 +434,14 @@ begin
               begin
                 P:=NewOwners[I];
                 if P=nil then Continue;
-                if P^.NativeHeld then Windows.FreeLibrary(P^.Module.Instance);
+                if P^.NativeHeld then NativeReleasePackage(P^.Module.Instance);
                 DisposeLoaded(P);
               end;
           end;
         raise EPackageError.Create(Failure);
       end;
   finally
-    if Handle<>0 then Windows.FreeLibrary(Handle);
+    if Handle<>0 then NativeReleasePackage(Handle);
     LifecycleBusy:=false;
   end;
 end;
@@ -392,7 +467,7 @@ begin
   end;
   UnlinkContext(P^.Context);
   Handle:=P^.Module.Instance;
-  if not Windows.FreeLibrary(Handle) then
+  if not NativeReleasePackage(Handle) then
     begin
       P^.Failed:=true;
       P^.Context^.Descriptor:=D; P^.Context^.State:=psFailed;

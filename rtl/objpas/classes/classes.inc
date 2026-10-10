@@ -1442,7 +1442,7 @@ Type
   TInitHandler = Class(TObject)
     AHandler : TInitComponentHandler;
     AClass : TComponentClass;
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
     Previous: TInitHandler;
     destructor Destroy; override;
 {$endif}
@@ -1457,7 +1457,7 @@ Var
   InitHandlerList : TList;
   FindGlobalComponentList : TCodePtrList;
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 destructor TInitHandler.Destroy;
 begin
   Previous.Free;
@@ -1525,7 +1525,7 @@ begin
         { override? }
         if (I<Count) and (TInitHandler(Items[I]).AClass=H.AClass) then
           begin
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
             if Assigned(PackageUnloadProc) then
               begin
                 H.Previous:=TInitHandler(Items[I]);
@@ -1548,7 +1548,7 @@ begin
 end;
 
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure UnRegisterModuleHandlers(Module: HMODULE);
 var
   I: Integer;
@@ -1600,7 +1600,7 @@ begin
   if PackageModuleFromAddress(TMethod(ApplicationHandleException).Code)=Module then ApplicationHandleException:=nil;
   if PackageModuleFromAddress(TMethod(ApplicationShowException).Code)=Module then ApplicationShowException:=nil;
 end;
-{$endif win64}
+{$endif}
 
 { all targets should at least include the sysres.inc dummy in the system unit to compile this }
 function CreateComponentfromRes(const res : string;Inst : THandle;var Component : TComponent) : Boolean;

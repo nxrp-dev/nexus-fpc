@@ -286,6 +286,10 @@ implementation
               end;
             if not assigned(hp) then
               internalerror(200801071);
+            { Imported resource support belongs to its package. Removing that
+              module would invalidate the provider's dependency closure. }
+            if assigned(hp.package) then
+              exit(resources_used);
             { find its tused_unit in the global list }
             uu:=tused_unit(usedunits.first);
             while assigned(uu) do
@@ -1966,6 +1970,7 @@ type
         force_init_final : boolean;
         uu : tused_unit;
         pentry : ppackageentry;
+        i : longint;
       begin
          result:=true;
          set_current_module(curr);
@@ -2112,7 +2117,7 @@ type
 
          exportlib.ignoreduplicates:=true;
 
-         if target_info.system=system_x86_64_win64 then
+         if target_info.system in [system_x86_64_win64,system_x86_64_linux] then
            begin
              cnodeutils.InsertInitFinalTable(curr);
              cnodeutils.InsertThreadvarTablesTable;
@@ -2120,6 +2125,11 @@ type
              cnodeutils.InsertWideInitsTablesTable;
              cnodeutils.InsertResStrTablesTable;
              emit_package_descriptor;
+             if target_info.system=system_x86_64_linux then
+               begin
+                 cnodeutils.InsertResourceInfo(CheckResourcesUsed(curr));
+                 export.exportname('FPC_RESLOCATION',[eo_name]);
+               end;
            end;
 
          { force exports }
@@ -2209,6 +2219,14 @@ type
                 hp:=tmodule(hp.next);
               end;
 
+             { A declared dependency also owns initialization/lifetime work
+               when none of its units contributed a referenced symbol. }
+             for i:=0 to packagelist.count-1 do
+               begin
+                 pentry:=ppackageentry(packagelist[i]);
+                 if pentry^.direct then
+                   pkg.add_required_package(pentry^.package);
+               end;
              pkg.initmoduleinfo(curr);
 
              { create the executable when we are at level 1 }
@@ -2407,7 +2425,7 @@ type
         resources_used:=MaybeRemoveResUnit(curr);
 
         linker.initsysinitunitname;
-        if (target_info.system=system_x86_64_win64) and
+        if (target_info.system in [system_x86_64_win64,system_x86_64_linux]) and
            assigned(find_module_from_symtable(systemunit).package) then
           linker.sysinitunit:='sysinitpkg';
         if target_info.system in systems_internal_sysinit then
@@ -2454,7 +2472,7 @@ type
         cnodeutils.InsertResStrTablesTable;
         cnodeutils.InsertMemorySizes;
 
-        if (target_info.system=system_x86_64_win64) and
+        if (target_info.system in [system_x86_64_win64,system_x86_64_linux]) and
            assigned(find_module_from_symtable(systemunit).package) then
           emit_package_descriptor;
 

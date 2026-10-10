@@ -445,8 +445,11 @@ implementation
           (target_info.system in systems_all_windows) then
           secname:='.rodata';
 
-        { Use .rodata and .data.rel.ro for Android with PIC }
-        if (target_info.system in systems_android) and (cs_create_pic in current_settings.moduleswitches) then
+        { PIC package metadata needs writable relocations until RELRO applies. }
+        if ((target_info.system in systems_android) or
+            ((target_info.system=system_x86_64_linux) and
+             (tf_supports_packages in target_info.flags))) and
+           (cs_create_pic in current_settings.moduleswitches) then
           begin
             case atype of
               sec_rodata:
@@ -505,6 +508,10 @@ implementation
     function TGNUAssembler.sectionattrs(atype:TAsmSectiontype):string;
       begin
         result:='';
+        if (atype=sec_rodata) and (target_info.system=system_x86_64_linux) and
+           (tf_supports_packages in target_info.flags) and
+           (cs_create_pic in current_settings.moduleswitches) then
+          result:='aw';
         if (target_info.system in [system_i386_win32,system_x86_64_win64,system_aarch64_win64]) then
           begin
             result:=sectionattrs_coff(atype);

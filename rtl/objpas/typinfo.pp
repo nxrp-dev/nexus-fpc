@@ -33,7 +33,7 @@ unit TypInfo;
   uses SysUtils;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure UnregisterModuleTypeInfo(Module: HMODULE);
 {$endif}
 
@@ -4997,7 +4997,7 @@ type
 Var
   EnumeratedAliases : TEnumeratedAliasesArray;
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure UnregisterModuleTypeInfo(Module: HMODULE);
 var I: Integer;
 begin
@@ -5009,7 +5009,7 @@ begin
         SetLength(EnumeratedAliases,Length(EnumeratedAliases)-1);
       end;
 end;
-{$endif win64}
+{$endif}
 
 Function IndexOfEnumeratedAliases(aTypeInfo : PTypeInfo) : integer;
 

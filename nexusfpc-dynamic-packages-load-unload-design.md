@@ -70,6 +70,10 @@ Ordinary build target flags remain package-disabled. Unrelated concurrent edits
 in `compiler/ncnv.pas`, `compiler/psub.pas`, `compiler/ptype.pas` and three deleted
 `tests/tbs` files are preserved and are not attributed to this work.
 
+The [Linux x86-64/glibc port](nexusfpc-dynamic-packages-linux.md) now uses this same
+manager through native ELF/glibc adapters. That report records its separate
+validation, SDK tools, and platform limitations.
+
 ## Validation on 2026-10-09
 
 | Check | Result | Evidence directory |

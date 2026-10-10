@@ -86,9 +86,9 @@ implementation
       end;
 
     begin
-      { Layout matches rtl/inc/fpcpackage.pp; only the experimental Win64
-        package path emits this ABI. Every field occupies one native word. }
-      if target_info.system<>system_x86_64_win64 then exit;
+      { Layout matches rtl/inc/fpcpackage.pp. The experimental targets are
+        currently 64 bit; every field occupies one native word. }
+      if not (target_info.system in [system_x86_64_win64,system_x86_64_linux]) then exit;
       start;
       for i:=1 to 6 do number(0);
       finish('FPC_PACKAGE_CONTEXT',sec_data);
@@ -110,6 +110,20 @@ implementation
       { Retain a valid address even for an empty owned-unit list. }
       if unitcount=0 then number(0);
       finish('FPC_PACKAGE_UNITS',sec_rodata);
+      if target_info.system=system_x86_64_linux then
+        begin
+          { ELF resolves these local slots directly. Keep the descriptor's
+            pointer-to-pointer ABI without manufacturing PE import symbols. }
+          start;
+          for i:=0 to packagelist.count-1 do
+            begin
+              entry:=ppackageentry(packagelist[i]);
+              if entry^.direct then
+                address('FPC_PACKAGE_'+entry^.package.packagename^);
+            end;
+          number(0);
+          finish('FPC_PACKAGE_DEPENDENCY_SLOTS',sec_rodata);
+        end;
       start;
       depcount:=0;
       for i:=0 to packagelist.count-1 do
@@ -117,10 +131,15 @@ implementation
           entry:=ppackageentry(packagelist[i]);
           if not entry^.direct then continue;
           name:='FPC_PACKAGE_'+entry^.package.packagename^;
-          current_module.addexternalimport(entry^.package.pplfilename,
-            name,name+suffix_indirect,0,true,false);
-          b.emit_tai(tai_const.create_sym(
-            current_asmdata.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
+          if target_info.system=system_x86_64_linux then
+            b.emit_tai(tai_const.createname('FPC_PACKAGE_DEPENDENCY_SLOTS',depcount*8),voidpointertype)
+          else
+            begin
+              current_module.addexternalimport(entry^.package.pplfilename,
+                name,name+suffix_indirect,0,true,false);
+              b.emit_tai(tai_const.create_sym(
+                current_asmdata.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
+            end;
           inc(depcount);
         end;
       if depcount=0 then number(0);
@@ -709,7 +728,7 @@ implementation
       for i:=0 to packagelist.count-1 do
         begin
           pkgentry:=ppackageentry(packagelist[i]);
-          if pkgentry^.usedunits>0 then
+          if (pkgentry^.usedunits>0) or pkgentry^.direct then
             begin
               //writeln('package used: ',pkgentry^.realpkgname);
               pkgname:=pkgentry^.package.pplfilename;
@@ -1001,6 +1020,7 @@ implementation
     var
       module : tmodule;
       i : longint;
+      libname : TCmdStr;
     begin
       cache:=tfphashlist.create;
       { check each external asm symbol of each unit of the package whether it is
@@ -1014,6 +1034,18 @@ implementation
         begin
           if not assigned(module.package) then
             processimportedsyms(module.unitimportsyms);
+          if (target_info.system=system_x86_64_linux) and assigned(module.package) then
+            begin
+              { Declarations imported from a packaged unit may still reference
+                native libraries. Preserve its $LINKLIB requirements without
+                linking the package's unit objects into this image. }
+              while not module.linkothersharedlibs.empty do
+                begin
+                  libname:=module.linkothersharedlibs.GetUseMask(link_always);
+                  if libname<>'' then
+                    current_module.linkothersharedlibs.add(libname,link_always);
+                end;
+            end;
           module:=tmodule(module.next);
         end;
 

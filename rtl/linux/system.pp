@@ -298,6 +298,21 @@ begin
   info.PascalMain();
 end;
 
+{$if defined(linux) and defined(cpux86_64)}
+procedure PreparePackageHost(var Info: TEntryInformation);
+begin
+  SetupEntryInformation(Info);
+  IsLibrary:=false;
+  InitHeap;
+  if Assigned(PackagePrepareProc) then
+    begin
+      PackagePrepareProc(Info);
+      SetupEntryInformation(Info);
+    end;
+  InitSystemThreads;
+end;
+{$endif}
+
 
 {$ifndef FPC_USE_LIBC}
 procedure SysEntry_InitTLS(constref info: TEntryInformation);[public,alias:'FPC_SysEntry_InitTLS'];
@@ -630,6 +645,11 @@ begin
 
   { Setup heap }
   InitHeap;
+{$if defined(linux) and defined(cpux86_64)}
+  { Package activation already has exception frames on the shared System
+    stack. Resetting it here would destroy the manager's rollback handlers. }
+  if not Assigned(PackageInitializeProc) then
+{$endif}
   SysInitExceptions;
   initunicodestringmanager;
   { Setup stdin, stdout and stderr }

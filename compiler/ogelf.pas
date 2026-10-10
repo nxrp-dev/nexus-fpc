@@ -583,6 +583,10 @@ implementation
         else
           begin
             secname:=secnames[atype];
+            if (atype=sec_rodata) and (target_info.system=system_x86_64_linux) and
+               (tf_supports_packages in target_info.flags) and
+               (cs_create_pic in current_settings.moduleswitches) then
+              secname:='.data.rel.ro';
             if (atype=sec_fpc) and (Copy(aname,1,3)='res') then
               begin
                 result:=secname+'.'+aname;

@@ -15,6 +15,11 @@ LoadPackage wraps diagnostics before releasing package-defined exception images.
 The limitations below describe items 6-10 at their completion, not the later
 loader implementation. Item 15 remains excluded.
 
+The [Linux x86-64/glibc implementation](nexusfpc-dynamic-packages-linux.md) reuses
+this explicit activation and synchronous lifetime contract. Its ELF/glibc adapters
+and tests are documented separately; the original Win64 milestone below remains
+historical context.
+
 ## Completion boundary
 
 The experimental EXE now links and runs against a package-owned System using

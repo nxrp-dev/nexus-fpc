@@ -153,12 +153,13 @@ implementation
         unitmodule:=tmodule(loaded_units.first);
         while assigned(unitmodule) do
           begin
-            if unitmodule.is_unit then
+            if unitmodule.is_unit and not assigned(unitmodule.package) then
               begin
                 hp:=texported_item(unitmodule._exports.first);
                 while assigned(hp) do
                   begin
-                    if assigned(exportedsymnames.FindCase(hp.name^)) then
+                    if assigned(exportedsymnames.FindCase(hp.name^)) and
+                       not current_module.ispackage then
                       duplicatesymbol(hp.name^)
                     else
                       begin
@@ -819,8 +820,17 @@ begin
 
  { Create some replacements }
  { note: linux does not use exportlib.initname/fininame due to the custom startup code }
-  InitStr:='-init FPC_SHARED_LIB_START';
-  FiniStr:='-fini FPC_LIB_EXIT';
+  if current_module.ispackage then
+    begin
+      { Pascal package lifecycle belongs to the shared manager, not ld.so. }
+      InitStr:='';
+      FiniStr:='';
+    end
+  else
+    begin
+      InitStr:='-init FPC_SHARED_LIB_START';
+      FiniStr:='-fini FPC_LIB_EXIT';
+    end;
   SoNameStr:='-soname '+ExtractFileName(current_module.sharedlibfilename);
   if (cs_link_map in current_settings.globalswitches) then
      mapstr:='-Map '+maybequoted(ChangeFileExt(current_module.sharedlibfilename,'.map'));
@@ -851,6 +861,10 @@ begin
   Replace(cmdstr,'$LTO',ltostr);
   Replace(cmdstr,'$RPATH',rpathstr);
   Replace(cmdstr,'$GCSECTIONS',GCSectionsStr);
+  if current_module.ispackage then
+    { Owned definitions have one canonical address and per-image tables must
+      not be preempted by equally named tables in a dependency. }
+    cmdstr:=cmdstr+' -Bsymbolic -z defs -z text -z relro -z now';
   success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,false);
 
 { Strip the library ? }

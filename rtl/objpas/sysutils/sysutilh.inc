@@ -473,8 +473,21 @@ const
   INVALID_HANDLE_VALUE = DWORD(-1);
 {$ENDIF}
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 { Installed by the shared package runtime; ordinary applications leave hooks nil. }
+{$ifdef linux}
+type
+  PLibModule = ^TLibModule;
+  TLibModule = record
+    Next: PLibModule;
+    { Linux file handles are 32 bit; native module handles are pointer-sized. }
+    Instance, CodeInstance, DataInstance, ResInstance: HMODULE;
+    Reserved: PtrInt;
+  end;
+var
+  LibModuleList: PLibModule = nil;
+  PackageAddressProc: function(Address: Pointer): HMODULE;
+{$endif}
 var
   PackageLoadProc: function(const Name: string): HMODULE;
   PackageUnloadProc: procedure(Module: HMODULE);
@@ -486,4 +499,4 @@ procedure UnregisterPackageCleanup(Module: HMODULE; Callback: TProcedure);
 function PackageModuleFromAddress(Address: Pointer): HMODULE;
 function FindClassHInstance(AClass: TClass): HMODULE;
 function FindResourceHInstance(Instance: HMODULE): HMODULE;
-{$endif win64}
+{$endif}

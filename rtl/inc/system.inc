@@ -998,7 +998,7 @@ var
 begin
   { call cpu/fpu initialisation routine }
   fpc_cpuinit;
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   if Assigned(PackageInitializeProc) then
     begin
       PackageInitializeProc();
@@ -1050,7 +1050,7 @@ procedure FinalizeUnits; external name 'FPC_FINALIZE_FUNC_TABLE';
 {$else FPC_INIT_FINAL_UNITS_BY_CALLS}
 procedure FinalizeUnits;[public,alias:'FPC_FINALIZEUNITS'];
 begin
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   if Assigned(PackageFinalizeProc) then
     begin
       PackageFinalizeProc();

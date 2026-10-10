@@ -1,5 +1,13 @@
 # Compiler package regressions
 
+## Linux glibc
+
+Run `python3 tests/dynamic-packages/run_linux_package_sdk_tests.py` on x86-64
+Linux for clean source-only normal/smart SDK builds, fresh/cached runtime tests,
+ordinary compiler/export checks and source-free relocation. For an existing SDK,
+use `run_linux_package_tests.py --sdk <directory>`; `--cached` and `--smart` select
+those configurations. See the [Linux implementation and SDK guide](../../nexusfpc-dynamic-packages-linux.md).
+
 ## Metadata
 
 This suite covers dynamic-package backlog items 1–4 without enabling packages in

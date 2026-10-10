@@ -30,7 +30,8 @@ type
   end;
   TPackageUnitNames = array[0..65534] of PShortString;
   PPackageUnitNames = ^TPackageUnitNames;
-  { Each entry points to an import-address-table slot containing a descriptor. }
+  { Each entry points to a relocation slot containing a descriptor: PE's import
+    address table or a compiler-emitted local slot on ELF. }
   TPackageDependencies = array[0..65534] of PPPackageDescriptor;
   PPackageDependencies = ^TPackageDependencies;
   TPackageDescriptor = record
@@ -56,8 +57,18 @@ procedure PreparePackageStartup(Descriptor: PPackageDescriptor);
 
 implementation
 
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
+uses
+{$ifdef linux}
+  DynLibs,
+{$endif}
+  Classes, TypInfo
 {$ifdef win64}
-uses Classes, TypInfo, Windows;
+  , Windows
+{$else}
+  , dl
+{$endif}
+  ;
 {$endif}
 
 type
@@ -86,6 +97,23 @@ var
   Startup: PPackageDescriptor;
   StartupThreadvars, StartupResources: Pointer;
   LifecycleBusy, ShuttingDown: Boolean;
+
+{$if defined(linux) and defined(cpux86_64)}
+function NativeModuleFromAddress(Address: Pointer; Retain: Boolean): HMODULE;
+var Info: dl_info; Handle: Pointer;
+begin
+  Result:=0;
+  if Address=Startup then Handle:=dlopen(nil,RTLD_NOW)
+  else
+    begin
+      FillChar(Info,SizeOf(Info),0);
+      if (dladdr(Address,@Info)=0) or (Info.dli_fname=nil) then Exit;
+      Handle:=dlopen(Info.dli_fname,RTLD_NOW or RTLD_NOLOAD);
+    end;
+  Result:=HMODULE(Handle);
+  if (Handle<>nil) and not Retain then dlclose(Handle);
+end;
+{$endif}
 
 procedure ManagedTables(Descriptor: PPackageDescriptor; Initialize: Boolean);
 var
@@ -196,6 +224,18 @@ begin
     Context^.Descriptor:=nil;
     raise;
   end;
+{$if defined(linux) and defined(cpux86_64)}
+  if Startup<>nil then
+    begin
+      Descriptor^.ModuleHandle^:=NativeModuleFromAddress(Descriptor,false);
+      if Descriptor^.ModuleHandle^=0 then
+        begin
+          Context^.State:=psUnregistered;
+          Context^.Descriptor:=nil;
+          raise EPackageError.Create('Cannot identify package image');
+        end;
+    end;
+{$endif}
   Context^.ModuleHandle:=Descriptor^.ModuleHandle^;
   Context^.NextRegistered:=Registered;
   Registered:=Context;
@@ -244,7 +284,7 @@ begin
     end;
 end;
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 {$i fpcpackageloader.inc}
 {$endif}
 
@@ -292,14 +332,14 @@ begin
   while Active<>nil do
     begin
       Context:=Active;
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
       BeforePackageFinalization(Context);
 {$endif}
       { Keep an interrupted owner on the stack. FinalizeOne advances before each
         callback, so a subsequent shutdown attempt resumes the remaining prefix. }
       FinalizeOne(Context);
       ManagedTables(Context^.Descriptor,false);
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
       AfterPackageFinalization(Context);
 {$endif}
       Active:=Context^.PreviousActive;
@@ -308,7 +348,7 @@ begin
     end;
   FreeMem(StartupThreadvars); StartupThreadvars:=nil;
   FreeMem(StartupResources); StartupResources:=nil;
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   ShutdownPackageManager;
 {$endif}
   ShuttingDown:=false;
@@ -316,13 +356,13 @@ end;
 
 procedure InitializeStartup;
 begin
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   StartPackageManager;
 {$endif}
   InitializePackage(Startup);
 end;
 
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 procedure PrepareStartupMetadata(var Info: TEntryInformation);
 type
   PTable = ^TTable;
@@ -371,22 +411,25 @@ begin
   Info.ThreadvarTablesTable:=Threads;
   Info.ResourceStringTables:=Resources;
 end;
-{$endif win64}
+{$endif}
 
 procedure PreparePackageStartup(Descriptor: PPackageDescriptor);
 begin
   if Startup<>nil then
     raise EPackageError.Create('Package startup already configured');
   Startup:=Descriptor;
-{$ifdef win64}
+{$if defined(win64) or (defined(linux) and defined(cpux86_64))}
   PackagePrepareProc:=@PrepareStartupMetadata;
   PackageInitializeProc:=@InitializeStartup;
   PackageFinalizeProc:=@FinalizePackages;
   PackageLoadProc:=@LoadRuntimePackage;
   PackageUnloadProc:=@UnloadRuntimePackage;
   PackageCleanupProc:=@ManagePackageCleanup;
+{$ifdef linux}
+  PackageAddressProc:=@ManagedModuleFromAddress;
+{$endif}
 {$else}
-  raise EPackageError.Create('Package startup requires Win64');
+  raise EPackageError.Create('Package startup requires a supported package target');
 {$endif}
 end;
 

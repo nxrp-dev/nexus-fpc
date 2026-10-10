@@ -1491,6 +1491,10 @@ implementation
               end;
           end;
         result:=secoptions[atype];
+        if (atype=sec_rodata) and (target_info.system=system_x86_64_linux) and
+           (tf_supports_packages in target_info.flags) and
+           (cs_create_pic in current_settings.moduleswitches) then
+          include(result,oso_write);
 {$ifdef OMFOBJSUPPORT}
         { in the huge memory model, BSS data is actually written in the regular
           FAR_DATA segment of the module }

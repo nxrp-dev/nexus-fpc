@@ -4,9 +4,9 @@ Date: 2026-10-09
 
 ## Assessment and scope
 
-FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has an experimental Win64 shared RTL with explicit EXE startup activation, per-image contexts, and synchronous LoadPackage/UnloadPackage. The current pass adds reference accounting, rollback, image-owned RTL registration cleanup and strict SDK/package identities. Late-loaded TLS, non-Win64 runtimes, IDE integration and Delphi binary compatibility remain outside this scope.
+FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has experimental Win64 and Linux x86-64/glibc shared RTL runtimes with explicit EXE startup activation, per-image contexts, and synchronous LoadPackage/UnloadPackage. They include reference accounting, rollback, image-owned RTL registration cleanup and strict SDK/package identities. Other CPU/libc package runtimes, late-loaded TLS, IDE integration and Delphi binary compatibility remain outside the implemented scope. The [Linux implementation report](nexusfpc-dynamic-packages-linux.md) records the Linux SDK, validation and remaining platform work.
 
-This document consolidates the source-based gap analyses, compatibility clarification, and implementation results. Items 1-10 and the profiler cache correction are committed. Item 11 now provides a tested, isolated Win64 package SDK and console/GUI build workflow. Its source-only and relocated builds, the runtime suite, and ordinary regressions pass. The preceding compiler/RTL milestone also passed profiler checks and the full bootstrap/cross matrix; item 11 changes build tooling and the experimental entry point without changing that runtime implementation.
+This document consolidates the source-based gap analyses, compatibility clarification, and the original Windows implementation results. Those milestones were committed before the Linux pass, whose starting baseline is `2acbb37a`. The Windows SDK includes source-only/relocated console and GUI builds, runtime tests and ordinary regressions. The separate Linux report records the current port and its evidence; the numbered milestone results below retain their original scope and dates.
 
 The source inspection was made against NexusFPC at commit `471e676d`, including its working tree. At inspection time there were existing uncommitted changes in `compiler/entfile.pas`, `compiler/export.pas`, `compiler/expunix.pas`, `compiler/fpcdefs.inc`, `compiler/fppu.pas`, `compiler/pmodules.pas`, `compiler/systems/t_linux.pas`, and `compiler/systems/t_win.pas`, plus an untracked `tests/unit-exports/` suite. Those changes were not treated as validated dynamic-package support. Recheck the working tree and source locations before implementation.
 
@@ -374,7 +374,10 @@ The implementation should provide dependable dependency accounting and explicit 
 
 ## Platform and follow-on work
 
-Start with Win64 and one compiler/RTL build identity. Linux should receive a separate implementation and validation effort covering ELF symbol visibility, relocations, native loading, TLS, and startup behavior.
+Win64 and Linux x86-64/glibc now have separate native adapters and validation under
+the same shared-RTL lifecycle contract. The [Linux report](nexusfpc-dynamic-packages-linux.md)
+covers ELF symbol visibility, relocations, native loading and startup. Package
+runtimes for other Linux CPUs/libcs and general late TLS remain follow-on work.
 
 Once the basic runtime works, add focused cross-package coverage for:
 
@@ -408,8 +411,9 @@ This demonstrates the central BPL-like behavior. A successful native DLL load or
 Items 1-14 and 16 now have scoped implementations; the
 [load/unload report](nexusfpc-dynamic-packages-load-unload-design.md) records current
 validation and limits. The experimental Win64 SDK supports console/GUI shared RTL
-startup and synchronous late loading/unloading. Item 15 and non-Win64 package
-runtimes remain deferred; cross-target builds validate ordinary compilation,
+startup and synchronous late loading/unloading. The Linux x86-64/glibc SDK now
+implements the same lifecycle through ELF and glibc. Item 15 and the remaining
+platform package runtimes remain deferred; cross-target builds validate ordinary compilation,
 not package execution on those platforms. This is not full Delphi BPL parity.
 
 The repository source links are relative so the document can be browsed within the checkout. Approximate line numbers describe the inspected snapshot and may move. Revalidate the target flags, working-tree changes, and source paths when beginning an implementation item.
