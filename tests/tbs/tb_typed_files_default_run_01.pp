@@ -1,4 +1,4 @@
-{ Typed-file block reads and string-record reads. }
+{ Typed-file block reads, string records, large records and ordinal writes. }
 { Original case IDs and variable scopes are retained below. }
 
 { Case tb0093.pp }
@@ -41,6 +41,32 @@ begin
 end;
 {$pop}
 
+{ Case tb0126.pp }
+{$push}
+{ Old file: tbs0145.pp }
+{ typed files with huges records (needs filerec.size:longint) OK 0.99.7 (PFV) }
+
+{$I+}
+const
+  tb0126_mb=512;
+  tb0126_siz=1024*tb0126_mb;
+
+type
+  tb0126_buf=array[1..tb0126_siz] of byte;
+
+var
+  tb0126_fin,
+  tb0126_fout : file of tb0126_buf;
+  tb0126_b1,tb0126_a1 : tb0126_buf;
+{$pop}
+
+{ Case tb0466.pp }
+{$push}
+var
+  tb0466_outf : file of byte;
+  tb0466_w : word;
+{$pop}
+
 begin
   { Case tb0093.pp }
   {$push}
@@ -73,6 +99,43 @@ begin
   tb0202_test;
   close(tb0202_fileof);
   erase(tb0202_fileof);
+end;
+  {$pop}
+
+  { Case tb0126.pp }
+  {$push}
+{$I+}
+begin
+  fillchar(tb0126_a1,sizeof(tb0126_a1),1);
+  assign(tb0126_fout,'tmp.tmp');
+  rewrite(tb0126_fout);
+  write(tb0126_fout,tb0126_a1);
+  close(tb0126_fout);
+
+  assign(tb0126_fin,'tmp.tmp');
+  reset(tb0126_fin);
+  read(tb0126_fin,tb0126_b1);
+  close(tb0126_fin);
+  erase(tb0126_fin);
+  if not tb0126_b1[512*tb0126_mb]=1 then
+   begin
+      writeln('data err');
+      Halt(1);
+   end;
+end;
+  {$pop}
+
+  { Case tb0466.pp }
+  {$push}
+begin
+   assign(tb0466_outf, 'tb0466.tmp');
+   rewrite(tb0466_outf);
+   {only explicit typecasting helps: byte(10)}
+   write(tb0466_outf, 10);
+   tb0466_w:=20;
+   write(tb0466_outf, tb0466_w);
+   close(tb0466_outf);
+   erase(tb0466_outf);
 end;
   {$pop}
 
