@@ -57,6 +57,18 @@ var
   tb0447_b : longint;
 {$pop}
 
+{ Case tb0533.pp }
+{$push}
+{$r+}
+
+const
+  tb0533_q: qword = 18446744073709551615;
+
+var
+  tb0533_i: int64;
+  tb0533_code: longint;
+{$pop}
+
 begin
   { Case tb0085.pp }
   {$push}
@@ -97,6 +109,28 @@ begin
     writeln ('OK')
   else
     halt(1);
+end;
+  {$pop}
+
+  { Case tb0533.pp }
+  {$push}
+{$R+}
+begin
+  val('18446744073709551615',tb0533_i,tb0533_code);
+  if (tb0533_code = 0) then
+    halt(1);
+  val('-9223372036854775808',tb0533_i,tb0533_code);
+  if (tb0533_code <> 0) or
+     (tb0533_i <> low(int64)) then
+    halt(2);
+  val('9223372036854775807',tb0533_i,tb0533_code);
+  if (tb0533_code <> 0) or
+     (tb0533_i <> high(int64)) then
+    halt(3);
+  val('$8000000000000000',tb0533_i,tb0533_code);
+  if (tb0533_code <> 0) or
+     (tb0533_i <> low(int64)) then
+    halt(4);
 end;
   {$pop}
 
