@@ -73,6 +73,79 @@ var
  tb0434_y2:pointer absolute tb0434_x2;
 {$pop}
 
+{ Case tb0157.pp }
+{$push}
+{ Old file: tbs0188.pp }
+{ can't print function result of procedural var that returns a function. Not a bugs : wrong syntax !! See source (PM) }
+
+{ this are no bugs, just wrong
+  understanding of FPC syntax }
+
+type tb0157_testfunc = function:longint;
+
+var tb0157_f : tb0157_testfunc;
+
+var tb0157_test: tb0157_testfunc;
+
+function tb0157_test_temp: longint;
+begin
+  tb0157_test_temp:=12;
+end;
+
+procedure tb0157_sound(tb0157_test: tb0157_testfunc);
+begin
+  {writeln(test); this is wrong because
+   test is the function itself and write does not know how to
+   output a function !
+   to call test you must use test() !! }
+  writeln(tb0157_test());
+end; { proc. sound }
+
+var tb0157_i : longint;
+{$pop}
+
+{ Case tb0385.pp }
+{$push}
+var
+  tb0385_count : longint;
+
+procedure tb0385_p1(w:word);overload;
+begin
+  writeln('word');
+  tb0385_count:=tb0385_count or 1;
+end;
+
+procedure tb0385_p1(l:longint);overload;
+begin
+  writeln('longint');
+  tb0385_count:=tb0385_count or 2;
+end;
+
+var
+  tb0385_f1 : procedure(l:longint);
+  tb0385_f2 : procedure(w:word);
+{$pop}
+
+{ Case tb0509.pp }
+{$push}
+type
+  tb0509_tp1 = function(var i : longint) : longint;
+
+  tb0509_tp2 = type tb0509_tp1;
+
+procedure tb0509_p(tb0509_f : tb0509_tp1);
+  begin
+  end;
+
+
+procedure tb0509_p(tb0509_f : tb0509_tp2);
+  begin
+  end;
+
+var
+  tb0509_f : tb0509_tp1;
+{$pop}
+
 begin
   { Case tb0028.pp }
   {$push}
@@ -132,6 +205,52 @@ begin
      Writeln('Wrong code generated for absolute to procvarsmy');
      halt(1);
    end;
+end;
+  {$pop}
+
+  { Case tb0157.pp }
+  {$push}
+begin
+  tb0157_i:=tb0157_test_temp;
+  tb0157_f:=@tb0157_test_temp;
+  if tb0157_f()<>tb0157_i then
+    begin
+       Writeln('error calling f');
+       Halt(1);
+    end;
+
+  { this works for FPC
+   sound(test_temp);
+  but the correct syntax would be }
+  tb0157_sound(@tb0157_test_temp);
+  { imagine if a function would return its own type !! }
+
+  { for f var this is correct also ! }
+  tb0157_sound(tb0157_f);
+end;
+  {$pop}
+
+  { Case tb0385.pp }
+  {$push}
+begin
+  tb0385_f1:=@tb0385_p1;
+  tb0385_f2:=@tb0385_p1;
+  tb0385_f1(1);
+  tb0385_f2(1);
+  if tb0385_count<>3 then
+   begin
+     writeln('ERROR!');
+     halt(1);
+   end;
+end;
+  {$pop}
+
+  { Case tb0509.pp }
+  {$push}
+begin
+  tb0509_f:=nil;
+  if assigned(tb0509_f) then
+    tb0509_p(tb0509_f);
 end;
   {$pop}
 
