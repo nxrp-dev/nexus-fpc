@@ -314,7 +314,8 @@ begin
   if T<>nil then
     for I:=0 to SizeInt(T^.Count)-1 do
       if (T^.Data[I]<>nil) and (PPointer(T^.Data[I])^<>nil) then
-        raise EPackageError.Create('Late-loaded package introduces threadvar storage: '+D^.Name^);
+        if IsMultiThread then
+          raise EPackageError.Create('Package threadvar lifecycle requires a single-threaded runtime: '+D^.Name^);
 end;
 
 procedure FinalizeManagedOwner(P: PLoadedPackage; var Failure: string);
@@ -429,7 +430,12 @@ begin
           begin
             for I:=0 to EdgesAdded-1 do ChangeDependencyRefs(NewOwners[I],false);
             C:=Registered;
-            while C<>SavedRegistered do begin Next:=C^.NextRegistered; UnlinkContext(C); C:=Next; end;
+            while C<>SavedRegistered do
+              begin
+                Next:=C^.NextRegistered;
+                ReleaseThreadVarTables(C^.Descriptor^.ThreadvarTable);
+                UnlinkContext(C); C:=Next;
+              end;
             for I:=0 to High(NewOwners) do
               begin
                 P:=NewOwners[I];
@@ -465,6 +471,7 @@ begin
     P^.Failed:=true; P^.Context^.State:=psFailed;
     raise;
   end;
+  ReleaseThreadVarTables(D^.ThreadvarTable);
   UnlinkContext(P^.Context);
   Handle:=P^.Module.Instance;
   if not NativeReleasePackage(Handle) then
@@ -490,6 +497,20 @@ begin
   if Failure<>'' then raise EPackageError.Create(Failure);
 end;
 
+procedure CheckThreadVarUnload(D: PPackageDescriptor);
+var T: PPointerTable; I: SizeInt;
+begin
+  if not IsMultiThread then Exit;
+  T:=D^.ThreadvarTable;
+  if T<>nil then
+    for I:=0 to SizeInt(T^.Count)-1 do
+      if (T^.Data[I]<>nil) and (PPointer(T^.Data[I])^<>nil) then
+        raise EPackageError.Create('Package threadvar lifecycle requires a single-threaded runtime: '+D^.Name^);
+  for I:=0 to SizeInt(D^.DependencyCount)-1 do
+    if not FindLoaded(D^.Dependencies^[I]^^.Context)^.Pinned then
+      CheckThreadVarUnload(D^.Dependencies^[I]^);
+end;
+
 procedure UnloadRuntimePackage(Module: HMODULE);
 var P: PLoadedPackage;
 begin
@@ -497,6 +518,7 @@ begin
   P:=FindHandle(Module);
   if (P=nil) or P^.Failed or (P^.ExplicitRefs=0) then
     raise EPackageError.Create('UnloadPackage has no matching successful LoadPackage');
+  CheckThreadVarUnload(P^.Context^.Descriptor);
   LifecycleBusy:=true;
   try Dec(P^.ExplicitRefs); ReleaseUnused(P);
   finally LifecycleBusy:=false; end;

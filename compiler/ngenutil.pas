@@ -889,6 +889,9 @@ implementation
       list : TAsmList;
       sectype : TAsmSectiontype;
       asmtype: TAsmsymtype;
+      builder: ttai_typedconstbuilder;
+      descriptor: tdef;
+      descriptorbind: TAsmsymbind;
     begin
       storefilepos:=current_filepos;
       current_filepos:=sym.fileinfo;
@@ -936,11 +939,24 @@ implementation
         begin
           if (vo_is_thread_var in sym.varoptions) then
             begin
-              inc(l,sizeof(pint));
-              { it doesn't help to set a higher alignment, as  }
-              { the first sizeof(pint) bytes field will offset }
-              { everything anyway                              }
-              varalign:=sizeof(pint);
+              { The exported symbol is a two-word descriptor, never storage. }
+              builder:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
+              builder.begin_anonymous_record('',sizeof(pint),sizeof(pint),sizeof(pint));
+              builder.emit_tai(tai_const.Createname('FPC_THREADVAROWNER',0),voidpointertype);
+              builder.emit_ord_const(0,sizeuinttype);
+              descriptor:=builder.end_anonymous_record;
+              if sym.globalasmsym then
+                descriptorbind:=AB_GLOBAL
+              else if tf_supports_hidden_symbols in target_info.flags then
+                descriptorbind:=AB_PRIVATE_EXTERN
+              else
+                descriptorbind:=AB_LOCAL;
+              current_asmdata.asmlists[al_globals].concatlist(builder.get_final_asmlist(
+                current_asmdata.DefineAsmSymbol(sym.mangledname,descriptorbind,AT_DATA,descriptor),
+                descriptor,sec_data,lower(sym.mangledname),sizeof(pint)));
+              builder.free;
+              current_filepos:=storefilepos;
+              exit;
             end;
           list:=current_asmdata.asmlists[al_globals];
           sectype:=sec_bss;
@@ -1239,6 +1255,7 @@ implementation
       sym: tasmsymbol;
       placeholder: ttypedconstplaceholder;
       tabledef: tdef;
+      ownerbind: TAsmsymbind;
     begin
       if (tf_section_threadvars in target_info.flags) then
         exit;
@@ -1276,12 +1293,29 @@ implementation
       placeholder := nil;
       { insert in data segment }
       tabledef:=tcb.end_anonymous_record;
-      sym:=current_asmdata.DefineAsmSymbol('FPC_THREADVARTABLES',AB_GLOBAL,AT_DATA,tabledef);
+      if tf_supports_hidden_symbols in target_info.flags then
+        ownerbind:=AB_PRIVATE_EXTERN
+      else
+        ownerbind:=AB_GLOBAL;
+      sym:=current_asmdata.DefineAsmSymbol('FPC_THREADVARTABLES',ownerbind,AT_DATA,tabledef);
       current_asmdata.asmlists[al_globals].concatlist(
         tcb.get_final_asmlist(
           sym,tabledef,sec_data,'FPC_THREADVARTABLES',const_align(sizeof(pint))
         )
       );
+      tcb.free;
+      { All unit objects bind this local image owner at final link time. }
+      tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
+      tcb.begin_anonymous_record('',sizeof(pint),sizeof(pint),sizeof(pint));
+      tcb.emit_tai(tai_const.Createname('FPC_THREADVARTABLES',0),voidpointertype);
+      tcb.emit_ord_const(0,sizeuinttype); { runtime identity }
+      tcb.emit_ord_const(0,sizeuinttype); { block size }
+      tcb.emit_ord_const(0,sizeuinttype); { block alignment }
+      tcb.emit_tai(tai_const.Create_nil_dataptr,voidpointertype); { main context debugger view }
+      tabledef:=tcb.end_anonymous_record;
+      current_asmdata.asmlists[al_globals].concatlist(tcb.get_final_asmlist(
+        current_asmdata.DefineAsmSymbol('FPC_THREADVAROWNER',ownerbind,AT_DATA,tabledef),
+        tabledef,sec_data,'FPC_THREADVAROWNER',sizeof(pint)));
       tcb.free;
       tcb := nil;
     end;
@@ -1291,20 +1325,21 @@ implementation
   procedure AddToThreadvarList(p:TObject;arg:pointer);
     var
       tcb: ttai_typedconstbuilder;
-      field1, field2: tsym;
+      def: tdef;
+      alignment: shortint;
     begin
       if (tsym(p).typ=staticvarsym) and
          (vo_is_thread_var in tstaticvarsym(p).varoptions) then
        begin
          tcb:=ttai_typedconstbuilder(arg);
-         { address of threadvar }
-         tcb.emit_tai(tai_const.Createname(tstaticvarsym(p).mangledname,0),
-           cpointerdef.getreusable(
-             get_threadvar_record(tstaticvarsym(p).vardef,field1,field2)
-           )
-         );
-         { size of threadvar }
-         tcb.emit_ord_const(tstaticvarsym(p).getsize,u32inttype);
+         def:=tstaticvarsym(p).vardef;
+         alignment:=def.alignment;
+         if (def.typ=recorddef) and
+            (tabstractrecordsymtable(trecorddef(def).symtable).explicitrecordalignment>alignment) then
+           alignment:=tabstractrecordsymtable(trecorddef(def).symtable).explicitrecordalignment;
+         tcb.emit_tai(tai_const.Createname(tstaticvarsym(p).mangledname,0),voidpointertype);
+         tcb.emit_ord_const(tstaticvarsym(p).getsize,sizeuinttype);
+         tcb.emit_ord_const(alignment,sizeuinttype);
        end;
     end;
 

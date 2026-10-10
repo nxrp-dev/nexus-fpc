@@ -126,68 +126,18 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
                              Threadvar support
 *****************************************************************************}
 
-    const
-      threadvarblocksize : dword = 0;
-
-
     var
-      TLSKey,
-      CleanupKey : pthread_key_t;
+      TLSKey, CleanupKey: pthread_key_t;
 
-    procedure CInitThreadvar(var offset : dword;size : dword);
-      begin
-
-
-
-        {$ifdef cpui386}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,8);
-        {$endif cpui386}
-
-
-
-        {$ifdef cpux86_64}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpux86_64}
-
-
-        {$ifdef cpuaarch64}
-        {$define threadvarblocksize_set}
-        threadvarblocksize:=align(threadvarblocksize,16);
-        {$endif cpuaarch64}
-
-
-
-
-
-        {$ifndef threadvarblocksize_set}
-        {$error threadvarblocksize must be set! }
-        {$endif threadvarblocksize_set}
-
-        offset:=threadvarblocksize;
-
-        inc(threadvarblocksize,size);
-      end;
-
-
+    procedure CSetThreadVarContext(Context: Pointer);
+    begin
+      if pthread_setspecific(TLSKey,Context)<>0 then FpExit(226);
+    end;
 
     procedure CAllocateThreadVars;
-      var
-        dataindex : pointer;
-      begin
-{$ifndef FPC_SECTION_THREADVARS}
-        { we've to allocate the memory from system  }
-        { because the FPC heap management uses      }
-        { exceptions which use threadvars but       }
-        { these aren't allocated yet ...            }
-        { allocate room on the heap for the thread vars }
-        DataIndex:=Pointer(Fpmmap(nil,threadvarblocksize,3,MAP_PRIVATE+MAP_ANONYMOUS,-1,0));
-        FillChar(DataIndex^,threadvarblocksize,0);
-        pthread_setspecific(tlskey,dataindex);
-{$endif FPC_SECTION_THREADVARS}
-      end;
-
+    begin
+      CSetThreadVarContext(AllocateThreadVarContext);
+    end;
 
     procedure CthreadCleanup(p: pointer); cdecl;
     {$ifdef DEBUG_MT}
@@ -232,7 +182,7 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
       end;
 
 
-    function CRelocateThreadvar(offset : dword) : pointer;
+    function CGetThreadVarContext: Pointer;
       var
         P : Pointer;
       begin
@@ -244,15 +194,14 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
             // If this also goes wrong: bye bye threadvars...
             P:=pthread_getspecific(tlskey);
           end;
-        CRelocateThreadvar:=P+Offset;
+        CGetThreadVarContext:=P;
       end;
 
 
     procedure CReleaseThreadVars;
       begin
-{$ifndef FPC_SECTION_THREADVARS}
-        Fpmunmap(pointer(pthread_getspecific(tlskey)),threadvarblocksize);
-{$endif FPC_SECTION_THREADVARS}
+        ReleaseThreadVarContext(pthread_getspecific(TLSKey));
+        pthread_setspecific(TLSKey,nil);
       end;
 
 { Include OS independent Threadvar initialization }
@@ -344,7 +293,7 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
       begin
         { We're still running in single thread mode, setup the TLS }
         pthread_key_create(@TLSKey,nil);
-        InitThreadVars(@CRelocateThreadvar);
+        InitThreadVars;
         { used to clean up threads that we did not create ourselves:
            a) the default value for a key (and hence also this one) in
               new threads is NULL, and if it's still like that when the
@@ -1031,8 +980,8 @@ begin
     EnterCriticalSection   :=@CEnterCriticalSection;
     TryEnterCriticalSection:=@CTryEnterCriticalSection;
     LeaveCriticalSection   :=@CLeaveCriticalSection;
-    InitThreadVar          :=@CInitThreadVar;
-    RelocateThreadVar      :=@CRelocateThreadVar;
+    SetThreadVarContext    :=@CSetThreadVarContext;
+    GetThreadVarContext    :=@CGetThreadVarContext;
     AllocateThreadVars     :=@CAllocateThreadVars;
     ReleaseThreadVars      :=@CReleaseThreadVars;
     BasicEventCreate       :=@intBasicEventCreate;

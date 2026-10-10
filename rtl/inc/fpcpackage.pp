@@ -10,7 +10,7 @@ uses SysUtils;
 
 const
   FPCPackageMagic = $4e58504b;
-  FPCPackageVersion = 2;
+  FPCPackageVersion = 3;
   psUnregistered = 0;
   psChecking = 1;
   psRegistered = 2;
@@ -258,6 +258,7 @@ begin
   Context^.PreviousActive:=Active;
   Active:=Context;
   Context^.State:=psInitializing;
+  RegisterThreadVarTables(Descriptor^.ThreadvarTable);
   Table:=Descriptor^.InitFinalTable;
   OwnsSystem:=(Table^.Count<>0) and (Table^.Units[0].UnitName<>nil) and
     (UpperCase(Table^.Units[0].UnitName^)='SYSTEM');
@@ -381,6 +382,7 @@ begin
   while Context<>nil do
     begin
       T:=Context^.Descriptor^.ThreadvarTable;
+      RegisterThreadVarTables(T);
       R:=Context^.Descriptor^.ResourceStringTable;
       if T<>nil then Inc(ThreadCount,T^.Count);
       if R<>nil then Inc(ResourceCount,R^.Count);

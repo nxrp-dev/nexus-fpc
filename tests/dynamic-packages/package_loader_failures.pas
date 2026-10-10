@@ -79,9 +79,14 @@ begin
     end
   else if Mode='tls' then
     begin
-      Reject(PackageFileName('newtls'),'threadvar storage');
-      Check(Trace='C','TLS rejection initialized the package');
-      Check(NativePackageHandle(PackageFileName('newtls'))=0,'TLS rejection leaked mapping');
+      Handle:=LoadPackage(PackageFileName('newtls'));
+      Check(Trace='CT','late TLS initialization');
+      UnloadPackage(Handle);
+      Check(Trace='CTt','late TLS finalization');
+      Check(NativePackageHandle(PackageFileName('newtls'))=0,'TLS unload leaked mapping');
+      Handle:=LoadPackage(PackageFileName('newtls'));
+      UnloadPackage(Handle);
+      Check(Trace='CTtTt','TLS reload did not reset storage');
     end
   else if Mode='nested-load' then
     begin

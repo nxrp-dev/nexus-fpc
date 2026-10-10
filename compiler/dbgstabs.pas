@@ -1258,10 +1258,9 @@ implementation
             end;
           else
             begin
-              if (vo_is_thread_var in sym.varoptions) then
-                threadvaroffset:='+'+tostr(sizeof(pint))
-              else
-                threadvaroffset:='';
+              if vo_is_thread_var in sym.varoptions then
+                exit; { STABS cannot describe the image/context indirection. }
+              threadvaroffset:='';
               if (vo_is_typed_const in sym.varoptions) then
                 if vo_is_public in sym.varoptions then
                   nsym:=globalvarsym_inited_stab

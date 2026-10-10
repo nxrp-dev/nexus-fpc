@@ -92,7 +92,7 @@ function Read-NexusPackageImage([string]$Path) {
         $pointer = Get-ImageOffset (Read-U32 ($functions+4*$ordinal))
         $descriptor = Get-ImageOffset ((Read-U64 $pointer)-$imageBase)
         if ((Read-U64 $descriptor) -ne 0x4e58504b -or
-            (Read-U64 ($descriptor+8)) -ne 2 -or (Read-U64 ($descriptor+16)) -ne 168) {
+            (Read-U64 ($descriptor+8)) -ne 3 -or (Read-U64 ($descriptor+16)) -ne 168) {
             throw "Unsupported package image descriptor: $Path"
         }
         return @{Name=(Read-ImageString (Read-U64 ($descriptor+6*8)));

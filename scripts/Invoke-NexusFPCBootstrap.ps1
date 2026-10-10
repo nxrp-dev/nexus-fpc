@@ -3,7 +3,9 @@
 Clean or bootstrap native Windows x86-64 NexusFPC using FPC 3.2.2.
 .DESCRIPTION
 Uses GNU make explicitly and follows the Free Pascal source tree's documented
-clean/all bootstrap flow. Use -RegenerateMakefiles after changing build definitions
+clean/all bootstrap flow after building a seed compiler against the installed RTL.
+The seed can generate the current threadvar ABI before the first RTL cycle.
+Use -RegenerateMakefiles after changing build definitions
 or pruning targets so FPC's generated package/utility registration and Makefiles are
 refreshed from the current source tree before bootstrapping.
 RTL generation includes Makefile.rtl; Makefile.pkg generation uses -s.
@@ -121,6 +123,34 @@ function Get-GitBash {
         if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
     throw "Unable to locate Git Bash from $($gitCommand.Source)."
+}
+
+function New-BootstrapSeed {
+    # The installed compiler cannot generate the current System threadvar ABI.
+    # Compile the new compiler against its installed RTL first, without mixing
+    # either compiler's PPUs into the ordinary self-hosting cycle.
+    $seedRoot = Join-Path $runRoot 'seed'
+    $seedSource = Join-Path $seedRoot 'source'
+    $seedUnits = Join-Path $seedRoot 'units'
+    New-Item -ItemType Directory -Path $seedSource, $seedUnits -Force | Out-Null
+    $originalCompiler = Join-Path $SourceRoot 'compiler'
+    foreach ($file in Get-ChildItem -LiteralPath $originalCompiler -Recurse -File) {
+        if ($file.Extension -notin @('.pas', '.pp', '.inc') -or
+            $file.Name -in @('msgtxt.inc', 'msgidx.inc')) { continue }
+        $destination = Join-Path $seedSource $file.FullName.Substring($originalCompiler.Length + 1)
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
+        Copy-Item -LiteralPath $file.FullName -Destination $destination
+    }
+    $options = @('-n', "-Fu$bootstrapUnits\rtl", "-FU$seedUnits", "-FE$seedRoot")
+    Invoke-BootstrapStep 'seed-message-generator' $seedRoot $compiler ($options + @("$seedSource\utils\msg2inc.pp"))
+    Invoke-BootstrapStep 'seed-messages' $seedRoot "$seedRoot\msg2inc.exe" @(
+        "$SourceRoot\compiler\msg\errore.msg", "$seedSource\msg", 'msg')
+    $options += @('-O2', '-dx86_64', "-Fu$seedUnits")
+    foreach ($part in @('', 'x86_64', 'x86', 'systems')) {
+        $directory = Join-Path $seedSource $part
+        $options += @("-Fu$directory", "-Fi$directory")
+    }
+    Invoke-BootstrapStep 'seed-compiler' $seedRoot $compiler ($options + @("$seedSource\pp.pas"))
 }
 
 function Update-FpmakeAggregates {
@@ -379,6 +409,11 @@ try {
         Write-Host "Logs: $runRoot"
         return
     }
+    New-BootstrapSeed
+    $seedCompiler = Join-Path $runRoot 'seed\pp.exe'
+    $seedVersion = & $seedCompiler -iV
+    if ($LASTEXITCODE -ne 0) { throw 'Seed compiler did not report its version.' }
+    $makeArguments = @("FPC=$seedCompiler", "REQUIREDVERSION=$seedVersion", 'CPU_TARGET=x86_64', 'OS_TARGET=win64')
     Invoke-BootstrapStep 'bootstrap' $SourceRoot $make (@('all') + $makeArguments)
     foreach ($artifact in @('compiler\ppcx64.exe', 'build-stamp.x86_64-win64', 'base.build-stamp.x86_64-win64')) {
         $file = Get-Item -LiteralPath "$SourceRoot\$artifact"

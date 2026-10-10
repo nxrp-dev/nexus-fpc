@@ -51,8 +51,8 @@ type
 {$endif FPC_HAS_FEATURE_UNICODESTRINGS}
   TCriticalSectionHandler = Procedure (var cs);
   TCriticalSectionHandlerTryEnter = function (var cs):longint;
-  TInitThreadVarHandler = Procedure(var offset : dword;size : dword);
-  TRelocateThreadVarHandler = Function(offset : dword) : pointer;
+  TSetThreadVarContextHandler = Procedure(Context: Pointer);
+  TGetThreadVarContextHandler = Function: Pointer;
   TAllocateThreadVarsHandler = Procedure;
   TReleaseThreadVarsHandler = Procedure;
   TBasicEventHandler        = procedure(state:peventstate);
@@ -91,8 +91,8 @@ type
     EnterCriticalSection   : TCriticalSectionHandler;
     TryEnterCriticalSection: TCriticalSectionHandlerTryEnter;
     LeaveCriticalSection   : TCriticalSectionHandler;
-    InitThreadVar          : TInitThreadVarHandler;
-    RelocateThreadVar      : TRelocateThreadVarHandler;
+    SetThreadVarContext    : TSetThreadVarContextHandler;
+    GetThreadVarContext    : TGetThreadVarContextHandler;
     AllocateThreadVars     : TAllocateThreadVarsHandler;
     ReleaseThreadVars      : TReleaseThreadVarsHandler;
     BasicEventCreate       : TBasicEventCreateHandler;      // left in for a while.
@@ -122,7 +122,13 @@ Function SetThreadManager(Const NewTM : TThreadManager) : Boolean;
   It needs to be exported even if FPC_SECTION_THREADVARS is set as it relocates also the
   heap
 }
-procedure InitThreadVars(RelocProc : TRelocateThreadVarHandler);
+procedure InitThreadVars;
+function AllocateThreadVarContext: Pointer;
+procedure ReleaseThreadVarContext(Context: Pointer);
+procedure RegisterThreadVarTables(Tables: Pointer);
+procedure ReleaseThreadVarTables(Tables: Pointer);
+function IsThreadVarPointer(P: Pointer): Boolean;
+function fpc_threadvar_addr(Descriptor: Pointer): Pointer; compilerproc;
 procedure InitThread(stklen:SizeUInt);
 procedure DoneThread;
 

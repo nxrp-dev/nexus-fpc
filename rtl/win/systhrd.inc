@@ -80,253 +80,146 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
 *****************************************************************************}
 
     type
-      { If IsLibrary, prepended to threadvar blocks allocated with HeapAlloc to forcefully free them in DLL_PROCESS_DETACH (SysFiniMultithreading). }
       PThreadvarNode=^TThreadvarNode;
       TThreadvarNode=record
-        prev, next : PThreadvarNode;
+        Prev, Next: PThreadvarNode;
+        Context: Pointer;
       end;
-
-    const
-      { Align threadvars on 2 * sizeof(pointer)... HeapAlloc has this alignment, so no point in more. }
-      AlignedThreadvarNodeSize=(sizeof(TThreadVarNode)+2*sizeof(pointer)-1) and -(2*sizeof(pointer));
 
     var
-      // public names are used by heaptrc unit
-      threadvarblocksize : dword; public name '_FPC_TlsSize';
       {$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}
-      TLSKey : PDword = nil; public name '_FPC_TlsKey';
-      {$else FPC_HAS_INDIRECT_ENTRY_INFORMATION}
-      TLSKeyVar : DWord = $ffffffff;
-      TLSKey : PDWord = @TLSKeyVar; public name '_FPC_TlsKey';
-      {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
-      DllProcessAttachPerformed : boolean;
+      TLSKey: PDword = nil; public name '_FPC_TlsKey';
+      {$else}
+      TLSKeyVar: DWord = $ffffffff;
+      TLSKey: PDword = @TLSKeyVar; public name '_FPC_TlsKey';
+      {$endif}
+      DllProcessAttachPerformed: Boolean;
+      AllThreadvarsLock: TRTLCriticalSection;
+      AllThreadvars: PThreadvarNode;
 
-      { AllThreadvars* are used only when IsLibrary. (Careful!)
-        Could be used when not IsLibrary as a no-op to simplify the code,
-        but this would require publishing SysFiniMultithreading to be called from sysinit.pp:Exec_Tls_callback.DLL_PROCESS_DETACH. }
-      AllThreadvarsLock : TRTLCriticalSection;
-      AllThreadvars : PThreadvarNode;
-
-    procedure SysInitThreadvar(var offset : dword;size : dword);
-      const
-        Alignment=2*sizeof(pointer);
-      begin
-        offset:=threadvarblocksize;
-        inc(threadvarblocksize,dword((size+(Alignment-1)) and dword(-Alignment)));
-      end;
-
-
-    procedure SysAllocateThreadVars; public name '_FPC_SysAllocateThreadVars';
-      var
-        tn,nx : PThreadvarNode;
-        prepend,errorsave : dword;
-      begin
-        { we've to allocate the memory from system  }
-        { because the FPC heap management uses      }
-        { exceptions which use threadvars but       }
-        { these aren't allocated yet ...            }
-        { allocate room on the heap for the thread vars }
-        errorsave:=GetLastError;
-        if tlskey^=$ffffffff then
-          RunError(226);
-        if TlsGetValue(tlskey^)=nil then
-          begin
-            prepend:=ord(IsLibrary)*AlignedThreadvarNodeSize;
-            tn:=HeapAlloc(GetProcessHeap,HEAP_ZERO_MEMORY,prepend+threadvarblocksize);
-            if tn=nil then
-              RunError(226);
-            TlsSetValue(tlskey^,pointer(tn)+prepend);
-
-            if IsLibrary then
-            begin
-              { Add tn to AllThreadvars. }
-              WinEnterCriticalSection(AllThreadvarsLock);
-              nx:=AllThreadvars;
-              tn^.next:=nx; { “tn^.prev := nil” can be omitted thanks to HEAP_ZERO_MEMORY. }
-              if Assigned(nx) then
-                nx^.prev:=tn;
-              AllThreadvars:=tn;
-              WinLeaveCriticalSection(AllThreadvarsLock);
-            end;
-          end;
-        SetLastError(errorsave);
-      end;
-
-    function SysRelocateThreadvar(offset : dword) : pointer; forward;
-
-    procedure SysInitTLS;
-      begin
-        { do not check IsMultiThread, as program could have altered it, out of Delphi habit }
-
-        { the thread attach/detach code uses locks to avoid multiple calls of this }
-        if TLSKey^=$ffffffff then
-         begin
-           { We're still running in single thread mode, setup the TLS }
-           if IsLibrary then
-             WinInitCriticalSection(AllThreadvarsLock);
-           TLSKey^:=TlsAlloc;
-           InitThreadVars(@SysRelocateThreadvar);
-         end;
-      end;
-
-
-    procedure SysFiniMultithreading;
-      var
-        tn,nx : PThreadvarNode;
-      begin
-        if TLSKey^=$ffffffff then
-          exit;
-        TlsFree(TLSKey^);
-        TLSKey^:=$ffffffff;
-
-        if IsLibrary then
+    procedure SysSetThreadVarContext(Context: Pointer);
+    var N: PThreadvarNode; SavedError: DWord;
+    begin
+      SavedError:=GetLastError;
+      N:=HeapAlloc(GetProcessHeap,HEAP_ZERO_MEMORY,SizeOf(N^));
+      if N=nil then ThreadVarFatal;
+      N^.Context:=Context;
+      if not TlsSetValue(TLSKey^,N) then ThreadVarFatal;
+      if IsLibrary then
         begin
-          { Purge all remaining threadvars! System doesn’t preface DLL_PROCESS_DETACH by sending DLL_THREAD_DETACH to all threads,
-            so think of it as of emulating the threadvar destroying part of DLL_THREAD_DETACH for all threads that require it. }
-          tn:=AllThreadvars;
-          AllThreadvars:=nil;
-          while Assigned(tn) do
-          begin
-            nx:=tn^.next;
-            HeapFree(GetProcessHeap,0,tn);
-            tn:=nx;
-          end;
-          WinDoneCriticalSection(AllThreadvarsLock);
-        end;
-      end;
-
-
-{ Directly access thread environment block (TEB). If there is a value, use it. If there is not, jump to TrulyRelocateThreadvar that can allocate it.
-  TrulyRelocateThreadvar is several (5+) times slower by itself; shortcutting SetLastError on errorsave = 0 helps a bit (reduces to 3.5× maybe :D).
-
-  General info (in particular, stories about de facto stability guarantees):
-  https://en.wikipedia.org/wiki/Win32_Thread_Information_Block
-
-  TEB layout:
-  https://github.com/wine-mirror/wine/blob/badaed641928edb8f2426d9f12d16c88b479e1e8/include/winternl.h#L431
-
-  “Why load fs:[0x18] into a register and then dereference that, instead of just going for fs:[n] directly?”
-  https://devblogs.microsoft.com/oldnewthing/20220919-00/?p=107195
-  TL;DR: even in Windows sources, TlsGetValue is written in relatively high-level manner and not overly optimized. }
-
-{$undef FPC_HAS_SYSRELOCATETHREADVAR_ASM}
-
-{$ifndef wince} { Don’t know a thing, maybe WinCE TEB is compatible... :D https://stackoverflow.com/questions/1099311/windows-ce-internals-teb-thread-environment-block }
-{$if defined(cpui386)}
-  {$define FPC_HAS_SYSRELOCATETHREADVAR_ASM}
-    function TrulyRelocateThreadvar(offset : dword) : pointer; forward;
-
-    function SysRelocateThreadvar(offset : dword) : pointer; assembler; nostackframe;
-      { eax = offset }
-      const
-        TlsSlots = $E10; { void* TlsSlots[64] @ fs:[E10h]. }
-        TlsExpansionSlots = $F94; { void** TlsExpansionSlots @ fs:[F94h] }
-      asm
-        mov  TLSKey, %edx
-        mov  (%edx), %edx { edx = TLSKey^. }
-
-        cmp  $0x40, %edx { There are 64 static slots + 1024 dynamic slots. }
-        jae  .LExp
-        mov  %fs:TlsSlots(,%edx,4), %edx { Read TLSKey^-th slot. }
-        test %edx, %edx
-        jz   .LOops
-        add  %edx, %eax { result := TlsGetValue(TLSKey^) + offset. }
-        ret
-
-.LOops: jmp  TrulyRelocateThreadvar { Save on relative jumps :) }
-
-.LExp:  cmp  $0x440, %edx
-        jae  .LOops { Will fail as 0x440 = 1088 = 64 static + 1024 dynamic is the limit on TLS indices. }
-        mov  %fs:TlsExpansionSlots, %ecx { ecx = TlsExpansionSlots. }
-        test %ecx, %ecx
-        jz   .LOops { No TlsExpansionSlots allocated. }
-        mov  -0x100(%ecx,%edx,4), %edx { Read (TLSKey^ − 64)-th dynamic slot. }
-        test %edx, %edx
-        jz   .LOops
-        add  %edx, %eax { result := TlsGetValue(TLSKey^) + offset. }
-      end;
-{$elseif defined(cpux86_64)}
-  {$define FPC_HAS_SYSRELOCATETHREADVAR_ASM}
-    function TrulyRelocateThreadvar(offset : dword) : pointer; forward;
-
-    function SysRelocateThreadvar(offset : dword) : pointer; assembler; nostackframe;
-      { ecx = offset }
-      const { Same as above but 64-bit: TEB pointer is in GS register, different offsets. }
-        TlsSlots = $1480;
-        TlsExpansionSlots = $1780;
-      asm
-        mov  TLSKey(%rip), %rdx
-        mov  (%rdx), %edx { edx = TLSKey^. }
-
-        cmp  $0x40, %edx
-        jae  .LExp
-        mov  %gs:TlsSlots(,%rdx,8), %rax
-        test %rax, %rax
-        jz   .LOops
-        add  %rcx, %rax { Hopefully offset is zero-extended on entry. }
-        ret
-
-.LOops: jmp  TrulyRelocateThreadvar
-
-.LExp:  cmp  $0x440, %edx
-        jae  .LOops
-        mov  %gs:TlsExpansionSlots, %rax
-        test %rax, %rax
-        jz   .LOops
-        mov  -0x200(%rax,%rdx,8), %rax
-        test %rax, %rax
-        jz   .LOops
-        add  %rcx, %rax
-      end;
-{$endif implement SysRelocateThreadvar with assembly}
-{$endif not wince}
-
-
-    function {$ifdef FPC_HAS_SYSRELOCATETHREADVAR_ASM} TrulyRelocateThreadvar {$else} SysRelocateThreadvar {$endif} (offset : dword) : pointer;
-      var
-        dataindex : pointer;
-        errorsave : dword;
-      begin
-        errorsave:=GetLastError;
-        dataindex:=TlsGetValue(tlskey^);
-        if dataindex=nil then
-          begin
-            SysAllocateThreadVars;
-            dataindex:=TlsGetValue(tlskey^);
-            InitThread($1000000);
-          end;
-        SetLastError(errorsave);
-        Result:=DataIndex+Offset;
-      end;
-
-
-    procedure SysReleaseThreadVars;
-      var
-        tn,prev,next: PThreadvarNode;
-      begin
-        if TLSKey^=$ffffffff then
-          exit;
-        tn:=TlsGetValue(TLSKey^);
-        if tn=nil then
-          exit;
-        TlsSetValue(TLSKey^,nil);
-        if IsLibrary then
-        begin
-          dec(pointer(tn),AlignedThreadvarNodeSize);
-          { Remove tn from AllThreadvars. }
           WinEnterCriticalSection(AllThreadvarsLock);
-          prev:=tn^.prev;
-          next:=tn^.next;
-          if Assigned(next) then
-            next^.prev:=prev;
-          if Assigned(prev) then
-            prev^.next:=next
-          else
-            AllThreadvars:=next;
+          N^.Next:=AllThreadvars;
+          if N^.Next<>nil then N^.Next^.Prev:=N;
+          AllThreadvars:=N;
           WinLeaveCriticalSection(AllThreadvarsLock);
         end;
-        HeapFree(GetProcessHeap,0,tn);
-      end;
+      SetLastError(SavedError);
+    end;
+
+    procedure SysAllocateThreadVars; public name '_FPC_SysAllocateThreadVars';
+    var SavedError: DWord;
+    begin
+      SavedError:=GetLastError;
+      if TLSKey^=$ffffffff then ThreadVarFatal;
+      if TlsGetValue(TLSKey^)=nil then
+        SysSetThreadVarContext(AllocateThreadVarContext);
+      SetLastError(SavedError);
+    end;
+
+    procedure SysInitTLS;
+    begin
+      if TLSKey^=$ffffffff then
+        begin
+          if IsLibrary then WinInitCriticalSection(AllThreadvarsLock);
+          TLSKey^:=TlsAlloc;
+          if TLSKey^=$ffffffff then ThreadVarFatal;
+          InitThreadVars;
+        end;
+    end;
+
+    procedure SysFiniMultithreading;
+    var N, Next: PThreadvarNode;
+    begin
+      if TLSKey^=$ffffffff then Exit;
+      TlsFree(TLSKey^);
+      TLSKey^:=$ffffffff;
+      ThreadVarContextProc:=nil;
+      if IsLibrary then
+        begin
+          N:=AllThreadvars; AllThreadvars:=nil;
+          while N<>nil do
+            begin
+              Next:=N^.Next;
+              ReleaseThreadVarContext(N^.Context);
+              HeapFree(GetProcessHeap,0,N);
+              N:=Next;
+            end;
+          WinDoneCriticalSection(AllThreadvarsLock);
+        end;
+    end;
+
+{$ifdef cpux86_64}
+    function SysGetThreadVarContextSlow: Pointer; forward;
+    function SysGetThreadVarContext: Pointer; assembler; nostackframe;
+    asm
+      mov TLSKey(%rip),%rdx
+      mov (%rdx),%edx
+      cmp $0x40,%edx
+      jae .LExpansion
+      mov %gs:0x1480(,%rdx,8),%rax
+      test %rax,%rax
+      jz .LUnallocated
+      mov 16(%rax),%rax
+      ret
+.LExpansion:
+      cmp $0x440,%edx
+      jae .LUnallocated
+      mov %gs:0x1780,%rax
+      test %rax,%rax
+      jz .LUnallocated
+      mov -0x200(%rax,%rdx,8),%rax
+      test %rax,%rax
+      jz .LUnallocated
+      mov 16(%rax),%rax
+      ret
+.LUnallocated:
+      jmp SysGetThreadVarContextSlow
+    end;
+{$endif}
+
+    function {$ifdef cpux86_64}SysGetThreadVarContextSlow{$else}SysGetThreadVarContext{$endif}: Pointer;
+    var N: PThreadvarNode; SavedError: DWord;
+    begin
+      SavedError:=GetLastError;
+      N:=TlsGetValue(TLSKey^);
+      if N=nil then
+        begin
+          SysAllocateThreadVars;
+          N:=TlsGetValue(TLSKey^);
+          InitThread($1000000);
+        end;
+      SetLastError(SavedError);
+      Result:=N^.Context;
+    end;
+
+    procedure SysReleaseThreadVars;
+    var N: PThreadvarNode;
+    begin
+      if TLSKey^=$ffffffff then Exit;
+      N:=TlsGetValue(TLSKey^);
+      if N=nil then Exit;
+      TlsSetValue(TLSKey^,nil);
+      if IsLibrary then
+        begin
+          WinEnterCriticalSection(AllThreadvarsLock);
+          if N^.Next<>nil then N^.Next^.Prev:=N^.Prev;
+          if N^.Prev<>nil then N^.Prev^.Next:=N^.Next
+          else AllThreadvars:=N^.Next;
+          WinLeaveCriticalSection(AllThreadvarsLock);
+        end;
+      ReleaseThreadVarContext(N^.Context);
+      HeapFree(GetProcessHeap,0,N);
+    end;
 
 
 {*****************************************************************************
@@ -749,8 +642,8 @@ begin
     EnterCriticalSection   :=@SysEnterCriticalSection;
     TryEnterCriticalSection:=@SysTryEnterCriticalSection;
     LeaveCriticalSection   :=@SysLeaveCriticalSection;
-    InitThreadVar          :=@SysInitThreadVar;
-    RelocateThreadVar      :=@SysRelocateThreadVar;
+    SetThreadVarContext    :=@SysSetThreadVarContext;
+    GetThreadVarContext    :=@SysGetThreadVarContext;
     AllocateThreadVars     :=@SysAllocateThreadVars;
     ReleaseThreadVars      :=@SysReleaseThreadVars;
     BasicEventCreate       :=@intBasicEventCreate;

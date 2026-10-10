@@ -155,7 +155,7 @@ implementation
       finish('FPC_PACKAGE_DEPENDENCY_IDS',sec_rodata);
       start;
       number($4e58504b);
-      number(2);
+      number(3);
       number(21*8);
       number((wordversion shl 8) or CurrentPPULongVersion);
       number(ord(target_info.system));

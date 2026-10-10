@@ -18,42 +18,20 @@ Const
 
 
 var
-  threadvarblocksize : dword = 0;
-  threadvarblock : array[1..64*10240] of byte;
   threadcount : Integer;
 
-procedure FakeInitThreadvar(var offset : dword;size : dword);
-  begin
-    offset:=threadvarblocksize;
-    inc(threadvarblocksize,size);
-  end;
+procedure FakeSetThreadVarContext(Context: Pointer);
+begin
+end;
 
-
+function FakeGetThreadVarContext: Pointer;
+begin
+  Result:=nil;
+end;
 
 procedure FakeAllocateThreadVars;
 begin
 end;
-
-
-procedure FakethreadCleanup(p: pointer); cdecl;
-
-begin
-end;
-
-procedure HookThread;
-begin
-  { Allocate local thread vars, this must be the first thing,
-    because the exception management and io depends on threadvars }
-  FakeAllocateThreadVars;
-  InitThread(1000000000);
-end;
-
-
-function FakeRelocateThreadvar(offset : dword) : pointer;
-begin
-  FakeRelocateThreadvar:=@ThreadVarBlock;
-end;
-
 
 procedure FakeReleaseThreadVars;
 begin
@@ -276,8 +254,8 @@ begin
     EnterCriticalSection   :=@FakeEnterCriticalSection;
     TryEnterCriticalSection:=@FakeTryEnterCriticalSection;
     LeaveCriticalSection   :=@FakeLeaveCriticalSection;
-    InitThreadVar          :=@FakeInitThreadVar;
-    RelocateThreadVar      :=@FakeRelocateThreadVar;
+    SetThreadVarContext    :=@FakeSetThreadVarContext;
+    GetThreadVarContext    :=@FakeGetThreadVarContext;
     AllocateThreadVars     :=@FakeAllocateThreadVars;
     ReleaseThreadVars      :=@FakeReleaseThreadVars;
     BasicEventCreate       :=@FakeBasicEventCreate;

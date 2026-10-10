@@ -2477,13 +2477,29 @@ implementation
                           end
                         else
                           begin
-                            { TODO: !!! FIXME: dwarf for thread vars !!!}
-                            { This is only a minimal change to at least be able to get a value
-                              in only one thread is present PM 2014-11-21, like for stabs format }
+                            { The existing debugger contract exposes the main
+                              context. Resolve it through the image descriptor,
+                              rather than describing the metadata as a value. }
                             templist.concat(tai_const.create_8bit(ord(DW_OP_addr)));
-                            templist.concat(tai_const.Create_type_name(aitconst_ptr_unaligned,sym.mangledname,
-                              offset+sizeof(pint)));
-                            blocksize:=1+sizeof(puint);
+                            templist.concat(tai_const.Create_type_name(aitconst_ptr_unaligned,sym.mangledname,0));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_dup)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_deref)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_plus_uconst)));
+                            templist.concat(tai_const.create_uleb128bit(4*sizeof(puint)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_deref)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_swap)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_plus_uconst)));
+                            templist.concat(tai_const.create_uleb128bit(sizeof(puint)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_deref)));
+                            templist.concat(tai_const.create_8bit(ord(DW_OP_plus)));
+                            blocksize:=9+sizeof(puint)+Lengthuleb128(4*sizeof(puint))+Lengthuleb128(sizeof(puint));
+                            if offset<>0 then
+                              begin
+                                templist.concat(tai_const.create_8bit(ord(DW_OP_consts)));
+                                templist.concat(tai_const.create_sleb128bit(offset));
+                                templist.concat(tai_const.create_8bit(ord(DW_OP_plus)));
+                                inc(blocksize,2+Lengthsleb128(offset));
+                              end;
                           end;
 {$endif wasm}
                       end

@@ -2605,16 +2605,11 @@ var
 {$endif}
 
 {$ifdef windows}
-var
 {$if not (defined(win32) or defined(win64))}
+var
    sdata : ptruint; external name '__data_start__';
    ebss : ptruint; external name '__bss_end__';
 {$endif}
-   TLSKey : PDWord; external name '_FPC_TlsKey';
-   TLSSize : DWord; external name '_FPC_TlsSize';
-
-function TlsGetValue(dwTlsIndex : DWord) : pointer;
-  {$ifdef wince}cdecl{$else}stdcall{$endif};external KernelDLL name 'TlsGetValue';
 {$endif}
 
 {$ifdef BEOS}
@@ -2635,12 +2630,14 @@ var
   get_ebp,stack_top : longword;
   bss_end : longword;
 {$endif go32v2}
-{$ifdef windows}
-  datap : pointer;
-{$endif windows}
 begin
   if p=nil then
     runerror(204);
+
+  { Threadvar blocks are OS allocations, outside both image data and the
+    traced Pascal heap, on every target using the common context model. }
+  if System.IsThreadVarPointer(p) then
+    exit;
 
 {$ifdef go32v2}
   if ptruint(p)<$1000 then
@@ -2675,14 +2672,6 @@ begin
   if (ptruint(p)>=ptruint(@sdata)) and (ptruint(p)<ptruint(@ebss)) then
     exit;
 {$endif}
-  { is program multi-threaded and p inside Threadvar range? }
-  if TlsKey^<>dword(-1) then
-    begin
-      datap:=TlsGetValue(tlskey^);
-      if ((ptruint(p)>=ptruint(datap)) and
-          (ptruint(p)<ptruint(datap)+TlsSize)) then
-        exit;
-    end;
 {$endif windows}
 
 {$IFDEF OS2}

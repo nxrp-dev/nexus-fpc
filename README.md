@@ -29,8 +29,10 @@ Build and run real late-loading console/GUI examples against that SDK:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot C:\temp\nxpkg-sdk -OutputRoot C:\temp\nxpkg-late -RunExamples
 ```
 
-Use the SDK path printed by the first command. Late loading is synchronous and
-rejects new package TLS; see the guide for unload lifetimes and build identities.
+Use the SDK path printed by the first command. Late loading is synchronous.
+[Unified threadvar storage](nexusfpc-threadvar-design.md) supports late package
+storage under the single-threaded lifecycle contract; see the guide for unload
+lifetimes and build identities.
 
 ## License
 The compiler is licensed under GPL v2, the run-time files are licensed under modified LGPL. 

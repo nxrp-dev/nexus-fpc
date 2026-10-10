@@ -146,7 +146,8 @@ The approved contract is in [the runtime design](../../nexusfpc-dynamic-packages
 The foundation owns System/ObjPas/SysUtils; generated EXE startup explicitly
 activates packages. Native LoadLibrary only maps them. This low-level suite uses
 caller-held mappings; the managed LoadPackage/UnloadPackage suite below exercises
-native release and registry cleanup. General late-loaded TLS remains deferred.
+native release and registry cleanup. The unified threadvar suite below covers
+late-loaded TLS within the single-threaded package lifecycle contract.
 No worker threads or new synchronization were introduced.
 
 Final 2026-10-09 runtime validation passed **99/99 steps** from a fresh directory:
@@ -206,7 +207,7 @@ callback cleanup, restoration of overridden component initialization handlers,
 native unmapping, reload and startup pinning.
 
 Separate processes inject initialization/finalization/cleanup failures, exercise
-new and already active dependencies, reject new TLS, nested lifecycle calls,
+new and already active dependencies, initialize/finalize/reload new TLS, reject nested lifecycle calls,
 missing/non-package images, duplicate images, SDK/ABI/dependency mismatches, and
 verify exception destruction before rollback releases the DLL. Failed compiler
 and linker invocations preserve the previous generation, as do rejected stale
@@ -214,3 +215,22 @@ consumers. Artifact checks reject mismatched PCP/DLL pairs and manifest tamperin
 
 The [load/unload design](../../nexusfpc-dynamic-packages-load-unload-design.md)
 records the current contract, tradeoffs and final validation results.
+
+## Unified threadvar storage
+
+Rebuild a matching SDK, then run the same sequential suite on Windows or Linux:
+
+```text
+python tests/dynamic-packages/run_threadvar_package_tests.py --sdk SDK_DIRECTORY --output NEW_DIRECTORY
+```
+
+The suite checks a startup owner and 24 late owners, shared imported variables,
+32-byte explicit alignment, managed strings, directory growth without moving
+variables, repeated unload/reload, an independent native loader reference, and
+initialization rollback. It creates no worker threads. Existing ordinary thread
+manager and Win64 DLL contract tests validate the reused platform adapters.
+The ordinary `tests/test/tthreadvarpointer.pp` regression also checks direct and
+interior pointers into threadvar blocks through HeapTrc on both platforms.
+
+The [design and validation report](../../nexusfpc-threadvar-design.md) records the
+new ABI, measured costs and the remaining multithreaded lifecycle restriction.

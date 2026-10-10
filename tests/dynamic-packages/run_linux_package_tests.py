@@ -25,7 +25,7 @@ def inspect(directory):
         libraries.append(lib)
         address = ctypes.c_void_p.in_dll(lib, 'FPC_PACKAGE_INFO').value
         words = Descriptor.from_address(address).w
-        assert tuple(words[:3]) == (0x4e58504b, 2, 168)
+        assert tuple(words[:3]) == (0x4e58504b, 3, 168)
         assert list((ctypes.c_size_t * 6).from_address(words[16])) == [0] * 6
     print('PASS native mapping does not activate Pascal packages')
 
@@ -213,7 +213,8 @@ begin Trace:=Trace+'D'; inherited Destroy; end;
     package('callbackfail', {'CallbackFailUnit': unit('CallbackFailUnit', error_class +
         "procedure FailedCleanup; begin Trace:=Trace+'K'; raise ELocalFailure.Create('callback-marker'); end;",
         "Trace:=Trace+'Y'; RegisterPackageCleanup(PackageModuleFromAddress(@FailedCleanup),@FailedCleanup);", "Trace:=Trace+'y';")})
-    package('newtls', {'NewTLSUnit': unit('NewTLSUnit', 'threadvar Value: LongInt;', "Value:=42; Trace:=Trace+'T';")})
+    package('newtls', {'NewTLSUnit': unit('NewTLSUnit', 'threadvar Value: LongInt;', "if Value<>0 then raise Exception.Create('TLS not zero'); Value:=42; Trace:=Trace+'T';",
+        "if Value<>42 then raise Exception.Create('TLS lost before finalization'); Trace:=Trace+'t';")})
     package('nestedload', {'NestedLoadUnit': unit('NestedLoadUnit', initialization="Trace:=Trace+'Q'; LoadPackage('libpluginleft.so');")})
     package('nestedunload', {'NestedUnloadUnit': unit('NestedUnloadUnit', 'procedure Marker; begin end;',
         "Trace:=Trace+'U';", "Trace:=Trace+'u'; UnloadPackage(PackageModuleFromAddress(@Marker));")})

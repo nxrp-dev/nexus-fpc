@@ -1,10 +1,17 @@
 # NexusFPC dynamic packages: gap analysis and implementation backlog
 
+2026-10-10 update: the [unified threadvar design](nexusfpc-threadvar-design.md)
+supersedes the earlier late-TLS rejection and unchanged-PPU statements below.
+Startup and late images use one model. Rebuild all artifacts for descriptor v3
+and PPU long version 34. Coordinating package lifecycle across live threads is
+still deferred; TLS-bearing load/unload requires `IsMultiThread=False`.
+
+
 Date: 2026-10-09
 
 ## Assessment and scope
 
-FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has experimental Win64 and Linux x86-64/glibc shared RTL runtimes with explicit EXE startup activation, per-image contexts, and synchronous LoadPackage/UnloadPackage. They include reference accounting, rollback, image-owned RTL registration cleanup and strict SDK/package identities. Other CPU/libc package runtimes, late-loaded TLS, IDE integration and Delphi binary compatibility remain outside the implemented scope. The [Linux implementation report](nexusfpc-dynamic-packages-linux.md) records the Linux SDK, validation and remaining platform work.
+FPC's historical dynamic-package work provides a substantial compiler foundation. This checkout now has experimental Win64 and Linux x86-64/glibc shared RTL runtimes with explicit EXE startup activation, per-image contexts, and synchronous LoadPackage/UnloadPackage. They include reference accounting, rollback, image-owned RTL registration cleanup and strict SDK/package identities. Other CPU/libc package runtimes, multithreaded late-TLS lifecycle, IDE integration and Delphi binary compatibility remain outside the implemented scope. The [Linux implementation report](nexusfpc-dynamic-packages-linux.md) records the Linux SDK, validation and remaining platform work.
 
 This document consolidates the source-based gap analyses, compatibility clarification, and the original Windows implementation results. Those milestones were committed before the Linux pass, whose starting baseline is `2acbb37a`. The Windows SDK includes source-only/relocated console and GUI builds, runtime tests and ordinary regressions. The separate Linux report records the current port and its evidence; the numbered milestone results below retain their original scope and dates.
 
@@ -358,7 +365,7 @@ Each item is intended to be independently reviewable and testable. Dependencies 
 | 12 | **Implemented for experimental Win64.** Explicit `LoadPackage`, dependency retention, descriptor/ownership checks, repeat loads and rollback. | `FPCPackage`, `fpcpackageloader.inc`, SysUtils facade; items 7-11. | Genuine late loading and clean/failed rollback checks; no new TLS or lifecycle reentrancy. |
 | 13 | **Implemented for the synchronous lifetime contract.** Separate explicit/dependency refs, startup pinning and finalization before unmapping. | RTL package manager; item 12. | A diamond retains its shared dependency until the last branch releases it; cleanup failure retains images. |
 | 14 | **Implemented for RTL-owned registrations.** Classes, aliases, component and conversion callbacks, enum aliases, native/string resources and application cleanup hooks. | Classes, TypInfo, SysUtils, loader; items 8 and 13. | Unload/reload clears stale RTL pointers and restores component initialization overrides. Application-held references remain caller-owned. |
-| 15 | **Deferred by user instruction.** Package TLS for existing/new threads and teardown requires joint design. New late-loaded threadvars are currently rejected. | `threadvr.inc`, platform TLS/thread code, generated TLS tables; items 8 and 12-13. | No threaded solution is included in this pass. |
+| 15 | **Unified storage implemented for synchronous use.** Startup/late images share one descriptor and resolver model. TLS-bearing load/unload requires `IsMultiThread=False`; coordinating live threads remains deferred. | `threadvr.inc`, platform TLS/thread code, generated TLS tables; items 8 and 12-13. | No threaded solution is included in this pass. |
 | 16 | **Implemented within the matching SDK contract.** PCP v4/descriptor v2, SDK/package/required-build identities and immutable bundle publication. | Compiler metadata/descriptor, runtime checks, SDK/build helpers. | Incompatible images fail before initialization; failed compilation/linking and stale-consumer updates preserve the selected generation. |
 
 Items 1-4 improve existing dormant package infrastructure without requiring the full runtime. Item 5 and the symbol work in item 6 expose the compiler/linker integration requirements. The descriptor and module-context contract in items 7-8 should anchor the runtime implementation.

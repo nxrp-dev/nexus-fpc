@@ -16,9 +16,7 @@
 
 Var
   CurrentTM : TThreadManager;
-{$ifndef THREADVAR_RELOCATED_ALREADY_DEFINED}
-  fpc_threadvar_relocate_proc : TRelocateThreadVarHandler; public name 'FPC_THREADVAR_RELOCATE';
-{$endif THREADVAR_RELOCATED_ALREADY_DEFINED}
+  ThreadVarContextProc : TGetThreadVarContextHandler;
 
 {$ifndef HAS_GETCPUCOUNT}
     function GetCPUCount: LongWord;
@@ -508,20 +506,6 @@ begin
   Result:=-1;
 end;
 
-procedure NoInitThreadvar(var offset : dword;size : dword);
-
-begin
-  NoThreadError;
-end;
-
-function NoRelocateThreadvar(offset : dword) : pointer;
-
-begin
-  NoThreadError;
-  result:=nil;
-end;
-
-
 function  NoBasicEventCreate(EventAttributes : Pointer; AManualReset,InitialState : Boolean;const Name : ansistring):pEventState;
 
 begin
@@ -606,8 +590,8 @@ const
          EnterCriticalSection   : TCriticalSectionHandler(@NoThreadError);
          TryEnterCriticalSection: TCriticalSectionHandlerTryEnter(@NoThreadError);
          LeaveCriticalSection   : TCriticalSectionHandler(@NoThreadError);
-         InitThreadVar          : TInitThreadVarHandler(@NoThreadError);
-         RelocateThreadVar      : TRelocateThreadVarHandler(@NoThreadError);
+         SetThreadVarContext    : TSetThreadVarContextHandler(@NoThreadError);
+         GetThreadVarContext    : TGetThreadVarContextHandler(@NoThreadError);
          AllocateThreadVars     : @NoThreadError;
          ReleaseThreadVars      : @NoThreadError;
          BasicEventCreate       : TBasicEventCreateHandler(@NoThreadError);
@@ -642,8 +626,8 @@ const
          EnterCriticalSection   : @NoCriticalSection;
          TryEnterCriticalSection: @NoTryEnterCriticalSection;
          LeaveCriticalSection   : @NoCriticalSection;
-         InitThreadVar          : @NoInitThreadVar;
-         RelocateThreadVar      : @NoRelocateThreadVar;
+         SetThreadVarContext    : TSetThreadVarContextHandler(@NoThreadError);
+         GetThreadVarContext    : TGetThreadVarContextHandler(@NoThreadError);
          AllocateThreadVars     : @NoThreadError;
          ReleaseThreadVars      : @NoThreadError;
          BasicEventCreate       : @NoBasicEventCreate;

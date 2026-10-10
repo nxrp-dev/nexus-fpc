@@ -35,9 +35,6 @@ unit i_linux;
             name         : 'Linux for i386';
             shortname    : 'Linux';
             flags        : [tf_needs_symbol_size,tf_pic_uses_got,tf_smartlink_sections,
-{$ifdef tls_threadvars}
-                            tf_section_threadvars,
-{$endif tls_threadvars}
                             tf_needs_symbol_type,tf_files_case_sensitive,
                             tf_needs_dwarf_cfi,tf_has_winlike_resources,
                             tf_safecall_exceptions,tf_safecall_clearstack,
@@ -107,9 +104,6 @@ unit i_linux;
             name         : 'Linux for x86-64';
             shortname    : 'Linux';
             flags        : [tf_smartlink_sections,tf_needs_symbol_size,tf_needs_dwarf_cfi,
-{$ifdef tls_threadvars}
-                            tf_section_threadvars,
-{$endif tls_threadvars}
                             tf_library_needs_pic,tf_needs_symbol_type,tf_files_case_sensitive,
                             tf_has_winlike_resources,tf_safecall_exceptions,tf_safecall_clearstack
 

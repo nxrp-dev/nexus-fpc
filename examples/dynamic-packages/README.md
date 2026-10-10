@@ -48,7 +48,8 @@ are required to run an application; the compiler, PCPs and startup units are bui
 inputs. Build helpers verify SDK and bundle hashes and paired PCP/DLL identities.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
-experimental packages for PCP v4 and descriptor v2; ordinary PPU format is unchanged.
+the compiler, RTL, units and packages together for PCP v4, descriptor v3 and
+PPU v208/long 34. Previous threadvar binary layouts are not supported.
 
 ## Build your own package or application
 
@@ -154,8 +155,10 @@ This implements startup and late-loaded package consumption on experimental Win6
 the approved [explicit startup contract](../../nexusfpc-dynamic-packages-runtime-design.md):
 DLL entry records the handle; generated EXE startup activates packages after
 native loading. Native LoadLibrary alone does not activate Pascal packages.
-New late-loaded `threadvar` storage is rejected. No threading/TLS redesign is
-included; item 15 remains deferred. Non-Win64 package runtimes, IDE packages,
+Startup and late-loaded `threadvar` declarations use one image-owned storage
+model. TLS-bearing load/unload requires `IsMultiThread=False`; coordinating
+package storage across live threads remains deferred. See the
+[threadvar design](../../nexusfpc-threadvar-design.md). Non-Win64 package runtimes, IDE packages,
 Delphi binary compatibility and arbitrary compiler/text-model combinations are
 outside this experimental SDK contract. The recorded
 [tradeoffs](../../nexusfpc-dynamic-packages-load-unload-design.md) explain the limits.

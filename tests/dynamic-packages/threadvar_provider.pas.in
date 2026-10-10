@@ -1,0 +1,41 @@
+unit Threadvar_Provider_@INDEX@;
+{$mode objfpc}{$H+}
+interface
+implementation
+uses SysUtils, Threadvar_Contracts;
+type
+  TAligned = record
+    Values: array[0..15] of QWord;
+  end align 32;
+threadvar
+  Value: QWord;
+  Text: AnsiString;
+  Aligned: TAligned;
+function Address: Pointer;
+begin Result:=@Value; end;
+function SharedAddress: Pointer;
+begin Result:=@SharedValue; end;
+procedure Check;
+begin
+  if Value<>1000+@INDEX@ then raise Exception.Create('threadvar scalar: @INDEX@');
+  if Length(Text)<>300+@INDEX@ then raise Exception.Create('threadvar string: @INDEX@');
+  if Aligned.Values[15]<>Value then raise Exception.Create('threadvar record: @INDEX@');
+  if (PtrUInt(@Aligned) and 31)<>0 then
+    raise Exception.Create('threadvar alignment: @INDEX@ '+IntToHex(PtrUInt(@Aligned),16));
+end;
+initialization
+  if (Value<>0) or (Text<>'') or (Aligned.Values[15]<>0) then
+    raise Exception.Create('threadvar storage not reset: @INDEX@');
+  Value:=1000+@INDEX@;
+  Text:=StringOfChar('x',300+@INDEX@);
+  Aligned.Values[15]:=Value;
+  Probes[@INDEX@].Address:=@Address;
+  Probes[@INDEX@].SharedAddress:=@SharedAddress;
+  Probes[@INDEX@].Check:=@Check;
+  Inc(Initializations);
+finalization
+  Check;
+  Text:='';
+  FillChar(Probes[@INDEX@],SizeOf(TProbe),0);
+  Inc(Finalizations);
+end.

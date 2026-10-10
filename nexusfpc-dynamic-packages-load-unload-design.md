@@ -1,5 +1,12 @@
 # Dynamic packages: load/unload implementation and tradeoffs
 
+2026-10-10 update: the [unified threadvar design](nexusfpc-threadvar-design.md)
+supersedes the earlier late-TLS rejection and unchanged-PPU statements below.
+Startup and late images use one model. Rebuild all artifacts for descriptor v3
+and PPU long version 34. Coordinating package lifecycle across live threads is
+still deferred; TLS-bearing load/unload requires `IsMultiThread=False`.
+
+
 Status: implemented and validated on 2026-10-09. User
 approved the recommendations for items 12-14 and 16, with remaining mechanical
 decisions delegated. Item 15 is excluded.

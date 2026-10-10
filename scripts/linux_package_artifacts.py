@@ -151,7 +151,7 @@ class ELF:
         else:
             raise ValueError('Missing package descriptor')
         words = self.unpack('<21Q', self.offset(address, 168))
-        if words[:3] != (0x4e58504b, 2, 168):
+        if words[:3] != (0x4e58504b, 3, 168):
             raise ValueError('Unsupported package descriptor')
         field = lambda index: self.pointer(address + 8 * index)
         result = dict(name=self.short(field(6)), sdk=self.short(field(18)),
