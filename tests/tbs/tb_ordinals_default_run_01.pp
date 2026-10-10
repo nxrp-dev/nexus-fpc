@@ -84,6 +84,15 @@ var
 	tb0715_code: int32;
 {$pop}
 
+{ Case tb0527.pp }
+{$push}
+type
+{$z-}
+  tb0527_te1 = (tb0527_a,tb0527_b,tb0527_c);
+{$z+}
+  tb0527_te2 = (tb0527_e,tb0527_f,tb0527_g);
+{$pop}
+
 begin
   { Case tb0023.pp }
   {$push}
@@ -164,6 +173,16 @@ begin
 	if tb0715_code = 0 then writeln('matches ', tb0715_e) else writeln('matches nothing, code ', tb0715_code);
     if tb0715_code <> 3 then
       halt(1);
+end;
+  {$pop}
+
+  { Case tb0527.pp }
+  {$push}
+begin
+  if sizeof(tb0527_te1) <> 1 then
+    halt(1);
+  if sizeof(tb0527_te2) <> 4 then
+    halt(2);
 end;
   {$pop}
 
