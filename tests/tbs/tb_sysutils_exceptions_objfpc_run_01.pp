@@ -3,7 +3,7 @@
 
 {$mode objfpc}
 
-uses SysUtils;
+uses SysUtils, Classes;
 
 { Case tb0247.pp }
 {$push}
@@ -46,6 +46,90 @@ var tb0540_a:string;
     tb0540_w:word;
 {$pop}
 
+{ Case tb0453.pp }
+{$push}
+{$MODE objfpc}
+type
+  tb0453_tfirstclass = class
+    constructor Create;
+    destructor Destroy; override;
+  end;
+  tb0453_tsecondclass = class(tb0453_tfirstclass)
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+constructor tb0453_tfirstclass.Create;
+begin
+  raise Exception.Create('');
+end;
+
+destructor tb0453_tfirstclass.Destroy;
+begin
+  WriteLn('TFirstClass.Destroy');
+  inherited Destroy;
+end;
+
+constructor tb0453_tsecondclass.Create;
+begin
+  inherited Create;
+end;
+
+destructor tb0453_tsecondclass.Destroy;
+begin
+  WriteLn('TSecondClass.Destroy');
+end;
+
+var
+  tb0453_o: tb0453_tsecondclass;
+{$pop}
+
+{ Case tb0284.pp }
+{$push}
+{ Old file: tbs0336.pp }
+{  }
+
+{$mode objfpc}
+const tb0284_dsmerged=0;
+      tb0284_dsopenerror=1;
+      tb0284_dscreateerror=2;
+      tb0284_dsconverterror=3;
+      tb0284_dsmismatcherror=4;
+      tb0284_dscrcerror=5;
+      tb0284_dserror=6;
+
+type tb0284_tvsmergediffs=class
+                     procedure execute;
+                     end;
+
+     tb0284_tvsdiffitem= class
+                                 status : longint;
+                    end;
+
+tb0284_emismatcheddifferror =class(exception);
+tb0284_ediffcrccompareerror= class(exception);
+
+procedure tb0284_tvsmergediffs.Execute;
+var
+  tb0284_stream: tFileStream;
+  tb0284_item: tb0284_tvsdiffitem;
+  tb0284_a : longint;
+begin
+      try
+        tb0284_item.Status := tb0284_dsmerged;
+      except
+        { Only the number of on xx do statements seems to matter, not
+                which ones, try commenting 3 or 4 out}
+        on EFOpenError do tb0284_item.Status := tb0284_dsopenerror;
+        on EFCreateError do tb0284_item.Status := tb0284_dscreateerror;
+        on EConvertError do tb0284_item.Status := tb0284_dsconverterror;
+        on tb0284_emismatcheddifferror do tb0284_item.Status := tb0284_dsmismatcherror;
+        on tb0284_ediffcrccompareerror do tb0284_item.Status := tb0284_dscrcerror;
+        on Exception do tb0284_item.Status := tb0284_dserror;
+      end;
+end;
+{$pop}
+
 begin
   { Case tb0247.pp }
   {$push}
@@ -81,6 +165,28 @@ begin
     halt(2);
   except
   end;
+end;
+  {$pop}
+
+  { Case tb0453.pp }
+  {$push}
+begin
+  try
+    try
+      tb0453_o := tb0453_tsecondclass.Create;
+    finally
+      tb0453_o.Free;
+    end;
+  except
+    on tb0453_e: Exception do
+      WriteLn('Exception: ', tb0453_e.Message);
+  end;
+end;
+  {$pop}
+
+  { Case tb0284.pp }
+  {$push}
+begin
 end;
   {$pop}
 
