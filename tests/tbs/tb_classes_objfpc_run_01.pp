@@ -374,6 +374,74 @@ var
   tw0947_a: tw0947_t2;
 {$pop}
 
+{ Case tb0298.pp }
+{$push}
+{$mode objfpc}
+type
+   tb0298_tobject1 = class
+      readl : longint;
+      function readl2 : longint;
+      procedure writel(ll : longint);
+      procedure writel2(ll : longint);
+      property l : longint read readl write writel;
+      property l2 : longint read readl2 write writel2;
+   end;
+
+procedure tb0298_tobject1.writel(ll : longint);
+
+  begin
+  end;
+
+procedure tb0298_tobject1.writel2(ll : longint);
+
+  begin
+  end;
+
+function tb0298_tobject1.readl2 : longint;
+
+  begin
+  end;
+
+var
+   tb0298_object1 : tb0298_tobject1;
+   tb0298_i : longint;
+{$pop}
+
+{ Case tb0306.pp }
+{$push}
+{$mode objfpc}
+
+type
+   tb0306_tobject2 = class
+      constructor create;
+      function rname : string;
+      procedure wname(const s : string);
+      property name : string read rname write wname;
+   end;
+
+   tb0306_tclass2 = class of tb0306_tobject2;
+
+var
+   tb0306_o2 : tb0306_tobject2;
+   tb0306_c2 : tb0306_tclass2;
+
+constructor tb0306_tobject2.create;
+
+  begin
+     inherited create;
+  end;
+
+procedure tb0306_tobject2.wname(const s : string);
+
+  begin
+  end;
+
+function tb0306_tobject2.rname : string;
+
+  begin
+  end;
+{$pop}
+
 begin
   { Case tb0228.pp }
   {$push}
@@ -476,6 +544,29 @@ tw0947_last:=0;
     Halt(1);
   Writeln('Bug with calling inherited in destructors solved');
   end;
+  {$pop}
+
+  { Case tb0298.pp }
+  {$push}
+begin
+   tb0298_object1:=tb0298_tobject1.create;
+   tb0298_i:=tb0298_object1.l;
+   tb0298_i:=tb0298_object1.l2;
+   tb0298_object1.l:=123;
+end;
+  {$pop}
+
+  { Case tb0306.pp }
+  {$push}
+begin
+   tb0306_o2:=tb0306_tobject2.create;
+   tb0306_o2.name:='1234';
+   writeln(tb0306_o2.name);
+   tb0306_o2.destroy;
+   tb0306_c2:=tb0306_tobject2;
+   tb0306_o2:=tb0306_c2.create;
+   tb0306_o2.destroy;
+end;
   {$pop}
 
 end.
