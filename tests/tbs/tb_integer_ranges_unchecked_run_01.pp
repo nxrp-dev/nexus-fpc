@@ -75,6 +75,33 @@ procedure tb0336_do_error(tb0336_l : longint);
   end;
 {$pop}
 
+{ Case tb0050.pp }
+{$push}
+{ Old file: tbs0056.pp }
+{  shows a _very_ simple expression which generates     OK 0.99.1 (FK) }
+
+(* This will compile
+VAR N, E: Integer;*)
+
+(* This will NOT compile*)
+VAR tb0050_n, tb0050_e: LongInt;
+{$pop}
+
+{ Case tb0062.pp }
+{$push}
+{ Old file: tbs0068.pp }
+{  Shows incorrect type of ofs()                        OK 0.99.1 (PFV and FK) }
+
+{ As l is only a smallint, this
+  test will almost always
+  trigger a range check error,
+  disable range check explicitly }
+{$R-}
+var
+  tb0062_p : pointer;
+  tb0062_l  : smallint;
+{$pop}
+
 begin
   { Case tb0077.pp }
   {$push}
@@ -168,6 +195,25 @@ begin
    val(tb0336_s,tb0336_l,tb0336_code);
    if tb0336_code=0 then
      tb0336_do_error(6);
+end;
+  {$pop}
+
+  { Case tb0050.pp }
+  {$push}
+BEGIN
+   tb0050_e := 2;
+   WriteLn(tb0050_e);
+   tb0050_n := 44 - tb0050_e;
+   WriteLn(tb0050_n);
+END;
+  {$pop}
+
+  { Case tb0062.pp }
+  {$push}
+{$R-}
+begin
+  tb0062_l:=Ofs(tb0062_p); { Ofs returns a pointer type !? }
+
 end;
   {$pop}
 
