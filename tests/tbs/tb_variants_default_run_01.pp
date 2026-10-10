@@ -31,6 +31,28 @@ var
   tb0492_v: Variant;
 {$pop}
 
+{ Case tb0520.pp }
+{$push}
+var
+  tb0520_w : widestring;
+  tb0520_v : variant;
+  tb0520_a : ansistring;
+{$pop}
+
+{ Case tb0536.pp }
+{$push}
+var tb0536_dt : TDateTime;
+    tb0536_v : variant;
+    tb0536_s : String;
+{$pop}
+
+{ Case tb0537.pp }
+{$push}
+var
+  tb0537_d: array of variant;
+  tb0537_v: variant;
+{$pop}
+
 begin
   { Case tb0410.pp }
   {$push}
@@ -64,6 +86,40 @@ end;
   {$push}
 begin
   tb0492_v := VarArrayCreate([0, 1], varVariant);
+end;
+  {$pop}
+
+  { Case tb0520.pp }
+  {$push}
+begin
+  tb0520_a:='';
+  tb0520_w:='';
+  tb0520_v:='asdf';
+  pos(tb0520_a,tb0520_v);
+  pos(tb0520_w,tb0520_v);
+  pos(tb0520_v,tb0520_v);
+  pos(tb0520_v,tb0520_a);
+  pos(tb0520_v,tb0520_w);
+  pos(tb0520_v,tb0520_v);
+end;
+  {$pop}
+
+  { Case tb0536.pp }
+  {$push}
+begin
+  tb0536_dt := 40000;
+  tb0536_v := tb0536_dt;
+  tb0536_s := tb0536_v;
+  // It should return the date, depending on the localisation settings
+  if tb0536_s = '40000' then halt(1);
+end;
+  {$pop}
+
+  { Case tb0537.pp }
+  {$push}
+begin
+  tb0537_v:=tb0537_d;
+  tb0537_d:=tb0537_v;
 end;
   {$pop}
 
