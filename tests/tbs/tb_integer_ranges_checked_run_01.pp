@@ -69,6 +69,14 @@ var
   tb0533_code: longint;
 {$pop}
 
+{ Case tb0344.pp }
+{$push}
+{$R+}
+var
+  tb0344_s : string;
+  tb0344_error : boolean;
+{$pop}
+
 begin
   { Case tb0085.pp }
   {$push}
@@ -131,6 +139,42 @@ begin
   if (tb0533_code <> 0) or
      (tb0533_i <> low(int64)) then
     halt(4);
+end;
+  {$pop}
+
+  { Case tb0344.pp }
+  {$push}
+{$R+}
+begin
+  tb0344_error:=false;
+  str(high(int64),tb0344_s);
+  if tb0344_s<>'9223372036854775807' then
+   begin
+     writeln('high(int64) error!: "',tb0344_s,'"');
+     tb0344_error:=true;
+   end;
+  str(low(int64),tb0344_s);
+  if tb0344_s<>'-9223372036854775808' then
+   begin
+     writeln('low(int64) error!: "',tb0344_s,'"');
+     tb0344_error:=true;
+   end;
+{$ifdef fpc}
+  str(high(qword),tb0344_s);
+  if tb0344_s<>'18446744073709551615' then
+   begin
+     writeln('high(qword) error!: "',tb0344_s,'"');
+     tb0344_error:=true;
+   end;
+  str(low(qword),tb0344_s);
+  if tb0344_s<>'0' then
+   begin
+     writeln('low(qword) error!: "',tb0344_s,'"');
+     tb0344_error:=true;
+   end;
+{$endif}
+  if tb0344_error then
+   halt(1);
 end;
   {$pop}
 
