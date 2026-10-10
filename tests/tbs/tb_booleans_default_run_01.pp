@@ -73,6 +73,19 @@ Var
  tb0087_int: byte;
 {$pop}
 
+{ Case tb0601.pp }
+{$push}
+var
+  tb0601_i1, tb0601_i2, tb0601_i3: LongWord;
+{$pop}
+
+{ Case tb0625.pp }
+{$push}
+var
+  tb0625_i: Int64;
+  tb0625_b: Boolean;
+{$pop}
+
 begin
   { Case tb0007.pp }
   {$push}
@@ -147,6 +160,43 @@ end;
 Begin
  { savesize is different! }
  tb0087_out:=boolean((tb0087_int AND $20) SHL 4);
+end;
+  {$pop}
+
+  { Case tb0601.pp }
+  {$push}
+begin
+  tb0601_i1 := 42;
+  tb0601_i2 := 84;
+  tb0601_i3 := LongWord(tb0601_i1 < tb0601_i2);
+  if tb0601_i3 <> 1 then
+    Halt(1);
+end;
+  {$pop}
+
+  { Case tb0625.pp }
+  {$push}
+begin
+  tb0625_i := 1;
+  tb0625_b := Boolean(tb0625_i);
+  if not tb0625_b then
+    Halt(1);
+  tb0625_i := 0;
+  tb0625_b := Boolean(tb0625_i);
+  if tb0625_b then
+    Halt(2);
+  tb0625_i := 42;
+  tb0625_b := Boolean(tb0625_i);
+  if not tb0625_b then
+    Halt(3);
+  tb0625_i := $ffffffffffffffff;
+  tb0625_b := Boolean(tb0625_i);
+  if not tb0625_b then
+    Halt(4);
+  tb0625_i := $ffffffffffffff00;
+  tb0625_b := Boolean(tb0625_i);
+  if tb0625_b then
+    Halt(5);
 end;
   {$pop}
 
