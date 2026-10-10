@@ -141,6 +141,18 @@ var
   var tb0176_l : array[1..10] of boolean;
 {$pop}
 
+{ Case tb0052.pp }
+{$push}
+{ Old file: tbs0058.pp }
+{  causes an internal error 10 (problem with getregisterOK 0.99.1 (FK) }
+
+{$r+}
+var
+   tb0052_a1 : array[0..1,0..1] of word;
+   tb0052_a2 : array[0..1,0..1] of longint;
+   tb0052_i,tb0052_j,tb0052_l,tb0052_n : longint;
+{$pop}
+
 begin
   { Case tb0012.pp }
   {$push}
@@ -245,6 +257,14 @@ New(tb0153_left);
   begin
 fillchar(tb0176_l,sizeof(tb0176_l),true);
   end;
+  {$pop}
+
+  { Case tb0052.pp }
+  {$push}
+{$R+}
+begin
+   tb0052_a1[tb0052_i,tb0052_j]:=tb0052_a2[tb0052_l,tb0052_n];
+end;
   {$pop}
 
 end.
