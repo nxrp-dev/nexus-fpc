@@ -9,7 +9,7 @@ Program tbs0152;
   Change loop variable to J to see what should be the correct output.
 }
 
-PROCEDURE LGrow(VAR S : String;C:CHAR;Count:WORD);
+PROCEDURE LGrow(VAR S : ShortString;C:CHAR;Count:WORD);
 
  VAR  I,J :WORD;
 
@@ -24,7 +24,7 @@ BEGIN
      END;
 END;
 
-Var S : string;
+Var S : ShortString;
 
 begin
   s:='abcedfghij';
