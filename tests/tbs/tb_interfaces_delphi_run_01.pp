@@ -1,5 +1,9 @@
 { Interfaces regression cases; original case IDs are retained below. }
 
+{$mode delphi}
+
+uses SysUtils;
+
 { Case tw11862.pp }
 {$push}
 {$ifdef fpc}
@@ -182,6 +186,63 @@ var
   tw8018_a: integer;
 {$pop}
 
+{ Case tb0571.pp }
+{$push}
+{$ifdef fpc}
+{$mode delphi}
+{$endif fpc}
+
+{ Some (delphi) applications expect that the QueryInterface method is invoked as first
+  priority to query for an interface and GetInterface as 2nd priority }
+
+type
+  tb0571_itest = interface
+     ['{E80B0A2E-96ED-4F38-A6AC-E4E0B59F27F3}']
+  end;
+
+  tb0571_ttest = class(TObject, IUnknown, tb0571_itest)
+  private
+    tb0571_refcount: integer;
+  public
+    function QueryInterface(constref iid : tguid;out obj) : Hresult;{$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+    function _AddRef : longint;{$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+    function _Release : longint;{$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+  end;
+
+var
+  tb0571_called: Boolean = False;
+
+function tb0571_ttest.QueryInterface(constref IID: TGUID; out Obj): Hresult; {$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+begin
+  tb0571_called := true;
+  if getinterface(iid,obj) then
+   result:=S_OK
+  else
+   result:=longint(E_NOINTERFACE);
+end;
+
+function tb0571_ttest._AddRef : longint;{$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+begin
+  Inc(tb0571_refcount);
+  result := tb0571_refcount;
+end;
+
+function tb0571_ttest._Release : longint;{$IFNDEF WINDOWS}cdecl{$else}stdcall{$ENDIF};
+begin
+  Dec(tb0571_refcount);
+  result := tb0571_refcount;
+end;
+
+var
+  tb0571_r: tb0571_ttest;
+  tb0571_i: tb0571_itest;
+
+procedure tb0571_get(out obj: tb0571_itest);
+begin
+  obj := tb0571_r as tb0571_itest;
+end;
+{$pop}
+
 begin
   { Case tw11862.pp }
   {$push}
@@ -237,6 +298,27 @@ tw8018_t := tw8018_ttest.create();
   if tw8018_err then
     halt(1);
   end;
+  {$pop}
+
+  { Case tb0571.pp }
+  {$push}
+{$mode delphi}
+begin
+  tb0571_r := tb0571_ttest.Create;
+  tb0571_r._AddRef;
+
+  if not supports(tb0571_r, tb0571_itest, tb0571_i) or not tb0571_called or (tb0571_r.tb0571_refcount<>2) then
+    Halt(1);
+  tb0571_called := false;
+  tb0571_i := nil;
+
+  tb0571_get(tb0571_i);
+  if (tb0571_i=nil) or not tb0571_called or (tb0571_r.tb0571_refcount<>2) then
+    Halt(1);
+  tb0571_i := nil;
+
+  tb0571_r._Release;
+end;
   {$pop}
 
 end.
