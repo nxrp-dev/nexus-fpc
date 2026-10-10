@@ -1156,6 +1156,12 @@ Function int_Val_SInt_ShortStr(DestSize: SizeInt; Const S: ShortString; out Code
 {$endif FPC_HAS_INT_VAL_SINT_SHORTSTR}
 
 
+{$ifndef FPC_HAS_INT_VAL_UINT_SHORTSTR}
+{$define FPC_HAS_INT_VAL_UINT_SHORTSTR}
+{ Forward the destination width from the managed-string Val wrappers. }
+Function int_Val_UInt_ShortStr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; [external name 'FPC_VAL_UINT_SHORTSTR'];
+{$endif FPC_HAS_INT_VAL_UINT_SHORTSTR}
+
 Function fpc_Val_UInt_Shortstr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_SHORTSTR']; compilerproc;
 var
   sp,ns : SizeInt;
