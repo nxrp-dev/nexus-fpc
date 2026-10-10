@@ -1,6 +1,18 @@
-uses
-   sysutils;
+{ Managed array copying and numeric formatting with explicit separators. }
+{ Original case IDs and variable scopes are retained below. }
 
+uses SysUtils;
+
+{ Case tb0572.pp }
+{$push}
+{ test copy optimization of dyn. arrays }
+var
+  tb0572_a,tb0572_b,tb0572_c : array of ansistring;
+  tb0572_i : longint;
+{$pop}
+
+{ Case tb0364.pp }
+{$push}
 { comment by submitter:
   The following statement (which works in Delphi)
     result:=Format('%10.n', [ival*1.0]);
@@ -19,18 +31,42 @@ uses
 }
 
 var
-   s : string;
-   ival : integer;
+   tb0364_s : string;
+   tb0364_ival : integer;
+{$pop}
 
+begin
+  { Case tb0572.pp }
+  {$push}
+begin
+  SetLength(tb0572_a,1000);
+  SetLength(tb0572_c,1000);
+  for tb0572_i:=low(tb0572_a) to high(tb0572_a) do
+    tb0572_a[tb0572_i]:=IntToStr(random(10000));
+  tb0572_b:=copy(tb0572_a);
+  tb0572_c:=copy(tb0572_a);
+  tb0572_a:=nil;
+  for tb0572_i:=low(tb0572_b) to high(tb0572_b) do
+    if tb0572_b[tb0572_i]<>tb0572_c[tb0572_i] then
+      halt(1);
+  writeln('ok');
+end;
+  {$pop}
+
+  { Case tb0364.pp }
+  {$push}
 begin
    ThousandSeparator:='.';
    DecimalSeparator:=',';
-   ival:=1234;
-   s:=Format('%10.n', [ival*1.0]);
-   writeln('s: "',s,'"');
-   if s<>'     1.234' then
+   tb0364_ival:=1234;
+   tb0364_s:=Format('%10.n', [tb0364_ival*1.0]);
+   writeln('s: "',tb0364_s,'"');
+   if tb0364_s<>'     1.234' then
      begin
         writeln('Problem with Format');
         halt(1);
      end;
+end;
+  {$pop}
+
 end.
