@@ -8,7 +8,7 @@ type
   prec=^trec;
 
 const
-  s  : string = 'test';
+  s  : shortstring = 'test';
 
   cfg : array[1..2] of trec=(
    (a:1;b:2),
