@@ -49,6 +49,16 @@ var
       tb0333_teststr : string = ' '#9#255#0;
 {$pop}
 
+{ Case tb0078.pp }
+{$push}
+{ Old file: tbs0090.pp }
+{  shows PChar comparison problem                        OK 0.99.7 (PFV) }
+
+{$X+}
+var
+ tb0078_mystr : array[0..4] of char;
+{$pop}
+
 begin
   { Case tb0109.pp }
   {$push}
@@ -105,6 +115,17 @@ begin
       tb0333_teststr := 'gaga';
       writeln(tb0333_teststr);
       if tb0333_teststr<>'gaga' then halt(1);
+end;
+  {$pop}
+
+  { Case tb0078.pp }
+  {$push}
+{$X+}
+Begin
+  if tb0078_mystr = #0#0#0#0 then
+  Begin
+  end;
+  tb0078_mystr:=#0#0#0#0;
 end;
   {$pop}
 
