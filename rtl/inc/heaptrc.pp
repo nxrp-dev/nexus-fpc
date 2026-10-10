@@ -2359,7 +2359,7 @@ end;
     inc(insideCheckOrDumpHeap);
     status := prevMgr.GetFPCHeapStatus();
     write(f,
-      'Heap dump by heaptrc unit of "' + GetModuleName() + '"', LineEnding,
+      'Heap dump by heaptrc unit of "', GetModuleName(), '"', LineEnding,
       getMemCount, ' memory blocks allocated : ', getMemSize, LineEnding,
       freeMemCount, ' memory blocks freed : ', freeMemSize, LineEnding,
       int64(getMemCount) - int64(freeMemCount), ' unfreed memory blocks : ', int64(getMemSize) - int64(freeMemSize), LineEnding,
