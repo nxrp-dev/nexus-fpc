@@ -55,6 +55,26 @@ var
   tb0598_c1, tb0598_c2: QWord;
 {$pop}
 
+{ Case tb0336.pp }
+{$push}
+{ Explicitly disable overflow and range checks }
+{$Q-}
+{$R-}
+
+var
+   tb0336_l : longint;
+   tb0336_d : dword;
+   tb0336_s : string;
+   tb0336_code : integer;
+
+procedure tb0336_do_error(tb0336_l : longint);
+
+  begin
+     writeln('Error near number ',tb0336_l);
+     halt(1);
+  end;
+{$pop}
+
 begin
   { Case tb0077.pp }
   {$push}
@@ -111,6 +131,43 @@ begin
   end
   else
     Writeln('OK');
+end;
+  {$pop}
+
+  { Case tb0336.pp }
+  {$push}
+{$Q-}
+{$R-}
+begin
+   tb0336_s:='4294967295';
+   val(tb0336_s,tb0336_d,tb0336_code);
+   if tb0336_code<>0 then
+     tb0336_do_error(1);
+
+   tb0336_s:='4294967296';
+   val(tb0336_s,tb0336_d,tb0336_code);
+   if tb0336_code=0 then
+     tb0336_do_error(1);
+
+   tb0336_s:='2147483647';
+   val(tb0336_s,tb0336_l,tb0336_code);
+   if tb0336_code<>0 then
+     tb0336_do_error(3);
+
+   tb0336_s:='2147483648';
+   val(tb0336_s,tb0336_l,tb0336_code);
+   if tb0336_code=0 then
+     tb0336_do_error(4);
+
+   tb0336_s:='-2147483648';
+   val(tb0336_s,tb0336_l,tb0336_code);
+   if tb0336_code<>0 then
+     tb0336_do_error(5);
+
+   tb0336_s:='-2147483649';
+   val(tb0336_s,tb0336_l,tb0336_code);
+   if tb0336_code=0 then
+     tb0336_do_error(6);
 end;
   {$pop}
 
