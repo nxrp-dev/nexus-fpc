@@ -32,6 +32,20 @@ type
 Var tb0141_sr : tb0141_psearchrec;
 {$pop}
 
+{ Case tb0338.pp }
+{$push}
+{$h+}
+
+Type
+  tb0338_tmyrec = Record
+    AString : AnsiString;
+  end;
+  tb0338_pmyrec = ^tb0338_tmyrec;
+
+Var
+  tb0338_m : tb0338_pmyrec;
+{$pop}
+
 begin
   { Case tb0125.pp }
   {$push}
@@ -50,6 +64,14 @@ begin
   if tb0141_sr^<>45 then
     Halt(1);
   Dispose(tb0141_sr);
+end;
+  {$pop}
+
+  { Case tb0338.pp }
+  {$push}
+{$H+}
+begin
+  tb0338_m:=New(tb0338_pmyrec);
 end;
   {$pop}
 
