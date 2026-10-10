@@ -11,6 +11,13 @@ statistics.
 
 scans the created log file and outputs some statistics
 
+The focused generic-set/CORBA regression checks, including source-hidden PPU
+loading, can also be run with:
+
+  python compiler-regressions/run_compiler_regressions.py
+
+See compiler-regressions/README.md for compiler/RTL selection and coverage.
+
   make digest USESQL=YES TEST_FPC=path_to_your_compiler
 
 sends the results to an SQL database

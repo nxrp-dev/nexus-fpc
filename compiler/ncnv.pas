@@ -511,6 +511,44 @@ implementation
         { keep in sync with arrayconstructor_can_be_set }
         if p.nodetype<>arrayconstructorn then
           internalerror(200205105);
+        { A generic body is parsed again when specializing. Do not lower a set
+          constructor before its element types are known: even a fixed set
+          destination can contain expressions whose type is a parameter. }
+        if assigned(current_procinfo) and
+           (df_generic in current_procinfo.procdef.defoptions) then
+          begin
+            hp:=tarrayconstructornode(p);
+            while assigned(hp) and assigned(hp.left) do
+              begin
+                typecheckpass(hp.left);
+                if hp.left.nodetype=arrayconstructorrangen then
+                  begin
+                    p2:=tarrayconstructorrangenode(hp.left).left;
+                    p3:=tarrayconstructorrangenode(hp.left).right;
+                  end
+                else
+                  begin
+                    p2:=hp.left;
+                    p3:=nil;
+                  end;
+                if is_typeparam(p2.resultdef) or
+                   (assigned(p3) and is_typeparam(p3.resultdef)) then
+                  begin
+                    { Keep a set-typed placeholder so surrounding set operators
+                      can still be checked while parsing the template. }
+                    new(constset);
+                    constset^:=[];
+                    constp:=csetconstnode.create(nil,csetdef.create(nil,0,0,true));
+                    constp.value_set:=constset;
+                    result:=constp;
+                    typecheckpass(result);
+                    if freep then
+                      p.free;
+                    exit;
+                  end;
+                hp:=tarrayconstructornode(hp.right);
+              end;
+          end;
         new(constset);
         constset^:=[];
         hdef:=nil;
