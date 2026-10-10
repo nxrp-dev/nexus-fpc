@@ -1,4 +1,4 @@
-{ Character comparisons, hexadecimal literals, sized strings and wide-character constants. }
+{ Character literals, comparisons, sized strings and ordinal/Boolean conversions. }
 { Original case IDs and variable scopes are retained below. }
 
 { Case tb0242.pp }
@@ -48,6 +48,34 @@ const
 {$push}
 var
    tb0381_w : widechar;
+{$pop}
+
+{ Case tb0187.pp }
+{$push}
+{ Old file: tbs0221.pp }
+{ syntax parsing incompatibilities with tp7            OK 0.99.11 (PFV) }
+
+
+var
+  tb0187_r : double;
+  tb0187_c : char;
+{$pop}
+
+{ Case tb0294.pp }
+{$push}
+{ Old file: tbs0350.pp }
+{  }
+
+var
+  tb0294_c : char;
+  tb0294_i : integer;
+{$pop}
+
+{ Case tb0401.pp }
+{$push}
+var
+   tb0401_b1,tb0401_b2 : boolean;
+   tb0401_c : char;
 {$pop}
 
 begin
@@ -102,6 +130,47 @@ begin
       #8889..#9999: ;
       'Z'..'a': ;
    end;
+end;
+  {$pop}
+
+  { Case tb0187.pp }
+  {$push}
+begin
+  tb0187_r:=1.;
+  tb0187_c:=^.; { this compile in tp7, c should contain 'n'/#110 }
+  if tb0187_c<>#110 then
+    begin
+       Writeln('FPC does not support ^. character!');
+       Halt(1);
+    end;
+end;
+  {$pop}
+
+  { Case tb0294.pp }
+  {$push}
+begin
+  tb0294_i:=integer(tb0294_c);
+  tb0294_c:=char(tb0294_i);
+end;
+  {$pop}
+
+  { Case tb0401.pp }
+  {$push}
+begin
+   tb0401_b1:=false;
+   tb0401_b2:=true;
+   tb0401_c:=char(tb0401_b1 and tb0401_b2);
+   if tb0401_c<>#0 then
+     halt(1);
+   tb0401_c:=char(tb0401_b1 or tb0401_b2);
+   if tb0401_c<>#1 then
+     halt(1);
+   tb0401_c:=char(tb0401_b1);
+   if tb0401_c<>#0 then
+     halt(1);
+   tb0401_c:=char(tb0401_b2);
+   if tb0401_c<>#1 then
+     halt(1);
 end;
   {$pop}
 
