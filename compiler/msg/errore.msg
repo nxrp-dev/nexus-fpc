@@ -3357,8 +3357,8 @@ unit_u_ppu_time=10005_U_PPU Time: $1
 % When you use the \var{-vu} flag, the time the unit was compiled is shown.
 unit_u_ppu_file_too_short=10006_U_PPU File too short
 % The ppufile is too short, not all declarations are present.
-unit_u_ppu_invalid_header=10007_U_PPU Invalid Header (no PPU at the begin)
-% A unit file contains as the first three bytes the ASCII codes of the characters \var{PPU}.
+unit_u_ppu_invalid_header=10007_U_PPU Invalid Header (expected NexusFPC NXU signature; rebuild with NexusFPC)
+% NexusFPC unit files begin with \var{NXU}. Upstream FPC and legacy NexusFPC units must be rebuilt.
 unit_u_ppu_invalid_version=10008_U_PPU Invalid Version $1 expecting $2
 % This unit file was compiled with a different version of the compiler, and
 % cannot be read.
@@ -3870,8 +3870,8 @@ package_u_pcp_time=13012_U_PCP Time: $1
 % When you use the \var{-vu} flag, the time the package was compiled is shown.
 package_u_pcp_file_too_short=13013_U_PCP File too short
 % The PCP file is too short, not all declarations are present.
-package_u_pcp_invalid_header=13014_U_PCP Invalid Header (no PCP at the begin)
-% A package file contains as the first three bytes the ASCII codes of the characters \var{PCP}.
+package_u_pcp_invalid_header=13014_U_PCP Invalid Header (expected NexusFPC NXP signature; rebuild with NexusFPC)
+% NexusFPC package metadata begins with \var{NXP}. Upstream FPC and legacy NexusFPC packages must be rebuilt.
 package_u_pcp_invalid_version=13015_U_PCP Invalid Version $1
 % This package file was compiled with a different version of the compiler, and
 % cannot be read.

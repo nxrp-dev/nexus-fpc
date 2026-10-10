@@ -1,5 +1,10 @@
 # Unified threadvar storage
 
+The subsequent [artifact identity change](nexusfpc-artifact-identity.md) moves
+compiled units and package metadata to Nexus-specific signatures and advances
+the runtime descriptor to v4. The validation record below describes the original
+threadvar change; its storage model is unchanged.
+
 Approved direction: option 6, one storage and access model. Option 10's legacy
 storage path is not retained. Compiler, RTL, units and packages must be rebuilt
 together; compatibility with previous binary layouts is not a requirement.

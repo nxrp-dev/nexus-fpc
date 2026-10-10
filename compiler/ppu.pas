@@ -26,7 +26,7 @@ unit ppu;
 interface
 
   uses
-    globtype,constexp,entfile;
+    globtype,constexp,entfile,nxartifactid;
 
 { Also write the ppu if only crc if done, this can be used with ppudump to
   see the differences between the intf and implementation }
@@ -34,6 +34,8 @@ interface
 
 
 const
+  { These revisions belong to the NXU family, independently of upstream FPC.
+    Also advance the long revision for incompatible compiler/RTL ABI changes. }
   { only update this version if something change in the tppuheader:
      * the unit flags listed below
      * the format of the header itself
@@ -190,9 +192,9 @@ end;
 
 function tppufile.CheckPPUId:boolean;
 begin
-  CheckPPUId:=((Header.common.Id[1]='P') and
-                (Header.common.Id[2]='P') and
-                (Header.common.Id[3]='U'));
+  CheckPPUId:=((Header.common.Id[1]=NexusPPUSignature[1]) and
+                (Header.common.Id[2]=NexusPPUSignature[2]) and
+                (Header.common.Id[3]=NexusPPUSignature[3]));
 end;
 
 
@@ -206,9 +208,9 @@ begin
    s:='0'+s;
   with header.common do
    begin
-     Id[1]:='P';
-     Id[2]:='P';
-     Id[3]:='U';
+     Id[1]:=NexusPPUSignature[1];
+     Id[2]:=NexusPPUSignature[2];
+     Id[3]:=NexusPPUSignature[3];
      Ver[1]:=s[1];
      Ver[2]:=s[2];
      Ver[3]:=s[3];

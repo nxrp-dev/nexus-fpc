@@ -101,6 +101,10 @@ begin
   ResetBad; Inc(Bad.Version); Reject(@Bad,'Unsupported package descriptor');
   ResetBad; Dec(Bad.Size); Reject(@Bad,'Unsupported package descriptor');
   ResetBad; Inc(Bad.CompilerIdentity); Reject(@Bad,'Incompatible package build');
+  ResetBad; Bad.CompilerIdentity:=Bad.CompilerIdentity xor (QWord(1) shl 32);
+  Reject(@Bad,'Incompatible package build');
+  ResetBad; Bad.CompilerIdentity:=Bad.CompilerIdentity xor (QWord(1) shl 48);
+  Reject(@Bad,'Incompatible package build');
   ResetBad; Inc(Bad.TargetIdentity); Reject(@Bad,'Incompatible package build');
   ResetBad; Inc(Bad.RTLIdentity); Reject(@Bad,'Incompatible package build');
   ResetBad; Bad.Name:=D[0].Name; Reject(@Bad,'Duplicate package image');

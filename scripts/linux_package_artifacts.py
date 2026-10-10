@@ -15,8 +15,8 @@ def digest(path):
 
 def metadata(path):
     data = Path(path).read_bytes()
-    if len(data) < 32 or data[:6] != b'PCP004':
-        raise ValueError(f'Unsupported package metadata: {path}')
+    if len(data) < 32 or data[:6] != b'NXP004':
+        raise ValueError(f'Unsupported package metadata: {path}; expected NexusFPC NXP004, rebuild with NexusFPC')
     result = dict(name='', sdk='', build='', requires={})
     pos = 32
     while pos + 6 <= len(data):
@@ -151,7 +151,7 @@ class ELF:
         else:
             raise ValueError('Missing package descriptor')
         words = self.unpack('<21Q', self.offset(address, 168))
-        if words[:3] != (0x4e58504b, 3, 168):
+        if words[:3] != (0x4e58504b, 4, 168):
             raise ValueError('Unsupported package descriptor')
         field = lambda index: self.pointer(address + 8 * index)
         result = dict(name=self.short(field(6)), sdk=self.short(field(18)),

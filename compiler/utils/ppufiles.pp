@@ -124,6 +124,7 @@ Function DoPPU(const PPUFn:String):Boolean;
 Var
   inppu  : tppufile;
   b      : byte;
+  ppulongversion: cardinal;
 
   procedure showfiles;
   begin
@@ -147,10 +148,10 @@ begin
   if not inppu.CheckPPUId then
    begin
      inppu.free;
-     Error('Error: Not a PPU File : '+PPUFn,false);
+     Error('Error: Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC',false);
      Exit;
    end;
-  if inppu.getversion<CurrentPPUVersion then
+  if inppu.getversion<>CurrentPPUVersion then
    begin
      inppu.free;
      Error('Error: Wrong PPU Version : '+PPUFn,false);
@@ -160,6 +161,16 @@ begin
   repeat
     b:=inppu.readentry;
     case b of
+      ibextraheader:
+        begin
+          ppulongversion:=cardinal(inppu.getlongint);
+          if ppulongversion<>CurrentPPULongVersion then
+            begin
+              inppu.free;
+              Error('Error: Wrong NexusFPC PPU Long Version in '+PPUFn,false);
+              exit;
+            end;
+        end;
       ibendinterface,
       ibend :
         break;
@@ -228,7 +239,8 @@ begin
      FindFirst(InFile,$20,Dir);
      while (DosError=0) do
       begin
-        DoPPU(SplitPath(InFile)+Dir.Name);
+        if not DoPPU(SplitPath(InFile)+Dir.Name) then
+          ExitCode:=1;
         FindNext(Dir);
       end;
      FindClose(Dir);

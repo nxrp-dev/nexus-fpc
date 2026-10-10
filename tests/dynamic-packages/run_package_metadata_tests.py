@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--compiler-build', type=Path,
                         help='Incrementally rebuild using an isolated compiler build and its units/')
     parser.add_argument('--output-root', type=Path)
+    parser.add_argument('--rtl-units', type=Path, help='Matching freshly rebuilt Nexus RTL units.')
     args = parser.parse_args()
     source = args.source_root.resolve()
     out = args.output_root or Path(tempfile.mkdtemp(prefix='nxpkg-tests-'))
@@ -65,7 +66,7 @@ def main():
     run('disabled-path', [driver, 'disabled', fixtures, 'DoesNotExist'], text='PASS graph 1')
 
     # Produce a real unit and package with the actual compiler and writer.
-    rtl = source / 'rtl' / 'units' / 'x86_64-win64'
+    rtl = (args.rtl_units or source / 'rtl' / 'units' / 'x86_64-win64').resolve()
     common = ['-n', f'-Fu{rtl}', f'-FU{fixtures}', f'-FE{fixtures}']
     unit = fixtures / 'ux.pas'
     unit.write_text('unit ux;\ninterface\nfunction Marker: LongInt;\n'
@@ -95,7 +96,8 @@ def main():
     table = entries(seed)[243][1]
     ppu_offset, ppu_size = struct.unpack_from('<ii', seed, table)
     embedded = seed[ppu_offset:ppu_offset + ppu_size]
-    assert len(embedded) == ppu_size and embedded[:3] == b'PPU'
+    assert seed[:6] == b'NXP004'
+    assert len(embedded) == ppu_size and embedded[:6] == b'NXU208'
     # Independently encode the existing version-4 format, rather than validating
     # the new reader solely against the new writer.
     def short(value):
@@ -118,7 +120,7 @@ def main():
         body += struct.pack(endian + 'iBB', len(contained) * 8, 1, 243)
         body += bytes(len(contained) * 8)
         body += struct.pack(endian + 'iBB', 0, 1, 255)
-        header = struct.pack('<3s3sHHHIIIII', b'PCP', b'004', compiler_id, cpu, target,
+        header = struct.pack('<3s3sHHHIIIII', b'NXP', b'004', compiler_id, cpu, target,
                              4 if endian == '>' else 4096, len(body), crc,
                              len(requirements), len(contained))
         data = bytearray(header + body)
@@ -177,6 +179,9 @@ def main():
 
     base = fixture('Case', contained=['UX', 'UY'])
     offsets = entries(base)
+    data = bytearray(base)
+    data[:3] = b'PCP'
+    reject('foreign-package-same-version', data, 'expected NXP signature')
     for length in (0, 1, 6, 19, 31):
         reject('short-header-' + str(length), base[:length], "Can't find package")
     for label, offset, fmt, value in (
@@ -220,6 +225,9 @@ def main():
     reject('empty-required-name', fixture('Case', ['']))
     reject('empty-contained-name', fixture('Case', contained=['']))
     first_ppu = struct.unpack_from('<i', base, offsets[243][1])[0]
+    data = bytearray(base)
+    data[first_ppu:first_ppu+3] = b'PPU'
+    reject('foreign-embedded-unit-same-version', data, 'requires NexusFPC NXU signature')
     for label, offset, fmt, value in (
         ('ppu-magic', 0, 'B', 0), ('ppu-version', 3, 'B', ord('9')),
         ('ppu-cpu', 8, 'H', 65535), ('ppu-target', 10, 'H', 65535),

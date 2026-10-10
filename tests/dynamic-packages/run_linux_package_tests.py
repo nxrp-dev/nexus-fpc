@@ -25,7 +25,8 @@ def inspect(directory):
         libraries.append(lib)
         address = ctypes.c_void_p.in_dll(lib, 'FPC_PACKAGE_INFO').value
         words = Descriptor.from_address(address).w
-        assert tuple(words[:3]) == (0x4e58504b, 3, 168)
+        assert tuple(words[:3]) == (0x4e58504b, 4, 168)
+        assert words[3] == (208 << 48) | (0xc181 << 32) | 34
         assert list((ctypes.c_size_t * 6).from_address(words[16])) == [0] * 6
     print('PASS native mapping does not activate Pascal packages')
 

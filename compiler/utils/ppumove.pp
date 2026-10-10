@@ -264,11 +264,11 @@ begin
   if not inppu.CheckPPUId then
    begin
      inppu.free;
-     Error('Error: Not a PPU File : '+PPUFn,false);
+     Error('Error: Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC',false);
      Exit;
    end;
   ppuversion:=inppu.getversion;
-  if ppuversion<CurrentPPUVersion then
+  if ppuversion<>CurrentPPUVersion then
    begin
      inppu.free;
      Error('Error: Wrong PPU Version '+tostr(ppuversion)+' in '+PPUFn,false);
@@ -653,7 +653,10 @@ begin
   While (i<=ParamCount) and Dofile(ChangeFileExt(Paramstr(i),PPUExt)) do
    Inc(i);
 { Do Linking stage }
-  DoLink;
+  if i<=ParamCount then
+    ExitCode:=1
+  else
+    DoLink;
 { Close BatchFile }
   if Batch then
    begin

@@ -29,7 +29,8 @@ def inspect(directory):
         library = ctypes.CDLL(str(directory / (name + '.dll')))
         libraries.append(library)
         descriptor = Descriptor.in_dll(library, 'FPC_PACKAGE_' + name.upper())
-        assert descriptor.magic == 0x4e58504b and descriptor.version == 3
+        assert descriptor.magic == 0x4e58504b and descriptor.version == 4
+        assert descriptor.compiler == (208 << 48) | (0xc181 << 32) | 34
         assert descriptor.size == ctypes.sizeof(Descriptor) == 168
         assert descriptor.rtl != 0
         identities.add((descriptor.compiler, descriptor.target, descriptor.rtl))

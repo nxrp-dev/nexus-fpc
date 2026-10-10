@@ -11,6 +11,11 @@ It contains
 * Several utilities in the directory *utils*.
 * The compiler testsuite in the directory *tests*.
 
+NexusFPC uses its own [compiled artifact identities](nexusfpc-artifact-identity.md):
+`NXU` in `.ppu` files and `NXP` in `.pcp` files. Numeric format revisions are
+independent of upstream FPC. Rebuild the compiler, RTL, units and packages together
+when moving from an earlier build; upstream compiled units cannot be reused.
+
 ## Experimental Win64 dynamic packages
 
 Build an isolated package SDK and validate console/GUI examples from a fresh checkout:

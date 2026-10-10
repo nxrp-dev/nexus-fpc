@@ -28,9 +28,10 @@ unit pcp;
 interface
 
   uses
-    cstreams,entfile;
+    cstreams,entfile,nxartifactid;
 
   const
+    { Nexus-owned revision within the NXP family. }
     CurrentPCPVersion=4;
 
     { unit flags }
@@ -109,9 +110,9 @@ uses
         s:='0'+s;
       with header.common do
         begin
-          id[1]:='P';
-          id[2]:='C';
-          id[3]:='P';
+          id[1]:=NexusPCPSignature[1];
+          id[2]:=NexusPCPSignature[2];
+          id[3]:=NexusPCPSignature[3];
           ver[1]:=s[1];
           ver[2]:=s[2];
           ver[3]:=s[3];
@@ -204,9 +205,9 @@ uses
                (header.requiredlistsize>=0) and (header.ppulistsize>=0) and
                (((header.common.flags and (pf_big_endian or pf_little_endian))=pf_big_endian) or
                 ((header.common.flags and (pf_big_endian or pf_little_endian))=pf_little_endian)) and
-               ((Header.common.Id[1]='P') and
-                (Header.common.Id[2]='C') and
-                (Header.common.Id[3]='P'));
+               ((Header.common.Id[1]=NexusPCPSignature[1]) and
+                (Header.common.Id[2]=NexusPCPSignature[2]) and
+                (Header.common.Id[3]=NexusPCPSignature[3]));
     end;
 
 

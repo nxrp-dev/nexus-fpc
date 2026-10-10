@@ -4,8 +4,8 @@ function Read-NexusPackageMetadata([string]$Path) {
     $reader = [IO.BinaryReader]::new($stream)
     try {
         $header = $reader.ReadBytes(32)
-        if ($header.Length -ne 32 -or [Text.Encoding]::ASCII.GetString($header,0,6) -cne 'PCP004') {
-            throw "Unsupported package metadata: $Path"
+        if ($header.Length -ne 32 -or [Text.Encoding]::ASCII.GetString($header,0,6) -cne 'NXP004') {
+            throw "Unsupported package metadata: $Path; expected NexusFPC NXP004, rebuild with NexusFPC"
         }
         $result = @{Name='';SDK='';Build='';Requires=@{}}
         while ($stream.Position -lt $stream.Length) {
@@ -92,7 +92,7 @@ function Read-NexusPackageImage([string]$Path) {
         $pointer = Get-ImageOffset (Read-U32 ($functions+4*$ordinal))
         $descriptor = Get-ImageOffset ((Read-U64 $pointer)-$imageBase)
         if ((Read-U64 $descriptor) -ne 0x4e58504b -or
-            (Read-U64 ($descriptor+8)) -ne 3 -or (Read-U64 ($descriptor+16)) -ne 168) {
+            (Read-U64 ($descriptor+8)) -ne 4 -or (Read-U64 ($descriptor+16)) -ne 168) {
             throw "Unsupported package image descriptor: $Path"
         }
         return @{Name=(Read-ImageString (Read-U64 ($descriptor+6*8)));

@@ -306,7 +306,7 @@ var
           { check for a valid PPU file }
             if not ppufile.CheckPPUId then
              begin
-               Message(unit_u_ppu_invalid_header);
+               Message(unit_u_ppu_invalid_header,@queuecomment);
                exit;
              end;
           { check for allowed PPU versions }

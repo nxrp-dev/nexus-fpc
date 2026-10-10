@@ -49,7 +49,7 @@ implementation
     aasmbase,aasmdata,aasmcnst,aasmtai,
     symtype,symconst,symsym,symdef,symbase,symtable,
     psub,pdecsub,
-    ppu,entfile,fpcp,
+    ppu,entfile,fpcp,nxartifactid,
     export;
 
   procedure emit_package_descriptor;
@@ -75,7 +75,7 @@ implementation
         b.free;
       end;
 
-    procedure number(n: SizeInt);
+    procedure number(n: Int64);
       begin
         b.emit_tai(tai_const.create_sizeint(n),sizeuinttype);
       end;
@@ -155,9 +155,9 @@ implementation
       finish('FPC_PACKAGE_DEPENDENCY_IDS',sec_rodata);
       start;
       number($4e58504b);
-      number(3);
+      number(4);
       number(21*8);
-      number((wordversion shl 8) or CurrentPPULongVersion);
+      number(NexusCompilerIdentity(CurrentPPUVersion,wordversion,CurrentPPULongVersion));
       number(ord(target_info.system));
       number(find_module_from_symtable(systemunit).crc);
       b.emit_pooled_shortstring_const_ref(current_module.modulename^);
@@ -428,7 +428,7 @@ implementation
       l,m    : longint;
       ext,
       s      : string;
-      ppuversion : dword;
+      ppuversion,ppulongversion : dword;
     begin
       Result:=false;
       MakeStatic:=False;
@@ -445,7 +445,7 @@ implementation
        begin
          inppu.free;
          inppu := nil;
-         Comment(V_Error,'Not a PPU File : '+PPUFn);
+         Comment(V_Error,'Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC');
          Exit;
        end;
       ppuversion:=inppu.getversion;
@@ -497,6 +497,18 @@ implementation
          end;
         if b<>untilb then
          begin
+           if b=ibextraheader then
+             begin
+               ppulongversion:=cardinal(inppu.getlongint);
+               if ppulongversion<>CurrentPPULongVersion then
+                 begin
+                   inppu.free;
+                   outppu.free;
+                   Comment(V_Error,'Wrong NexusFPC PPU Long Version in '+PPUFn);
+                   exit;
+                 end;
+               outppu.putlongint(longint(ppulongversion));
+             end;
            repeat
              inppu.getdatabuf(buffer,sizeof(buffer),l);
              outppu.putdata(buffer,l);

@@ -112,12 +112,13 @@ implementation
          Message(package_u_pcp_file_too_short);
          exit;
        end;
-    { check for a valid PPU file }
+    { Check the Nexus family before interpreting package metadata. }
       if not pcpfile.checkpcpid then
        begin
          pcpfile.free;
          pcpfile:=nil;
-         Message(package_u_pcp_invalid_header);
+         Comment(V_Normal,'Invalid NexusFPC package header in '+pcpfilename+
+           ' (expected NXP signature and current header layout); rebuild with NexusFPC');
          exit;
        end;
     { check for allowed PCP versions }
@@ -484,8 +485,11 @@ implementation
               if data.CopyFrom(pcpfile.stream,sizeof(tppuheader))<>sizeof(tppuheader) then
                 invalidpcp('truncated embedded PPU header');
               data.Position:=0;
-              if not ppufile.openstream(data) or not ppufile.CheckPPUId or
-                 (ppufile.getversion<>CurrentPPUVersion) or
+              if not ppufile.openstream(data) then
+                invalidpcp('truncated embedded PPU header');
+              if not ppufile.CheckPPUId then
+                invalidpcp('embedded unit requires NexusFPC NXU signature; rebuild with NexusFPC');
+              if (ppufile.getversion<>CurrentPPUVersion) or
                  (ppufile.header.common.cpu<>pcpfile.header.common.cpu) or
                  (ppufile.header.common.target<>pcpfile.header.common.target) or
                  (ppufile.header.common.size<>dword(module^.size-sizeof(tppuheader))) then

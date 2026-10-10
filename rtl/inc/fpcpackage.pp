@@ -10,7 +10,7 @@ uses SysUtils;
 
 const
   FPCPackageMagic = $4e58504b;
-  FPCPackageVersion = 3;
+  FPCPackageVersion = 4;
   psUnregistered = 0;
   psChecking = 1;
   psRegistered = 2;

@@ -48,8 +48,10 @@ are required to run an application; the compiler, PCPs and startup units are bui
 inputs. Build helpers verify SDK and bundle hashes and paired PCP/DLL identities.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
-the compiler, RTL, units and packages together for PCP v4, descriptor v3 and
-PPU v208/long 34. Previous threadvar binary layouts are not supported.
+the compiler, RTL, units and packages together for `NXP004` package metadata,
+descriptor v4 and `NXU208` units with long revision 34. These
+[artifact identities](../../nexusfpc-artifact-identity.md) belong to NexusFPC;
+upstream and previous Nexus binary artifacts must be rebuilt.
 
 ## Build your own package or application
 
