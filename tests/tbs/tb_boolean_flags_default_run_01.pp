@@ -125,6 +125,15 @@ begin
 end;
 {$pop}
 
+{ Case tb0246.pp }
+{$push}
+{ Old file: tbs0287.pp }
+{ (true > false) not supported                         OK 0.99.13 (PFV) }
+
+var
+  tb0246_b,tb0246_bb : boolean;
+{$pop}
+
 begin
   { Case tb0161.pp }
   {$push}
@@ -204,6 +213,29 @@ end;
   {$push}
 begin
   tb0172a_test;
+end;
+  {$pop}
+
+  { Case tb0246.pp }
+  {$push}
+begin
+  tb0246_b:=(true > false);
+  if tb0246_b then
+   writeln('ok 1')
+  else
+   halt(1);
+  tb0246_b:=true;
+  tb0246_b:=(tb0246_b > false);
+  if tb0246_b then
+   writeln('ok 2')
+  else
+   halt(1);
+  tb0246_b:=false;
+  tb0246_bb:=true;
+  if tb0246_b<tb0246_bb then
+   writeln('ok 3')
+  else
+   halt(1);
 end;
   {$pop}
 
