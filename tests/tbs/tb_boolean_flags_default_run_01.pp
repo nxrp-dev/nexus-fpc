@@ -66,6 +66,65 @@ begin
 end;
 {$pop}
 
+{ Case tb0172.pp }
+{$push}
+{ Old file: tbs0204.pp }
+{ can typecast the result var in an assignment          OK 0.99.11 (PM) }
+
+{ boolean(byte) byte(boolean)
+  word(wordbool) wordbool(word)
+  longint(longbool) and longbool(longint)
+  must be accepted as var parameters
+  or a left of an assignment }
+
+procedure tb0172_error;
+begin
+   Writeln('Error in tbs0204');
+   Halt(1);
+end;
+
+var
+  tb0172_b : boolean;
+  tb0172_wb : wordbool;
+  tb0172_lb : longbool;
+{$pop}
+
+{ Case tb0172a.pp }
+{$push}
+{ Old file: tbs0204.pp }
+{ can typecast the result var in an assignment          OK 0.99.11 (PM) }
+
+{ boolean(byte) byte(boolean)
+  word(wordbool) wordbool(word)
+  longint(longbool) and longbool(longint)
+  must be accepted as var parameters
+  or a left of an assignment }
+
+procedure tb0172a_error;
+begin
+   Writeln('Error in tb0172a');
+   Halt(1);
+end;
+
+procedure tb0172a_test;
+var
+  tb0172a_b : shortint;
+  tb0172a_wb : smallint;
+  tb0172a_lb : longint;
+
+begin
+  tb0172a_b:=0;
+  tb0172a_wb:=0;
+  tb0172a_lb:=0;
+
+  byte(tb0172a_b):=128;
+  word(tb0172a_wb):=32768;
+  cardinal(tb0172a_lb):=$80000000;
+  if (tb0172a_b<>low(shortint)) or (tb0172a_wb<>low(smallint)) or (tb0172a_lb<>low(longint)) then
+    tb0172a_error;
+end;
+{$pop}
+
 begin
   { Case tb0161.pp }
   {$push}
@@ -121,6 +180,30 @@ begin
   { if wordbool is 256 should not convert true to false !! }
 
   Writeln('boolean(256) =',tb0177_a);
+end;
+  {$pop}
+
+  { Case tb0172.pp }
+  {$push}
+begin
+  byte(tb0172_b):=1;
+  word(tb0172_wb):=1;
+  longint(tb0172_lb):=1;
+  if (not tb0172_b) or (not tb0172_wb) or (not tb0172_lb) then
+    tb0172_error;
+  byte(tb0172_b):=2;
+  Writeln('if a boolean contains 2 it is considered as ',tb0172_b);
+  byte(tb0172_b):=3;
+  Writeln('if a boolean contains 3 it is considered as ',tb0172_b);
+  shortint(tb0172_b):=-1;
+  Writeln('if a boolean contains shortint(-1) it is considered as ',tb0172_b);
+end;
+  {$pop}
+
+  { Case tb0172a.pp }
+  {$push}
+begin
+  tb0172a_test;
 end;
   {$pop}
 
