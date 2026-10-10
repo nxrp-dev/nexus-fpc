@@ -21,6 +21,15 @@ const
   tb0473_w = $5000;
 {$pop}
 
+{ Case tb0399.pp }
+{$push}
+procedure tb0399_error;
+  begin
+     writeln('Problem with octal constants');
+     halt(1);
+  end;
+{$pop}
+
 begin
   { Case tb0431.pp }
   {$push}
@@ -51,6 +60,24 @@ begin
       writeln('Error!');
       halt(1);
     end;
+end;
+  {$pop}
+
+  { Case tb0399.pp }
+  {$push}
+begin
+   if 8<>&10 then
+     tb0399_error;
+   if 1<>&1 then
+     tb0399_error;
+   if 64<>&100 then
+     tb0399_error;
+   if 33<>&41 then
+     tb0399_error;
+   if 33<>&41 then
+     tb0399_error;
+   if 12345678<>&57060516 then
+     tb0399_error;
 end;
   {$pop}
 
