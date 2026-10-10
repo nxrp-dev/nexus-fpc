@@ -40,6 +40,15 @@ var
   tb0634_s, tb0634_s1, tb0634_s2, tb0634_s3, tb0634_s4: String;
 {$pop}
 
+{ Case tb0333.pp }
+{$push}
+{ Old file: tbs0001.pp }
+{  tests a bugs in the .ascii output (#0 and too long)  OK 0.9.2 }
+
+  const
+      tb0333_teststr : string = ' '#9#255#0;
+{$pop}
+
 begin
   { Case tb0109.pp }
   {$push}
@@ -86,6 +95,16 @@ begin
   if tb0634_s <> 'Hello Free Pascal World' then
     Halt(4);
   Writeln('ok');
+end;
+  {$pop}
+
+  { Case tb0333.pp }
+  {$push}
+begin
+      writeln(tb0333_teststr);
+      tb0333_teststr := 'gaga';
+      writeln(tb0333_teststr);
+      if tb0333_teststr<>'gaga' then halt(1);
 end;
   {$pop}
 
