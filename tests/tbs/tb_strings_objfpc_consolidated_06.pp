@@ -3,6 +3,13 @@ program nexus_consolidated_tests;
 {$mode objfpc}
 uses sysutils;
 
+{ Case tb_strings_objfpc_consolidated_04.pp }
+{$push}
+{ Consolidated strings regressions; original case IDs and assertions are retained. }
+
+
+
+
 { Case tw10224.pp }
 {$push}
 
@@ -416,6 +423,150 @@ var
 
 {$pop}
 
+
+{$pop}
+
+{ Case texception16.pp }
+{$push}
+
+
+{$H+}
+
+
+
+var
+  texception16_AllocCount: Integer = 0;
+
+function texception16_MakeStr(const S: String): String;
+begin
+  { Force a dynamic string allocation so finalization matters }
+  Result := S + IntToStr(Random(1000));
+  Inc(texception16_AllocCount);
+end;
+
+procedure texception16_Test(aArg: array of String);
+begin
+  WriteLn('  Inside Test, High(aArg) = ', High(aArg));
+  WriteLn('  aArg[0] = ', aArg[0]);
+  if High(aArg) > 0 then
+    WriteLn('  aArg[1] = ', aArg[1]);
+  raise Exception.Create('Boom');
+end;
+
+procedure texception16_TestMany(A, B, C, D, E: Integer; aArg: array of String);
+{ Extra params push the high bound further into the frame,
+  making a garbage SP read more likely to be obviously wrong }
+begin
+  WriteLn('  Inside TestMany, High(aArg) = ', High(aArg),
+          ', A=', A, ' B=', B, ' C=', C, ' D=', D, ' E=', E);
+  raise Exception.Create('Boom from TestMany');
+end;
+
+{ Test with a large array to make fpc_finalize_array iterate many times
+  if the count is garbage }
+procedure texception16_TestLargeArray(aArg: array of String);
+var
+  I: Integer;
+begin
+  WriteLn('  Inside TestLargeArray, High(aArg) = ', High(aArg));
+  for I := 0 to High(aArg) do
+    Write('.');
+  WriteLn;
+  raise Exception.Create('Boom from TestLargeArray');
+end;
+
+
+{$pop}
+
+{ Case tset4.pp }
+{$push}
+
+{$packset 1}
+
+
+function tset4_possetex (const c:string;const s : ansistring;count:Integer ):Integer;
+
+var cset : TSysCharSet;
+    i    : integer;
+begin
+  cset:=[];
+  if length(c)>0 then
+  for i:=1 to length(c) do
+    include(cset,c[i]);
+end;
+
+
+{$pop}
+
+{ Case tfilename.pp }
+{$push}
+
+
+{$IFDEF FPC}
+  {$H+}
+{$ENDIF}
+
+
+
+var
+  tfilename_err : boolean;
+procedure tfilename_TestFuncs(testidx:integer;const res,expected: string);
+begin
+  if res<>expected then
+    begin
+      Writeln('FAILURE at ',testidx:5,' got "',res,'", expected "',expected,'"  ');
+      tfilename_err:=true;
+    end;
+end;
+
+
+{$pop}
+
+begin
+
+{ Case tb_strings_objfpc_consolidated_04.pp }
+{$push}
+
+{$push}
+{$pop}
+{$push}
+{$IFDEF FPC}
+{$H+}
+{$ENDIF}
+{$ifdef unix}
+{$else}
+{$endif}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$endif}
+{$pop}
+{$push}
+{$H+}
+{$pop}
+{$push}
+{$H+}
+{$pop}
+{$push}
+{$h+}
+{$pop}
+{$push}
+{$H+}
+{$pop}
+{$push}
+{$h+}
+{$assertions on}
+{$pop}
+{$push}
+{$H+}
+{$R+}
+{$ZeroBasedStrings On}
+{$pop}
+{$push}
+{$H+}
+{$pop}
 begin
 
 { Case tw10224.pp }
@@ -655,6 +806,160 @@ begin
     WriteLn('Some tests FAILED!');
     Halt(1);
   end;
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case texception16.pp }
+{$push}
+
+{$H+}
+begin
+  WriteLn('=== Test 1: Basic open array with dynamic strings ===');
+  try
+    texception16_Test([texception16_MakeStr('hello'), texception16_MakeStr('world')]);
+  except
+    on E: Exception do
+      WriteLn('  Caught: ', E.Message);
+  end;
+
+  WriteLn;
+  WriteLn('=== Test 2: Open array with many preceding params ===');
+  try
+    texception16_TestMany(1, 2, 3, 4, 5, [texception16_MakeStr('aaa'), texception16_MakeStr('bbb'), texception16_MakeStr('ccc')]);
+  except
+    on E: Exception do
+      WriteLn('  Caught: ', E.Message);
+  end;
+
+  WriteLn;
+  WriteLn('=== Test 3: Large open array ===');
+  try
+    texception16_TestLargeArray([texception16_MakeStr('s0'), texception16_MakeStr('s1'), texception16_MakeStr('s2'), texception16_MakeStr('s3'),
+                    texception16_MakeStr('s4'), texception16_MakeStr('s5'), texception16_MakeStr('s6'), texception16_MakeStr('s7'),
+                    texception16_MakeStr('s8'), texception16_MakeStr('s9')]);
+  except
+    on E: Exception do
+      WriteLn('  Caught: ', E.Message);
+  end;
+
+  WriteLn;
+  WriteLn('AllocCount = ', texception16_AllocCount);
+  WriteLn('All tests passed without crash.');
+end;
+{$pop}
+
+{ Case tset4.pp }
+{$push}
+
+{$packset 1}
+begin
+end;
+{$pop}
+
+{ Case tfilename.pp }
+{$push}
+{$IFDEF FPC}
+
+{$H+}
+{$ENDIF}
+begin
+  // Default Unix
+  AllowDirectorySeparators:=['/','\'];
+  AllowDriveSeparators:=[];
+  tfilename_TestFuncs(1,ExtractFilePath('./:'),'./');
+  tfilename_TestFuncs(2,ExtractFileName('./:'),':');
+  tfilename_TestFuncs(3,ExtractFileDrive('./:'),'');
+
+  tfilename_TestFuncs(4,ExtractFilePath('C:/blah:blah'),'C:/');
+  tfilename_TestFuncs(5,ExtractFileName('C:/blah:blah'),'blah:blah');
+  tfilename_TestFuncs(6,ExtractFileDrive('C:/blah:blah'),'');
+
+  tfilename_TestFuncs(7,ExtractFilePath('./\'),'./\');
+  tfilename_TestFuncs(8,ExtractFileName('./\'),'');
+  tfilename_TestFuncs(9,ExtractFileDrive('./\'),'');
+
+  tfilename_TestFuncs(10,ExtractFilePath('./c:'),'./');
+  tfilename_TestFuncs(11,ExtractFileName('./c:'),'c:');
+  tfilename_TestFuncs(12,ExtractFileDrive('./c:'),'');
+
+  tfilename_TestFuncs(13,ExtractFilePath('\\server\share\file'),'\\server\share\');
+  tfilename_TestFuncs(14,ExtractFileName('\\server\share\file'),'file');
+  tfilename_TestFuncs(15,ExtractFileDrive('\\server\share\file'),'\\server\share');
+
+  // Kylix compatibility mode
+  AllowDirectorySeparators:=['/'];
+  AllowDriveSeparators:=[];
+  tfilename_TestFuncs(101,ExtractFilePath('./:'),'./');
+  tfilename_TestFuncs(102,ExtractFileName('./:'),':');
+  tfilename_TestFuncs(103,ExtractFileDrive('./:'),'');
+
+  tfilename_TestFuncs(104,ExtractFilePath('C:/blah:blah'),'C:/');
+  tfilename_TestFuncs(105,ExtractFileName('C:/blah:blah'),'blah:blah');
+  tfilename_TestFuncs(106,ExtractFileDrive('C:/blah:blah'),'');
+
+  tfilename_TestFuncs(107,ExtractFilePath('./\'),'./');
+  tfilename_TestFuncs(108,ExtractFileName('./\'),'\');
+  tfilename_TestFuncs(109,ExtractFileDrive('./\'),'');
+
+  tfilename_TestFuncs(110,ExtractFilePath('./c:'),'./');
+  tfilename_TestFuncs(111,ExtractFileName('./c:'),'c:');
+  tfilename_TestFuncs(112,ExtractFileDrive('./c:'),'');
+
+  tfilename_TestFuncs(113,ExtractFilePath('\\server\share\file'),'');
+  tfilename_TestFuncs(114,ExtractFileName('\\server\share\file'),'\\server\share\file');
+  tfilename_TestFuncs(115,ExtractFileDrive('\\server\share\file'),'');
+
+  // Default Windows/DOS/SO2
+  AllowDirectorySeparators:=['/','\'];
+  AllowDriveSeparators:=[':'];
+  tfilename_TestFuncs(201,ExtractFilePath('./:'),'./:');
+  tfilename_TestFuncs(202,ExtractFileName('./:'),'');
+  tfilename_TestFuncs(203,ExtractFileDrive('./:'),'');
+
+  tfilename_TestFuncs(204,ExtractFilePath('C:/blah:blah'),'C:/blah:');
+  tfilename_TestFuncs(205,ExtractFileName('C:/blah:blah'),'blah');
+  tfilename_TestFuncs(206,ExtractFileDrive('C:/blah:blah'),'C:');
+
+  tfilename_TestFuncs(207,ExtractFilePath('./\'),'./\');
+  tfilename_TestFuncs(208,ExtractFileName('./\'),'');
+  tfilename_TestFuncs(209,ExtractFileDrive('./\'),'');
+
+  tfilename_TestFuncs(210,ExtractFilePath('./c:'),'./c:');
+  tfilename_TestFuncs(211,ExtractFileName('./c:'),'');
+  tfilename_TestFuncs(212,ExtractFileDrive('./c:'),'');
+
+  tfilename_TestFuncs(213,ExtractFilePath('\\server\share\file'),'\\server\share\');
+  tfilename_TestFuncs(214,ExtractFileName('\\server\share\file'),'file');
+  tfilename_TestFuncs(215,ExtractFileDrive('\\server\share\file'),'\\server\share');
+
+  // Windows/DOS/SO2 Delphi Compatibility
+  AllowDirectorySeparators:=['\'];
+  AllowDriveSeparators:=[':'];
+  tfilename_TestFuncs(301,ExtractFilePath('./:'),'./:');
+  tfilename_TestFuncs(302,ExtractFileName('./:'),'');
+  tfilename_TestFuncs(303,ExtractFileDrive('./:'),'');
+
+  tfilename_TestFuncs(304,ExtractFilePath('C:/blah:blah'),'C:/blah:');
+  tfilename_TestFuncs(305,ExtractFileName('C:/blah:blah'),'blah');
+  tfilename_TestFuncs(306,ExtractFileDrive('C:/blah:blah'),'C:');
+
+  tfilename_TestFuncs(307,ExtractFilePath('./\'),'./\');
+  tfilename_TestFuncs(308,ExtractFileName('./\'),'');
+  tfilename_TestFuncs(309,ExtractFileDrive('./\'),'');
+
+  tfilename_TestFuncs(310,ExtractFilePath('./c:'),'./c:');
+  tfilename_TestFuncs(311,ExtractFileName('./c:'),'');
+  tfilename_TestFuncs(312,ExtractFileDrive('./c:'),'');
+
+  tfilename_TestFuncs(313,ExtractFilePath('\\server\share\file'),'\\server\share\');
+  tfilename_TestFuncs(314,ExtractFileName('\\server\share\file'),'file');
+  tfilename_TestFuncs(315,ExtractFileDrive('\\server\share\file'),'\\server\share');
+
+  if tfilename_err then
+    halt(1);
 end;
 {$pop}
 
