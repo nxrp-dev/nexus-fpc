@@ -134,6 +134,62 @@ var
   tb0246_b,tb0246_bb : boolean;
 {$pop}
 
+{ Case tb0328.pp }
+{$push}
+{ test for full boolean eval and register usage with b+ }
+
+{$b+}
+
+var
+  tb0328_funcscalled: byte;
+  tb0328_ok: boolean;
+
+function tb0328_function1: boolean;
+begin
+  writeln('function1 called!');
+  inc(tb0328_funcscalled);
+  tb0328_function1 := false;
+end;
+
+function tb0328_function2: boolean;
+begin
+  writeln('function2 called!');
+  inc(tb0328_funcscalled);
+  tb0328_function2 := false;
+end;
+
+function tb0328_function3: boolean;
+begin
+  writeln('function3 called!');
+  inc(tb0328_funcscalled);
+  tb0328_function3 := false;
+end;
+
+function tb0328_function4: boolean;
+begin
+  writeln('function4 called!');
+  inc(tb0328_funcscalled);
+  tb0328_function4 := false;
+end;
+
+function tb0328_test2: boolean;
+var tb0328_j, tb0328_k, tb0328_l, tb0328_m: longint;
+begin
+  tb0328_test2 := true;
+  tb0328_m := 0;
+{ get as much regvars occupied as possible }
+  for tb0328_j := 1 to 100 do
+    for tb0328_k := 1 to 100 do
+      for tb0328_l := tb0328_k downto 0 do
+         inc(tb0328_m,tb0328_j - tb0328_k + tb0328_l);
+  if (tb0328_j = 5) and (tb0328_k = 0) and (tb0328_l = 100) and tb0328_function1 then
+    begin
+      tb0328_test2 := false;
+      writeln('bug');
+    end;
+end;
+{$pop}
+
 begin
   { Case tb0161.pp }
   {$push}
@@ -236,6 +292,33 @@ begin
    writeln('ok 3')
   else
    halt(1);
+end;
+  {$pop}
+
+  { Case tb0328.pp }
+  {$push}
+{$B+}
+begin
+  tb0328_ok := true;
+  tb0328_funcscalled := 0;
+  if tb0328_function1 and tb0328_function2 and tb0328_function3 and tb0328_function4 then
+    begin
+      writeln('bug!');
+    end;
+  tb0328_ok := tb0328_funcscalled = 4;
+  if tb0328_ok then
+    writeln('all functions called!')
+  else
+    writeln('not all functions called');
+  tb0328_ok := tb0328_test2 and (tb0328_funcscalled = 5);
+  if tb0328_ok then
+    writeln('test2 passed')
+  else writeln('test2 not passed');
+  if not tb0328_ok then
+    begin
+      writeln('full boolean evaluation is not working!');
+      halt(1);
+    end;
 end;
   {$pop}
 
