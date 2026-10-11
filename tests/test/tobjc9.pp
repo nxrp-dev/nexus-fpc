@@ -1,3 +1,4 @@
+{ Also covers identical original fixture tobjc9b.pp. }
 { %target=darwin }
 { %cpu=x86_64,aarch64}
 { %norun }
