@@ -37,3 +37,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_arrays_fpc_consolidated_01.pp` | 12 | 1 |
 | `tbs/tb_arrays_fpc_consolidated_02.pp` | 3 | 1 |
 | `tbs/tb_arrays_fpc_consolidated_03.pp` | 3 | 1 |
+| `tbs/tb_booleans_fpc_consolidated_01.pp` | 10 | 1 |
