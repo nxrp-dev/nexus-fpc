@@ -1,3 +1,4 @@
+{ Equivalent regression IDs: tb0263.pp, tw0753.pp; exercised once. }
 { %RESULT=217 }
 
 { Old file: tbs0306.pp }
