@@ -44,6 +44,17 @@ var
   tb0712_yy,tb0712_res : longint;
 {$pop}
 
+{ Case tw10009.pp }
+{$push}
+var
+  tw10009_test : 2..14;
+{$pop}
+
+{ Case tw1061.pp }
+{$push}
+var tw1061_vlcnt:longint;
+{$pop}
+
 begin
   { Case tb0034.pp }
   {$push}
@@ -125,6 +136,35 @@ begin
     tb0712_res:=4;
   if tb0712_res<>0 then
     halt(tb0712_res);
+end;
+  {$pop}
+
+  { Case tw10009.pp }
+  {$push}
+begin
+  tw10009_test:=14;
+  case tw10009_test of
+    2..9: halt(1);
+    14: ;
+  else
+    halt(1);
+  end;
+  writeln('ok');
+end;
+  {$pop}
+
+  { Case tw1061.pp }
+  {$push}
+begin
+   tw1061_vlcnt := 10;
+   case tw1061_vlcnt of
+   7: writeln(7);
+   12,13: begin
+            writeln('Case codegeneration error!');
+            halt(1);
+          end;
+   11:writeln(11);
+   end;
 end;
   {$pop}
 
