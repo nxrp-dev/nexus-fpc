@@ -3,6 +3,13 @@
 program nexus_consolidated_tests;
 {$mode delphi}
 
+{ Case tb_interfaces_delphi_consolidated_03.pp }
+{$push}
+{ Consolidated interfaces regressions; original case IDs and assertions are retained. }
+
+
+
+
 { Case tw26481.pp }
 {$push}
 
@@ -126,6 +133,79 @@ type
 
 {$pop}
 
+
+{$pop}
+
+{ Case tgeneric38.pp }
+{$push}
+
+
+{ in mode Delphi generic types might be overloaded - here: interface only }
+
+
+{$ifdef fpc}
+  
+{$endif}
+
+type
+  tgeneric38_TTest = interface
+
+  end;
+
+  tgeneric38_TTest<T> = interface
+
+  end;
+
+  tgeneric38_TTest<T, S> = interface
+
+  end;
+
+
+{$pop}
+
+{ Case tgeneric44.pp }
+{$push}
+
+
+{ in mode Delphi generic types might be overloaded - here: interface only
+  Note: This tests a different code path than in the compiler than tgeneric38! }
+
+
+{$ifdef fpc}
+  
+{$endif}
+
+type
+  tgeneric44_TTest<T> = interface
+
+  end;
+
+  tgeneric44_TTest = interface
+
+  end;
+
+  tgeneric44_TTest<T, S> = interface
+
+  end;
+
+
+{$pop}
+
+begin
+
+{ Case tb_interfaces_delphi_consolidated_03.pp }
+{$push}
+
+{$push}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$endif}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$endif}
+{$pop}
 begin
 
 { Case tw26481.pp }
@@ -150,6 +230,29 @@ end;
 
 {$endif}
 begin
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case tgeneric38.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif}
+begin
+
+end;
+{$pop}
+
+{ Case tgeneric44.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif}
+begin
+
 end;
 {$pop}
 
