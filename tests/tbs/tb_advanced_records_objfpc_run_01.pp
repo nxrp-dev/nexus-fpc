@@ -34,7 +34,7 @@ var
 {$push}
 {$APPTYPE CONSOLE}
 {$IFDEF FPC}
-  
+
   {$MODESWITCH ADVANCEDRECORDS}
 {$ENDIF}
 

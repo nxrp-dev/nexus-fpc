@@ -33,7 +33,7 @@ var
 { Case tb0443.pp }
 {$push}
 {$ifdef fpc}
-  
+
 {$else}
 type
   qword = int64;
