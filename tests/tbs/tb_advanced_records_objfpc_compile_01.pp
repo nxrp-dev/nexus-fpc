@@ -46,6 +46,35 @@ begin
 end;
 {$pop}
 
+{ Case tw27750b.pp }
+{$push}
+{$modeswitch advancedrecords}
+
+type
+
+  { TGeneric }
+
+  generic tw27750b_tgeneric<tw27750b_foo, tw27750b_bar> = record
+  public type
+    tw27750b_tgfb = specialize tw27750b_tgeneric<tw27750b_foo, tw27750b_bar>;
+  public
+    class operator :=(tw27750b_afoo : tw27750b_foo) : tw27750b_tgfb;
+    class operator :=(tw27750b_abar : tw27750b_bar) : tw27750b_tgfb;
+  end;
+
+{ TGeneric }
+
+class operator tw27750b_tgeneric.:=(tw27750b_afoo: tw27750b_foo): tw27750b_tgfb;
+begin
+
+end;
+
+class operator tw27750b_tgeneric.:=(tw27750b_abar: tw27750b_bar): tw27750b_tgfb;
+begin
+
+end;
+{$pop}
+
 begin
   { Case tb0623.pp }
   {$push}
@@ -58,6 +87,12 @@ end;
   {$push}
 begin
 
+end;
+  {$pop}
+
+  { Case tw27750b.pp }
+  {$push}
+begin
 end;
   {$pop}
 
