@@ -176,3 +176,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_floating_point_fpc_consolidated_04.pp` | 5 | 1 |
 | `tbs/tb_floating_point_fpc_consolidated_05.pp` | 4 | 1 |
 | `tbs/tb_generics_delphi_consolidated_01.pp` | 4 | 1 |
+| `tbs/tb_generics_objfpc_consolidated_04.pp` | 3 | 1 |

@@ -1,9 +1,17 @@
-{ %norun }
-{ %opt=-Sew }
+{ Consolidated generics regressions; original case IDs and assertions are retained. }
+{ %NORUN }
+{ %OPT=-Sew }
+program nexus_consolidated_tests;
+{$mode objfpc}
+
+{ Case tb_generic_classes_objfpc_compile_01.pp }
+{$push}
+
+
 { Generic class result initialization and comparisons involving unresolved types. }
 { Original case IDs and variable scopes are retained below. }
 
-{$mode objfpc}
+
 
 { Case tb0617.pp }
 {$push}
@@ -55,6 +63,90 @@ begin
 end;
 {$pop}
 
+
+{$pop}
+
+{ Case tgeneric120.pp }
+{$push}
+
+
+
+
+
+
+
+type
+  generic tgeneric120_TTest<T> = class
+    constructor Create; virtual;
+  end;
+
+  {$warn 3018 off}
+
+  generic tgeneric120_TTestSub<T> = class(specialize tgeneric120_TTest<T>)
+  protected
+    constructor Create; override;
+  end;
+
+constructor tgeneric120_TTest.Create;
+begin
+end;
+
+constructor tgeneric120_TTestSub.Create;
+begin
+end;
+
+
+{$pop}
+
+{ Case tgeneric121.pp }
+{$push}
+
+
+
+
+
+
+
+type
+  generic tgeneric121_TTest<T> = class
+    constructor Create; virtual;
+  end;
+
+  {$push}
+  {$warn 3018 off}
+
+  generic tgeneric121_TTestSub<T> = class(specialize tgeneric121_TTest<T>)
+  protected
+    constructor Create; override;
+  end;
+
+  {$pop}
+
+  generic tgeneric121_TTestSub2<T> = class(specialize tgeneric121_TTestSub<T>)
+
+  end;
+
+constructor tgeneric121_TTest.Create;
+begin
+end;
+
+constructor tgeneric121_TTestSub.Create;
+begin
+end;
+
+
+{$pop}
+
+begin
+
+{ Case tb_generic_classes_objfpc_compile_01.pp }
+{$push}
+
+{$push}
+{$warn 5059 error}
+{$pop}
+{$push}
+{$pop}
 begin
   { Case tb0617.pp }
   {$push}
@@ -69,5 +161,28 @@ begin
 
 end;
   {$pop}
+
+end;
+{$pop}
+
+{ Case tgeneric120.pp }
+{$push}
+
+{$warn 3018 off}
+begin
+
+end;
+{$pop}
+
+{ Case tgeneric121.pp }
+{$push}
+
+{$push}
+{$warn 3018 off}
+{$pop}
+begin
+
+end;
+{$pop}
 
 end.
