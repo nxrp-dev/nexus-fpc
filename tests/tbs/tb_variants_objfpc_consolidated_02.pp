@@ -3,6 +3,13 @@ program nexus_consolidated_tests;
 {$mode objfpc}
 uses variants;
 
+{ Case tb_variants_objfpc_consolidated_01.pp }
+{$push}
+{ Consolidated variants regressions; original case IDs and assertions are retained. }
+
+
+
+
 { Case tw20873.pp }
 {$push}
 
@@ -96,6 +103,63 @@ var
 
 {$pop}
 
+
+{$pop}
+
+{ Case testv9.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif fpc}
+
+
+var
+  testv9_a,testv9_av : array of longint;
+  testv9_a2,testv9_av2 : array of array of longint;
+  testv9_v,testv9_v2 : variant;
+  testv9_i,testv9_j : longint;
+
+{$pop}
+
+{ Case tw26370.pp }
+{$push}
+
+
+
+procedure tw26370_test;
+var
+  Bounds: Array [0..1] of TVarArrayBound;
+  V1, V2: Variant;
+begin
+  Bounds[0].lowbound := 0;
+  Bounds[0].elementcount := 1;
+  Bounds[1].lowbound := 0;
+  Bounds[1].elementcount := 0;
+  V1 := VarArrayCreate(@Bounds, 2, varVariant);
+  V2 := V1; // <- Exception EVariantBadIndexError!!!!!
+end;
+
+
+{$pop}
+
+begin
+
+{ Case tb_variants_objfpc_consolidated_01.pp }
+{$push}
+
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$H+}
+{$pop}
+{$push}
+{$pop}
 begin
 
 { Case tw20873.pp }
@@ -193,6 +257,65 @@ begin
       halt(1)
     else
       writeln('ok');
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case testv9.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif fpc}
+begin
+  setlength(testv9_a,1000);
+  for testv9_i:=0 to high(testv9_a) do
+    testv9_a[testv9_i]:=testv9_i;
+  testv9_v:=testv9_a;
+  for testv9_i:=0 to high(testv9_a) do
+    if testv9_v[testv9_i]<>testv9_i then
+      begin
+        writeln('v[',testv9_i,']=',testv9_v[testv9_i]);
+        halt(1);
+      end;
+  writeln('simple test ok');
+
+  setlength(testv9_a2,10,30);
+  for testv9_i:=0 to high(testv9_a2) do
+    for testv9_j:=0 to high(testv9_a2[testv9_i]) do
+      testv9_a2[testv9_i,testv9_j]:=testv9_i*testv9_j;
+  writeln(length(testv9_a2));
+  writeln(length(testv9_a2[0]));
+  testv9_v2:=testv9_a2;
+  for testv9_i:=0 to high(testv9_a2) do
+    for testv9_j:=0 to high(testv9_a2[testv9_i]) do
+    if testv9_v2[testv9_i,testv9_j]<>testv9_i*testv9_j then
+      begin
+        writeln('v2[',testv9_i,',',testv9_j,']=',testv9_v2[testv9_i,testv9_j]);
+        halt(1);
+      end;
+  writeln('complex test ok');
+
+  testv9_av:=testv9_v;
+  writeln('1d dyn. array:=var. array ok');
+
+
+  testv9_av2:=testv9_v2;
+  if high(testv9_av2)<>VarArrayHighBound(testv9_v2,1) then
+   halt(1);
+  if high(testv9_av2[0])<>VarArrayHighBound(testv9_v2,2) then
+   halt(1);
+  writeln('2d dyn. array:=var. array ok');
+  writeln('ok');
+end;
+{$pop}
+
+{ Case tw26370.pp }
+{$push}
+
+begin
+  tw26370_test;
 end;
 {$pop}
 
