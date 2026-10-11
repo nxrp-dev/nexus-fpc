@@ -1,21 +1,28 @@
+{ Consolidated floating point regressions; original case IDs and assertions are retained. }
+program nexus_consolidated_tests;
 {$mode delphi}
+uses sysutils;
 
-program test;
-uses SysUtils;
+{ Case tw13622.pp }
+{$push}
+
+
+
+
 
 type
-    TReal1DArray        = array of Double;
-    TReal2DArray        = array of array of Double;
+    tw13622_TReal1DArray        = array of Double;
+    tw13622_TReal2DArray        = array of array of Double;
 
-function TestSST(Silent : Boolean):Boolean;
+function tw13622_TestSST(Silent : Boolean):Boolean;
 var
     MaxMN : Integer;
     PassCount : Integer;
     Threshold : Double;
-    AEffective : TReal2DArray;
-    AParam : TReal2DArray;
-    XE : TReal1DArray;
-    B : TReal1DArray;
+    AEffective : tw13622_TReal2DArray;
+    AParam : tw13622_TReal2DArray;
+    XE : tw13622_TReal1DArray;
+    B : tw13622_TReal1DArray;
     N : Integer;
     Pass : Integer;
     I : Integer;
@@ -173,6 +180,72 @@ begin
     Result :=  False;
 end;
 
+
+{$pop}
+
+{ Case tw22809.pp }
+{$push}
+
+
+
+
+
+
+var
+   tw22809_v : Double;
+
+{$pop}
+
+{ Case tw35886.pp }
+{$push}
+
+
+
+
+
+
+var
+  tw35886_f: Double;
+  tw35886_n: Int64;
+
+
+{$pop}
+
 begin
-  TestSST(False);
+
+{ Case tw13622.pp }
+{$push}
+
+begin
+  tw13622_TestSST(False);
+end;
+{$pop}
+
+{ Case tw22809.pp }
+{$push}
+
+begin
+  try
+    TryStrToFloat('9e9999', tw22809_v);
+  except
+    on e: Exception do begin
+      writeln('Unexpected exception thrown: ',e.ClassName);
+      halt(1);
+    end;
+  end;
+  writeln('ok')
+end;
+{$pop}
+
+{ Case tw35886.pp }
+{$push}
+
+begin
+  tw35886_n := 9876543210;
+  tw35886_f := Double(tw35886_n);
+  if tw35886_f<>9876543210.0 then
+    halt(1);
+end;
+{$pop}
+
 end.
