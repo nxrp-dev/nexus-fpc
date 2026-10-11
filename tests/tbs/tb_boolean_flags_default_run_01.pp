@@ -190,6 +190,25 @@ begin
 end;
 {$pop}
 
+{ Case tw15750.pp }
+{$push}
+var
+  tw15750_i: longint;
+  tw15750_a, tw15750_b: boolean;
+{$pop}
+
+{ Case tw11027.pp }
+{$push}
+var tw11027_i : char;
+    tw11027_bb: bytebool;
+{$pop}
+
+{ Case tw35272.pp }
+{$push}
+var
+  tw35272_b1, tw35272_b2, tw35272_b3: longbool;
+{$pop}
+
 begin
   { Case tb0161.pp }
   {$push}
@@ -319,6 +338,54 @@ begin
       writeln('full boolean evaluation is not working!');
       halt(1);
     end;
+end;
+  {$pop}
+
+  { Case tw15750.pp }
+  {$push}
+begin
+  tw15750_a:=true;
+  tw15750_i:=0;
+  for tw15750_b:=not tw15750_a to true do
+    begin
+      inc(tw15750_i);
+      writeln('now b is ',tw15750_b);
+    end;
+  if tw15750_i<>2 then
+    halt(1);
+end;
+  {$pop}
+
+  { Case tw11027.pp }
+  {$push}
+begin
+  boolean(tw11027_i) := (1=1);
+  if not boolean(tw11027_i) then
+    halt(1);
+  boolean(tw11027_bb):=boolean(tw11027_i);
+  if not(tw11027_bb) then
+    halt(2);
+end;
+  {$pop}
+
+  { Case tw35272.pp }
+  {$push}
+begin
+  tw35272_b1:=longbool(1);
+  tw35272_b2:=longbool(2);
+  tw35272_b3:=tw35272_b1 and tw35272_b2;
+  if not tw35272_b3 then
+    halt(1);
+  tw35272_b3:=tw35272_b1 xor tw35272_b2;
+  if tw35272_b3 then
+    halt(2);
+{$b+}
+  tw35272_b3:=tw35272_b1 and tw35272_b2;
+  if not tw35272_b3 then
+    halt(3);
+  tw35272_b3:=tw35272_b1 xor tw35272_b2;
+  if tw35272_b3 then
+    halt(4);
 end;
   {$pop}
 
