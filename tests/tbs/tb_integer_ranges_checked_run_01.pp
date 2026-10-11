@@ -96,6 +96,21 @@ begin
 end;
 {$pop}
 
+{ Case tw15304.pp }
+{$push}
+{$r+,q+}
+
+var tw15304_a : LongWord;
+{$pop}
+
+{ Case tw14841.pp }
+{$push}
+{$r+,o+}
+var
+tw14841_b: byte;
+tw14841_s: shortint;
+{$pop}
+
 begin
   { Case tb0085.pp }
   {$push}
@@ -215,6 +230,29 @@ end;
 {$R+,Q+}
 begin
   tb0658_test(0);
+end;
+  {$pop}
+
+  { Case tw15304.pp }
+  {$push}
+{$R+,Q+}
+begin
+  tw15304_a := $0FFFFFFF;
+  Inc(tw15304_a, LongWord($F0000000));
+  // no runtime error if the above line is changed to:
+  // A := A + LongWord($F0000000);
+end;
+  {$pop}
+
+  { Case tw14841.pp }
+  {$push}
+{$R+,O+}
+begin
+  tw14841_b:=57;
+  tw14841_s:=-1;
+  inc(tw14841_b, tw14841_s);
+  if tw14841_b<>56 then
+    halt(1);
 end;
   {$pop}
 
