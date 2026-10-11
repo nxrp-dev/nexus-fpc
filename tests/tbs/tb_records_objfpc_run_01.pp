@@ -1,11 +1,17 @@
-{ Records regression cases; original case IDs are retained below. }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode objfpc}
+{$modeswitch advancedrecords}
+{$MODESWITCH ADVANCEDRECORDS}
+
+{ Source group: tb_records_objfpc_run_01.pp }
+{$push}
 
 { Case tb0282.pp }
 {$push}
 { Old file: tbs0334.pp }
 {  }
 
-{$ifdef fpc}{$mode objfpc}{$endif}
+{$ifdef fpc}{$endif}
 
 type
   tb0282_tvarrec=record
@@ -22,7 +28,7 @@ end;
 
 { Case tb0573.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tb0573_tr1 = record
@@ -68,7 +74,7 @@ end;
 
 { Case tb0593.pp }
 {$push}
-{$mode objfpc}
+
 type
   tb0593_tblocktype = (
     btNone,
@@ -174,7 +180,7 @@ var
 
 { Case tw1409.pp }
 {$push}
-{$MODE objfpc}
+
 type
   tw1409_tpoint = record
     tw1409_x, tw1409_y: Integer;
@@ -205,7 +211,7 @@ const
 
 { Case tw17283.pp }
 {$push}
-{$mode objfpc}
+
 
   type
     tw17283_tr_32=packed record
@@ -257,7 +263,7 @@ const
 
 { Case tw17862.pp }
 {$push}
-{$mode objfpc}
+
 type
  tw17862_tfield = record
    tw17862_a,tw17862_b,tw17862_c: byte;
@@ -283,7 +289,7 @@ var
 { Source provided for Free Pascal Bug Report 2514 }
 { Submitted by "Andreas Horst" on  2003-05-28 }
 { e-mail: AndyHorst@web.de }
-{$mode objfpc}
+
 type tw2514_trgb=record
  tw2514_trgb2hsl: record
  tw2514_r,tw2514_g,tw2514_b : extended;
@@ -338,7 +344,7 @@ var
 
 { Case tw25895.pp }
 {$push}
-{$MODE OBJFPC}
+
 
 type
    tw25895_tdummy = record end;
@@ -351,7 +357,7 @@ end; // Fatal: Internal error 2010053111
 
 { Case tw29547.pp }
 {$push}
-{$mode objfpc}
+
 
 type
     tw29547_point2d = record
@@ -385,7 +391,7 @@ end;
 
 { Case tw29933.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tw29933_tpoint =
@@ -417,7 +423,7 @@ var
 
 { Case tw36381.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tw36381_tvec2 = record
@@ -438,6 +444,186 @@ end;
 var
   tw36381_pt: tw36381_tvec2;
 {$pop}
+
+
+{$pop}
+
+{ Source group: tb_records_objfpc_run_03.pp }
+{$push}
+
+{ Case tw12000.pp }
+{$push}
+{$H+}
+
+type
+  tw12000_trec = record
+    tw12000_signature: array of Integer;
+    tw12000_s: ansistring;
+  end;
+
+var
+  tw12000_m: array of tw12000_trec;
+  tw12000_s2: ansistring;
+{$pop}
+
+{ Case tw21505a.pp }
+{$push}
+{$H+}
+
+type
+  tw21505a_pposlist = ^tw21505a_tposlist;
+  tw21505a_tposlist = record
+    tw21505a_elem : Double;
+    tw21505a_tail : ^tw21505a_tposlist;
+  end;
+
+  operator >< (e : single; tw21505a_list : tw21505a_pposlist) : tw21505a_pposlist;
+  begin
+    new (result);
+    result^.tw21505a_elem := e;
+    result^.tw21505a_tail := tw21505a_list;
+  end;
+
+var
+  tw21505a_list : tw21505a_pposlist;
+{$pop}
+
+{ Case tw30329.pp }
+{$push}
+{$H+}
+
+type
+  tw30329_tgf2dpoint = array[0..1] of Single;
+
+  tw30329_tgf2doutbox = packed record
+    tw30329_fmin, tw30329_fmax: tw30329_tgf2dpoint;
+  end;
+
+function tw30329_some2doutbox : tw30329_tgf2doutbox;
+begin
+  Result.tw30329_fmin[0]:=1.0;
+  Result.tw30329_fmin[1]:=2.0;
+  Result.tw30329_fmax[0]:=3.0;
+  Result.tw30329_fmax[1]:=4.0;
+end;
+
+var
+  tw30329_outbox : tw30329_tgf2doutbox;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_advanced_records_objfpc_run_01.pp }
+{$push}
+{$modeswitch advancedrecords}
+{ Case tb0665.pp }
+{$push}
+{$modeswitch advancedrecords}
+
+type
+  TTest = record
+    b: Boolean;
+    function Test(aArg: Pointer): Boolean; inline;
+    generic function Test<tb0665_t>: Boolean; inline;
+  end;
+
+function TTest.Test(aArg: Pointer): Boolean;
+begin
+  b := True;
+  Result := True;
+end;
+
+generic function TTest.Test<tb0665_t>: Boolean;
+begin
+  Result := Test(Nil);
+end;
+
+var
+  tb0665_t: TTest;
+{$pop}
+
+{ Case tb0695.pp }
+{$push}
+{$APPTYPE CONSOLE}
+{$IFDEF FPC}
+
+  {$MODESWITCH ADVANCEDRECORDS}
+{$ENDIF}
+
+type
+  TState = record
+  strict private
+    FState: LongWord;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Instance: TState);
+  public
+    property State: LongWord read FState;
+  end;
+
+var
+  initdone: Boolean = False;
+
+class operator TState.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Instance: TState);
+begin
+  Writeln('TState now being initialised');
+  initdone := True;
+  Instance.FState := 1;
+end;
+
+type
+  TSys0 = class(TObject)
+    FItem: TState;
+    constructor Create;
+  end;
+
+  TSys = class(TSys0)
+    //FItem2: TState;
+  end;
+
+constructor TSys0.Create;
+begin
+  inherited;
+  Writeln(ClassName + ' now being created');
+  Writeln('State=', FItem.State);
+end;
+
+var
+  tb0695_c: TSys;
+{$pop}
+
+{ Case tb0707.pp }
+{$push}
+{$modeswitch advancedrecords}
+var
+	tb0707_initialized: boolean = false;
+
+type
+	tb0707_innerrec = record
+		class operator Initialize(var self: tb0707_innerrec);
+	end;
+
+	tb0707_outerrec = record
+		tb0707_inner: tb0707_innerrec;
+		class operator Initialize(var self: tb0707_outerrec);
+	end;
+
+	class operator tb0707_innerrec.Initialize(var self: tb0707_innerrec);
+	begin
+		tb0707_initialized := true;
+	end;
+
+	class operator tb0707_outerrec.Initialize(var self: tb0707_outerrec);
+	begin
+	end;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_records_objfpc_run_01.pp }
+  {$push}
+
 
 begin
   { Case tb0282.pp }
@@ -583,6 +769,126 @@ tw36381_pt.tw36381_x:=1.0;
   if tw36381_pt.tw36381_y<>2.0 then
     halt(2);
   end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_records_objfpc_run_03.pp }
+  {$push}
+
+
+begin
+  { Case tw12000.pp }
+  {$push}
+
+  begin
+SetLength(tw12000_m,2);
+  SetLength(tw12000_m[0].tw12000_signature,4);
+  SetLength(tw12000_m[1].tw12000_signature,4);
+  setlength(tw12000_m[0].tw12000_s,2);
+  tw12000_s2:=tw12000_m[0].tw12000_s;
+  WriteLn(Length(tw12000_m[0].tw12000_signature), ' ', Length(tw12000_m[1].tw12000_signature));
+  writeln(length(tw12000_m[0].tw12000_s));
+  tw12000_m[0].tw12000_signature := tw12000_m[0].tw12000_signature;
+  tw12000_m[0].tw12000_s:=tw12000_m[0].tw12000_s;
+  WriteLn(Length(tw12000_m[0].tw12000_signature), ' ', Length(tw12000_m[1].tw12000_signature));
+  writeln(length(tw12000_m[0].tw12000_s));
+  tw12000_s2:='';
+  if (Length(tw12000_m[0].tw12000_signature) <> 4) then
+    halt(1);
+  if (Length(tw12000_m[0].tw12000_s) <> 2) then
+    halt(2);
+  end;
+  {$pop}
+
+  { Case tw21505a.pp }
+  {$push}
+
+  begin
+// This makes Fatal: Internal error 2008022101
+//  list := 1.0 >< 3.0 >< 5.0 >< 7.0 >< 9.0 >< nil;
+// This says Error: Operation "><" not supported for types "ShortInt" and "Pointer"
+  tw21505a_list := 1.0 >< (3.0 >< (5.0 >< (7.0 >< (9.0 >< nil))));
+  if tw21505a_list^.tw21505a_elem<>1.0 then
+    halt(1);
+  if tw21505a_list^.tw21505a_tail^.tw21505a_elem<>3.0 then
+    halt(2);
+  if tw21505a_list^.tw21505a_tail^.tw21505a_tail^.tw21505a_elem<>5.0 then
+    halt(3);
+  if tw21505a_list^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail^.tw21505a_elem<>7.0 then
+    halt(4);
+  if tw21505a_list^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail^.tw21505a_elem<>9.0 then
+    halt(5);
+  if tw21505a_list^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail^.tw21505a_tail<>nil then
+    halt(6);
+  end;
+  {$pop}
+
+  { Case tw30329.pp }
+  {$push}
+
+  begin
+tw30329_outbox:=tw30329_some2doutbox;
+  with tw30329_outbox do
+    if (tw30329_fmin[0]<>1.0) or
+       (tw30329_fmin[1]<>2.0) or
+       (tw30329_fmax[0]<>3.0) or
+       (tw30329_fmax[1]<>4.0) then
+      halt(1);
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_advanced_records_objfpc_run_01.pp }
+  {$push}
+{$modeswitch advancedrecords}
+{$modeswitch advancedrecords}
+{$MODESWITCH ADVANCEDRECORDS}
+{$modeswitch advancedrecords}
+begin
+  { Case tb0665.pp }
+  {$push}
+begin
+  tb0665_t.b := False;
+  { check for side effects to ensure that the code was correctly generated }
+  tb0665_t.specialize Test<LongInt>;
+  if not tb0665_t.b then
+    Halt(1);
+  Writeln('ok');
+end;
+  {$pop}
+
+  { Case tb0695.pp }
+  {$push}
+begin
+  Writeln('Create instance of TSys...');
+  tb0695_c := TSys.Create;
+  if not InitDone then
+    Halt(1);
+  tb0695_c.Free;
+end;
+  {$pop}
+
+  { Case tb0707.pp }
+  {$push}
+begin
+	Initialize(tb0707_outerrec(nil^));
+	if not tb0707_initialized then
+	begin
+		writeln('Inner record not initialized.');
+		halt(1);
+	end;
+	writeln('ok');
+end;
+  {$pop}
+
+
+end;
   {$pop}
 
 end.
