@@ -65,3 +65,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/tb_booleans_macpas_consolidated_01.pp` | 5 | 1 |
 | `test/tb_classes_delphi_consolidated_01.pp` | 3 | 1 |
 | `test/tb_control_flow_objfpc_consolidated_01.pp` | 5 | 1 |
+| `test/tb_floating_point_fpc_consolidated_01.pp` | 5 | 1 |
