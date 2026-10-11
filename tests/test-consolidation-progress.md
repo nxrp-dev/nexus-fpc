@@ -153,3 +153,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_integers_objfpc_consolidated_02.pp` | 5 | 1 |
 | `tbs/tb_records_macpas_consolidated_01.pp` | 5 | 1 |
 | `tbs/tb_strings_fpc_consolidated_02.pp` | 12 | 1 |
+| `test/tb_classes_delphi_consolidated_04.pp` | 20 | 1 |
