@@ -95,3 +95,14 @@ Commands and complete diagnostics are retained under `output/test-consolidation`
 normally and with `-O2`. It passes on Win64. It has been restored as an
 independent fixture and removed from the floating-point group. The
 remaining group passes normally and with `-O2` on both architectures.
+
+`tbs/tw25122.pp` also exits with code 1 on Win32 in both variants: its first
+assertion comparing the ten-byte representation of an Extended literal fails.
+It has been restored unchanged and removed from the record group; the remaining
+group passes on both architectures.
+
+## Multiline string scanning
+
+`test/tmultilinestring26.pp` fails standalone compilation normally and with
+`-O2`: `Fatal: Unterminated multi-line string starting at line 0, column 0.`
+The fixture remains unchanged and separate.
