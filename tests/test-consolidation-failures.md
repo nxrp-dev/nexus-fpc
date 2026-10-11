@@ -20,7 +20,7 @@ is available. No compiler or RTL source correction was made during consolidation
 
 The existing package SDK builder builds the current compiler against the stock
 bootstrap RTL before building its matching Nexus RTL. That separate build path
-is being used for fixture validation; it does not establish that the complete
+was used for fixture validation; it does not establish that the complete
 stock-compiler bootstrap passes.
 
 ## 2026-10-10: layout-sensitive managed-string diagnostics
@@ -36,3 +36,19 @@ prints string-header diagnostics that vary with allocation/layout between runs.
 The grouping/output comparison therefore failed; no compiler defect has been
 established by these checks. The attempted groups were discarded, and all three
 original fixtures remain unchanged.
+
+## 2026-10-10: standalone Currency runtime failures
+
+The fresh Win64 compiler and matching RTL reproduce these failures through the
+standard test driver, both normally and with `-O2`:
+
+- `tbs/tw1737.pp` compiles but crashes with runtime error `216` while executing
+  `writeln(round(c * 100))`, where `c: Currency` is assigned `234982814`.
+- `tbs/tw41865c.pp` compiles but exits with code `1`. Its first assertion expects
+  the raw scaled representation of `Currency(10) div Currency(3)` to be `30000`.
+  The remaining assertions cannot be assessed because the first assertion halts.
+
+These are failures of the original standalone fixtures, before any grouping.
+Both fixtures were left unchanged and were excluded from consolidation. No
+compiler or RTL correction was attempted in this pass. Other Currency fixtures
+that pass independently remain eligible for separate consolidated batches.
