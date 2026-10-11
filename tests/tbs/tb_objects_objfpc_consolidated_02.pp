@@ -2,6 +2,12 @@
 program nexus_consolidated_tests;
 {$mode objfpc}
 
+{ Case tb_objects_objfpc_consolidated_01.pp }
+{$push}
+{ Consolidated objects regressions; original case IDs and assertions are retained. }
+
+
+
 { Case tb0252.pp }
 {$push}
 { Old file: tbs0292.pp }
@@ -187,6 +193,71 @@ var
 
 {$pop}
 
+
+{$pop}
+
+{ Case tw17521.pp }
+{$push}
+
+{$h+}
+
+
+type tw17521_tx = object
+       a,b,c: longint; // remove these => no crash
+       constructor init;
+       function v: longint; virtual;
+       end;
+     tw17521_px = ^tw17521_tx;
+
+constructor tw17521_tx.init;
+  begin
+  end;
+
+function tw17521_tx.v: longint;
+  begin
+    v:=b;
+  end;
+
+var tw17521_t : function:longint of object;
+    tw17521_p : tw17521_px;
+
+
+{$pop}
+
+{ Case tsealed6.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif}
+
+type
+  tsealed6_TAbstractObject = object abstract abstract abstract
+  public
+  end;
+
+  tsealed6_TSealedObject = object sealed sealed sealed
+  public
+  end;
+
+{$pop}
+
+begin
+
+{ Case tb_objects_objfpc_consolidated_01.pp }
+{$push}
+
+{$push}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$endif}
+{$pop}
+{$push}
+{$OPTIMIZATION NODFA}
+{$OPTIMIZATION NOFORLOOP}
+{$pop}
+{$push}
+{$pop}
 begin
 
 { Case tb0252.pp }
@@ -240,6 +311,34 @@ begin
   if tw9095_Obj.p_child<>tw9095_panother($deadbeef) then
     halt(1);
   writeln('ok');
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case tw17521.pp }
+{$push}
+
+{$h+}
+begin
+  new( tw17521_p, init );
+  tw17521_p^.a:=3;
+  tw17521_p^.b:=4;
+  tw17521_p^.c:=5;
+  tw17521_p^.v; // ok
+  tw17521_t := @tw17521_p^.v; // sigsegv
+  if tw17521_t()<>4 then
+    halt(1);
+end;
+{$pop}
+
+{ Case tsealed6.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif}
+begin
 end;
 {$pop}
 
