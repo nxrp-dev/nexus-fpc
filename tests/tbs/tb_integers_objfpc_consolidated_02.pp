@@ -1,7 +1,24 @@
-{ Consolidated integer checks regressions; original case IDs and assertions are retained. }
+{ Consolidated integers regressions; original case IDs and assertions are retained. }
 program nexus_consolidated_tests;
 {$mode objfpc}
 uses sysutils;
+
+{ Case tb0713.pp }
+{$push}
+
+
+{$Q+}
+
+
+
+{$pop}
+
+{ Case tb_integer_checks_objfpc_consolidated_01.pp }
+{$push}
+{ Consolidated integer checks regressions; original case IDs and assertions are retained. }
+
+
+
 
 { Case tb0162.pp }
 {$push}
@@ -70,6 +87,92 @@ const
 
 {$pop}
 
+
+{$pop}
+
+{ Case tw15438.pp }
+{$push}
+
+
+
+
+
+
+function tw15438_InlineSwapEndian(const AValue: QWord): QWord;inline;
+  begin
+    result := (qword(SwapEndian(lo(avalue))) shl 32) or SwapEndian(hi(avalue));
+  end;
+
+var
+    tw15438_q : QWord;
+
+procedure tw15438_Check;
+begin
+    tw15438_q := $0102030405060708;
+    tw15438_q := tw15438_InlineSwapEndian(tw15438_q);
+end;
+
+
+{$pop}
+
+{ Case tw3534.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 3534 }
+{ Submitted by "Mattias Gaertner" on  2005-01-08 }
+{ e-mail: mattias@freepascal.org }
+
+
+{$H+}
+
+
+
+var
+  tw3534_i: SmallInt;
+
+{$pop}
+
+{ Case tw7104.pp }
+{$push}
+
+
+{$H+}
+
+
+
+function tw7104_count: integer;
+begin
+  result := 5;
+end;
+
+var
+  tw7104_i: Integer;
+
+
+{$pop}
+
+begin
+
+{ Case tb0713.pp }
+{$push}
+
+{$Q+}
+begin
+  writeln(Int64.MinValue+Int64(Random(0)));
+end;
+{$pop}
+
+{ Case tb_integer_checks_objfpc_consolidated_01.pp }
+{$push}
+
+{$push}
+{$R-}
+{$Q+}
+{$pop}
+{$push}
+{$R-}
+{$pop}
+{$push}
+{$pop}
 begin
 
 { Case tb0162.pp }
@@ -374,6 +477,48 @@ begin
       writeln('This test failed');
       halt(1);
     end;
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case tw15438.pp }
+{$push}
+
+begin
+    tw15438_q:=0;
+    tw15438_Check;
+    if tw15438_q <> $0807060504030201 then begin
+        writeln(format('failed Swap - expected $0807060504030201, got %x',[tw15438_q]));
+        halt(1);
+    end;
+end;
+{$pop}
+
+{ Case tw3534.pp }
+{$push}
+
+{$H+}
+begin
+  tw3534_i:=-3;
+  writeln(IntToStr(tw3534_i));
+  if IntToStr(tw3534_i)<>'-3' then
+    halt(1);
+end;
+{$pop}
+
+{ Case tw7104.pp }
+{$push}
+
+{$H+}
+begin
+  for tw7104_i := 0 to tw7104_count-1 do begin
+    writeln(tw7104_i);
+    if FileExists('asdkjasdjalsj') then;
+
+    if tw7104_i>5 then halt(1);
+  end;
 end;
 {$pop}
 
