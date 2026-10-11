@@ -57,3 +57,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_strings_fpc_consolidated_01.pp` | 42 | 1 |
 | `tbs/tb_strings_objfpc_consolidated_01.pp` | 9 | 1 |
 | `tbs/tb_strings_objfpc_consolidated_02.pp` | 11 | 1 |
+| `tbs/tb_strings_objfpc_consolidated_04.pp` | 11 | 1 |
