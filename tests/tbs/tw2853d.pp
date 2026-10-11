@@ -1,3 +1,4 @@
+{ Equivalent regression IDs: tw2853d.pp, tw2853e.pp; exercised once. }
 { OPT= -dloop }
 { bug report variant, check that it works in
   TP mode , added by Pierre }
