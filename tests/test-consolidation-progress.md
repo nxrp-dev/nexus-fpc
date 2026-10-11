@@ -138,3 +138,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/tb_classes_objfpc_consolidated_03.pp` | 3 | 1 |
 | `test/tb_classes_objfpc_consolidated_05.pp` | 4 | 1 |
 | `test/tb_classes_objfpc_consolidated_09.pp` | 9 | 1 |
+| `test/tb_enumerations_fpc_consolidated_01.pp` | 5 | 1 |
