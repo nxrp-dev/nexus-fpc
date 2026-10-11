@@ -66,6 +66,71 @@ LABEL
 label 1;
 {$pop}
 
+{ Case tb0468a.pp }
+{$push}
+procedure tb0468a_foo;
+begin
+end;
+
+procedure tb0468a_test;
+label
+  tb0468a_a,tb0468a_b,tb0468a_c,tb0468a_d;
+const
+  tb0468a_x: array[0..3] of pointer=(@tb0468a_a,@tb0468a_b,@tb0468a_c,@tb0468a_d);
+begin
+  tb0468a_foo;
+tb0468a_a:
+  tb0468a_foo;
+tb0468a_b:
+  tb0468a_foo;
+tb0468a_c:
+  tb0468a_foo;
+tb0468a_d:
+  tb0468a_foo;
+end;
+{$pop}
+
+{ Case tb0507.pp }
+{$push}
+{$goto on}
+{$inline on}
+
+var
+  tb0507_j : longint;
+
+procedure tb0507_p1;inline;
+  label tb0507_l;
+  var
+    tb0507_i:longint;
+  begin
+    tb0507_i:=0;
+  tb0507_l:
+    inc(tb0507_i);
+    while tb0507_i<2 do
+      begin
+        goto tb0507_l;
+        goto tb0507_l;
+        goto tb0507_l;
+      end;
+  end;
+
+
+procedure tb0507_p2;inline;
+  label tb0507_l;
+  begin
+    goto tb0507_l;
+    goto tb0507_l;
+    goto tb0507_l;
+  tb0507_l:
+  end;
+
+
+procedure tb0507_p3;inline;
+  begin
+    tb0507_j:=tb0507_j+1;
+  end;
+{$pop}
+
 begin
   { Case tb0031.pp }
   {$push}
@@ -108,6 +173,29 @@ END;
 begin
  goto 1;
 1:
+end;
+  {$pop}
+
+  { Case tb0468a.pp }
+  {$push}
+begin
+end;
+  {$pop}
+
+  { Case tb0507.pp }
+  {$push}
+{$inline on}
+begin
+  tb0507_j:=0;
+  tb0507_p1;
+  tb0507_p1;
+  tb0507_p1;
+  tb0507_p1;
+  tb0507_p2;
+  tb0507_p2;
+  tb0507_p2;
+  tb0507_p2;
+  tb0507_p3;
 end;
   {$pop}
 
