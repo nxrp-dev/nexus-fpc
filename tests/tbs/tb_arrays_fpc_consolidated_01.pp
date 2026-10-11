@@ -1,5 +1,63 @@
-{ Consolidated feature cases; original case IDs and settings are retained below. }
+{ Consolidated arrays regressions; original case IDs and assertions are retained. }
+program nexus_consolidated_tests;
 {$mode fpc}
+
+{ Preserve terminal exit-status assertions while allowing later cases to run. }
+procedure CheckCaseExitCode(AValue: LongInt);
+begin
+  if AValue <> 0 then Halt(AValue);
+end;
+
+{ Case tb0008.pp }
+{$push}
+{ Old file: tbs0011.pp }
+{  tests div/mod bugs, where edx is scrambled, if a called procedure does a div/mod                   OK 0.9.2 }
+
+{$message don't know how to make a test from bug0011 (PM)}
+var
+   tb0008_vga : array[0..320*200-1] of byte;
+
+procedure tb0008_test(x,y : longint);
+
+  begin
+     tb0008_vga[x+y mod 320]:=random(256);
+     tb0008_vga[x+y mod 320]:=random(256);
+  end;
+
+
+{$pop}
+
+{ Case tb_array_type_expressions.pp }
+{$push}
+{ Array type bounds, constant expressions and packed declarations. }
+
+{ tb0073.pp }
+{  Shows Missing High() (internal) function.             OK 0.99.6 (MVC) }
+
+type
+
+ tb_array_type_expressions_tHugeArray = array [ 1 .. High(Word) ] of byte;
+
+{ tb0108.pp }
+{ packed array isn't allowed                            OK 0.99.6 (FK) }
+
+type
+   tb_array_type_expressions_myarray = packed array[0..10] of longint;
+
+{ tb0361.pp }
+type
+  tb_array_type_expressions_e=(tb_array_type_expressions_one,tb_array_type_expressions_two,tb_array_type_expressions_three);
+
+var
+  tb_array_type_expressions_a : array[0..cardinal(tb_array_type_expressions_two)+1] of byte;
+
+
+{$pop}
+
+{ Case tb_arrays_default_run_01.pp }
+{$push}
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+
 
 { Source group: tb_arrays_default_run_01.pp }
 {$push}
@@ -52,7 +110,7 @@ var
 { Old file: tbs0053.pp }
 {  shows a problem with open arrays                     OK 0.99.1 (FK) }
 
-procedure tb0047_abc(var a : array of char);
+procedure tb0047_abc(var tb_arrays_default_run_01_a : array of char);
 
   begin
      // error: a:='asdf';
@@ -71,13 +129,13 @@ var
 type
    tb0049_tarraysingle = array[0..1] of single;
 
-procedure tb0049_test(var a : tb0049_tarraysingle);
+procedure tb0049_test(var tb_arrays_default_run_01_a : tb0049_tarraysingle);
 
 var
    tb0049_i,tb0049_j,tb0049_k : integer;
 
 begin
-   a[tb0049_i]:=a[tb0049_j]-a[tb0049_k];
+   tb_arrays_default_run_01_a[tb0049_i]:=tb_arrays_default_run_01_a[tb0049_j]-tb_arrays_default_run_01_a[tb0049_k];
 end;
 {$pop}
 
@@ -216,9 +274,9 @@ Var tb0233_chararray : Array[1..4] Of Char;
 
 {$packenum 1}
 type
-  tb0288_t = (a,b,c,d,e);
+  tb0288_t = (tb_arrays_default_run_01_a,tb_arrays_default_run_01_b,tb_arrays_default_run_01_c,tb_arrays_default_run_01_d,tb_arrays_default_run_01_e);
 
-const tb0288_arr:  array[0..4] of tb0288_t = (a,b,c,d,e);
+const tb0288_arr:  array[0..4] of tb0288_t = (tb_arrays_default_run_01_a,tb_arrays_default_run_01_b,tb_arrays_default_run_01_c,tb_arrays_default_run_01_d,tb_arrays_default_run_01_e);
 
 var
   tb0288_x: byte;
@@ -302,7 +360,7 @@ var
 
 { Case tb0418.pp }
 {$push}
-procedure tb0418_array_test(b: integer; tb0418_parr: array of word; tb0418_c: integer);
+procedure tb0418_array_test(tb_arrays_default_run_01_b: integer; tb0418_parr: array of word; tb0418_c: integer);
 begin
 end;
 {$pop}
@@ -313,7 +371,7 @@ var
   tb0419_nc : integer;
   tb0419_test_w : word;
 
-procedure tb0419_array_test(b: integer; tb0419_parr: array of word; tb0419_c: integer);cdecl;
+procedure tb0419_array_test(tb_arrays_default_run_01_b: integer; tb0419_parr: array of word; tb0419_c: integer);cdecl;
 begin
   tb0419_nc:=tb0419_c;
   tb0419_test_w:=tb0419_parr[2];
@@ -322,7 +380,7 @@ end;
 
 { Case tb0420.pp }
 {$push}
-procedure tb0420_array_test(b: integer; tb0420_parr: array of word; tb0420_c: integer);cdecl;
+procedure tb0420_array_test(tb_arrays_default_run_01_b: integer; tb0420_parr: array of word; tb0420_c: integer);cdecl;
 begin
 end;
 
@@ -496,12 +554,12 @@ var
 
 { Case tw1567.pp }
 {$push}
-procedure tw1567_hallo(a:array of word);
+procedure tw1567_hallo(tb_arrays_default_run_01_a:array of word);
 begin
-   writeln(a[0],' ',a[1],' ',a[2]);
-   if (a[0]<>999) or
-      (a[1]<>999) or
-      (a[2]<>999) then
+   writeln(tb_arrays_default_run_01_a[0],' ',tb_arrays_default_run_01_a[1],' ',tb_arrays_default_run_01_a[2]);
+   if (tb_arrays_default_run_01_a[0]<>999) or
+      (tb_arrays_default_run_01_a[1]<>999) or
+      (tb_arrays_default_run_01_a[2]<>999) then
     halt(1);
 end;
 {$pop}
@@ -545,7 +603,7 @@ procedure tw2525_myproc(x:array of longint);
      halt(1);
  end;
 type
- tw2525_tmyenum=(My1,My2,My3);
+ tw2525_tmyenum=(tb_arrays_default_run_01_My1,tb_arrays_default_run_01_My2,tb_arrays_default_run_01_My3);
 var
  tw2525_ar:array[tw2525_tmyenum]of longint;
 {$pop}
@@ -672,19 +730,19 @@ end;
 type
   tw3113_tvector3 = array[0..2]of Integer;
 
-procedure tw3113_p(const A:array of tw3113_tvector3);
+procedure tw3113_p(const tb_arrays_default_run_01_A:array of tw3113_tvector3);
 var tw3113_i:Integer;
 begin
- Writeln(High(A));
+ Writeln(High(tb_arrays_default_run_01_A));
 
- if High(A)<>0 then
+ if High(tb_arrays_default_run_01_A)<>0 then
    begin
      writeln('Error!');
      halt(1);
    end;
 
- for tw3113_i:=0 to High(A) do
-  Writeln('  ', A[tw3113_i][0], ' ', A[tw3113_i][1], ' ', A[tw3113_i][2]);
+ for tw3113_i:=0 to High(tb_arrays_default_run_01_A) do
+  Writeln('  ', tb_arrays_default_run_01_A[tw3113_i][0], ' ', tb_arrays_default_run_01_A[tw3113_i][1], ' ', tb_arrays_default_run_01_A[tw3113_i][2]);
 end;
 
 const tw3113_a1:tw3113_tvector3 = (1, 2, 3);
@@ -726,11 +784,11 @@ var
 { Case tw36157.pp }
 {$push}
 type
-  tw36157_tenum = (EnVal1, EnVal2, EnVal3, EnVal4);
+  tw36157_tenum = (tb_arrays_default_run_01_EnVal1, tb_arrays_default_run_01_EnVal2, tb_arrays_default_run_01_EnVal3, tb_arrays_default_run_01_EnVal4);
   tw36157_tset = set of tw36157_tenum;
   tw36157_tbitpacksetarray2 = bitpacked array [0..1, 0..2] of tw36157_tset;
 const
-  tw36157_gcbitpacksetarray2 : tw36157_tbitpacksetarray2 = (([EnVal3, EnVal1], [], [EnVal3]), ([],[EnVal1,EnVal2],[EnVal1]));
+  tw36157_gcbitpacksetarray2 : tw36157_tbitpacksetarray2 = (([tb_arrays_default_run_01_EnVal3, tb_arrays_default_run_01_EnVal1], [], [tb_arrays_default_run_01_EnVal3]), ([],[tb_arrays_default_run_01_EnVal1,tb_arrays_default_run_01_EnVal2],[tb_arrays_default_run_01_EnVal1]));
 {$pop}
 
 { Case tw39897.pp }
@@ -791,6 +849,306 @@ var tw7143_a,tw7143_b: array[0..99] of byte;
 
 {$pop}
 
+
+{$pop}
+
+{ Case tw0859.pp }
+{$push}
+type
+  tw0859_TBoolArray = array [0..1048576] of Boolean;
+
+procedure tw0859_OrBoolProc(var Vector1; const Vector2; Count: Integer);
+var
+  tw0859_I: Integer;
+begin
+  for tw0859_I:=0 to Count - 1 do
+    tw0859_TBoolArray(Vector1)[tw0859_I]:=tw0859_TBoolArray(Vector1)[tw0859_I] or tw0859_TBoolArray(Vector2)[tw0859_I];
+end;
+
+var
+  tw0859_A, tw0859_B: array [0..10] of Boolean;
+  tw0859_I: Integer;
+const
+  tw0859_error : boolean = false;
+
+{$pop}
+
+{ Case tw15694.pp }
+{$push}
+type
+ tw15694_TEn=array [0..63] of boolean;
+var
+  tw15694_WlEnb:array [0..511] of tw15694_TEn;
+
+procedure tw15694_ReadMask;
+var
+  I,ICd,J:ptrint;
+  b: boolean;
+begin
+  for ICd:=0 to 10 do
+    begin
+      J:=icd;
+{$R-}
+      for I:=0 to 3 do
+        begin
+          tw15694_WlEnb[ICd,I]:=J and $01<>0;
+          b:=J and $01<>0;
+          if tw15694_WlEnb[ICd,I]<>b then
+            halt(1);
+          J:=J shr 1;
+       end;
+{$R+}
+    end;
+end;
+
+
+{$pop}
+
+{ Case tw24007.pp }
+{$push}
+var
+    tw24007_str: bitpacked array [1..6] of 'a'..'z';
+    tw24007_i: integer;
+    tw24007_ch: char;
+    tw24007_error: boolean;
+
+{$pop}
+
+{ Case tw25956.pp }
+{$push}
+{$r+}
+
+{$t+}
+var
+  tw25956_a : array of integer;
+  tw25956_i : integer;
+
+procedure tw25956_Foo(var c: array of integer);
+begin
+  writeln( (@c)^[1] );
+  tw25956_i:=(@c)^[1];
+end;
+
+
+{$pop}
+
+{ Case tw3210.pp }
+{$push}
+Const
+    tw3210_N   = 10000;
+
+Var
+    tw3210_count       : array[0..200] of int64;
+    tw3210_i , tw3210_tot     : longint;
+
+
+{$pop}
+
+{ Case tw38413.pp }
+{$push}
+var
+  tw38413_arr : array[-1..140] of byte=(4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+    4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,
+    4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4);
+  tw38413_index , tw38413_value : byte; // unsigned byte - important
+
+{$pop}
+
+{ Case tw3864.pp }
+{$push}
+{ Explicitly disable range check as the test
+  is not about this but does generate a range check error
+  for the index of rasteriso array }
+{$R-}
+
+{ Source provided for Free Pascal Bug Report 3864 }
+{ Submitted by "Jernej" on  2005-04-01 }
+{ e-mail: jernejcoder@gmail.com }
+const
+ tw3864_rasteriso: array[0..2] of byte = // this is WAY too big
+ (
+   $00, $00, $00
+ );
+
+procedure tw3864_glBitMap(const pb:pbyte);cdecl;
+begin
+end;
+
+var
+  tw3864_i : longint;
+
+{$pop}
+
+{ Case tw40292.pp }
+{$push}
+var
+  tw40292_arr: array of longint;
+  tw40292_x: longint;
+
+{$pop}
+
+{ Case tw4669.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 4669 }
+{ Submitted by "C.Stolk" on  2006-01-07 }
+{ e-mail: C.stolk@cos.rotterdam.nl }
+
+
+const
+  tw4669_nul1:array[boolean] of byte=(0,1);
+var
+  tw4669_b,tw4669_j,tw4669_h:byte;
+
+{$pop}
+
+begin
+
+{ Case tb0008.pp }
+{$push}
+{$message don't know how to make a test from bug0011 (PM)}
+begin
+end;
+{$pop}
+
+{ Case tb_array_type_expressions.pp }
+{$push}
+
+begin
+
+end;
+{$pop}
+
+{ Case tb_arrays_default_run_01.pp }
+{$push}
+
+{$push}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$r+}
+{$pop}
+{$pop}
+{$push}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$packenum 1}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$pop}
+{$push}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$pop}
+{$push}
+{$push}
+{$inline on }
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$T+}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$pop}
+{$push}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$pop}
 begin
   { Source group: tb_arrays_default_run_01.pp }
   {$push}
@@ -1365,11 +1723,11 @@ tw3612_str:= 'abcdefgh';
   {$push}
 
   begin
-if tw36157_gcbitpacksetarray2[0,0]<>[EnVal3, EnVal1] then
+if tw36157_gcbitpacksetarray2[0,0]<>[tb_arrays_default_run_01_EnVal3, tb_arrays_default_run_01_EnVal1] then
     halt(1);
-  if tw36157_gcbitpacksetarray2[0,2]<>[EnVal3] then
+  if tw36157_gcbitpacksetarray2[0,2]<>[tb_arrays_default_run_01_EnVal3] then
     halt(2);
-  if tw36157_gcbitpacksetarray2[1,1]<>[EnVal1,EnVal2] then
+  if tw36157_gcbitpacksetarray2[1,1]<>[tb_arrays_default_run_01_EnVal1,tb_arrays_default_run_01_EnVal2] then
     halt(3);
   end;
   {$pop}
@@ -1456,5 +1814,146 @@ for tw7143_i:=0 to 99 do
 
 end;
   {$pop}
+
+end;
+{$pop}
+
+{ Case tw0859.pp }
+{$push}
+
+begin
+  for tw0859_I:=0 to High(tw0859_A) do tw0859_A[tw0859_I]:=False;
+  for tw0859_I:=0 to High(tw0859_B) do tw0859_B[tw0859_I]:=True;
+  tw0859_OrBoolProc(tw0859_A, tw0859_B, SizeOf(tw0859_A));
+  for tw0859_I:=0 to High(tw0859_A) do
+    begin
+      write(tw0859_A[tw0859_I], ' ');
+      if not tw0859_A[tw0859_i] then
+        tw0859_error:=true;
+    end;
+  writeln;
+  if tw0859_error then
+    Halt(1);
+
+end;
+{$pop}
+
+{ Case tw15694.pp }
+{$push}
+{$R-}
+{$R+}
+begin
+  tw15694_readmask
+end;
+{$pop}
+
+{ Case tw24007.pp }
+{$push}
+
+begin
+    tw24007_error := false;
+    for tw24007_i := 1 to 6 do tw24007_str[tw24007_i] := chr(ord('a')+tw24007_i-1);
+
+    for tw24007_i := 1 to 6 do begin
+        write('str[i] = ''', tw24007_str[tw24007_i], '''; ord(str[2]) = ',ord(tw24007_str[tw24007_i]));
+	tw24007_ch:=tw24007_str[tw24007_i]; {if we had used directly str[i] in the expression below, the correct value would have been read}
+	if tw24007_ch <> chr(ord(tw24007_str[tw24007_i])) then
+          begin
+           write(' ==> Bug: chr(',ord(tw24007_ch),') read, excpected chr(',ord('a')+tw24007_i-1,')');
+           tw24007_error:=true;
+          end;
+	writeln;
+    end;
+  CheckCaseExitCode(ord(tw24007_error));
+end;
+{$pop}
+
+{ Case tw25956.pp }
+{$push}
+{$r+}
+{$t+}
+begin
+  tw25956_i:=$1234;
+  SetLength(tw25956_a,5);
+  tw25956_a[0]:= 100;
+  tw25956_a[1]:= 101;
+  tw25956_foo(tw25956_a);
+  if tw25956_i<>101 then
+    halt(1);
+  writeln('ok');
+end;
+{$pop}
+
+{ Case tw3210.pp }
+{$push}
+
+Begin
+    fillchar(tw3210_count , sizeof(tw3210_count) , 0);
+    for tw3210_i := 1 to tw3210_N do
+      begin
+          inc(tw3210_count[random(201)]);
+      end;
+    tw3210_tot := 0;
+    for tw3210_i := 0 to 200 do inc(tw3210_tot , tw3210_count[tw3210_i]);
+    if (tw3210_tot <> tw3210_N) then
+      halt(1);
+End;
+{$pop}
+
+{ Case tw38413.pp }
+{$push}
+
+begin
+  tw38413_index:=133; // positive value, which is treated as negative
+  tw38413_value:=tw38413_arr[tw38413_index]; // wrong value! Memory access outside array
+  if tw38413_value<>4 then
+    halt(1);
+  writeln('ok');
+end;
+{$pop}
+
+{ Case tw3864.pp }
+{$push}
+{$R-}
+begin
+   tw3864_i:=0;
+   tw3864_glBitmap(@tw3864_rasteriso[(255 - tw3864_i) * 16]); // Add a character to the current Display list
+end;
+{$pop}
+
+{ Case tw40292.pp }
+{$push}
+
+begin
+  tw40292_x:=12+random(0);
+  setlength(tw40292_arr,13+random(0));
+  if (tw40292_x < length(tw40292_arr)) <> (tw40292_x <= high(tw40292_arr)) then
+    halt(1);
+
+  if (length(tw40292_arr) > tw40292_x) <> (tw40292_x <= high(tw40292_arr)) then
+    halt(2);
+
+  tw40292_x:=13+random(0);
+  if (tw40292_x >= length(tw40292_arr)) <> (tw40292_x > high(tw40292_arr)) then
+    halt(3);
+
+  if (length(tw40292_arr) <= tw40292_x) <> (tw40292_x > high(tw40292_arr)) then
+    halt(4);
+end;
+{$pop}
+
+{ Case tw4669.pp }
+{$push}
+
+begin
+tw4669_b:=0;
+for tw4669_j:=1 to 2 do
+  begin
+  tw4669_h:=
+    tw4669_nul1[(tw4669_b=2) and (tw4669_b=tw4669_j)] or
+    tw4669_nul1[(tw4669_b=6)or(tw4669_b=tw4669_j)];
+  end;
+end;
+{$pop}
 
 end.
