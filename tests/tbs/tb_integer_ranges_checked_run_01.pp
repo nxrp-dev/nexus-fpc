@@ -111,6 +111,28 @@ tw14841_b: byte;
 tw14841_s: shortint;
 {$pop}
 
+{ Case tw10966.pp }
+{$push}
+{$r+}
+
+const
+  tw10966_ctnsneedjitparsing  = 1 shl 1;
+type
+  tw10966_tcodetreenodesubdesc = word;
+var
+  tw10966_subdesc: tw10966_tcodetreenodesubdesc;
+  tw10966_l: longint;
+//  c: cardinal;
+{$pop}
+
+{ Case tw11216.pp }
+{$push}
+{$R+}
+
+var tw11216_li, tw11216_lj : Int64;
+const tw11216_i = $7fffffffffffffff;
+{$pop}
+
 begin
   { Case tb0085.pp }
   {$push}
@@ -253,6 +275,45 @@ begin
   inc(tw14841_b, tw14841_s);
   if tw14841_b<>56 then
     halt(1);
+end;
+  {$pop}
+
+  { Case tw10966.pp }
+  {$push}
+{$R+}
+begin
+  tw10966_subdesc := 1;
+// fails
+//  SubDesc := not 2;
+  tw10966_l := not(2);
+// fails
+//  c := not(2);
+  tw10966_l := not tw10966_ctnsneedjitparsing;
+// fails
+//  c := not ctnsNeedJITParsing;
+  tw10966_subdesc := tw10966_subdesc and (not 2);
+  tw10966_subdesc := tw10966_subdesc and (not (1 shl 1));
+  tw10966_subdesc := tw10966_subdesc and (not tw10966_ctnsneedjitparsing);
+end;
+  {$pop}
+
+  { Case tw11216.pp }
+  {$push}
+{$R+}
+begin
+  if (1-tw11216_i)<>(-tw11216_i+1) then
+    halt(1);
+
+  writeln(1-tw11216_i);
+  writeln(-tw11216_i+1);
+
+  tw11216_li := 1-tw11216_i;
+  tw11216_lj := -tw11216_i + 1;
+  if tw11216_li<>tw11216_lj then
+    halt(2);
+
+  if (tw11216_li<>-9223372036854775806) then
+    halt(3);
 end;
   {$pop}
 
