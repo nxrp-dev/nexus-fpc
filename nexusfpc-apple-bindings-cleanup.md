@@ -14,7 +14,8 @@ application migration. Replacement implementation work is tracked separately.
 
 ## First removal batch
 
-Status: first removal batch implemented and compile-verified; uncommitted.
+Status: first removal batch implemented, compile-verified and committed as
+`e09f5bfa`. The follow-up cleanup below is implemented and uncommitted.
 
 | Retired functionality / source | Replacement reference | Bindings we already carry | Implementation still needed |
 | --- | --- | --- | --- |
@@ -69,7 +70,7 @@ APIs which were themselves deprecated later; those are identified below.
 | Keyboard Layout Services: `Keyboards` | Text Input Source Services | `TextInputSources.TISCopyCurrentKeyboardInputSource`, `TISSelectInputSource` | Migrate layout enumeration, selection and property access. |
 | Clipboard and drag-and-drop: `Scrap`, `Drag` | [NSPasteboard](https://developer.apple.com/documentation/appkit/nspasteboard), Cocoa dragging | AppKit `NSPasteboard`, dragging protocols / `NSDraggingSession` | Convert flavor identifiers, promised data, and drag lifecycle. |
 | Classic sound/music: `Sound`, QuickTime music units | Core Audio; [AVAudioEngine](https://developer.apple.com/documentation/avfaudio/avaudioengine) | `AudioQueue`, `AudioFile`, audio-unit interfaces; AVFoundation `AVAudioEngine` | Implement playback/capture/sequencing against the chosen existing API. |
-| Carbon audio-unit views and obsolete listener removal: `AudioUnitCarbonViews`, `AUComponent` | Cocoa views; callback-specific listener removal | CoreAudioKit `AUGenericView`; `AUComponent.AudioUnitRemovePropertyListenerWithUserData` | Custom plug-in UI must become Cocoa. Audit the separate component-based Audio Unit restrictions on Apple Silicon later. |
+| Carbon audio-unit views and obsolete listener removal: `AudioUnitCarbonViews`, `AUComponent` | Cocoa views; callback-specific listener removal | CoreAudioKit `AUGenericView`; `AUComponent.AudioUnitRemovePropertyListenerWithUserData` | Custom plug-in UI must become Cocoa. The follow-up audit below found no legacy component-based Audio Unit loader consumers in the searched source. |
 | Old ColorSync/image/icon APIs: `ColorSyncDeprecated`, `Icons`, `IconsCore`, `Palettes`, `PictUtils`, `QDPictToCGContext` | ColorSync transforms/profiles; Core Graphics and Image I/O | `ColorSyncTransform`, `ColorSyncProfile`, `CGImage`, `CGImageSource`, `CGImageDestination` | Reimplement color/image pipelines and convert PICT assets. A color-management API does not by itself implement a display-calibration plug-in. |
 | Classic fonts and font matching: `Fonts`, `FontSync`, `ATSFont`, `ATSUnicode*` | Core Text and AppKit font selection | `CTFont`, `CTFontDescriptor`, `CTFontManager`; `NSFontManager`, `NSFontPanel` | Convert font matching/metrics. Retained ATS declarations need a separate modern-API audit. |
 | Carbon printing UI and old core-print calls: `PMApplication`, `PMApplicationDeprecated`, `PMCoreDeprecated` | Cocoa printing and explicit Core Printing objects | AppKit `NSPrintOperation`, `NSPrintPanel`; `PMCore` | Port print loops/dialog customization and obsolete handle-based state. |
@@ -85,9 +86,9 @@ APIs which were themselves deprecated later; those are identified below.
 | Old power/device/SCSI operations: `Power`, `SCSI` | [IOKit](https://developer.apple.com/documentation/iokit), power assertions, or application activity tokens as applicable | `NSProcessInfo.beginActivityWithOptions_reason` exists; **IOPM/IOService/SCSI task interfaces were not found** | Add the specific IOKit bindings required by an actual device/power use case. Some old hardware controls have no modern equivalent. `IOKitReturn` alone is not IOKit coverage. |
 | Legacy Keychain FSSpec entry point: `KeychainCore.KCMakeKCRefFromFSSpec` | [Keychain Services](https://developer.apple.com/documentation/security/keychain-services), preferably SecItem operations for new credential storage | `SecBase` / `SecTrust` and SecurityFoundation exist; **SecItem / modern keychain-storage declarations were not found** | Add storage/query/update/delete bindings for a credential feature. Existing certificate/trust types do not provide that implementation. |
 | AppleScript debugging/property extensions: `ASDebugging` | [OSAKit](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html) where it covers the use case | `OSAScript` and the surviving OSA interfaces | Script execution bindings exist; exact debugging/property behavior requires a consumer-specific audit. |
-| Old Component Manager calls: `Components` | Component-specific replacement; AudioComponent for audio | `AudioComponent` and surviving component functions exist | Do not claim one replacement for every component type; determine the consumer's framework. |
+| Old Component Manager calls: `Components` | Component-specific replacement; AudioComponent for audio | `AudioComponents.pas` and surviving component functions exist | Do not claim one replacement for every component type; determine the consumer's framework. |
 | Old Translation Manager: `Translation`, `TranslationExtensions` | Format-specific conversion in the consuming application | Historical `TranslationServices` successor exists | Current converter/format support still needs review; that old successor is not a promise of a modern conversion feature. |
-| Objective-C legacy ABI branches: `ObjCRuntime`; aggregate helpers in `MacOSAll` | Existing 64-bit declarations and compiler Objective-C support | Surviving declarations have unchanged interface checksums | No new binding for the retained ABI. Obsolete garbage-collector/runtime manipulation functions are not recreated. |
+| Objective-C legacy ABI branches: `ObjCRuntime`; aggregate helpers in `MacOSAll` | Existing 64-bit declarations and compiler Objective-C support | First-batch universal-interface checksums matched the baseline; the now-empty ObjCRuntime shell is removed in the follow-up | No new binding for the retained ABI. Obsolete garbage-collector/runtime manipulation functions are not recreated. |
 
 The Carbon UI grouping also covers `Appearance`, `ControlDefinitions`, `Controls`,
 `Dialogs`, `Lists`, `Menus`, `MacWindows`, `Navigation`, `IBCarbonRuntime`,
@@ -110,6 +111,53 @@ is included in this removal batch.
 - Nexus2D's Mac WebView and OpenGL implementations require later migration;
   neither is being removed in this nonfunctional/32-bit binding batch.
 
+## Follow-up cleanup (2026-10-10)
+
+The confirmed dead-code findings are now cleaned up. The first batch selected
+supported 64-bit declarations and removed QTKit; neither batch constitutes a
+complete current-SDK audit.
+
+| Finding and evidence | Replacement / binding coverage | Disposition |
+| --- | --- | --- |
+| PowerPC64 conditionals were unreachable: both package CPU lists select only x86_64/aarch64, and the compiler has no retained PowerPC backend. | Existing x86_64/aarch64 branches; no new bindings. | Removed PowerPC selection branches and unused target constants throughout both binding packages. Shared expressions were simplified; historical architecture identifiers in data declarations remain. |
+| Declaration-free legacy shells remained registered after their API declarations disappeared in the 32-bit pruning. | Relevant feature replacements are listed above; the empty units need no new binding. | Removed 22 shells, their namespace wrappers, registrations, aggregate includes and obsolete `uses` entries. Useful umbrella units such as CoreFoundation remain. |
+| Foundation included `NSGarbageCollector.inc` and its class forward. Apple states in its [Objective-C runtime source](https://github.com/apple-oss-distributions/objc4/blob/main/runtime/objc-auto.mm) that garbage collection is unsupported; collector compatibility routines are stubs. | Ordinary Objective-C object ownership and autorelease pools; existing compiler Objective-C support and `NSAutoreleasePool` bindings. ARC in Objective-C source is not a Pascal replacement binding. | Removed the class include, registration and forward after finding no consumers. Kept `NSAllocateCollectable` / `NSReallocateCollectable`: their names alone do not establish that their fallback allocation behavior is nonfunctional. |
+| `LowMem.pas` exported `LMSetApFontID` and `LMSetSysFontSize`; their translated Apple documentation explicitly says the corresponding functionality is unsupported on Mac OS X. | AppKit font selection (`NSFont`, control/view font properties) and Core Text, already present. | Removed both unsupported setters after finding no callers. Other LowMem entry points remain pending individual review. |
+| `Components.pas` exposes legacy component enumeration/opening. Apple says [Carbon Component Manager cannot open Audio Units for arm64 or apps linked against macOS 11+ SDKs](https://developer.apple.com/documentation/apple-silicon/porting-your-audio-code-to-apple-silicon). | `AudioComponents.pas` already declares `AudioComponentFindNext`, `AudioComponentInstanceNew`, and `AudioComponentRegister`; `AUComponent` already imports it. | No legacy Audio Unit loader consumers were found in the searched FPC source/tests or Nexus packages/projects, so no application migration was needed. Retained shared Component Manager declarations: the Audio Unit restriction does not establish that non-audio component operations are dead. |
+| ImageKit retains QTMovie representation constants in `imagekit/IKImageBrowserView.inc`. These refer to the retired QTKit ecosystem, although they are not imports of the removed QTKit unit. | URL-based media sources and AVFoundation/AVKit are available; ImageKit declares `IKImageBrowserNSURLRepresentationType`. | Check the individual representation contracts and consumers before deleting constants or claiming an equivalent ImageKit rendering path. |
+
+The 22 removed source units are `CodeFragments`, `HIMovieView`, `HIRelevanceBar`,
+`HITextUtils`, `ImageCodec`, `MediaHandlers`, `ObjCRuntime`,
+`OpenTransportProtocol`, `OpenTransportProviders`, `PMApplication`,
+`PMApplicationDeprecated`, `PMDefinitionsDeprecated`,
+`PMPrintingDialogExtensions`, `QTML`, `QTSMovie`, `QTStreamingComponents`,
+`QuickTimeErrors`, `QuickTimeMusic`, `QuickTimeStreaming`, `QuickTimeVR`,
+`SCSI`, and `Sound`. Each had no remaining API declarations or declaration
+includes. Their `MacOsApi.*` wrappers are removed as well.
+
+### PowerPC scope decision
+
+Removing PowerPC from the current Nexus desktop/mobile target set remains
+reasonable, but the broader architecture is not dead. IBM introduced
+[Power11 servers in July 2025](https://newsroom.ibm.com/2025-07-08-ibm-power11-raises-the-bar-for-enterprise-it),
+and NXP maintains [Power Architecture embedded products](https://www.nxp.com/products/processors-and-microcontrollers/power-architecture%3APOWER-ARCHITECTURE).
+Apple's PowerPC Mac platform is a different case: its
+[2009 Snow Leopard release required Intel processors](https://www.apple.com/newsroom/2009/06/08Apple-Unveils-Mac-OS-X-Snow-Leopard/).
+
+The tradeoff is deliberately foregoing POWER server/Linux and Power Architecture
+embedded targets. Reconsider that choice if a concrete supported product needs
+them. Old PowerPC Mac binding branches do not provide those targets; support
+would require a compiler backend, target ABI/RTL integration and validation.
+This cleanup changes Apple bindings only and does not revisit compiler targets.
+
+`InstantMessage`, `PubSub`, and `SyncServices` are still registered Cocoa packages
+and deserve a focused SDK/runtime audit. Apple explicitly labels InstantMessage
+deprecated and says not to use it in its [framework reference](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html),
+but this review has not established that every operation in all three frameworks
+is nonfunctional. They are candidates, not confirmed whole-framework deletions.
+OpenGL, AddressBook, CalendarStore and SceneKit also require their own availability
+and consumer checks; deprecation alone is not proof that code cannot run.
+
 ## Deferred deprecated functionality
 
 | Functionality | Intended replacement | Binding status / remaining work |
@@ -120,7 +168,7 @@ is included in this removal batch.
 | CalendarStore | EventKit | `cocoaint/src/EventKit.pas` exists; consumer migration remains separate. |
 | SceneKit | Evaluate current Apple rendering alternatives for the actual use case | Replacement choice and coverage still need review. |
 
-## Validation and limitations
+## First-batch validation and limitations
 
 - Before edits, `MacOS`, `MacOSAll`, `CocoaAll`, `AVFoundation`, `AVKit` and
   `QTKit` compiled for x86_64-darwin and aarch64-darwin using the existing cross
@@ -130,11 +178,12 @@ is included in this removal batch.
   rebuilding with the declared package options passed. That invocation is not
   the baseline used for comparison.
 - The standalone `cocoaint/src/QuartzCore.pas` wrapper has unbalanced existing
-  conditional directives in its `uses` section. Automatic pruning leaves this
+  conditional directives in its `uses` section. The first batch left this
   wrapper untouched. `CocoaAll` includes the QuartzCore declarations directly
-  and passes the baseline check. Direct standalone compilation without
-  `COCOAALL` reproduces `ENDIF without IF(N)DEF` at line 208 in both the baseline
-  and final source. Repairing that wrapper is separate.
+  and passed the baseline check. Direct standalone compilation without
+  `COCOAALL` reproduced `ENDIF without IF(N)DEF` at then-line 208 in both the
+  first-batch baseline and final source. The follow-up prunes only its balanced
+  architecture header; the existing `uses` defect remains separate.
 
 ### Scope of the mechanical pruning
 
@@ -151,11 +200,9 @@ is included in this removal batch.
 
 ### Reproduction
 
-Validation logs and result summaries live under ignored
-`output/apple-bindings-cleanup/`; generated compiler artifacts and copied
-baseline source files were removed after verification. Automatic approval
-review blocked bulk directory cleanup, so empty directories and intermediate
-audit files remain there.
+First-batch validation used ignored `output/apple-bindings-cleanup/`. That
+directory is no longer present; the results below are the recorded historical
+results. The follow-up has its own fresh baseline and logs, described below.
 The baseline is committed `6fad023d`; Apple package sources were extracted there
 for comparison without changing the working checkout. Each target/phase uses
 a separate empty unit-output directory and the matching existing RTL.
@@ -200,7 +247,42 @@ run for this binding-only batch. The 128 checks cover the registered package
 roots, not every independently compilable convenience wrapper; in particular,
 the existing standalone QuartzCore wrapper problem remains outside this change.
 
-### Next audit priorities
+## Follow-up validation and limitations
+
+Compared against committed `e09f5bfa`, extracted into an isolated source
+directory without changing the working checkout. Used the same existing cross
+compilers and matching RTL for both phases, with fresh unit-output directories
+and the compile options above. No cached binding PPUs were reused between the
+baseline and changed sources.
+
+| Check | Result |
+| --- | --- |
+| Committed baseline: universal roots on five Apple targets and every registered Cocoa root on both macOS CPUs | 128/128 passed. |
+| Changed source: identical matrix | 128/128 passed: 61 each on x86_64-darwin and aarch64-darwin; 2 each on x86_64-iphonesim, aarch64-iphonesim and aarch64-ios. |
+| Namespaced MacOSAll, CocoaAll, AVFoundation and AVKit on both macOS CPUs | 8/8 passed. Namespaced System.CTypes was built in its normal mode, MacOSAll with MacPas, and the Cocoa wrappers with Delphi mode. |
+| Existing `fcl-base` CustApp consumer on both macOS CPUs | 2/2 passed with the changed MacOSAll PPU. |
+| Both `fpmake.pp` package definitions | Compiled successfully with the native compiler. All unit and namespace-map source paths resolve. |
+| PPU interface inventory | Exactly the 22 intentionally deleted units are absent on every target; no unexpected missing units. |
+| Interface checksums on each macOS CPU | 511 unchanged, 65 changed, 22 removed. Changes include the removed class/setters and obsolete imports, with dependent interface checksums. |
+| Interface checksums on mobile/simulator targets | x86_64-iphonesim and aarch64-ios: 442 unchanged, 11 changed, 22 removed each. aarch64-iphonesim: 440 unchanged, 13 changed, 22 removed. This batch intentionally changes interfaces; it does not claim checksum identity. |
+| Source audit | No remaining PowerPC-selecting conditionals in either package's source; no dangling removed-unit imports/includes. Shared records and functioning umbrella units remain. |
+| Working diff | `git diff --check` passes. Compiler and RTL sources are unchanged. 45 files deleted: 22 units, 22 namespace wrappers and the collector include. |
+
+The follow-up removes about 15,000 net source lines. It introduces no new
+frameworks, runtime ownership mechanisms, or threaded implementation. Validation
+is compile-only: no native Windows bootstrap, Apple SDK linking or Apple runtime
+test was run. The standalone QuartzCore `uses` defect remains as documented
+above; the registered Cocoa roots pass.
+
+Follow-up logs and JSON results are under ignored
+`output/apple-bindings-followup/`. Removed 10,519 generated artifacts and copied
+baseline files (357.31 MiB) after verification. Automatic approval review
+rejected the subsequent removal of empty directories and two temporary helper
+scripts with `blocked by policy`; those small leftovers remain alongside the
+validation records. These local records are not part of the commit; this
+register is the durable result and replacement inventory.
+
+## Next audit priorities
 
 1. Check residual 64-bit declarations and framework availability against a
    current Apple SDK. An old unit name or successful Pascal compilation alone

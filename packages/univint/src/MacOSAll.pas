@@ -27,12 +27,6 @@ interface
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-	{$setc __ppc__ := 0}
-{$ifc not defined __ppc64__ and defined CPUPOWERPC64}
-	{$setc __ppc64__ := 1}
-{$elsec}
-	{$setc __ppc64__ := 0}
-{$endc}
 	{$setc __i386__ := 0}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
@@ -50,20 +44,7 @@ interface
 
 
 
-{$ifc defined __ppc64__ and __ppc64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := TRUE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __x86_64__ and __x86_64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
+{$ifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := TRUE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -79,8 +60,6 @@ interface
 {$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __arm64__ and __arm64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := FALSE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -96,7 +75,7 @@ interface
 {$endc}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
 {$elsec}
-	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
+	{$error Neither __x86_64__ nor __arm64__ is defined.}
 {$endc}
 
   {$setc TARGET_CPU_64 := TRUE}
@@ -161,20 +140,12 @@ interface
 {$i PEFBinaryFormat.pas}
 {unit PLStringFuncs}
 {$i PLStringFuncs.pas}
-{unit PMDefinitionsDeprecated}
-{$i PMDefinitionsDeprecated.pas}
 {unit PMPrintSettingsKeys}
 {$i PMPrintSettingsKeys.pas}
-{unit PMPrintingDialogExtensions}
-{$i PMPrintingDialogExtensions.pas}
 {unit QDCMCommon}
 {$i QDCMCommon.pas}
 {unit QLBase}
 {$i QLBase.pas}
-{unit QTML}
-{$i QTML.pas}
-{unit QuickTimeErrors}
-{$i QuickTimeErrors.pas}
 {unit SFNTLayoutTypes}
 {$i SFNTLayoutTypes.pas}
 {unit SFNTTypes}
@@ -355,8 +326,6 @@ interface
 {$i HFSVolumes.pas}
 {unit HIGeometry}
 {$i HIGeometry.pas}
-{unit HITextUtils}
-{$i HITextUtils.pas}
 {unit HostTime}
 {$i HostTime.pas}
 {unit ICACamera}
@@ -393,8 +362,6 @@ interface
 {$i OSUtils.pas}
 {unit OpenTransport}
 {$i OpenTransport.pas}
-{unit OpenTransportProviders}
-{$i OpenTransportProviders.pas}
 {unit Power}
 {$i Power.pas}
 {unit QuickdrawText}
@@ -405,8 +372,6 @@ interface
 {$i SCDynamicStoreKey.pas}
 {unit SCNetwork}
 {$i SCNetwork.pas}
-{unit SCSI}
-{$i SCSI.pas}
 {unit SCSchemaDefinitions}
 {$i SCSchemaDefinitions.pas}
 {unit Script}
@@ -757,8 +722,6 @@ interface
 {$i CVPixelBufferPool.pas}
 {unit CVPixelFormatDescription}
 {$i CVPixelFormatDescription.pas}
-{unit CodeFragments}
-{$i CodeFragments.pas}
 {unit ColorPicker}
 {$i ColorPicker.pas}
 {unit ColorSyncCMM}
@@ -779,8 +742,6 @@ interface
 {$i MIDIDriver.pas}
 {unit NSLCore}
 {$i NSLCore.pas}
-{unit OpenTransportProtocol}
-{$i OpenTransportProtocol.pas}
 {unit QLThumbnailImage}
 {$i QLThumbnailImage.pas}
 {unit Translation}
@@ -885,10 +846,6 @@ interface
 {$i MusicDevice.pas}
 {unit NSL}
 {$i NSL.pas}
-{unit PMApplication}
-{$i PMApplication.pas}
-{unit PMApplicationDeprecated}
-{$i PMApplicationDeprecated.pas}
 {unit PMCore}
 {$i PMCore.pas}
 {unit QDPictToCGContext}
@@ -911,8 +868,6 @@ interface
 {$i SCPreferencesPath.pas}
 {unit SCPreferencesSetSpecific}
 {$i SCPreferencesSetSpecific.pas}
-{unit Sound}
-{$i Sound.pas}
 {unit AEHelpers}
 {$i AEHelpers.pas}
 {unit AEObjects}
@@ -957,8 +912,6 @@ interface
 {$i OSAGeneric.pas}
 {unit PMPrintAETypes}
 {$i PMPrintAETypes.pas}
-{unit QuickTimeMusic}
-{$i QuickTimeMusic.pas}
 {unit SCNetworkConfiguration}
 {$i SCNetworkConfiguration.pas}
 {unit AppleScript}
@@ -985,22 +938,14 @@ interface
 {$i HIToolbar.pas}
 {unit Icons}
 {$i Icons.pas}
-{unit ImageCodec}
-{$i ImageCodec.pas}
 {unit MacApplication}
 {$i MacApplication.pas}
 {unit MacWindows}
 {$i MacWindows.pas}
-{unit MediaHandlers}
-{$i MediaHandlers.pas}
 {unit Navigation}
 {$i Navigation.pas}
 {unit QuickTimeComponents}
 {$i QuickTimeComponents.pas}
-{unit QuickTimeStreaming}
-{$i QuickTimeStreaming.pas}
-{unit QuickTimeVR}
-{$i QuickTimeVR.pas}
 {unit QuickTimeVRFormat}
 {$i QuickTimeVRFormat.pas}
 {unit TextServices}
@@ -1025,8 +970,6 @@ interface
 {$i HIPopupButton.pas}
 {unit HIProgressViews}
 {$i HIProgressViews.pas}
-{unit HIRelevanceBar}
-{$i HIRelevanceBar.pas}
 {unit HISeparator}
 {$i HISeparator.pas}
 {unit HITabbedView}
@@ -1047,10 +990,6 @@ interface
 {$i MacHelp.pas}
 {unit MacTextEditor}
 {$i MacTextEditor.pas}
-{unit QTSMovie}
-{$i QTSMovie.pas}
-{unit QTStreamingComponents}
-{$i QTStreamingComponents.pas}
 {unit TSMTE}
 {$i TSMTE.pas}
 {unit ControlDefinitions}
@@ -1065,8 +1004,6 @@ interface
 {$i HIImageViews.pas}
 {unit HIMenuView}
 {$i HIMenuView.pas}
-{unit HIMovieView}
-{$i HIMovieView.pas}
 {unit HIScrollView}
 {$i HIScrollView.pas}
 {unit HISearchField}

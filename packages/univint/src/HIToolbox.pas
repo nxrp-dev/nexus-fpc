@@ -45,12 +45,6 @@ interface
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-	{$setc __ppc__ := 0}
-{$ifc not defined __ppc64__ and defined CPUPOWERPC64}
-	{$setc __ppc64__ := 1}
-{$elsec}
-	{$setc __ppc64__ := 0}
-{$endc}
 	{$setc __i386__ := 0}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
@@ -68,20 +62,7 @@ interface
 
 
 
-{$ifc defined __ppc64__ and __ppc64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := TRUE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __x86_64__ and __x86_64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
+{$ifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := TRUE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -97,8 +78,6 @@ interface
 {$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __arm64__ and __arm64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := FALSE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -114,7 +93,7 @@ interface
 {$endc}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
 {$elsec}
-	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
+	{$error Neither __x86_64__ nor __arm64__ is defined.}
 {$endc}
 
   {$setc TARGET_CPU_64 := TRUE}
@@ -153,9 +132,9 @@ interface
 {$setc TYPE_EXTENDED := FALSE}
 {$setc TYPE_LONGLONG := TRUE}
 {$IFDEF FPC_DOTTEDUNITS}
-uses MacOsApi.MacTypes,MacOsApi.HIObject,MacOsApi.HIArchive,MacOsApi.HIGeometry,MacOsApi.HIToolbar,MacOsApi.HIView,MacOsApi.HITextUtils,MacOsApi.HIAccessibility,MacOsApi.Events,MacOsApi.Notification,MacOsApi.Drag,MacOsApi.Controls,MacOsApi.Appearance,MacOsApi.HITheme,MacOsApi.MacWindows,MacOsApi.Menus,MacOsApi.Dialogs,MacOsApi.CarbonEventsCore,MacOsApi.CarbonEvents,MacOsApi.TextServices,MacOsApi.Scrap,MacOsApi.MacTextEditor,MacOsApi.MacHelp,MacOsApi.HIButtonViews,MacOsApi.HIClockView,MacOsApi.HIComboBox,MacOsApi.HIContainerViews,MacOsApi.HIDataBrowser,MacOsApi.HIDisclosureViews,MacOsApi.HIImageViews,MacOsApi.HILittleArrows,MacOsApi.HIMenuView,MacOsApi.HIPopupButton,MacOsApi.HIProgressViews,MacOsApi.HIRelevanceBar,MacOsApi.HIScrollView,MacOsApi.HISearchField,MacOsApi.HISegmentedView,MacOsApi.HISeparator,MacOsApi.HISlider,MacOsApi.HITabbedView,MacOsApi.HITextViews,MacOsApi.HIWindowViews,MacOsApi.HITextLengthFilter,MacOsApi.ControlDefinitions,MacOsApi.TranslationExtensions,MacOsApi.Translation,MacOsApi.AEInteraction,MacOsApi.TypeSelect,MacOsApi.MacApplication,MacOsApi.Keyboards,MacOsApi.IBCarbonRuntime,MacOsApi.TextInputSources,MacOsApi.HIToolboxDebugging,MacOsApi.Lists,MacOsApi.TextEdit,MacOsApi.TSMTE;
+uses MacOsApi.MacTypes,MacOsApi.HIObject,MacOsApi.HIArchive,MacOsApi.HIGeometry,MacOsApi.HIToolbar,MacOsApi.HIView,MacOsApi.HIAccessibility,MacOsApi.Events,MacOsApi.Notification,MacOsApi.Drag,MacOsApi.Controls,MacOsApi.Appearance,MacOsApi.HITheme,MacOsApi.MacWindows,MacOsApi.Menus,MacOsApi.Dialogs,MacOsApi.CarbonEventsCore,MacOsApi.CarbonEvents,MacOsApi.TextServices,MacOsApi.Scrap,MacOsApi.MacTextEditor,MacOsApi.MacHelp,MacOsApi.HIButtonViews,MacOsApi.HIClockView,MacOsApi.HIComboBox,MacOsApi.HIContainerViews,MacOsApi.HIDataBrowser,MacOsApi.HIDisclosureViews,MacOsApi.HIImageViews,MacOsApi.HILittleArrows,MacOsApi.HIMenuView,MacOsApi.HIPopupButton,MacOsApi.HIProgressViews,MacOsApi.HIScrollView,MacOsApi.HISearchField,MacOsApi.HISegmentedView,MacOsApi.HISeparator,MacOsApi.HISlider,MacOsApi.HITabbedView,MacOsApi.HITextViews,MacOsApi.HIWindowViews,MacOsApi.HITextLengthFilter,MacOsApi.ControlDefinitions,MacOsApi.TranslationExtensions,MacOsApi.Translation,MacOsApi.AEInteraction,MacOsApi.TypeSelect,MacOsApi.MacApplication,MacOsApi.Keyboards,MacOsApi.IBCarbonRuntime,MacOsApi.TextInputSources,MacOsApi.HIToolboxDebugging,MacOsApi.Lists,MacOsApi.TextEdit,MacOsApi.TSMTE;
 {$ELSE FPC_DOTTEDUNITS}
-uses MacTypes,HIObject,HIArchive,HIGeometry,HIToolbar,HIView,HITextUtils,HIAccessibility,Events,Notification,Drag,Controls,Appearance,HITheme,MacWindows,Menus,Dialogs,CarbonEventsCore,CarbonEvents,TextServices,Scrap,MacTextEditor,MacHelp,HIButtonViews,HIClockView,HIComboBox,HIContainerViews,HIDataBrowser,HIDisclosureViews,HIImageViews,HILittleArrows,HIMenuView,HIPopupButton,HIProgressViews,HIRelevanceBar,HIScrollView,HISearchField,HISegmentedView,HISeparator,HISlider,HITabbedView,HITextViews,HIWindowViews,HITextLengthFilter,ControlDefinitions,TranslationExtensions,Translation,AEInteraction,TypeSelect,MacApplication,Keyboards,IBCarbonRuntime,TextInputSources,HIToolboxDebugging,Lists,TextEdit,TSMTE;
+uses MacTypes,HIObject,HIArchive,HIGeometry,HIToolbar,HIView,HIAccessibility,Events,Notification,Drag,Controls,Appearance,HITheme,MacWindows,Menus,Dialogs,CarbonEventsCore,CarbonEvents,TextServices,Scrap,MacTextEditor,MacHelp,HIButtonViews,HIClockView,HIComboBox,HIContainerViews,HIDataBrowser,HIDisclosureViews,HIImageViews,HILittleArrows,HIMenuView,HIPopupButton,HIProgressViews,HIScrollView,HISearchField,HISegmentedView,HISeparator,HISlider,HITabbedView,HITextViews,HIWindowViews,HITextLengthFilter,ControlDefinitions,TranslationExtensions,Translation,AEInteraction,TypeSelect,MacApplication,Keyboards,IBCarbonRuntime,TextInputSources,HIToolboxDebugging,Lists,TextEdit,TSMTE;
 {$ENDIF FPC_DOTTEDUNITS}
 {$endc} {not MACOSALLINCLUDE}
 

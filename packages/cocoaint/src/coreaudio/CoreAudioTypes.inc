@@ -10,7 +10,7 @@ const
 
 {$if defined(TARGET_OS_IPHONE)}
 
-{$if (defined(TARGET_CPU_X86) or defined(TARGET_CPU_X86_64) or defined(TARGET_CPU_PPC) or defined(TARGET_CPU_PPC64)) and not defined(TARGET_IPHONE_SIMULATOR)}
+{$if defined(TARGET_CPU_X86_64) and not defined(TARGET_IPHONE_SIMULATOR)}
 {$ifdef TYPES}
 const
   CA_PREFER_FIXED_POINT = 0;

@@ -239,7 +239,6 @@ begin
     T:=P.Targets.AddImplicitUnit('CaptiveNetwork.pas');
     T:=P.Targets.AddImplicitUnit('CarbonEvents.pas');
     T:=P.Targets.AddImplicitUnit('CarbonEventsCore.pas');
-    T:=P.Targets.AddImplicitUnit('CodeFragments.pas');
     T:=P.Targets.AddImplicitUnit('Collections.pas');
     T:=P.Targets.AddImplicitUnit('ColorPicker.pas');
     T:=P.Targets.AddImplicitUnit('ColorSyncCMM.pas');
@@ -295,11 +294,9 @@ begin
     T:=P.Targets.AddImplicitUnit('HIImageViews.pas');
     T:=P.Targets.AddImplicitUnit('HILittleArrows.pas');
     T:=P.Targets.AddImplicitUnit('HIMenuView.pas');
-    T:=P.Targets.AddImplicitUnit('HIMovieView.pas');
     T:=P.Targets.AddImplicitUnit('HIObject.pas');
     T:=P.Targets.AddImplicitUnit('HIPopupButton.pas');
     T:=P.Targets.AddImplicitUnit('HIProgressViews.pas');
-    T:=P.Targets.AddImplicitUnit('HIRelevanceBar.pas');
     T:=P.Targets.AddImplicitUnit('HIScrollView.pas');
     T:=P.Targets.AddImplicitUnit('HISearchField.pas');
     T:=P.Targets.AddImplicitUnit('HISegmentedView.pas');
@@ -308,7 +305,6 @@ begin
     T:=P.Targets.AddImplicitUnit('HISlider.pas');
     T:=P.Targets.AddImplicitUnit('HITabbedView.pas');
     T:=P.Targets.AddImplicitUnit('HITextLengthFilter.pas');
-    T:=P.Targets.AddImplicitUnit('HITextUtils.pas');
     T:=P.Targets.AddImplicitUnit('HITextViews.pas');
     T:=P.Targets.AddImplicitUnit('HITheme.pas');
     T:=P.Targets.AddImplicitUnit('HIToolbar.pas');
@@ -327,7 +323,6 @@ begin
     T:=P.Targets.AddImplicitUnit('IconStorage.pas');
     T:=P.Targets.AddImplicitUnit('Icons.pas');
     T:=P.Targets.AddImplicitUnit('IconsCore.pas');
-    T:=P.Targets.AddImplicitUnit('ImageCodec.pas');
     T:=P.Targets.AddImplicitUnit('ImageCompression.pas');
     T:=P.Targets.AddImplicitUnit('InternetConfig.pas');
     T:=P.Targets.AddImplicitUnit('IntlResources.pas');
@@ -363,7 +358,6 @@ begin
     T:=P.Targets.AddImplicitUnit('MacWindows.pas');
     T:=P.Targets.AddImplicitUnit('MachineExceptions.pas');
     T:=P.Targets.AddImplicitUnit('Math64.pas');
-    T:=P.Targets.AddImplicitUnit('MediaHandlers.pas');
     T:=P.Targets.AddImplicitUnit('Menus.pas');
     T:=P.Targets.AddImplicitUnit('MixedMode.pas');
     T:=P.Targets.AddImplicitUnit('Movies.pas');
@@ -381,20 +375,14 @@ begin
     T:=P.Targets.AddImplicitUnit('OSAGeneric.pas');
     T:=P.Targets.AddImplicitUnit('OSUtils.pas');
     T:=P.Targets.AddImplicitUnit('OpenTransport.pas');
-    T:=P.Targets.AddImplicitUnit('OpenTransportProtocol.pas');
-    T:=P.Targets.AddImplicitUnit('OpenTransportProviders.pas');
     T:=P.Targets.AddImplicitUnit('PEFBinaryFormat.pas');
     T:=P.Targets.AddImplicitUnit('PLStringFuncs.pas');
-    T:=P.Targets.AddImplicitUnit('PMApplication.pas');
-    T:=P.Targets.AddImplicitUnit('PMApplicationDeprecated.pas');
     T:=P.Targets.AddImplicitUnit('PMCore.pas');
     T:=P.Targets.AddImplicitUnit('PMCoreDeprecated.pas');
     T:=P.Targets.AddImplicitUnit('PMDefinitions.pas');
-    T:=P.Targets.AddImplicitUnit('PMDefinitionsDeprecated.pas');
     T:=P.Targets.AddImplicitUnit('PMErrors.pas');
     T:=P.Targets.AddImplicitUnit('PMPrintAETypes.pas');
     T:=P.Targets.AddImplicitUnit('PMPrintSettingsKeys.pas');
-    T:=P.Targets.AddImplicitUnit('PMPrintingDialogExtensions.pas');
     T:=P.Targets.AddImplicitUnit('Palettes.pas');
     T:=P.Targets.AddImplicitUnit('Pasteboard.pas');
     T:=P.Targets.AddImplicitUnit('PictUtils.pas');
@@ -407,14 +395,7 @@ begin
     T:=P.Targets.AddImplicitUnit('QLGenerator.pas');
     T:=P.Targets.AddImplicitUnit('QLThumbnail.pas');
     T:=P.Targets.AddImplicitUnit('QLThumbnailImage.pas');
-    T:=P.Targets.AddImplicitUnit('QTML.pas');
-    T:=P.Targets.AddImplicitUnit('QTSMovie.pas');
-    T:=P.Targets.AddImplicitUnit('QTStreamingComponents.pas');
     T:=P.Targets.AddImplicitUnit('QuickTimeComponents.pas');
-    T:=P.Targets.AddImplicitUnit('QuickTimeErrors.pas');
-    T:=P.Targets.AddImplicitUnit('QuickTimeMusic.pas');
-    T:=P.Targets.AddImplicitUnit('QuickTimeStreaming.pas');
-    T:=P.Targets.AddImplicitUnit('QuickTimeVR.pas');
     T:=P.Targets.AddImplicitUnit('QuickTimeVRFormat.pas');
     T:=P.Targets.AddImplicitUnit('Quickdraw.pas');
     T:=P.Targets.AddImplicitUnit('QuickdrawText.pas');
@@ -431,7 +412,6 @@ begin
     T:=P.Targets.AddImplicitUnit('SCPreferences.pas');
     T:=P.Targets.AddImplicitUnit('SCPreferencesPath.pas');
     T:=P.Targets.AddImplicitUnit('SCPreferencesSetSpecific.pas');
-    T:=P.Targets.AddImplicitUnit('SCSI.pas');
     T:=P.Targets.AddImplicitUnit('SCSchemaDefinitions.pas');
     T:=P.Targets.AddImplicitUnit('SFNTLayoutTypes.pas');
     T:=P.Targets.AddImplicitUnit('SFNTTypes.pas');
@@ -445,7 +425,6 @@ begin
     T:=P.Targets.AddImplicitUnit('SKIndex.pas');
     T:=P.Targets.AddImplicitUnit('SKSearch.pas');
     T:=P.Targets.AddImplicitUnit('SKSummary.pas');
-    T:=P.Targets.AddImplicitUnit('Sound.pas');
     T:=P.Targets.AddImplicitUnit('SpeechRecognition.pas');
     T:=P.Targets.AddImplicitUnit('SpeechSynthesis.pas');
     T:=P.Targets.AddImplicitUnit('StringCompare.pas');
@@ -511,13 +490,9 @@ begin
           AddInclude('src/Multiprocessing.pas');
           AddInclude('src/PEFBinaryFormat.pas');
           AddInclude('src/PLStringFuncs.pas');
-          AddInclude('src/PMDefinitionsDeprecated.pas');
           AddInclude('src/PMPrintSettingsKeys.pas');
-          AddInclude('src/PMPrintingDialogExtensions.pas');
           AddInclude('src/QDCMCommon.pas');
           AddInclude('src/QLBase.pas');
-          AddInclude('src/QTML.pas');
-          AddInclude('src/QuickTimeErrors.pas');
           AddInclude('src/SFNTLayoutTypes.pas');
           AddInclude('src/SFNTTypes.pas');
           AddInclude('src/ScalerStreamTypes.pas');
@@ -610,7 +585,6 @@ begin
           AddInclude('src/GestaltEqu.pas');
           AddInclude('src/HFSVolumes.pas');
           AddInclude('src/HIGeometry.pas');
-          AddInclude('src/HITextUtils.pas');
           AddInclude('src/HostTime.pas');
           AddInclude('src/ICACamera.pas');
           AddInclude('src/IOKitReturn.pas');
@@ -629,13 +603,11 @@ begin
           AddInclude('src/OSAComp.pas');
           AddInclude('src/OSUtils.pas');
           AddInclude('src/OpenTransport.pas');
-          AddInclude('src/OpenTransportProviders.pas');
           AddInclude('src/Power.pas');
           AddInclude('src/QuickdrawText.pas');
           AddInclude('src/QuickdrawTypes.pas');
           AddInclude('src/SCDynamicStoreKey.pas');
           AddInclude('src/SCNetwork.pas');
-          AddInclude('src/SCSI.pas');
           AddInclude('src/SCSchemaDefinitions.pas');
           AddInclude('src/Script.pas');
           AddInclude('src/SecBase.pas');
@@ -802,7 +774,6 @@ begin
           AddInclude('src/CVPixelBufferIOSurface.pas');
           AddInclude('src/CVPixelBufferPool.pas');
           AddInclude('src/CVPixelFormatDescription.pas');
-          AddInclude('src/CodeFragments.pas');
           AddInclude('src/ColorPicker.pas');
           AddInclude('src/ColorSyncCMM.pas');
           AddInclude('src/FontSync.pas');
@@ -813,7 +784,6 @@ begin
           AddInclude('src/MDImporter.pas');
           AddInclude('src/MIDIDriver.pas');
           AddInclude('src/NSLCore.pas');
-          AddInclude('src/OpenTransportProtocol.pas');
           AddInclude('src/QLThumbnailImage.pas');
           AddInclude('src/Translation.pas');
           AddInclude('src/URLAccess.pas');
@@ -866,8 +836,6 @@ begin
           AddInclude('src/ImageCompression.pas');
           AddInclude('src/MusicDevice.pas');
           AddInclude('src/NSL.pas');
-          AddInclude('src/PMApplication.pas');
-          AddInclude('src/PMApplicationDeprecated.pas');
           AddInclude('src/PMCore.pas');
           AddInclude('src/QDPictToCGContext.pas');
           AddInclude('src/QLGenerator.pas');
@@ -879,7 +847,6 @@ begin
           AddInclude('src/SCPreferences.pas');
           AddInclude('src/SCPreferencesPath.pas');
           AddInclude('src/SCPreferencesSetSpecific.pas');
-          AddInclude('src/Sound.pas');
           AddInclude('src/AEHelpers.pas');
           AddInclude('src/AEObjects.pas');
           AddInclude('src/AEPackObject.pas');
@@ -902,7 +869,6 @@ begin
           AddInclude('src/OSA.pas');
           AddInclude('src/OSAGeneric.pas');
           AddInclude('src/PMPrintAETypes.pas');
-          AddInclude('src/QuickTimeMusic.pas');
           AddInclude('src/SCNetworkConfiguration.pas');
           AddInclude('src/AppleScript.pas');
           AddInclude('src/CarbonEvents.pas');
@@ -910,14 +876,10 @@ begin
           AddInclude('src/HIShape.pas');
           AddInclude('src/HIToolbar.pas');
           AddInclude('src/Icons.pas');
-          AddInclude('src/ImageCodec.pas');
           AddInclude('src/MacApplication.pas');
           AddInclude('src/MacWindows.pas');
-          AddInclude('src/MediaHandlers.pas');
           AddInclude('src/Navigation.pas');
           AddInclude('src/QuickTimeComponents.pas');
-          AddInclude('src/QuickTimeStreaming.pas');
-          AddInclude('src/QuickTimeVR.pas');
           AddInclude('src/QuickTimeVRFormat.pas');
           AddInclude('src/TextServices.pas');
           AddInclude('src/ASDebugging.pas');
@@ -930,7 +892,6 @@ begin
           AddInclude('src/HILittleArrows.pas');
           AddInclude('src/HIPopupButton.pas');
           AddInclude('src/HIProgressViews.pas');
-          AddInclude('src/HIRelevanceBar.pas');
           AddInclude('src/HISeparator.pas');
           AddInclude('src/HITabbedView.pas');
           AddInclude('src/HITheme.pas');
@@ -941,8 +902,6 @@ begin
           AddInclude('src/Lists.pas');
           AddInclude('src/MacHelp.pas');
           AddInclude('src/MacTextEditor.pas');
-          AddInclude('src/QTSMovie.pas');
-          AddInclude('src/QTStreamingComponents.pas');
           AddInclude('src/TSMTE.pas');
           AddInclude('src/ControlDefinitions.pas');
           AddInclude('src/HIComboBox.pas');
@@ -950,7 +909,6 @@ begin
           AddInclude('src/HIDisclosureViews.pas');
           AddInclude('src/HIImageViews.pas');
           AddInclude('src/HIMenuView.pas');
-          AddInclude('src/HIMovieView.pas');
           AddInclude('src/HIScrollView.pas');
           AddInclude('src/HISearchField.pas');
           AddInclude('src/HISegmentedView.pas');
@@ -958,7 +916,6 @@ begin
           AddInclude('src/HITextViews.pas');
           AddInclude('src/IBCarbonRuntime.pas');
           AddInclude('src/HIToolbox.pas');
-          AddInclude('src/ObjCRuntime.pas');
           AddInclude('src/SKAnalysis.pas');
           AddInclude('src/SKDocument.pas');
           AddInclude('src/SKIndex.pas');

@@ -60,19 +60,7 @@
 {$define __IPHONE_LATEST  := __IPHONE_8_0}
 
 // Target Conditionals
-{$if defined(CPUPOWERPC64)}
-	{$undef TARGET_CPU_PPC}
-	{$define TARGET_CPU_PPC64}
-	{$undef TARGET_CPU_X86}
-	{$undef TARGET_CPU_X86_64}
-	{$undef TARGET_CPU_ARM}
-	{$define TARGET_OS_MAC}
-	{$undef TARGET_OS_IPHONE}
-	{$undef TARGET_IPHONE_SIMULATOR}
-	{$define TARGET_RT_64_BIT}
-{$elseif defined(CPUX86_64)}
-	{$undef TARGET_CPU_PPC}
-	{$undef TARGET_CPU_PPC64}
+{$if defined(CPUX86_64)}
 	{$undef TARGET_CPU_X86}
 	{$define TARGET_CPU_X86_64}
 	{$undef TARGET_CPU_ARM}
@@ -133,7 +121,7 @@
   {$define __LP64__}
 
 // Mac OS X Version Requirements
-{$if defined(TARGET_CPU_PPC64) or defined(TARGET_CPU_X86) or defined(TARGET_CPU_X86_64)}
+{$if defined(TARGET_CPU_X86_64)}
     {$define MAC_OS_X_VERSION_MIN_REQUIRED := MAC_OS_X_VERSION_10_4}
 {$else}
     {$define MAC_OS_X_VERSION_MIN_REQUIRED := MAC_OS_X_VERSION_10_1}

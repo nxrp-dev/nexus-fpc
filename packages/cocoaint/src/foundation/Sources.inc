@@ -134,7 +134,6 @@
 {$include NSAppleScript.inc}
 {$include NSClassDescription.inc}
 {$include NSDistributedLock.inc}
-{$include NSGarbageCollector.inc}
 {$include NSHFSFileTypes.inc}
 {$include NSHost.inc}
 {$include NSObjectScripting.inc}

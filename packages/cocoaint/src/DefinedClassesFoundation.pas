@@ -69,7 +69,6 @@ type
   NSFileVersion = objcclass external;
   NSFileWrapper = objcclass external;
   NSFormatter = objcclass external;
-  NSGarbageCollector = objcclass external;
   NSGetCommand = objcclass external;
   NSHTTPCookie = objcclass external;
   NSHTTPCookieStorage = objcclass external;

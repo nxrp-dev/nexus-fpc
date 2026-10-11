@@ -35,12 +35,6 @@ interface
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-	{$setc __ppc__ := 0}
-{$ifc not defined __ppc64__ and defined CPUPOWERPC64}
-	{$setc __ppc64__ := 1}
-{$elsec}
-	{$setc __ppc64__ := 0}
-{$endc}
 	{$setc __i386__ := 0}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
@@ -58,20 +52,7 @@ interface
 
 
 
-{$ifc defined __ppc64__ and __ppc64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := TRUE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __x86_64__ and __x86_64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
+{$ifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := TRUE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -87,8 +68,6 @@ interface
 {$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __arm64__ and __arm64__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
 	{$setc TARGET_CPU_X86 := FALSE}
 	{$setc TARGET_CPU_X86_64 := FALSE}
 	{$setc TARGET_CPU_ARM := FALSE}
@@ -104,7 +83,7 @@ interface
 {$endc}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
 {$elsec}
-	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
+	{$error Neither __x86_64__ nor __arm64__ is defined.}
 {$endc}
 
   {$setc TARGET_CPU_64 := TRUE}
@@ -432,20 +411,6 @@ function LMGetApFontID: SInt16; external name '_LMGetApFontID';
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{
- *  LMSetApFontID()   *** DEPRECATED ***
- *
- *  Summary:
- *    Set the id of the application font.  Don't use this call anymore;
- *    this functionality is not supported on Mac OS X.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetApFontID( value: SInt16 ); external name '_LMSetApFontID';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
 
 
 
@@ -603,20 +568,6 @@ function LMGetSysFontSize: SInt16; external name '_LMGetSysFontSize';
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{
- *  LMSetSysFontSize()
- *
- *  Summary:
- *    Set the size for the system font.  This is not supported on Mac
- *    OS X.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetSysFontSize( value: SInt16 ); external name '_LMSetSysFontSize';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
 
 
 {*************************************************************************************
