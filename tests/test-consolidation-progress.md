@@ -62,7 +62,11 @@ without claiming execution on Darwin.
 
 Local evidence is retained in `output/test-consolidation/evidence.zip`: original
 and grouped commands/output, bootstrap logs, focused checks, inventories, and
-commit/source mappings. The large temporary source/build copies were removed.
+commit/source mappings. Automatic approval review rejected both bulk directory cleanup and a narrower
+verified-file/empty-directory cleanup, stating only `blocked by policy`. About
+1.90 GB of temporary source/build files remain under that same output directory;
+the evidence archive is verified and must be retained if those copies are
+removed later.
 The fixture index in `tests/test/README.txt` points to the final grouped paths.
 All changes are committed locally; nothing was pushed.
 
