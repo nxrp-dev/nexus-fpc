@@ -78,6 +78,32 @@ var
   tb0695_c: TSys;
 {$pop}
 
+{ Case tb0707.pp }
+{$push}
+{$modeswitch advancedrecords}
+var
+	tb0707_initialized: boolean = false;
+
+type
+	tb0707_innerrec = record
+		class operator Initialize(var self: tb0707_innerrec);
+	end;
+
+	tb0707_outerrec = record
+		tb0707_inner: tb0707_innerrec;
+		class operator Initialize(var self: tb0707_outerrec);
+	end;
+
+	class operator tb0707_innerrec.Initialize(var self: tb0707_innerrec);
+	begin
+		tb0707_initialized := true;
+	end;
+
+	class operator tb0707_outerrec.Initialize(var self: tb0707_outerrec);
+	begin
+	end;
+{$pop}
+
 begin
   { Case tb0665.pp }
   {$push}
@@ -99,6 +125,19 @@ begin
   if not InitDone then
     Halt(1);
   tb0695_c.Free;
+end;
+  {$pop}
+
+  { Case tb0707.pp }
+  {$push}
+begin
+	Initialize(tb0707_outerrec(nil^));
+	if not tb0707_initialized then
+	begin
+		writeln('Inner record not initialized.');
+		halt(1);
+	end;
+	writeln('ok');
 end;
   {$pop}
 
