@@ -38,6 +38,12 @@ var
   tb0082_ch : char;
 {$pop}
 
+{ Case tb0712.pp }
+{$push}
+var
+  tb0712_yy,tb0712_res : longint;
+{$pop}
+
 begin
   { Case tb0034.pp }
   {$push}
@@ -89,6 +95,36 @@ begin
   else
    writeln('bug');
   end;
+end;
+  {$pop}
+
+  { Case tb0712.pp }
+  {$push}
+begin
+  tb0712_res:=0;
+  tb0712_yy:=random(0)+1980;
+  If (tb0712_yy<1980) or (tb0712_yy>2099) then
+    tb0712_res:=1;
+  if tb0712_res<>0 then
+    halt(tb0712_res);
+
+  tb0712_yy:=random(0)+2099;
+  If (tb0712_yy<1980) or (tb0712_yy>2099) then
+    tb0712_res:=2;
+  if tb0712_res<>0 then
+    halt(tb0712_res);
+
+  tb0712_yy:=random(0)+1980;
+  If (tb0712_yy<=1979) or (tb0712_yy>2099) then
+    tb0712_res:=3;
+  if tb0712_res<>0 then
+    halt(tb0712_res);
+
+  tb0712_yy:=random(0)+2099;
+  If (tb0712_yy<1979) or (tb0712_yy>=2100) then
+    tb0712_res:=4;
+  if tb0712_res<>0 then
+    halt(tb0712_res);
 end;
   {$pop}
 
