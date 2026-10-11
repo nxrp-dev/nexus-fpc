@@ -132,8 +132,13 @@ end;
 
 {$pop}
 
-begin
 
+{ Isolate changes to locale settings made by individual cases. }
+var lOriginalFormatSettings: TFormatSettings;
+begin
+  lOriginalFormatSettings := DefaultFormatSettings;
+
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw10013.pp }
 {$push}
 
@@ -180,6 +185,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw13456.pp }
 {$push}
 {$ifdef fpc}
@@ -204,6 +210,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw33875.pp }
 {$push}
 
@@ -212,6 +219,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw3443.pp }
 {$push}
 
@@ -225,6 +233,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw38390.pp }
 {$push}
 
@@ -245,6 +254,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw39664.pp }
 {$push}
 
@@ -278,6 +288,7 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 { Case tw9126.pp }
 {$push}
 {$ifdef fpc}
@@ -298,4 +309,5 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := lOriginalFormatSettings;
 end.
