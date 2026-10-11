@@ -101,3 +101,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_files_objfpc_consolidated_01.pp` | 3 | 1 |
 | `tbs/tb_integers_macpas_consolidated_01.pp` | 6 | 1 |
 | `tbs/tb_integers_objfpc_consolidated_04.pp` | 3 | 1 |
+| `tbs/tb_strings_objfpc_consolidated_05.pp` | 4 | 1 |
