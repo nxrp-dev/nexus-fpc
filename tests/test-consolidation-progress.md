@@ -81,3 +81,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/cg/tb_strings_objfpc_consolidated_01.pp` | 4 | 1 |
 | `tbs/tb_arrays_objfpc_consolidated_01.pp` | 3 | 1 |
 | `tbs/tb_classes_objfpc_consolidated_01.pp` | 19 | 1 |
+| `tbs/tb_control_flow_fpc_consolidated_02.pp` | 22 | 1 |
