@@ -1952,10 +1952,8 @@ const
                         ;
                     end;
                   end
-{$ifndef jvm}
                 else if TryHandleLengthZero(left,right,nodetype,Result) then
                   exit
-{$endif jvm}
                    ;
               end;
 
@@ -2012,9 +2010,6 @@ const
             { using sqr(x) for reals instead of x*x might reduces register pressure and/or
               memory accesses while sqr(<real>) has no drawback }
             if
-{$ifdef xtensa}
-               (FPUXTENSA_DOUBLE in fpu_capabilities[current_settings.fputype]) and
-{$endif xtensa}
                (nodetype=muln) and
                is_real(ld) and is_real(rd) and
                left.isequal(right) and
@@ -3017,10 +3012,6 @@ const
                       inserttypeconv(left,right.resultdef)
                     else if not(equal_defs(ld,rd)) then
                       IncompatibleTypes(ld,rd);
-{$if defined(jvm)}
-                    inserttypeconv_internal(left,java_jlobject);
-                    inserttypeconv_internal(right,java_jlobject);
-{$endif jvm}
                  end;
                ltn,lten,gtn,gten:
                  begin
@@ -4872,17 +4863,6 @@ const
                   else
                     expectloc:=LOC_JUMP;
                end
-{$elseif defined(wasm)}
-            { WebAssembly does not support overflow checking for 64-bit multiplication }
-            else if (torddef(ld).ordtype in [s64bit,u64bit,scurrency]) and
-                    (cs_check_overflow in current_settings.localswitches) and
-                    (nodetype = muln) then
-              begin
-                result := first_add64bitint;
-                if assigned(result) then
-                  exit;
-                expectloc:=LOC_REGISTER
-              end
 {$endif not(cpu64bitalu) and not(cpuhighleveltarget)}
              { generic 32bit conversion }
              else

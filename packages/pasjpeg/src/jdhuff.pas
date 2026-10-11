@@ -571,10 +571,8 @@ function jpeg_fill_bit_buffer (var state : bitread_working_state;
                               {register} get_buffer : bit_buf_type;
                               {register} bits_left : int;
                               nbits  : int) : boolean;
-{$IFNDEF NOGOTO}
 label
   no_more_bytes;
-{$ENDIF}
 
 { Load up the bit buffer to a depth of at least nbits }
 var
@@ -692,13 +690,7 @@ begin
 
           cinfo^.unread_marker := c;
           { See if we need to insert some fake zero bits. }
-          {$IFDEF NOGOTO}
-            DoNomoreBytes;
-            PrepareExit;
-            exit;
-          {$ELSE}
             goto no_more_bytes;
-          {$ENDIF}
         end;
       end;
 
@@ -709,9 +701,7 @@ begin
   end
   else
   begin
-{$IFNDEF NOGOTO}
   no_more_bytes:
-{$ENDIF}
     DoNomoreBytes;
   end;
 
@@ -883,10 +873,8 @@ end;
 {METHODDEF}
 function decode_mcu (cinfo : j_decompress_ptr;
                      var MCU_data : array of JBLOCKROW) : boolean;
-{$IFNDEF NOGOTO}
 label
   label1, label2, label3;
-{$ENDIF}
 var
   entropy : huff_entropy_ptr;
   {register} s, k, r : int;
@@ -975,13 +963,7 @@ begin
         if (bits_left < HUFF_LOOKAHEAD) then
         begin
           nb := 1;
-          {$IFDEF NOGOTO}
-          if DoDecode(dctbl) then
-            exit;
-          SkipToLabel1:=True;
-          {$ELSE}
           goto label1;
-          {$ENDIF}
         end;
       end;
       if not SkipToLabel1 then
@@ -1001,9 +983,7 @@ begin
           else
           begin
             nb := HUFF_LOOKAHEAD+1;
-            {$IFNDEF NOGOTO}
             label1:
-            {$ENDIF}
             if DoDecode(dctbl) then exit;
           end;
         end;
@@ -1064,13 +1044,7 @@ begin
             if (bits_left < HUFF_LOOKAHEAD) then
             begin
               nb := 1;
-              {$IFDEF NOGOTO}
-              if DoDecode(actbl) then
-                exit;
-              skiptolabel2:=True;
-              {$ELSE}
               goto label2;
-              {$ENDIF}
             end;
           end;
           {look := PEEK_BITS(HUFF_LOOKAHEAD);}
@@ -1090,9 +1064,7 @@ begin
               else
               begin
                 nb := HUFF_LOOKAHEAD+1;
-                {$IFNDEF NOGOTO}
                 label2:
-                {$ENDIF}
                 if DoDecode(actbl) then
                   exit;
               end;
@@ -1161,13 +1133,7 @@ begin
             if (bits_left < HUFF_LOOKAHEAD) then
             begin
               nb := 1;
-              {$IFDEF NOGOTO}
-              if DoDecode(actbl) then
-                exit;
-              SkipToLabel3:=True;
-              {$ELSE}
               goto label3;
-              {$ENDIF}
             end;
           end;
           if not SkipToLabel3 then
@@ -1187,9 +1153,7 @@ begin
               else
               begin
                 nb := HUFF_LOOKAHEAD+1;
-                {$IFNDEF NOGOTO}
                 label3:
-                {$ENDIF}
                 if DoDecode(actbl) then exit;
 
               end;

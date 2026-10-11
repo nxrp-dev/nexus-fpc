@@ -52,7 +52,6 @@
   {$define DEBUG_INSTRUCTIONREGISTERDEPENDENCIES}
   {for CPU/aoptcpu unit }
   {$define DEBUG_AOPTCPU}
-  {$define DEBUG_PREREGSCHEDULER (arm specific) }
   { for aoptobj unit }
   {$define DEBUG_JUMP}
   {$define ALLOCREGDEBUG}

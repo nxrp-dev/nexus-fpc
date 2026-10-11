@@ -14,12 +14,8 @@ const
   LibName = 'msvcrt';
 {$elseif defined(win64)}
   LibName = 'msvcrt';
-{$elseif defined(wince)}
-  LibName = 'coredll';
 {$elseif defined(macos)}
   LibName = 'StdCLib';
-{$elseif defined(beos)}
-  LibName = 'root';
 {$else}
   LibName = 'c';
 {$endif}

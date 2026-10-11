@@ -130,7 +130,7 @@ type
    ExceptClass = class of Exception;
 
    EExternal = class(Exception)
-{$if defined(win32) or defined(win64) or defined(wince)}
+{$if (defined(win32)) or (defined(win64))}
    { OS-provided exception record is stored on stack and has very limited lifetime.
      Therefore store a complete copy. }
    private

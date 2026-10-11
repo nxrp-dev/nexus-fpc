@@ -223,17 +223,6 @@ end;
         result:='';
         totalsize:=0;
         pd.init_paraloc_info(callerside);
-{$if defined(powerpc) and defined(dummy)}
-        { Disabled, because neither Clang nor gcc does this, and the ObjC
-          runtime contains an explicit fix to detect this error.  }
-
-        { On ppc, the callee is responsible for removing the hidden function
-          result parameter from the stack, so it has to know. On i386, it's
-          the caller that does this.  }
-        if (pd.returndef<>voidtype) and
-            paramgr.ret_in_param(pd.returndef,pocall_cdecl) then
-          inc(totalsize,sizeof(pint));
-{$endif}
         for i:=0 to pd.paras.count-1 do
           begin
             vs:=tparavarsym(pd.paras[i]);

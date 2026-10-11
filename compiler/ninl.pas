@@ -4475,10 +4475,8 @@ implementation
               expectloc:=LOC_REGISTER;
               { in case of range/overflow checking, use a regular addnode
                 because it's too complex to handle correctly otherwise }
-{$ifndef jvm}
               { enums are class instances in the JVM -> always need conversion }
               if (([cs_check_overflow,cs_check_range]*current_settings.localswitches)<>[]) and not(nf_internal in flags) then
-{$endif}
                 begin
                   { create constant 1, ensure the data type is large enough }
                   range_to_type(
@@ -5125,10 +5123,6 @@ implementation
              trigger an overflow. For uint32 it works because then the operation is done
              in 64bit. Range checking is not applicable to pointers either }
              (tcallparanode(left).left.resultdef.typ<>pointerdef))
-{$ifdef jvm}
-             { enums are class instances on the JVM -> special treatment }
-             or (tcallparanode(left).left.resultdef.typ=enumdef)
-{$endif}
             then
              { convert to simple add (JM) }
              result:=getaddsub_for_incdec

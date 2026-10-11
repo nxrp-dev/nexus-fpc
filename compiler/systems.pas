@@ -165,8 +165,6 @@ interface
             tf_no_objectfiles_when_smartlinking,
             { indicates that the default value of the ts_cld target switch is 'on' for this target }
             tf_cld,
-            { indicates that the default value of the ts_x86_far_procs_push_odd_bp target switch is 'on' for this target }
-            tf_x86_far_procs_push_odd_bp,
             { indicates that this target can use dynamic packages otherwise an
               error will be generated if a package file is compiled }
             tf_supports_packages,
@@ -181,9 +179,7 @@ interface
             { units are initialized by direct calls and not table driven,
               in particular for a small amount of units, this results in smaller
               executables }
-            tf_init_final_units_by_calls,
-            { indicates that the default value of the ts_wasm_threads target switch is 'on' for this target }
-            tf_wasm_threads
+            tf_init_final_units_by_calls
        );
        psysteminfo = ^tsysteminfo;
        { using packed causes bus errors on processors which require alignment }
@@ -309,7 +305,7 @@ interface
 
        { all PPC ABIs that use a TOC register to address globals }
        abis_ppc_toc = [
-         {$ifdef powerpc64}abi_powerpc_sysv,{$endif}abi_powerpc_aix,abi_powerpc_elfv2
+         abi_powerpc_aix,abi_powerpc_elfv2
        ];
 
        { pointer checking (requires special code in FPC_CHECKPOINTER,
@@ -365,9 +361,9 @@ interface
          (name: 'LP64S'; supported:false),
          (name: 'LP64F'; supported:false),
          (name: 'LP64D'; supported:false),
-         (name: 'LP32S'; supported:{$if defined(loongarch32)}true{$else}false{$endif}),
-         (name: 'LP32F'; supported:{$if defined(loongarch32)}true{$else}false{$endif}),
-         (name: 'LP32D'; supported:{$if defined(loongarch32)}true{$else}false{$endif})
+         (name: 'LP32S'; supported:false),
+         (name: 'LP32F'; supported:false),
+         (name: 'LP32D'; supported:false)
        );
 
        cgbackend2str: array[tcgbackend] of ansistring = (

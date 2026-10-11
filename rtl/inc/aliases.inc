@@ -35,6 +35,6 @@ Function int_Copy(Src, Dest, TypeInfo : Pointer) : SizeInt;[external name 'FPC_C
 Function int_Copy_with_move_semantics(Src, Dest, TypeInfo : Pointer) : SizeInt;[external name 'FPC_COPY_WITH_MOVE_SEMANTICS'];
 {$endif}
 
-{$if defined(FPC_HAS_FEATURE_RTTI) and not defined(cpujvm)}
+{$if defined(FPC_HAS_FEATURE_RTTI)}
 procedure FinalizeRecordFields(Data:Pointer;Ri:PRecordInfoInit); forward;
 {$endif FPC_HAS_FEATURE_RTTI and not cpujvm}

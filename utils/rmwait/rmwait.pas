@@ -22,12 +22,6 @@ Remove (delete) file(s) with optional retries.
 { $DEFINE DONOTHING}
 
 uses
-{$IFDEF GO32V2}
-  Go32,
-{$ENDIF GO32V2}
-{$IFDEF OS2}
-  DosCalls,
-{$ENDIF OS2}
 {$IFDEF WINDOWS}
   Windows,
 {$ENDIF WINDOWS}
@@ -86,34 +80,6 @@ end;
 
 
 procedure Wait (Seconds: Cardinal);
-{$IFDEF GO32v2}
-var
-  R: Registers;
-  T0, T1, T2: int64;
-  DayOver: boolean;
-begin
-(* Sleep is supposed to give up time slice - DOS Idle Interrupt chosen
-   because it should be supported in all DOS versions. *)
-  R.AH := $2C;
-  RealIntr($21, R);
-  T0 := R.CH * 3600 + R.CL * 60 + R.DH;
-  T2 := T0 + Seconds;
-  DayOver := T2 > (24 * 3600);
-  repeat
-    Intr ($28, R);
-(*    R.AH := $2C; - should be preserved. *)
-    RealIntr($21, R);
-    T1 := R.CH * 3600 + R.CL * 60 + R.DH;
-    if DayOver and (T1 < T0) then
-     Inc (T1, 24 * 3600);
-  until T1 >= T2;
-end;
-{$ELSE GO32v2}
- {$IFDEF OS2}
-begin
-  DosSleep (Seconds * 1000);
-end;
- {$ELSE OS2}
   {$IFDEF UNIX}
 begin
   fpSleep (Seconds * 1000);
@@ -138,8 +104,6 @@ begin
 end;
    {$ENDIF WINDOWS}
   {$ENDIF UNIX}
- {$ENDIF OS2}
-{$ENDIF GO32v2}
 
 
 procedure ClearAttribs (var F: file); inline;
@@ -304,19 +268,19 @@ var
   RemFNDir: boolean;
 begin
   RemFNDir := false;
-{$IF NOT DEFINED (OS2) and NOT DEFINED (WINDOWS) and NOT DEFINED (DPMI) and NOT DEFINED (UNIX) and NOT DEFINED (MACOS) and NOT DEFINED (AMIGA)}
+{$if ((not (DEFINED (WINDOWS))) and (not (DEFINED (UNIX)))) and (not (DEFINED (MACOS)))}
  {$WARNING Proper behaviour for this target platform has not been checked!}
 {$ENDIF}
-{$IF NOT DEFINED (MACOS) and NOT DEFINED (AMIGA)}
+{$if not (DEFINED (MACOS))}
 (* Special case - root directory needs to be treated in a special way. *)
  {$IFDEF UNIX}
  if (Length (FN) = 1)
  {$ELSE UNIX}
-  {$IF DEFINED (OS2) or DEFINED (WINDOWS) or DEFINED (DPMI)}
+  {$if DEFINED (WINDOWS)}
  if (((Length (FN) = 3) and (FN [2] = DriveSeparator))
         or ((Length (FN) = 2) and (FN [1] = DirectorySeparator)))
 (* Root of UNC path - nonsense, but changing it to root of current drive would be dangerous. *)
-  {$ELSE}
+  {$else}
   {$ENDIF}
       and (FN [Length (FN)] = DirectorySeparator) then
  {$ENDIF UNIX}
@@ -525,9 +489,6 @@ var
   EnvOpts, Par: string;
 
 begin
-{$IFDEF OS2}
-  DosCalls.DosError (0);
-{$ENDIF}
 
   OldExit := ExitProc;
   ExitProc := @NewExit;

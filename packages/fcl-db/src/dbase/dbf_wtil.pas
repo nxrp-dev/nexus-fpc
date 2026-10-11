@@ -26,27 +26,19 @@ interface
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
- {$IFDEF OS2}
-  OS2Api.os2def,
- {$ELSE OS2}
   {$ifdef FPC}
   UnixApi.Base,
   {$else}
   Api.Libc,
   {$endif}
- {$ENDIF OS2}
   System.Types, System.SysUtils, System.Classes;
 {$ELSE FPC_DOTTEDUNITS}
 uses
- {$IFDEF OS2}
-  OS2Def,
- {$ELSE OS2}
   {$ifdef FPC}
   BaseUnix,
   {$else}
   Libc,
   {$endif}
- {$ENDIF OS2}
   Types, SysUtils, Classes;
 {$ENDIF FPC_DOTTEDUNITS}
 
@@ -237,15 +229,11 @@ const
 (*
   Error const of File Locking
 *)
-{$IFDEF OS2}
-  ERROR_LOCK_VIOLATION = OS2Def.ERROR_LOCK_VIOLATION;
-{$ELSE OS2}
  {$ifdef FPC}
   ERROR_LOCK_VIOLATION = ESysEACCES;
  {$else}
   ERROR_LOCK_VIOLATION = EACCES;
  {$endif}
-{$ENDIF OS2}
 
 { MBCS and Unicode Translation Flags. }
   MB_PRECOMPOSED = 1; { use precomposed chars }
@@ -312,11 +300,7 @@ procedure SetLastError(Value: Integer);
 implementation
 
 {$ifndef WINDOWS}
- {$IFDEF OS2}
-  {$I dbf_wos2.inc}
- {$ELSE OS2}
   {$I dbf_wnix.inc}
- {$ENDIF OS2}
 
 procedure DateTimeToSystemTime(const DateTime: System.TDateTime; var SystemTime: TSystemTime);
 begin

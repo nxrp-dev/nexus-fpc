@@ -66,9 +66,6 @@ implementation
        scanner,
        pbase,pexpr,ptype,ptconst,pdecsub,pdecvar,pdecobj,pgenutil,pparautl,
        procdefutil,
-{$ifdef jvm}
-       pjvm,
-{$endif}
        { cpu-information }
        cpuinfo
        ;
@@ -264,17 +261,6 @@ implementation
                        sym.visibility:=symtablestack.top.currentvisibility;
                        symtablestack.top.insertsym(sym);
                        sym.register_sym;
-{$ifdef jvm}
-                       { for the JVM target, some constants need to be
-                         initialized at run time (enums, sets) -> create fake
-                         typed const to do so (at least if they are visible
-                         outside this routine, since we won't directly access
-                         these symbols in the generated code) }
-                       if (symtablestack.top.symtablelevel<normal_function_level) and
-                          assigned(tconstsym(sym).constdef) and
-                          (tconstsym(sym).constdef.typ in [enumdef,setdef]) then
-                         jvm_add_typed_const_initializer(tconstsym(sym));
-{$endif}
                      end
                    else
                      stringdispose(deprecatedmsg);

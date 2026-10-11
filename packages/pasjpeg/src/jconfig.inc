@@ -1,6 +1,3 @@
-{$IFDEF CPUWASM}
-{$DEFINE NOGOTO}
-{$ENDIF}
 { ----------------------- JPEG_INTERNAL_OPTIONS ---------------------- }
 
 

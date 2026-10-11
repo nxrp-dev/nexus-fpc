@@ -102,19 +102,6 @@ end;
 //
 // ---------------------------------------------------------------------
 {$if defined(VALREAL_64) and not defined(VALREAL_PACK)}
-{$ifdef cpujvm}
-
-function unpack_float( const f: ValReal; out minus: boolean ): TDIY_FP; {$ifdef grisu1_inline}inline;{$endif}
-var
-    doublebits: int64;
-begin
-    doublebits := JLDouble.doubleToLongBits( f );
-    minus := ( doublebits < 0 );
-    unpack_float.e := ( doublebits shr 52 ) and $7FF;
-    unpack_float.f := ( doublebits and $000FFFFFFFFFFFFF );
-end;
-
-{$else not cpujvm}
 
 {$if defined(fpc_softfpu_implementation)
      or ( defined(FPC_SYSTEM_HAS_extractFloat64Frac)
@@ -156,21 +143,9 @@ begin
 end;
 
 {$endif fpc_softfpu_implementation}
-{$endif cpujvm}
 {$endif unpack float64}
 
 {$if defined(VALREAL_64) and defined(VALREAL_PACK)}
-{$ifdef cpujvm}
-
-procedure pack_float( out f: ValReal; minus: boolean; exp: integer; const m: qword ); {$ifdef grisu1_inline}inline;{$endif}
-var
-    doublebits: int64;
-begin
-    doublebits := ( m and $000FFFFFFFFFFFFF ) + ( qword( exp and $7FF ) shl 52 ) + ( qword( ord(minus) ) shl 63 );
-    f := JLDouble.longBitsToDouble( doublebits );
-end;
-
-{$else not cpujvm}
 
 {$ifdef fpc_softfpu_implementation}
 
@@ -208,7 +183,6 @@ begin
 end;
 
 {$endif fpc_softfpu_implementation}
-{$endif cpujvm}
 {$endif pack float64}
 
 // ---------------------------------------------------------------------

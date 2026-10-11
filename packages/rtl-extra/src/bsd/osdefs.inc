@@ -27,9 +27,4 @@
 {$ifdef darwin}
   {$define FPC_USE_LIBC}
 {$endif}
-{$ifdef openbsd}
-  {$ifndef FPC_USE_SYSCALL}
-    {$define FPC_USE_LIBC}
-  {$endif}
-{$endif}
 

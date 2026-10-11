@@ -64,7 +64,7 @@ uses
 { ToDo: we need defines for the MIPS ABI }
 
 const
-{$if defined(CPUMIPS) or defined(CPU64)}
+{$if defined(CPU64)}
   FFI_SIZEOF_ARG = 8;
 {$else}
   FFI_SIZEOF_ARG = 4;
@@ -72,17 +72,6 @@ const
 
   FFI_SIZEOF_JAVA_ARG = FFI_SIZEOF_ARG;
 
-{$if defined(CPUPOWERPC) and not defined(AIX) and not defined(DARWIN)}
-  {$if defined(CPUPOWERPC32)}
-  FFI_SYSV_SOFT_FLOAT = 1;
-  FFI_SYSV_STRUCT_RET = 2;
-  FFI_SYSV_IBM_LONG_DOUBLE = 4;
-  FFI_SYSV_LONG_DOUBLE_128 = 16;
-  {$elseif defined(CPUPOWERPC64)}
-  FFI_LINUX_STRUCT_ALIGN = 1;
-  FFI_LINUX_LONG_DOUBLE_128 = 2;
-  {$endif}
-{$endif}
 
 type
 {$ifdef WIN64}
@@ -99,19 +88,11 @@ type
 {$else}
     FFI_FIRST_ABI,
 {$endif}
-{$if not defined(CPUMIPS) and not defined(CPUX86_64) and not defined(CPUPOWERPC) and not defined(CPUSPARCGEN)}
+{$if not (defined(CPUX86_64))}
     FFI_SYSV,
 {$endif}
 {$if defined(CPUAARCH64) and defined(WIN64)}
     FFI_WIN64,
-{$endif}
-{$if defined(CPUMIPS)}
-    FFI_O32,
-    FFI_N32,
-    FFI_N64,
-    FFI_O32_SOFT_FLOAT,
-    FFI_N32_SOFT_FLOAT,
-    FFI_N64_SOFT_FLOAT,
 {$endif}
 {$if defined(CPUX86_64)}
   {$ifndef WIN64}
@@ -137,37 +118,7 @@ type
     FFI_MS_CDECL,
   {$endif}
 {$endif}
-{$if defined(CPUSPARC32)}
-    FFI_V8,
-{$endif}
-{$if defined(CPUSPARC64)}
-    FFI_V9,
-{$endif}
-{$if defined(CPUPOWERPC)}
-    { this one is getting ugly... }
-  {$if defined(AIX) or defined(DARWIN)}
-    FFI_AIX,
-    FFI_DARWIN,
-  {$else}
-    FFI_COMPAT_SYSV,
-    FFI_COMPAT_GCC_SYSV,
-    FFI_COMPAT_LINUX64,
-    FFI_COMPAT_LINUX,
-    FFI_COMPAT_LINUX_SOFT_FLOAT,
-    {$if defined(CPUPOWERPC64)}
-    FFI_LINUX = 8,
-    {$define NO_LAST_ABI}
-    FFI_LAST_ABI = 12
-    {$elseif defined(CPUPOWERPC32)}
-    FFI_SYSV = 8,
-    {$define NO_LAST_ABI}
-    FFI_LAST_ABI = 32
-    {$endif}
-  {$endif}
-{$endif}
-{$ifndef NO_LAST_ABI}
     FFI_LAST_ABI
-{$endif}
   );
 
 { alias values }
@@ -175,10 +126,7 @@ const
 {$if defined(CPUX86_64) and not defined(WIN64)}
   FFI_EFI64 = FFI_WIN64;
 {$endif}
-{$if defined(CPUMIPS)}
-  { ToDo: needs define for ABI }
-  FFI_DEFAULT_ABI = FFI_N32;
-{$elseif defined(CPUX86_64)}
+{$if defined(CPUX86_64)}
   {$ifdef WIN64}
   FFI_DEFAULT_ABI = FFI_WIN64;
   {$else}
@@ -186,22 +134,6 @@ const
   {$endif}
 {$elseif defined(CPUAARCH64) and defined(WIN64)}
   FFI_DEFAULT_ABI = FFI_WIN64;
-{$elseif defined(CPUSPARC32)}
-  FFI_DEFAULT_ABI = FFI_V8;
-{$elseif defined(CPUSPARC64)}
-  FFI_DEFAULT_ABI = FFI_V9;
-{$elseif defined(CPUPOWERPC)}
-  {$if defined(AIX)}
-  FFI_DEFAULT_ABI = FFI_AIX;
-  {$elseif defined(DARWIN)}
-  FFI_DEFAULT_ABI = FFI_DARWIN;
-  {$elseif defined(CPUPOWERPC64)}
-  { ToDo: find out what needs to be set }
-  FFI_DEFAULT_ABI = ffi_abi(Ord(FFI_LINUX) or FFI_LINUX_STRUCT_ALIGN or FFI_LINUX_LONG_DOUBLE_128);
-  {$elseif defined(CPUPOWERPC)}
-  { ToDo: find out what needs to be set }
-  FFI_DEFAULT_ABI = ffi_abi(Ord(FFI_SYSV) {$ifdef FREEBSD}or FFI_SYSV_STRUCT_RET{$endif});
-  {$endif}
 {$else}
   {$ifdef WIN32}
     FFI_DEFAULT_ABI = FFI_MS_CDECL;
@@ -211,7 +143,7 @@ const
 {$endif}
 
 const
-{$if defined(CPUPOWERPC) or (defined(CPUAARCH64) and defined(WIN64))}
+{$if (defined(CPUAARCH64)) and (defined(WIN64))}
   FFI_TARGET_HAS_COMPLEX_TYPE = False;
 {$else}
   FFI_TARGET_HAS_COMPLEX_TYPE = True;
@@ -232,7 +164,7 @@ const
   FFI_NATIVE_RAW_API = False;
 {$endif}
 
-{$if defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not (defined(DARWIN))) or (defined(CPUPOWERPC) and not (defined(DARWIN)))}
+{$if ((defined(CPUX86_64)) or (defined(CPUI386))) or ((defined(CPUAARCH64)) and (not (defined(DARWIN))))}
   FFI_GO_CLOSURES = True;
 {$else}
   FFI_GO_CLOSURES = False;
@@ -246,41 +178,10 @@ const
   FFI_TRAMPOLINE_SIZE = 24;
   FFI_TRAMPOLINE_CLOSURE_OFFSET = FFI_TRAMPOLINE_SIZE;
   {$endif}
-{$elseif defined(CPUPOWERPC)}
-  { ToDo: check for ELFv2? }
-  {$ifdef ELF_V2}
-  FFI_TRAMPOLINE_SIZE = 32;
-  {$else}
-    {$if defined(CPUPOWERPC64) or defined(AIX)}
-      {$if defined(DARWIN)}
-  FFI_TRAMPOLINE_SIZE = 48;
-      {$else}
-  FFI_TRAMPOLINE_SIZE = 25;
-      {$endif}
-    {$else}
-  FFI_TRAMPOLINE_SIZE = 40;
-    {$endif}
-  {$endif}
-{$elseif defined(CPUSPARC32)}
-  FFI_TRAMPOLINE_SIZE = 16;
-{$elseif defined(CPUSPARC64)}
-  FFI_TRAMPOLINE_SIZE = 24;
 {$elseif defined(CPUX86_64)}
   FFI_TRAMPOLINE_SIZE = 32;
 {$elseif defined(CPUI386)}
   FFI_TRAMPOLINE_SIZE = 16;
-{$elseif defined(CPUM68K)}
-  FFI_TRAMPOLINE_SIZE = 16;
-{$elseif defined(CPURISCV32)}
-  FFI_TRAMPOLINE_SIZE = 24;
-{$elseif defined(CPURISCV64)}
-  FFI_TRAMPOLINE_SIZE = 24;
-{$elseif defined(CPUMIPS32)}
-  FFI_TRAMPOLINE_SIZE = 20;
-{$elseif defined(CPUMIPS64)}
-  FFI_TRAMPOLINE_SIZE = 56;
-{$elseif defined(CPUXTENSA)}
-  FFI_TRAMPOLINE_SIZE = 24;
 {$elseif defined(CPULOONGARCH64)}
   FFI_TRAMPOLINE_SIZE = 24;
 {$endif}
@@ -327,7 +228,7 @@ var
   ffi_type_longdouble: ffi_type absolute ffi_type_double;
 {$endif}
 
-{$if not defined(CPUPOWERPC) and not (defined(CPUAARCH64) and defined(WIN64))}
+{$if not ((defined(CPUAARCH64)) and (defined(WIN64)))}
   ffi_type_complex_float: ffi_type; cvar; external ffilibrary;
   ffi_type_complex_double: ffi_type; cvar; external ffilibrary;
   {$ifdef HAVE_LONG_DOUBLE}
@@ -378,12 +279,6 @@ type
   {$ifdef WIN64}
     is_variadic: cuint;
   {$endif}
-  {$endif}
-{$elseif defined(CPUSPARC64)}
-    nfixedargs: cuint;
-{$elseif defined(CPUPOWERPC)}
-  {$ifndef DARWIN}
-    nfixedargs: cuint;
   {$endif}
 {$elseif defined(CPULOONGARCH64)}
   loongarch_nfixedargs: cuint;
@@ -533,7 +428,7 @@ function ffi_prep_java_raw_closure_loc(clo: pffi_java_raw_closure;
                                   user_data: Pointer;
                                   codeloc: Pointer): ffi_status; cdecl; external ffilibrary name 'ffi_prep_java_raw_closure_loc';
 
-{$if defined(CPUX86_64) or defined(CPUI386) or defined(CPUSPARCGEN) or (defined(CPUAARCH64) and not (defined(DARWIN))) or (defined(CPUPOWERPC) and not (defined(DARWIN)))}
+{$if ((defined(CPUX86_64)) or (defined(CPUI386))) or ((defined(CPUAARCH64)) and (not (defined(DARWIN))))}
 type
   ffi_go_closure = record
     tramp: Pointer;

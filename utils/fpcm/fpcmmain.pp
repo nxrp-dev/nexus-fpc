@@ -39,19 +39,7 @@ interface
       sysutils,classes,
       fpcmdic;
 
-{$ifdef BEOS}
-{$define NO_UNIX_UNIT}
-{$endif}
-{$ifdef SOLARIS}
-{$define NO_UNIX_UNIT}
-{$endif}
-{$ifdef QNX}
-{$define NO_UNIX_UNIT}
-{$endif}
 
-{$ifdef GO32V2}
-  {$define LIMIT83}
-{$endif}
 
     const
       Version='2.0.0';
@@ -1042,11 +1030,7 @@ implementation
         { Force the current target }
         SetVariable('OSTARGET',OSStr[t],false);
         SetVariable('CPUTARGET',CpuStr[c],false);
-{$ifdef LIMIT83}
-        SetVariable('FULLTARGET',OSStr[t],false);
-{$else}
         SetVariable('FULLTARGET',CpuStr[c]+'-'+OSStr[t],false);
-{$endif}
         { Check for Makefile.fpc }
         s:=SubstVariables('$(addsuffix /'+ReqName+'/Makefile.fpc,$(FPCDIR)) $(addsuffix /'+ReqName+'/Makefile.fpc,$(PACKAGESDIR)) $(addsuffix /'+ReqName+'/Makefile.fpc,$(REQUIRE_PACKAGESDIR))');
         Verbose(FPCMakeDebug,'Package "'+ReqName+'": Looking for Makefile.fpc: "'+s+'"');
@@ -1315,7 +1299,6 @@ implementation
         if hs='' then
          begin
 {$ifdef UNIX}
-{$ifndef NO_UNIX_UNIT}
            cpu := succ(low(TCpu));
            while(cpuStr[cpu] <> {$I %FPCTARGETCPU%}) do begin
              Inc(cpu);
@@ -1345,7 +1328,6 @@ implementation
                   end;
                end;
             end;
-{$endif}
 {$else UNIX}
            hs:=ExtractFilePath(FSearch('ppc386.exe',getenv('PATH')));
            if hs<>'' then

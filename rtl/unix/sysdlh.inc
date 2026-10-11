@@ -22,8 +22,6 @@ Const
 // these are for easier crossplatform construction of dll names in dynloading libs.
 {$if defined(Darwin)}
   SharedSuffix = 'dylib';
-{$elseif defined(aix)}
-  SharedSuffix = 'a';
 {$else}
   SharedSuffix = 'so';
 {$endif}

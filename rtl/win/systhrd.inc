@@ -19,12 +19,10 @@
                            Local WINApi imports
 *****************************************************************************}
 
-{$ifndef WINCE}
 function TlsAlloc : DWord;
   stdcall;external KernelDLL name 'TlsAlloc';
 function TlsFree(dwTlsIndex : DWord) : LongBool;
   stdcall;external KernelDLL name 'TlsFree';
-{$endif WINCE}
 function TlsGetValue(dwTlsIndex : DWord) : pointer;
 stdcall;external KernelDLL name 'TlsGetValue';
 function TlsSetValue(dwTlsIndex : DWord;lpTlsValue : pointer) : LongBool;
@@ -43,7 +41,6 @@ function  TerminateThread  (threadHandle : THandle; var exitCode : dword) : bool
 function  WaitForSingleObject (hHandle : THandle;Milliseconds: dword): dword; stdcall;external KernelDLL name 'WaitForSingleObject';
 function  WinThreadSetPriority (threadHandle : THandle; Prio: longint): boolean; stdcall;external KernelDLL name 'SetThreadPriority';
 function  WinThreadGetPriority (threadHandle : THandle): LongInt; stdcall;external KernelDLL name 'GetThreadPriority';
-{$ifndef WINCE}
 function WinGetCurrentThread: THandle; stdcall; external KernelDLL name 'GetCurrentThread';
 function WinOpenThread(dwDesiredAccess: DWord; bInheritHandle: Boolean; dwThreadId: DWord): THandle; stdcall; external KernelDLL name 'OpenThread';
 function WinIsDebuggerPresent: Boolean; stdcall; external KernelDLL name 'IsDebuggerPresent';
@@ -54,7 +51,6 @@ var
 function  CreateEvent(lpEventAttributes:pointer;bManualReset:longbool;bInitialState:longbool;lpName:PAnsiChar): THandle; stdcall; external KernelDLL name 'CreateEventA';
 function  ResetEvent(hEvent:THandle):LONGBOOL; stdcall; external KernelDLL name 'ResetEvent';
 function  SetEvent(hEvent:THandle):LONGBOOL; stdcall; external KernelDLL name 'SetEvent';
-{$endif WINCE}
 
 procedure WinInitCriticalSection(var cs : TRTLCriticalSection);
   stdcall;external KernelDLL name 'InitializeCriticalSection';
@@ -250,12 +246,10 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
         if ThreadID=TThreadID(0) then
           begin
             InitThread(ti.stklen);
-{$ifndef wince}
 {$ifdef win32}
             if Assigned(SetThreadStackGuarantee) then
 {$endif win32}
               SetThreadStackGuaranteeTo(StackMargin);
-{$endif wince}
           end;
 
         dispose(pthreadinfo(param));
@@ -381,7 +375,6 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
       SysGetCurrentThreadId:=Win32GetCurrentThreadId;
     end;
 
-{$ifndef WINCE}
     { following method is supported on older Windows versions AND currently only supported method by GDB }
     procedure RaiseMSVCExceptionMethod(threadHandle: TThreadID; const ThreadName: AnsiString);
     const
@@ -431,11 +424,9 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
         CloseHandle(thrdhandle);
       end;
     end;
-{$endif WINCE}
 
     procedure SysSetThreadDebugNameA(threadHandle: TThreadID; const ThreadName: AnsiString);
     begin
-{$ifndef WINCE}
       if ThreadName = '' then
         Exit;
 
@@ -448,14 +439,10 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
       begin
         SetThreadDescriptionMethod(threadHandle, UnicodeString(ThreadName));
       end;
-{$else WINCE}
-      {$Warning SetThreadDebugNameA needs to be implemented}
-{$endif WINCE}
     end;
 
     procedure SysSetThreadDebugNameU(threadHandle: TThreadID; const ThreadName: UnicodeString);
     begin
-{$ifndef WINCE}
       if ThreadName = '' then
         Exit;
 
@@ -468,9 +455,6 @@ function WinTryEnterCriticalSection(var cs : TRTLCriticalSection):longint;
       begin
         SetThreadDescriptionMethod(threadHandle, ThreadName);
       end;
-{$else WINCE}
-      {$Warning SetThreadDebugNameU needs to be implemented}
-{$endif WINCE}
     end;
 
 {*****************************************************************************
@@ -616,9 +600,7 @@ end;
 Procedure InitSystemThreads;public name '_FPC_InitSystemThreads';
 var
   WinThreadManager : TThreadManager;
-{$ifndef WINCE}
   KernelHandle : THandle;
-{$endif}
 begin
   With WinThreadManager do
     begin
@@ -665,15 +647,11 @@ begin
 {$endif}
     SysInitTLS;
 
-{$ifndef WINCE}
   KernelHandle:=GetModuleHandle(KernelDLL);
-{$endif}
 
-{$ifndef WINCE}
   if KernelHandle<>0 then
   begin
     WinSetThreadDescription:=TSetThreadDescription(WinGetProcAddress(KernelHandle, 'SetThreadDescription'));
   end;
-{$endif WINCE}
 end;
 

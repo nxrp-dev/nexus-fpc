@@ -145,7 +145,6 @@
             ,res_m68k_palmos,res_m68k_mpw
             ,res_powerpc_mpw,res_elf,res_xcoff
             ,res_win64_gorc, res_macho, res_ext
-            ,res_jvm_raw,res_wasm
        );
 
        tresinfoflags = (res_external_file,res_arch_in_file_name

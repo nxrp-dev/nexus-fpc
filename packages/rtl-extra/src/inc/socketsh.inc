@@ -22,19 +22,11 @@ type
 
 const
   { Socket types }
-{$ifdef sunos}
-  SOCK_STREAM     = 2;               { stream socket }
-  SOCK_DGRAM      = 1;               { datagram socket }
-  SOCK_RAW        = 4;               { raw-protocol interface }
-  SOCK_RDM        = 5;               { reliably-delivered message }
-  SOCK_SEQPACKET  = 6;               { sequenced packet stream }
-{$else}
   SOCK_STREAM     = 1;               { stream (connection) socket   }
   SOCK_DGRAM      = 2;               { datagram (conn.less) socket  }
   SOCK_RAW        = 3;               { raw socket                   }
   SOCK_RDM        = 4;               { reliably-delivered message   }
   SOCK_SEQPACKET  = 5;               { sequential packet socket     }
-{$endif}
 
   INADDR_ANY   = CARDINAL(0);
   INADDR_NONE  = CARDINAL($FFFFFFFF);

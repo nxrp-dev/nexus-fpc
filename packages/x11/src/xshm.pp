@@ -10,16 +10,11 @@ uses
   ctypes,x,xlib;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$ifndef os2}
   {$LinkLib c}
   {$LinkLib X11}
   {$LinkLib Xext}
 const
   libX11='X11';
-{$else}
-const
-  libX11='X11';
-{$endif}
 
 {
   Automatically converted by H2Pas 0.99.15 from xshm.h

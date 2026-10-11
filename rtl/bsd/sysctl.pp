@@ -108,16 +108,9 @@ Uses Syscall;
 {$ENDIF}
 
 {$ifndef FPC_USE_LIBC}
-{$if defined(FreeBSD) or defined(DragonFly)}
-CONST  syscall_nr___sysctl                    = 202;
-{$endif}
 
 function FPsysctl (Name: pcint; namelen:cuint; oldp:pointer;oldlenp:psize_t; newp:pointer;newlen:size_t):cint;
 
-{$ifdef OpenBSD}
-const
-  syscall_nr___sysctl = syscall_nr_sysctl;
-{$endif OpenBSD}
 
 Begin
         if (name[0] <> CTL_USER) Then

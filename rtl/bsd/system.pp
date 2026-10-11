@@ -43,36 +43,10 @@ var argc:longint;
 
 CONST SIGSTKSZ = 40960;
 
-{$if defined(CPUM68K)}
-
-{$define fpc_softfpu_interface}
-{$i softfpu.pp}
-{$undef fpc_softfpu_interface}
-
-{$endif}
 
 
 Implementation
 
-{$if defined(CPUM68K)}
-
-{$define fpc_softfpu_implementation}
-{$i softfpu.pp}
-{$undef fpc_softfpu_implementation}
-
-{ we get these functions and types from the softfpu code }
-{$define FPC_SYSTEM_HAS_float64}
-{$define FPC_SYSTEM_HAS_float32}
-{$define FPC_SYSTEM_HAS_flag}
-{$define FPC_SYSTEM_HAS_extractFloat64Frac0}
-{$define FPC_SYSTEM_HAS_extractFloat64Frac1}
-{$define FPC_SYSTEM_HAS_extractFloat64Exp}
-{$define FPC_SYSTEM_HAS_extractFloat64Sign}
-{$define FPC_SYSTEM_HAS_ExtractFloat32Frac}
-{$define FPC_SYSTEM_HAS_extractFloat32Exp}
-{$define FPC_SYSTEM_HAS_extractFloat32Sign}
-
-{$endif}
 
 {$ifdef darwin}
 {$define HAS_GETCPUCOUNT}
@@ -120,19 +94,12 @@ end;
 
 {$endif}
 
-{$if defined(openbsd)}
-procedure haltproc; cdecl; external name '_haltproc';
-{$endif}
 
 procedure System_exit;
 {$if defined(darwin)}
 begin
    { make sure the libc atexit handlers are called, needed for e.g. profiling }
    normalexit(cint(ExitCode));
-end;
-{$elseif defined(openbsd)}
-begin
-   haltproc;
 end;
 {$else}
 begin

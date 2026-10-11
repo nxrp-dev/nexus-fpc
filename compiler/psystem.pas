@@ -310,18 +310,6 @@ implementation
         s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
 {$endif aarch64}
 
-{$ifdef jvm}
-        create_fpu_types;
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif jvm}
-{$ifdef wasm}
-        create_fpu_types;
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif wasm}
-{$ifdef xtensa}
-        create_fpu_types;
-        s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-{$endif xtensa}
         set_default_int_types;
         { some other definitions }
         charpointertype:=cpointerdef.create(cansichartype);
@@ -354,9 +342,6 @@ implementation
         tarraydef(x86_m256dtype).elementdef:=s64floattype;
         tarraydef(x86_m256itype).elementdef:=s32floattype;
 {$endif x86}
-{$ifdef wasm}
-        wasmvoidexternreftype:=tcpupointerdefclass.create_externref(voidtype);
-{$endif wasm}
         set_default_ptr_types;
         openchararraytype:=carraydef.create_openarray;
         tarraydef(openchararraytype).elementdef:=cansichartype;
@@ -507,10 +492,6 @@ implementation
         addtype('$__m256d',x86_m256dtype);
         addtype('$__m256i',x86_m256itype);
 {$endif x86}
-{$ifdef wasm}
-        addtype('$wasm_void_externref',wasmvoidexternreftype);
-        addtype('WasmExternRef',wasmvoidexternreftype);
-{$endif wasm}
         addtype('$openchararray',openchararraytype);
         addtype('$file',cfiletype);
         if f_variants in features then
@@ -662,9 +643,6 @@ implementation
         loadtype('__m256i',x86_m256itype);
 {$endif x86}
 
-{$ifdef wasm}
-        loadtype('wasm_void_externref',wasmvoidexternreftype);
-{$endif wasm}
         loadtype('file',cfiletype);
         pvmt_name:='pvmt';
         loadtype(pvmt_name,pvmttype);
@@ -794,10 +772,6 @@ implementation
         aiclass[ait_tempalloc]:=tai_tempalloc;
         aiclass[ait_marker]:=tai_marker;
         aiclass[ait_seh_directive]:=tai_seh_directive;
-{$ifdef JVM}
-        aiclass[ait_jvar]:=tai_jvar;
-        aiclass[ait_jcatch]:=tai_jcatch;
-{$endif JVM}
       end;
 
 end.

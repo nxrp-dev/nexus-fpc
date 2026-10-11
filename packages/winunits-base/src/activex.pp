@@ -3854,11 +3854,9 @@ type
   function CoGetCancelObject (InThreadId : DWORD; constref InIid : TIID; out ppunk : IUnknown):HRESULT;stdcall;external 'ole32.dll' name 'CoGetCancelObject';
 
 { additional definitions }
-{$ifndef wince}
   function IsEqualGUID(const guid1,guid2 : TGUID) : Boolean;stdcall;external 'ole32.dll' name 'IsEqualGUID';
   function IsEqualIID(const iid1,iid2 : TIID) : Boolean;stdcall;external 'ole32.dll' name 'IsEqualGUID';
   function IsEqualCLSID(const clsid1,clsid2 : TCLSID) : Boolean;stdcall;external 'ole32.dll' name 'IsEqualGUID';
-{$endif wince}
 
 { OleIdl.h }
 type
@@ -4245,15 +4243,12 @@ Type
   { extended create function flags  }
      OLECREATE_LEAVERUNNING = $00000001;
   { pull the MIDL generated header  }
-{$ifndef wince}
   function OleBuildVersion:DWORD;stdcall;external 'ole32.dll' name 'OleBuildVersion';
-{$endif wince}
   { helper functions  }
   function ReadClassStg(pStg:IStorage; pclsid:PCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'ReadClassStg';
   function WriteClassStg(pStg:IStorage;const rclsid:TCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'WriteClassStg';
   function ReadClassStm(pStm:IStream; pclsid:PCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'ReadClassStm';
   function WriteClassStm(pStm:IStream;const rclsid:TCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'WriteClassStm';
-{$ifndef wince}
   function WriteFmtUserTypeStg(pstg:IStorage; cf:CLIPFORMAT; lpszUserType:LPOLESTR):WINOLEAPI;stdcall;external 'ole32.dll' name 'WriteFmtUserTypeStg';
   function ReadFmtUserTypeStg(pstg:IStorage; pcf:PCLIPFORMAT;out lplpszUserType:POleStr):WINOLEAPI;stdcall;external 'ole32.dll' name 'ReadFmtUserTypeStg';
 
@@ -4265,13 +4260,11 @@ Type
      the data object  }
   function OleQueryLinkFromData(pSrcDataObject:IDataObject):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleQueryLinkFromData';
   function OleQueryCreateFromData(pSrcDataObject:IDataObject):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleQueryCreateFromData';
-{$endif wince}
   { Object creation APIs  }
   function OleCreate(const rclsid:TCLSID; const riid:TIID;
              renderopt:DWORD; pFormatEtc:LPFORMATETC; pClientSite:IOleClientSite;
              pStg:IStorage; out ppvObj):WINOLEAPI;stdcall;external 'ole32.dll' name
              'OleCreate';
-{$ifndef wince}
   function OleCreateEx(const rclsid:TCLSID; const riid:TIID; dwFlags:DWORD; renderopt:DWORD; cFormats:ULONG;
              rgAdvf:PDWORD; rgFormatEtc:LPFORMATETC; lpAdviseSink:IAdviseSink; rgdwConnection:PDWORD; pClientSite:IOleClientSite;
              pStg:IStorage; out ppvObj):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleCreateEx';
@@ -4318,12 +4311,10 @@ Type
   function OleLoadFromStream(pStm:IStream; const iidInterface:TIID; out ppvObj):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleLoadFromStream';
   function OleSaveToStream(pPStm:IPersistStream; pStm:IStream):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleSaveToStream';
   function OleNoteObjectVisible(pUnknown:IUnknown; fVisible:BOOL):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleNoteObjectVisible';
-{$endif wince}
   function OleSave(pPS:IPersistStorage; pStg:IStorage; fSameAsLoad:BOOL):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleSave';
   function OleSetContainedObject(pUnknown:IUnknown; fContained:BOOL):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleSetContainedObject';
 
   { Drag/Drop APIs  }
-{$ifndef wince}
   function RegisterDragDrop(hwnd:HWND; pDropTarget:IDropTarget):WINOLEAPI;stdcall;external 'ole32.dll' name 'RegisterDragDrop';
   function RevokeDragDrop(hwnd:HWND):WINOLEAPI;stdcall;external 'ole32.dll' name 'RevokeDragDrop';
   function DoDragDrop(pDataObj:IDataObject; pDropSource:IDropSource; dwOKEffects:DWORD; pdwEffect:LPDWORD):WINOLEAPI;stdcall;external 'ole32.dll' name 'DoDragDrop';
@@ -4333,28 +4324,23 @@ Type
   function OleGetClipboard(out ppDataObj:IDataObject):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleGetClipboard';
   function OleFlushClipboard:WINOLEAPI;stdcall;external 'ole32.dll' name 'OleFlushClipboard';
   function OleIsCurrentClipboard(pDataObj:IDataObject):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleIsCurrentClipboard';
-{$endif wince}
 
 type
   HOLEMENU = HMenu;
 
   { InPlace Editing APIs  }
-{$ifndef wince}
   function OleCreateMenuDescriptor(hmenuCombined:HMENU; lpMenuWidths:LPOLEMENUGROUPWIDTHS):HOLEMENU;stdcall;external 'ole32.dll' name 'OleCreateMenuDescriptor';
   function OleDestroyMenuDescriptor(holemenu:HOLEMENU):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleDestroyMenuDescriptor';
   function OleTranslateAccelerator(lpFrame:IOleInPlaceFrame; var lpFrameInfo:TOleInPlaceFrameInfo; lpmsg:LPMSG):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleTranslateAccelerator';
-{$endif wince}
   function OleSetMenuDescriptor(holemenu:HOLEMENU; hwndFrame:HWND; hwndActiveObject:HWND; lpFrame:IOleInPlaceFrame; lpActiveObj:IOleInPlaceActiveObject):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleSetMenuDescriptor';
 
   { Helper APIs  }
-{$ifndef wince}
   function OleDuplicateData(hSrc:HANDLE; cfFormat:CLIPFORMAT; uiFlags:UINT):HANDLE;stdcall;external 'ole32.dll' name 'OleDuplicateData';
   function OleLockRunning(pUnknown:IUnknown; fLock:BOOL; fLastUnlockCloses:BOOL):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleLockRunning';
   function OleCreateDefaultHandler(const clsid:TCLSID; pUnkOuter:IUnknown; const riid:TIID; out lplpObj):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleCreateDefaultHandler';
   function OleCreateEmbeddingHelper(const clsid:TCLSID; pUnkOuter:IUnknown; flags:DWORD; pCF:IClassFactory; const riid:TIID;
              out lplpObj):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleCreateEmbeddingHelper';
   function IsAccelerator(hAccel:HACCEL; cAccelEntries:longint; lpMsg:LPMSG; lpwCmd:PWORD):BOOL;stdcall;external 'ole32.dll' name 'IsAccelerator';
-{$endif wince}
   function OleDraw(pUnknown:IUnknown; dwAspect:DWORD; hdcDraw:HDC;const lprcBounds:TRect):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleDraw';
   function OleRun(pUnknown:IUnknown):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleRun';
   function OleIsRunning(pObject:IOleObject):BOOL;stdcall;external 'ole32.dll' name 'OleIsRunning';
@@ -4364,19 +4350,15 @@ type
   function CreateOleAdviseHolder(out ppOAHolder:IOleAdviseHolder):WINOLEAPI;stdcall;external 'ole32.dll' name 'CreateOleAdviseHolder';
 
   { Icon extraction Helper APIs  }
-{$ifndef wince}
   function OleGetIconOfFile(lpszPath:LPOLESTR; fUseFileAsLabel:BOOL):HGLOBAL;stdcall;external 'ole32.dll' name 'OleGetIconOfFile';
   function OleGetIconOfClass(const rclsid:TCLSID; lpszLabel:LPOLESTR; fUseTypeAsLabel:BOOL):HGLOBAL;stdcall;external 'ole32.dll' name 'OleGetIconOfClass';
   function OleMetafilePictFromIconAndLabel(hIcon:HICON; lpszLabel:LPOLESTR; lpszSourceFile:LPOLESTR; iIconIndex:UINT):HGLOBAL;stdcall;external 'ole32.dll' name 'OleMetafilePictFromIconAndLabel';
-{$endif wince}
 
   { Registration Database Helper APIs  }
-{$ifndef wince}
   function OleRegGetUserType(const clsid:TCLSID; dwFormOfType:DWORD;out pszUserType:POleStr):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleRegGetUserType';
   function OleRegGetMiscStatus(const clsid:TCLSID; dwAspect:DWORD; pdwStatus:PDWORD):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleRegGetMiscStatus';
   function OleRegEnumFormatEtc(const clsid:TCLSID; dwDirection:DWORD;out ppenum:IEnumFormatEtc):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleRegEnumFormatEtc';
   function OleRegEnumVerbs(const clsid:TCLSID;out ppenum:IEnumOLEVERB):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleRegEnumVerbs';
-{$endif wince}
 
 {$ifdef _MAC}
   { WlmOLE helper APIs  }
@@ -4424,21 +4406,16 @@ type
      OLESTREAM = _OLESTREAM;
 (* Const before type ignored *)
 
-{$ifndef wince}
   function OleConvertOLESTREAMToIStorage(_lpolestream:LPOLESTREAM; pstg:IStorage; ptd:PDVTARGETDEVICE):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleConvertOLESTREAMToIStorage';
   function OleConvertIStorageToOLESTREAM(pstg:IStorage; lpolestream:LPOLESTREAM):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleConvertIStorageToOLESTREAM';
-{$endif wince}
 
   { Storage Utility APIs  }
   function GetHGlobalFromILockBytes(plkbyt:ILockBytes;out phglobal:HGLOBAL):WINOLEAPI;stdcall;external 'ole32.dll' name 'GetHGlobalFromILockBytes';
   function CreateStreamOnHGlobal(hGlobal:HGLOBAL; fDeleteOnRelease:BOOL;out stm:IStream):WINOLEAPI;stdcall;external 'ole32.dll' name 'CreateStreamOnHGlobal';
-{$ifndef wince}
   function CreateILockBytesOnHGlobal(hGlobal:HGLOBAL; fDeleteOnRelease:BOOL;out pplkbyt:ILockBytes):WINOLEAPI;stdcall;external 'ole32.dll' name 'CreateILockBytesOnHGlobal';
   function GetHGlobalFromStream(pstm:IStream;out phglobal:HGLOBAL):WINOLEAPI;stdcall;external 'ole32.dll' name 'GetHGlobalFromStream';
-{$endif wince}
 
   { ConvertTo APIS  }
-{$ifndef wince}
   function OleDoAutoConvert(pStg:IStorage; pClsidNew:LPCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleDoAutoConvert';
   function OleGetAutoConvert(const clsidOld:TCLSID; pClsidNew:LPCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleGetAutoConvert';
   function OleSetAutoConvert(const clsidOld:TCLSID; clsidNew:TCLSID):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleSetAutoConvert';
@@ -4461,7 +4438,6 @@ type
   {      size bytes }
   function OleConvertOLESTREAMToIStorageEx(polestm:LPOLESTREAM; pstg:IStorage; pcfFormat:PCLIPFORMAT; plwWidth:PLONG; plHeight:PLONG;
              pdwSize:PDWORD; pmedium:LPSTGMEDIUM):WINOLEAPI;stdcall;external 'ole32.dll' name 'OleConvertOLESTREAMToIStorageEx';
-{$endif wince}
 
 const
   DROPEFFECT_NONE   = 0;
@@ -4495,7 +4471,6 @@ type
   function CLSIDFromProgID(_para1:POLESTR; out _para2:TCLSID):HRESULT;stdcall; external  'ole32.dll' name 'CLSIDFromProgID';
   function StringFromGUID2(const _para1:TGUID; _para2:LPOLESTR; _para3:longint):longint;stdcall; external  'ole32.dll' name 'StringFromGUID2';
   function CoCreateGuid(_para1:PGUID):HRESULT;stdcall; external  'ole32.dll' name 'CoCreateGuid';
-{$ifndef wince}
   function CoBuildVersion:DWORD;stdcall; external  'ole32.dll' name 'CoBuildVersion';
   function CoInitialize(_para1:PVOID):HRESULT;stdcall; external  'ole32.dll' name 'CoInitialize';
   function CoGetMalloc(_para1:DWORD; out _para2:IMalloc):HRESULT;stdcall; external  'ole32.dll' name 'CoGetMalloc';
@@ -4534,24 +4509,19 @@ type
   function CoRegisterMessageFilter(_para1:IMessageFilter;out _para2:IMessageFilter):HRESULT;stdcall; external  'ole32.dll' name 'CoRegisterMessageFilter';
   function CoGetTreatAsClass(const _para1:TCLSID; _para2:LPCLSID):HRESULT;stdcall; external  'ole32.dll' name 'CoGetTreatAsClass';
   function CoTreatAsClass(const _para1:TCLSID; const _para2:TCLSID):HRESULT;stdcall; external  'ole32.dll' name 'CoTreatAsClass';
-{$endif wince}
 
   type
     LPFNGETCLASSOBJECT = function (const _para1:TCLSID; const _para2:TIID;out _para3):HRESULT;stdcall;
     LPFNCANUNLOADNOW = function:HRESULT;stdcall;
 
-{$ifndef wince}
   function DllGetClassObject(const _para1:TCLSID; const _para2:TIID; out _para3):HRESULT;stdcall; external  'ole32.dll' name 'DllGetClassObject';
   function DllCanUnloadNow:HRESULT;stdcall; external  'ole32.dll' name 'DllCanUnloadNow';
-{$endif wince}
   function CoTaskMemAlloc(_para1:SIZE_T):PVOID;stdcall; external  'ole32.dll' name 'CoTaskMemAlloc';
   function CoTaskMemRealloc(_para1:PVOID; _para2:SIZE_T):PVOID;stdcall; external  'ole32.dll' name 'CoTaskMemRealloc';
   procedure CoTaskMemFree(_para1:PVOID);stdcall; external  'ole32.dll' name 'CoTaskMemFree';
 
-{$ifndef wince}
   function CreateDataAdviseHolder(out _para1:IDataAdviseHolder):HRESULT;stdcall; external  'ole32.dll' name 'CreateDataAdviseHolder';
   function CreateDataCache(_para1:IUnknown; const _para2:TCLSID; const _para3:TIID; out _para4):HRESULT;stdcall; external  'ole32.dll' name 'CreateDataCache';
-{$endif wince}
 
 (* Const before type ignored *)
   function StgCreateDocfile(_para1:POLESTR; _para2:DWORD; _para3:DWORD; out _para4:IStorage):HRESULT;stdcall; external  'ole32.dll' name 'StgCreateDocfile';
@@ -4562,7 +4532,6 @@ type
              out _para6:IStorage):HRESULT;stdcall; external  'ole32.dll' name 'StgOpenStorage';
   function StgOpenStorageOnILockBytes(_para1:ILockBytes; _para2:IStorage; _para3:DWORD; _para4:SNB; _para5:DWORD;
              out _para6:IStorage):HRESULT;stdcall; external  'ole32.dll' name 'StgOpenStorageOnILockBytes';
-{$ifndef wince}
   function StgIsStorageFile(_para1:POLESTR):HRESULT;stdcall; external  'ole32.dll' name 'StgIsStorageFile';
   function StgIsStorageILockBytes(_para1:ILockBytes):HRESULT;stdcall; external  'ole32.dll' name 'StgIsStorageILockBytes';
   function StgSetTimes(_para1:POLESTR; _para2:PFILETIME; _para3:PFILETIME; _para4:PFILETIME):HRESULT;stdcall; external  'ole32.dll' name 'StgSetTimes';
@@ -4572,10 +4541,8 @@ type
   function MkParseDisplayName(_para1:IBindCtx; _para2:POLESTR; _para3:PULONG; out _para4:IMoniker):HRESULT;stdcall; external  'ole32.dll' name 'MkParseDisplayName';
   function MonikerRelativePathTo(_para1:IMoniker; _para2:IMoniker; out _para3:IMoniker; _para4:BOOL):HRESULT;stdcall; external  'ole32.dll' name 'MonikerRelativePathTo';
   function MonikerCommonPrefixWith(_para1:IMoniker; _para2:IMoniker; _para3:PIMoniker):HRESULT;stdcall; external  'ole32.dll' name 'MonikerCommonPrefixWith';
-{$endif wince}
   function CreateBindCtx(_para1:DWORD;out _para2:IBindCtx):HRESULT;stdcall; external  'ole32.dll' name 'CreateBindCtx';
   function GetClassFile(_para1:POLESTR; out _para2:TCLSID):HRESULT;stdcall; external  'ole32.dll' name 'GetClassFile';
-{$ifndef wince}
   function CreateGenericComposite(_para1:IMoniker; _para2:IMoniker; out _para3:IMoniker):HRESULT;stdcall; external  'ole32.dll' name 'CreateGenericComposite';
   function CreateFileMoniker(_para1:POLESTR; out _para2:IMoniker):HRESULT;stdcall; external  'ole32.dll' name 'CreateFileMoniker';
   function CreateItemMoniker(_para1:POLESTR; _para2:POLESTR;out _para3:IMoniker):HRESULT;stdcall; external  'ole32.dll' name 'CreateItemMoniker';
@@ -4600,17 +4567,14 @@ type
              _para6:POLESTR; _para7:DWORD; _para8:PMULTI_QI):HRESULT;stdcall; external  'ole32.dll' name 'CoGetInstanceFromFile';
   function CoGetInstanceFromIStorage(_para1:PCOSERVERINFO; _para2:PCLSID; _para3:IUnknown; _para4:DWORD; _para5:IStorage;
              _para6:DWORD; _para7:PMULTI_QI):HRESULT;stdcall; external  'ole32.dll' name 'CoGetInstanceFromIStorage';
-{$endif wince}
 
   type
     REFIID = TIID;
     TREFIID = TIID;
 
-{$ifndef wince}
   function SetErrorInfo(dwReserved:ULONG;errinfo:IErrorInfo):HResult;stdcall; external 'ole32.dll' name 'SetErrorInfo';
   function GetErrorInfo(dwReserved:ULONG;out errinfo:IErrorInfo):HResult;stdcall; external 'ole32.dll' name 'GetErrorInfo';
   function CreateErrorInfo(out errinfo:ICreateErrorInfo):HResult;stdcall; external 'ole32.dll' name 'CreateErrorInfo';
-{$endif wince}
 
   const
     oleaut32dll   = 'oleaut32.dll';
@@ -4624,7 +4588,6 @@ type
   function  SysReAllocStringLen(var bstr:pointer;psz: pointer; len:dword): Integer; stdcall; external oleaut32dll name 'SysReAllocStringLen';
 
 	{ Active object registration API }
-{$ifndef wince}
 	const
 	  ACTIVEOBJECT_STRONG = 0;
 	  ACTIVEOBJECT_WEAK = 1;
@@ -4632,7 +4595,6 @@ type
 	function RegisterActiveObject(unk: IUnknown; const clsid: TCLSID; dwFlags: DWORD; out dwRegister: culong): HResult; stdcall; external oleaut32dll name 'RegisterActiveObject';
 	function RevokeActiveObject(dwRegister: culong; pvReserved: Pointer) : HResult; stdcall; external oleaut32dll name 'RevokeActiveObject';
 	function GetActiveObject(const clsid: TCLSID; pvReserved: Pointer; out unk: IUnknown) : HResult; stdcall; external oleaut32dll name 'GetActiveObject';
-{$endif wince}
 
 function Succeeded(Res: HResult) : Boolean;inline;
 function Failed(Res: HResult) : Boolean;inline;
@@ -4647,7 +4609,6 @@ function RegisterTypeLib(const ptrlib :ITypeLib;szfullpath:lpolestr;szhelpdir:lp
 function CreateTypeLib2(sysk:TSysKind;szfile:lpolestr;out ppctlib:ICreateTypeLib2):HResult; stdcall; external oleaut32dll name 'CreateTypeLib2';
 function DispInvoke(this:pointer;const ptinfo: ITypeInfo;dispidMember:TDISPID;wflags:ushort;pparams:pDISPParams;
    var pvarresult:OLEVARIANT;pexcepinfo:EXCEPINFO;puArgErr:puint):HRESULT; stdcall; external oleaut32dll name 'DispInvoke';
-{$ifndef wince}
 function LoadTypeLibEx(szfile : lpolestr; regk:tregkind; var pptlib: ITypelib):HResult; stdcall; external oleaut32dll name 'LoadTypeLibEx';
 function QueryPathOfRegTypeLib(const guid:TGUID;wVerMajor:ushort;wVerMinor:ushort;_lcid:lcid;lpbstr:LPolestr):HResult; stdcall; external oleaut32dll name 'QueryPathOfRegTypeLib';
 function UnRegisterTypeLib(const libid:TGUID; wVerMajor:ushort;wVerMinor:ushort;_lcid:lcid;sysk:TSysKind):HResult; stdcall; external oleaut32dll name 'UnRegisterTypeLib';
@@ -4655,7 +4616,6 @@ function CreateTypeLib(sysk:TSysKind;szfile:lpolestr;out ppctlib:ICreateTypeLib)
 
 function DosDateTimeToVariantTime( wDosDate: ushort; wDosTime:ushort;pvtime:pdouble):longint; stdcall; external oleaut32dll name 'DosDateTimeToVariantTime';
 function VariantTimeToDosDateTime( vtime:DOUBLE;pwdosdate:PUSHORT;pwDosTime:PUSHORT):longint; stdcall; external oleaut32dll name 'VariantTimeToDosDateTime';
-{$endif wince}
 
 function SystemTimeToVariantTime(var lpsystemtime:TSystemTime;out pvtime: TOleDate):LONGINT; stdcall; external oleaut32dll name 'SystemTimeToVariantTime';
 function VariantTimeToSystemTime(vtime:TOleDate; out lpsystemtime: TSystemTime):LONGINT; stdcall; external oleaut32dll name 'VariantTimeToSystemTime';

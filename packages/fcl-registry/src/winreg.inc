@@ -179,11 +179,7 @@ begin
   Rel:=RelativeKey(Key);
   if not(Rel) then
     Delete(Key,1,1);
-{$ifdef WinCE}
-  FLastError:=RegOpenKeyEx(GetBaseKey(Rel),PWideChar(Key),0,FAccess,Result);
-{$else WinCE}
   FLastError:=RegOpenKeyExW(GetBaseKey(Rel),PWideChar(Key),0,FAccess,Result);
-{$endif WinCE}
 end;
 
 
@@ -218,7 +214,7 @@ begin
   OldAccess:=FAccess;
   try
     FAccess:=KEY_QUERY_VALUE or KEY_ENUMERATE_SUB_KEYS or STANDARD_RIGHTS_READ
-    {$ifndef WinCE} or (OldAccess and (KEY_WOW64_64KEY or KEY_WOW64_32KEY)) {$endif};
+     or (OldAccess and (KEY_WOW64_64KEY or KEY_WOW64_32KEY)) ;
     KeyHandle:=GetKey(Key);
     if KeyHandle<>0 then
       begin
@@ -283,7 +279,7 @@ Var
   OldAccess: LongWord;
 begin
   OldAccess:=fAccess;
-  fAccess:=KEY_READ {$ifndef WinCE} or (OldAccess and (KEY_WOW64_64KEY or KEY_WOW64_32KEY)) {$endif};
+  fAccess:=KEY_READ  or (OldAccess and (KEY_WOW64_64KEY or KEY_WOW64_32KEY)) ;
   try
     Result:=OpenKey(Key, False);
   finally
@@ -293,21 +289,15 @@ end;
 
 
 function TRegistry.RegistryConnect(const UNCName: UnicodeString): Boolean;
-{$ifndef WinCE}
 var
   newroot: HKEY;
-{$endif}
 begin
-{$ifdef WinCE}
-  Result:=False;
-{$else}
   FLastError:=RegConnectRegistryW(PWideChar(UNCName),RootKey,newroot);
   Result:=FLastError=ERROR_SUCCESS;
   if Result then begin
     RootKey:=newroot;
     PWinRegData(FSysData)^.RootKeyOwned:=True;
   end;
-{$endif}
 end;
 
 

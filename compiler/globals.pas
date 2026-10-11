@@ -297,12 +297,6 @@ Const
        { specified with -FW and -Fw }
        wpofeedbackinput,
        wpofeedbackoutput : TPathStr;
-{$if defined(XTENSA)}
-       { specified with -Ff }
-       idfpath           : TPathStr;
-       { specified with }
-       idf_version       : longint;
-{$endif}
        { external assembler extra option }
        asmextraopt       : string;
 
@@ -534,12 +528,6 @@ Const
         fputype : fpu_vfp;
   {$endif aarch64}
 
-  {$ifdef xtensa}
-        cputype : cpu_none;
-        optimizecputype : cpu_none;
-        asmcputype : cpu_none;
-        fputype : fpu_none;
-  {$endif xtensa}
 
 {$endif not GENERIC_CPU}
         asmmode : asmmode_standard;
@@ -928,12 +916,6 @@ implementation
          ReplaceSpecialFolder('$PROGRAM_FILES_COMMON',CSIDL_PROGRAM_FILES_COMMON);
          ReplaceSpecialFolder('$PROFILE',CSIDL_PROFILE);
 {$endif mswindows}
-{$ifdef xtensa}
-         if idf_version > 0 then
-           Replace(s,'$IDF_VERSION',idfversionstring(idf_version));
-         if idfpath <> '' then
-           Replace(s,'$IDFPATH',idfpath);
-{$endif xtensa}
 
          if not substitute_env_variables then
            exit;
@@ -1554,9 +1536,6 @@ implementation
         cshared:=false;
         rlinkpath:='';
         sysrootpath:='';
-{$if defined(XTENSA)}
-        idfpath:='';
-{$endif defined(XTENSA)}
 
         { Search Paths }
         unicodepath:='';

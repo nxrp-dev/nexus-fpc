@@ -2036,9 +2036,7 @@ implementation
     function assembler_block : tnode;
       var
         p : tnode;
-        {$if not (defined(sparcgen)) and not (defined(mips))}
         locals : longint;
-        {$endif}
         srsym : tsym;
       begin
          if parse_generic then
@@ -2064,7 +2062,6 @@ implementation
          include(current_procinfo.flags,pi_is_assembler);
          p:=_asm_statement;
 
-{$if not (defined(sparcgen)) and not (defined(mips))}
          if (po_assembler in current_procinfo.procdef.procoptions) then
            begin
              { set the framepointer to esp for assembler functions when the
@@ -2090,7 +2087,6 @@ implementation
                  current_procinfo.framepointer:=NR_STACK_POINTER_REG;
                end;
            end;
-{$endif}
 
         { Flag the result as assigned when it is returned in a
           register.

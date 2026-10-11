@@ -43,7 +43,7 @@
 {$endif}
 {$endif}
 
-{$if defined(linux) or defined(aix) or defined(android)}
+{$if (defined(linux)) or (defined(android))}
 {$define has_sem_timedwait}
 {$endif}
 
@@ -56,9 +56,7 @@ interface
 {$ifndef dynpthreads}   // If you have problems compiling this on FreeBSD 5.x
  {$linklib c}
  {$if not defined(Darwin) and not defined(iphonesim) and not defined(Android)}
-   {$ifndef haiku}
      {$linklib pthread}
-   {$endif haiku}
  {$endif darwin}
 {$endif}
 
@@ -338,12 +336,8 @@ Type  PINTRTLEvent = ^TINTRTLEvent;
       writeln('Starting new thread');
 {$endif DEBUG_MT}
       pthread_attr_init(@thread_attr);
-      {$if not defined(HAIKU)and not defined(BEOS) and not defined(ANDROID)}
-      {$if defined (solaris) or defined (netbsd) }
-      pthread_attr_setinheritsched(@thread_attr, PTHREAD_INHERIT_SCHED);
-      {$else not solaris}
+      {$if not (defined(ANDROID))}
       pthread_attr_setinheritsched(@thread_attr, PTHREAD_EXPLICIT_SCHED);
-      {$endif not solaris}
       {$ifend}
 
       // will fail under linux -- apparently unimplemented

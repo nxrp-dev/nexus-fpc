@@ -81,13 +81,6 @@ unit cgutils;
          addressmode : taddressmode;
          shiftmode   : tshiftmode;
 {$endif aarch64}
-{$ifdef jvm}
-         arrayreftype: tarrayreftype;
-         indexbase: tregister;
-         indexsymbol: tasmsymbol;
-         indexoffset: aint;
-         checkcast: boolean;
-{$endif jvm}
          volatility: tvolatilityset;
          alignment : byte;
       end;
@@ -508,8 +501,6 @@ uses
     function needs_check_for_fpu_exceptions: boolean;
       begin
 {$if defined(AARCH64)}
-        result:=cs_check_fpu_exceptions in current_settings.localswitches;
-{$elseif defined(XTENSA)}
         result:=cs_check_fpu_exceptions in current_settings.localswitches;
 {$else}
         result:=false;

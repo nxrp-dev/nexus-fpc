@@ -483,17 +483,7 @@ Unit AoptObj;
 
     function JumpTargetOp(ai: taicpu): poper; {$IFDEF USEINLINE}inline;{$ENDIF}
       begin
-{$if defined(MIPS) or defined(xtensa)}
-        { Branches of above archs can have 1,2 or 3 operands, target label is the last one. }
-        result:=ai.oper[ai.ops-1];
-{$elseif defined(SPARC64)}
-        if ai.ops=2 then
-          result:=ai.oper[1]
-        else
-          result:=ai.oper[0];
-{$else MIPS}
         result:=ai.oper[0];
-{$endif}
       end;
 
 
@@ -1764,11 +1754,6 @@ Unit AoptObj;
 
         p.opcode := aopt_uncondjmp;
 
-{$ifdef xtensa}
-        p.opcode := aopt_uncondjmp;
-        p.loadoper(0, p.oper[p.ops-1]^);
-        p.ops:=1;
-{$endif}
       end;
 
 
@@ -2430,9 +2415,7 @@ Unit AoptObj;
 
       var p1: tai;
           p2: tai;
-{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
           p3: tai;
-{$endif}
           ThisLabel, l: tasmlabel;
 
       begin
@@ -2477,9 +2460,7 @@ Unit AoptObj;
                       Exit;
                   end;
 
-{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
                 p3 := p2;
-{$endif not MIPS and not RV64 and not RV32 and not JVM and not loongarch64 and not WASM}
 
                 if { the next instruction after the label where the jump hp arrives}
                    { is unconditional or of the same type as hp, so continue       }
@@ -2488,7 +2469,6 @@ Unit AoptObj;
                    { TODO: For anyone with experience with MIPS or RISC-V, please add support for tracing
                      conditional jumps. [Kit] }
 
-{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
   { for MIPS, it isn't enough to check the condition; first operands must be same, too. }
                    or
                    condition_in(hp.condition, taicpu(p1).condition) or
@@ -2506,7 +2486,6 @@ Unit AoptObj;
                      ) and
                      SetAndTest(p2,p1)
                    )
-{$endif not MIPS and not RV64 and not RV32 and not JVM and not loongarch64 and not WASM}
                    then
                   begin
                     { quick check for loops of the form "l5: ; jmp l5" }
@@ -2535,7 +2514,6 @@ Unit AoptObj;
                     GetFinalDestination := True;
                     Exit;
                   end
-{$if not defined(MIPS) and not defined(JVM) and not defined(WASM)}
                 else
                   if condition_in(inverse_cond(hp.condition), taicpu(p1).condition) then
                     begin
@@ -2564,7 +2542,6 @@ Unit AoptObj;
                       GetFinalDestination := True;
                       Exit;
                     end;
-{$endif not MIPS and not RV64 and not RV32 and not JVM and not loongarch64 and not WASM}
               end;
           end;
 

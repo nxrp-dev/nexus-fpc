@@ -351,27 +351,6 @@ var
               exit;
             end;
 
-{$ifdef wasm}
-          { check WebAssembly exceptions mode flag }
-          if ((mf_wasm_no_exceptions in moduleflags) <>
-              (ts_wasm_no_exceptions in current_settings.targetswitches)) or
-             ((mf_wasm_bf_exceptions in moduleflags) <>
-              (ts_wasm_bf_exceptions in current_settings.targetswitches)) or
-             ((mf_wasm_exnref_exceptions in moduleflags) <>
-              (ts_wasm_native_exnref_exceptions in current_settings.targetswitches)) or
-             ((mf_wasm_native_exceptions in moduleflags) <>
-              (ts_wasm_native_legacy_exceptions in current_settings.targetswitches)) then
-            begin
-              Message(unit_u_ppu_invalid_wasm_exceptions_mode,@queuecomment);
-              exit;
-            end;
-          if (mf_wasm_threads in moduleflags) <>
-             (ts_wasm_threads in current_settings.targetswitches) then
-            begin
-              Message(unit_u_ppu_wasm_threads_mismatch,@queuecomment);
-              exit;
-            end;
-{$endif}
           if {$ifdef symansistr}not{$endif}(mf_symansistr in moduleflags) then
             begin
               Message(unit_u_ppu_symansistr_mismatch,@queuecomment);
@@ -1123,18 +1102,6 @@ var
          if compilerwide_unicode_strings then
            include(moduleflags,mf_unicode_default);
 
-{$ifdef wasm}
-        if ts_wasm_no_exceptions in current_settings.targetswitches then
-          include(moduleflags,mf_wasm_no_exceptions);
-        if ts_wasm_native_exnref_exceptions in current_settings.targetswitches then
-          include(moduleflags,mf_wasm_exnref_exceptions);
-        if ts_wasm_native_legacy_exceptions in current_settings.targetswitches then
-          include(moduleflags,mf_wasm_native_exceptions);
-        if ts_wasm_bf_exceptions in current_settings.targetswitches then
-          include(moduleflags,mf_wasm_bf_exceptions);
-        if ts_wasm_threads in current_settings.targetswitches then
-          include(moduleflags,mf_wasm_threads);
-{$endif wasm}
 
 {$ifdef symansistr}
         include(moduleflags,mf_symansistr);

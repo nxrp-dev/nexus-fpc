@@ -1749,12 +1749,6 @@ implementation
           objectdef :
             result:=int_cgsize(def.size);
           floatdef:
-{$ifdef xtensa}
-            if not(tfloatdef(def).floattype=s32real) or
-               not(FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) then
-              result:=int_cgsize(def.size)
-            else
-{$endif xtensa}
               result:=tfloat2tcgsize[tfloatdef(def).floattype];
           recorddef :
               result:=int_cgsize(def.size);

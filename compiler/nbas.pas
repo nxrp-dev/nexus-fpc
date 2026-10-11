@@ -375,7 +375,6 @@ implementation
       nutils,nld,ncnv,
       procinfo
 {$ifdef DEBUG_NODE_XML}
-{$ifndef jvm}
       ,
       cpubase,
       cutils,
@@ -383,7 +382,6 @@ implementation
       agcpugas, { Needed for gas_shiftmode2str }
 {$endif aarch64}
       itcpugas
-{$endif jvm}
 {$endif DEBUG_NODE_XML}
       ;
 

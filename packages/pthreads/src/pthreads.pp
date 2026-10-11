@@ -43,13 +43,6 @@ interface
   uses initc, ctypes, unixtype;
 {$ENDIF FPC_DOTTEDUNITS}
   {$i pthrlinux.inc}
-{$elseif defined(aix)}
-{$IFDEF FPC_DOTTEDUNITS}
-  uses System.InitC, System.CTypes, UnixApi.Base, UnixApi.Types;
-{$ELSE FPC_DOTTEDUNITS}
-  uses initc, ctypes, baseunix, unixtype;
-{$ENDIF FPC_DOTTEDUNITS}
-  {$i pthraix.inc}
 {$else}
   {$error operating system not detected}
 {$endif}

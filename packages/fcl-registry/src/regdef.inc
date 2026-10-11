@@ -41,10 +41,8 @@ Const
   KEY_READ               = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.KEY_READ;
   KEY_SET_VALUE          = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.KEY_SET_VALUE;
   KEY_WRITE              = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.KEY_WRITE;
-{$ifndef WinCE}
   KEY_WOW64_64KEY        = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.KEY_WOW64_64KEY;
   KEY_WOW64_32KEY        = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.KEY_WOW64_32KEY;
-{$endif WinCE}
 {$else}
 
 Const

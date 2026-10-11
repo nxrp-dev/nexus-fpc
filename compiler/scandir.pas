@@ -1620,15 +1620,18 @@ unit scandir;
             current_scanner.readchar;
             current_scanner.readid;
             value:=current_scanner.orgpattern;
-            UpdateTargetSwitchStr(name+'='+value,current_settings.targetswitches,current_module.in_global);
+            if not UpdateTargetSwitchStr(name+'='+value,current_settings.targetswitches,current_module.in_global) then
+              Message1(scan_w_illegal_switch,name);
           end
         else if current_scanner.c='-' then
           begin
             current_scanner.readchar;
-            UpdateTargetSwitchStr(name+'-',current_settings.targetswitches,current_module.in_global);
+            if not UpdateTargetSwitchStr(name+'-',current_settings.targetswitches,current_module.in_global) then
+              Message1(scan_w_illegal_switch,name);
           end
         else
-          UpdateTargetSwitchStr(name,current_settings.targetswitches,current_module.in_global);
+          if not UpdateTargetSwitchStr(name,current_settings.targetswitches,current_module.in_global) then
+            Message1(scan_w_illegal_switch,name);
       end;
 
     procedure dir_typedaddress;

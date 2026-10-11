@@ -3297,14 +3297,6 @@ implementation
                          { structured types                         }
                          if not(
                                 (left.resultdef.typ=formaldef) or
-{$ifdef jvm}
-                                { enums /are/ class instances on the JVM
-                                  platform }
-                                (((left.resultdef.typ=enumdef) and
-                                  (resultdef.typ=objectdef)) or
-                                 ((resultdef.typ=enumdef) and
-                                  (left.resultdef.typ=objectdef))) or
-{$endif}
                                 (
                                  is_void(left.resultdef)  and
                                  (left.nodetype=derefn)
@@ -4178,11 +4170,7 @@ implementation
             (left.resultdef.size=resultdef.size) and
             (left.expectloc in [LOC_REFERENCE,LOC_CREFERENCE,LOC_CREGISTER]) then
            begin
-{$ifdef xtensa}
-             expectloc:=LOC_REGISTER;
-{$else xtensa}
              expectloc:=left.expectloc;
-{$endif xtensa}
              exit;
            end;
          { when converting 64bit int to C-ctyle boolean, first convert to an int32 and then }

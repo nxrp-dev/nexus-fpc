@@ -36,9 +36,6 @@ uses
 const
   n = 1;
 
-{$ifdef beos}
-  ESysEILSEQ = EILSEQ;
-{$endif}
 
 type
    piconv_t = ^iconv_t;
@@ -103,9 +100,6 @@ begin
   error := '';
   if not TryLoadLib('libc.so.6', error) then
     if not TryLoadLib('libiconv.so', error) then
-    {$if defined(haiku)}
-        if not TryLoadLib('libtextencoding.so', error) then
-      {$ifend}
       result := false;
   iconvlibfound := iconvlibfound or result;
 end;

@@ -128,45 +128,14 @@ var
   {$elseif defined(CPUX86_64)}
     machine : mtx86_64;
     submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUPOWERPC32)}
-    machine : mtppc;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUPOWERPC64)}
-    {$ifdef FPC_BIG_ENDIAN}
-    machine : mtppc64;
-    {$else FPC_BIG_ENDIAN}
-    machine : mtppc64le;
-    {$endif FPC_BIG_ENDIAN}
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPU68K)}
-    machine : mtm68k;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUSPARC)}
-    machine : mtsparc;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUSPARC64)}
-    machine : mtsparc64;
-    submachine : (subgen: smtgen_all);
   {$elseif defined(CPUALPHA)}
     machine : mtalpha;
     submachine : (subgen: smtgen_all);
   {$elseif defined(CPUIA64)}
     machine : mtia64;
     submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUMIPSEL)}
-    machine : mtmipsel;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPUMIPS)}
-    machine : mtmips;
-    submachine : (subgen: smtgen_all);
   {$elseif defined(CPUAARCH64)}
     machine : mtaarch64;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPURISCV32)}
-    machine : mtriscv32;
-    submachine : (subgen: smtgen_all);
-  {$elseif defined(CPURISCV64)}
-    machine : mtriscv64;
     submachine : (subgen: smtgen_all);
   {$elseif defined(CPULOONGARCH64)}
     machine : mtloongarch64;
@@ -181,9 +150,7 @@ var
   {$ELSE}
     {$IF defined(DARWIN)}
       objformat : ofMachO;
-    {$ELSEIF defined(AIX)}
-      objformat : ofXCoff;
-    {$ELSE}
+    {$else}
       objformat : ofElf;
     {$ENDIF}
   {$ENDIF}

@@ -424,7 +424,7 @@ function FPC_psabieh_Unwind_decode_target2(ptr: PtrUInt {_Unwind_Word}):  PtrUIn
     // Zero values are always NULL.
     if result<>0 then
       begin
-{$if defined(linux) or defined(netbsd)}
+{$if defined(linux)}
         // Pc-relative indirect.
         inc(result,ptr);
         result:=PPtrUint(result)^;

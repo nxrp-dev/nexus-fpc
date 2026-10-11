@@ -67,9 +67,6 @@ implementation
       globals,globtype,cclasses,cutils,verbose,systems,fmodule,
       tokens,
       symbase,symsym,symtable,symutil,defutil,defcmp,blockutl,
-{$ifdef jvm}
-      jvmdef,
-{$endif jvm}
       node,nbas,
       aasmbase,
       paramgr;
@@ -1261,14 +1258,6 @@ implementation
         nestedvarsst:=trecordsymtable.create('$'+current_module.realmodulename^+'$$_fpc_nestedvars$'+pd.unique_id_str,
           current_settings.alignment.localalignmax,current_settings.alignment.localalignmin);
         nestedvarsdef:=crecorddef.create(nestedvarsst.name^,nestedvarsst);
-  {$ifdef jvm}
-        { don't add clone/FpcDeepCopy, because the field names are not all
-          representable in source form and we don't need them anyway }
-        symtablestack.push(trecorddef(nestedvarsdef).symtable);
-        maybe_add_public_default_java_constructor(trecorddef(nestedvarsdef));
-        insert_struct_hidden_paras(trecorddef(nestedvarsdef));
-        symtablestack.pop(trecorddef(nestedvarsdef).symtable);
-  {$endif}
         symtablestack.free;
         symtablestack:=old_symtablestack.getcopyuntil(pd.localst);
         pnestedvarsdef:=cpointerdef.getreusable(nestedvarsdef);

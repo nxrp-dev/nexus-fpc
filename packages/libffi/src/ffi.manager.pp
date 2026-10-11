@@ -361,9 +361,7 @@ begin
       ((Kind = tkUnknown) and (pfConst in aFlags))
       // This is true for all CPUs except sparc64/xtensa and i386/X86_64 on windows.
       // The latter 2 are handled by the i386-specific invoke, so need not concern us here.
-{$IF NOT (DEFINED(CPUSPARC64) or DEFINED(CPUXTENSA))}
       or (Kind=tkVariant)
-{$ENDIF}
       then
     Result := True;
 end;
@@ -519,10 +517,8 @@ begin
     ccCppdecl:
       abi := FFI_THISCALL;
 {$else}
-{$ifndef CPUM68K}
     { M68k has a custom register calling convention implementation }
     ccReg,
-{$endif}
     ccCdecl,
     ccPascal,
     ccStdCall,

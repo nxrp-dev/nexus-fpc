@@ -37,13 +37,10 @@ implementation
 // hasn't been divided up in .inc's, because I first want to see hoe
 // this idea works out.
 
-{$ifdef OpenBSD}
-{define UseOldErrnoDirectLink OpenBSD also uses __errno function }
-{$endif}
 
 {$ifdef UseOldErrnoDirectLink}
 Var
-  interrno : cint;external name {$ifdef OpenBSD} '_errno' {$else} 'h_errno'{$endif};
+  interrno : cint;external name  'h_errno';
 
 function fpgetCerrno:cint;
 
@@ -66,34 +63,16 @@ function geterrnolocation: pcint; cdecl;external clib name '__errno_location';
 function geterrnolocation: pcint; cdecl;external clib name '__errno';
 {$endif}
 
-{$if defined(FreeBSD) or defined(DragonFly)} // tested on x86
-function geterrnolocation: pcint; cdecl;external clib name '__error';
-{$endif}
 
-{$ifdef OpenBSD} // tested on x86
-function geterrnolocation: pcint; cdecl;external clib name '__errno';
-{$endif}
 
-{$ifdef NetBSD} // from a sparc dump.
-function geterrnolocation: pcint; cdecl;external clib name '__errno';
-{$endif}
 
 {$ifdef Darwin}
 function geterrnolocation: pcint; cdecl;external clib name '__error';
 {$endif}
 
 
-{$ifdef SunOS}
-function geterrnolocation: pcint; cdecl;external clib name '___errno';
-{$endif}
 
-{$ifdef beos}
-function geterrnolocation: pcint; cdecl;external 'root' name '_errnop';
-{$endif}
 
-{$ifdef aix}
-function geterrnolocation: pcint; cdecl;external clib name '_Errno';
-{$endif}
 
 function fpgetCerrno:cint;
 

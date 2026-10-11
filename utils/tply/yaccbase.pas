@@ -82,11 +82,7 @@ tokleng   : Integer; (* length of current token *)
 
 const
 
-{$IFDEF MsDos}
-max_elems  =  50; (* maximum size of integer sets *)
-{$ELSE}
 max_elems  = 150; (* maximum size of integer sets *)
-{$ENDIF}
 
 type
 

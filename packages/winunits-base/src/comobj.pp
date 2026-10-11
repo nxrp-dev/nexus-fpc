@@ -23,9 +23,6 @@ unit ComObj;
 { $define DEBUG_COM}
 { $define DEBUG_COMDISPATCH}
 
-{$ifdef wince}
-  {$define DUMMY_REG}
-{$endif}
 {$IFDEF FPC_DOTTEDUNITS}
     uses
       WinApi.Windows,System.Types,System.Variants,System.SysUtils,WinApi.Activex,System.Classes;
@@ -341,10 +338,10 @@ implementation
 
 {$IFDEF FPC_DOTTEDUNITS}
     uses
-      WinApi.Comconst, WinApi.Ole2, {$ifndef dummy_reg} System.Registry, {$endif} System.RtlConsts;
+      WinApi.Comconst, WinApi.Ole2,  System.Registry,  System.RtlConsts;
 {$ELSE FPC_DOTTEDUNITS}
     uses
-      ComConst, Ole2, {$ifndef dummy_reg} Registry, {$endif} RtlConsts;
+      ComConst, Ole2,  Registry,  RtlConsts;
 {$ENDIF FPC_DOTTEDUNITS}
 
     var
@@ -352,14 +349,11 @@ implementation
 
     function HandleSafeCallException(ExceptObject: TObject; ExceptAddr: Pointer; const ErrorIID: TGUID; const ProgID,
       HelpFileName: WideString): HResult;
-{$ifndef wince}
       var
         _CreateErrorInfo : ICreateErrorInfo;
         ErrorInfo : IErrorInfo;
-{$endif wince}
       begin
         Result:=E_UNEXPECTED;
-{$ifndef wince}
         if Succeeded(CreateErrorInfo(_CreateErrorInfo)) then
           begin
             _CreateErrorInfo.SetGUID(ErrorIID);
@@ -377,7 +371,6 @@ implementation
             if _CreateErrorInfo.QueryInterface(IErrorInfo,ErrorInfo)=S_OK then
               SetErrorInfo(0,ErrorInfo);
           end;
-{$endif wince}
       end;
 
 
@@ -440,14 +433,12 @@ implementation
        flags:=CLSCTX_LOCAL_SERVER or CLSCTX_REMOTE_SERVER or CLSCTX_INPROC_SERVER;
 
        { actually a remote call? }
-{$ifndef wince}
        //roozbeh although there is a way to retrieve computer name...HKLM\Ident\Name..but are they same?
 	     size:=sizeof(localhost);
        if (MachineName<>'') and
           (not(GetComputerNameW(localhost,size)) or
           (WideCompareText(localhost,MachineName)<>0)) then
            flags:=CLSCTX_REMOTE_SERVER;
-{$endif}
 
        OleCheck(CoCreateInstanceEx(ClassID,nil,flags,@server,1,@mqi));
        OleCheck(mqi.hr);
@@ -464,7 +455,6 @@ implementation
      end;
 
    function GetActiveOleObject(const ClassName : string) : IDispatch;
-{$ifndef wince}
      var
      	 intf : IUnknown;
        id : TCLSID;
@@ -473,23 +463,15 @@ implementation
        OleCheck(GetActiveObject(id,nil,intf));
        OleCheck(intf.QueryInterface(IDispatch,Result));
      end;
-{$else}
-     begin
-       Result:=nil;
-     end;
-{$endif wince}
 
     procedure CreateRegKey(const Key, ValueName, Value: string; RootKey: HKEY = HKEY_CLASSES_ROOT);
-{$ifndef DUMMY_REG}
       var
         Reg: TRegistry;
-{$endif}
       begin
 {$ifdef DEBUG_COM}
          if printcom then
         WriteLn('CreateRegKey: ', Key, ': ', ValueName, ': ', Value );
 {$endif}
-{$ifndef DUMMY_REG}
         Reg := TRegistry.Create;
         try
           Reg.RootKey := RootKey;
@@ -506,7 +488,6 @@ implementation
         finally
           Reg.Free;
         end;
-{$endif}
 {$ifdef DEBUG_COM}
          if printcom then
         WriteLn('CreateRegKey exit: ', Key, ': ', ValueName, ': ', Value );
@@ -515,16 +496,13 @@ implementation
 
 
     procedure DeleteRegKey(const Key: string; RootKey: HKEY = HKEY_CLASSES_ROOT);
-{$ifndef DUMMY_REG}
       var
         Reg: TRegistry;
-{$endif}
       begin
 {$ifdef DEBUG_COM}
          if printcom then
         WriteLn('DeleteRegKey: ', Key);
 {$endif}
-{$ifndef DUMMY_REG}
         Reg := TRegistry.Create;
         try
           Reg.RootKey := RootKey;
@@ -532,17 +510,13 @@ implementation
         finally
           Reg.Free;
         end;
-{$endif}
       end;
 
 
     function GetRegStringValue(const Key, ValueName: string; RootKey: HKEY = HKEY_CLASSES_ROOT): string;
-    {$ifndef DUMMY_REG}
       var
         Reg: TRegistry;
-    {$endif}
       begin
-       {$ifndef DUMMY_REG}
         Reg := TRegistry.Create();
         try
           Reg.RootKey := RootKey;
@@ -559,7 +533,6 @@ implementation
         finally
           Reg.Free;
         end;
-       {$endif}
       end;
 
 
@@ -633,14 +606,11 @@ implementation
 
 
    procedure SafeCallErrorHandler(err : HResult;addr : pointer);
-{$ifndef wince}
      var
        info : IErrorInfo;
        descr,src,helpfile : widestring;
        helpctx : DWORD;
-{$endif wince}
      begin
-{$ifndef wince}
        if GetErrorInfo(0,info)=S_OK then
          begin
            info.GetDescription(descr);
@@ -650,7 +620,6 @@ implementation
            raise EOleException.Create(descr,err,src,helpfile,helpctx) at addr;
          end
        else
-{$endif wince}
          raise EOleException.Create('',err,'','',0) at addr;
      end;
 
@@ -849,10 +818,8 @@ implementation
           begin
             if assigned(FFactory) and FCounted then
               FFactory.Comserver.CountObject(false);
-{$ifndef wince}
             if FRefCount>0 then
               CoDisconnectObject(Self,0);
-{$endif wince}
           end;
       end;
 
@@ -959,13 +926,8 @@ implementation
          if printcom then
         WriteLn('LockServer: ', fLock);
 {$endif}
-{$ifndef wince}
           Result := CoLockObjectExternal(Self, fLock, True);
           ComServer.CountObject(fLock);
-{$else}
-          RunError(217);
-          Result:=0;
-{$endif}
       end;
 
 
@@ -1036,9 +998,7 @@ implementation
 
     destructor TComObjectFactory.Destroy;
       begin
-{$ifndef wince}
         if fIsRegistered <> dword(-1) then CoRevokeClassObject(fIsRegistered);
-{$endif}
         ComClassManager.RemoveObjectFactory(Self);
       end;
 
@@ -1070,13 +1030,9 @@ implementation
          if printcom then
         WriteLn('TComObjectFactory.RegisterClassObject');
       {$endif}
-{$ifndef wince}
       if FInstancing <> ciInternal then
       OleCheck(CoRegisterClassObject(FClassID, Self, CLSCTX_LOCAL_SERVER,
          reg_flags(), @FIsRegistered));
-{$else}
-      RunError(217);
-{$endif}
     end;
 
 
@@ -1126,7 +1082,6 @@ HKCR
         end;
 
       begin
-{$ifndef DUMMY_REG}
 {$ifdef DEBUG_COM}
          if printcom then
         WriteLn('UpdateRegistry begin');
@@ -1184,7 +1139,6 @@ HKCR
          if printcom then
         WriteLn('UpdateRegistry end');
 {$endif}
-{$endif DUMMY_REG}
       end;
 
 
@@ -1484,11 +1438,7 @@ HKCR
             inc(NameCount);
       	  end;
       	res:=DispatchInterface.GetIDsOfNames(GUID_NULL,NamesArray,NameCount,
-{$ifdef wince}
-		     LOCALE_SYSTEM_DEFAULT
-{$else wince}
          GetThreadLocale
-{$endif wince}
          ,IDs);
 {$ifdef DEBUG_COMDISPATCH}
                  if printcom then
@@ -1937,11 +1887,9 @@ begin
   if SaveInitProc<>nil then
     TProcedure(SaveInitProc)();
   if not CoInitDisable then
-{$ifndef wince}
     if (CoInitFlags=-1) or not(assigned({$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}ComObj.CoInitializeEx)) then
       Initialized:=Succeeded(CoInitialize(nil))
     else
-{$endif wince}
       Initialized:=Succeeded({$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}ComObj.CoInitializeEx(nil, CoInitFlags));
 end;
 

@@ -29,11 +29,7 @@ program fpc;
 {$ifdef UNIX}
     exeext='';
 {$else UNIX}
-    {$ifdef ATARI}
-      exeext='.ttp';
-    {$else}
       exeext='.exe';
-    {$endif ATARI}
 {$endif UNIX}
 
 Const
@@ -93,10 +89,6 @@ Const
          ppcbin:='ppcx64';
          processorname:='x86_64';
     {$endif x86_64}
-        {$ifdef mips}
-          ppcbin:='ppcmips';
-          processorname:='mips';
-        {$endif mips}
   end;
 
   function SplitPath(Const HStr:String):String;

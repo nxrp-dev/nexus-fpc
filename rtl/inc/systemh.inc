@@ -166,20 +166,6 @@ Type
 
 
 
-{$if defined(CPUMIPS32) or defined(CPUMIPSEL32)}
-  {$define DEFAULT_DOUBLE}
-
-  {$define FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-
-  {$ifndef FPUNONE}
-    {$define SUPPORT_SINGLE}
-    {$define SUPPORT_DOUBLE}
-
-    {$define FPC_INCLUDE_SOFTWARE_INT64_TO_DOUBLE}
-
-    ValReal = Double;
-  {$endif}
-{$endif CPUMIPS32}
 
 
 
@@ -886,7 +872,7 @@ function fpc_SarInt64(Const AValue : Int64;const Shift : Byte): Int64;compilerpr
 {$define FPC_HAS_INTERNAL_BSF_WORD}
 {$define FPC_HAS_INTERNAL_BSF_DWORD}
 {$endif}
-{$if defined(cpux86_64) or defined(cpuaarch64) or defined(cpupowerpc64)}
+{$if (defined(cpux86_64)) or (defined(cpuaarch64))}
 {$define FPC_HAS_INTERNAL_BSF_QWORD}
 {$endif}
 {$endif}
@@ -897,7 +883,7 @@ function fpc_SarInt64(Const AValue : Int64;const Shift : Byte): Int64;compilerpr
 {$define FPC_HAS_INTERNAL_BSR_WORD}
 {$define FPC_HAS_INTERNAL_BSR_DWORD}
 {$endif}
-{$if defined(cpux86_64) or defined(cpuaarch64) or defined(cpupowerpc64)}
+{$if (defined(cpux86_64)) or (defined(cpuaarch64))}
 {$define FPC_HAS_INTERNAL_BSR_QWORD}
 {$endif}
 {$endif}

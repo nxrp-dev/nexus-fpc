@@ -1752,10 +1752,6 @@ implementation
                end;
 
              read_anon_type(hdef,false,tstoreddef(gendef));
-{$ifdef wasm}
-             if is_wasm_reference_type(hdef) then
-               messagepos(typepos,sym_e_wasm_ref_types_cannot_be_used_in_records);
-{$endif wasm}
              block_type:=bt_var;
              { allow only static fields reference to struct where they are declared }
              if not (vd_class in options) then

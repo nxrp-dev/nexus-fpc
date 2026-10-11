@@ -3503,25 +3503,15 @@ P*2CT<x>_目标特定的代码生成选项
 J*2CT<x>_目标特定的代码生成选项
 A*2CT<x>_目标特定的代码生成选项
 W*2CT<x>_目标特定的代码生成选项
-p*3CTsmalltoc_以牺牲执行速度为代价生成更小的 TOC (AIX)
-P*3CTsmalltoc_以牺牲执行速度为代价生成更小的 TOC (AIX)
 J*3CTautogetterprefix=X_使用前缀 X 自动为属性创建 getter (空字符串禁用)
 J*3CTautosetterprefix=X_使用前缀 X 自动为属性创建 setter (空字符串禁用)
 8*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
 3*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
 4*3CTcld_在使用 x86 字符串指令之前发出 CLD 指令
-8*3CTfarprocspushoddbp_在远程函数序言中增加 BP 后再压入栈
-J*3CTcompactintarrayinit_为初始化整数数组常量生成更小(但可能更慢)的代码
-J*3CTenumfieldinit_在调用继承构造函数后，在构造函数中将枚举字段初始化为 enumtype(0)
-J*3CTinitlocals_初始化未初始化使用时会触发 JVM 字节码验证错误的局部变量(会降低代码速度)
+�栈
+�)的代码
 J*3CTlowercaseprocstart_将过程/函数/方法名称的第一个字符小写
-A*3CTthumbinterworking_尽可能生成 Thumb 互操作安全代码
-W*3CTnoexceptions_禁用异常支持。引发异常将中止程序。
-W*3CTbfexceptions_为 WebAssembly 启用分支异常支持
-W*3CTjsexceptions_为 WebAssembly 启用基于 JavaScript 的异常支持(实验性)
-W*3CTwasmexceptions_启用原生 WebAssembly 异常支持
-W*3CTwasmthreads_启用 WebAssembly 线程支持(实验性)
-W*3CTsaturatingfloattoint_使用饱和(非陷阱)浮点到整数转换指令
+�代码
 J*2Cv_Var/out 参数复制检查
 A*2CV<x>_将线程变量模型设置为 <x>
 **2CX_同时创建智能链接库

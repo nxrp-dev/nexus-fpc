@@ -23,15 +23,10 @@
   {- $DEFINE Delphi5}  { keep compiler quiet }
 {$ENDIF}
 
-{$IFDEF DPMI}
-  {$DEFINE MSDOS}
-{$ENDIF}
 
 {$IFDEF FPC}
  {$DEFINE Use32}
  {$DEFINE pointer_arith}
- {$UNDEF DPMI}
- {$UNDEF MSDOS}
  {$UNDEF UNALIGNED_OK}  { requires SizeOf(ush) = 2 ! }
  {$UNDEF MAXSEG_64K}
  {$UNDEF Delphi32}

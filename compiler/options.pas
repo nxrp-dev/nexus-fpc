@@ -124,9 +124,6 @@ Type
     processorstr: TCmdStr;
     function ParseMacVersionMin(out minversion, invalidateversion: tversion; const compvarname, value: string; ios: boolean): boolean;
     procedure MaybeSetDefaultMacVersionMacro;
-{$if defined(XTENSA)}
-    function ParseVersionStr(out ver: longint; const compvarname, value: string): boolean;
-{$endif}
 
     procedure VerifyTargetProcessor;
   end;
@@ -1158,86 +1155,6 @@ function TOption.ParseMacVersionMin(out minversion,
     result:=true;
   end;
 
-{$if defined(XTENSA)}
-function TOption.ParseVersionStr(out ver: longint;
-  const compvarname, value: string): boolean;
-
-  function subval(start,maxlen: longint; out stop: longint): string;
-    var
-      i: longint;
-    begin
-      result:='';
-      i:=start;
-      while (i<=length(value)) and
-            (value[i] in ['0'..'9']) do
-        inc(i);
-      { sufficient amount of digits? }
-      if (i=start) or
-         (i-start>maxlen) then
-        exit;
-      result:=copy(value,start,i-start);
-      stop:=i;
-    end;
-
-  var
-    temp,
-    compvarvalue: string[15];
-    i: longint;
-  begin
-    Result:=false;
-    IdfVersionSet:=false;
-    emptystr:='';
-    { check whether the value is a valid version number }
-    if value='' then
-      begin
-        undef_system_macro(compvarname);
-        exit(true);
-      end;
-    { major version number }
-    compvarvalue:=subval(1,2,i);
-    { not enough digits -> invalid }
-    if compvarvalue='' then
-      exit(false);
-    { already end of string -> invalid }
-    if (i>=length(value)) or
-       (value[i]<>'.') then
-      exit(false);
-    { minor version number }
-    temp:=subval(i+1,2,i);
-    if temp='' then
-      exit(false);
-    if length(temp)=1 then
-      temp:='0'+temp;
-    compvarvalue:=compvarvalue+temp;
-    { patch level }
-    if i<=length(value) then
-      begin
-        if value[i]<>'.' then
-          exit(false);
-        temp:=subval(i+1,2,i);
-        if temp='' then
-          exit(false);
-
-        if length(temp)=1 then
-          temp:='0'+temp;
-        compvarvalue:=compvarvalue+temp;
-        { must be the end }
-        if i<=length(value) then
-          exit(false);
-      end
-    else
-      begin
-        compvarvalue:=compvarvalue+'00';
-      end;
-    val(compvarvalue,idf_version,i);
-    if i=0 then
-      begin
-        set_system_compvar(compvarname,compvarvalue);
-        IdfVersionSet:=true;
-        result:=true;
-      end;
-end;
-{$endif XTENSA}
 
 procedure TOption.MaybeSetDefaultMacVersionMacro;
 var
@@ -1990,16 +1907,6 @@ begin
      (not(cs_link_extern in init_settings.globalswitches) and
       (target_info.link=ld_lld_windows)));
 
-{$ifdef wasm}
-  if (Ord(ts_wasm_no_exceptions in init_settings.targetswitches)+
-      Ord(ts_wasm_native_exnref_exceptions in init_settings.targetswitches)+
-      Ord(ts_wasm_native_legacy_exceptions in init_settings.targetswitches)+
-      Ord(ts_wasm_bf_exceptions in init_settings.targetswitches))>1 then
-    begin
-      Message(option_too_many_exception_modes);
-      StopOptions(1);
-    end;
-{$endif}
 
 
 
@@ -3181,9 +3088,6 @@ begin
     IllegalPara(opt);
   if more[1]='I' then
     begin
-{$ifdef jvm}
-      UnsupportedPara('-SI');
-{$endif}
       if upper(more)='ICOM' then
         init_settings.interfacetype:=it_interfacecom
       else if upper(more)='ICORBA' then
@@ -3992,12 +3896,6 @@ procedure read_arguments(cmd:TCmdStr);
 
 
 
-      {$ifdef jvm}
-        def_system_macro('CPUJVM');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-      {$endif jvm}
 
 
 
@@ -4015,13 +3913,6 @@ procedure read_arguments(cmd:TCmdStr);
 
 
 
-      {$ifdef xtensa}
-        def_system_macro('CPUXTENSA');
-        def_system_macro('CPU32');
-        def_system_macro('FPC_CURRENCY_IS_INT64');
-        def_system_macro('FPC_COMP_IS_INT64');
-        def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
-      {$endif xtensa}
 
 
 
@@ -4159,12 +4050,6 @@ begin
   if tf_cld in target_info.flags then
     if not UpdateTargetSwitchStr('CLD', init_settings.targetswitches, true) then
       InternalError(2013092801);
-  if tf_x86_far_procs_push_odd_bp in target_info.flags then
-    if not UpdateTargetSwitchStr('FARPROCSPUSHODDBP', init_settings.targetswitches, true) then
-      InternalError(2013092802);
-  if tf_wasm_threads in target_info.flags then
-    if not UpdateTargetSwitchStr('WASMTHREADS', init_settings.targetswitches, true) then
-      InternalError(2025022701);
 
   { Android uses the NDK's unprefixed Clang with an explicit target triple.
     An explicit -XP option can still select a tool prefix below. }
@@ -4478,14 +4363,6 @@ begin
 
 
 
-{$ifdef wasm}
-  { if no explicit exception handling mode is set for WebAssembly, select branchful exceptions }
-  if init_settings.targetswitches*[ts_wasm_no_exceptions,ts_wasm_native_exnref_exceptions,ts_wasm_native_legacy_exceptions,ts_wasm_bf_exceptions]=[] then
-    begin
-      def_system_macro(TargetSwitchStr[ts_wasm_bf_exceptions].define);
-      include(init_settings.targetswitches,ts_wasm_bf_exceptions);
-    end;
-{$endif wasm}
 
 
   { now we can define cpu and fpu type }
@@ -4573,15 +4450,6 @@ begin
 {$endif defined(i386) or defined(x86_64)}
 
 
-{$if defined(xtensa)}
-  { it is determined during system unit compilation if nsau is used for bsr or not,
-    this is not perfect but the current implementation bsf/bsr does not allow another
-    solution }
-  if CPUXTENSA_HAS_NSAx in cpu_capabilities[init_settings.cputype] then
-    begin
-      def_system_macro('FPC_HAS_INTERNAL_BSR');
-    end;
-{$endif}
 
 
 

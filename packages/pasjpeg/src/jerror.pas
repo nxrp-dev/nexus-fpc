@@ -93,32 +93,25 @@ implementation
 
 { How to format a message string, in format_message() ? }
 
-{$IFDEF OS2}
-  {$DEFINE NO_FORMAT}
-{$ENDIF}
 {$IFDEF FPC}
   {.$DEFINE NO_FORMAT}
 {$ENDIF}
 
 {$IFDEF FPC_DOTTEDUNITS}
 uses
-{$IFNDEF NO_FORMAT}
   {$IFDEF VER70}
     drivers, { Turbo Vision unit with FormatStr }
   {$ELSE}
     System.SysUtils,  { Delphi Unit with Format() }
   {$ENDIF}
-{$ENDIF}
   System.Jpeg.Jcomapi;
 {$ELSE FPC_DOTTEDUNITS}
 uses
-{$IFNDEF NO_FORMAT}
   {$IFDEF VER70}
     drivers, { Turbo Vision unit with FormatStr }
   {$ELSE}
     sysutils,  { Delphi Unit with Format() }
   {$ENDIF}
-{$ENDIF}
   jcomapi;
 {$ENDIF FPC_DOTTEDUNITS}
 
@@ -414,15 +407,11 @@ begin
  {$IFDEF VER70}
     FormatStr(buffer, msgtext, err^.msg_parm.i);
  {$ELSE}
-   {$IFDEF NO_FORMAT}
-   buffer := msgtext;
-   {$ELSE}
    buffer := Format(msgtext, [
         err^.msg_parm.i[0], err^.msg_parm.i[1],
         err^.msg_parm.i[2], err^.msg_parm.i[3],
         err^.msg_parm.i[4], err^.msg_parm.i[5],
         err^.msg_parm.i[6], err^.msg_parm.i[7] ]);
-   {$ENDIF}
  {$ENDIF}
   end;
 end;

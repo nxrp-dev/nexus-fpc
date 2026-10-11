@@ -71,12 +71,7 @@ interface
          { Thread-local symbol (ELF targets) }
          AT_TLS,
          { GNU indirect function (ELF targets) }
-         AT_GNU_IFUNC,
-         { WebAssembly global variable }
-         AT_WASM_GLOBAL,
-         { WebAssembly exception tag (used as a parameter for the 'throw' and
-           'catch' instructions) }
-         AT_WASM_EXCEPTION_TAG
+         AT_GNU_IFUNC
          );
 
        { is the label only there for getting an DataOffset (e.g. for i/o
@@ -200,9 +195,6 @@ interface
            TAsmList with loadsym/loadref/const_symbol (PFV) }
          refs       : longint;
        public
-{$ifdef wasm}
-         nestingdepth : longint;
-{$endif wasm}
          { on avr the compiler needs to replace cond. jumps with too large offsets
            so we have to store an offset somewhere to calculate jump distances }
          bind       : TAsmsymbind;
@@ -333,9 +325,6 @@ implementation
         typ:=_typ;
         { used to remove unused labels from the al_procedures }
         refs:=0;
-{$ifdef wasm}
-        nestingdepth:=-1;
-{$endif wasm}
       end;
 
 

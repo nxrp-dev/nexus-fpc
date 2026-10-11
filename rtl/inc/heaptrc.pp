@@ -18,7 +18,7 @@
 {$modeswitch advancedrecords} {$scopedenums on} {$typedaddress on}
 unit heaptrc;
 
-{$if defined(win32) or defined(wince)}
+{$if defined(win32)}
   {$define windows}
 {$endif}
 
@@ -2249,11 +2249,7 @@ const
 {$ifdef BSD}   // dlopen is in libc on FreeBSD.
   LibDL = 'c';
 {$else}
-  {$ifdef HAIKU}
-    LibDL = 'root';
-  {$else}
     LibDL = 'dl';
-  {$endif}
 {$endif}
 
 type
@@ -2577,12 +2573,6 @@ end;
   {$S-}
 {$endif}
 
-{$ifdef go32v2}
-var
-   __stklen : longword;external name '__stklen';
-   __stkbottom : longword;external name '__stkbottom';
-   ebss : longword; external name 'end';
-{$endif go32v2}
 
 {$ifdef linux}
 var
@@ -2590,19 +2580,7 @@ var
    eend : ptruint; external name '_end';
 {$endif}
 
-{$ifdef freebsd}
-var
-   text_start: ptruint; external name '__executable_start';
-   etext: ptruint; external name '_etext';
-   eend : ptruint; external name '_end';
-{$endif}
 
-{$ifdef os2}
-(* Currently still EMX based - possibly to be changed in the future. *)
-var
-   etext: ptruint; external name '_etext';
-   eend : ptruint; external name '_end';
-{$endif}
 
 {$ifdef windows}
 {$if not (defined(win32) or defined(win64))}
@@ -2612,24 +2590,10 @@ var
 {$endif}
 {$endif}
 
-{$ifdef BEOS}
-const
-  B_ERROR = -1;
-
-type
-  area_id   = Longint;
-
-function area_for(addr : Pointer) : area_id;
-            cdecl; external 'root' name 'area_for';
-{$endif BEOS}
 
 procedure CheckPointer(p: pointer); {$ifndef debug_heaptrc} [public, alias : 'FPC_CHECKPOINTER']; {$endif}
 var
   n,first : HeapTracer.pNode;
-{$ifdef go32v2}
-  get_ebp,stack_top : longword;
-  bss_end : longword;
-{$endif go32v2}
 begin
   if p=nil then
     runerror(204);
@@ -2639,23 +2603,6 @@ begin
   if System.IsThreadVarPointer(p) then
     exit;
 
-{$ifdef go32v2}
-  if ptruint(p)<$1000 then
-    runerror(216);
-  asm
-     movl %ebp,get_ebp
-     leal ebss,%eax
-     movl %eax,bss_end
-  end;
-  stack_top:=__stkbottom+__stklen;
-  { allow all between start of code and end of bss }
-  if ptruint(p)<=bss_end then
-    exit;
-  { stack can be above heap !! }
-
-  if (ptruint(p)>=get_ebp) and (ptruint(p)<=stack_top) then
-    exit;
-{$endif go32v2}
 
   { I don't know where the stack is in other OS !! }
 {$ifdef windows}
@@ -2674,15 +2621,6 @@ begin
 {$endif}
 {$endif windows}
 
-{$IFDEF OS2}
-  { inside stack ? }
-  if (PtrUInt (P) > PtrUInt (Get_Frame)) and
-     (PtrUInt (P) < PtrUInt (StackTop)) then
-    exit;
-  { inside data or bss ? }
-  if (PtrUInt (P) >= PtrUInt (@etext)) and (PtrUInt (P) < PtrUInt (@eend)) then
-    exit;
-{$ENDIF OS2}
 
 {$ifdef linux}
   { inside stack ? }
@@ -2694,34 +2632,12 @@ begin
     exit;
 {$endif linux}
 
-{$ifdef freebsd}
-  { inside stack ? }
-  if (ptruint(p)>ptruint(get_frame)) and
-     (ptruint(p)<ptruint(StackTop)) then
-    exit;
-  { inside data or bss ? }
-  if (ptruint(p)>=ptruint(@text_start)) and (ptruint(p)<ptruint(@eend)) then
-    exit;
-{$endif linux}
-{$ifdef morphos}
-  { inside stack ? }
-  if (ptruint(p)<ptruint(StackTop)) and (ptruint(p)>ptruint(StackBottom)) then
-    exit;
-  { inside data or bss ? }
-  {$WARNING data and bss checking missing }
-{$endif morphos}
 
   {$ifdef darwin}
   {$warning No checkpointer support yet for Darwin}
   exit;
   {$endif}
 
-{$ifdef BEOS}
-  // if we find the address in a known area in our current process,
-  // then it is a valid one
-  if area_for(p) <> B_ERROR then
-    exit;
-{$endif BEOS}
 
   ht.Lock;
   first := ht.allNodes;
@@ -2996,7 +2912,7 @@ type
 
 { WinCE: does not have environment strings. Add some way to specify heaptrc options?
   msdos: don’t want to bother with far pointers and their forwarding to ScanIgnoringCase & ParseEnv... }
-{$elseif not defined(wince) and not defined(sinclairql) and not defined(msdos)}
+{$else}
   procedure LoadEnvironment;
   var
     ep: ppAnsiChar;

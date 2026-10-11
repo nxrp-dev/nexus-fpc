@@ -283,25 +283,14 @@ implementation
       cpubase,cpuinfo,paramgr,
       fmodule,
       defutil,symtable,symcpu,ppu
-{$ifdef wasm}
-      ,aasmcpu
-{$endif wasm}
 {$ifdef OMFOBJSUPPORT}
       ,dbgcodeview
 {$endif OMFOBJSUPPORT}
       ;
 
     const
-{$ifdef WASM}
-      { WasmTime's debugger requires that:
-        (LINE_BASE<=0) and (SignedInt8(LINE_BASE + LINE_RANGE) > 0),
-        so we use different values for WebAssembly }
-      LINE_BASE   = 0;
-      LINE_RANGE  = 127;
-{$else WASM}
       LINE_BASE   = 1;
       LINE_RANGE  = 255;
-{$endif WASM}
       OPCODE_BASE = 13;
 
     const
@@ -731,12 +720,8 @@ implementation
 
     function TDebugInfoDwarf.is_fbreg(reg: tregister): boolean;
       begin
-{$if defined(wasm)}
-        result:=reg=NR_LOCAL_FRAME_POINTER_REG;
-{$else}
         { always return false, because we don't emit DW_AT_frame_base attributes yet }
         result:=false;
-{$endif}
       end;
 
     function TDebugInfoDwarf.def_dwarf_lab(def: tdef): tasmsymbol;
@@ -1130,34 +1115,11 @@ implementation
 
     procedure TDebugInfoDwarf.append_proc_frame_base(list: TAsmList;
       def: tprocdef);
-{$if defined(wasm)}
-      var
-        blocksize: longint;
-        templist: TAsmList;
-      begin
-        with tcpuprocdef(def).frame_pointer_ref do
-          if (base=NR_LOCAL_STACK_POINTER_REG) and
-             (index=NR_NO) then
-            begin
-              templist:=TAsmList.create;
-              templist.concat(tai_const.create_8bit(ord(DW_OP_WASM_location)));
-              templist.concat(tai_const.create_8bit(0)); { wasm local }
-              templist.concat(tai_const.create_uleb128bit(offset));
-              templist.concat(tai_const.create_8bit(ord(DW_OP_stack_value)));
-              blocksize:=3+Lengthuleb128(offset);
-              append_block1(DW_AT_frame_base,blocksize);
-              current_asmdata.asmlists[al_dwarf_info].concatlist(templist);
-              templist.free;
-              templist := nil;
-            end;
-      end;
-{$else}
       begin
         { problem: base reg isn't known here
           DW_AT_frame_base,DW_FORM_block1,1
         }
       end;
-{$endif}
 
 
 
@@ -2441,15 +2403,6 @@ implementation
                   begin
                     if (vo_is_thread_var in sym.varoptions) then
                       begin
-{$ifdef wasm}
-                        templist.concat(tai_const.create_8bit(ord(DW_OP_WASM_location)));
-                        templist.concat(tai_const.create_8bit(3)); { wasm global }
-                        templist.concat(tai_const.Create_type_name(aitconst_ptr_unaligned,TLS_BASE_SYM,TWasmGlobalAsmSymbol,AT_WASM_GLOBAL,0));
-                        templist.concat(tai_const.create_8bit(ord(DW_OP_addr)));
-                        templist.concat(tai_const.Create_type_name(aitconst_ptr_unaligned,sym.mangledname,0));
-                        templist.concat(tai_const.create_8bit(ord(DW_OP_plus)));
-                        blocksize:=4+2*sizeof(puint);
-{$else wasm}
                         if tf_section_threadvars in target_info.flags then
                           begin
                             case sizeof(puint) of
@@ -2501,7 +2454,6 @@ implementation
                                 inc(blocksize,2+Lengthsleb128(offset));
                               end;
                           end;
-{$endif wasm}
                       end
                     else
                       begin
@@ -2526,15 +2478,6 @@ implementation
                             templist.concat(tai_const.create_sleb128bit(sym.localloc.reference.offset+offset));
                             blocksize:=1+Lengthsleb128(sym.localloc.reference.offset+offset);
                           end
-{$ifdef wasm}
-                        else if sym.localloc.reference.base=NR_LOCAL_STACK_POINTER_REG then
-                          begin
-                            templist.concat(tai_const.create_8bit(ord(DW_OP_WASM_location)));
-                            templist.concat(tai_const.create_8bit(0));  { 0 = WebAssembly Local }
-                            templist.concat(tai_const.create_uleb128bit(sym.localloc.reference.offset+offset));
-                            blocksize:=2+Lengthuleb128(sym.localloc.reference.offset+offset);
-                          end
-{$endif wasm}
                         else
                           begin
                             dreg:=dwarf_reg(sym.localloc.reference.base);

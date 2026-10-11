@@ -15,15 +15,7 @@
 {$define uselibc:=cdecl; external;}
 
 const
-  {$ifdef BEOS}
-    {$ifdef HAIKU}
-    libname = 'network';
-    {$else}
-    libname = 'net';
-    {$endif}
-  {$else}
   libname='c';
-  {$endif}
 
 function cfpaccept      (s:cint; addrx : psockaddr; addrlen : psocklen):cint; cdecl; external libname name 'accept';
 function cfpbind        (s:cint; addrx : psockaddr; addrlen : tsocklen):cint;  cdecl; external libname name 'bind';
@@ -42,11 +34,7 @@ function cfpsetsockopt  (s:cint; level:cint; optname:cint; optval:pointer; optle
 function cfpshutdown    (s:cint; how:cint):cint; cdecl; external libname name 'shutdown';
 function cfpsocket      (domain:cint; xtype:cint; protocol: cint):cint; cdecl; external libname name 'socket';
 
-{$if defined(BEOS) and not defined(HAIKU)}
-// function unavailable under BeOS
-{$else}
 function cfpsocketpair  (d:cint; xtype:cint; protocol:cint; sv:pcint):cint; cdecl; external libname name 'socketpair';
-{$endif}
 
 
 function fpaccept      (s:cint; addrx : psockaddr; addrlen : psocklen):cint;
@@ -134,16 +122,8 @@ begin
   internal_socketerror:=fpgeterrno;
 end;
 
-{$if defined(BEOS) and not defined(HAIKU)}
-// function unavailable under BeOS
-function fpsocketpair  (d:cint; xtype:cint; protocol:cint; sv:pcint):cint;
-begin
-  internal_socketerror:= -1; // TODO : check if it is an error
-end;
-{$else}
 function fpsocketpair  (d:cint; xtype:cint; protocol:cint; sv:pcint):cint;
 begin
   fpsocketpair:=cfpsocketpair(d,xtype,protocol,sv);
   internal_socketerror:=fpgeterrno;
 end;
-{$endif}

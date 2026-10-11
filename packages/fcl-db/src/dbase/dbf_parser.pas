@@ -24,9 +24,6 @@ interface
 uses
   System.SysUtils,
   System.Classes,
-{$ifdef KYLIX}
-  Api.Libc,
-{$endif}
 {$ifndef Windows}
   Data.Dbf.Wtil,
 {$endif}
@@ -40,9 +37,6 @@ uses
 uses
   SysUtils,
   Classes,
-{$ifdef KYLIX}
-  Libc,
-{$endif}
 {$ifndef WINDOWS}
   dbf_wtil,
 {$endif}

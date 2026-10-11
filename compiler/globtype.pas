@@ -261,61 +261,16 @@ interface
 
        { global target-specific switches }
        ttargetswitch = (ts_none,
-         { generate code that results in smaller TOCs than normal (AIX) }
-         ts_small_toc,
-         { for the JVM target: generate integer array initializations via string
-           constants in order to reduce the generated code size (Java routines
-           are limited to 64kb of bytecode) }
-         ts_compact_int_array_init,
-         { for the JVM target: initialize enum fields in constructors with the
-           enum class instance corresponding to ordinal value 0 (not done by
-           default because this initialization can only be performed after the
-           inherited constructors have run, and if they call a virtual method
-           of the current class, then this virtual method may already have
-           initialized that field with another value and the constructor
-           initialization will result in data loss }
-         ts_jvm_enum_field_init,
          { when automatically generating getters/setters for properties, use
            these strings as prefixes for the generated getters/setter names }
          ts_auto_getter_prefix,
          ts_auto_setter_predix,
-         ts_thumb_interworking,
          { lowercase the first character of routine names, used to generate
            names that are compliant with Java coding standards from code
            written according to Delphi coding standards }
          ts_lowercase_proc_start,
-         { initialise local variables on the JVM target so you won't get
-           accidental uses of uninitialised values }
-         ts_init_locals,
          { emit a CLD instruction before using the x86 string instructions }
-         ts_cld,
-         { increment BP before pushing it in the function prologue and decrement
-           it after popping it in the function epilogue, iff the function is
-           going to terminate with a far ret. Thus, the BP value pushed on the
-           stack becomes odd if the function is far and even if the function is
-           near. This allows walking the BP chain on the stack and e.g.
-           obtaining a stack trace even if the program uses a mixture of near
-           and far calls. This is also required for Win16 real mode, because it
-           allows Windows to move code segments around (in order to defragment
-           memory) and then walk through the stacks of all running programs and
-           update the segment values of the segment that has moved. }
-         ts_x86_far_procs_push_odd_bp,
-         { no exception support. Raising an exception will abort the program. }
-         ts_wasm_no_exceptions,
-         { Branchful exceptions support. A global threadvar is checked after each function call. }
-         ts_wasm_bf_exceptions,
-         { WebAssembly exnref exceptions support:
-           https://github.com/WebAssembly/exception-handling/blob/master/proposals/exception-handling/Exceptions.md }
-         ts_wasm_native_exnref_exceptions,
-         { WebAssembly legacy exceptions support:
-           https://github.com/WebAssembly/exception-handling/blob/master/proposals/exception-handling/legacy/Exceptions.md }
-         ts_wasm_native_legacy_exceptions,
-         { support multithreading via the WebAssembly threading proposal:
-           https://github.com/WebAssembly/threads/blob/master/proposals/threads/Overview.md }
-         ts_wasm_threads,
-         { use saturating (nontrapping) float to int conversion instructions:
-           https://github.com/WebAssembly/spec/blob/main/proposals/nontrapping-float-to-int-conversion/Overview.md }
-         ts_wasm_saturating_float_to_int
+         ts_cld
        );
        ttargetswitches = set of ttargetswitch;
 
@@ -401,11 +356,6 @@ interface
          mf_package_deny,             { this unit must not be part of a package }
          mf_package_weak,             { this unit may be completely contained in a package }
          mf_symansistr,               { symbols are ansistrings (for ppudump) }
-         mf_wasm_no_exceptions,       { unit was compiled in WebAssembly 'no exceptions' mode }
-         mf_wasm_bf_exceptions,       { unit was compiled in WebAssembly 'branchful' exceptions mode }
-         mf_wasm_exnref_exceptions,   { unit was compiled in WebAssembly exceptions with exnref mode }
-         mf_wasm_native_exceptions,   { unit was compiled in WebAssembly native legacy exceptions mode }
-         mf_wasm_threads,             { unit was compiled with WebAssembly multithreading support turned on }
          mf_system_unit,              { unit was compiled as a System unit }
           mf_nexus_profile,            { unit contains Nexus procedure profiling instrumentation }
           mf_unicode_default           { unit was compiled with Unicode default text types }
@@ -442,22 +392,10 @@ interface
 
        TargetSwitchStr : array[ttargetswitch] of ttargetswitchinfo = (
          (name: '';                    hasvalue: false; isglobal: true ; define: ''),
-         (name: 'SMALLTOC';            hasvalue: false; isglobal: true ; define: ''),
-         (name: 'COMPACTINTARRAYINIT'; hasvalue: false; isglobal: true ; define: ''),
-         (name: 'ENUMFIELDINIT';       hasvalue: false; isglobal: true ; define: ''),
          (name: 'AUTOGETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
          (name: 'AUTOSETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
-         (name: 'THUMBINTERWORKING';   hasvalue: false; isglobal: true ; define: ''),
          (name: 'LOWERCASEPROCSTART';  hasvalue: false; isglobal: true ; define: ''),
-         (name: 'INITLOCALS';          hasvalue: false; isglobal: true ; define: ''),
-         (name: 'CLD';                 hasvalue: false; isglobal: true ; define: 'FPC_ENABLED_CLD'),
-         (name: 'FARPROCSPUSHODDBP';   hasvalue: false; isglobal: false; define: 'FPC_FAR_PROCS_PUSH_ODD_BP'),
-         (name: 'NOEXCEPTIONS';        hasvalue: false; isglobal: true ; define: 'FPC_WASM_NO_EXCEPTIONS'),
-         (name: 'BFEXCEPTIONS';        hasvalue: false; isglobal: true ; define: 'FPC_WASM_BRANCHFUL_EXCEPTIONS'),
-         (name: 'WASMEXCEPTIONS';      hasvalue: false; isglobal: true ; define: 'FPC_WASM_EXNREF_EXCEPTIONS'),
-         (name: 'LEGACYEXCEPTIONS';    hasvalue: false; isglobal: true ; define: 'FPC_WASM_LEGACY_EXCEPTIONS'),
-         (name: 'WASMTHREADS';         hasvalue: false; isglobal: true ; define: 'FPC_WASM_THREADS'),
-         (name: 'SATURATINGFLOATTOINT';hasvalue: false; isglobal: false; define: 'FPC_WASM_SATURATING_FLOAT_TO_INT')
+         (name: 'CLD';                 hasvalue: false; isglobal: true ; define: 'FPC_ENABLED_CLD')
        );
 
        { switches being applied to all CPUs at the given level }

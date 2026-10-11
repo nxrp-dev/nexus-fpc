@@ -632,9 +632,9 @@ begin
 end;
 
 { also define alias for internal use in the system unit }
-procedure fpc_shortstr_bool(b : boolean;len:sizeint;out s:shortstring);external {$ifndef cpujvm}name 'FPC_SHORTSTR_BOOL'{$endif};
+procedure fpc_shortstr_bool(b : boolean;len:sizeint;out s:shortstring);external name 'FPC_SHORTSTR_BOOL';
 
-procedure fpc_shortstr_currency({$ifdef cpujvm}constref{$endif} c : currency; len,f : SizeInt; out s : shortstring);[public,alias:'FPC_SHORTSTR_CURRENCY']; compilerproc;
+procedure fpc_shortstr_currency( c : currency; len,f : SizeInt; out s : shortstring);[public,alias:'FPC_SHORTSTR_CURRENCY']; compilerproc;
 const
   MinLen = 8; { Minimal string length in scientific format }
 var

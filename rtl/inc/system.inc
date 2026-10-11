@@ -92,7 +92,7 @@ begin
 end;
 {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 
-{$if not defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD) and not defined(FPUNONE) and not defined(FPC_SYSTEM_FPUCW_IMMUTABLE)}
+{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
 var
   { Control word of the fpu that determines which exceptions will be thrown and
     potentially other flags (precision, exception-happened flags, ... Used to
@@ -147,12 +147,10 @@ function do_isdevice(handle:thandle):boolean;forward;
 { Under Haiku, bcopy cause a problem when searching for include file
   in the compiler. So, we use the internal implementation for now
   under BeOS and Haiku.  }
-{$ifndef BEOS}
 { prefer libc implementations over our own, as they're most likely faster }
 {$i cgeneric.inc}
 { is now declared as external reference to another routine in the interface }
 {$i cgenstr.inc}
-{$endif}
 {$ifdef USE_CPU_MOVE}
   { Avoid use of generic C code for move procedure }
   {$undef FPC_SYSTEM_HAS_MOVE}
@@ -202,13 +200,6 @@ function do_isdevice(handle:thandle):boolean;forward;
 
 
 
-{$ifdef cpuwasm32}
-  {$ifdef SYSPROCDEFINED}
-    {$Error Can't determine processor type !}
-  {$endif}
-  {$i wasm32.inc}  { Case dependent, don't change }
-  {$define SYSPROCDEFINED}
-{$endif cpuwasm32}
 
 
 {$ifndef SYSPROCDEFINED}
@@ -1080,7 +1071,7 @@ end;
                         FPU Exceptions state
 *****************************************************************************}
 
-{$if defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPU_NONE)}
+{$if defined(FPU_NONE)}
 function GetNativeFPUControlWord: TNativeFPUControlWord; {$if defined(SYSTEMINLINE)}inline;{$endif}
 begin
   result:=default(TNativeFPUControlWord);
@@ -1125,7 +1116,7 @@ var
 {$ifdef FPC_HAS_FEATURE_CONSOLEIO}
   pstdout : ^Text;
 {$endif}
-{$if defined(MSWINDOWS) or defined(OS2)}
+{$if defined(MSWINDOWS)}
   i : longint;
 {$endif}
 Begin
@@ -1165,23 +1156,6 @@ Begin
   { Finalize units }
   FinalizeUnits;
 
-{$if defined(OS2)}
-  { finally release the heap if possible, especially
-    important for DLLs.
-    Reset the array to nil, and finally also argv itself to
-    avoid double freeing problem in case this function gets called twice. }
-  if assigned(argv) then
-    begin
-      for i:=0 to argc-1 do
-        if assigned(argv[i]) then
-          begin
-            sysfreemem(argv[i]);
-            argv[i]:=nil;
-          end;
-      sysfreemem(argv);
-      argv:=nil;
-    end;
-{$endif}
 {$ifdef LINUX}
   {sysfreemem already checks for nil}
   { Do not try to do anything if the heap manager already reported an error }

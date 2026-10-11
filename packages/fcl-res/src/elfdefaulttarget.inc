@@ -23,9 +23,6 @@
   {$IFDEF CPUAARCH64}
   fMachineType:=emtaarch64;
   {$ENDIF}
-  {$IFDEF CPU68K}
-  fMachineType:=emtm68k;
-  {$ENDIF}
   {$IFDEF CPUALPHA}
   fMachineType:=emtalpha;
   {$ENDIF}

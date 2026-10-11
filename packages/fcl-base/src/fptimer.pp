@@ -46,7 +46,7 @@ unit fpTimer;
 }
 
 {$IFNDEF USESLEEP}
-{$if Defined(MSWINDOWS) or (Defined(UNIX) and not Defined(BEOS))}
+{$if (Defined(MSWINDOWS)) or (Defined(UNIX))}
 {$define Has_EventWait}
 {$endif}
 {$ENDIF}

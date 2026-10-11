@@ -17,13 +17,7 @@
 {$modeswitch anonymousfunctions}
 {$h+}
 
-{$IF DEFINED(WINCE) or DEFINED(AIX)}
-{$DEFINE NO_SEMAPHORE_SUPPORT}
-{$ENDIF}
 
-{$IF DEFINED(WINCE)}
-{$DEFINE NO_MUTEX_SUPPORT}
-{$ENDIF}
 
 
 {$IFNDEF FPC_DOTTEDUNITS}
@@ -40,9 +34,6 @@ uses
   {$IFDEF UNIX}
   UnixApi.Types,
   {$ENDIF}
-  {$IFDEF CPUWASM32}
-  Wasm.Semaphore,
-  {$ENDIF}
   System.DateUtils,
   System.Classes,
   System.SysUtils;
@@ -54,9 +45,6 @@ uses
   {$IFDEF UNIX}
   unixtype,
   {$ENDIF}
-  {$IFDEF CPUWASM32}
-  WasmSem,
-  {$ENDIF}
   DateUtils,
   Classes, // TThread
   sysutils;
@@ -66,11 +54,9 @@ type
   PSecurityAttributes = Pointer;
   TEventHandle = Pointer;
 
-{$IFNDEF NO_SEMAPHORE_SUPPORT}
 {$IFDEF UNIX}
   TPosixSemaphore = sem_t;
   PPosixSemaphore = ^TPosixSemaphore;
-{$ENDIF}
 {$ENDIF}
 
 const
@@ -198,13 +184,9 @@ type
 {$ENDIF NOPOINTER}
   end;
 
-{$IFNDEF NO_SEMAPHORE_SUPPORT}
   TSemaphore = class(THandleObject)
   {$IFDEF UNIX}
      Fsem: TPosixSemaphore;
-  {$ENDIF}
-  {$IFDEF CPUWASM32}
-     FSem : TWasmSemaphore;
   {$ENDIF}
    public
      constructor Create(aUseCOMWait: boolean = false); overload;
@@ -217,17 +199,12 @@ type
      function WaitFor(aTimeout: Cardinal = INFINITE): TWaitResult; override;
    end;
    TSemaphoreGuard = specialize TLockGuard<TSemaphore>;
-{$ENDIF}
 
-{$IFNDEF NO_MUTEX_SUPPORT}
   TMutex = class(THandleObject)
   private
 {$IFDEF UNIX}
     FMutex: pthread_mutex_t;
 {$ENDIF POSIX}
-{$IFDEF CPUWASM32}
-    FMutex: TRTLCriticalSection;
-{$ENDIF CPUWASM32}
   public
     constructor Create(aUseCOMWait: Boolean = False); overload;
     constructor Create(aAttributes: PSecurityAttributes; aInitialOwner: Boolean; const aName: string; aUseCOMWait: Boolean = False); overload;
@@ -238,7 +215,6 @@ type
     procedure Release; override;
   end;
   TMutexGuard = specialize TLockGuard<TMutex>;
-{$ENDIF}
 
   // Delphi compatible (hopefully) TSpinwait
   // Uses exponential backoff for first 10 SpinCycles, uses sleep(1) every 20 and sleep(1) every 5 cycles afterwards.
@@ -342,14 +318,6 @@ Resourcestring
     Real syncobjs implementation
   ---------------------------------------------------------------------}
 
-{$IFDEF OS2}
-type
-  TBasicEventState = record
-                      FHandle: THandle;
-                      FLastError: longint;
-                     end;
-  PLocalEventRec = ^TBasicEventState;
-{$ENDIF OS2}
 
 procedure TSynchroObject.Acquire;
 begin
@@ -415,11 +383,7 @@ function THandleObject.WaitFor(Timeout : Cardinal) : TWaitResult;
 begin
   Result := TWaitResult(basiceventWaitFor(Timeout, Handle));
   if Result = wrError then
-{$IFDEF OS2}
-    FLastError := PLocalEventRec (Handle)^.FLastError;
-{$ELSE OS2}
     FLastError := GetLastOSError;
-{$ENDIF OS2}
 end;
 
 {$IFNDEF VER3_2}
@@ -758,7 +722,6 @@ end;
 { ---------------------------------------------------------------------
   TSemaphore
   ---------------------------------------------------------------------}
-{$IFNDEF NO_SEMAPHORE_SUPPORT}
 constructor TSemaphore.Create(aUseCOMWait: boolean = false);
 
 begin
@@ -789,11 +752,7 @@ begin
   if sem_init(@FSem,0,aInitial)<>0 then
     RaiseLastOSError;
 {$ELSE UNIX}
-{$IFDEF CPUWASM32}
-  semaphore_init(FSEM,aInitial,aMaximum);
-{$ELSE CPUWASM32}
   Raise ESyncObjectException.Create(SErrNoSemaphoreSupport);
-{$ENDIF CPUWASM32}
 {$ENDIF UNIX}
 {$ENDIF WINDOWS}
 end;
@@ -828,10 +787,6 @@ begin
 {$IFDEF UNIX}
   sem_destroy(@FSem);
 {$ENDIF}
-{$IFDEF CPUWASM32}
-  // If someone is waiting, (s)he'll be notified...
-  semaphore_signal(FSEM);
-{$ENDIF}
   inherited Destroy;
 end;
 
@@ -839,10 +794,6 @@ end;
 
 function TSemaphore.WaitFor(aTimeout: Cardinal = INFINITE): TWaitResult;
 
-{$IFDEF CPUWASM32}
-var
-  Res : Boolean;
-{$ENDIF}
 
 {$IFDEF UNIX}
 var
@@ -894,18 +845,7 @@ begin
       Result:=wrSignaled
     end;
 {$ELSE UNIX}
-{$IFDEF CPUWASM32}
-  if aTimeout=INFINITE then
-    Res:=semaphore_wait_infinite(FSEM)
-  else
-    Res:=semaphore_wait(FSEM,aTimeOut);
-  if Res then
-    Result:=wrSignaled
-  else
-    Result:=wrTimeout;
-{$ELSE}
   Result:=Inherited WaitFor(aTimeOut);
-{$ENDIF}
 {$ENDIF UNIX}
 
 end;
@@ -944,25 +884,13 @@ begin
     Dec(aCount);
     end;
 {$ENDIF}
-{$IFDEF CPUWASM32}
-  Result:=0;
-  While aCount>0 do
-    begin
-    if not semaphore_signal(FSem) then
-          raise ESyncObjectException.CreateFmt(SErrFailedToSignalSemaphore, [aCount]);
-    Inc(Result);
-    Dec(aCount);
-    end;
-{$ENDIF}
 end;
 
-{$ENDIF NO_SEMAPHORE_SUPPORT}
 
 { ---------------------------------------------------------------------
   TMutex
   ---------------------------------------------------------------------}
 
-{$IFNDEF NO_MUTEX_SUPPORT}
 
 constructor TMutex.Create(aUseCOMWait: Boolean = False);
 
@@ -1007,18 +935,7 @@ begin
   if (FHandle=TEventHandle(0)) then
     RaiseLastOSError;
 {$ELSE}
-{$IFDEF CPUWASM}
-  inherited Create;
-  if (aName <> '') then
-    raise ESyncObjectException.Create(SErrNamesNotSupported);
-  // InitCriticalSection creates a recursive mutex (mkRecursive),
-  // matching the UNIX behavior (PTHREAD_MUTEX_RECURSIVE)
-  InitCriticalSection(FMutex);
-  if aInitialOwner then
-    Acquire;
-{$ELSE}
   raise ESyncObjectException.Create(SErrMutexNotSupported);
-{$ENDIF CPUWASM}
 {$ENDIF WINDOWS}
 {$ENDIF UNIX}
 end;
@@ -1045,11 +962,7 @@ begin
   if FHandle=TEventHandle(0) then
     RaiseLastOSError;
 {$ELSE}
-{$IFDEF CPUWASM}
-  Create(nil, false, aName, aUseCOMWait);
-{$ELSE}
   raise ESyncObjectException.Create(SErrMutexNotSupported);
-{$ENDIF CPUWASM}
 {$ENDIF WINDOWS}
 {$ENDIF UNIX}
 end;
@@ -1059,9 +972,6 @@ destructor TMutex.Destroy;
 begin
 {$IFDEF UNIX}
    pthread_mutex_destroy(@FMutex);
-{$ENDIF}
-{$IFDEF CPUWASM}
-  DoneCriticalSection(FMutex);
 {$ENDIF}
   Inherited;
 end;
@@ -1078,45 +988,7 @@ var
   tnow: ttimeval;
   Tmp: timespec;
 {$ENDIF}
-{$IFDEF CPUWASM32}
-var
-  EndTime : Int64;
-{$ENDIF}
 begin
-{$IFDEF CPUWASM32}
-    // TRTLCriticalSection only supports blocking acquire (no timeout).
-    // For INFINITE, use EnterCriticalSection directly.
-    // For timeout=0 (try-lock), use TryEnterCriticalSection.
-    // Other timeouts: spin with TryEnterCriticalSection.
-    if aTimeout = INFINITE then
-    begin
-      EnterCriticalSection(FMutex);
-      Result := wrSignaled;
-    end
-    else if aTimeout = 0 then
-    begin
-      if TryEnterCriticalSection(FMutex) <> 0 then
-        Result := wrSignaled
-      else
-        Result := wrTimeout;
-    end
-    else
-    begin
-      // Spin-wait with timeout (no native timed lock in WASM RTL)
-      Result := wrTimeout;
-      // LockMutexTimeout from wasmmutex.inc supports timed waits,
-      // but it's not exported. Use a simple spin loop:
-      EndTime := GetTickCount64 + aTimeout;
-      repeat
-        if TryEnterCriticalSection(FMutex) <> 0 then
-        begin
-          Result := wrSignaled;
-          Break;
-        end;
-        ThreadSwitch; // yield to other web workers
-      until GetTickCount64 >= EndTime;
-    end;
-{$ELSE}
 {$IFNDEF UNIX}
   Result:=Inherited WaitFor(aTimeOut);
 {$ELSE}
@@ -1161,7 +1033,6 @@ begin
       Result:=wrSignaled
     end;
 {$ENDIF}
-{$ENDIF}
 end;
 
 procedure TMutex.Acquire;
@@ -1181,11 +1052,7 @@ begin
 {$IFDEF UNIX}
   CheckOSError(pthread_mutex_unlock(@FMutex));
 {$ENDIF UNIX}
-{$IFDEF CPUWASM32}
-  LeaveCriticalSection(FMutex);
-{$ENDIF CPUWASM32}
 end;
-{$ENDIF NO_MUTEX_SUPPORT}
 
 { TLockGuard }
 

@@ -38,20 +38,6 @@ Uses System.Net.Sockets;
 Uses Sockets;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$IFDEF OS2}
-(* ETC directory location determined by environment variable ETC *)
- {$DEFINE ETC_BY_ENV}
-(* Use names supported also on non-LFN drives like plain FAT-16. *)
- {$DEFINE SFN_VERSION}
-{$ENDIF OS2}
-{$IFDEF GO32V2}
- {$DEFINE ETC_BY_ENV}
- {$DEFINE SFN_VERSION}
-{$ENDIF GO32V2}
-{$IFDEF WATCOM}
- {$DEFINE ETC_BY_ENV}
- {$DEFINE SFN_VERSION}
-{$ENDIF WATCOM}
 
 {$IFDEF UNIX}
 (* ETC directory location hardcoded to /etc/ *)
@@ -74,18 +60,8 @@ Const
   SServicesFile  = 'services';
   SHostsFile     = 'hosts';
   SNetworksFile  = 'networks';
-{$IFDEF SFN_VERSION}
-  SProtocolFile  = 'protocol';
-  SResolveFile   = 'resolv';
- {$IFDEF OS2}
-(* Peculiarity of OS/2 - depending on the used TCP/IP version, *)
-(* the file differs slightly in name and partly also content.  *)
-   SResolveFile2  = 'resolv2';
- {$ENDIF OS2}
-{$ELSE SFN_VERSION}
   SProtocolFile  = 'protocols';
   SResolveFile   = 'resolv.conf';
-{$ENDIF SFN_VERSION}
 
   MaxRecursion = 10;
   MaxIP4Mapped = 10;
@@ -2648,14 +2624,8 @@ begin
 {$IFDEF UNIX_ETC}
   EtcPath := '/etc/';
 {$ELSE UNIX_ETC}
- {$IFDEF ETC_BY_ENV}
-  EtcPath := GetEnvironmentVariable ('ETC');
-  if (EtcPath <> '') and (EtcPath [Length (EtcPath)] <> DirectorySeparator) then
-   EtcPath := EtcPath + DirectorySeparator;
- {$ELSE ETC_BY_ENV}
 {$WARNING Support for finding /etc/ directory not implemented for this platform!}
 
- {$ENDIF ETC_BY_ENV}
 {$ENDIF UNIX_ETC}
   If FileExists (EtcPath + SHostsFile) then
     HostsList := ProcessHosts (EtcPath + SHostsFile);
@@ -2667,10 +2637,6 @@ begin
   If FileExists(EtcPath + SResolveFile) then
     GetDNsservers(EtcPath + SResolveFile)
 {$endif android}
-{$IFDEF OS2}
-  else if FileExists(EtcPath + SResolveFile2) then
-    GetDNsservers(EtcPath + SResolveFile2)
-{$ENDIF OS2}
                                          ;
 
   FallbackToLocal; // if no nameservers found: fall back to 'localhost'

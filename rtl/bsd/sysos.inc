@@ -22,21 +22,9 @@ const clib = 'c';
 type libcint=longint;
      plibcint=^libcint;
 
-{$if defined(FreeBSD) or defined(DragonFly)} // tested on x86
-function geterrnolocation: Plibcint; cdecl;external clib name '__error';
-{$else}
-{$ifdef NetBSD} // from a sparc dump.
-function geterrnolocation: Plibcint; cdecl;external clib name '__errno';
-{$else}
 {$ifdef Darwin}
 function geterrnolocation: Plibcint; cdecl;external clib name '__error';
 {$else}
-{$ifdef OpenBSD}
-function geterrnolocation: Plibcint; cdecl;external clib name '__errno';
-{$else}
-{$endif}
-{$endif}
-{$endif}
 {$endif}
 
 function geterrno:libcint; [public, alias: 'FPC_SYS_GETERRNO'];

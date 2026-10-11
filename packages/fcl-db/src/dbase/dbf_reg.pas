@@ -35,16 +35,9 @@ implementation
 uses
   SysUtils,
   Classes,
-{$ifdef KYLIX}
-  QGraphics,
-  QControls,
-  QForms,
-  QDialogs,
-{$else}
   Controls,
   Forms,
   Dialogs,
-{$endif}
   dbf,
   dbf_dbffile,
   dbf_idxfile,

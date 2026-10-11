@@ -16,11 +16,6 @@
 unit Rtti;
 {$ENDIF}
 
-{$IFDEF CPUWASM}
-// Thunk class could also be used for other CPUS, but it is mandatory for wasm
-{$define use_thunk_class}
-{$define use_invoke_helper}
-{$ENDIF}
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}
@@ -754,9 +749,6 @@ type
     FString: String;
     function GetFlags: TFunctionCallFlags;
   protected
-{$IFDEF USE_INVOKE_HELPER}
-    function HandleInvokeHelper(aParentTypeInfo : PTypeInfo; aInstance : Pointer; const aArgs : array of TValue): TValue;
-{$ENDIF}
     function GetCallingConvention: TCallConv; virtual; abstract;
     function GetCodeAddress: CodePointer; virtual; abstract;
     function GetDispatchKind: TDispatchKind; virtual; abstract;
@@ -940,23 +932,11 @@ type
     fGUID: TGUID;
     fOnInvoke: TVirtualInterfaceInvokeEvent;
     fContext: TRttiContext;
-{$IFNDEF USE_THUNK_CLASS}
     fThunks: array[0..2] of CodePointer;
     fImpls: array of TMethodImplementation;
     fVmt: PCodePointer;
-{$ELSE}
-    IThunk : IInterface;
-    FIntfRTTI : trttitype;
-    FThunk : TInterfaceThunk;
-    Procedure ThunkClassCallback(aInstance: Pointer; aMethod,aCount : Longint; aData: TInterfaceThunk.PArgData);
-    procedure CreateThunk(aPIID: PTypeInfo; T : trttitype; td : PInterfaceData);
-    procedure DestroyThunk;
-{$ENDIF}
 
   protected
-{$IFDEF USE_THUNK_CLASS}
-    Procedure HandleThunkQueryInterface(iid : tguid;out Result : longint;out aIntf); virtual;
-{$ENDIF}
     function QueryInterface(constref aIID: TGuid; out aObj): LongInt;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF}; reintroduce; virtual;
     function _AddRef : longint;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF}; reintroduce; virtual;
     function _Release : longint;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF}; reintroduce; virtual;
@@ -1142,14 +1122,10 @@ Const
 
 function AlignToPtr(aPtr: Pointer): Pointer; inline;
 begin
-{$ifdef CPUM68K}
-  Result := AlignTypeData(aPtr);
-{$else}
 {$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
   Result := Align(aPtr, SizeOf(Pointer));
 {$else}
   Result := aPtr;
-{$endif}
 {$endif}
 end;
 
@@ -1539,7 +1515,6 @@ var
   GRttiPool : Array [Boolean] of TRttiPool;
   FuncCallMgr: TFunctionCallManagerArray;
 
-{$ifndef use_thunk_class}
 
 function AllocateMemory(aSize: PtrUInt): Pointer;
 begin
@@ -1667,63 +1642,6 @@ asm
   .quad RawThunkPlaceholderContext
 RawThunkEnd:
 end;
-{$elseif defined(cpum68k)}
-const
-  RawThunkPlaceholderProc = $87658765;
-  RawThunkPlaceholderContext = $43214321;
-
-type
-  TRawThunkProc = PtrUInt;
-  TRawThunkContext = PtrUInt;
-
-procedure RawThunk; assembler; nostackframe;
-asm
-  lea 4(sp), a0
-  move.l #RawThunkPlaceholderContext, (a0)
-  move.l #RawThunkPlaceholderProc, a0
-  jmp (a0)
-RawThunkEnd:
-end;
-{$elseif defined(cpuriscv64)}
-const
-  RawThunkPlaceholderProc = $8765876587658765;
-  RawThunkPlaceholderContext = $4321432143214321;
-
-type
-  TRawThunkProc = PtrUInt;
-  TRawThunkContext = PtrUInt;
-
-procedure RawThunk; assembler; nostackframe;
-asm
-  ld x5, .LProc
-  ld x10, .LContext
-  jalr x0, x5, 0
-.LProc:
-  .quad RawThunkPlaceholderProc
-.LContext:
-  .quad RawThunkPlaceholderContext
-RawThunkEnd:
-end;
-{$elseif defined(cpuriscv32)}
-const
-  RawThunkPlaceholderProc = $87658765;
-  RawThunkPlaceholderContext = $43214321;
-
-type
-  TRawThunkProc = PtrUInt;
-  TRawThunkContext = PtrUInt;
-
-procedure RawThunk; assembler; nostackframe;
-asm
-  lw x5, .LProc
-  lw x10, .LContext
-  jalr x0, x5, 0
-.LProc:
-  .long RawThunkPlaceholderProc
-.LContext:
-  .long RawThunkPlaceholderContext
-RawThunkEnd:
-end;
 {$elseif defined(cpuloongarch64)}
 const
   RawThunkPlaceholderProc = $8765876587658765;
@@ -1824,7 +1742,6 @@ begin
   FreeMemory(aThunk, PtrUInt(RawThunkEndPtr) - PtrUInt(@RawThunk));
 end;
 
-{$ENDIF use_thunk_class}
 
 function CCToStr(aCC: TCallConv): String; inline;
 begin
@@ -2329,25 +2246,6 @@ begin
   Result:=FAttributes;
 end;
 
-{$IFDEF USE_INVOKE_HELPER}
-function TRttiMethod.HandleInvokeHelper(aParentTypeInfo : PTypeInfo; aInstance : Pointer; const aArgs : array of TValue): TValue;
-
-var
-  lArgs : Array of Pointer;
-  I : integer;
-
-begin
-  SetLength(lArgs,Length(aArgs)+1);
-  if Assigned(ReturnType) then
-    TValue.Make(Nil,ReturnType.Handle,Result)
-  else
-    Result:=TValue.Empty;
-  lArgs[0]:=Result.GetReferenceToRawData;
-  For I:=0 to Length(aArgs)-1 do
-    lArgs[i+1]:=aArgs[i].GetReferenceToRawData;
-  CallInvokeHelper(aParentTypeInfo,aInstance,Name,@lArgs[0]);
-end;
-{$ENDIF}
 
 
 function TRttiInstanceMethod.Invoke(aInstance: TValue; const aArgs: array of TValue): TValue;
@@ -5598,32 +5496,12 @@ end;
 
 function TRttiIntfMethod.Invoke(aInstance: TValue; const aArgs: array of TValue): TValue;
 var
-  {$IFDEF USE_INVOKE_HELPER}
-  Intf : IInterface;
-  InstPtr : Pointer;
-  {$ELSE}
   addr: CodePointer;
   vmt: PCodePointer;
-  {$ENDIF}
 begin
   if IsStatic and not aInstance.IsEmpty then
     raise EInvocationError.CreateFmt(SErrInvokeStaticNoSelf, [Name]);
 
-{$IFDEF USE_INVOKE_HELPER}
-  // Until extended info is available.
-  Intf:=aInstance.AsInterface;
-  if not Supports(Intf,TRttiInterfaceType(Parent).GUID,InstPtr) then
-    raise EInvocationError.Create(SErrInvokeInsufficientRtti);
-  try
-    Result:=HandleInvokeHelper(Parent.handle,InstPtr,aArgs);
-  finally
-    { Supports into an untyped pointer add-referenced the invocation target
-      without a matching release: one leaked reference on the invoked object
-      per incoming dispatch.
-      InstPtr stays valid during the call through the Intf local reference. }
-    IInterface(InstPtr)._Release;
-  end;
-{$ELSE}
   if not IsStatic and aInstance.IsEmpty then
     raise EInvocationError.CreateFmt(SErrInvokeNotStaticNeedsSelf, [Name]);
 
@@ -5644,7 +5522,6 @@ begin
   end;
 
   Result := {$IFDEF FPC_DOTTEDUNITS}System.{$ENDIF}Rtti.Invoke(Name, addr, CallingConvention, IsStatic, aInstance, aArgs, GetParameters(True), TypeInfoFromRtti(ReturnType));
-{$endif}
 end;
 
 { TRttiInt64Type }
@@ -8444,151 +8321,6 @@ end;}
 
 {.$define DEBUG_VIRTINTF}
 
-{$IFDEF USE_THUNK_CLASS}
-constructor TVirtualInterface.Create(aPIID: PTypeInfo);
-
-var
-  TD : PInterfaceData;
-  t: TRttiType;
-
-begin
-  if not Assigned(aPIID) then
-    raise EArgumentNilException.Create(SErrVirtIntfTypeNil);
-  { ToDo: add support for raw interfaces once they support RTTI }
-  if aPIID^.Kind <> tkInterface then
-    raise EArgumentException.CreateFmt(SErrVirtIntfTypeMustBeIntf, [aPIID^.Name]);
-
-  fContext := TRttiContext.Create;
-  t := fContext.GetType(aPIID);
-  if not Assigned(t) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtIntfTypeNotFound, [aPIID^.Name]);
-  td := PInterfaceData(GetTypeData(aPIID));
-  CreateThunk(aPIID,t,td);
-end;
-
-Procedure TVirtualInterface.ThunkClassCallback(aInstance: Pointer; aMethod,aCount : Longint; aData : TInterfaceThunk.PArgData);
-
-var
-  len,lCount,I : integer;
-  methods: specialize TArray<TRttiMethod>;
-  M : TRttiMethod;
-  ParamInfos : TRttiParameterArray;
-  ParamInfo : TRttiParameter;
-  ParamValues : Array of TValue;
-  ReturnVal : TValue;
-  TheIntf : Pointer;
-
-begin
-  I:=0;
-  M:=Nil;
-  Methods:=FIntfRTTI.GetMethods;
-  len:=Length(Methods);
-  // Find our method.
-  // Quick check
-  I:=aMethod-FThunk.InterfaceVmtOffset;
-  if (I<Len) and (Methods[I].VirtualIndex=aMethod) then
-    M:=Methods[I]
-  else
-    // Long check
-    begin
-    I:=0;
-    While (M=Nil) and (I<Len) do
-      begin
-      if methods[i].VirtualIndex=aMethod then
-        M:=methods[i];
-      Inc(I);
-      end;
-    end;
-  if (M=Nil) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkMethodNotFound, [FIntfRTTI.Name,aMethod]);
-  // Check parameter length
-  ParamInfos:=M.GetParameters(True);
-  lCount:=0;
-  for I:=0 to Length(ParamInfos)-1 do
-    if not (pfHidden in ParamInfos[i].Flags) then
-      inc(lCount);
-  if lCount<>acount then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkParameterMismatch, [FIntfRTTI.Name,M.Name,lCount,aCount]);
-  // Prepare call args
-  SetLength(ParamValues,aCount+1);
-  // Convert interface to TValue
-  if not Supports(TInterfaceThunk(aInstance),(FIntfRTTI as TRttiInterfaceType).GUID,TheIntf) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkNotCorrectInterface, [FIntfRTTI.Name]);
-  TValue.Make(@TheIntf,FIntfRTTI.Handle,ParamValues[0]);
-  { Supports into an untyped pointer add-referenced the thunk without a
-    matching release, and TValue.Make above took its own properly-managed reference.
-    Balance the Supports reference here. }
-  IInterface(TheIntf)._Release;
-  // Convert parameters to TValue
-  For I:=1 to aCount do
-    begin
-    ParamInfo:=ParamInfos[aData[i].idx];
-    if pfArray in ParamInfo.Flags then
-      TValue.MakeOpenArray(aData[i].Addr,aData[i].aHigh,PTypeInfo(aData[i].info),ParamValues[I])
-    else
-      if Assigned(aData[i].info) then
-        TValue.Make(aData[i].addr, aData[i].Info,ParamValues[i])
-      else
-        TValue.Make(@aData[i].addr, TypeInfo(Pointer), ParamValues[i]);
-    end;
-
-  // Callback...
-  ReturnVal:=Default(TValue);
-
-  HandleUserCallback(M,ParamValues,ReturnVal);
-
-  { copy back var/out parameters }
-  for i:=1 to aCount do
-    begin
-    ParamInfo:=ParamInfos[aData[i].idx];
-    if (ParamInfo.Flags * [pfVar, pfOut] <> []) then
-       ParamValues[I].ExtractRawData(aData[i].addr);
-    end;
-  // Copy back result
-  if Assigned(aData[0].addr) then
-    ReturnVal.ExtractRawData(aData[0].addr);
-end;
-
-Procedure TVirtualInterface.HandleThunkQueryInterface(iid : tguid;out Result : longint;out aIntf);
-begin
-  Result:=S_FALSE;
-end;
-
-procedure TVirtualInterface.CreateThunk(aPIID: PTypeInfo;T : trttitype; td : PInterfaceData);
-
-Type
-  TInterfaceThunkClass = class of TInterfaceThunk;
-
-var
-  TTI : PTypeInfo;
-  TTD : PClassData;
-  TC : TInterfaceThunkClass;
-
-begin
-  FIntfRTTI:=T;
-  If not assigned(td^.ThunkClass) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkClassTypeNotFound, [T.Name]);
-  TTI:=td^.ThunkClass^;
-  If not assigned(TTI)  then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkClassTypeNotFound, [T.Name]);
-  TTD:=PClassData(GetTypeData(TTI));
-  If not (assigned(TTD) and assigned(TTD^.ClassType)) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkClassTypeNotFound, [T.Name]);
-  TC:=TInterfaceThunkClass(TTD^.ClassType);
-  FThunk:=TC.create(@ThunkClassCallback);
-  FThunk.OnQueryInterface:=@HandleThunkQueryInterface;
-  IThunk:=FThunk as IInterface;
-  if not Supports(IThunk,td^.GUID) then
-    raise EInsufficientRtti.CreateFmt(SErrVirtThunkClassTypeNotFound, [T.Name]);
-end;
-
-procedure TVirtualInterface.DestroyThunk;
-
-begin
-  iThunk:=nil;
-end;
-
-{$ELSE}
 constructor TVirtualInterface.Create(aPIID: PTypeInfo);
 const
   BytesToPopQueryInterface =
@@ -8688,7 +8420,6 @@ begin
     {$IFDEF DEBUG_VIRTINTF}Writeln('VMT ', i + Length(fThunks), ': ', HexStr(fVmt[i + Length(fThunks)]));{$ENDIF}
   end;
 end;
-{$ENDIF}
 
 constructor TVirtualInterface.Create(aPIID: PTypeInfo; aInvokeEvent: TVirtualInterfaceInvokeEvent);
 begin
@@ -8701,9 +8432,6 @@ var
   impl: TMethodImplementation;
   thunk: CodePointer;
 begin
-{$IFDEF USE_THUNK_CLASS}
-  DestroyThunk;
-{$ELSE}
   {$IFDEF DEBUG_VIRTINTF}Writeln('Freeing implementations');{$ENDIF}
   for impl in fImpls do
     impl.Free;
@@ -8714,15 +8442,11 @@ begin
   if Assigned(fVmt) then
     FreeMem(fVmt);
   {$IFDEF DEBUG_VIRTINTF}Writeln('Done');{$ENDIF}
-{$ENDIF}
   inherited Destroy;
 end;
 
 function TVirtualInterface.QueryInterface(constref aIID: TGuid; out aObj): LongInt;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
-{$IFDEF USE_THUNK_CLASS}
-   Result:=ITHUNK.QueryInterface(aIID,aObj);
-{$ELSE}
   {$IFDEF DEBUG_VIRTINTF}Writeln('QueryInterface for ', GUIDToString(aIID));{$ENDIF}
   if IsEqualGUID(aIID, fGUID) then begin
     {$IFDEF DEBUG_VIRTINTF}Writeln('Returning ', HexStr(@fVmt));{$ENDIF}
@@ -8732,7 +8456,6 @@ begin
     Result := S_OK;
   end else
     Result := inherited QueryInterface(aIID, aObj);
-{$ENDIF}
 end;
 
 function TVirtualInterface._AddRef : longint;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
@@ -9143,7 +8866,7 @@ end;
 
 
 {$ifndef InLazIDE}
-{$if (defined(CPUX86_64) and defined(WIN64)) or defined(CPUWASM32)}
+{$if (defined(CPUX86_64)) and (defined(WIN64))}
 {$I invoke.inc}
 {$endif}
 {$endif}

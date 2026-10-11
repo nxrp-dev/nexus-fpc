@@ -50,19 +50,12 @@ begin
  Fpclose:=do_syscall(syscall_nr_close,fd);
 end;
 
-{$ifdef netbsd}
-{$endif}
 
 {$ifdef netbsdmacppc}
 {$i sysofft.inc}                        // odd ball calling convention.
 {$else}
   // generic versions.
 function Fplseek(fd : cint; offset : off_t; whence : cint): off_t; [public, alias : 'FPC_SYSC_LSEEK'];
-{$ifdef cpum68k}
-begin
-  Fplseek:=do_syscall64(syscall_nr_lseek,TSysParam(fd),0,hi(offset),lo(offset),whence);
-end;
-{$else}
 {
 this one is special for the return value being 64-bit..
 hi/lo offset not yet tested.
@@ -73,42 +66,22 @@ FreeBSD: same implementation as NetBSD.
 
 begin
   {$ifdef CPU64}
-    {$ifdef freebsd}
-    // newer style, no align zeroes in _syscall
-    Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,TSysParam(fd),Offset,whence);
-    {$else}
     Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,TSysParam(fd),0,Offset,whence);
-    {$endif}
   {$else}
-    {$ifdef freebsd}
-    Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,0,TSysParam(fd),
-    {$else}
     Fplseek:=do_syscall(syscall_nr___syscall,syscall_nr_lseek,0,TSysParam(fd),0,
-    {$endif}
        {$ifdef ENDIAN_BIG}hi(offset),lo(offset){$endif}
        {$ifdef ENDIAN_LITTLE}lo(Offset),hi(offset){$endif},
        Whence);
   {$endif}
 end;
-{$endif}
 
 function Fpftruncate(fd : cint; flength : off_t): cint; [public, alias : 'FPC_SYSC_FTRUNCATE'];
 
 begin
  {$ifdef CPU64}
-   {$ifdef freebsd}
-   // newer style, no align zeroes in _syscall
-   Fpftruncate:=Do_syscall(syscall_nr___syscall,syscall_nr_ftruncate, fd  ,flength);
-   {$else}
    Fpftruncate:=Do_syscall(syscall_nr___syscall,syscall_nr_ftruncate, fd  ,0   ,flength);
-   {$endif}
  {$else}
-   {$ifdef freebsd}
-   // newer style, no align zeroes in _syscall
-   Fpftruncate:=Do_syscall(syscall_nr___syscall,syscall_nr_ftruncate,0,fd,lo(flength),hi(flength));
-   {$else}
    Fpftruncate:=Do_syscall(syscall_nr___syscall,syscall_nr_ftruncate,0,fd,0,lo(flength),hi(flength));
-   {$endif}
  {$endif}
 end;
 
@@ -117,17 +90,9 @@ Function Fpmmap(start:pointer;len:size_t;prot:cint;flags:cint;fd:cint;offst:off_
 
 begin
  {$ifdef CPU64}
- {$ifdef freebsd}
-  Fpmmap:=pointer(ptruint(do_syscall(TSysParam(syscall_nr_mmap),TSysParam(Start),TSysParam(Len),TSysParam(Prot),TSysParam(Flags),TSysParam(fd),TSysParam(offst))));
- {$else}
   Fpmmap:=pointer(ptruint(do_syscall(TSysParam(syscall_nr_mmap),TSysParam(Start),TSysParam(Len),TSysParam(Prot),TSysParam(Flags),TSysParam(fd),0,TSysParam(offst))));
- {$endif}
 {$else}
- {$ifdef freebsd}
-  Fpmmap:=pointer(ptruint(do_syscall(syscall_nr_mmap,TSysParam(Start),Len,Prot,Flags,fd,
- {$else}
   Fpmmap:=pointer(ptruint(do_syscall(syscall_nr_mmap,TSysParam(Start),Len,Prot,Flags,fd,0,
- {$endif}
          {$ifdef FPC_BIG_ENDIAN}    hi(offst),lo(offst){$endif}
          {$ifdef FPC_LITTLE_ENDIAN} lo(offst),hi(offst){$endif}
          )));
@@ -161,24 +126,13 @@ begin
   Fprename:=do_syscall(syscall_nr_rename,TSysParam(old),TSysParam(newpath));
 end;
 
-{$ifdef freebsd}
-Function fpFstatat(fd: cint; path: PAnsiChar; var sb: stat; flag: cint):cint;
-
-begin
-  fpFStatat:=do_syscall(syscall_nr_fstatat,fd,TSysParam(path),TSysParam(@sb),flag);
-end;
-{$endif}
 
 function Fpstat(const path: PAnsiChar; var buf : stat):cint; [public, alias : 'FPC_SYSC_STAT'];
 
 const
  AT_FDCWD=-100;
 begin
-{$ifdef freebsd}
-  Fpstat:=FpFstatat(AT_FDCWD, path, buf, 0);
-{$else}
   Fpstat:=do_syscall(syscall_nr_stat,TSysParam(path),TSysParam(@buf));
-{$endif}
 end;
 
 {*****************************************************************************
@@ -207,13 +161,6 @@ end;
 
 const DIRBLKSIZ=1024;
 
-{$ifdef freebsd}
-function FpGetdirentries(fd : cint; buf : PAnsiChar; nbytes : clong) : cint;
-
-begin
-  FpGetdirentries:=do_syscall(syscall_nr_getdirentries,fd,TSysParam(buf),nbytes,TSysParam(0));
-end;
-{$endif}
 
 function Fpfstat(fd : cint; var sb : stat): cint; forward;
 
@@ -290,11 +237,7 @@ function readbuffer:longint;
 
 var retval :longint;
 begin
-{$ifdef freebsd}
-  Retval:=FpGetdirentries(dirp^.dd_fd, @dirp^.dd_buf^, DIRBLKSIZ {sizeof(getdentsbuffer)});
-{$else}
   Retval:=do_syscall(syscall_nr_getdents,TSysParam(dirp^.dd_fd),TSysParam(@dirp^.dd_buf^),DIRBLKSIZ {sizeof(getdentsbuffer)});
-{$endif}
    dirp^.dd_rewind:=TSysParam(dirp^.dd_buf);
    if retval=0 then
     begin
@@ -327,11 +270,7 @@ begin
  repeat
   novalid:=false;
   CurEntry:=pdirent(dirp^.dd_rewind);
-{$ifdef dragonfly}
-  RecLen:=(CurEntry^.d_namlen + 24) and $FFFFFFF8;
-{$else}
   RecLen:=CurEntry^.d_reclen;
-{$endif}
   if RecLen<>0 Then
    begin {valid direntry?}
     if CurEntry^.d_fileno<>0 then
@@ -564,28 +503,8 @@ function FPSigProcMask(how:cint;nset : psigset;oset : psigset):cint; [public, al
   if OldSSet is non-null, the old set will be saved there.
 }
 
-{$ifdef OpenBSD}
-  { OpenBSD sigprocmask signal uses
-    sigset_t that are cint type
-    the value of nset^[0] must be passed as second parameter
-    the old mask value is in return value }
-  { How do we know if the call failed... PM }
-{$define OS_SIGPROCMASK_RETURNS_OVAL}
-{$endif}
-{$ifdef OS_SIGPROCMASK_RETURNS_OVAL}
-  var
-    res : cint;
-{$endif OS_SIGPROCMASK_RETURNS_OVAL}
 begin
-{$ifdef OS_SIGPROCMASK_RETURNS_OVAL}
-  res:=do_syscall(syscall_nr_sigprocmask,tsysparam(how),TSysParam(nset^[0]));
-  if assigned(oset) then
-    oset^[0]:=res;
-  FPsigprocmask:=0;
-
-{$else OS_SIGPROCMASK_RETURNS_OVAL}
   FPsigprocmask:=do_syscall(syscall_nr_sigprocmask,tsysparam(how),TSysParam(nset),TSysParam(oset));
-{$endif OS_SIGPROCMASK_RETURNS_OVAL}
 end;
 {$warning user BLA!}
 Function FpNanoSleep(req : ptimespec;rem : ptimespec) : cint; [public, alias : 'FPC_SYSC_NANOSLEEP'];
@@ -642,13 +561,7 @@ begin
                End;
            End
       end
-{$if defined(openbsd) or defined (netbsd)}
-   { At least for openbsd, a positive return value is
-     the length of the returned PAnsiChar }
-   else if (ret<0) then
-{$else not opensd}
    else
-{$endif openbsd}
      begin
        seterrno(-ret);
        pt:=nil;

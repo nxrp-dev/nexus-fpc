@@ -240,7 +240,6 @@ stdcall;external KernelDLL name 'GetLastError';
    function GetTickCount : DWORD;
      stdcall;external KernelDLL name 'GetTickCount';
 
-{$ifndef WINCE}
    { process functions }
    procedure ExitProcess(uExitCode : UINT);
      stdcall;external KernelDLL name 'ExitProcess';
@@ -289,16 +288,6 @@ var
   begin
     SetThreadStackGuarantee(@guarantee);
   end;
-{$else WINCE}
-
-   { module functions }
-   function GetModuleFileName(l1:THandle;p:PWideChar;l2:longint):longint;
-     cdecl;external KernelDLL name 'GetModuleFileNameW';
-
-   function GetModuleHandle(p : PWideChar) : THandle;
-     cdecl;external KernelDLL name 'GetModuleHandleW';
-
-{$endif WINCE}
   { memory functions }
 const
   HEAP_ZERO_MEMORY = $8;
@@ -341,16 +330,11 @@ const
 
    function WinLoadLibraryW(lpLibFileName:pwidechar):THandle; stdcall; external KernelDLL name 'LoadLibraryW';
    function WinGetModuleHandleW(lpModuleName:pwidechar):THandle; stdcall; external KernelDLL name 'GetModuleHandleW';
-   {$ifdef wince}
-   function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; stdcall; external KernelDLL name 'GetProcAddressA';
-   {$else}
    function WinGetProcAddress(hModule:THandle; lpProcName:PAnsiChar):pointer; stdcall; external KernelDLL name 'GetProcAddress';
-   {$endif}
    function WinFreeLibrary(hLibModule:THandle):ByteBool; stdcall;external KernelDLL name 'FreeLibrary';
 
    function FormatMessageW(dwFlags:DWORD; lpSource:LPCVOID; dwMessageId:DWORD; dwLanguageId:DWORD; lpBuffer:LPWSTR;nSize:DWORD; Arguments:va_list):DWORD;stdcall; external KernelDLL name 'FormatMessageW';
 
-{$ifndef WINCE}
    function GetFileType(Handle:thandle):DWord;
      stdcall;external KernelDLL name 'GetFileType';
 
@@ -427,7 +411,6 @@ var
      CodePointer(SysReAllocStringLen) := WinGetProcAddress(EnsureOleAut32Dll, 'SysReAllocStringLen');
      Result := SysReAllocStringLen(bstr,psz,len);
    end;
-{$endif WINCE}
 
    Procedure Errno2InOutRes(oserror: longword);
    var
@@ -493,7 +476,6 @@ var
     end;
 
 
-{$ifndef WINCE}
 {$define FPC_HAS_TRANSLATEPLACEHOLDERCP}
 function TranslatePlaceholderCP(cp: TSystemCodePage): TSystemCodePage; {$ifdef SYSTEMINLINE}inline;{$endif}
 begin
@@ -505,7 +487,6 @@ begin
       TranslatePlaceholderCP:=DefaultSystemCodePage;
   end;
 end;
-{$endif not WINCE}
 
 {$define HAS_GETCPUCOUNT}
 function GetCPUCount: LongWord;

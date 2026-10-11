@@ -45,11 +45,7 @@
 }
 
 {$MODE objfpc}
-{$IFDEF CPUWASM32}
-{$inline off}
-{$ELSE}
 {$inline on}
-{$ENDIF}
 {$GOTO on}
 {$IFNDEF FPC_DOTTEDUNITS}
 unit Math;

@@ -30,15 +30,7 @@ unit fpMkUnit;
 Interface
 
 
-{$IFDEF GO32V2}
- {$DEFINE NO_UNIT_PROCESS}
- {$DEFINE NO_THREADING}
-{$ENDIF GO32V2}
 
-{$IFDEF NETBSD}
- { NetBSD pthreads are not yet working, try to use fpmake without threads }
-  {$DEFINE NO_THREADING}
-{$ENDIF NETBSD}
 
 { $define NO_UNIT_PROCESS}
 { $define NO_UNIT_ZIPPER}

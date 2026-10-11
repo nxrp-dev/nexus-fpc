@@ -22,6 +22,10 @@ A tool that attempts to serve every possible use case can become too broad to ma
 
 The following are currently supported.
 
+32-bit x86 (i386) Windows and Linux are supported targets. NexusFPC does not
+have a blanket 64-bit-only policy. Apple and Android targets retain the CPU
+restrictions listed below.
+
 | Platform | CPUs to retain |
 |---|---|
 | Windows desktop | x86 (i386), x86-64, ARM64 |

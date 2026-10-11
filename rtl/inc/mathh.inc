@@ -34,27 +34,9 @@
     function GetSSECSR : dword; deprecated 'Renamed to GetMXCSR';
 {$endif}
 
-{$if defined(cpum68k)}
-    {$define FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD}
-{$if defined(fpu68881) or defined(fpucoldfire)}
-    const
-    {$ifdef FPC_68K_SYSTEM_HAS_FPU_EXCEPTIONS}
-       Default68KFPCR: DWord = $3400; { Enable OVFL, OPERR and DZ, round to nearest, default precision }
-    {$else}
-       Default68KFPCR: DWord = 0;
-    {$endif}
 
-    procedure SetFPCR(x: DWord);
-    procedure SetFPSR(x: DWord);
-    function GetFPCR: DWord;
-    function GetFPSR: DWord;
-{$else}
-    {$define FPC_SYSTEM_FPUCW_IMMUTABLE}
-{$endif}
-{$endif}
-
-    function GetNativeFPUControlWord: TNativeFPUControlWord; {$if (defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPUNONE)) and defined(SYSTEMINLINE)}inline;{$endif}
-    procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord); {$if (defined(FPC_SYSTEM_FPUCW_IMMUTABLE) or defined(FPUNONE)) and defined(SYSTEMINLINE)}inline;{$endif}
+    function GetNativeFPUControlWord: TNativeFPUControlWord; {$if (defined(FPUNONE)) and (defined(SYSTEMINLINE))}inline;{$endif}
+    procedure SetNativeFPUControlWord(const cw: TNativeFPUControlWord); {$if (defined(FPUNONE)) and (defined(SYSTEMINLINE))}inline;{$endif}
 
   type
     TFPURoundingMode = (rmNearest, rmDown, rmUp, rmTruncate);

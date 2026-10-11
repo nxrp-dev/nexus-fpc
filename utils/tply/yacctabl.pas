@@ -53,17 +53,6 @@ const
 (* Maximum table sizes: *)
 
 max_keys           =  997;  (* size of hash symbol table (prime number!)   *)
-{$IFDEF MsDos}
-max_nts            =  300;  (* maximum number of nonterminals              *)
-max_lits           =  556;  (* number of literals (300+256)                *)
-max_rules          =  301;  (* number of rules (300+1)                     *)
-max_types          =  100;  (* number of type tags                         *)
-max_prec           =   50;  (* maximum precedence level                    *)
-max_states         =  600;  (* number of LR(0) states                      *)
-max_items          = 2400;  (* number of items                             *)
-max_trans          = 2400;  (* number of transitions                       *)
-max_redns          = 1200;  (* number of reductions                        *)
-{$ELSE}
 max_nts            =  900;  (* maximum number of nonterminals              *)
 max_lits           =  max_nts+256;  (* number of literals (300+256)                *)
 max_rules          =  max_nts+1;  (* number of rules (300+1)                     *)
@@ -77,15 +66,9 @@ max_states         = 3000;  (* number of LR(0) states                      *)
 max_items          = 40000;  (* number of items                             *)
 max_trans          = 40000;  (* number of transitions                       *)
 max_redns          =  9600;  (* number of reductions                        *)
-{$ENDIF}
 
-{$IFDEF MsDos}
-max_rule_len       =   64;  (* maximum length of rules                     *)
-max_set_items      =   64;  (* maximum number of items in an item set      *)
-{$ELSE}
 max_rule_len       =   64;  (* maximum length of rules                     *)
 max_set_items      = 9600;  (* maximum number of items in an item set      *)
-{$ENDIF}
 
 var
 

@@ -58,7 +58,7 @@ Type
 
   // only win32/64 and wince uses this. wince doesn't have the constants in the headers for the latter two.
   // unix defines them (as nice levels?), but doesn't use them.
-  TProcessPriority = (ppHigh,ppIdle,ppNormal,ppRealTime{$ifndef wince},ppBelowNormal,ppAboveNormal{$endif});
+  TProcessPriority = (ppHigh,ppIdle,ppNormal,ppRealTime,ppBelowNormal,ppAboveNormal);
   TProcessPriorityhelper = type helper for TProcessPriority
     function ToString : String;
   end;

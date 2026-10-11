@@ -29,7 +29,6 @@ function align(addr : PtrUInt;alignment : PtrUInt) : PtrUInt;{$ifdef SYSTEMINLIN
   end;
 
 
-{$ifndef cpujvm}
 function align(addr : Pointer;alignment : PtrUInt) : Pointer;{$ifdef SYSTEMINLINE}inline;{$endif}
   var
     tmp,am1 : PtrUInt;
@@ -41,7 +40,6 @@ function align(addr : Pointer;alignment : PtrUInt) : Pointer;{$ifdef SYSTEMINLIN
     else
       result:=pointer(ptruint(tmp-(tmp mod alignment)));
   end;
-{$endif}
 
 {****************************************************************************
                                Primitives
@@ -666,7 +664,7 @@ end;
 {$endif not FPC_SYSTEM_HAS_COMPARECHAR0}
 
 
-{$if not defined(FPC_SYSTEM_HAS_MEMPOS_PBYTE) and not defined(CPUJVM)}
+{$if not (defined(FPC_SYSTEM_HAS_MEMPOS_PBYTE))}
 function MemPos(needle:PByte;nNeedle:SizeUint;haystack:PByte;nHaystack:SizeUint):SizeInt;
 var
   p,d,pmaxplus1,iNeedle : SizeUint;
@@ -991,7 +989,6 @@ end;
 
 {$endif ndef FPC_SYSTEM_HAS_FPC_PCHAR_TO_SHORTSTR}
 
-{$ifndef cpujvm}
 
 { also define alias which can be used inside the system unit }
 procedure fpc_pchar_to_shortstr(out res : shortstring;p:PAnsiChar);[external name 'FPC_PCHAR_TO_SHORTSTR'];
@@ -1002,7 +999,6 @@ function strpas(p:PAnsiChar):shortstring;{$ifdef SYSTEMINLINE}inline;{$endif}
     fpc_pchar_to_shortstr(result,p);
   end;
 
-{$endif not cpujvm}
 
 
 { Combining codepoints are those belonging to one of the three "Mark" general categories.
@@ -2400,7 +2396,7 @@ end;
 procedure SysResetFpu;{$ifdef SYSTEMINLINE}inline;{$endif}
 begin
   softfloat_exception_flags:=[];
-{$if not defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD) and not defined(FPUNONE) and not defined(FPC_SYSTEM_FPUCW_IMMUTABLE)}
+{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
   SetNativeFPUControlWord(DefaultFPUControlWord);
 {$endif}
 end;
@@ -2426,7 +2422,7 @@ procedure fpc_cpuinit;
     if not IsLibrary then
 {$endif}
       SysInitFPU;
-{$if not defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD) and not defined(FPUNONE) and not defined(FPC_SYSTEM_FPUCW_IMMUTABLE)}
+{$if (not (defined(FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD))) and (not (defined(FPUNONE)))}
     DefaultFPUControlWord:=GetNativeFPUControlWord;
 {$endif}
     SysResetFPU;
@@ -2444,12 +2440,10 @@ function SwapEndian(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inlin
     Result := SmallInt(((Word(AValue) shr 8) or (Word(AValue) shl 8)) and $ffff);
   end;
 
-{$ifndef cpujvm}
 function SwapEndian(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     Result := ((AValue shr 8) or (AValue shl 8)) and $ffff;
   end;
-{$endif}
 
 function SwapEndian(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
@@ -2457,13 +2451,11 @@ function SwapEndian(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;
     Result := (Result shl 16) or (Result shr 16);
   end;
 
-{$ifndef cpujvm}
 function SwapEndian(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     Result := ((AValue shl 8) and $FF00FF00) or ((AValue shr 8) and $00FF00FF);
     Result := (Result shl 16) or (Result shr 16);
   end;
-{$endif}
 
 function SwapEndian(const AValue: Int64): Int64;
   begin
@@ -2474,7 +2466,6 @@ function SwapEndian(const AValue: Int64): Int64;
     Result := (Result shl 32) or ((Result shr 32));
   end;
 
-{$ifndef cpujvm}
 function SwapEndian(const AValue: QWord): QWord;
   begin
     Result := ((AValue shl 8) and $FF00FF00FF00FF00) or
@@ -2483,7 +2474,6 @@ function SwapEndian(const AValue: QWord): QWord;
             ((Result shr 16) and $0000FFFF0000FFFF);
     Result := (Result shl 32) or ((Result shr 32));
   end;
-{$endif}
 {$endif FPC_SYSTEM_HAS_SWAPENDIAN}
 
 function BEtoN(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2496,7 +2486,6 @@ function BEtoN(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$e
   end;
 
 
-{$ifndef cpujvm}
 function BEtoN(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2505,7 +2494,6 @@ function BEtoN(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function BEtoN(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2518,7 +2506,6 @@ function BEtoN(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$end
   end;
 
 
-{$ifndef cpujvm}
 function BEtoN(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2527,7 +2514,6 @@ function BEtoN(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function BEtoN(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2540,7 +2526,6 @@ function BEtoN(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
   end;
 
 
-{$ifndef cpujvm}
 function BEtoN(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2549,7 +2534,6 @@ function BEtoN(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 
@@ -2563,7 +2547,6 @@ function LEtoN(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$e
   end;
 
 
-{$ifndef cpujvm}
 function LEtoN(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2572,7 +2555,6 @@ function LEtoN(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function LEtoN(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2585,7 +2567,6 @@ function LEtoN(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$end
   end;
 
 
-{$ifndef cpujvm}
 function LEtoN(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2594,7 +2575,6 @@ function LEtoN(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function LEtoN(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2607,7 +2587,6 @@ function LEtoN(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
   end;
 
 
-{$ifndef cpujvm}
 function LEtoN(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2616,7 +2595,6 @@ function LEtoN(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 
@@ -2630,7 +2608,6 @@ function NtoBE(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$e
   end;
 
 
-{$ifndef cpujvm}
 function NtoBE(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2639,7 +2616,6 @@ function NtoBE(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function NtoBE(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2652,7 +2628,6 @@ function NtoBE(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$end
   end;
 
 
-{$ifndef cpujvm}
 function NtoBE(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2661,7 +2636,6 @@ function NtoBE(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function NtoBE(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2674,7 +2648,6 @@ function NtoBE(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
   end;
 
 
-{$ifndef cpujvm}
 function NtoBE(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_BIG}
@@ -2683,7 +2656,6 @@ function NtoBE(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function NtoLE(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2696,7 +2668,6 @@ function NtoLE(const AValue: SmallInt): SmallInt;{$ifdef SYSTEMINLINE}inline;{$e
   end;
 
 
-{$ifndef cpujvm}
 function NtoLE(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2705,7 +2676,6 @@ function NtoLE(const AValue: Word): Word;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function NtoLE(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2718,7 +2688,6 @@ function NtoLE(const AValue: LongInt): LongInt;{$ifdef SYSTEMINLINE}inline;{$end
   end;
 
 
-{$ifndef cpujvm}
 function NtoLE(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2727,7 +2696,6 @@ function NtoLE(const AValue: DWord): DWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 
 function NtoLE(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
@@ -2740,7 +2708,6 @@ function NtoLE(const AValue: Int64): Int64;{$ifdef SYSTEMINLINE}inline;{$endif}
   end;
 
 
-{$ifndef cpujvm}
 function NtoLE(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
   begin
     {$IFDEF ENDIAN_LITTLE}
@@ -2749,7 +2716,6 @@ function NtoLE(const AValue: QWord): QWord;{$ifdef SYSTEMINLINE}inline;{$endif}
       Result := SwapEndian(AValue);
     {$ENDIF}
   end;
-{$endif not cpujvm}
 
 {$ifndef FPC_SYSTEM_HAS_MEM_BARRIER}
 
@@ -3128,7 +3094,7 @@ function fpc_PopCnt_qword(AValue : QWord): QWord;[Public,Alias:'FPC_POPCNT_QWORD
   end;
 {$endif}
 
-{$if not defined(VER3_2) and not defined(CPUJVM)}
+{$if not (defined(VER3_2))}
 {$push}
 {$R-,Q-}
 

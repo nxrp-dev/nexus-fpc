@@ -29,7 +29,7 @@ Uses
 // If you deprecated new symbols, please annotate the version.
 // this makes it easier to decide if they can already be removed.
 
-{$if (defined(BSD) or defined(SUNOS)) and defined(FPC_USE_LIBC)}
+{$if (defined(BSD)) and (defined(FPC_USE_LIBC))}
 {$define USE_VFORK}
 {$endif}
 
@@ -674,17 +674,13 @@ end;
 
 Function fpFlock (var T : text;mode : cint) : cint;
 begin
-{$ifndef beos}
   fpFlock:=fpFlock(TextRec(T).Handle,mode);
-{$endif}
 end;
 
 
 Function  fpFlock (var F : File;mode : cint) :cint;
 begin
-{$ifndef beos}
   fpFlock:=fpFlock(FileRec(F).Handle,mode);
-{$endif}
 end;
 
 Function SelectText(var T:Text;TimeOut :PTimeval):cint;
@@ -731,13 +727,11 @@ begin
      fpseterrno(ESysEBADF);
      exit;
    end;
- {$if not(defined(bsd)) and not(defined(solaris)) and not(defined(beos)) and not(defined(aix)) }
+ {$if not (defined(bsd))}
   p^.dd_nextoff:=fplseek(p^.dd_fd,loc,seek_set);
  {$endif}
- {$if not(defined(beos))}
   p^.dd_size:=0;
   p^.dd_loc:=0;
- {$endif}
 end;
 
 function TellDir(p:pdir):TOff;
@@ -748,9 +742,7 @@ begin
      telldir:=-1;
      exit;
    end;
- {$ifndef beos}
   telldir:=fplseek(p^.dd_fd,0,seek_cur)
- {$endif}
   { We could try to use the nextoff field here, but on my 1.2.13
     kernel, this gives nothing... This may have to do with
     the readdir implementation of libc... I also didn't find any trace of
@@ -1324,15 +1316,6 @@ begin
 end;
 {$endif}
 
-{$ifdef sunos}
-{ sunos doesn't support GetDomainName, see also
-  http://www.sun.com/software/solaris/programs/abi/appcert_faq.xml#q18
-}
-Function GetDomainName:String;
-  begin
-    GetDomainName:='';
-  end;
-{$endif sunos}
 
 {$ifdef android}
 { android doesn't seem to implement GetDomainName
@@ -1343,7 +1326,7 @@ Function GetDomainName:String;
   end;
 {$endif}
 
-{$if defined(BSD) or defined(aix)}
+{$if defined(BSD)}
 
 function intGetDomainName(Name:PAnsiChar; NameLen:Cint):cint;
 {$ifndef FPC_USE_LIBC}

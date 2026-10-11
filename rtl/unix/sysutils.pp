@@ -25,7 +25,7 @@ interface
 {$modeswitch typehelpers}
 {$modeswitch advancedrecords}
 
-{$if (defined(BSD) or defined(SUNOS)) and defined(FPC_USE_LIBC)}
+{$if (defined(BSD)) and (defined(FPC_USE_LIBC))}
 {$define USE_VFORK}
 {$endif}
 {$DEFINE HAS_FILEGETDATETIMEINFO}
@@ -52,12 +52,12 @@ interface
 {$IFDEF FPC_DOTTEDUNITS}
 uses
 {$IFDEF LINUX}LinuxApi,{$ENDIF}
-{$IFDEF FreeBSD}freebsd,{$ENDIF}
+
   UnixApi.Base, UnixApi.Unix,UnixApi.Errors,System.SysConst,UnixApi.Types;
 {$ELSE FPC_DOTTEDUNITS}
 uses
 {$IFDEF LINUX}linux,{$ENDIF}
-{$IFDEF FreeBSD}freebsd,{$ENDIF}
+
   baseunix, Unix,errors,sysconst,Unixtype;
 {$ENDIF FPC_DOTTEDUNITS}
 
@@ -65,7 +65,7 @@ uses
 const
   INVALID_HANDLE_VALUE = -1;
 
-{$IF defined(LINUX) or defined(FreeBSD)}
+{$if defined(LINUX)}
 {$DEFINE HAVECLOCKGETTIME}
 {$ENDIF}
 
@@ -168,15 +168,7 @@ function InternalInquireSignal(RtlSigNum: Integer; out act: SigActionRec; fromin
             if not frominit then
               begin
                 { check whether the installed signal handler is still ours }
-{$if not defined(aix) and (not defined(linux) or not defined(cpupowerpc64) or (defined(_call_elf) and (_call_elf = 2)))}
                 if (pointer(act.sa_handler)=pointer(@defaultsighandler)) then
-{$else}
-                { on aix and linux/ppc64 (ELFv1), procedure addresses are
-                  actually descriptors -> check whether the code addresses
-                  inside the descriptors match, rather than the descriptors
-                  themselves }
-                if (ppointer(act.sa_handler)^=ppointer(@defaultsighandler)^) then
-{$endif}
                   result:=ssHooked
                 else
                   result:=ssOverridden;
@@ -191,11 +183,7 @@ function InternalInquireSignal(RtlSigNum: Integer; out act: SigActionRec; fromin
                 { program -> signals have been hooked by system init code }
                 if (byte(RtlSigNum) in [RTL_SIGFPE,RTL_SIGSEGV,RTL_SIGILL,RTL_SIGBUS]) then
                   begin
-{$if not defined(aix) and (not defined(linux) or not defined(cpupowerpc64) or (defined(_call_elf) and (_call_elf = 2)))}
                     if (pointer(act.sa_handler)=pointer(@defaultsighandler)) then
-{$else}
-                    if (ppointer(act.sa_handler)^=ppointer(@defaultsighandler)^) then
-{$endif}
                       result:=ssHooked
                     else
                       result:=ssOverridden;
@@ -372,28 +360,8 @@ var
   TryCount : integer;
 begin
   DoFileLocking:=Handle;
-{$ifdef beos}
-{$else}
   if (Handle>=0) then
     begin
-{$if defined(solaris) or defined(aix)}
-      { Solaris' & AIX' flock is based on top of fcntl, which does not allow
-        exclusive locks for files only opened for reading nor shared locks
-        for files opened only for writing.
-
-        If no locking is specified, we normally need an exclusive lock.
-        So create an exclusive lock for fmOpenWrite and fmOpenReadWrite,
-        but only a shared lock for fmOpenRead (since an exclusive lock
-        is not possible in that case)
-      }
-      if ((mode and (fmShareCompat or fmShareExclusive or fmShareDenyWrite or fmShareDenyRead or fmShareDenyNone)) = 0) then
-        begin
-          if ((mode and (fmOpenRead or fmOpenWrite or fmOpenReadWrite)) = fmOpenRead) then
-            mode := mode or fmShareDenyWrite
-          else
-            mode := mode or fmShareExclusive;
-        end;
-{$endif solaris}
       case (mode and (fmShareCompat or fmShareExclusive or fmShareDenyWrite or fmShareDenyRead or fmShareDenyNone)) of
         fmShareCompat,
         fmShareExclusive:
@@ -443,7 +411,6 @@ begin
           exit;
         end;
     end;
-{$endif not beos}
 end;
 
 

@@ -180,9 +180,6 @@ uses
 {$ifdef WINDOWS}
   WinApi.Windows,
 {$else}
-{$ifdef KYLIX}
-  Libc,
-{$endif}
   System.Types, Data.Dbf.Wtil,
 {$endif}
   Data.Dbf.Str;
@@ -191,9 +188,6 @@ uses
 {$ifdef WINDOWS}
   Windows,
 {$else}
-{$ifdef KYLIX}
-  Libc,
-{$endif}
   Types, dbf_wtil,
 {$endif}
   dbf_str;
@@ -831,15 +825,10 @@ const
   LockStart  = LockOffset - 1000000000;
 
 function TPagedFile.LockSection(const Offset, Length: Cardinal; const Wait: Boolean): Boolean;
-{$ifndef wince}
   // assumes FNeedLock = true
 var
   Failed: Boolean;
-{$endif wince}
 begin
-{$ifdef wince}
-  Result := True;
-{$else}
   // FNeedLocks => FStream is of type TFileStream
   Failed := false;
   repeat
@@ -853,16 +842,11 @@ begin
         Failed := true;
     end;
   until Result or not Wait or Failed;
-{$endif wince}
 end;
 
 function TPagedFile.UnlockSection(const Offset, Length: Cardinal): Boolean;
 begin
-{$ifdef wince}
-  Result := True;
-{$else}
   Result := UnlockFile(TFileStream(FStream).Handle, Offset, 0, Length, 0);
-{$endif wince}
 end;
 
 function TPagedFile.LockAllPages(const Wait: Boolean): Boolean;

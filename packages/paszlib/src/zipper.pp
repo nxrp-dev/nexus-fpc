@@ -1779,9 +1779,6 @@ Begin
       MadeBy_Version := MadeBy_Version or (OS_UNIX shl 8);
       {$ENDIF}
     {$ENDIF}
-    {$IFDEF OS2}
-      MadeBy_Version := MadeBy_Version or (OS_OS2 shl 8);
-    {$ENDIF}
       {$warning TODO: find a way to recognize VFAT and NTFS}
       // Copy over extract_version_reqd..extra_field_length
       Move(LocalHdr.Extract_Version_Reqd, Extract_Version_Reqd, 26);

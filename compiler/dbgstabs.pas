@@ -1795,7 +1795,7 @@ implementation
                       begin
                         current_asmdata.getlabel(hlabel,alt_dbgline);
                         list.insertbefore(Tai_stab.Create_str(stab_stabn,tostr(stabs_n_textline)+',0,'+tostr(currfileinfo.line)+','+
-                                          hlabel.name+' - '+{$IFDEF POWERPC64}'.'+{$ENDIF POWERPC64}currfuncname^),hp);
+                                          hlabel.name+' - '+currfuncname^),hp);
                         list.insertbefore(tai_label.create(hlabel),hp);
                         hlabel.increfs;
                       end

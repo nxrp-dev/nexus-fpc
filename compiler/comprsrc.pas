@@ -63,14 +63,6 @@ type
       procedure EndCollect; override;
    end;
 
-   TJVMRawResourceFile = class(TWinLikeResourceFile)
-   private
-   protected
-   public
-      function Compile(output: tresoutput; const OutName: ansistring) : boolean; override;
-      function IsCompiled(const fn : ansistring) : boolean;override;
-   end;
-
 
 procedure CompileResourceFiles;
 procedure CollectResourceFiles;
@@ -394,25 +386,6 @@ begin
     Compile(roOBJ,ChangeFileExt(fname,target_info.resobjext));
   end;
 end;
-
-
-{****************************************************************************
-                              TJVMRawResourceFile
-****************************************************************************}
-
-function TJVMRawResourceFile.Compile(output: tresoutput; const OutName: ansistring): boolean;
-  begin
-    if output<>roOBJ then
-      internalerror(2011081703);
-    result:=inherited;
-  end;
-
-
-function TJVMRawResourceFile.IsCompiled(const fn: ansistring): boolean;
-  begin
-    internalerror(2011081704);
-    result:=true;
-  end;
 
 
 function CopyResFile(inf,outf : TCmdStr) : boolean;

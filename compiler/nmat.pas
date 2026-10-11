@@ -1449,7 +1449,7 @@ implementation
                expectloc:=LOC_REGISTER;
              { xtensa has boolean registers which are treated as flags but they
                are not used for boolean expressions }
-{$if defined(cpuflags) and not(defined(xtensa))}
+{$if defined(cpuflags)}
              if left.expectloc<>LOC_JUMP then
                expectloc:=LOC_FLAGS;
 {$endif defined(cpuflags) and not(defined(xtensa)}

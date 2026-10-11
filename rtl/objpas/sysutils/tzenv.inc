@@ -32,9 +32,6 @@ type
 
 const
   TZEnvName = 'TZ';
-{$IFDEF OS2}
-  EMXTZEnvName = 'EMXTZ';
-{$ENDIF OS2}
   MaxSecond = 86399;
 (* The following values differing from the defaults *)
 (* below are not used at the moment. *)
@@ -368,10 +365,6 @@ var
 
 begin
   TZ := GetEnvironmentVariable (TZEnvName);
-{$IFDEF OS2}
-  if TZ = '' then
-   TZ := GetEnvironmentVariable (EMXTZEnvName);
-{$ENDIF OS2}
   if TZ <> '' then
    begin
     TZ := Upcase (TZ);

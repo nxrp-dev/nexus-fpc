@@ -839,10 +839,6 @@ implementation
                 and (use_vectorfpu(left.resultdef) or not(use_vectorfpu(right.resultdef)))
 {$endif}
 
-{$ifdef xtensa}
-                and not((FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) xor
-                  (FPUXTENSA_DOUBLE in fpu_capabilities[current_settings.fputype]))
-{$endif}
         then
           begin
             if not(nf_internal in flags) then

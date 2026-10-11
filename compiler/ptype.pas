@@ -69,9 +69,6 @@ implementation
        { symtable }
        symconst,symsym,symtable,symcreat,
        defutil,defcmp,
-{$ifdef jvm}
-       jvmdef,
-{$endif}
        { modules }
        fmodule,
        { pass 1 }
@@ -80,9 +77,6 @@ implementation
        { parser }
        scanner,
        pbase,pexpr,pdecsub,pdecvar,pdecobj,pdecl,pgenutil,pparautl,procdefutil
-{$ifdef jvm}
-       ,pjvm
-{$endif}
        ;
 
 
@@ -1019,9 +1013,6 @@ implementation
               end;
             _END :
               begin
-{$ifdef jvm}
-                add_java_default_record_methods_intf(trecorddef(current_structdef));
-{$endif}
                 consume(_END);
                 break;
               end;
@@ -1128,10 +1119,6 @@ implementation
          else
            begin
              read_record_fields([vd_record],nil,nil,hadgendummy,dummyattrelcount);
-{$ifdef jvm}
-             { we need a constructor to create temps, a deep copy helper, ... }
-             add_java_default_record_methods_intf(trecorddef(current_structdef));
-{$endif}
              consume(_END);
             end;
 
@@ -1926,9 +1913,6 @@ implementation
                 until not try_to_consume(_COMMA);
                 def:=aktenumdef;
                 consume(_RKLAMMER);
-{$ifdef jvm}
-                jvm_maybe_create_enum_class(name,def);
-{$endif}
               end;
             _ARRAY:
               array_dec(false,genericdef,genericlist);
@@ -2084,9 +2068,6 @@ implementation
             _FUNCTION:
               begin
                 def:=procvar_dec(genericdef,genericlist,nil,true);
-{$ifdef jvm}
-                jvm_create_procvar_class(name,def);
-{$endif}
               end;
             _ID:
               begin

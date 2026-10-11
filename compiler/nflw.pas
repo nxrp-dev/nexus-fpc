@@ -305,7 +305,7 @@ implementation
       nstate,
     {$endif}
 
-    {$if defined(xtensa) or defined(i386)}
+    {$if defined(i386)}
       cpuinfo,
     {$endif defined(xtensa) or defined(i386)}
       cgbase,procinfo
@@ -1653,7 +1653,7 @@ implementation
       end;
 
 
-  {$if defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
+  {$if ((defined(i386)) or (defined(x86_64))) or (defined(aarch64))}
     {$define HAS_MINMAX_INTRINSICS}
   {$endif defined(i386) or defined(x86_64) or defined(xtensa) or defined(aarch64)}
 
@@ -1729,9 +1729,6 @@ implementation
           ) and
 {$endif i386}
 {$endif defined(i386) or defined(x86_64)}
-{$if defined(xtensa)}
-          (CPUXTENSA_HAS_MINMAX in cpu_capabilities[current_settings.cputype]) and is_32bitint(tassignmentnode(thenstmnt).right.resultdef) and
-{$endif defined(xtensa)}
 {$if defined(aarch64)}
           (is_single(tassignmentnode(thenstmnt).left.resultdef) or is_double(tassignmentnode(thenstmnt).left.resultdef) or
            is_32bitint(tassignmentnode(thenstmnt).left.resultdef) or is_64bitint(tassignmentnode(thenstmnt).left.resultdef)) and

@@ -103,7 +103,7 @@ type
 {$endif}
 {$endif}
 
-{$if defined(win64) or defined(wince) or defined(android)}
+{$if (defined(win64)) or (defined(android))}
   {$define longdouble_is_double}
 {$endif}
 

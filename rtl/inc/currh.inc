@@ -18,13 +18,8 @@
 {$ifndef FPUNONE}
     function round(c : currency) : int64;
 {$endif FPUNONE}
-{$ifndef cpujvm}
     function trunc(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
     function round(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$else not cpujvm}
-    function trunc_comp(c: comp) : int64; {$ifdef systeminline} inline; {$endif}
-    function round_comp(c : comp) : int64; {$ifdef systeminline} inline; {$endif}
-{$endif not cpujvm}
 {$endif FPC_CURRENCY_IS_INT64}
 
 

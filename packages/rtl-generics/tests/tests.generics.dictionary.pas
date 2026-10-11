@@ -483,11 +483,7 @@ end;
 
 Const
 {$IFDEF FPC}
-  {$IFNDEF CPUWASM}
     ReverseDeleteNotification = True;
-  {$ElSE}
-    ReverseDeleteNotification = False;
-  {$ENDIF}
 {$ELSE}
    ReverseDeleteNotification = False;
 {$ENDIF}

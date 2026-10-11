@@ -22,27 +22,13 @@ type filedesarray=array[0..1] of cint;
   {$endif}
 {$endif}
 
-{$if defined(solaris) or defined(aix)}
-Function fpFlock (fd,mode : longint) : cint;{$ifdef IN_SYSTEM}forward;{$endif IN_SYSTEM}
-{$else solaris or aix}
-{$if not defined(beos) or defined(haiku)}
 Function fpFlock (fd,mode : longint) : cint; cdecl; external clib name 'flock';
-{$endif beos}
-{$endif solaris or aix}
 
-{$if defined(beos) or defined(solaris) }
-Function fpfStatFS(Fd:Longint; Info:pstatfs):cint; cdecl; external clib name 'fstatvfs';
-{$else beos or solaris }
 Function fpfStatFS(Fd:Longint; Info:pstatfs):cint; cdecl; external clib name 'fstatfs'{$ifdef darin_new_iostructs_suffix}+'$INODE64'{$endif};
-{$endif beos or solaris }
 
 Function fpfsync (fd : cint) : cint; cdecl; external clib name 'fsync';
 
-{$if defined(beos) or defined(solaris) }
-Function fpStatFS  (Path:PAnsiChar; Info:pstatfs):cint; cdecl; external clib name 'statvfs';
-{$else beos or solaris }
 Function fpStatFS  (Path:PAnsiChar; Info:pstatfs):cint; cdecl; external clib name 'statfs'{$ifdef darin_new_iostructs_suffix}+'$INODE64'{$endif};
-{$endif beos or solaris }
 
 function pipe (var fildes: filedesarray):cint;  cdecl; external clib name 'pipe';
 function fpgettimeofday(tp: ptimeval;tzp:ptimezone):cint;   cdecl; external clib name 'gettimeofday';

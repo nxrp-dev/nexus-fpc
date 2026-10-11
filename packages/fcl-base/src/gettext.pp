@@ -308,7 +308,7 @@ end;
 {$ifdef windows}
 procedure GetLanguageIDs(var Lang, FallbackLang:AnsiString );
 var
-  Buffer: array[1..4] of {$ifdef Wince}WideChar{$else}AnsiChar{$endif};
+  Buffer: array[1..4] of AnsiChar;
   Country: AnsiString;
   UserLCID: LCID;
 begin

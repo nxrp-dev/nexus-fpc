@@ -26,9 +26,6 @@ uses
   System.SysUtils, System.Classes, Data.Db
 {$ifndef Windows}
   , System.Types, Data.Dbf.Wtil
-{$ifdef KYLIX}
-  , Libc
-{$endif}
 {$endif}
   ;
 {$ELSE FPC_DOTTEDUNITS}
@@ -36,9 +33,6 @@ uses
   SysUtils, Classes, DB
 {$ifndef WINDOWS}
   , Types, dbf_wtil
-{$ifdef KYLIX}
-  , Libc
-{$endif}
 {$endif}
   ;
 {$ENDIF FPC_DOTTEDUNITS}
@@ -412,14 +406,12 @@ begin
   if Length = -1 then
     Length := StrLen(Src);
   Result := Length;
-{$ifndef WINCE}
   if (FromCP = GetOEMCP) and (ToCP = GetACP) then
     OemToCharBuffA(Src, Dest, Length)
   else
   if (FromCP = GetACP) and (ToCP = GetOEMCP) then
     CharToOemBuffA(Src, Dest, Length)
   else
-{$endif}
   if FromCP = ToCP then
   begin
     if Src <> Dest then

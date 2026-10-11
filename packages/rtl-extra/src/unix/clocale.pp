@@ -54,7 +54,7 @@ Uses
 {$ENDIF FPC_DOTTEDUNITS}
 
 Const
-{$if defined(BSD) or defined(SUNOS) or defined(aix)}
+{$if defined(BSD)}
   // Darwin, FreeBSD, Solaris, AIX. Note the lead underscores are added.
  {$i clocale.inc}
 {$else}
@@ -99,13 +99,7 @@ Const
  _NL_MONETARY_CRNCYSTR = (__INT_CURR_SYMBOL)+15;
  {$endif}
 
-{$ifdef netbsd}
-  { NetBSD has a new setlocale function defined in /usr/include/locale.h
-    that should be used }
-function setlocale(category: cint; locale: PAnsiChar): PAnsiChar; cdecl; external clib name '__setlocale_mb_len_max_32';
-{$else}
 function setlocale(category: cint; locale: PAnsiChar): PAnsiChar; cdecl; external clib name 'setlocale';
-{$endif}
 
 function nl_langinfo(__item: cint):PAnsiChar;cdecl;external clib name 'nl_langinfo';
 
@@ -273,7 +267,7 @@ const
 var
   i: integer;
   prec, sep, signp: byte;
-  {$if defined(BSD) or defined(SUNOS) or defined(aix)}
+  {$if defined(BSD)}
    plocale : plconv;
   {$ENDIF}
 begin
@@ -321,7 +315,7 @@ begin
   else
     fmts.LongTimeFormat := TransformFormatStr(fmts.LongTimeFormat);
 
-  {$if defined(BSD) or defined(SUNOS) or defined(aix)}
+  {$if defined(BSD)}
      plocale:=localeconv;
      // for these fields there is a separate BSD derived POSIX function.
      if not assigned(plocale) then exit; // for now.

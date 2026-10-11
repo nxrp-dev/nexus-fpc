@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.ppu` | `NXU` | Header 208; long compatibility revision 35 |
+| Compiled unit | `.ppu` | `NXU` | Header 208; long compatibility revision 36 |
 | Compiler package metadata | `.pcp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -18,10 +18,15 @@ endianness; the four-character name does not specify on-disk byte order.
 File extensions, source syntax, and target identifiers stay the same.
 
 The [standard package support integration](nexusfpc-standard-package-support.md)
-advances the unit compatibility revision to 35 because the normal Win64 compiler
+advanced the unit compatibility revision to 35 because the normal Win64 compiler
 now emits package-capable indirect data references. Rebuild ordinary units as
 well as package SDKs. The validation record below describes the earlier family
 identity milestone at revision 34.
+
+The retired-target cleanup advances the compatibility revision to 36. Removing
+obsolete target switches changes the settings recorded in generic token streams;
+obsolete module flags are removed too. Rebuild ordinary units and package SDKs.
+The `NXU208` family/header and `NXP004` package container remain unchanged.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`

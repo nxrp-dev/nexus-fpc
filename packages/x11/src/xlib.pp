@@ -12,15 +12,10 @@ uses
 {$ENDIF FPC_DOTTEDUNITS}
 {$define MACROS}
 
-{$ifndef os2}
   {$LinkLib c}
   {$LinkLib X11}
 const
   libX11='X11';
-{$else}
-const
-  libX11='X11';
-{$endif}
 
 type
   PPcint = ^Pcint;
@@ -1285,10 +1280,8 @@ type
         count_values : cushort;
         supported_values : PPAnsiChar;
      end;
-{$ifndef os2}
   var
      _Xdebug : cint;cvar;external;
-{$endif}
 type
   funcdisp    = function(display:PDisplay):cint;cdecl;
   funcifevent = function(display:PDisplay; event:PXEvent; p : TXPointer):TBoolResult;cdecl;

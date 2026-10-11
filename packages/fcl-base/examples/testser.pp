@@ -5,9 +5,6 @@ Program testser;
 {$Mode Delphi}
 
 Uses
-{$ifdef go32v2}
-dpmiexcp,
-{$endif}
 Typinfo,classes,iostream;
 
 Const TypeNames : Array [TTYpeKind] of string[15] =

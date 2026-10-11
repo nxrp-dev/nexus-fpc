@@ -35,9 +35,6 @@ uses
 const
   n = 1;
 
-{$ifdef beos}
-  ESysEILSEQ = EILSEQ;
-{$endif}
 
 type
    piconv_t = ^iconv_t;
@@ -47,12 +44,8 @@ type
    Ticonv = function(__cd: iconv_t; __inbuf: PPAnsiChar; __inbytesleft: psize_t; __outbuf: PPAnsiChar; __outbytesleft: psize_t): size_t; cdecl;
    Ticonv_close = function(__cd: iconv_t): cint; cdecl;
 
-{$if not defined(linux) and not defined(solaris)}  // Linux (and maybe glibc pl
-   {$if defined(haiku)}
-    {$linklib textencoding}
-   {$else}
+{$if not (defined(linux))}  // Linux (and maybe glibc pl
     {$linklib iconv}
-   {$endif}
  {$define useiconv}
 {$endif linux}
 
@@ -60,18 +53,10 @@ Const
 {$ifndef useiconv}
   libiconvname='c';  // is in libc under Linux.
 {$else}
-  {$ifdef haiku}
-    libiconvname='textencoding';  // is in libtextencoding under Haiku
-  {$else}
     libiconvname='iconv';
-  {$endif}
 {$endif}
 
-{$if (defined(darwin) and defined(cpupowerpc32)) or defined(haiku)}
-  iconvprefix='lib';
-{$else}
   iconvprefix='';
-{$endif}
 
 function iconv_open(__tocode: PAnsiChar; __fromcode: PAnsiChar): iconv_t; cdecl; external libiconvname name iconvprefix+'iconv_open';
 function iconv (__cd: iconv_t; __inbuf: PPAnsiChar; __inbytesleft: psize_t; __outbuf: PPAnsiChar; __outbytesleft: psize_t): size_t; cdecl; external libiconvname name iconvprefix+'iconv';

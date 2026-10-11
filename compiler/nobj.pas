@@ -192,10 +192,6 @@ implementation
 
       // returns true if we can stop checking, false if we have to continue
       function found_entry(var vmtpd: tprocdef; var vmtentryvis: tvisibility; updatevalues: boolean): boolean;
-{$ifdef jvm}
-        var
-          javanewtreeok: boolean;
-{$endif jvm}
         begin
           result:=false;
 
@@ -259,24 +255,9 @@ implementation
                   hasequalpara
                  ) then
                 begin
-{$ifdef jvm}
-                  { if the mangled names are different, the inheritance trees
-                    are different too in Java; exception: when the parent method
-                    is a virtual class method or virtual constructor, because
-                    those are looked up dynamical by name }
-                  javanewtreeok:=
-                    is_java_class_or_interface(_class) and
-                    (tcpuprocdef(pd).jvmmangledbasename(false)<>tcpuprocdef(vmtpd).jvmmangledbasename(false)) and
-                    ((vmtpd.proctypeoption<>potype_constructor) and
-                     not(po_staticmethod in vmtpd.procoptions));
-{$endif}
                   if not(po_reintroduce in pd.procoptions) and
                      not(po_java_nonvirtual in vmtpd.procoptions) then
                     if not(is_objc_class_or_protocol(_class))
-{$ifdef jvm}
-                       and (not is_java_class_or_interface(_class) or
-                        javanewtreeok)
-{$endif jvm}
                        then
                       MessagePos1(pd.fileinfo,parser_w_should_use_override,pd.fullprocname(false))
                     else
@@ -292,9 +273,7 @@ implementation
                           automated header translation tools too complex.
 
                           The same goes for Java. }
-{$ifndef jvm}
                         if hasequalpara then
-{$endif}
                           begin
                             if not(oo_is_external in _class.objectoptions) then
                               if not is_objccategory(_class) then
@@ -334,15 +313,6 @@ implementation
                           end;
                         result:=true;
                         exit;
-{$ifdef jvm}
-                      end
-                  else
-                    if not javanewtreeok and
-                       is_java_class_or_interface(_class) then
-                      begin
-                        { mangled names are the same -> can only override }
-                        MessagePos1(pd.fileinfo,parser_e_must_use_override,FullTypeName(tdef(vmtpd.owner.defowner),nil))
-{$endif jvm}
                       end;
                   { disable/hide old VMT entry }
                   if updatevalues then
@@ -393,11 +363,7 @@ implementation
                             end
                         end
                       else
-{$ifdef jvm}
-                        MessagePos4(pd.fileinfo,parser_e_method_lower_visibility,
-{$else jvm}
                         MessagePos4(pd.fileinfo,parser_n_ignore_lower_visibility,
-{$endif jvm}
                           pd.fullprocname(false),
                           visibilityname[pd.visibility],tobjectdef(vmtpd.owner.defowner).objrealname^,visibilityname[vmtentryvis])
                       end
@@ -556,11 +522,7 @@ implementation
                         { does the interface increase the visibility of the
                           implementing method? }
                         if implprocdef.visibility<proc.visibility then
-{$ifdef jvm}
-                          MessagePos2(implprocdef.fileinfo,type_e_interface_lower_visibility,proc.fullprocname(false),implprocdef.fullprocname(false));
-{$else}
                           MessagePos2(implprocdef.fileinfo,type_w_interface_lower_visibility,proc.fullprocname(false),implprocdef.fullprocname(false));
-{$endif}
                         result:=implprocdef;
                         addsymref(result.procsym,result);
                         exit;

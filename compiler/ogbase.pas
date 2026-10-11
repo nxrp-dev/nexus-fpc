@@ -3769,10 +3769,6 @@ implementation
             refobjsec:=objreloc.objsection
           else if assigned(objreloc.group) then
             refgrp:=objreloc.group
-{$ifdef WASM}
-          else if objreloc.ftype=Ord(RELOC_TYPE_INDEX_LEB) then
-            {nothing}
-{$endif WASM}
           else
             internalerror(200603316);
           if assigned(exemap) then
@@ -3785,10 +3781,6 @@ implementation
                 exemap.Add('  References '+refobjsec.fullname)
               else if assigned(refgrp) then
                 exemap.Add('  References '+refgrp.Name)
-{$ifdef WASM}
-              else if objreloc.ftype=Ord(RELOC_TYPE_INDEX_LEB) then
-                {nothing}
-{$endif WASM}
               else
                 internalerror(2006033111);
             end;

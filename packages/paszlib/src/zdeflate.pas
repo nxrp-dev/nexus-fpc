@@ -2,13 +2,8 @@
 unit ZDeflate;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$IFDEF CPUWASM}
-{$DEFINE NOGOTO}
-{$ENDIF}
 
-{$IFNDEF NOGOTO}
 {$goto on}
-{$ENDIF}
 
 { Orginal: deflate.h -- internal compression state
            deflate.c -- compress data using the deflation algorithm
@@ -1250,17 +1245,8 @@ var
 var
   MAX_DIST : cardinal;
 
-{$IFNDEF NOGOTO}
 label
   nextstep;
-{$ELSE}
-  Procedure DoNextStep; inline;
-
-  begin
-    cur_match := prev^[cur_match and wmask];
-    dec(chain_length);
-  end;
-{$ENDIF}
 
 begin
   chain_length := s.max_chain_length; { max hash chain length }
@@ -1339,14 +1325,7 @@ distances are limited to MAX_DIST instead of WSIZE. }
   {$PUSH} {$R-}
         if (match[best_len-1]<>scan_end) or
            (match^ <> scan_start) then
-          {$IFDEF NOGOTO}
-          begin
-            DoNextStep;
-            Continue;
-          end;
-          {$ELSE}
           goto nextstep; {continue;}
-          {$ENDIF}
 
   {$POP}
 
@@ -1393,25 +1372,11 @@ distances are limited to MAX_DIST instead of WSIZE. }
         if (Pbytearray(match)^[best_len]   <> scan_end) or
            (Pbytearray(match)^[best_len-1] <> scan_end1) or
            (match^ <> scan^) then
-          {$IFDEF NOGOTO}
-          begin
-            DoNextStep;
-            Continue;
-          end;
-          {$ELSE}
           goto nextstep; {continue;}
-          {$ENDIF}
   {$POP}
         inc(match);
         if (match^ <> Pbytearray(scan)^[1]) then
-          {$IFDEF NOGOTO}
-          begin
-            DoNextStep;
-            Continue;
-          end;
-          {$ELSE}
           goto nextstep; {continue;}
-          {$ENDIF}
 
         { The check at best_len-1 can be removed because it will be made
           again later. (This heuristic is not always a win.)
@@ -1465,9 +1430,7 @@ distances are limited to MAX_DIST instead of WSIZE. }
 {$endif}
 {$pop}
         end;
-{$ifndef NOGOTO}
     nextstep:
-{$ENDIF}
       { Advance to the next hash-chain entry and count down. 
         This MUST run on every fall-through iteration 
         (mismatch paths already advanced via DoNextStep + Continue, which skips these statements). 

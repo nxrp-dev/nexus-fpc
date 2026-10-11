@@ -664,11 +664,9 @@ var
 begin
   Result := FileTimeToSystemTime(aFileTime, st);
   if Result then begin
-{$ifndef wince}
     if SystemTimeToTzSpecificLocalTime(Nil, st, lt) then
       aResult := SystemTimeToDateTime(lt)
     else
-{$endif}
       aResult := SystemTimeToDateTime(st);
   end;
 end;

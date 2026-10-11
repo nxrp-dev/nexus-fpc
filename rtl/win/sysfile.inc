@@ -19,17 +19,11 @@
 *****************************************************************************}
 
 function do_isdevice(handle:thandle):boolean;
-{$IFNDEF WINCE}
 var
   HT: dword;
-{$ENDIF WINCE}
 begin
-{$IFDEF WINCE}
-  Do_IsDevice := false;
-{$ELSE WINCE}
   HT := GetFileType (Handle);
   Do_IsDevice := (HT = FILE_TYPE_CHAR) or (HT = FILE_TYPE_PIPE);
-{$ENDIF WINCE}
 end;
 
 
@@ -86,16 +80,13 @@ end;
 function do_write(h:thandle;addr:pointer;len : longint) : longint;
 var
    size:longint;
-{$ifndef WINCE}
    ConsoleMode : dword;
    CodePage : UInt;
    accept_smaller_size : boolean;
-{$endif ndef WINCE}
 begin
    if writefile(h,addr,len,size,nil)=0 then
     Begin
       Errno2InoutRes(GetLastError);
-{$ifndef WINCE}
     end
    else if (size<len) then
     Begin
@@ -120,7 +111,6 @@ begin
            size:=len;
        end;
 
-{$endif ndef WINCE}
     end;
    do_write:=size;
 end;
@@ -257,12 +247,7 @@ begin
   else
     if ((filemode and fmshareDenyNone) = fmshareDenyNone) then
       shflags :=
-{$ifdef WINCE}
-        { WinCE does not know file_share_delete }
-        file_Share_Read or file_Share_Write;
-{$else WINCE}
         fmShareDenyNoneFlags;
-{$endif WINCE}
   { convert filemode to filerec modes }
   case (flags and 3) of
    0 : begin

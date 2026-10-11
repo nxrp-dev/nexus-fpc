@@ -555,10 +555,8 @@ end;  { get_sof }
 {LOCAL}
 function get_sos (cinfo : j_decompress_ptr) : boolean;
 { Process a SOS marker }
-{$IFNDEF NOGOTO}
 label
   id_found;
-{$ENDIF}
 
 var
   length : INT32;
@@ -706,11 +704,7 @@ begin
       FoundID:=(cc = compptr^.component_id);
       if FoundID then
         begin
-      {$IFDEF NOGOTO}
-        Break;
-      {$ELSE}
         goto id_found;
-      {$ENDIF}
         end;
       Inc(compptr);
     end;
@@ -718,9 +712,7 @@ begin
     if not FoundID then
       ERREXIT1(j_common_ptr(cinfo), JERR_BAD_COMPONENT_ID, cc);
 
-  {$IFNDEF NOGOTO}
   id_found:
-  {$ENDIF}
 
     cinfo^.cur_comp_info[i] := compptr;
     compptr^.dc_tbl_no := (c shr 4) and 15;

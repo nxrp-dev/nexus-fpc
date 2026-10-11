@@ -51,7 +51,7 @@ const
   sLineBreak = LineEnding;
   DefaultTextLineBreakStyle : TTextLineBreakStyle = tlbsLF;
 
-{$if not defined(solaris) and not defined(darwin) and not defined(aix)}
+{$if not (defined(darwin))}
 {$ifdef FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 var argc:longint;
     argv:PPAnsiChar;

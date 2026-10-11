@@ -47,12 +47,7 @@ function FPsigsuspend(const sigmask:sigset_t):cint;
 }
 
 begin
-{$ifdef OPENBSD}
-  { OpenBSD sigsuspend syscall wants a simple int as arg }
-  FPsigsuspend:= do_syscall(syscall_nr_sigsuspend,TSysParam(sigmask[0]));
-{$else}
   FPsigsuspend:= do_syscall(syscall_nr_sigsuspend,TSysParam(@sigmask));
-{$endif}
 end;
 
 {$ifndef FPC_SYS_SIGTIMEDWAIT_UNAVAILABLE}
@@ -205,7 +200,7 @@ end;
 
 function GetDomainName(Name:PAnsiChar; NameLen:Cint):cint; [public,alias:'FPC_SYSC_GETDOMAINNAME'];
 
-Const Mib_GetDomainName : array[0..1] of cint=(CTL_KERN,{$ifdef OpenBSD}KERN_DOMAINNAME{$ELSE}KERN_NISDOMAINNAME{$endif});
+Const Mib_GetDomainName : array[0..1] of cint=(CTL_KERN,KERN_NISDOMAINNAME);
 
 VAR
         tsize : size_t;
@@ -381,47 +376,12 @@ begin
 end;
 
 
-{$if (defined (freebsd))}
-function FPpipe(var fildes : tfildes; flags:cint):cint;
-
-begin
-  fppipe:=do_syscall(syscall_nr_pipe2,TSysParam(@fildes), TSysParam(flags));
-end;
-{$else}
 function __pipe_call(sysnr:TSysParam):TSysResult; {$ifdef cpui386}oldfpccall{$endif} external name 'FPC_DOSYS0';
 
-  {$if defined (dragonfly) and (defined(CPUi386) or defined(CPUX86_64))}
-    {$define PIPE_RESULT_IN_EAX_AND_EDX}
-  {$endif}
   Function FPpipe(var fildes : tfildes):cint;
-  {$ifndef PIPE_RESULT_IN_EAX_AND_EDX}
   begin
     fppipe:=do_syscall(syscall_nr_pipe,TSysParam(@fildes));
   end;
-  {$else}
-  var
-    a, b: cInt;
-  begin
-    asm
-    {$ifdef CPUi386}
-      pushl syscall_nr_pipe
-      call __pipe_call
-      movl %eax, a
-      movl %edx, b
-    {$else}
-      movq syscall_nr_pipe, %rdi
-      call __pipe_call
-      movl %eax, a
-      movl %edx, b
-    {$endif}
-    end;
-
-    fpPipe := a; // eax is in a, no matter if it worked or not
-    fildes[0] := a;
-    fildes[1] := b;
-  end;
-  {$endif}
-{$endif}
 
 function FPfcntl(fildes:cint;Cmd:cint;Arg:cint):cint;
 
@@ -517,11 +477,7 @@ const
   AT_FDCWD=-100;
   AT_SYMLINK_NOFOLLOW=$0200;
 begin
-{$ifdef freebsd}
-  fpLStat:=do_syscall(syscall_nr_fstatat,AT_FDCWD,TSysParam(path),TSysParam(Info),AT_SYMLINK_NOFOLLOW);
-{$else}
   fpLStat:=do_syscall(syscall_nr_lstat,TSysParam(path),TSysParam(info));
-{$endif}
 end;
 
 function fpNice(N:cint):cint;

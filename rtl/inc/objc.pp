@@ -9,7 +9,7 @@ unit objc;
 {$i objcnf.inc}
 {$endif}
 
-{$if defined(cpupowerpc32) or (defined(cpui386) and not defined(iphonesim))}
+{$if (defined(cpui386)) and (not (defined(iphonesim)))}
 {$define targethandled}
 {$i objc1.inc}
 {$endif}

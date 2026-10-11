@@ -19,7 +19,7 @@ unit Types;
   interface
 {$modeswitch advancedrecords}
 {$modeswitch class}
-{$if defined(win32) or defined(win64) or defined(wince)}
+{$if (defined(win32)) or (defined(win64))}
     uses
        {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows;
 {$endif}
@@ -121,7 +121,7 @@ type
   TCompDynArray = array of Comp;
 {$endif}
 
-{$if defined(win32) or defined(win64) or defined(wince)}
+{$if (defined(win32)) or (defined(win64))}
   TArray4IntegerType = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.TArray4IntegerType;
   TSmallPoint = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.TSmallPoint;
   PSmallPoint = {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.PSmallPoint;
@@ -377,7 +377,6 @@ const
   STATFLAG_NONAME    	      = 1;
   STATFLAG_NOOPEN    	      = 2;
 
-{$ifndef Wince}
   // in Wince these are in unit windows. Under 32/64 in ActiveX.
   // for now duplicate them. Not that bad for untyped constants.
 
@@ -426,9 +425,8 @@ const
   STG_S_BLOCK                 = $00030201;
   STG_S_RETRYNOW              = $00030202;
   STG_S_MONITORING            = $00030203;
-{$endif}
 
-{$if (not defined(win32)) and (not defined(win64)) and (not defined(wince))}
+{$if (not (defined(win32))) and (not (defined(win64)))}
 type
   PCLSID = PGUID;
   TCLSID = TGUID;
@@ -592,7 +590,7 @@ Uses System.Math;
 Uses Math;
 {$ENDIF FPC_DOTTEDUNITS}
 
-{$if (not defined(win32)) and (not defined(win64)) and (not defined(wince))}
+{$if (not (defined(win32))) and (not (defined(win64)))}
   {$i typshrd.inc}
 {$endif}
 

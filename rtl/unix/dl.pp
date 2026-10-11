@@ -22,14 +22,10 @@ const
 {$ifdef BSD}   // dlopen is in libc on FreeBSD.
   LibDL = 'c';
 {$else}
-  {$ifdef HAIKU}
-    LibDL = 'root';
-  {$else}
     LibDL = 'dl';
-  {$endif}
 {$endif}
 
-{$if defined(linux) or defined(freebsd) or defined(openbsd) or defined(dragonfly)}
+{$if defined(linux)}
   {$define ELF} // ELF symbol versioning.
 {$endif}
 
@@ -39,16 +35,6 @@ const
     {$linklib c}
 {$endif}
 
-{$ifdef aix}
-  RTLD_LAZY         = $004;
-  RTLD_NOW          = $002;
-  RTLD_BINDING_MASK = $006;
-  RTLD_LOCAL        = 0;
-  RTLD_GLOBAL       = $10000;
-  RTLD_MEMBER       = $40000;
-  RTLD_NEXT         = pointer(-3);
-  RTLD_DEFAULT      = pointer(-1);
-{$else}
   RTLD_LAZY         = $001;
   RTLD_NOW          = $002;
   RTLD_BINDING_MASK = $003;
@@ -76,7 +62,6 @@ const
   RTLD_MODEMASK     = RTLD_BINDING_MASK;
   {$endif}
   {$endif}          // DARWIN
-{$endif}
 
 type
   Pdl_info = ^dl_info;
@@ -98,7 +83,7 @@ function dlerror() : PAnsiChar; cdecl; external libdl;
 { overloaded for compatibility with hmodule }
 function dlsym(Lib : PtrInt; Name : PAnsiChar) : Pointer; cdecl; external Libdl;
 function dlclose(Lib : PtrInt) : Longint; cdecl; external libdl;
-function dladdr(Lib: pointer; info: Pdl_info): Longint; cdecl; {$if not defined(aix) and not defined(android)} external; {$endif}
+function dladdr(Lib: pointer; info: Pdl_info): Longint; cdecl; {$if not (defined(android))} external; {$endif}
 
 type
   plink_map = ^link_map;
@@ -156,9 +141,6 @@ uses
       filename:=String(dlinfo.dli_fname);
     end;
 
-{$ifdef aix}
-{$i dlaix.inc}
-{$endif}
 
 {$ifdef android}
 {$i dlandroid.inc}

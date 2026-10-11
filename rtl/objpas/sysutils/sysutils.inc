@@ -395,7 +395,7 @@ begin
   inherited CreateFmt(fmt,args);
 end;
 
-{$if defined(win32) or defined(win64) or defined (wince)}
+{$if (defined(win32)) or (defined(win64))}
 function EExternal.GetExceptionRecord: PExceptionRecord;
 begin
   result:=@FExceptionRecord;
@@ -897,7 +897,7 @@ begin
 end;
 {$endif}
 
-{$if defined(win32) or defined(win64) or defined(wince)}
+{$if (defined(win32)) or (defined(win64))}
 function GetModuleName(Module: HMODULE): string;
 var
   ResultLength, BufferLength: DWORD;
@@ -1119,59 +1119,14 @@ begin
   {$IFDEF LINUX}
   Result:=pfLinux;
   {$ENDIF}
-  {$IFDEF GO32V2}
-  Result:=pfGo32v2;
-  {$ENDIF}
-  {$IFDEF OS2}
-  Result:=pfOS2;
-  {$ENDIF}
-  {$IFDEF FREEBSD}
-  Result:=pfFreeBSD;
-  {$ENDIF}
-  {$IFDEF BEOS}
-  Result:=pfBeos;
-  {$ENDIF}
-  {$IFDEF NETBSD}
-  Result:=pfNetBSD;
-  {$ENDIF}
-  {$IFDEF AMIGA}
-  Result:=pfAmiga;
-  {$ENDIF}
-  {$IFDEF ATARI}
-  Result:=pfAtari;
-  {$ENDIF}
-  {$IFDEF SUNOS}
-  Result:=pfSolaris;
-  {$ENDIF}
-  {$IFDEF QNX}
-  Result:=pfQNX;
-  {$ENDIF}
-  {$IFDEF OpenBSD}
-  Result:=pfOpenBSD;
-  {$ENDIF}
   {$IFDEF WDosX}
   Result:=pfWDosX;
-  {$ENDIF}
-  {$IFDEF PALMOS}
-  Result:=pfPalmos;
   {$ENDIF}
   {$IFDEF MacOSClassic}
   Result:=pfMacOSClassic;
   {$ENDIF}
   {$IFDEF DARWIN}
   Result:=pfDarwin;
-  {$ENDIF}
-  {$IFDEF EMX}
-  Result:=pfEMX;
-  {$ENDIF}
-  {$IFDEF WATCOM}
-  Result:=pfWatcom;
-  {$ENDIF}
-  {$IFDEF MORPHOS}
-  Result:=pfMorphos;
-  {$ENDIF}
-  {$IFDEF WINCE}
-  Result:=pfWinCE;
   {$ENDIF}
   {$IFDEF GBA}
   Result:=pfGBA;
@@ -1182,38 +1137,14 @@ begin
   {$IFDEF EMBEDDED}
   Result:=pfEmbedded;
   {$ENDIF}
-  {$IFDEF SYMBIAN}
-  Result:=pfSymbian;
-  {$ENDIF}
-  {$IFDEF HAIKU}
-  Result:=pfHaiku;
-  {$ENDIF}
   {$IFDEF IPHONESIM}
   Result:=pfIPhoneSim;
-  {$ENDIF}
-  {$IFDEF AIX}
-  Result:=pfAIX;
   {$ENDIF}
   {$IFDEF NATIVENT}
   Result:=pfNativeNT;
   {$ENDIF}
-  {$IFDEF MSDOS}
-  Result:=pfMSDos;
-  {$ENDIF}
-  {$IFDEF WII}
-  Result:=pfWII;
-  {$ENDIF}
-  {$IFDEF AROS}
-  Result:=pfAROS;
-  {$ENDIF}
-  {$IFDEF DRAGONFLY}
-  Result:=pfDragonFly;
-  {$ENDIF}
   {$IFDEF FREERTOS}
   Result:=pfFreeRTOS;
-  {$ENDIF}
-  {$IFDEF SINCLAIRQL}
-  Result:=pfSinclairQL;
   {$ENDIF}
 end;
 

@@ -73,7 +73,7 @@ type
     MsgWndProc
   ---------------------------------------------------------------------}
 
-function MsgWndProc(Window: HWND; uMsg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; {$ifdef wince}cdecl;{$else}stdcall;{$endif}
+function MsgWndProc(Window: HWND; uMsg: UINT; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
 Var
   Server: TWinMsgServerComm;
   Msg: TMsg;
@@ -85,7 +85,7 @@ begin
     // Post WM_USER to wake up GetMessage call.
     PostMessage(Window, WM_USER, 0, 0);
     // Read message data and add to message queue.
-    Server:=TWinMsgServerComm({$ifdef wince}GetWindowLong{$else}GetWindowLongPtr{$endif}(Window,GWL_USERDATA));
+    Server:=TWinMsgServerComm(GetWindowLongPtr(Window,GWL_USERDATA));
     if Assigned(Server) then
     begin
       Msg.Message:=uMsg;
@@ -129,7 +129,7 @@ begin
     PWideChar(aWindowName), WS_POPUP {!0}, 0, 0, 0, 0, 0, 0, HInstance, nil);
   if (Result=0) then
     Owner.DoError(SErrFailedToCreateWindow,[aWindowName]);
-  {$ifdef wince}SetWindowLong{$else}SetWindowLongPtr{$endif}(Result,GWL_USERDATA,PtrInt(Self));
+  SetWindowLongPtr(Result,GWL_USERDATA,PtrInt(Self));
 end;
 
 constructor TWinMsgServerComm.Create(AOwner: TSimpleIPCServer);

@@ -68,13 +68,9 @@ Type
      plconv = ^lconv;
 
 Const
-{$if defined(openbsd) or defined(netbsd)}
-        D_T_FIRST       = 0;
-{$else}
         // FreeBSD and Mac OS X?
         D_T_FIRST       = 1;
         CODESET         = 0;               { codeset name }
-{$endif}
         D_T_FMT         = D_T_FIRST;       { string for formatting date and time }
         D_FMT           = D_T_FIRST+1;     { date format string }
         T_FMT           = D_T_FIRST+2;     { time format string }
@@ -127,15 +123,6 @@ Const
         ABMON_10        = ABMON_1+9;
         ABMON_11        = ABMON_1+10;
         ABMON_12        = ABMON_1+11;
-        {$if defined(openbsd) or defined(netbsd)}
-        RADIXCHAR       = ABMON_1+12;   { Radix AnsiChar}
-        THOUSEP         = RADIXCHAR+1;  { separator for thousands }
-        YESSTR          = RADIXCHAR+2;  { affirmative response for yes/no queries }
-        YESEXPR         = RADIXCHAR+3;  { affirmative response expression }
-        NOSTR           = RADIXCHAR+4;  { negative response for yes/no queries }
-        NOEXPR          = RADIXCHAR+5;  { negative response expression }
-        CRNCYSTR        = RADIXCHAR+6;  { currency symbol }
-        {$else}
         ERA             = ABMON_12+1;           { era description segments }
         ERA_D_FMT       = ERA+1;        { era date format string }
         ERA_D_T_FMT     = ERA+2;        { era date and time format string }
@@ -148,12 +135,7 @@ Const
         YESSTR          = RADIXCHAR+4;  { affirmative response for yes/no queries }
         NOSTR           = RADIXCHAR+5;  { negative response for yes/no queries }
         CRNCYSTR        = RADIXCHAR+6;  { currency symbol }
-        {$endif}
 
-        {$if defined(openbsd) or defined(netbsd)}
-        CODESET         = 51;
-        {$else}
         D_MD_ORDER      = 57;      { month/day order (local extension) }
-        {$endif}
 
 function localeconv:plconv; cdecl; external clib name 'localeconv';

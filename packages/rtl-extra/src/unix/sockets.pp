@@ -29,12 +29,7 @@ Uses baseunix,UnixType;
 
 {$i osdefs.inc}       { Compile time defines }
 
-{$if
-     defined(FreeBSD) or
-     defined(Darwin) or
-     defined(Haiku) or
-     defined(OpenBSD)
-}
+{$if defined(Darwin)}
 {$DEFINE SOCK_HAS_SINLEN}               // BSD definition of socketaddr
 {$endif}
 
@@ -60,14 +55,10 @@ const
   EsockEINVAL           = EsysEINVAL;
   EsockEACCESS          = ESysEAcces;
   EsockEMFILE           = ESysEmfile;
-{$ifndef beos}
   EsockEMSGSIZE         = ESysEMsgSize;
-{$endif beos}
   EsockENOBUFS          = ESysENoBufs;
   EsockENOTCONN         = ESysENotConn;
-{$ifndef beos}
   EsockENOTSOCK         = ESysENotSock;
-{$endif beos}
   EsockEPROTONOSUPPORT  = ESysEProtoNoSupport;
   EsockEWOULDBLOCK      = ESysEWouldBlock;
   EsockADDRINUSE        = ESysEADDRINUSE;

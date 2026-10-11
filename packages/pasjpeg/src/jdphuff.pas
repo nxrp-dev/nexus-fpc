@@ -322,10 +322,8 @@ end;
 {METHODDEF}
 function decode_mcu_DC_first (cinfo : j_decompress_ptr;
                                var MCU_data : array of JBLOCKROW) : boolean;
-{$IFNDEF NOGOTO}
 label
   label1;
-{$ENDIF}
 
 var
   entropy : phuff_entropy_ptr;
@@ -418,13 +416,7 @@ begin
         if (bits_left < HUFF_LOOKAHEAD) then
         begin
           nb := 1;
-          {$IFDEF NOGOTO}
-            SkipToLabel1:=true;
-            if DoDecode then
-              exit;
-          {$ELSE}
             goto label1;
-          {$ENDIF}
 
         end;
       end;
@@ -445,9 +437,7 @@ begin
           else
           begin
             nb := HUFF_LOOKAHEAD+1;
-            {$IFNDEF NOGOTO}
             label1:
-            {$ENDIF}
             if DoDecode then
               exit;
           end;
@@ -508,10 +498,8 @@ end;
 {METHODDEF}
 function decode_mcu_AC_first (cinfo : j_decompress_ptr;
                               var MCU_data : array of JBLOCKROW) : boolean;
-{$IFNDEF NOGOTO}
 label
   label2;
-{$ENDIF}
 var
   entropy : phuff_entropy_ptr;
   Se : int;
@@ -599,12 +587,7 @@ begin
           if (bits_left < HUFF_LOOKAHEAD) then
           begin
             nb := 1;
-            {$IFDEF NOGOTO}
-            if DoDecode then
-              exit;
-            {$ELSE}
             goto label2;
-            {$ENDIF}
           end;
         end;
         {look := PEEK_BITS(HUFF_LOOKAHEAD);}
@@ -622,9 +605,7 @@ begin
         else
         begin
           nb := HUFF_LOOKAHEAD+1;
-          {$IFNDEF NOGOTO}
       label2:
-          {$ENDIF}
           if DoDecode then
             exit;
         end;
@@ -801,10 +782,8 @@ end;
 {METHODDEF}
 function decode_mcu_AC_refine (cinfo : j_decompress_ptr;
                                var MCU_data : array of JBLOCKROW) : boolean;
-{$IFNDEF NOGOTO}
 label
   undoit, label3;
-{$ENDIF}
 var
   entropy : phuff_entropy_ptr;
   Se : int;
@@ -905,27 +884,14 @@ begin
         begin
           if (not jpeg_fill_bit_buffer(br_state,get_buffer,bits_left, 0)) then
             begin
-            {$IFDEF NOGOTO}
-            FinishDecode;
-            Exit;
-            {$ELSE}
             goto undoit;
-            {$ENDIF}
             end;
           get_buffer := br_state.get_buffer;
           bits_left := br_state.bits_left;
           if (bits_left < HUFF_LOOKAHEAD) then
           begin
             nb := 1;
-            {$IFDEF NOGOTO}
-            if DoDecode then
-              begin
-              FinishDecode;
-              Exit;
-              end;
-            {$ELSE}
             goto label3;
-            {$ENDIF}
           end;
         end;
         {look := PEEK_BITS(HUFF_LOOKAHEAD);}
@@ -943,9 +909,7 @@ begin
         else
         begin
           nb := HUFF_LOOKAHEAD+1;
-          {$IFNDEF NOGOTO}
       label3:
-          {$ENDIF}
           if DoDecode then
             begin
             FinishDecode;
@@ -964,12 +928,7 @@ begin
           begin
             if (not jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) then
               begin
-              {$IFDEF NOGOTO}
-              FinishDecode;
-              Exit;
-              {$ELSE}
               goto undoit;
-              {$ENDIF}
               end;
             get_buffer := br_state.get_buffer;
             bits_left := br_state.bits_left;
@@ -994,12 +953,7 @@ begin
               begin
                 if (not jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,r)) then
                   begin
-                  {$IFDEF NOGOTO}
-                  FinishDecode;
-                  Exit;
-                  {$ELSE}
                   goto undoit;
-                  {$ENDIF}
                   end;
                 get_buffer := br_state.get_buffer;
                 bits_left := br_state.bits_left;
@@ -1028,12 +982,7 @@ begin
             begin
               if (not jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) then
                 begin
-                {$IFDEF NOGOTO}
-                FinishDecode;
-                Exit;
-                {$ELSE}
                 goto undoit;
-                {$ENDIF}
                 end;
               get_buffer := br_state.get_buffer;
               bits_left := br_state.bits_left;
@@ -1090,12 +1039,7 @@ begin
           begin
             if (not jpeg_fill_bit_buffer(br_state,get_buffer,bits_left,1)) then
               begin
-              {$IFDEF NOGOTO}
-              FinishDecode;
-              Exit;
-              {$ELSE}
               goto undoit;
-              {$ENDIF}
               end;
             get_buffer := br_state.get_buffer;
             bits_left := br_state.bits_left;
@@ -1136,9 +1080,7 @@ begin
   decode_mcu_AC_refine := TRUE;
   exit;
 
-{$IFNDEF NOGOTO}
 undoit:
-{$ENDIF}
   FinishDecode;
 end;
 

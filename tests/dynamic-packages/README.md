@@ -109,7 +109,7 @@ The earlier standalone EXE startup failure is covered by the shared RTL suite
 below. The symbol-only runner no longer expects or counts that historical failure.
 
 The standard Win64 and Linux x86-64 compilers now support packages. Metadata uses
-NXP v4 and NXU header 208 with compatibility revision 35; rebuild existing units.
+NXP v4 and NXU header 208 with compatibility revision 36; rebuild existing units.
 
 ## Shared RTL and explicit startup activation (items 6-10)
 

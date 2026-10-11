@@ -25,9 +25,6 @@ uses
 {$ifdef Windows}
   WinApi.Windows;
 {$else}
-{$ifdef KYLIX}
-  Api.Libc,
-{$endif}
   System.Types, Data.Dbf.Wtil;
 {$endif}
 {$ELSE FPC_DOTTEDUNITS}
@@ -35,9 +32,6 @@ uses
 {$ifdef WINDOWS}
   Windows;
 {$else}
-{$ifdef KYLIX}
-  Libc,
-{$endif}
   Types, dbf_wtil;
 {$endif}
 {$ENDIF FPC_DOTTEDUNITS}

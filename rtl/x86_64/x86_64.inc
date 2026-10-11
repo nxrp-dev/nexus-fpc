@@ -75,13 +75,7 @@ end;
 // Even after fixing them, it can be enabled only for the trunk version,
 // otherwise bootstrapping won't be possible.
 // Modified to use oldbinutils as in cpu.pp source, to allow easier use for other targets.
-{$ifdef freebsd}
-  {$ifndef overridebinutils}
-    {$define oldbinutils}
-  {$endif}
-{$endif freebsd}
 
-{$ifndef oldbinutils}
 
 
 {$ifndef FPC_SYSTEM_HAS_MOVE}
@@ -1066,7 +1060,6 @@ end;
 {$endif ndef CPUX86_HAS_SSE4_1}
 {$endif FPC_SYSTEM_HAS_INDEXQWORD}
 
-{$endif freebsd}
 
 {$ifndef FPC_SYSTEM_HAS_COMPAREBYTE}
 {$define FPC_SYSTEM_HAS_COMPAREBYTE}

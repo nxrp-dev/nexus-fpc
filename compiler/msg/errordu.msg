@@ -4146,25 +4146,12 @@ P*2CT<x>_Optionen für die ziel-spezifische Code-Erzeugung
 J*2CT<x>_Optionen für die ziel-spezifische Code-Erzeugung
 A*2CT<x>_Optionen für die ziel-spezifische Code-Erzeugung
 W*2CT<x>_Optionen für die ziel-spezifische Code-Erzeugung
-p*3CTsmalltoc_ Erzeuge kleinere TOCs auf Kosten der Ausführungsgeschwindigkeit (AIX)
-P*3CTsmalltoc_ Erzeuge kleinere TOCs auf Kosten der Ausführungsgeschwindigkeit (AIX)
 J*3CTautogetterprefix=X_  Erzeuge automatisch Getter für Eigenschaften mit dem Prefix X (Leerstring schaltet aus)
 J*3CTautosetterprefix=X_  Erzeuge automatisch Setter für Eigenschaften mit dem Prefix X (Leerstring schaltet aus)
 8*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
 3*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
 4*3CTcld_                 Emittiere eine CLD-Instruktion vor der x86-String-Instruktion
-8*3CTfarprocspushoddbp_ Erhöhe BP vor dem Verschieben in den Prolog von "far"-Funktionen
-J*3CTcompactintarrayinit_ Erzeuge kleineren (aber möglicherweise langsameren) Code für die Initialisierung von Integer-Array-Konstanten
-J*3CTenumfieldinit_       Initialisiere Aufzählungsfelder in Konstruktoren mit enumtype(0), nach dem Aufruf geerbter Konstruktoren
-J*3CTinitlocals_          Initialisiere lokale Variablen, die einen JVM bytecode Verifikationfehler auslösen, wenn uninitialisiert verwendet (verzögert den Code)
 J*3CTlowercaseprocstart_  Kleinschreibung des ersten Buchstabens bei Prozedur/Funktions/Methoden-Namen.
-A*3CTthumbinterworking_ Erzeuge "Thumb interworking-safe code", wenn möglich
-W*3CTnoexceptions_        Schalte die Unterstützung von Exceptions aus. Das Auslösen einer Exception bricht das Programm ab.
-W*3CTbfexceptions_        Schalte die Unterstützung von verzweigten WebAssembly Exceptions ein
-W*3CTjsexceptions_        Schalte die Unterstützung von JavaScript-basierten Exceptions für WebAssembly ein (experimentell)
-W*3CTwasmexceptions_      Schalte die Unterstützung von nativen WebAssembly-Exceptions ein
-W*3CTwasmthreads_         Schalte die Unterstützung von WebAssembly-Threads ein (experimentell)
-W*3CTsaturatingfloattoint_ Verwende sättigende (ohne Trapauslösung) Fließkomma-nach-Integer Konversions-Instruktionen
 J*2Cv_Var/out Parameter copy-out Überprüfung
 A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 **2CX_Benutze Smartlinking

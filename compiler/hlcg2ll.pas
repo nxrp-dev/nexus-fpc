@@ -1899,31 +1899,12 @@ implementation
         LOC_FPUREGISTER,
         LOC_CFPUREGISTER :
           begin
-{$if defined(sparc)}
-            { Arm and Sparc passes floats in int registers, when loading to fpu register
-              we need a temp }
-            sizeleft := TCGSize2Size[destloc.size];
-            tg.GetTemp(list,sizeleft,sizeleft,tt_normal,tempref);
-            href:=tempref;
-            while assigned(paraloc) do
-              begin
-                unget_para(paraloc^);
-                cg.a_load_cgparaloc_ref(list,paraloc^,href,sizeleft,destloc.reference.alignment);
-                inc(href.offset,TCGSize2Size[paraloc^.size]);
-                dec(sizeleft,TCGSize2Size[paraloc^.size]);
-                paraloc:=paraloc^.next;
-              end;
-            gen_alloc_regloc(list,destloc,vardef);
-            cg.a_loadfpu_ref_reg(list,destloc.size,destloc.size,tempref,destloc.register);
-            tg.UnGetTemp(list,tempref);
-{$else defined(sparc) or defined(arm)}
             unget_para(paraloc^);
             gen_alloc_regloc(list,destloc,vardef);
             { from register to register -> alignment is irrelevant }
             cg.a_load_cgparaloc_anyreg(list,destloc.size,paraloc^,destloc.register,0);
             if assigned(paraloc^.next) then
               internalerror(200410109);
-{$endif}
           end;
         LOC_MMREGISTER,
         LOC_CMMREGISTER :

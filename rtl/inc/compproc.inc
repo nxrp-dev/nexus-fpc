@@ -542,16 +542,6 @@ function fpc_mod_currency(n,z : currency) : currency; compilerproc;
 function fpc_mul_currency(x,y : currency) : currency; compilerproc;
 function fpc_mul_currency_checkoverflow(x,y : currency) : currency; compilerproc;
 
-{$ifdef FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
-function fpc_shl_qword(value : qword; shift : ALUUInt) : qword; compilerproc;
-function fpc_shr_qword(value : qword; shift : ALUUInt) : qword; compilerproc;
-function fpc_shl_int64(value : int64; shift : ALUUInt) : int64; compilerproc;
-function fpc_shr_int64(value : int64; shift : ALUUInt) : int64; compilerproc;
-procedure fpc_shl_assign_qword(var value : qword; shift : ALUUInt); compilerproc;
-procedure fpc_shr_assign_qword(var value : qword; shift : ALUUInt); compilerproc;
-procedure fpc_shl_assign_int64(var value : int64; shift : ALUUInt); compilerproc;
-procedure fpc_shr_assign_int64(var value : int64; shift : ALUUInt); compilerproc;
-{$endif  FPC_INCLUDE_SOFTWARE_SHIFT_INT64}
 {$ifndef FPC_HAS_INTERNAL_SAR_ASSIGN_QWORD}
 procedure fpc_sar_assign_int64(var AValue : Int64;const Shift : Byte);compilerproc;
 procedure fpc_sar_assign_qword(var AValue : qword;const Shift : Byte);compilerproc;
@@ -568,7 +558,7 @@ function fpc_popcnt_word(AValue : Word): Word;compilerproc;
 function fpc_popcnt_dword(AValue : DWord): DWord;compilerproc;
 function fpc_popcnt_qword(AValue : QWord): QWord;compilerproc;
 
-{$if not defined(VER3_2) and not defined(CPUJVM)}
+{$if not (defined(VER3_2))}
 function fpc_atomic_inc_8(var Target: shortint): shortint;compilerproc;
 function fpc_atomic_inc_16(var Target: smallint): smallint;compilerproc;
 function fpc_atomic_inc_32(var Target: longint): longint;compilerproc;
@@ -641,21 +631,12 @@ procedure fpc_dispatch_by_id(Result: Pointer; const Dispatch: pointer;DispDesc: 
 
 
 {$ifdef FPC_HAS_FEATURE_EXCEPTIONS}
-{$if not defined(FPC_WASM_EXNREF_EXCEPTIONS) and not defined(FPC_WASM_LEGACY_EXCEPTIONS) and not defined(FPC_WASM_BRANCHFUL_EXCEPTIONS)}
 Function fpc_PushExceptAddr (Ft: Longint;_buf,_newaddr : pointer): PJmp_buf ; compilerproc;
 Procedure fpc_PopAddrStack; compilerproc;
-{$endif}
-{$ifdef FPC_WASM_BRANCHFUL_EXCEPTIONS}
-function fpc_raised_exception_flag: Boolean;compilerproc;
-procedure fpc_clear_exception_flag;compilerproc;
-{$endif FPC_WASM_BRANCHFUL_EXCEPTIONS}
 procedure fpc_Raiseexception (Obj : TObject; AnAddr : CodePointer; AFrame : Pointer); compilerproc;
 function fpc_PopObjectStack : TObject; compilerproc;
 function fpc_PopSecondObjectStack : TObject; compilerproc;
 Procedure fpc_ReRaise; compilerproc;
-{$if defined(FPC_WASM_EXNREF_EXCEPTIONS) or defined(FPC_WASM_LEGACY_EXCEPTIONS) or defined(FPC_WASM_BRANCHFUL_EXCEPTIONS)}
-Procedure fpc_ReRaise2; compilerproc;
-{$endif}
 Function fpc_Catches(Objtype : TClass) : TObject; compilerproc;
 function fpc_safecallhandler(obj: TObject): HResult; compilerproc;
 function fpc_safecallcheck(res : hresult) : hresult; compilerproc; {$ifdef CPU86} register; {$endif}
@@ -773,11 +754,3 @@ function fpc_longword_to_double(i: longword): double; compilerproc;
 
 function fpc_setjmp(var s : jmp_buf) : longint; compilerproc;
 procedure fpc_longjmp(var s : jmp_buf; value : longint); compilerproc;
-
-
-
-
-
-{$ifdef cpuwasm32}
-procedure fpc_wasm_invoke_helper(CodeAddress: CodePointer; Args: Pointer; Result: Pointer); compilerproc;
-{$endif cpuwasm32}

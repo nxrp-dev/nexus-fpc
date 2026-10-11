@@ -19,11 +19,6 @@
 {   var
      Errno : cint; external clib name 'errno';}
 
-{$if defined(aix) and not defined(FPC_IS_SYSTEM)}
-{ in AIX, several UNIX routines are part of the "compatibility interface for
-  older Berkeley Software Distribution (BSD) system programs" }
-{$linklib libbsd}
-{$endif aix}
 
 Type TGrpArr = Array [0..0] of TGid;            { C style array workarounds}
      pGrpArr = ^TGrpArr;
@@ -31,7 +26,7 @@ Type TGrpArr = Array [0..0] of TGid;            { C style array workarounds}
      pFilDes = ^TFilDes;
 
 const
-{$if (defined(linux) and defined(cpu32) and not defined(fs32bit)) or defined(aix)}
+{$if ((defined(linux)) and (defined(cpu32))) and (not (defined(fs32bit)))}
     suffix64bit = '64';
     darwinsuffix64bit = '';
 {$elseif defined(darwin_new_iostructs) and (defined(cpui386) or defined(cpux86_64))}
@@ -46,7 +41,7 @@ const
     function  FPSigProcMask(how:cint;const nset : sigset;var oset : sigset):cint;cdecl; external clib name 'sigprocmask';
     Function  FpSigPending   (var nset : sigset): cInt; external clib name 'sigpending';
     Function  FpSigSuspend   (constref sigmask : TSigSet): cInt; external clib name 'sigsuspend';
-{$if not defined(darwin) and not defined(haiku) and not defined(beos)}
+{$if not (defined(darwin))}
     Function  FpSigTimedWait (Constref sigset : TSigSet; info : Psiginfo; timeout:Ptimespec): cInt; cdecl; external clib name 'sigtimedwait';
 {$endif}
     Function  FpUmask       (cmask : TMode): TMode; cdecl; external clib name 'umask';
@@ -93,9 +88,9 @@ const
     procedure FpExit    (status : cint); cdecl; external clib name '_exit';
     Function  FpKill       (pid : TPid; sig: cInt): cInt; cdecl; external clib name 'kill';
     function  FpUname   (var name: utsname): cint; cdecl; external clib name 'uname';
-    function  FpOpendir (dirname : PAnsiChar): pdir; cdecl; external clib name 'opendir'{$ifdef aix}+suffix64bit{$endif};
+    function  FpOpendir (dirname : PAnsiChar): pdir; cdecl; external clib name 'opendir';
     Function  FpReaddir (var dirp : Dir) : pDirent;cdecl; external clib name 'readdir'+suffix64bit+darwinsuffix64bit;
-    Function  FpClosedir (var dirp : Dir): cInt; cdecl; external clib name 'closedir'{$ifdef aix}+suffix64bit{$endif};
+    Function  FpClosedir (var dirp : Dir): cInt; cdecl; external clib name 'closedir';
     function  FpChdir   (path : PAnsiChar): cint; cdecl; external clib name 'chdir';
     { emulate the bunxovl version that automatically passes
      638 as mode }
@@ -130,30 +125,12 @@ const
     Function  FpTime       (var tloc : Time_t): Time_t; cdecl; external clib name 'time';
     function  FpFtruncate(fd : cint; flength : TOff): cint; cdecl; external clib name 'ftruncate'+suffix64bit;
     Function  FPSigaction (sig: cInt; act :pSigActionRec;oact:pSigActionRec):cint;cdecl; external clib name 'sigaction';
-{$ifdef beos}
-  {$ifdef haiku}
-    Function  FPSelect  (N:cint;readfds,writefds,exceptfds:pfdSet;TimeOut:PTimeVal):cint; cdecl; external 'network' name 'select';
-    Function  FpPoll    (fds: ppollfd; nfds: cuint; timeout: clong): cint; cdecl; external clib name 'poll';
-  {$else}
-    Function  FPSelect  (N:cint;readfds,writefds,exceptfds:pfdSet;TimeOut:PTimeVal):cint; cdecl; external 'net' name 'select';
-    Function  FpPoll    (fds: ppollfd; nfds: cuint; timeout: clong): cint; cdecl; external clib name 'poll';
-  {$endif}
-{$else}
     Function  FPSelect  (N:cint;readfds,writefds,exceptfds:pfdSet;TimeOut:PTimeVal):cint; cdecl; external clib name 'select';
     Function  FpPoll    (fds: ppollfd; nfds: cuint; timeout: clong): cint; cdecl; external clib name 'poll';
-{$endif}
     { The libc version has "..." as third parameter -> wrap for }
     { interface compatibility with syscalls                     }
     function  FpIOCtl   (Handle:cint;Ndx: TIOCtlRequest;Data: Pointer):cint; {$ifdef FPC_IS_SYSTEM}forward;{$endif}
-{$ifdef solaris}
-{$linklib md5}
-{$linklib aio}
-    Function  FPnanosleep  (const rqtp: ptimespec; rmtp: ptimespec): cint; cdecl; external 'rt' name 'nanosleep';
-{$else solaris}
-{$if not defined(beos) or defined(haiku)}
     Function  FPnanosleep  (const rqtp: ptimespec; rmtp: ptimespec): cint; cdecl; external clib name 'nanosleep';
-{$endif}
-{$endif solaris}
     Function  fpSymlink    (oldname,newname:PAnsiChar):cint;   cdecl; external clib name 'symlink';
     Function  fpReadLink           (name,linkname:PAnsiChar;maxlen:size_t):cint;  cdecl; external clib name 'readlink';
 
@@ -165,11 +142,7 @@ const
     function  fpmprotect(addr:pointer;len:size_t;prot:cint):cint; cdecl; external clib name 'mprotect';
 
     function  fpgetenv  (name : PAnsiChar):PAnsiChar; cdecl; external clib name 'getenv';
-{$ifndef beos}
     function  fpsettimeofday(tp:ptimeval;tzp:ptimezone):cint; cdecl; external clib name 'settimeofday';
-{$else}
-//    function  fpsettimeofday(tp:ptimeval;tzp:ptimezone):cint;
-{$endif}
 
     function FpGetRLimit(resource : cInt; rlim : PRLimit) : cInt; cdecl; external clib name 'getrlimit';
     function FpSetRLimit(resource : cInt; rlim : PRLimit) : cInt; cdecl; external clib name 'setrlimit';
@@ -179,9 +152,9 @@ const
 
     { overloads not available in bunxh.inc }
     function  FpReaddir (dirp : pdir) : pdirent;cdecl; external clib name 'readdir'+suffix64bit;
-    function  FpClosedir (dirp : pdir): cint; cdecl; external clib name 'closedir'{$ifdef aix}+suffix64bit{$endif};
+    function  FpClosedir (dirp : pdir): cint; cdecl; external clib name 'closedir';
     function  FpSigaction (sig: cint;var act : sigactionrec; var oact : sigactionrec): cint; cdecl; external clib name 'sigaction';
-{$if not defined(darwin) and not defined(haiku) and not defined(beos)}
+{$if not (defined(darwin))}
     Function  FpSigTimedWait (Const sigset : TSigSet; info : Psiginfo; var timeout:Ttimespec): cInt; cdecl; external clib name 'sigtimedwait';
 {$endif}
     function  FpTime       (tloc:ptime_t): time_t; cdecl; external clib name 'time';

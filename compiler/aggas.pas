@@ -32,9 +32,6 @@ interface
     uses
       globtype,globals,
       cpubase,aasmbase,aasmtai,aasmdata,aasmcfi,
-{$ifdef wasm}
-      aasmcpu,
-{$endif wasm}
       assemble;
 
     type
@@ -86,10 +83,6 @@ interface
         procedure WriteTree(p:TAsmList);override;
         procedure WriteAsmList;override;
         destructor destroy; override;
-{$ifdef WASM}
-        procedure WriteFuncType(functype: TWasmFuncType);
-        procedure WriteFuncTypeDirective(hp:tai_functype);virtual;abstract;
-{$endif WASM}
        private
         setcount: longint;
         procedure WriteCFI(hp: tai_cfi_base);
@@ -137,9 +130,6 @@ implementation
 {$ifndef DISABLE_WIN64_SEH}
       itcpugas,
 {$endif DISABLE_WIN64_SEH}
-{$ifdef m68k}
-      cpuinfo,aasmcpu,
-{$endif m68k}
       objcasm;
 
     const
@@ -783,35 +773,6 @@ implementation
       end;
 
 
-{$ifdef WASM}
-    procedure TGNUAssembler.WriteFuncType(functype: TWasmFuncType);
-      var
-        wasm_basic_typ: TWasmBasicType;
-        first: boolean;
-      begin
-        writer.AsmWrite('(');
-        first:=true;
-        for wasm_basic_typ in functype.params do
-          begin
-            if first then
-              first:=false
-            else
-              writer.AsmWrite(',');
-            writer.AsmWrite(gas_wasm_basic_type_str[wasm_basic_typ]);
-          end;
-        writer.AsmWrite(') -> (');
-        first:=true;
-        for wasm_basic_typ in functype.results do
-          begin
-            if first then
-              first:=false
-            else
-              writer.AsmWrite(',');
-            writer.AsmWrite(gas_wasm_basic_type_str[wasm_basic_typ]);
-          end;
-        writer.AsmWrite(')');
-      end;
-{$endif WASM}
 
 
     procedure TGNUAssembler.WriteTree(p:TAsmList);
@@ -832,32 +793,12 @@ implementation
         var
           i: longint;
           alignment64 : int64;
-{$ifdef m68k}
-          instr : string;
-{$endif}
         begin
           last_align:=alignment;
           if alignment>1 then
             begin
               if not(target_info.system in systems_darwin) then
                 begin
-{$ifdef m68k}
-                  if not use_op and (lastsectype=sec_code) then
-                    begin
-                      if not ispowerof2(alignment,i) then
-                        internalerror(2014022201);
-                      { the Coldfire manual suggests the TBF instruction for
-                        alignments, but somehow QEMU does not interpret that
-                        correctly... }
-                      {if current_settings.cputype in cpu_coldfire then
-                        instr:='0x51fc'
-                      else}
-                        instr:='0x4e71';
-                      writer.AsmWrite(#9'.balignw '+tostr(alignment)+','+instr);
-                    end
-                  else
-                    begin
-{$endif m68k}
                       alignment64:=alignment;
                       if (maxbytes<>alignment) and ispowerof2(alignment64,i) then
                         begin
@@ -885,9 +826,6 @@ implementation
                             writer.AsmWrite(',0x90');
 {$endif x86}
                         end;
-{$ifdef m68k}
-                    end;
-{$endif m68k}
                 end
               else
                 begin
@@ -901,46 +839,6 @@ implementation
             end;
         end;
 
-{$ifdef WASM}
-      procedure WriteTagType(hp: tai_tagtype);
-        var
-          wasm_basic_typ: TWasmBasicType;
-          first: boolean;
-        begin
-          writer.AsmWrite(#9'.tagtype'#9);
-          writer.AsmWrite(hp.tagname);
-          first:=true;
-          for wasm_basic_typ in hp.params do
-            begin
-              if first then
-                begin
-                  first:=false;
-                  writer.AsmWrite(' ');
-                end
-              else
-                writer.AsmWrite(',');
-              writer.AsmWrite(gas_wasm_basic_type_str[wasm_basic_typ]);
-            end;
-          writer.AsmLn;
-        end;
-
-      procedure WriteWasmLocalDirective(hp: tai_local);
-        var
-          t: TWasmBasicType;
-          first: boolean=true;
-        begin
-          writer.AsmWrite(#9'.local'#9);
-          for t in tai_local(hp).locals do
-            begin
-              if first then
-                first:=false
-              else
-                writer.AsmWrite(', ');
-              writer.AsmWrite(gas_wasm_basic_type_str[t]);
-            end;
-          writer.AsmLn;
-        end;
-{$endif WASM}
 
     var
       ch       : char;
@@ -1387,21 +1285,14 @@ implementation
                   if (tai_symbol(hp).sym.bind=AB_PRIVATE_EXTERN) then
                     WriteHiddenSymbol(tai_symbol(hp).sym);
                 end;
-               if tai_symbol(hp).sym.typ=AT_WASM_EXCEPTION_TAG then
+               sepChar := '@';
+               if (tf_needs_symbol_type in target_info.flags) then
                  begin
-                   { nothing here, to ensure we don' write the .type directive for exception tags }
-                 end
-               else
-                 begin
-                   sepChar := '@';
-                   if (tf_needs_symbol_type in target_info.flags) then
-                     begin
-                       writer.AsmWrite(#9'.type'#9 + tai_symbol(hp).sym.name);
-                       if (needsObject(tai_symbol(hp))) then
-                         writer.AsmWriteLn(',' + sepChar + 'object')
-                       else
-                         writer.AsmWriteLn(',' + sepChar + 'function');
-                     end;
+                   writer.AsmWrite(#9'.type'#9 + tai_symbol(hp).sym.name);
+                   if (needsObject(tai_symbol(hp))) then
+                     writer.AsmWriteLn(',' + sepChar + 'object')
+                   else
+                     writer.AsmWriteLn(',' + sepChar + 'function');
                  end;
                if replaceforbidden then
                  if not(tai_symbol(hp).has_value) then
@@ -1611,107 +1502,6 @@ implementation
                end;
                writer.AsmLn;
              end;
-{$ifdef WASM}
-           ait_local:
-             WriteWasmLocalDirective(tai_local(hp));
-           ait_globaltype:
-             begin
-               writer.AsmWrite(#9'.globaltype'#9);
-               writer.AsmWrite(tai_globaltype(hp).globalname);
-               writer.AsmWrite(', ');
-               writer.AsmWrite(gas_wasm_basic_type_str[tai_globaltype(hp).gtype]);
-               if tai_globaltype(hp).immutable then
-                 writer.AsmWrite(', immutable');
-               writer.AsmLn;
-               if tai_globaltype(hp).is_global then
-                 begin
-                   writer.AsmWrite(#9'.globl ');
-                   writer.AsmWriteLn(tai_globaltype(hp).globalname);
-                 end;
-               if not tai_globaltype(hp).is_external then
-                 begin
-                   writer.AsmWrite(tai_globaltype(hp).globalname);
-                   writer.AsmWriteLn(':');
-                 end;
-             end;
-           ait_functype:
-             WriteFuncTypeDirective(tai_functype(hp));
-           ait_export_name:
-             begin
-               writer.AsmWrite(#9'.export_name'#9);
-               writer.AsmWrite(tai_export_name(hp).intname);
-               writer.AsmWrite(', ');
-               writer.AsmWriteLn(tai_export_name(hp).extname);
-             end;
-           ait_tagtype:
-             WriteTagType(tai_tagtype(hp));
-           ait_import_module:
-             begin
-               writer.AsmWrite(#9'.import_module'#9);
-               writer.AsmWrite(tai_import_module(hp).symname);
-               writer.AsmWrite(', ');
-               writer.AsmWriteLn(tai_import_module(hp).importmodule);
-             end;
-           ait_import_name:
-             begin
-               writer.AsmWrite(#9'.import_name'#9);
-               writer.AsmWrite(tai_import_name(hp).symname);
-               writer.AsmWrite(', ');
-               writer.AsmWriteLn(tai_import_name(hp).importname);
-             end;
-           ait_wasm_structured_instruction:
-             begin
-               { What we output for these is not valid llvm-mc output
-                 and we only print it for compiler debug purposes.
-                 These shouldn't be present in the final asmlist. }
-               if hp is tai_wasmstruc_block then
-                 begin
-                   writer.AsmWriteLn('.err block {');
-                   WriteTree(tai_wasmstruc_block(hp).inner_asmlist);
-                   writer.AsmWriteLn('.err } end block');
-                 end
-               else if hp is tai_wasmstruc_loop then
-                 begin
-                   writer.AsmWriteLn('.err loop {');
-                   WriteTree(tai_wasmstruc_loop(hp).inner_asmlist);
-                   writer.AsmWriteLn('.err } end loop');
-                 end
-               else if hp is tai_wasmstruc_if then
-                 begin
-                   writer.AsmWriteLn('.err if {');
-                   WriteTree(tai_wasmstruc_if(hp).then_asmlist);
-                   writer.AsmWriteLn('.err } else {');
-                   WriteTree(tai_wasmstruc_if(hp).else_asmlist);
-                   writer.AsmWriteLn('.err } endif');
-                 end
-               else if hp is tai_wasmstruc_legacy_try then
-                 begin
-                   writer.AsmWriteLn('.err try {');
-                   WriteTree(tai_wasmstruc_legacy_try(hp).try_asmlist);
-                   if hp is tai_wasmstruc_legacy_try_catch then
-                     with tai_wasmstruc_legacy_try_catch(hp) do
-                       begin
-                         for i:=low(catch_list) to high(catch_list) do
-                           begin
-                             writer.AsmWriteLn('.err catch');
-                             WriteTree(catch_list[i].asmlist);
-                           end;
-                         if assigned(catch_all_asmlist) then
-                           begin
-                             writer.AsmWriteLn('.err catch_all');
-                             WriteTree(catch_all_asmlist);
-                           end;
-                         writer.AsmWriteLn('.err } end try');
-                       end
-                   else if hp is tai_wasmstruc_legacy_try_delegate then
-                     writer.AsmWriteLn('.err } delegate')
-                   else
-                     writer.AsmWriteLn('.err unknown try structured instruction: ' + hp.ClassType.ClassName);
-                 end
-               else
-                 writer.AsmWriteLn('.err structured instruction: ' + hp.ClassType.ClassName);
-             end;
-{$endif WASM}
 
            else
              if not WriteComments(hp) then

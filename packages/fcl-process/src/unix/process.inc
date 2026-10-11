@@ -204,10 +204,6 @@ Function MakeCommand(P : TProcess) : PPAnsiChar;
 Const
   TerminalApp = 'open';
 {$endif}
-{$ifdef haiku}
-Const
-  TerminalApp = 'Terminal';
-{$endif}
 
 Var
   Cmd : String;
@@ -237,14 +233,7 @@ begin
       end;
     if poNewConsole in P.Options then
       begin
-      {$ifdef haiku}
-      If (P.ApplicationName<>'') then
-        begin
-        S.Insert(0,P.ApplicationName);
-        S.Insert(0,'--title');
-        end;
-      {$endif}
-      {$if defined(darwin) or defined(haiku)}
+      {$if defined(darwin)}
       S.Insert(0,TerminalApp);
       {$else}
       S.Insert(0,'-e');
@@ -264,7 +253,6 @@ begin
         S.Insert(0,DetectXterm);
       {$endif}
       end;
-    {$ifndef haiku}
     if (PA<>'') then
       begin
       S.Add(TitleOption);
@@ -280,7 +268,6 @@ begin
       S.Add(GeometryOption);
       S.Add(g);
       end;
-    {$endif}
     Result:=StringsToPcharList(S);
   Finally
     S.free;
@@ -389,7 +376,7 @@ begin
         else
           SysCurrentDir:='';
 
-{$if (defined(DARWIN) or defined(SUNOS))}
+{$if defined(DARWIN)}
         { can't use vfork in case the child has to be
           suspended immediately, because with vfork the
           child borrows the execution thread of the parent

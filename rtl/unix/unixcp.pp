@@ -39,7 +39,7 @@ type
 * http://msdn2.microsoft.com/en-us/library/ms776446.aspx
 *)
 const
-  UnixCpMapLimit = 406{$ifndef aix}-83{$endif}{$ifdef ACCEPT_646}+1{$endif};
+  UnixCpMapLimit = 406-83;
   UnixCpMap: array[-1..UnixCpMapLimit] of TUnixCpData =
   ((cp:0; name: 'UTF-8'), { invalid/unknown -> utf-8 }
    (cp:37; name:'IBM037'), (* IBM EBCDIC US-Canada *)
@@ -65,34 +65,22 @@ const
    (cp:775; name:'CSPC775BALTIC'),
    (cp:775; name:'ibm775'), (* OEM Baltic; Baltic (DOS) *)
    (cp:850; name:'850'),
-  {$ifdef aix}
-   (cp:850; name:'IBM-850'), (* AIX *)
-  {$endif}
    (cp:850; name:'CP850'),
    (cp:850; name:'IBM850'),
    (cp:850; name:'CSPC850MULTILINGUAL'),
    (cp:850; name:'ibm850'), (* OEM Multilingual Latin 1; Western European (DOS) *)
    (cp:852; name:'852'),
-  {$ifdef aix}
-   (cp:852; name:'IBM-852'), (* AIX *)
-  {$endif}
    (cp:852; name:'CP852'),
    (cp:852; name:'IBM852'),
    (cp:852; name:'CSPCP852'),
    (cp:852; name:'ibm852'), (* OEM Latin 2; Central European (DOS) *)
    (cp:853; name:'CP853'),
    (cp:855; name:'855'),
-  {$ifdef aix}
-   (cp:855; name:'IBM-855'), (* AIX *)
-  {$endif}
    (cp:855; name:'CP855'),
    (cp:855; name:'IBM855'),
    (cp:855; name:'CSIBM855'),
    (cp:855; name:'IBM855'), (* OEM Cyrillic (primarily Russian) *)
    (cp:857; name:'857'),
-  {$ifdef aix}
-   (cp:857; name:'IBM-857'), (* AIX *)
-  {$endif}
    (cp:857; name:'CP857'),
    (cp:857; name:'IBM857'),
    (cp:857; name:'CSIBM857'),
@@ -100,41 +88,26 @@ const
    (cp:858; name:'CP858'),
    (cp:858; name:'IBM00858'), (* OEM Multilingual Latin 1 + Euro symbol *)
    (cp:860; name:'860'),
-  {$ifdef aix}
-   (cp:860; name:'IBM-860'), (* AIX *)
-  {$endif}
    (cp:860; name:'CP860'),
    (cp:860; name:'IBM860'),
    (cp:860; name:'CSIBM860'),
    (cp:860; name:'IBM860'), (* OEM Portuguese; Portuguese (DOS) *)
    (cp:861; name:'861'),
-  {$ifdef aix}
-   (cp:861; name:'IBM-861'), (* AIX *)
-  {$endif}
    (cp:861; name:'CP-IS'),
    (cp:861; name:'CP861'),
    (cp:861; name:'IBM861'),
    (cp:861; name:'CSIBM861'),
    (cp:861; name:'ibm861'), (* OEM Icelandic; Icelandic (DOS) *)
    (cp:862; name:'862'),
-  {$ifdef aix}
-   (cp:862; name:'IBM-862'), (* AIX *)
-  {$endif}
    (cp:862; name:'CP862'),
    (cp:862; name:'IBM862'),
    (cp:862; name:'CSPC862LATINHEBREW'),
    (cp:862; name:'DOS-862'), (* OEM Hebrew; Hebrew (DOS) *)
    (cp:863; name:'863'),
    (cp:863; name:'CP863'),
-  {$ifdef aix}
-   (cp:863; name:'IBM-863'), (* AIX *)
-  {$endif}
    (cp:863; name:'CSIBM863'),
    (cp:863; name:'IBM863'), (* OEM French Canadian; French Canadian (DOS) *)
    (cp:864; name:'CP864'),
-  {$ifdef aix}
-   (cp:864; name:'IBM-864'), (* AIX *)
-  {$endif}
    (cp:864; name:'CSIBM864'),
    (cp:864; name:'IBM864'), (* OEM Arabic; Arabic (864) *)
    (cp:865; name:'865'),
@@ -143,9 +116,6 @@ const
    (cp:865; name:'CSIBM865'),
    (cp:865; name:'IBM865'), (* OEM Nordic; Nordic (DOS) *)
    (cp:866; name:'866'),
-  {$ifdef aix}
-   (cp:866; name:'IBM-866'), (* AIX *)
-  {$endif}
    (cp:866; name:'CP866'),
    (cp:866; name:'IBM866'),
    (cp:866; name:'CSIBM866'),
@@ -158,9 +128,6 @@ const
    (cp:869; name:'CSIBM869'),
    (cp:869; name:'ibm869'), (* OEM Modern Greek; Greek, Modern (DOS) *)
    (cp:870; name:'IBM870'), (* IBM EBCDIC Multilingual/ROECE (Latin 2); IBM EBCDIC Multilingual Latin 2 *)
-  {$ifdef aix}
-   (cp:870; name:'IBM-870'), (* AIX *)
-  {$endif}
    (cp:874; name:'CP874'),
    (cp:874; name:'WINDOWS-874'),
    (cp:874; name:'windows-874'), (* ANSI/OEM Thai (same as 28605, ISO 8859-15); Thai (Windows) *)
@@ -180,17 +147,11 @@ const
    (cp:932; name:'shift_jis'), (* ANSI/OEM Japanese; Japanese (Shift-JIS) *)
    (cp:932; name:'shift-jis'), (* alternative name for it *)
    (cp:936; name:'CP936'),
-  {$ifdef aix}
-   (cp:936; name:'IBM-eucCN'), (* AIX *)
-  {$endif}
    (cp:936; name:'GBK'),
    (cp:936; name:'MS936'),
    (cp:936; name:'WINDOWS-936'),
    (cp:936; name:'gb2312'), (* ANSI/OEM Simplified Chinese (PRC, Singapore); Chinese Simplified (GB2312) *)
    (cp:949; name:'CP949'),
-  {$ifdef aix}
-   (cp:949; name:'IBM-eucKR'), (* AIX *)
-  {$endif}
    (cp:949; name:'UHC'),
    (cp:949; name:'EUC-KR'),
    (cp:949; name:'ks_c_5601-1987'), (* ANSI/OEM Korean (Unified Hangul Code) *)
@@ -198,62 +159,23 @@ const
    (cp:950; name:'BIG5'),
    (cp:950; name:'big5'), (* ANSI/OEM Traditional Chinese (Taiwan; Hong Kong SAR, PRC); Chinese Traditional (Big5) *)
    (cp:1026; name:'IBM1026'), (* IBM EBCDIC Turkish (Latin 5) *)
-  {$ifdef aix}
-   (cp:1026; name:'IBM-1026'), (* AIX *)
-  {$endif}
    (cp:1047; name:'IBM01047'), (* IBM EBCDIC Latin 1/Open System *)
-  {$ifdef aix}
-   (cp:1047; name:'IBM-1047'), (* AIX *)
-  {$endif}
    (cp:1125; name:'CP1125'),
    (cp:1125; name:'IBM-1125'),
    (cp:1133; name:'CP1133'),
    (cp:1133; name:'IBM-1133'),
    (cp:1133; name:'IBM-CP1133'),
    (cp:1140; name:'IBM01140'), (* IBM EBCDIC US-Canada (037 + Euro symbol); IBM EBCDIC (US-Canada-Euro) *)
-  {$ifdef aix}
-   (cp:1140; name:'IBM-1140'), (* AIX *)
-  {$endif}
    (cp:1141; name:'IBM01141'), (* IBM EBCDIC Germany (20273 + Euro symbol); IBM EBCDIC (Germany-Euro) *)
-  {$ifdef aix}
-   (cp:1141; name:'IBM-1141'), (* AIX *)
-  {$endif}
    (cp:1142; name:'IBM01142'), (* IBM EBCDIC Denmark-Norway (20277 + Euro symbol); IBM EBCDIC (Denmark-Norway-Euro) *)
-  {$ifdef aix}
-   (cp:1142; name:'IBM-1142'), (* AIX *)
-  {$endif}
    (cp:1143; name:'IBM01143'), (* IBM EBCDIC Finland-Sweden (20278 + Euro symbol); IBM EBCDIC (Finland-Sweden-Euro) *)
-  {$ifdef aix}
-   (cp:1143; name:'IBM-1143'), (* AIX *)
-  {$endif}
    (cp:1144; name:'IBM01144'), (* IBM EBCDIC Italy (20280 + Euro symbol); IBM EBCDIC (Italy-Euro) *)
-  {$ifdef aix}
-   (cp:1144; name:'IBM-1144'), (* AIX *)
-  {$endif}
    (cp:1145; name:'IBM01145'), (* IBM EBCDIC Latin America-Spain (20284 + Euro symbol); IBM EBCDIC (Spain-Euro) *)
-  {$ifdef aix}
-   (cp:1145; name:'IBM-1145'), (* AIX *)
-  {$endif}
    (cp:1146; name:'IBM01146'), (* IBM EBCDIC United Kingdom (20285 + Euro symbol); IBM EBCDIC (UK-Euro) *)
-  {$ifdef aix}
-   (cp:1146; name:'IBM-1146'), (* AIX *)
-  {$endif}
    (cp:1147; name:'IBM01147'), (* IBM EBCDIC France (20297 + Euro symbol); IBM EBCDIC (France-Euro) *)
-  {$ifdef aix}
-   (cp:1147; name:'IBM-1147'), (* AIX *)
-  {$endif}
    (cp:1148; name:'IBM01148'), (* IBM EBCDIC International (500 + Euro symbol); IBM EBCDIC (International-Euro) *)
-  {$ifdef aix}
-   (cp:1148; name:'IBM-1148'), (* AIX *)
-  {$endif}
    (cp:1149; name:'IBM01149'), (* IBM EBCDIC Icelandic (20871 + Euro symbol); IBM EBCDIC (Icelandic-Euro) *)
-  {$ifdef aix}
-   (cp:1149; name:'IBM-1149'), (* AIX *)
-  {$endif}
    (cp:1200; name:'UTF-16LE'),
-  {$ifdef aix}
-   (cp:1200; name:'UTF-16le'), (* AIX *)
-  {$endif}
    (cp:1200; name:'UTF16LE'),
    (cp:1200; name:'UCS-2LE'),
    (cp:1200; name:'CP1200'),
@@ -357,20 +279,11 @@ const
    (cp:20108; name:'x-IA5-Norwegian'), (* IA5 Norwegian (7-bit) *)
    (cp:20127; name:'US-ASCII'),
    (cp:20127; name:'ASCII'),
-  {$ifdef aix}
-   (cp:20127; name:'ASCII-GR'), (* AIX *)
-  {$endif}
    (cp:20127; name:'ANSI_X3.4-1968'),
    (cp:20127; name:'ANSI_X3.4-1986'),
    (cp:20127; name:'CP367'),
-  {$ifdef aix}
-   (cp:20127; name:'IBM-367'), (* AIX *)
-  {$endif}
    (cp:20127; name:'IBM367'),
    (cp:20127; name:'ISO-IR-6'),
-{$ifdef ACCEPT_646}
-   (cp:20127; name:'646'),
-{$endif ACCEPT_646}
    (cp:20127; name:'ISO646-US'),
    (cp:20127; name:'ISO_646.IRV:1991'),
    (cp:20127; name:'US'),
@@ -379,94 +292,28 @@ const
    (cp:20261; name:'x-cp20261'), (* T.61 *)
    (cp:20269; name:'x-cp20269'), (* ISO 6937 Non-Spacing Accent *)
    (cp:20273; name:'IBM273'), (* IBM EBCDIC Germany *)
-  {$ifdef aix}
-   (cp:20273; name:'IBM-273'), (* AIX *)
-  {$endif}
    (cp:20277; name:'IBM277'), (* IBM EBCDIC Denmark-Norway *)
-  {$ifdef aix}
-   (cp:20277; name:'IBM-277'), (* AIX *)
-  {$endif}
    (cp:20278; name:'IBM278'), (* IBM EBCDIC Finland-Sweden *)
-  {$ifdef aix}
-   (cp:20278; name:'IBM-278'), (* AIX *)
-  {$endif}
    (cp:20280; name:'IBM280'), (* IBM EBCDIC Italy *)
-  {$ifdef aix}
-   (cp:20280; name:'IBM-280'), (* AIX *)
-  {$endif}
    (cp:20284; name:'IBM284'), (* IBM EBCDIC Latin America-Spain *)
-  {$ifdef aix}
-   (cp:20284; name:'IBM-284'), (* AIX *)
-  {$endif}
    (cp:20285; name:'IBM285'), (* IBM EBCDIC United Kingdom *)
-  {$ifdef aix}
-   (cp:20285; name:'IBM-285'), (* AIX *)
-  {$endif}
    (cp:20290; name:'IBM290'), (* IBM EBCDIC Japanese Katakana Extended *)
-  {$ifdef aix}
-   (cp:20290; name:'IBM-290'), (* AIX *)
-  {$endif}
    (cp:20297; name:'IBM297'), (* IBM EBCDIC France *)
-  {$ifdef aix}
-   (cp:20297; name:'IBM-297'), (* AIX *)
-  {$endif}
    (cp:20420; name:'IBM420'), (* IBM EBCDIC Arabic *)
-  {$ifdef aix}
-   (cp:20420; name:'IBM-420'), (* AIX *)
-  {$endif}
    (cp:20423; name:'IBM423'), (* IBM EBCDIC Greek *)
-  {$ifdef aix}
-   (cp:20423; name:'IBM-423'), (* AIX *)
-  {$endif}
    (cp:20424; name:'IBM424'), (* IBM EBCDIC Hebrew *)
-  {$ifdef aix}
-   (cp:20424; name:'IBM-424'), (* AIX *)
-  {$endif}
    (cp:20833; name:'x-EBCDIC-KoreanExtended'), (* IBM EBCDIC Korean Extended *)
    (cp:20838; name:'IBM-Thai'), (* IBM EBCDIC Thai *)
-  {$ifdef aix}
-   (cp:20838; name:'TIS-620'),  (* AIX *)
-  {$endif}
    (cp:20866; name:'koi8-r'), (* Russian (KOI8-R); Cyrillic (KOI8-R) *)
    (cp:20871; name:'IBM871'), (* IBM EBCDIC Icelandic *)
-  {$ifdef aix}
-   (cp:20871; name:'IBM-871'), (* AIX *)
-  {$endif}
    (cp:20880; name:'IBM880'), (* IBM EBCDIC Cyrillic Russian *)
-  {$ifdef aix}
-   (cp:20880; name:'IBM-880'), (* AIX *)
-  {$endif}
    (cp:20905; name:'IBM905'), (* IBM EBCDIC Turkish *)
-  {$ifdef aix}
-   (cp:20905; name:'IBM-905'), (* AIX *)
-  {$endif}
    (cp:20924; name:'IBM00924'), (* IBM EBCDIC Latin 1/Open System (1047 + Euro symbol) *)
-  {$ifdef aix}
-   (cp:20924; name:'IBM-924'), (* AIX *)
-  {$endif}
    (cp:20932; name:'EUC-JP'), (* Japanese (JIS 0208-1990 and 0121-1990) *)
-  {$ifdef aix}
-   (cp:20932; name:'IBM-eucJP'), (* AIX *)
-  {$endif}
    (cp:20936; name:'x-cp20936'), (* Simplified Chinese (GB2312); Chinese Simplified (GB2312-80) *)
-  {$ifdef aix}
-   (cp:20936; name:'GB2312.1980-0'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:20936; name:'GB2312.1980-0-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:20936; name:'GB2312.1980-0-GR'), (* AIX *)
-  {$endif}
    (cp:20949; name:'x-cp20949'), (* Korean Wansung *)
    (cp:21025; name:'cp1025'), (* IBM EBCDIC Cyrillic Serbian-Bulgarian *)
-  {$ifdef aix}
-   (cp:21025; name:'IBM-1025'), (* AIX *)
-  {$endif}
    (cp:21866; name:'koi8-u'), (* Ukrainian (KOI8-U); Cyrillic (KOI8-U) *)
-  {$ifdef aix}
-   (cp:21866; name:'IBM-1124'), (* AIX *)
-  {$endif}
    (cp:28591; name:'CP819'),
    (cp:28591; name:'IBM819'),
    (cp:28591; name:'ISO-8859-1'),
@@ -478,125 +325,26 @@ const
    (cp:28591; name:'LATIN1'),
    (cp:28591; name:'CSISOLATIN1'),
    (cp:28591; name:'iso-8859-1'), (* ISO 8859-1 Latin 1; Western European (ISO) *)
-  {$ifdef aix}
-   (cp:28591; name:'ISO8859-1'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28591; name:'ISO8859-1-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28591; name:'ISO8859-1-GT'), (* AIX *)
-  {$endif}
    (cp:28591; name:'iso8859-1'), (* ISO 8859-1 Latin 1; Western European (ISO) *)
    (cp:28592; name:'iso-8859-2'), (* ISO 8859-2 Central European; Central European (ISO) *)
-  {$ifdef aix}
-   (cp:28592; name:'ISO8859-2'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28592; name:'ISO8859-2-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28593; name:'ISO8859-2-GT'), (* AIX *)
-  {$endif}
    (cp:28592; name:'iso8859-2'), (* ISO 8859-2 Central European; Central European (ISO) *)
    (cp:28593; name:'iso-8859-3'), (* ISO 8859-3 Latin 3 *)
-  {$ifdef aix}
-   (cp:28593; name:'ISO8859-3'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28593; name:'ISO8859-3-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28593; name:'ISO8859-3-GT'), (* AIX *)
-  {$endif}
    (cp:28593; name:'iso8859-3'), (* ISO 8859-3 Latin 3 *)
    (cp:28594; name:'iso-8859-4'), (* ISO 8859-4 Baltic *)
-  {$ifdef aix}
-   (cp:28594; name:'ISO8859-4'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28594; name:'ISO8859-4-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28594; name:'ISO8859-4-GT'), (* AIX *)
-  {$endif}
    (cp:28594; name:'iso8859-4'), (* ISO 8859-4 Baltic *)
    (cp:28595; name:'iso-8859-5'), (* ISO 8859-5 Cyrillic *)
-  {$ifdef aix}
-   (cp:28595; name:'ISO8859-5'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28595; name:'ISO8859-5-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28595; name:'ISO-8859-5-GT'), (* AIX *)
-  {$endif}
    (cp:28595; name:'iso8859-5'), (* ISO 8859-5 Cyrillic *)
    (cp:28596; name:'iso-8859-6'), (* ISO 8859-6 Arabic *)
-  {$ifdef aix}
-   (cp:28596; name:'ISO8859-6'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28596; name:'ISO-8859-6-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28596; name:'ISO-8859-6-GT'), (* AIX *)
-  {$endif}
    (cp:28596; name:'iso8859-6'), (* ISO 8859-6 Arabic *)
    (cp:28597; name:'iso-8859-7'), (* ISO 8859-7 Greek *)
-  {$ifdef aix}
-   (cp:28597; name:'ISO8859-7'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28597; name:'ISO-8859-7-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28597; name:'ISO8859-7-GT'), (* AIX *)
-  {$endif}
    (cp:28597; name:'iso8859-7'), (* ISO 8859-7 Greek *)
    (cp:28598; name:'iso-8859-8'), (* ISO 8859-8 Hebrew; Hebrew (ISO-Visual) *)
-  {$ifdef aix}
-   (cp:28598; name:'ISO8859-8'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28598; name:'ISO8859-8-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28598; name:'ISO8859-8-GT'), (* AIX *)
-  {$endif}
    (cp:28598; name:'iso8859-8'), (* ISO 8859-8 Hebrew; Hebrew (ISO-Visual) *)
    (cp:28599; name:'iso-8859-9'), (* ISO 8859-9 Turkish *)
-  {$ifdef aix}
-   (cp:28599; name:'ISO8859-9'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28599; name:'ISO8859-9-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28599; name:'ISO8859-9-GT'), (* AIX *)
-  {$endif}
    (cp:28599; name:'iso8859-9'), (* ISO 8859-9 Turkish *)
    (cp:28603; name:'iso-8859-13'), (* ISO 8859-13 Estonian *)
-  {$ifdef aix}
-   (cp:28603; name:'ISO8859-13'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28603; name:'ISO8859-13-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28603; name:'ISO8859-13-GT'), (* AIX *)
-  {$endif}
    (cp:28603; name:'iso8859-13'), (* ISO 8859-13 Estonian *)
    (cp:28605; name:'iso-8859-15'), (* ISO 8859-15 Latin 9 *)
-  {$ifdef aix}
-   (cp:28605; name:'ISO8859-15'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28605; name:'ISO8859-15-GL'), (* AIX *)
-  {$endif}
-  {$ifdef aix}
-   (cp:28605; name:'ISO8859-15-GT'), (* AIX *)
-  {$endif}
    (cp:28605; name:'iso8859-15'), (* ISO 8859-15 Latin 9 *)
    (cp:29001; name:'x-Europa'), (* Europa 3 *)
    (cp:38598; name:'iso-8859-8-i'), (* ISO 8859-8 Hebrew; Hebrew (ISO-Logical) *)
@@ -720,7 +468,7 @@ var
 begin
   // Get one of non-empty environment variables in the next order:
   // LC_ALL, LC_CTYPE, LANG. Default is UTF-8 or ASCII.
-{$if defined(linux) or defined(darwin) or defined(haiku)}
+{$if (defined(linux)) or (defined(darwin))}
   Result:=CP_UTF8;
 {$else}
   Result:=CP_ASCII;

@@ -46,30 +46,16 @@ begin
       InOutRes := 16;
       exit;
     end;
-  {$ifdef WINCE}
-  if (s='..') then
-    begin
-      InOutRes := 5;
-      exit;
-    end;
-  {$endif WINCE}
   dirfn(TDirFnType(@RemoveDirectoryW),s);
-{$ifdef WINCE}
-  if (Inoutres=3) and (Pos(DirectorySeparator, s)<2) then
-    Inoutres:=2;
-{$endif WINCE}
 end;
 
 Procedure do_ChDir(const s: UnicodeString);
-{$ifndef WINCE}
 var
   EnvName: array [0..3] of WideChar;
   Len, Len2: cardinal;
   FullPath: UnicodeString;
   P: PWideChar;
-{$ENDIF WINCE}
 begin
-{$ifndef WINCE}
   Len := GetFullPathNameW (PUnicodeChar (S), 0, nil, P); // in TChar
   SetLength (FullPath, Len - 1); // -1 because len is #0 inclusive
   Len2 := GetFullPathNameW (PUnicodeChar (S), Len, PUnicodeChar (FullPath), P);
@@ -97,20 +83,14 @@ begin
    dirfn(TDirFnType(@SetCurrentDirectoryW),s);
   if Inoutres=2 then
    Inoutres:=3;
-{$else WINCE}
-  InOutRes:=3;
-{$endif WINCE}
 end;
 
 procedure do_GetDir (DriveNr: byte; var Dir: Unicodestring);
-{$ifndef WINCE}
 var
   Drive:array[0..3]of widechar;
   P: PWideChar;
   Len, Len2: cardinal;
-{$endif WINCE}
 begin
-{$ifndef WINCE}
   if DriveNr <> 0 then
    begin
     Drive[0]:=widechar(DriveNr+ Ord ('A') - 1);
@@ -144,7 +124,4 @@ begin
     if not FileNameCasePreserving then
      Dir := UpCase (Dir);
    end;
-{$else WINCE}
-  Dir:='\';
-{$endif WINCE}
 end;

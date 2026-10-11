@@ -26,9 +26,6 @@ uses
 {$ifdef Windows}
   WinApi.Windows,
 {$else}
-{$ifdef KYLIX}
-  Api.Libc,
-{$endif}
   System.Types, Data.Dbf.Wtil,
 {$endif}
   Data.Db,
@@ -44,9 +41,6 @@ uses
 {$ifdef WINDOWS}
   Windows,
 {$else}
-{$ifdef KYLIX}
-  Libc,
-{$endif}
   Types, dbf_wtil,
 {$endif}
   Db,
@@ -269,13 +263,11 @@ implementation
 {$IFDEF FPC_DOTTEDUNITS}
 uses
 {$ifndef WINDOWS}
- {$IFNDEF OS2}
   {$ifndef FPC}
   RTLConsts,
   {$else FPC}
   UnixApi.Base,
   {$endif FPC}
- {$ENDIF OS2}
 {$endif WinApi.Windows}
 {$ifdef SUPPORT_MATH_UNIT}
   System.Math,
@@ -284,13 +276,11 @@ uses
 {$ELSE FPC_DOTTEDUNITS}
 uses
 {$ifndef WINDOWS}
- {$IFNDEF OS2}
   {$ifndef FPC}
   RTLConsts,
   {$else FPC}
   BaseUnix,
   {$endif FPC}
- {$ENDIF OS2}
 {$endif WINDOWS}
 {$ifdef SUPPORT_MATH_UNIT}
   Math,
@@ -3337,18 +3327,12 @@ end;
 procedure TDbfGlobals.InitUserName;
 {$ifdef FPC}
 {$ifndef WINDOWS}
- {$IFNDEF OS2}
 var
   TempName: UTSName;
- {$ENDIF OS2}
 {$endif}
 {$endif}
 begin
 {$ifdef WINDOWS}
-{$ifdef wince}
-  FUserName:='cedevice';
-  FUserNameLen:=Length(FUserName);
-{$else}
   FUserNameLen := MAX_COMPUTERNAME_LENGTH+1;
   SetLength(FUserName, FUserNameLen);
   {$IFDEF FPC_DOTTEDUNITS}WinApi.{$ENDIF}Windows.GetComputerName(PAnsiChar(FUserName),
@@ -3357,15 +3341,10 @@ begin
     {$ifdef DELPHI_3}){$endif}
     );
   SetLength(FUserName, FUserNameLen);
-{$endif wince}
 {$else}
 {$ifdef FPC}
- {$IFDEF OS2}
-  FUserName := GetEnvironmentVariable ('HOSTNAME');
- {$ELSE OS2}
   FpUname(TempName);
   FUserName := TempName.machine;
- {$ENDIF OS2}
   FUserNameLen := Length(FUserName);
 {$endif}
 {$endif}

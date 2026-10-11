@@ -928,12 +928,12 @@ implementation
     { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
 
     procedure maybe_load_got(curr: tmodule);
-{$if defined(i386) or defined (sparcgen)}
+{$if defined(i386)}
        var
          gotvarsym : tstaticvarsym;
 {$endif i386 or sparcgen}
       begin
-{$if defined(i386) or defined(sparcgen)}
+{$if defined(i386)}
          if (cs_create_pic in current_settings.moduleswitches) and
             (tf_pic_uses_got in target_info.flags) then
            begin
@@ -1037,23 +1037,6 @@ implementation
       end;
 
 
-{$ifdef jvm}
-      procedure addmoduleclass(curr : tmodule);
-        var
-          def: tobjectdef;
-          typesym: ttypesym;
-        begin
-          { java_jlobject may not have been parsed yet (system unit); in any
-            case, we only use this to refer to the class type, so inheritance
-            does not matter }
-          def:=cobjectdef.create(odt_javaclass,'__FPC_JVM_Module_Class_Alias$',nil,true);
-          include(def.objectoptions,oo_is_external);
-          include(def.objectoptions,oo_is_sealed);
-          def.objextname:=stringdup(curr.realmodulename^);
-          typesym:=ctypesym.create('__FPC_JVM_Module_Class_Alias$',def);
-          symtablestack.top.insertsym(typesym);
-        end;
-{$endif jvm}
 
 type
     tfinishstate=record
@@ -1171,10 +1154,6 @@ type
         { ... parse the declarations }
         Message1(parser_u_parsing_interface,curr.realmodulename^);
 
-{$ifdef jvm}
-         { fake classdef to represent the class corresponding to the unit }
-         addmoduleclass(curr);
-{$endif}
         read_interface_declarations;
 
 
@@ -2570,10 +2549,6 @@ type
 
         symtablestack.push(curr.localsymtable);
 
-  {$ifdef jvm}
-        { fake classdef to represent the class corresponding to the unit }
-        addmoduleclass(curr);
-  {$endif}
 
         { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
         maybe_load_got(curr);

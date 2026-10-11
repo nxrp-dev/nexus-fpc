@@ -97,7 +97,7 @@ begin
 end;
 
 
-{$if defined(unix) and not defined(beos) and not defined(haiku)}
+{$if defined(unix)}
 
   procedure GetModuleByAddr(addr: pointer; var baseaddr: pointer; var filename: ansistring);
     begin
@@ -141,59 +141,6 @@ end;
         end;
     end;
 
-{$elseif defined(morphos) or defined(aros) or defined(amigaos4)}
-
-  procedure startsymbol; external name '_start';
-
-  procedure GetModuleByAddr(addr: pointer; var baseaddr: pointer; var filename: ansistring);
-    begin
-      baseaddr:= @startsymbol;
-{$ifdef FPC_HAS_FEATURE_COMMANDARGS}
-      filename:=ParamStr(0);
-{$else FPC_HAS_FEATURE_COMMANDARGS}
-      filename:='';
-{$endif FPC_HAS_FEATURE_COMMANDARGS}
-    end;
-
-{$elseif defined(msdos)}
-
-  procedure GetModuleByAddr(addr: farpointer; var baseaddr: farpointer; var filename: ansistring);
-    begin
-      baseaddr:=Ptr(PrefixSeg+16,0);
-      filename:=ParamStr(0);
-    end;
-
-{$elseif defined(beos) or defined(haiku)}
-
-{$i ptypes.inc}
-{$i ostypes.inc}
-
-  function get_next_image_info(team: team_id; var cookie:longint; var info:image_info; size: size_t) : status_t;cdecl; external 'root' name '_get_next_image_info';
-
-  procedure GetModuleByAddr(addr: pointer; var baseaddr: pointer; var filename: ansistring);
-    const
-      B_OK = 0;
-    var
-      cookie    : longint;
-      info      : image_info;
-    begin
-      filename:='';
-      baseaddr:=nil;
-
-      cookie:=0;
-      fillchar(info, sizeof(image_info), 0);
-
-      while get_next_image_info(0,cookie,info,sizeof(info))=B_OK do
-        begin
-          if (info._type = B_APP_IMAGE) and
-             (addr >= info.text) and (addr <= (info.text + info.text_size)) then
-            begin
-              baseaddr:=info.text;
-              filename:=PAnsiChar(@info.name);
-            end;
-        end;
-    end;
-
 {$else}
 
 
@@ -214,7 +161,7 @@ end;
                              Executable Loaders
 ****************************************************************************}
 
-{$if defined(freebsd) or defined(netbsd) or defined (openbsd) or defined(linux) or defined(sunos) or defined(android) or defined(dragonfly)}
+{$if (defined(linux)) or (defined(android))}
   {$ifdef cpu64}
     {$define ELF64}
     {$define FIND_BASEADDR_ELF}
@@ -224,27 +171,10 @@ end;
   {$endif}
 {$endif}
 
-{$if defined(beos) or defined(haiku)}
-  {$ifdef cpu64}
-    {$define ELF64}
-  {$else}
-    {$define ELF32}
-  {$endif}
-{$endif}
 
-{$if defined(morphos) or defined(aros) or defined(amigaos4)}
-  {$ifdef cpu64}
-    {$define ELF64}
-  {$else}
-    {$define ELF32}
-  {$endif}
-{$endif}
 
-{$if defined(msdos)}
-  {$define ELF32}
-{$endif}
 
-{$if defined(win32) or defined(wince)}
+{$if defined(win32)}
   {$define PE32}
 {$endif}
 
@@ -253,16 +183,13 @@ end;
 {$endif}
 
 
-{$IFDEF OS2}
-  {$DEFINE EMX}
-{$ENDIF OS2}
 
 
 {****************************************************************************
                               DOS Stub
 ****************************************************************************}
 
-{$if defined(EMX) or defined(PE32) or defined(PE32PLUS) or defined(GO32V2) or defined(MSDOS)}
+{$if (defined(PE32)) or (defined(PE32PLUS))}
 type
   tdosheader = packed record
      e_magic : word;
@@ -298,7 +225,7 @@ type
                                COFF
 ****************************************************************************}
 
-{$if defined(PE32) or defined(PE32PLUS) or defined(GO32V2)}
+{$if (defined(PE32)) or (defined(PE32PLUS))}
 type
   tcoffsechdr=packed record
     name     : array[0..7] of ansichar;
@@ -360,9 +287,6 @@ begin
      if asecname=secname then
        begin
          secofs:=cardinal(sechdr.datapos) + E.ImgOffset;
-{$ifdef GO32V2}
-         seclen:=sechdr.datalen;
-{$else GO32V2}
          { In PECOFF, datalen includes file padding up to the next section.
            vsize is the actual payload size if it does not exceed datalen,
            otherwise it is .bss (or alike) section that we should ignore.  }
@@ -370,7 +294,6 @@ begin
            seclen:=sechdr.vsize
          else
            exit;
-{$endif GO32V2}
          FindSectionCoff:=true;
          exit;
        end;
@@ -379,53 +302,6 @@ end;
 {$endif PE32 or PE32PLUS or GO32V2}
 
 
-{$ifdef go32v2}
-function OpenGo32Coff(var e:TExeFile):boolean;
-type
-  tgo32coffheader=packed record
-    mach   : word;
-    nsects : word;
-    time   : longint;
-    sympos : longint;
-    syms   : longint;
-    opthdr : word;
-    flag   : word;
-    other  : array[0..27] of byte;
-  end;
-const
-  ParagraphSize = 512;
-var
-  coffheader : tgo32coffheader;
-  DosHeader: TDosHeader;
-  BRead: cardinal;
-begin
-  OpenGo32Coff:=false;
-  { read and check header }
-  if E.Size < SizeOf (DosHeader) then
-   Exit;
-  BlockRead (E.F, DosHeader, SizeOf (DosHeader), BRead);
-  if BRead <> SizeOf (DosHeader) then
-   Exit;
-  if DosHeader.E_Magic = $5A4D then
-  begin
-   E.ImgOffset := DosHeader.e_cp * ParagraphSize;
-   if DosHeader.e_cblp > 0 then
-    E.ImgOffset := E.ImgOffset + DosHeader.e_cblp - ParagraphSize;
-  end;
-  if e.size < E.ImgOffset + sizeof(coffheader) then
-   exit;
-  seek(e.f,E.ImgOffset);
-  blockread(e.f,coffheader,sizeof(coffheader));
-  if coffheader.mach<>$14c then
-    exit;
-  e.sechdrofs:=filepos(e.f);
-  e.nsects:=coffheader.nsects;
-  e.secstrofs:=coffheader.sympos+coffheader.syms*sizeof(coffsymbol)+4;
-  if e.secstrofs>e.size then
-    exit;
-  OpenGo32Coff:=true;
-end;
-{$endif Go32v2}
 
 
 {$ifdef PE32}
@@ -567,108 +443,6 @@ end;
                                  AOUT
 ****************************************************************************}
 
-{$IFDEF EMX}
-type
-  TEmxHeader = packed record
-     Version: array [1..16] of AnsiChar;
-     Bound: word;
-     AoutOfs: longint;
-     Options: array [1..42] of AnsiChar;
-  end;
-
-  TAoutHeader = packed record
-     Magic: word;
-     Machine: byte;
-     Flags: byte;
-     TextSize: longint;
-     DataSize: longint;
-     BssSize: longint;
-     SymbSize: longint;
-     EntryPoint: longint;
-     TextRelocSize: longint;
-     DataRelocSize: longint;
-  end;
-
-const
- PageSizeFill = $FFF;
-
-var
- DosHeader: TDosHeader;
- EmxHeader: TEmxHeader;
- AoutHeader: TAoutHeader;
- StabOfs: PtrUInt;
- S4: string [4];
-
-function OpenEMXaout (var E: TExeFile): boolean;
-begin
- OpenEMXaout := false;
-{ GDB after 4.18 uses offset to function begin
-  in text section but OS/2 version still uses 4.16 PM }
- E.FunctionRelative := false;
-{ read and check header }
- if E.Size > SizeOf (DosHeader) then
- begin
-  BlockRead (E.F, DosHeader, SizeOf (TDosHeader));
-{$IFDEF DEBUG_LINEINFO}
-  WriteLn (StdErr, 'DosHeader.E_CParHdr = ', DosHeader.E_cParHdr);
-{$ENDIF DEBUG_LINEINFO}
-  if E.Size > DosHeader.e_cparhdr shl 4 + SizeOf (TEmxHeader) then
-  begin
-   Seek (E.F, DosHeader.e_cparhdr shl 4);
-   BlockRead (E.F, EmxHeader, SizeOf (TEmxHeader));
-  S4 [0] := #4;
-  Move (EmxHeader.Version, S4 [1], 4);
-   if (S4 = 'emx ') and
-                       (E.Size > EmxHeader.AoutOfs + SizeOf (TAoutHeader)) then
-   begin
-{$IFDEF DEBUG_LINEINFO}
-    WriteLn (StdErr, 'EmxHeader.AoutOfs = ', EmxHeader.AoutOfs, '/', HexStr (pointer (EmxHeader.AoutOfs)));
-{$ENDIF DEBUG_LINEINFO}
-    Seek (E.F, EmxHeader.AoutOfs);
-    BlockRead (E.F, AoutHeader, SizeOf (TAoutHeader));
-{$IFDEF DEBUG_LINEINFO}
-    WriteLn (StdErr, 'AoutHeader.Magic = ', AoutHeader.Magic);
-{$ENDIF DEBUG_LINEINFO}
-{    if AOutHeader.Magic = $10B then}
-    StabOfs := (EmxHeader.AoutOfs or PageSizeFill) + 1
-                 + AoutHeader.TextSize
-                 + AoutHeader.DataSize
-                 + AoutHeader.TextRelocSize
-                 + AoutHeader.DataRelocSize;
-{$IFDEF DEBUG_LINEINFO}
-    WriteLn (StdErr, 'AoutHeader.TextSize = ', AoutHeader.TextSize, '/', HexStr (pointer (AoutHeader.TextSize)));
-    WriteLn (StdErr, 'AoutHeader.DataSize = ', AoutHeader.DataSize, '/', HexStr (pointer (AoutHeader.DataSize)));
-    WriteLn (StdErr, 'AoutHeader.TextRelocSize = ', AoutHeader.TextRelocSize, '/', HexStr (pointer (AoutHeader.TextRelocSize)));
-    WriteLn (StdErr, 'AoutHeader.DataRelocSize = ', AoutHeader.DataRelocSize, '/', HexStr (pointer (AoutHeader.DataRelocSize)));
-    WriteLn (StdErr, 'AoutHeader.SymbSize = ', AoutHeader.SymbSize, '/', HexStr (pointer (AoutHeader.SymbSize)));
-    WriteLn (StdErr, 'StabOfs = ', StabOfs, '/', HexStr (pointer (StabOfs)));
-{$ENDIF DEBUG_LINEINFO}
-    if E.Size > StabOfs + AoutHeader.SymbSize then
-     OpenEMXaout := true;
-   end;
-  end;
- end;
-end;
-
-
-function FindSectionEMXaout (var E: TExeFile; const ASecName: shortstring;
-                                         var SecOfs, SecLen: longint): boolean;
-begin
- FindSectionEMXaout := false;
- if ASecName = '.stab' then
- begin
-  SecOfs := StabOfs;
-  SecLen := AoutHeader.SymbSize;
-  FindSectionEMXaout := true;
- end else
- if ASecName = '.stabstr' then
- begin
-  SecOfs := StabOfs + AoutHeader.SymbSize;
-  SecLen := E.Size - Pred (SecOfs);
-  FindSectionEMXaout := true;
- end;
-end;
-{$ENDIF EMX}
 
 
 {****************************************************************************
@@ -909,35 +683,13 @@ end;
 {$endif FIND_BASEADDR_ELF}
 
 function OpenElf(var e:TExeFile):boolean;
-{$ifdef MSDOS}
-const
-  ParagraphSize = 512;
-{$endif MSDOS}
 var
   elfheader : telfheader;
   elfsec    : telfsechdr;
   phdr      : telfproghdr;
   i         : longint;
-{$ifdef MSDOS}
-  DosHeader : tdosheader;
-  BRead     : cardinal;
-{$endif MSDOS}
 begin
   OpenElf:=false;
-{$ifdef MSDOS}
-  { read and check header }
-  if E.Size < SizeOf (DosHeader) then
-   Exit;
-  BlockRead (E.F, DosHeader, SizeOf (DosHeader), BRead);
-  if BRead <> SizeOf (DosHeader) then
-   Exit;
-  if DosHeader.E_Magic = $5A4D then
-  begin
-   E.ImgOffset := LongWord(DosHeader.e_cp) * ParagraphSize;
-   if DosHeader.e_cblp > 0 then
-    E.ImgOffset := E.ImgOffset + DosHeader.e_cblp - ParagraphSize;
-  end;
-{$endif MSDOS}
   { read and check header }
   if e.size<(sizeof(telfheader)+e.ImgOffset) then
    exit;
@@ -954,10 +706,6 @@ begin
   e.sechdrofs:=elfheader.e_shoff;
   e.nsects:=elfheader.e_shnum;
 
-{$ifdef MSDOS}
-  { e.processaddress is already initialized to 0 }
-  e.processsegment:=PrefixSeg+16;
-{$else MSDOS}
   { scan program headers to find the image base address }
   e.processaddress:=High(e.processaddress);
   seek(e.f,e.ImgOffset+elfheader.e_phoff);
@@ -970,7 +718,6 @@ begin
 
   if e.processaddress = High(e.processaddress) then
     e.processaddress:=0;
-{$endif MSDOS}
 
   OpenElf:=true;
 end;
@@ -1384,10 +1131,6 @@ type
 
 const
   ExeProcs : TExeProcRec = (
-{$ifdef go32v2}
-     openproc : @OpenGo32Coff;
-     findproc : @FindSectionCoff;
-{$endif}
 {$ifdef PE32}
      openproc : @OpenPeCoff;
      findproc : @FindSectionCoff;
@@ -1404,10 +1147,6 @@ const
      openproc : @OpenMachO;
      findproc : @FindSectionMachO;
 {$endif darwin}
-{$IFDEF EMX}
-     openproc : @OpenEMXaout;
-     findproc : @FindSectionEMXaout;
-{$ENDIF EMX}
    );
 
 function OpenExeFile(var e:TExeFile;const fn:shortstring):boolean;

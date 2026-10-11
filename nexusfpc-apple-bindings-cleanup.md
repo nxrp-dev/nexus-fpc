@@ -8,6 +8,10 @@ nonfunctional APIs and declarations exclusive to 32-bit processes first. A
 shared types, constants, and functioning 64-bit declarations until their
 consumers have been checked. MACPAS remains required by the surviving bindings.
 
+This restriction applies to Apple targets. NexusFPC also supports 32-bit
+i386 Windows and Linux; see the supported-target table in
+[the mission statement](nexusfpc-mission-statement.md).
+
 “Bindings present” below means the named declarations exist in this checkout;
 it does not claim coverage of the entire current Apple SDK or a completed
 application migration. Replacement implementation work is tracked separately.

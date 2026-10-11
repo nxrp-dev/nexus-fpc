@@ -110,9 +110,6 @@ implementation
        scanner,
        syscinfo,
        pbase,pexpr,ptype,pdecl,pparautl,pgenutil
-{$ifdef jvm}
-       ,pjvm
-{$endif}
        ;
 
     const
@@ -356,10 +353,6 @@ implementation
                parse_proctype_directives(pv);
              { Add implicit hidden parameters and function result }
              handle_calling_convention(pv,hcc_default_actions_intf);
-{$ifdef jvm}
-             { anonymous -> no name }
-             jvm_create_procvar_class('',pv);
-{$endif}
              hdef:=pv;
            end
           else
@@ -482,10 +475,6 @@ implementation
               vs.vardef:=hdef;
               vs.defaultconstsym:=defaultvalue;
 
-{$ifdef wasm}
-              if (vs.varspez in [vs_var,vs_constref,vs_out]) and is_wasm_reference_type(vs.vardef) then
-                Message(parser_e_wasm_ref_types_can_only_be_passed_by_value);
-{$endif wasm}
             end;
         until not try_to_consume(_SEMICOLON);
 

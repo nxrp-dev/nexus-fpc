@@ -49,17 +49,10 @@ const
 (* Maximum table sizes: *)
 
 max_keys           =  997;  (* size of hash symbol table (prime number!)   *)
-{$IFDEF MsDos}
-max_pos            =  600;  (* maximum number of positions                 *)
-max_states         =  300;  (* number of DFA states                        *)
-max_trans          =  600;  (* number of transitions                       *)
-max_start_states   =   50;  (* maximum number of user-defined start states *)
-{$ELSE}
 max_pos            = 1200;  (* maximum number of positions                 *)
 max_states         =  600;  (* number of DFA states                        *)
 max_trans          = 1200;  (* number of transitions                       *)
 max_start_states   =  100;  (* maximum number of user-defined start states *)
-{$ENDIF}
 
 var
 

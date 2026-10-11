@@ -13,19 +13,7 @@
 
  **********************************************************************}
 const
-{$if defined(CPUWASM)}
-  { Since WebAssembly is a Harvard architecture, the code is invisible in linear
-    memory and the data section starts at address 0. Resources reside after the
-    initialized data section, just before the bss (uninitialized data) section,
-    therefore it's perfectly possible that their data exist on a relatively low
-    address (less than 64KB). So, for WebAssembly we check whether the pointer
-    resides in the first 1KB of linear memory, instead of the first 64KB. Note
-    that the first 1KB of linear memory in WebAssembly aren't used by Free
-    Pascal. }
-  MaxIntResource=1023;
-{$else}
   MaxIntResource=65535;
-{$endif}
 
 type
   PResInfoNode = ^TResInfoNode;

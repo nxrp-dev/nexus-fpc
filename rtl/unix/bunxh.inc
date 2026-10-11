@@ -35,11 +35,7 @@ Type TGrpArr = Array [0..0] of TGid;            { C style array workarounds}
     Function  FpChown      (path : PAnsiChar; owner : TUid; group : TGid): cInt;
     Function  FpUtime      (path : PAnsiChar; times : putimbuf): cInt;
     Function  FpFUtimens   (handle: cint;constref times: TTimespecArr):cint;
-{$if defined(freebsd)}
-    Function  FpPipe       (var fildes : tfildes; flags : cInt=0):cInt;
-{$else}
     Function  FpPipe       (var fildes : tfildes):cInt;
-{$endif}
     Function  FpDup        (fildes : cInt): cInt;  external name 'FPC_SYSC_DUP';
     Function  FpDup2       (fildes, fildes2 : cInt): cInt; external name 'FPC_SYSC_DUP2';
     Function  FpTimes      (var buffer : tms): TClock;

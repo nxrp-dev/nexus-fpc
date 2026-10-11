@@ -89,96 +89,13 @@ TYPE
         st_gen        : cuint32;           // file generation number
         st_lspare     : cuint32;           // RESERVED: DO NOT USE!
         st_qspare     : array[0..1] Of cint64;
-{$elseif defined(dragonfly)}
-        st_ino        : ino_t;             // inode's number
-        st_nlink      : nlink_t;           // number of hard links
-        st_dev        : dev_t;             // inode's device
-        st_mode       : mode_t;            // inode protection mode
-        st_padd1      : cuint16;
-        st_uid        : uid_t;             // user ID of the file's owner
-        st_gid        : gid_t;             // group ID of the file's group
-        st_rdev       : dev_t;             // device type
-        st_atime      : time_t;            // time of last access (half timespec)
-        st_atimensec  : clong;             // nsec of last access (half timespec)
-        st_mtime      : time_t;            // time of last data modification
-        st_mtimensec  : clong;             // nsec of last data modification
-        st_ctime      : time_t;            // time of last file status change
-        st_ctimensec  : clong;             // nsec of last file status change
-        st_size       : off_t;             // file size, in bytes
-        st_blocks     : cint64;            // blocks allocated for file
-        st_blksize    : cuint32;           // optimal blocksize for I/O
-        st_flags      : cuint32;           // user defined flags for file
-        st_gen        : cuint32;           // file generation number
-        st_lspare     : cint32;
-        st_qspare1    : cint64;            // was recursive change detect
-        st_qspare2    : cint64;
-{$elseif defined(openbsd)}
-        st_mode       : mode_t;            // inode protection mode
-        st_dev        : dev_t;             // inode's device
-        st_ino        : ino_t;             // inode's number
-        st_nlink      : nlink_t;           // number of hard links
-        st_uid        : uid_t;             // user ID of the file's owner
-        st_gid        : gid_t;             // group ID of the file's group
-        st_rdev       : dev_t;             // device type
-        st_atime      : time_t;            // time of last access
-        st_atimensec  : clong;             // nsec of last access
-        st_mtime      : time_t;            // time of last data modification
-        st_mtimensec  : clong;             // nsec of last data modification
-        st_ctime      : time_t;            // time of last file status change
-        st_ctimensec  : clong;             // nsec of last file status change
-        st_size       : off_t;             // file size, in bytes
-        st_blocks     : cint64;            // blocks allocated for file
-        st_blksize    : cint32;            // optimal blocksize for I/O
-        st_flags      : cuint32;           // user defined flags for file
-        st_gen        : cuint32;           // file generation number
-        st_birthtime  : time_t;            // File creation time
-        st_birthtimensec : clong;          // nsec of file creation time
-{$elseif defined(freebsd)}
-{$ifdef i386}
-{$define __STAT_TIME_T_EXT}
-{$endif}
-        st_dev        : dev_t;             // inode's device
-        st_ino        : ino_t;             // inode's number
-        st_nlink      : nlink_t;           // number of hard links
-        st_mode       : mode_t;            // inode protection mode
-	st_padding0   : cint16;
-        st_uid        : uid_t;             // user ID of the file's owner
-        st_gid        : gid_t;             // group ID of the file's group
-	st_padding1   : cint32;
-        st_rdev       : dev_t;             // device type
-{$ifdef __STAT_TIME_T_EXT}
-        st_atim_ext   : cint32;
-{$endif}
-        st_atime      : time_t;            // time of last access
-        st_atimensec  : clong;             // nsec of last access
-{$ifdef __STAT_TIME_T_EXT}
-        st_mtim_ext   : cint32;
-{$endif}
-        st_mtime      : time_t;            // time of last data modification
-        st_mtimensec  : clong;             // nsec of last data modification
-{$ifdef __STAT_TIME_T_EXT}
-        st_ctim_ext   : cint32;
-{$endif}
-        st_ctime      : time_t;            // time of last file status change
-        st_ctimensec  : clong;             // nsec of last file status change
-{$ifdef __STAT_TIME_T_EXT}
-        st_birthtim_ext   : cint32;
-{$endif}
-        st_birthtime  : time_t;            // File creation time
-        st_birthtimensec : clong;          // nsec of file creation time
-        st_size       : off_t;             // file size, in bytes
-        st_blocks     : cint64;            // blocks allocated for file
-        st_blksize    : cint32;            // optimal blocksize for I/O
-        st_flags      : cuint32;           // user defined flags for file
-        st_gen        : cuint64;           // file generation number
-	st_spare      : array [0..10-1] of cuint64;
 {$else}
         st_dev        : dev_t;             // inode's device
 {$ifdef netbsd_use_stat30}
      { order is inverted for better alignment probably }
         st_mode       : mode_t;            // inode protection mode
         st_ino        : ino_t;             // inode's number
-{$else not netbsd}
+{$else}
         st_ino        : ino_t;             // inode's number
         st_mode       : mode_t;            // inode protection mode
 {$endif not netbsd}
@@ -197,9 +114,7 @@ TYPE
         st_blksize    : cuint32;           // optimal blocksize for I/O
         st_flags      : cuint32;           // user defined flags for file
         st_gen        : cuint32;           // file generation number
-{$ifndef NetBSD}
         st_lspare     : cint32;
-{$endif}
         st_qspare     : array[0..1] Of cint64;
 {$endif}
    end;
@@ -219,36 +134,6 @@ TYPE
         d_name        : array[0..PATH_MAX-1] of AnsiChar;        // name must be no longer than this
    end;
    {$packrecords c}
-{$elseif defined(dragonfly)}
-   dirent  = record
-        d_fileno      : ino_t;                          // file number of entry
-        d_namlen      : cuint16;                        // strlen (d_name)
-        d_type        : cuint8;                         // file type, see below
-        d_unused1     : cuint8;                         // padding, reserved
-        d_unused2     : cuint32;                        // reserved
-        d_name        : array[0..255] of AnsiChar;          // name, null terminated
-   end;
-{$elseif defined(openbsd)}
-   dirent  = record
-        d_fileno      : ino_t;
-        d_off         : off_t;
-        d_reclen      : cuint16;                        // length of this record
-        d_type        : cuint8;                         // file type, see below
-        d_namlen      : cuint8;                         // length of string in d_name
-        d_padding     : array[0..3] of cuint8;
-        d_name        : array[0..(255 + 1)-1] of AnsiChar;  // name must be no longer than this
-   end;
-{$elseif defined(freebsd)}
-   dirent  = record
-        d_fileno      : ino_t;
-        d_off         : off_t;
-        d_reclen      : cuint16;                        // length of this record
-        d_type        : cuint8;                         // file type, see below
-	d_pad0        : cuint8;
-        d_namlen      : cuint16;                        // length of string in d_name
-	d_pad1        : cuint16;
-        d_name        : array[0..(255 + 1)-1] of AnsiChar;  // name must be no longer than this
-   end;
 {$else}
    dirent  = record
         d_fileno      : cuint32;                        // file number of entry
@@ -267,11 +152,6 @@ TYPE
         dd_size   : clong;        // amount of data returned by getdirentries
         dd_buf    : PAnsiChar;        // data buffer
         dd_len    : cint;         // size of data buffer
-{$ifdef openbsd}
-        dd_curpos : off_t;
-        dd_lock   : pointer;
-        dd_rewind : clong;
-{$else not openbsd}
         dd_seek   : clong;        // magic cookie returned by getdirentries
         dd_rewind : clong;        // magic cookie for rewinding
         dd_flags  : cint;         // flags for readdir
@@ -279,7 +159,6 @@ TYPE
         __dd_lock : pthread_mutex_t; // for thread locking
         __dd_td : pointer;        // telldir position recording
 {$endif}
-{$endif not openbsd}
    end;
    TDir    = dir;
    pDir    = ^dir;
@@ -297,9 +176,6 @@ TYPE
                 l_pid   : pid_t;        { lock owner }
                 l_type  : cshort;       { lock type: read/write, etc. }
                 l_whence: cshort;       { type of l_start }
-{$ifdef freebsd}
-                l_sysid : cint;
-{$endif}
                 end;
    TFlock   = flock;
    pFlock   = ^flock;
@@ -344,16 +220,6 @@ CONST
     O_APPEND    =     8;        { Writes append to the file.        }
     O_NONBLOCK  =     4;        { Non-blocking I/O.                 }
 
-{$if defined(freebsd) or defined(dragonfly)}
-    { Other }
-    O_SHLOCK    =   $10;        { Open with shared file lock }
-    O_EXLOCK    =   $20;        { Open with exclusive file lock }
-    O_ASYNC     =   $40;        { Signal pgrp when data ready }
-    O_FSYNC     =   $80;        { Synchronous writes }
-    O_SYNC      =   $80;        { POSIX synonym for O_FSYNC }
-    O_NOFOLLOW  =  $100;        { Don't follow symlinks }
-    O_DIRECT    =$10000;        { Attempt to bypass buffer cache }
-{$endif}
 
     { mode_t possible values                                 }
     S_IRUSR =  %0100000000;     { Read permission for owner   }
@@ -382,37 +248,6 @@ CONST
   F_SetFl          = 4;           { set file status flags }
   F_GetOwn         = 5;           { get SIGIO/SIGURG proc/pgrp }
   F_SetOwn         = 6;           { set SIGIO/SIGURG proc/pgrp }
-{$ifdef freebsd}
-  F_OGetLk         = 7;           { get record locking information }
-  F_OSetLk         = 8;           { set record locking information }
-  F_OSetLkW        = 9;           { F_SETLK; wait if blocked }
-  F_Dup2Fd         = 10;          { duplicate file descriptor to arg }
-  F_GetLk          = 11;          { get record locking information}
-  F_SetLk          = 12;          { set record locking information }
-  F_SetLkW         = 13;          { F_SETLK; wait if blocked }
-  F_SetLkRemote    = 14;          { debugging support for remote locks }
-{$endif}
-{$ifdef dragonfly}
-  F_GetLk          = 7;           { get record locking information}
-  F_SetLk          = 8;           { set record locking information }
-  F_SetLkW         = 9;           { F_SETLK; wait if blocked }
-  F_Dup2Fd         = 10;          { duplicate file descriptor to arg }
-  F_DupFd_CloExec  = 17;	  { close on exec duplicated fd }
-{$endif}
-{$ifdef netbsd}
-  F_GetLk          = 7;           { get record locking information}
-  F_SetLk          = 8;           { set record locking information }
-  F_SetLkW         = 9;           { F_SETLK; wait if blocked }
-  F_CloseM	   = 10;	  { close all fds >= to the one given }
-  F_MaxFd          = 11;	  { return the max open fd }
-  F_DupFd_CloExec  = 12;	  { close on exec duplicated fd }
-{$endif}
-{$ifdef openbsd}
-  F_GetLk          = 7;           { get record locking information}
-  F_SetLk          = 8;           { set record locking information }
-  F_SetLkW         = 9;           { F_SETLK; wait if blocked }
-  F_DupFd_CloExec  = 10;	  { duplicate with FD_CLOEXEC set }
-{$endif}
 {$ifdef darwin}
   F_GetLk          = 7;           { get record locking information}
   F_SetLk          = 8;           { set record locking information }
@@ -426,18 +261,10 @@ CONST
   F_RDLCK          = 1;		  { shared or read lock }
   F_UNLCK          = 2;		  { unlock }
   F_WRLCK          = 3;		  { exclusive or write lock }
-{$ifdef freebsd}
-  F_UNLCKSYS       = 4;		  { purge locks for a given system ID }
-  F_CANCEL         = 5;		  { cancel an async lock request }
-{$endif}
 {$ifndef darwin}
   F_WAIT	   = $10;	  { Wait until lock is granted }
   F_FLOCK          = $20;         { Use flock(2) semantics for lock }
   F_POSIX          = $40; 	  { Use POSIX semantics for lock }
-{$endif}
-{$ifdef freebsd}
-  F_REMOTE	   = $80;	  { Lock owner is remote NFS client }
-  F_NOINTR	   = $100;        { Ignore signals when waiting }
 {$endif}
 
 {$ifdef darwin}
@@ -515,20 +342,8 @@ Const
   RLIMIT_MEMLOCK  = 6;              { locked-in-memory address space }
   RLIMIT_NPROC    = 7;              { number of processes }
   RLIMIT_NOFILE   = 8;              { number of open files }
-{$if defined(freebsd) or defined(dragonfly)}
-  RLIMIT_SBSIZE   = 9;              { maximum size of all socket buffers }
-  RLIMIT_VMEM     =10;              { virtual process size (inclusive of mmap) }
-  RLIMIT_AS       = RLIMIT_VMEM;
-{$ELSE}
   RLIMIT_AS       = 5;    	    { address space= resident set size}
-{$ENDIF}
 
-  {$ifdef FreeBSD}
-  RLIM_NLIMITS    =11;              { number of resource limits }
-  {$endif}
-  {$ifdef dragonfly}
-  RLIM_NLIMITS    =12;              { number of resource limits }
-  {$endif}
 
   {$ifdef Darwin}   // OS X 10.3
   RLIM_NLIMITS    =9;              { number of resource limits }

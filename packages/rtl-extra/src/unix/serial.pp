@@ -209,10 +209,8 @@ begin
     4000000: tios.c_cflag := B4000000;
     else tios.c_cflag := B9600;
   end;
-{$ifndef SOLARIS}
   tios.c_ispeed := tios.c_cflag;
   tios.c_ospeed := tios.c_ispeed;
-{$endif}
 
   tios.c_cflag := tios.c_cflag or CREAD or CLOCAL;
 

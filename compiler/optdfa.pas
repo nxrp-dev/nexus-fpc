@@ -551,10 +551,6 @@ unit optdfa;
                   end;
               end;
 
-{$ifdef JVM}
-            { all other platforms except jvm translate raise nodes into call nodes during pass_1 }
-            raisen,
-{$endif JVM}
             tempcreaten,
             asn,
             inlinen,
@@ -960,10 +956,6 @@ unit optdfa;
                   end
               end;
             { could be the implicitly generated load node for the result }
-{$ifdef JVM}
-            { all other platforms except jvm translate raise nodes into call nodes during pass_1 }
-            raisen,
-{$endif JVM}
             labeln,
             loadn,
             assignn,

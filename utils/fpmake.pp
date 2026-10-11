@@ -4,9 +4,6 @@
 {$mode objfpc}{$H+}
 program fpmake;
 
-{$IFDEF GO32V2}
- {$DEFINE NO_UNIT_PROCESS}
-{$ENDIF GO32V2}
 
 {$ifndef NO_UNIT_PROCESS}
   {$define HAS_UNIT_PROCESS}

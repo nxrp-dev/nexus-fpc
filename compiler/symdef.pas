@@ -1169,9 +1169,6 @@ interface
        voidneargspointertype,
 
 {$endif x86}
-{$ifdef wasm}
-       wasmvoidexternreftype,
-{$endif wasm}
        cundefinedtype,
        cformaltype,               { unique formal definition }
        ctypedformaltype,          { unique typed formal definition }
@@ -2537,9 +2534,6 @@ implementation
        result:=use_vectorfpu(self);
 {$else x86}
        result:=(typ=floatdef)
-{$ifdef xtensa}
-         and (FPUXTENSA_SINGLE in fpu_capabilities[current_settings.fputype]) and (tfloatdef(self).floattype=s32real)
-{$endif xtensa}
          ;
 {$endif x86}
      end;
@@ -7545,19 +7539,11 @@ implementation
           else
             internalerror(200411171);
 {$endif symansistr}
-{$ifdef jvm}
-        { this routine can be called for compilerproces. can't set mangled
-          name since it must be calculated, but it uses import_name when set
-          -> set that one }
-        import_name:=stringdup(s);
-        include(procoptions,po_has_importname);
-{$else}
   {$ifdef symansistr}
         _mangledname:=s;
   {$else symansistr}
         _mangledname:=stringdup(s);
   {$endif symansistr}
-{$endif jvm}
         include(procoptions,po_has_mangledname);
       end;
 
@@ -9630,9 +9616,6 @@ implementation
        voidneargspointertype:=nil;
 
 {$endif x86}
-{$ifdef wasm}
-       wasmvoidexternreftype:=nil;
-{$endif wasm}
        cundefinedtype:=nil;
        cformaltype:=nil;               { unique formal definition }
        ctypedformaltype:=nil;          { unique typed formal definition }

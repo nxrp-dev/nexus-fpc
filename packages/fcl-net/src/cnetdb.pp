@@ -91,32 +91,6 @@ const
   NO_DATA         = 4;       { Valid name, no data record of requested type  }
   NO_ADDRESS      = NO_DATA; { no address, look for MX record  }
 
-  {$IF DEFINED(FREEBSD)}
-
-    AI_PASSIVE     = $00000001;
-    AI_CANONNAME   = $00000002;
-    AI_NUMERICHOST = $00000004;
-    AI_V4MAPPED    = $00000008;
-    AI_ALL         = $00000010;
-    AI_ADDRCONFIG  = $00000020;
-    AI_DEFAULT     = (AI_V4MAPPED OR AI_ADDRCONFIG);
-
-    EAI_ADDRFAMILY = 1; (* address family for hostname not supported *)
-    EAI_AGAIN      = 2; (* temporary failure in name resolution *)
-    EAI_BADFLAGS   = 3; (* invalid value for ai_flags *)
-    EAI_FAIL       = 4; (* non-recoverable failure in name resolution *)
-    EAI_FAMILY     = 5; (* ai_family not supported *)
-    EAI_MEMORY     = 6; (* memory allocation failure *)
-    EAI_NODATA     = 7; (* no address associated with hostname *)
-    EAI_NONAME     = 8; (* hostname nor servname provided, or not known *)
-    EAI_SERVICE    = 9; (* servname not supported for ai_socktype *)
-    EAI_SOCKTYPE   = 10; (* ai_socktype not supported *)
-    EAI_SYSTEM     = 11; (* system error returned in errno *)
-    EAI_BADHINTS   = 12;
-    EAI_PROTOCOL   = 13;
-    EAI_MAX        = 14;
-
-  {$ELSE}
 
     (* Possible values for `ai_flags' field in `addrinfo' structure.  *)
 
@@ -153,7 +127,6 @@ const
     EAI_INTR        = -104; (* Interrupted by a signal.  *)
     EAI_IDN_ENCODE  = -105; (* IDN encoding failed.  *)
 
-  {$ENDIF}
 
   (* Constants for getnameinfo() *)
 
@@ -162,16 +135,6 @@ const
 
   (* Flag values for getnameinfo() *)
 
-  {$IF DEFINED(FREEBSD)}
-
-    NI_NOFQDN       = $00000001;
-    NI_NUMERICHOST  = $00000002;
-    NI_NAMEREQD     = $00000004;
-    NI_NUMERICSERV  = $00000008;
-    NI_DGRAM        = $00000010;
-    NI_NUMERICSCOPE = $00000020;
-
-  {$ELSE}
 
     NI_NUMERICHOST = 1;
     NI_NUMERICSERV = 2;
@@ -179,7 +142,6 @@ const
     NI_NAMEREQD    = 8;
     NI_DGRAM       = 16;
 
-  {$ENDIF}
 
 {
  * Scope delimit character
@@ -237,10 +199,10 @@ type
   PProtoEnt = ^TProtoEnt;
   PPProtoEnt = ^PProtoEnt;
 
-{$if defined(LINUX) or defined(OPENBSD) or defined(DARWIN)}
+{$if (defined(LINUX)) or (defined(DARWIN))}
 {$define FIRST_ADDR_THEN_CANONNAME}
 {$endif}
-{$if defined(FREEBSD) or defined(NETBSD) or defined(DRAGONFLY) or defined(SOLARIS) or defined(ANDROID)}
+{$if defined(ANDROID)}
 {$define FIRST_CANONNAME_THEN_ADDR}
 {$endif}
 {$if not defined(FIRST_CANONNAME_THEN_ADDR) and not defined(FIRST_ADDR_THEN_CANONNAME)}
