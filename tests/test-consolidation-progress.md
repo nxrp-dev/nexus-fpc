@@ -174,3 +174,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/opt/tb_control_flow_fpc_consolidated_01.pp` | 3 | 1 |
 | `tbs/tb_currency_fpc_consolidated_02.pp` | 3 | 1 |
 | `tbs/tb_floating_point_fpc_consolidated_04.pp` | 5 | 1 |
+| `tbs/tb_floating_point_fpc_consolidated_05.pp` | 4 | 1 |
