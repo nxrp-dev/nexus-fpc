@@ -77,6 +77,26 @@ procedure tb0476_p(const tb0476_p);
   end;
 {$pop}
 
+{ Case tb0470.pp }
+{$push}
+procedure tb0470_proc1(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20 : longint);
+  begin
+  end;
+
+procedure tb0470_proc2;
+  var
+    tb0470_l : dword;
+  begin
+    tb0470_l:=$deadbeef;
+    tb0470_proc1(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20);
+    if tb0470_l<>$deadbeef then
+      begin
+        writeln('error');
+        halt(1);
+      end;
+  end;
+{$pop}
+
 begin
   { Case tb0010.pp }
   {$push}
@@ -106,6 +126,13 @@ end;
   {$push}
 begin
   tb0476_p(tb0476_e[1]);
+end;
+  {$pop}
+
+  { Case tb0470.pp }
+  {$push}
+begin
+  tb0470_proc2;
 end;
   {$pop}
 
