@@ -88,3 +88,10 @@ Commands and complete diagnostics are retained under `output/test-consolidation`
 | `test/twrstr8.pp` | O2 | Exitcode: 1 (expected 0) |
 | `test/units/system/ttrig.pp` | normal | Runtime error 216 |
 | `test/units/system/ttrig.pp` | O2 | Runtime error 216 |
+
+## Win32 checks during the resumed pass
+
+`tbs/tw6493.pp` exits with code 1 in its unchanged standalone form on Win32,
+normally and with `-O2`. It passes on Win64. It has been restored as an
+independent fixture and removed from the floating-point group. The
+remaining group passes normally and with `-O2` on both architectures.

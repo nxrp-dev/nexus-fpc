@@ -387,27 +387,7 @@ end;
 
 {$pop}
 
-{ Case tw6493.pp }
-{$push}
 
-
-  Const
-{$ifdef FPC_HAS_TYPE_EXTENDED}
-    tw6493_MinExtendedStr=' 3.6451995318824746E-4951';
-    tw6493_MinExtended=3.64519953188247460E-4951;
-    tw6493_ToWidth=25;
-{$else}
-    tw6493_MinExtendedStr=' 4.94065645841247E-324';
-    tw6493_MinExtended=4.94065645841247E-324;
-    tw6493_ToWidth=22;
-{$endif}
-
-  Var
-    tw6493_x:extended;
-    tw6493_s:shortstring;
-
-  
-{$pop}
 
 { Case tw6727.pp }
 {$push}
@@ -1005,20 +985,7 @@ writeln(1.0)
 end;
 {$pop}
 
-{ Case tw6493.pp }
-{$push}
-{$ifdef FPC_HAS_TYPE_EXTENDED}
-{$else}
-{$endif}
-Begin
-    val(tw6493_MinExtendedStr,tw6493_x);
-    str(tw6493_x:tw6493_ToWidth,tw6493_s);
-    if (tw6493_x=0.0) or
-       (tw6493_x<>tw6493_minextended) or
-       (tw6493_s<>tw6493_MinExtendedStr) then
-      halt(1);
-  End;
-{$pop}
+
 
 { Case tw6727.pp }
 {$push}

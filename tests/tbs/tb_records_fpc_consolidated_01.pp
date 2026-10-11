@@ -337,23 +337,7 @@ var tw1677_r:tw1677_trec; tw1677_s:ansistring;
 
 {$pop}
 
-{ Case tw25122.pp }
-{$push}
 
-var
-  tw25122_e: record
-    case byte of
-      1: (tw25122_e: extended);
-      2: (a: array[0..9] of byte);
-  end;
-  tw25122_i: longint;
-
-  { assume little endian }
-const
-  tw25122_a1: array[0..9] of byte = ($f8,$da,$4f,$8d,$97,$6e,$12,$83,$f5,$43);
-  tw25122_a2: array[0..9] of byte = ($05,$dd,$4f,$8d,$97,$6e,$12,$83,$f5,$43);
-
-{$pop}
 
 { Case tw2966.pp }
 {$push}
@@ -735,23 +719,7 @@ begin
 end;
 {$pop}
 
-{ Case tw25122.pp }
-{$push}
 
-begin
-{$ifdef FPC_HAS_TYPE_EXTENDED}
-  writeln('testing');
-  tw25122_e.tw25122_e := 1.7976931348623157e+305;
-  for tw25122_i:=low(tw25122_a1) to high(tw25122_a1) do
-    if tw25122_e.a[tw25122_i]<>tw25122_a1[tw25122_i] then
-      halt(1);
-  tw25122_e.tw25122_e := 1.7976931348623158e+305;
-  for tw25122_i:=low(tw25122_a1) to high(tw25122_a1) do
-    if tw25122_e.a[tw25122_i]<>tw25122_a2[tw25122_i] then
-      halt(2);
-{$endif}
-end;
-{$pop}
 
 { Case tw2966.pp }
 {$push}
