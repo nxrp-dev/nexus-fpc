@@ -1,9 +1,14 @@
-{ Classes regression cases; original case IDs are retained below. }
-{ %NORUN }
+{ %norun }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode objfpc}
+{$modeswitch advancedrecords}
+
+{ Source group: tb_classes_objfpc_compile_01.pp }
+{$push}
 
 { Case tb0526.pp }
 {$push}
-{$mode objfpc}
+
 type
   tb0526_tmyclass = class
   protected
@@ -19,7 +24,7 @@ end;
 
 { Case tb0649.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tb0649_tenum = (
@@ -65,7 +70,7 @@ var
 
 { Case tw20119.pp }
 {$push}
-{$mode objfpc}
+
 type
   tw20119_t = class
   private
@@ -77,7 +82,7 @@ type
 { Case tw22593.pp }
 {$push}
 {$ifdef fpc}
-{$mode objfpc}
+
 {$endif}
 
 type
@@ -105,7 +110,7 @@ end;
 
 { Case tw26976.pp }
 {$push}
-{$MODE OBJFPC}
+
 
 type
    tw26976_ttest = class end;
@@ -119,7 +124,7 @@ begin end;
 
 { Case tw27348.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tw27348_trect = record
@@ -165,7 +170,7 @@ end;
 
 { Case tw41504b.pp }
 {$push}
-{$mode objfpc}
+
 
 type
   tw41504b_ttest = class
@@ -174,6 +179,303 @@ type
 
   tw41504b_ttest2 = type tw41504b_ttest;
 {$pop}
+
+
+{$pop}
+
+{ Source group: tb_assigned_expressions_objfpc_compile_01.pp }
+{$push}
+
+{ Case tb0584.pp }
+{$push}
+type
+  tb0584_tsomeobj = class
+    function tb0584_test(tb0584_s: String): TObject;
+  end;
+
+  tb0584_tsomeotherobj = class
+  public
+    function GetFoo: String;
+  end;
+
+function tb0584_tsomeobj.tb0584_test(tb0584_s: String): TObject;
+begin
+
+end;
+
+function tb0584_tsomeotherobj.GetFoo: String;
+begin
+
+end;
+
+var
+  tb0584_someobj: tb0584_tsomeobj;
+
+procedure tb0584_test;
+var
+  tb0584_b: Boolean;
+  tb0584_obj: tb0584_tsomeotherobj;
+begin
+  tb0584_b := not Assigned(tb0584_someobj.tb0584_test(tb0584_obj.GetFoo));
+end;
+{$pop}
+
+{ Case tb0586.pp }
+{$push}
+procedure tb0586_test;
+var
+  tb0586_a, tb0586_b: Boolean;
+  tb0586_obj: TObject;
+begin
+  if assigned(tb0586_obj)<>(tb0586_a=tb0586_b) then
+    ;
+end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_class_declarations_objfpc_compile_01.pp }
+{$push}
+
+{ Case tb0585.pp }
+{$push}
+type
+  tb0585_tobjectoptions = set of (tb0585_oo_is_external, tb0585_oo_is_forward, tb0585_oo_is_formal);
+
+  tb0585_tobjectdef = class
+    tb0585_objectoptions: tb0585_tobjectoptions;
+  end;
+
+procedure tb0585_finalize_class_external_status(tb0585_od: tb0585_tobjectdef);
+  begin
+    if  [tb0585_oo_is_external,tb0585_oo_is_forward] <= tb0585_od.tb0585_objectoptions then
+      begin
+        { formal definition: x = objcclass external; }
+        exclude(tb0585_od.tb0585_objectoptions,tb0585_oo_is_forward);
+        include(tb0585_od.tb0585_objectoptions,tb0585_oo_is_formal);
+      end;
+  end;
+{$pop}
+
+{ Case tb0679.pp }
+{$push}
+type
+  tb0679_ta = class
+  public
+    class destructor Destroy;
+    destructor Destroy; override;
+  end;
+
+class destructor tb0679_ta.Destroy;
+begin
+end;
+
+destructor tb0679_ta.Destroy;
+begin
+  inherited;
+end;
+
+var
+  tb0679_a: tb0679_ta;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_constref_objfpc_compile_01.pp }
+{$push}
+
+{ Case tb0656.pp }
+{$push}
+procedure tb0656_test1(const tb0656_aarg);
+begin
+end;
+
+procedure tb0656_test2(const tb0656_aarg);
+begin
+  tb0656_test1(tb0656_aarg);
+end;
+
+procedure tb0656_test3(constref tb0656_aarg);
+begin
+end;
+
+procedure tb0656_test4(constref tb0656_aarg);
+begin
+  tb0656_test3(tb0656_aarg);
+end;
+{$pop}
+
+{ Case tw29992.pp }
+{$push}
+procedure tw29992_test(constref tw29992_aparam: String = 'def_param');
+begin
+  writeln(tw29992_aparam);
+end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_records_objfpc_compile_01.pp }
+{$push}
+
+{ Case tw16163.pp }
+{$push}
+
+
+type
+  tw16163_tfcolor = record
+    tw16163_b, tw16163_g, tw16163_r : Byte;
+    // m : Byte; // uncomment it to avoid InternalError 200301231
+  end;
+
+  tw16163_tfcolora = record
+    tw16163_c : tw16163_tfcolor;
+    tw16163_a : Byte;
+    // adding some field here, or changing a type to Word or Integer
+    // also fixed the problem.
+  end;
+
+function tw16163_fcolortofcolora(tw16163_c : tw16163_tfcolor) : tw16163_tfcolora;
+begin
+  Result.tw16163_c:=tw16163_c;
+  Result.tw16163_a:=255;
+end;
+
+var
+  tw16163_t : tw16163_tfcolor;
+  tw16163_a : tw16163_tfcolor;
+{$pop}
+
+{ Case tw39464.pp }
+{$push}
+
+
+type
+  tw39464_ttestrec = packed record
+    tw39464_empty: packed record end;
+  end;
+
+function tw39464_getemptyptr(R: tw39464_ttestrec): Pointer;
+begin
+  Result := @R.tw39464_empty;
+end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_objects_objfpc_compile_01.pp }
+{$push}
+
+{ Case tb0626.pp }
+{$push}
+
+
+type
+  tb0626_tnonmanagedobj = object
+    tb0626_d: double;
+  end;
+
+var
+  tb0626_p: Pointer;
+{$pop}
+
+{ Case tw35149.pp }
+{$push}
+
+type
+  tw35149_testobject = object
+  var
+    tw35149_testnested: Integer;
+  end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_advanced_records_objfpc_compile_01.pp }
+{$push}
+{$modeswitch advancedrecords}
+{ Case tb0623.pp }
+{$push}
+type
+  generic tb0623_ttest<T> = record
+  public type
+    PSelf = ^specialize tb0623_ttest<T>;
+  public
+    Next: PSelf;
+  end;
+
+  generic tb0623_ttest2<T> = record
+    Next: ^specialize tb0623_ttest2<T>;
+  end;
+
+  tb0623_ttestlongint = specialize tb0623_ttest<LongInt>;
+  tb0623_tteststring = specialize tb0623_ttest<String>;
+
+  tb0623_ttest2longint = specialize tb0623_ttest2<LongInt>;
+  tb0623_ttest2string = specialize tb0623_ttest2<String>;
+{$pop}
+
+{ Case tb0680.pp }
+{$push}
+{$H+}
+type
+  tb0680_ttest = record
+    class operator + (aLeft, aRight: tb0680_ttest): tb0680_ttest;
+    function Plus(aLeft, aRight: tb0680_ttest): tb0680_ttest;
+  end;
+
+class operator tb0680_ttest.+(aLeft, aRight: tb0680_ttest): tb0680_ttest;
+begin
+
+end;
+
+function tb0680_ttest.Plus(aLeft, aRight: tb0680_ttest): tb0680_ttest;
+begin
+
+end;
+{$pop}
+
+{ Case tw27750b.pp }
+{$push}
+{$modeswitch advancedrecords}
+
+type
+
+  { TGeneric }
+
+  generic tw27750b_tgeneric<tw27750b_foo, tw27750b_bar> = record
+  public type
+    tw27750b_tgfb = specialize tw27750b_tgeneric<tw27750b_foo, tw27750b_bar>;
+  public
+    class operator :=(tw27750b_afoo : tw27750b_foo) : tw27750b_tgfb;
+    class operator :=(tw27750b_abar : tw27750b_bar) : tw27750b_tgfb;
+  end;
+
+{ TGeneric }
+
+class operator tw27750b_tgeneric.:=(tw27750b_afoo: tw27750b_foo): tw27750b_tgfb;
+begin
+
+end;
+
+class operator tw27750b_tgeneric.:=(tw27750b_abar: tw27750b_bar): tw27750b_tgfb;
+begin
+
+end;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_classes_objfpc_compile_01.pp }
+  {$push}
+
 
 begin
   { Case tb0649.pp }
@@ -191,6 +493,155 @@ tb0649_t := tb0649_t + [1, 2, 3];
   begin
 tw26976_e(['aa']); // Incompatible types: got "Constant String" expected "TTest"
   end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_assigned_expressions_objfpc_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0584.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tb0586.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_class_declarations_objfpc_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0585.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tb0679.pp }
+  {$push}
+begin
+  tb0679_a := tb0679_ta.Create;
+  tb0679_a.Free;
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_constref_objfpc_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0656.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tw29992.pp }
+  {$push}
+begin
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_records_objfpc_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tw16163.pp }
+  {$push}
+
+  begin
+FillChar(tw16163_a, sizeof(tw16163_a), $55);
+  tw16163_t:=tw16163_fcolortofcolora(tw16163_a).tw16163_c; // IE 200301231 why?
+  if (tw16163_t.tw16163_b<>$55) or
+     (tw16163_t.tw16163_r<>$55) or
+     (tw16163_t.tw16163_g<>$55) then
+    halt(1);
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_objects_objfpc_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0626.pp }
+  {$push}
+
+  begin
+tb0626_p := TypeInfo(tb0626_tnonmanagedobj);
+  end;
+  {$pop}
+
+  { Case tw35149.pp }
+  {$push}
+
+  begin
+writeln(SizeOf(tw35149_testobject.tw35149_testnested));
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_advanced_records_objfpc_compile_01.pp }
+  {$push}
+{$modeswitch advancedrecords}
+{$modeswitch advancedrecords}
+begin
+  { Case tb0623.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tb0680.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tw27750b.pp }
+  {$push}
+begin
+end;
+  {$pop}
+
+
+end;
   {$pop}
 
 end.
