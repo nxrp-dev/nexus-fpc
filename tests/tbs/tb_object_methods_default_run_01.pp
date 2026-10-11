@@ -110,6 +110,56 @@ warning ? }
   end;
 {$pop}
 
+{ Case tb0404.pp }
+{$push}
+type
+  tb0404_g = object
+    public
+      tb0404_b:procedure;
+    { the 1.1 compiler parses the next "public" as a procdirective of the preceding procedure }
+    public
+      constructor tb0404_init;
+  end;
+
+  constructor tb0404_g.tb0404_init;
+    begin
+      tb0404_b:=nil;
+    end;
+{$pop}
+
+{ Case tb0458.pp }
+{$push}
+type tb0458_smallword=word;
+
+Type  tb0458_localheader     = Record
+        Time          : Longint;
+      End;
+
+Type tb0458_pkzipobject = Object
+       Buf         : longint;
+
+       Constructor ZIPInit;
+       Procedure FindFirstEntry;   Virtual;
+     End; {PkzipObject}
+
+     tb0458_pkzipptr = ^tb0458_pkzipobject;
+
+
+Constructor tb0458_pkzipobject.ZIPInit;
+Begin
+End;
+
+
+Procedure tb0458_pkzipobject.FindFirstEntry;
+var tb0458_localheaderbuf: tb0458_localheader ABSOLUTE buf;
+Begin
+  tb0458_localheaderbuf.Time:=12341234;
+End;
+
+var
+  tb0458_o : tb0458_pkzipobject;
+{$pop}
+
 begin
   { Case tb0018.pp }
   {$push}
@@ -130,6 +180,25 @@ end;
   {$push}
 Begin
 end;
+  {$pop}
+
+  { Case tb0404.pp }
+  {$push}
+begin
+end;
+  {$pop}
+
+  { Case tb0458.pp }
+  {$push}
+begin
+  tb0458_o.ZIPInit;
+  tb0458_o.FindFirstEntry;
+  if tb0458_o.Buf<>12341234 then
+    begin
+      writeln('error');
+      halt(1);
+    end;
+End;
   {$pop}
 
 end.
