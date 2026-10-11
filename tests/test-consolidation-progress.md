@@ -15,3 +15,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | Feature group | Original fixtures | Grouped fixtures |
 |---|---:|---:|
 | `tbs/tb_booleans_objfpc_consolidated_01.pp` | 5 | 1 |
+| `tbs/tb_floating_point_fpc_consolidated_01.pp` | 31 | 1 |
