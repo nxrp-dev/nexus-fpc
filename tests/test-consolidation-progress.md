@@ -24,3 +24,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_floating_point_objfpc_consolidated_01.pp` | 12 | 1 |
 | `tbs/tb_floating_point_objfpc_consolidated_02.pp` | 4 | 1 |
 | `tbs/tb_integers_fpc_consolidated_01.pp` | 5 | 1 |
+| `tbs/tb_integers_fpc_consolidated_02.pp` | 5 | 1 |
