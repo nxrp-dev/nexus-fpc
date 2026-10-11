@@ -77,6 +77,25 @@ var
   tb0344_error : boolean;
 {$pop}
 
+{ Case tb0574.pp }
+{$push}
+{$r+}
+{$q+}
+var
+  tb0574_i1,tb0574_i2 : int64;
+{$pop}
+
+{ Case tb0658.pp }
+{$push}
+{$r+,q+}
+
+procedure tb0658_test(tb0658_i: int64);
+begin
+  if (tb0658_i>0) and (tb0658_i<$1fff) then
+    halt(1);
+end;
+{$pop}
+
 begin
   { Case tb0085.pp }
   {$push}
@@ -175,6 +194,27 @@ begin
 {$endif}
   if tb0344_error then
    halt(1);
+end;
+  {$pop}
+
+  { Case tb0574.pp }
+  {$push}
+{$R+,Q+}
+begin
+  tb0574_i1:=$100000000;
+  tb0574_i2:=$800000000;
+  inc(tb0574_i1,tb0574_i2);
+  if tb0574_i1<>$900000000 then
+    halt(1);
+  writeln('ok');
+end;
+  {$pop}
+
+  { Case tb0658.pp }
+  {$push}
+{$R+,Q+}
+begin
+  tb0658_test(0);
 end;
   {$pop}
 
