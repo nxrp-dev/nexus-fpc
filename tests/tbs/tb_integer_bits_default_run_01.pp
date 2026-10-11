@@ -30,6 +30,12 @@ procedure tb0399_error;
   end;
 {$pop}
 
+{ Case tw15015.pp }
+{$push}
+var
+  tw15015_a, tw15015_b: LongWord;
+{$pop}
+
 begin
   { Case tb0431.pp }
   {$push}
@@ -78,6 +84,18 @@ begin
      tb0399_error;
    if 12345678<>&57060516 then
      tb0399_error;
+end;
+  {$pop}
+
+  { Case tw15015.pp }
+  {$push}
+begin
+  tw15015_a := 307;
+  tw15015_b := 1 + ($FFFFFFFF mod (tw15015_a - 2));
+  writeln(tw15015_b);
+  if tw15015_b <> 301 then Halt(1);
+  writeln(1 + $FFFFFFFF mod (tw15015_a - 2));
+  if tw15015_b <> 301 then Halt(1);
 end;
   {$pop}
 
