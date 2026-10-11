@@ -1,9 +1,14 @@
-{ Generics regression cases; original case IDs are retained below. }
-{ %NORUN }
+{ %norun }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode delphi}
+
+
+{ Source group: tb_generics_delphi_compile_01.pp }
+{$push}
 
 { Case tw21064a.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw21064a_igenericintf<T> = interface
@@ -27,7 +32,7 @@ type
 
 { Case tw21064b.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw21064b_igenericintf<T> = interface
@@ -53,7 +58,7 @@ type
 
 { Case tw22192.pp }
 {$push}
-{$MODE DELPHI}
+
 
  type
    tw22192_twrapper<T> = record end;
@@ -62,7 +67,7 @@ type
 
 { Case tw22433.pp }
 {$push}
-{$MODE DELPHI}
+
 
 type tw22433_twrapper<T> = record end;
 
@@ -73,7 +78,7 @@ end;
 
 { Case tw24073.pp }
 {$push}
-{$MODE DELPHI}
+
 
 type
   tw24073_ta<T: record> = record
@@ -103,7 +108,7 @@ var
 
 { Case tw24848.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw24848_tfoo<T> = class
@@ -117,7 +122,7 @@ end;
 
 { Case tw24872.pp }
 {$push}
-{$mode delphi}
+
 
 procedure tw24872_test;
 begin
@@ -136,7 +141,7 @@ end; // Error: Global Generic template references static symtable
 
 { Case tw25604.pp }
 {$push}
-{$MODE DELPHI}
+
 
 type
   tw25604_ta<T> = class
@@ -156,7 +161,7 @@ end;
 
 { Case tw25929.pp }
 {$push}
-{$MODE DELPHI}
+
 
 type
   tw25929_tr<T> = record
@@ -177,7 +182,7 @@ end;
 
 { Case tw26180.pp }
 {$push}
-{$MODE DELPHI}
+
 {$Assertions on}
 
 type
@@ -196,7 +201,7 @@ end;
 
 { Case tw26483.pp }
 {$push}
-{$MODE DELPHI}
+
 
 type
   tw26483_ta<T> = class
@@ -216,7 +221,7 @@ end;
 
 { Case tw26599.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw26599_tsomelist<T : TObject> = Class
@@ -230,5 +235,408 @@ type
   End;
 {$pop}
 
+
+{$pop}
+
+{ Source group: tb_generics_delphi_compile_02.pp }
+{$push}
+
+{ Case tw29053.pp }
+{$push}
+
+
+type
+  tw29053_tmodelarray<T: class> = array of T;
+{$pop}
+
+{ Case tw30030.pp }
+{$push}
+
+
+type
+  tw30030_tacl<K, R, M> = Class
+  End;
+
+  tw30030_tassertion<K, R, M> = Function(Acl: tw30030_tacl<K, R, M>): Boolean Of Object;
+{$pop}
+
+{ Case tw30524a.pp }
+{$push}
+{$ifdef FPC}
+
+{$endif}
+
+{uses
+  Generics.Defaults;}
+
+type
+  tw30524a_tuple<tw30524a_t> = record
+    tw30524a_item1: tw30524a_t;
+    class operator Equal( a, b: tw30524a_tuple<tw30524a_t> ): Boolean; // FPC Error: Compilation raised exception internally
+    class operator NotEqual( a, b: tw30524a_tuple<tw30524a_t> ): Boolean;
+  end;
+
+  tw30524a_tuple = record
+    class function Create<tw30524a_t>( tw30524a_item1: tw30524a_t ): tw30524a_tuple<tw30524a_t>; overload; static;
+  end;
+
+class function tw30524a_tuple.Create<tw30524a_t>( tw30524a_item1: tw30524a_t ): tw30524a_tuple<tw30524a_t>;
 begin
+  Result.tw30524a_item1 := tw30524a_item1;
+end;
+
+class operator tw30524a_tuple<tw30524a_t>.Equal( a, b: tw30524a_tuple<tw30524a_t> ): Boolean;
+begin
+  Result := False;//TEqualityComparer<T>.Default.Equals( a.Item1, b.Item1 );
+end;
+
+class operator tw30524a_tuple<tw30524a_t>.NotEqual( a, b: tw30524a_tuple<tw30524a_t> ): Boolean;
+begin
+  Result := not( a = b );
+end;
+
+var
+  tw30524a_t: tw30524a_tuple<LongInt>;
+{$pop}
+
+{ Case tw30534.pp }
+{$push}
+
+
+type
+  tw30534_tsmartptr<T: class> = record
+    class operator Implicit(aValue: T): tw30534_tsmartptr<T>;
+  end;
+
+class operator tw30534_tsmartptr<T>.Implicit(aValue: T): tw30534_tsmartptr<T>;
+begin
+end;
+
+var
+  tw30534_sp: tw30534_tsmartptr<TObject>;
+{$pop}
+
+{ Case tw30830b.pp }
+{$push}
+
+
+type
+  tw30830b_tbase<T> = class
+    procedure tw30830b_test1(const a: T);
+  end;
+
+  tw30830b_tderived<T> = class(tw30830b_tbase<T>)
+    procedure tw30830b_test2(const a: T);
+  end;
+
+procedure tw30830b_tbase<T>.tw30830b_test1(const a: T);
+begin
+end;
+
+procedure tw30830b_tderived<T>.tw30830b_test2(const a: T);
+begin
+end;
+
+procedure tw30830b_test<T>(aIntf: tw30830b_tbase<T>); overload; // works
+begin
+end;
+
+procedure tw30830b_test<T>(aIntf: tw30830b_tderived<T>); overload; // SIGSEGV :(
+begin
+end;
+
+var
+  tw30830b_b: tw30830b_tbase<LongInt>;
+  tw30830b_d: tw30830b_tderived<LongInt>;
+{$pop}
+
+{ Case tw30939b.pp }
+{$push}
+
+
+Type
+  tw30939b_tgdata<T> = record
+    tw30939b_b: T
+  end;
+
+  tw30939b_tgwrapper<T> = record
+    tw30939b_a: tw30939b_tgdata<T>
+  end;
+
+Function tw30939b_dosomething<T>: tw30939b_tgwrapper<T>;
+  Begin
+    result.tw30939b_a.tw30939b_b := default(T)
+  End;
+{$pop}
+
+{ Case tw38145a.pp }
+{$push}
+
+type
+  tw38145a_tmywrap<T> = record
+    tw38145a_value: T;
+    class operator Explicit(const w: tw38145a_tmywrap<T>): T;
+    class operator Implicit(const w: tw38145a_tmywrap<T>): T;
+  end;
+
+class operator tw38145a_tmywrap<T>.Explicit(const w: tw38145a_tmywrap<T>): T;
+begin
+  Result := w.tw38145a_value;
+end;
+
+class operator tw38145a_tmywrap<T>.Implicit(const w: tw38145a_tmywrap<T>): T;
+begin
+  Result := w.tw38145a_value;
+end;
+
+type
+  //TString = string[255]; //compiles
+  tw38145a_tstring = string[254]; //not compiles
+
+var
+  tw38145a_myspec: tw38145a_tmywrap<tw38145a_tstring>;
+{$pop}
+
+{ Case tw40712b.pp }
+{$push}
+
+type
+    tw40712b_tsomegeneric<T> = object
+    type
+      tw40712b_tmine = T;
+    var
+      tw40712b_data: record
+        tw40712b_value: T;
+      end;
+  end;
+  tw40712b_tsomegeneric2 = object(tw40712b_tsomegeneric<Integer>)
+  end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_generics_delphi_compile_03.pp }
+{$push}
+
+{ Case tw21921.pp }
+{$push}
+{$H+}
+
+type
+
+ { THashEntry }
+
+ tw21921_thashentry<T> = record
+   tw21921_key: string;
+   tw21921_value: T;
+   class function Create(const AKey: string; const tw21921_avalue: T): tw21921_thashentry<T>; static; inline;
+ end;
+
+class function tw21921_thashentry<T>.Create(const AKey: string; const tw21921_avalue: T): tw21921_thashentry<T>;
+begin
+  Result.tw21921_key := AKey;
+  Result.tw21921_value := tw21921_avalue;
+end;
+
+var
+  tw21921_entry: tw21921_thashentry<Integer>;
+{$pop}
+
+{ Case tw24283.pp }
+{$push}
+{$H+}
+
+type
+  tw24283_ta<tw24283_t> = record
+  end;
+
+  tw24283_tb<tw24283_t> = class
+  end;
+
+  tw24283_tc<tw24283_t> = class(tw24283_tb<tw24283_ta<tw24283_t>>)
+  end;
+
+{ ensure that specialization works as well }
+var
+  tw24283_t: tw24283_tc<LongInt>;
+{$pop}
+
+{ Case tw39581.pp }
+{$push}
+ {$H+}
+
+Type
+  tw39581_timplclass<P> = class;
+
+  tw39581_ilinkingintf<P> = interface
+    procedure tw39581_nestedcall(const DataFrom: tw39581_timplclass<P>);
+  end;
+
+(* Компиляция проекта, цель: Project1.exe: Код завершения 1, ошибок: 1
+Project1.pas(9,55) Error: Internal error 2012101001
+*)
+
+  { TImplClass }
+
+  tw39581_timplclass<P> = class( TInterfacedObject, tw39581_ilinkingintf<P> )
+  protected
+    procedure tw39581_nestedcall(const DataFrom: tw39581_timplclass<P> );
+  end;
+
+{ TImplClass }
+
+procedure tw39581_timplclass<P>.tw39581_nestedcall(const DataFrom: tw39581_timplclass<P>);
+begin
+
+end;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_generic_routines_delphi_compile_01.pp }
+{$push}
+
+{ Case tw35670b.pp }
+{$push}
+procedure tw35670b_dothis<T>(tw35670b_msg: T);
+begin
+end;
+
+procedure tw35670b_dothis(tw35670b_msg: TObject);
+begin
+end;
+{$pop}
+
+{ Case tw37380.pp }
+{$push}
+function tw37380_gtest<T>(tw37380_a: T; tw37380_b: T = T(1)): T;
+begin
+  Result := tw37380_a + tw37380_b;
+end;
+
+function tw37380_foobar(tw37380_a: Single; tw37380_b: Single = Single(1)): Single;
+begin
+  Result := tw37380_a + tw37380_b;
+end;
+{$pop}
+
+{ Case tw38083.pp }
+{$push}
+procedure tw38083_test<T>(tw38083_a: T; tw38083_b: Boolean); overload;
+  begin
+
+  end;
+
+  procedure tw38083_test(tw38083_a: String); overload;
+  begin
+    tw38083_test<String>(tw38083_a, True);
+  end;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_generics_delphi_compile_01.pp }
+  {$push}
+
+
+begin
+
+end;
+  {$pop}
+
+  { Source group: tb_generics_delphi_compile_02.pp }
+  {$push}
+
+
+begin
+  { Case tw30524a.pp }
+  {$push}
+{$ifdef FPC}
+{$endif}
+  begin
+tw30524a_t := tw30524a_tuple.Create<LongInt>(42);
+  end;
+  {$pop}
+
+  { Case tw30534.pp }
+  {$push}
+
+  begin
+tw30534_sp := nil;
+  end;
+  {$pop}
+
+  { Case tw30830b.pp }
+  {$push}
+
+  begin
+tw30830b_test<LongInt>(tw30830b_b);
+  tw30830b_test<LongInt>(tw30830b_d);
+  end;
+  {$pop}
+
+  { Case tw30939b.pp }
+  {$push}
+
+  begin
+tw30939b_dosomething<LongInt>;
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_generics_delphi_compile_03.pp }
+  {$push}
+
+
+begin
+  { Case tw21921.pp }
+  {$push}
+
+  begin
+tw21921_entry := tw21921_thashentry<Integer>.Create('One', 1);
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_generic_routines_delphi_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tw35670b.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+  { Case tw37380.pp }
+  {$push}
+begin
+  WriteLn(tw37380_gtest<Single>(2, 1));
+  WriteLn(tw37380_foobar(2));
+end;
+  {$pop}
+
+  { Case tw38083.pp }
+  {$push}
+begin
+
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
 end.
