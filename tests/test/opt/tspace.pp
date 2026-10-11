@@ -7,7 +7,7 @@ begin
 end;
 
 var
-  s: string;
+  s: shortstring;
   i: longint;
 begin
   fillchar(s,sizeof(s),255);

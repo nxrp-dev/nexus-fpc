@@ -17,7 +17,9 @@ Original case IDs, comments and assertions remain in the grouped sources.
 Global symbols receive case prefixes where needed. Terminal computed exit codes
 become nonzero-status checks so subsequent cases execute. Locale-mutating cases
 restore their initial formatting settings between cases. Compiler, RTL and
-package production sources were not changed.
+package production sources were not changed during consolidation. The separate
+correction pass and its validation are recorded in
+[the failure notes](test-consolidation-failures.md#2026-10-11-correction-pass).
 
 ## Validation
 

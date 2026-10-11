@@ -1,7 +1,80 @@
 # Unexpected failures encountered during test consolidation
 
-Keep affected fixtures separate and unchanged. Continue consolidating other
-verified cases; resolve these failures in a separate correction pass.
+The sections below preserve the consolidation findings. The correction pass
+addresses the local failures listed below; numeric/directive questions and
+grouping-only output differences remain separate for discussion.
+
+## 2026-10-11: correction pass
+
+Corrections implemented:
+
+- `tw25685` and `tspace` now explicitly use ShortString for their inline-buffer
+  operations. The four DelphiUnicode fixtures supply `-MUNICODESTRINGS` and are
+  tested against a matching Unicode RTL.
+- `tw41282`: reserve the hidden upper bound of a captured parameter in its
+  parent's frame before register allocation. Regression coverage includes a
+  bounded ShortString, open-array bounds, and two levels of nesting.
+- `tw1592`, `tw0788`, `tw1737`, `twrstr8`, and `ttrig`: System's x86 SIMD Abs
+  intrinsic must reference its own numeric masks directly. Its local indirect
+  alias is a pointer cell, not mask data. Consumers retain import indirection.
+  Both the RTL and the compiler must be rebuilt: the compiler's old RTL also
+  corrupted compile-time trigonometric evaluation. `tabsrealmask` checks Single
+  and Double signs, negative zero, and folded/runtime trigonometry.
+- `tw41865c`: lower integer-backed Currency div/mod to operations on the stored
+  Int64 values, restoring the quotient scale and preserving the remainder scale.
+  `tcurrencydivmodscaled` covers constants, fractions, signs, mixed operands and
+  evaluation counts. Win32 uses floating-backed Currency and does not accept
+  these operators; the original fixture is not a Win32 runtime regression.
+- `tmultilinestring26`: set the quote style when a backtick fragment follows a
+  character code or ordinary quoted fragment. The fixture now asserts all six
+  exact strings, including whitespace. The nearby negative `tmultilinestring11`
+  also needed explicit ShortString and warning-as-error options to test its
+  intended overlength diagnostic under Nexus string defaults.
+
+### Validation and check-in scope
+
+- All 170 consolidated groups pass on Win64 and Win32, normally and with `-O2`:
+  **680 group checks**, with no failures.
+- Fresh native bootstrap and all 13 retained cross-target RTL builds passed,
+  with the same 14 native warning lines. Linux FmtBCD and `-CfNONE` heaptrc
+  checks also passed. These are build checks, not execution on every target.
+- All 14 corrected Win64 fixtures pass normally and with `-O2` (28 checks).
+  All four Unicode fixtures pass on Win32 and Win64 with matching Unicode RTLs
+  in both variants (16 checks).
+- All 52 multiline scanner checks pass through the standard test driver,
+  including the intended compile failures. The enhanced nested-parameter test
+  and the new Abs/scaling regressions pass their applicable checks; the
+  integer-backed Currency test body is conditional on that representation.
+- All 32 existing focused compiler checks pass, including saved/cached PPUs.
+- A fresh package SDK and both console/GUI lifecycle examples pass. Shared-RTL
+  consumers of `tw1737`, `ttrig`, `twrstr8`, and `tabsrealmask` also pass.
+
+The changed compiler sources exactly match the isolated bootstrap sources.
+Validation evidence is under `output/failure-corrections`; the successful full
+build is `bootstrap-final.log`. The earlier overlapping build/test run is
+invalid validation evidence and was replaced by sequential build then test.
+Remaining orchestration was switched to PowerShell at the owner's instruction;
+future work must use PowerShell, not Python. Changes are left uncommitted for
+the owner to check in.
+
+### Deferred numeric/configuration review
+
+The earlier recommendation to replace the real-constant evaluator is withdrawn.
+The owner identified an existing compiler directive relevant to these cases.
+Review that directive and each fixture's intended precision/target contract
+before classifying these observations as compiler defects. No evaluator, PPU
+format, or production compiler-host policy change is part of this patch.
+
+The original assertions remain unchanged in `tw6493`, `tw25122`, `tw11308`,
+`tb_currency_default_run_01`, `tcurrency1`, and `tfloatrecs`. The recorded
+cross-compiler failures and native-i386 comparison are evidence for that review,
+not proof that an architectural change is needed. `tw0788` also retains a Win32
+exact-equality failure after its Win64 crash was corrected. Leave these cases
+for the requested discussion; do not introduce a redesign to make them pass.
+
+`tw41865c` passes on Win64 after the local scaling correction. Its Win32 compile
+rejection needs to be considered against its intended target coverage; this
+patch does not add Currency div/mod support to floating-backed Currency.
 
 ## 2026-10-10: stock-compiler bootstrap
 

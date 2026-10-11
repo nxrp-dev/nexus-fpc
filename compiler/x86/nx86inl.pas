@@ -755,7 +755,10 @@ implementation
 
        function needs_indirect:boolean; inline;
          begin
+            { System owns these masks; its local indirect aliases are pointer
+              cells, not mask data. Only consumers import them indirectly. }
            result:=(tf_supports_packages in target_info.flags) and
+                     not(cs_compilesystem in current_settings.moduleswitches) and
                      (target_info.system in systems_indirect_var_imports);
          end;
 

@@ -5752,7 +5752,12 @@ type
                 begin
                   in_multiline_string:=(c='`');
                   if in_multiline_string then
-                    backtick:=true
+                    begin
+                      backtick:=true;
+                      style:=qsBacktick;
+                      multiline_start_line:=current_filepos.line;
+                      multiline_start_column:=current_filepos.column;
+                    end
                   else
                     style:=qsNone;
                   first_multiline:=in_multiline_string and (last_c in [#0,#32,#61]);

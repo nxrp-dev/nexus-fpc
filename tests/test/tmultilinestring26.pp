@@ -17,8 +17,17 @@ const middleSpaceBug: array[0..5] of string = (
 ^T' e s'` t`  //<--- Original bug, now fixed: "last two: $73$74 instead of $73$20$74"
 );
 
-var S: String;
+const cExpected: array[0..5] of string = (
+  'A B', 'A - B', 'A      -      B', 'A      -      B  --  ',
+  '  A B', #20' e s t');
+
+var lIndex: Integer;
 
 begin
-  for S in middleSpaceBug do WriteLn(S);
+  for lIndex := Low(middleSpaceBug) to High(middleSpaceBug) do
+    begin
+      if middleSpaceBug[lIndex] <> cExpected[lIndex] then
+        Halt(lIndex + 1);
+      WriteLn(middleSpaceBug[lIndex]);
+    end;
 end.

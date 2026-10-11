@@ -311,6 +311,29 @@ implementation
               exit;
            end;
 
+         if not(nf_internal in flags) and
+            (is_currency(left.resultdef) or is_currency(right.resultdef)) then
+           begin
+             { Divide the stored fixed-point integers. The quotient needs its
+               Currency scale restored; the remainder already has that scale. }
+             inserttypeconv(left,s64currencytype);
+             inserttypeconv(right,s64currencytype);
+             if codegenerror then
+               exit;
+             hp:=cmoddivnode.create(nodetype,
+               ctypeconvnode.create_internal(left,s64inttype),
+               ctypeconvnode.create_internal(right,s64inttype));
+             tmoddivnode(hp).moddivnodeflags:=moddivnodeflags;
+             left:=nil;
+             right:=nil;
+             if nodetype=divn then
+               hp:=caddnode.create_internal(muln,hp,cordconstnode.create(10000,s64inttype,false));
+             result:=ctypeconvnode.create_internal(hp,s64currencytype);
+             typecheckpass(result);
+             include(result.flags,nf_is_currency);
+             exit;
+           end;
+
          { we need 2 orddefs always }
          if (left.resultdef.typ<>orddef) then
            inserttypeconv(left,sinttype);
@@ -447,21 +470,6 @@ implementation
          result:=simplify(false);
          if assigned(result) then
            exit;
-
-         { when the result is currency we need some extra code for
-           division. this should not be done when the divn node is
-           created internally }
-         if (nodetype=divn) and
-            not(nf_internal in flags) and
-            not(nf_is_currency in flags) and
-            is_currency(resultdef) and
-            (nf_is_currency in left.flags) and
-            not (nf_is_currency in right.flags) then
-          begin
-            hp:=caddnode.create(muln,getcopy,cordconstnode.create(10000,s64currencytype,false));
-            include(hp.flags,nf_is_currency);
-            result:=hp;
-          end;
 
          if (nodetype=modn) and (mdnf_isomod in moddivnodeflags) then
            begin

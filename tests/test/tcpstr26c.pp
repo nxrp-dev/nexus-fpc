@@ -1,3 +1,4 @@
+{ %OPT=-MUNICODESTRINGS }
 {$ifdef fpc}
 {$mode delphiunicode}
 {$endif}

@@ -1046,6 +1046,8 @@ implementation
 
     { marks an lvalue as "unregable" }
     procedure make_not_regable_intern(p : tnode; how: tregableinfoflags; records_only: boolean);
+      var
+        lHighSym: tabstractvarsym;
       begin
         if ra_addr_taken in how then
           include(p.flags,nf_address_taken);
@@ -1084,7 +1086,20 @@ implementation
                     if (ra_addr_taken in how) then
                       tabstractvarsym(tloadnode(p).symtableentry).addr_taken:=true;
                     if (ra_different_scope in how) then
-                      tabstractvarsym(tloadnode(p).symtableentry).different_scope:=true;
+                      begin
+                        tabstractvarsym(tloadnode(p).symtableentry).different_scope:=true;
+                        { Hidden bounds can be loaded only during code generation.
+                          Reserve their frame location before allocating the parent. }
+                        if tloadnode(p).symtableentry.typ=paravarsym then
+                          begin
+                            lHighSym:=get_high_value_sym(tparavarsym(tloadnode(p).symtableentry));
+                            if assigned(lHighSym) then
+                              begin
+                                lHighSym.different_scope:=true;
+                                lHighSym.varregable:=vr_none;
+                              end;
+                          end;
+                      end;
                     if (tabstractvarsym(tloadnode(p).symtableentry).varregable <> vr_none) and
                        ((not records_only) or
                         (tabstractvarsym(tloadnode(p).symtableentry).vardef.typ = recorddef)) then

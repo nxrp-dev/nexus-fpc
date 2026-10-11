@@ -1,4 +1,5 @@
 
+{ %OPT=-MUNICODESTRINGS }
 {$mode delphiunicode}
 
 const r: rawbytestring = 'abc';
