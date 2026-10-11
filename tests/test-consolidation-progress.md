@@ -74,3 +74,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/tb_routines_delphi_consolidated_01.pp` | 4 | 1 |
 | `test/tb_strings_delphi_consolidated_01.pp` | 7 | 1 |
 | `test/cg/tb_arrays_fpc_consolidated_01.pp` | 4 | 1 |
+| `test/cg/tb_floating_point_fpc_consolidated_01.pp` | 5 | 1 |
