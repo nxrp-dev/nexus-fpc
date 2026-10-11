@@ -44,3 +44,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_control_flow_objfpc_consolidated_01.pp` | 7 | 1 |
 | `tbs/tb_currency_fpc_consolidated_01.pp` | 3 | 1 |
 | `tbs/tb_files_fpc_consolidated_01.pp` | 8 | 1 |
+| `tbs/tb_floating_point_objfpc_consolidated_03.pp` | 6 | 1 |
