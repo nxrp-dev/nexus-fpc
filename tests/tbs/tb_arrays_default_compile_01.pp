@@ -1,5 +1,10 @@
-{ Arrays regression cases; original case IDs are retained below. }
-{ %NORUN }
+{ %norun }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode fpc}
+
+
+{ Source group: tb_arrays_default_compile_01.pp }
+{$push}
 
 { Case tw38051.pp }
 {$push}
@@ -28,6 +33,90 @@ var
    tw38054_p: ^tw38054_t;
 {$pop}
 
+
+{$pop}
+
+{ Source group: tb_records_default_compile_01.pp }
+{$push}
+
+{ Case tb0589.pp }
+{$push}
+type
+  tb0589_ttest = record
+    tb0589_f: array of tb0589_ttest;
+  end;
+{$pop}
+
+{ Case tw15592.pp }
+{$push}
+TYPE
+  tw15592_trtime = Record
+    tw15592_rtday : Integer;
+  end;
+  tw15592_ttimerange = Record
+    tw15592_trflags : Integer;
+    tw15592_trtime : tw15592_trtime;
+    case trType : Integer of
+     0 : (trTime2 : tw15592_trtime);
+     1 : (trMinutes : Integer);
+  end;
+{$pop}
+
+{ Case tw37779.pp }
+{$push}
+type
+  tw37779_complex = record
+    tw37779_re : Double;
+    tw37779_im : Double;
+  end;
+  tw37779_tcomplexarray = array of tw37779_complex;
+  tw37779_tcomplexarrayarray = array of tw37779_tcomplexarray;
+
+var
+  tw37779_mc: array of array of array of array of tw37779_tcomplexarrayarray;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_range_expressions_default_compile_01.pp }
+{$push}
+
+{ Case tw11349.pp }
+{$push}
+{$R+,Q+}
+
+const
+  tw11349_ws_border = DWORD($800000);
+
+var
+  tw11349_style: Cardinal;
+{$pop}
+
+{ Case tw34543.pp }
+{$push}
+{$r+}
+procedure tw34543_range_check_fail;
+var tw34543_v : word;
+    tw34543_vto : word;
+    tw34543_vno : word;
+begin
+     tw34543_vto:=3;
+     tw34543_vno:=0;
+     for tw34543_v:=tw34543_vno to tw34543_vto do {Error: range check error while evaluating constants (-1 must be between 0 and 65535)}
+     begin
+     end;
+end;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_arrays_default_compile_01.pp }
+  {$push}
+
+
 begin
   { Case tw38051.pp }
   {$push}
@@ -45,6 +134,53 @@ new(tw38054_p);
    writeln( sizeof(tw38054_p^) );
    tw38054_p^[tw38054_l]:=0;  writeln(tw38054_p^[tw38054_l])
   end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_records_default_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tw37779.pp }
+  {$push}
+
+  begin
+tw37779_mc := nil;
+  tw37779_mc := Copy(tw37779_mc);
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_range_expressions_default_compile_01.pp }
+  {$push}
+
+
+begin
+  { Case tw11349.pp }
+  {$push}
+{$R+,Q+}
+begin
+  tw11349_style := 0;
+  tw11349_style := tw11349_style and not tw11349_ws_border;
+end;
+  {$pop}
+
+  { Case tw34543.pp }
+  {$push}
+{$R+}
+begin
+end;
+  {$pop}
+
+
+end;
   {$pop}
 
 end.
