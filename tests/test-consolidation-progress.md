@@ -29,3 +29,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_integers_fpc_consolidated_04.pp` | 4 | 1 |
 | `tbs/tb_records_objfpc_consolidated_01.pp` | 4 | 1 |
 | `tbs/tb_routines_delphi_consolidated_01.pp` | 4 | 1 |
+| `tbs/tb_routines_fpc_consolidated_01.pp` | 4 | 1 |
