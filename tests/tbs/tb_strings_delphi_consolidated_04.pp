@@ -3,6 +3,16 @@ program nexus_consolidated_tests;
 {$mode delphi}
 uses sysutils;
 
+{ Every case starts with the process locale settings it had standalone. }
+var lOriginalFormatSettings: TFormatSettings;
+
+{ Case tb_strings_delphi_consolidated_03.pp }
+{$push}
+{ Consolidated strings regressions; original case IDs and assertions are retained. }
+
+
+
+
 { Case tw10013.pp }
 {$push}
 
@@ -134,11 +144,76 @@ end;
 
 
 { Isolate changes to locale settings made by individual cases. }
-var lOriginalFormatSettings: TFormatSettings;
+var tb_strings_delphi_consolidated_03_lOriginalFormatSettings: TFormatSettings;
+
+{$pop}
+
+{ Case tencodingerrors.pp }
+{$push}
+
+
+{$H+}
+
+
+
+var
+  tencodingerrors_S: String;
+  tencodingerrors_Bytes: TBytes;
+
+{$pop}
+
+{ Case tinttohex.pp }
+{$push}
+
+
+
+
+
+
+var
+  tinttohex_i8: Int8;
+  tinttohex_u8: UInt8;
+  tinttohex_i16: Int16;
+  tinttohex_u32: UInt32;
+  tinttohex_u64: Uint64;
+  tinttohex_i: Integer;
+  tinttohex_s: AnsiString;
+
+
+{$pop}
+
 begin
   lOriginalFormatSettings := DefaultFormatSettings;
-
   DefaultFormatSettings := lOriginalFormatSettings;
+
+{ Case tb_strings_delphi_consolidated_03.pp }
+{$push}
+
+{$push}
+{$H+}
+{$R+}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$H+}
+{$endif}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$ifdef fpc}
+{$endif}
+{$pop}
+begin
+  tb_strings_delphi_consolidated_03_lOriginalFormatSettings := DefaultFormatSettings;
+
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw10013.pp }
 {$push}
 
@@ -185,7 +260,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw13456.pp }
 {$push}
 {$ifdef fpc}
@@ -210,7 +285,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw33875.pp }
 {$push}
 
@@ -219,7 +294,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw3443.pp }
 {$push}
 
@@ -233,7 +308,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw38390.pp }
 {$push}
 
@@ -254,7 +329,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw39664.pp }
 {$push}
 
@@ -288,7 +363,7 @@ begin
 end;
 {$pop}
 
-  DefaultFormatSettings := lOriginalFormatSettings;
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
 { Case tw9126.pp }
 {$push}
 {$ifdef fpc}
@@ -309,5 +384,122 @@ begin
 end;
 {$pop}
 
+  DefaultFormatSettings := tb_strings_delphi_consolidated_03_lOriginalFormatSettings;
+end;
+{$pop}
   DefaultFormatSettings := lOriginalFormatSettings;
+
+{ Case tencodingerrors.pp }
+{$push}
+
+{$H+}
+begin
+  tencodingerrors_S := '';
+  SetLength(tencodingerrors_Bytes, 0);
+  try
+    // invalid source array?
+    TEncoding.UTF8.GetBytes(tencodingerrors_S, 1, -1, tencodingerrors_Bytes, 0);
+    halt(1);
+  except on E: Exception do
+    WriteLn(E.ClassName, ' ', E.Message);
+  end;
+  tencodingerrors_S := 'Test';
+  try
+    // delphi raises a message "Invalid source array" while the problem is in
+    // destination array in real
+    TEncoding.UTF8.GetBytes(tencodingerrors_S, 0, 2, tencodingerrors_Bytes, 0);
+    halt(2);
+  except on E: Exception do
+    WriteLn(E.ClassName, ' ', E.Message);
+  end;
+  SetLength(tencodingerrors_Bytes, 1);
+  try
+    // invalid count
+    TEncoding.UTF8.GetBytes(tencodingerrors_S, 5, 2, tencodingerrors_Bytes, 0);
+    halt(3);
+  except on E: Exception do
+    WriteLn(E.ClassName, ' ', E.Message);
+  end;
+  try
+    // character index out of bounds
+    TEncoding.UTF8.GetBytes(tencodingerrors_S, 0, 2, tencodingerrors_Bytes, 0);
+    halt(4);
+  except on E: Exception do
+    WriteLn(E.ClassName, ' ', E.Message);
+  end;
+  try
+    // invalid destination index
+    TEncoding.UTF8.GetBytes(tencodingerrors_S, 1, 2, tencodingerrors_Bytes, -1);
+    halt(5);
+  except on E: Exception do
+    WriteLn(E.ClassName, ' ', E.Message);
+  end;
+end;
+{$pop}
+  DefaultFormatSettings := lOriginalFormatSettings;
+
+{ Case tinttohex.pp }
+{$push}
+
+begin
+  tinttohex_i8 := 15;
+  tinttohex_s := IntToHex(tinttohex_i8);
+  writeln(tinttohex_s);
+  if tinttohex_s <> '0F' then halt(1);
+
+  tinttohex_u8 := 224;
+  tinttohex_s := IntToHex(tinttohex_u8);
+  writeln(tinttohex_s);
+  if tinttohex_s <> 'E0' then halt(2);
+
+  tinttohex_i16 := 224;
+  tinttohex_s := IntToHex(tinttohex_i16);
+  writeln(tinttohex_s);
+  if tinttohex_s <> '00E0' then halt(3);
+
+  tinttohex_u32 := 224;
+  tinttohex_s := IntToHex(tinttohex_u32);
+  writeln(tinttohex_s);
+  if tinttohex_s <> '000000E0' then halt(4);
+
+  tinttohex_u64 := 224;
+  tinttohex_s := IntToHex(tinttohex_u64);
+  writeln(tinttohex_s);
+  if tinttohex_s <> '00000000000000E0' then halt(5);
+
+  tinttohex_i := 224;
+  tinttohex_s := IntToHex(tinttohex_i);
+  writeln(tinttohex_s);
+  if tinttohex_s <> '000000E0' then halt(6);
+
+  tinttohex_s := tinttohex_i8.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> '0F' then halt(7);
+
+  tinttohex_s := tinttohex_u8.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> 'E0' then halt(8);
+
+  tinttohex_s := tinttohex_i16.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> '00E0' then halt(9);
+
+  tinttohex_s := tinttohex_u32.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> '000000E0' then halt(10);
+
+  tinttohex_s := tinttohex_u64.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> '00000000000000E0' then halt(11);
+
+  tinttohex_s := tinttohex_i.ToHexString;
+  writeln(tinttohex_s);
+  if tinttohex_s <> '000000E0' then halt(12);
+
+  writeln('ok');
+  //readln;
+end;
+{$pop}
+  DefaultFormatSettings := lOriginalFormatSettings;
+
 end.
