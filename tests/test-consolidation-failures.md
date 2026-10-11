@@ -120,3 +120,80 @@ but pass on Win64. These fixtures were restored as separate tests:
 The attempted Currency merge was withdrawn because only one passing input
 remained. The other reduced groups pass normally and with `-O2` on both
 Win32 and Win64. No compiler or RTL correction was made.
+
+## Additional unchanged Win64 failures
+
+`tbs/tw25685.pp` and `test/opt/tspace.pp` both compile, then fail with runtime
+error `216`, normally and with `-O2`. Their required `-o2` fixture option remains
+unchanged. Both originals remain separate.
+
+`tbs/tw25332a.pp`, `test/tcpstr26a.pp`, `test/tcpstr26c.pp` and
+`test/tcpstr26d.pp` fail compilation in both variants with
+`MODE DELPHIUNICODE requires -MUNICODESTRINGS`. The fixtures do not supply that
+required option. They remain unchanged pending a decision about their intended
+compiler-option contract. This is a test configuration failure, not evidence of
+a compiler crash.
+
+## Remaining regrouping failures and identity-sensitive fixtures
+
+The originals below pass independently on Win64 normally and with `-O2`.
+A proposed grouped form could not preserve their compilation or exact runtime
+output. They remain unchanged; these results do **not** establish standalone
+compiler defects. In particular, prefixing symbols changes RTTI names, while
+addresses, timestamps, executable names and diagnostic line numbers naturally
+change between programs. No assertions or reference strings were weakened to
+force a match. Temporary failed proposals were discarded.
+
+| Original fixture | Observed regrouping difference |
+|---|---|
+| `tbs/tb0546.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tb0660.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tb0662.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tb_generics_objfpc_run_01.pp` | Error: Fields cannot appear after a method or property definition, start a new visibility section first |
+| `tbs/tb_nested_method_types_delphi.pp` | Error: Method identifier expected |
+| `tbs/tb_sets_objfpc_run_02.pp` | Exitcode: 1 (expected 0) |
+| `tbs/tw0719.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw10247.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw11825.pp` | Runtime assertion fails after symbol renaming |
+| `tbs/tw12788.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw14155.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw15377.pp` | Exitcode: 1 (expected 0) |
+| `tbs/tw15467.pp` | Exitcode: 1 (expected 0) |
+| `tbs/tw17402.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw22570.pp` | Exitcode: 1 (expected 0) |
+| `tbs/tw2913.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw38058.pp` | Compiles and runs; output differs after regrouping |
+| `tbs/tw3870.pp` | Compiles and runs; output differs after regrouping |
+| `test/cg/tcalpvr4.pp` | Fatal: Syntax error, "=" expected but ";" found |
+| `test/tanonfunc15.pp` | Exitcode: 1 (expected 0) |
+| `test/tanonfunc16.pp` | Exitcode: 2 (expected 0) |
+| `test/tcustomattr10.pp` | Error: Identifier not found "TMyAttr" |
+| `test/tcustomattr19.pp` | Error: Identifier not found "TTest" |
+| `test/tenum3.pp` | Error: Identifier idents no member "first" |
+| `test/tforin28.pp` | Compiles and runs; output differs after regrouping |
+| `test/tgeneric15.pp` | Compiles and runs; output differs after regrouping |
+| `test/tgeneric16.pp` | Compiles and runs; output differs after regrouping |
+| `test/tgeneric97.pp` | Exitcode: 1 (expected 0) |
+| `test/tmultilinestring25.pp` | Compiles and runs; output differs after regrouping |
+| `test/tpropdef.pp` | Exception: Wrong output at character index: 1
+ |
+| `test/trtti20.pp` | Exitcode: 1 (expected 0) |
+| `test/trtti25.pp` | Exitcode: 5 (expected 0) |
+| `test/tstatementexpr20.pp` | Compiles and runs; output differs after regrouping |
+| `test/units/system/targs.pp` | Compiles and runs; output differs after regrouping |
+| `test/units/system/tdir.pp` | Compiles and runs; output differs after regrouping |
+| `test/units/system/trnd1.pp` | Compiles and runs; output differs after regrouping |
+| `test/units/sysutils/tgetlocaltime.pp` | Compiles and runs; output differs after regrouping |
+
+Additional whole-program interactions, although the transformed individual
+cases pass: `tmoperator2.pp`, `tmoperator3.pp` and `tmoperator5.pp` emit global
+record initialization/finalization output outside their case bodies; their
+combined output order changes. `tmacprocvar.pp` prints a procedure address.
+The attempted combinations containing `tw11859.pp` and `tw15061.pp` fail
+representation/layout assertions; those containing `tw3144.pp`, `tw33205.pp`
+and `tw9704.pp` change runtime output. Keep those cases independent; the logs
+distinguish output-comparison failures from compiler/runtime failures.
+
+The full commands, original and grouped output, and compiler diagnostics are
+in the local `output/test-consolidation/evidence.zip` (`baseline.json`,
+`final-exclusions.json`, `round*-merges.json`, `merges.json`, and `checks/`).

@@ -23,15 +23,15 @@ reference platforms:
 --------------------------------------------------------------------
 
 
-Shortstrings .......... tstring1.pp    compatibility and speed of shortstrings
+Shortstrings .......... tb_strings_fpc_consolidated_01.pp [case tstring1]    compatibility and speed of shortstrings
                         tstring2.pp    some misc. tests mainly collected
                                        from bug reports
                         tstring3.pp    Typed Constant string loading from
                                        other constants
                         tstring4.pp    Ansistring #1
                         tstring5.pp    Ansistring #2
-Classes ............... tclass1.pp     AfterConstruction
-                        tclass2.pp     BeforeDestruction
+Classes ............... tb_classes_objfpc_consolidated_02.pp [case tclass1]     AfterConstruction
+                        tb_classes_objfpc_consolidated_02.pp [case tclass2]     BeforeDestruction
 Objects ............... tobject1.pp    Fail in constructor
 Exceptions ............ texception1.pp
                         texception2.pp
@@ -40,40 +40,40 @@ Exceptions ............ texception1.pp
 Procedure Variable .... tprocvar1.pp
                         tprocvar2.pp
 Libraries ............. testlib.pp     a very primitive test
-Parameter passing ..... tpara1.pp      Out Parameter
+Parameter passing ..... cg/tb_integers_fpc_consolidated_01.pp [case tpara1]      Out Parameter
 
 Units ................. testu1.pp      tests init. & finalization and halt
                         testu2.pp      in finalization
                         testu3.pp      a type redefining problem
                         testu4.pp
                         testu5.pp
-case .................. tcase1.pp      tests case statements with byte and word
+case .................. tb_integers_fpc_consolidated_01.pp [case tcase1]      tests case statements with byte and word
                                        sized decision variables
-                        tcase2.pp      tests case with sub enum types
-Arrays ................ tarray1.pp     open arrays with classes
+                        tb_enumerations_fpc_consolidated_01.pp [case tcase2]      tests case with sub enum types
+Arrays ................ tb_classes_objfpc_consolidated_02.pp [case tarray1]     open arrays with classes
                         tarray2.pp     Array of const
-                        tarray3.pp     Array of Char #1 (Known bug)
+                        tb_strings_fpc_consolidated_01.pp [case tarray3]     Array of Char #1 (Known bug)
                         tarray4.pp     Array of Char #2 (Known bug)
-Enumerations .......... tenum1.pp      tests assignments of subrange
+Enumerations .......... tb_enumerations_fpc_consolidated_01.pp [case tenum1]      tests assignments of subrange
                                        enumerations
 Codegenerration ....... tcg1.pp        i386 pushw
                         tcg2.pp        saveregisters
-                        tinivar.pp     initial values for local variables (1.1)
-Inline ................ tinline1.pp    tests recursive inlining, inlining
+                        tb_integers_fpc_consolidated_01.pp [case tinivar]     initial values for local variables (1.1)
+Inline ................ tb_integers_fpc_consolidated_01.pp [case tinline1]    tests recursive inlining, inlining
                                        a procedure multiple times and
                                        inlining procedures in other
                                        inline procedures.
-                        tinlin64.pp    tests for a problem in pushing 64bit parameters
+                        tb_integers_fpc_consolidated_01.pp [case tinlin64]    tests for a problem in pushing 64bit parameters
                                        by value.
-TypeInfo .............. trtti2.pp      test the function system.typeinfo
-                        trtti3.pp      tests the procedure system.finalize
+TypeInfo .............. tb_integers_fpc_consolidated_01.pp [case trtti2]      test the function system.typeinfo
+                        tb_strings_delphi_consolidated_01.pp [case trtti3]      tests the procedure system.finalize
 Resourcestrings ....... tresstr.pp     tests a simple resource string
 Range checking ........ trange1.pp     range checking when converting int64/
                                        qword to longint/cardinal
-                        trange2.pp     range checking when converting
+                        ../tbs/tb_integers_objfpc_consolidated_05.pp [case trange2]     range checking when converting
                                        between longint and cardinal
                         trange3.pp     range checking for array
-                        trange4.pp     range checking when assigning
+                        tb_integers_fpc_consolidated_01.pp [case trange4]     range checking when assigning
                                        values to int64/qword
 Floating Point ........ tfpu1.pp
                         tfpu2.pp
@@ -92,8 +92,8 @@ Code Page strings       tpcstr1.pp     tests the new codepage string type introd
 
 SYSTEM
 ------
-str/write(real_type) .. tstrreal1.pp   test correct rounding
-                        tstrreal2.pp   test correct writing of 10 till 1e-24
+str/write(real_type) .. tb_floating_point_fpc_consolidated_01.pp [case tstrreal1]   test correct rounding
+                        tb_floating_point_fpc_consolidated_01.pp [case tstrreal2]   test correct writing of 10 till 1e-24
 Heap .................. theap.pp       Heap manager test
 input/output .......... /units/system/tiorte.pp   tests inoutres values of invalid operations
 Random ................ /units/system/trandom.pp  tests random (interactive)
