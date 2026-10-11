@@ -189,3 +189,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_records_delphi_consolidated_01.pp` | 3 | 1 |
 | `tbs/tb_records_delphi_consolidated_02.pp` | 3 | 1 |
 | `webtbf/tb_records_fpc_consolidated_01.pp` | 3 | 1 |
+| `tbs/tb_records_objfpc_consolidated_02.pp` | 6 | 1 |
