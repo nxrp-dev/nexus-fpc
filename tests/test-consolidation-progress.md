@@ -51,3 +51,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_integers_delphi_consolidated_03.pp` | 4 | 1 |
 | `tbs/tb_integers_fpc_consolidated_06.pp` | 7 | 1 |
 | `tbs/tb_integers_objfpc_consolidated_03.pp` | 3 | 1 |
+| `tbs/tb_records_fpc_consolidated_02.pp` | 3 | 1 |
