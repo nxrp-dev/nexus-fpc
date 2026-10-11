@@ -57,14 +57,7 @@ var
 
 {$pop}
 
-{ Case tw11308.pp }
-{$push}
 
-
-var
-  tw11308_s: string;
-
-{$pop}
 
 { Case tw11711.pp }
 {$push}
@@ -215,22 +208,7 @@ end;
 {$pop}
   DefaultFormatSettings := lOriginalFormatSettings;
 
-{ Case tw11308.pp }
-{$push}
 
-begin
-  str(1.575:0:2,tw11308_s);
-  writeln(tw11308_s);
-  if (tw11308_s<>'1.58') then
-    halt(1);
-  str(0.575:0:2,tw11308_s);
-  writeln(tw11308_s);
-  if (tw11308_s<>'0.58') then
-    halt(2);
-//  writeln(FloatToStrF(1.575 ,ffFixed,19,2));
-//  writeln(FloatToStrF(0.575 ,ffFixed,19,2));
-end;
-{$pop}
   DefaultFormatSettings := lOriginalFormatSettings;
 
 { Case tw11711.pp }

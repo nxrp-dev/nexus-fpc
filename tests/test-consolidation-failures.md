@@ -106,3 +106,17 @@ group passes on both architectures.
 `test/tmultilinestring26.pp` fails standalone compilation normally and with
 `-O2`: `Fatal: Unterminated multi-line string starting at line 0, column 0.`
 The fixture remains unchanged and separate.
+
+## Additional Win32 failures from cross-directory consolidation
+
+Unchanged originals fail through the standard driver normally and with `-O2`,
+but pass on Win64. These fixtures were restored as separate tests:
+
+- `tbs/tw11308.pp`: formatting prints `1.57` where the assertion expects `1.58`.
+- `tbs/tb_currency_default_run_01.pp`: retained pre-existing Currency group fails at runtime.
+- `test/tcurrency1.pp`: Currency runtime assertion fails.
+- `test/units/system/tfloatrecs.pp`: reports `Error near 12`.
+
+The attempted Currency merge was withdrawn because only one passing input
+remained. The other reduced groups pass normally and with `-O2` on both
+Win32 and Win64. No compiler or RTL correction was made.
