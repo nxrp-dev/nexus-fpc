@@ -61,6 +61,11 @@ LABEL
      self : longint;
 {$pop}
 
+{ Case tb0393.pp }
+{$push}
+label 1;
+{$pop}
+
 begin
   { Case tb0031.pp }
   {$push}
@@ -96,6 +101,14 @@ BEGIN
   FAIL: Write;
   self:=1;
 END;
+  {$pop}
+
+  { Case tb0393.pp }
+  {$push}
+begin
+ goto 1;
+1:
+end;
   {$pop}
 
 end.
