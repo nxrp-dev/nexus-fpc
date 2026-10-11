@@ -1,8 +1,14 @@
+{ Consolidated integers regressions; original case IDs and assertions are retained. }
+program nexus_consolidated_tests;
 {$mode objfpc}
 
-program testbitscan;
+{ Case tbsx1.pp }
+{$push}
 
-function test_byte: boolean;
+
+
+
+function tbsx1_test_byte: boolean;
 var
   x8,f,r: byte;
   i: integer;
@@ -39,7 +45,7 @@ begin
   result:=true;
 end;
 
-function test_word: boolean;
+function tbsx1_test_word: boolean;
 var
   x16: word;
   i,f,r: integer;
@@ -76,7 +82,7 @@ begin
   result:=true;
 end;
 
-function test_dword: boolean;
+function tbsx1_test_dword: boolean;
 var
   x32: cardinal;
   i,f,r: integer;
@@ -113,7 +119,7 @@ begin
   result:=true;
 end;
 
-function test_qword: boolean;
+function tbsx1_test_qword: boolean;
 var
   x64: qword;
   i, f, r: integer;
@@ -148,9 +154,148 @@ begin
   result:=true;
 end;
 
+
+{$pop}
+
+{ Case tnest2.pp }
+{$push}
+
+
+procedure tnest2_outer;
+
+  procedure nest2(l: longint); forward;
+
+  function nest(l: longint): longint;
+    begin
+      if l>1 then
+        result:=nest(l-1)+nest(l-2)
+      else
+        begin
+          result:=1;
+          nest2(result);
+        end;
+    end;
+
+  procedure nest2(l: longint);
+    begin
+      writeln(l);
+    end;
+
 begin
-  if test_byte then writeln('passed') else halt(1);
-  if test_word then writeln('passed') else halt(1);
-  if test_dword then writeln('passed') else halt(1);
-  if test_qword then writeln('passed') else halt(1);
+  if nest(3) <> 3 then
+    halt(1);
+  nest2(4);
+end;
+
+
+{$pop}
+
+{ Case tnest4.pp }
+{$push}
+
+
+function tnest4_test: longint;
+
+  function func(aa: integer): integer;
+
+    function func_nested(b: integer): integer;
+    begin
+      if b < 10 then
+        Result:=func_nested(b+1)
+      else
+        Result:=b;
+      Inc(Result, aa);
+    end;
+
+  begin
+    Result:=func_nested(0);
+  end;
+
+begin
+  result:=func(10);
+end;
+
+function tnest4_test2: longint;
+var
+  i: integer;
+
+  function func(aa: integer): integer;
+
+    function func_nested(b: integer): integer;
+    begin
+      if b < 10 then
+        Result:=func(b+1)
+      else
+        Result:=b;
+    end;
+
+  begin
+    Result:=func_nested(aa);
+    Inc(Result, i);
+  end;
+
+begin
+  i:=100;
+  result:=func(0);
+end;
+
+
+{$pop}
+
+{ Case twarn1.pp }
+{$push}
+
+
+{$H+}
+
+var
+   twarn1_i: integer platform;
+
+{$pop}
+
+begin
+
+{ Case tbsx1.pp }
+{$push}
+
+begin
+  if tbsx1_test_byte then writeln('passed') else halt(1);
+  if tbsx1_test_word then writeln('passed') else halt(1);
+  if tbsx1_test_dword then writeln('passed') else halt(1);
+  if tbsx1_test_qword then writeln('passed') else halt(1);
+end;
+{$pop}
+
+{ Case tnest2.pp }
+{$push}
+
+begin
+  tnest2_outer;
+end;
+{$pop}
+
+{ Case tnest4.pp }
+{$push}
+
+begin
+  if tnest4_test <> 120 then
+    halt(1);
+  if tnest4_test2 <> 1110 then
+    halt(2);
+  writeln('OK');
+end;
+{$pop}
+
+{ Case twarn1.pp }
+{$push}
+
+{$H+}
+begin
+   {$warn symbol_platform off}
+   twarn1_i := 1;
+   {$warn symbol_platform off}
+   twarn1_i := 2;
+end;
+{$pop}
+
 end.
