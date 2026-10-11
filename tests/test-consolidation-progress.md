@@ -61,3 +61,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_variants_objfpc_consolidated_01.pp` | 6 | 1 |
 | `test/tb_arrays_fpc_consolidated_01.pp` | 5 | 1 |
 | `test/tb_arrays_macpas_consolidated_01.pp` | 5 | 1 |
+| `test/tb_arrays_objfpc_consolidated_01.pp` | 5 | 1 |
