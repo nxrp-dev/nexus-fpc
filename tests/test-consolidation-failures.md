@@ -52,3 +52,19 @@ These are failures of the original standalone fixtures, before any grouping.
 Both fixtures were left unchanged and were excluded from consolidation. No
 compiler or RTL correction was attempted in this pass. Other Currency fixtures
 that pass independently remain eligible for separate consolidated batches.
+
+## 2026-10-10: address-dependent output in larger group merges
+
+The following existing groups pass independently, normally and with `-O2`, but
+their proposed larger merges changed address diagnostics in standard output:
+
+- `tb_records_default_run_01.pp`: case `tb0258` prints local addresses.
+- `tb_records_objfpc_run_02.pp`: case `tw39665` prints object-field addresses
+  and addresses recovered by subtracting field offsets.
+- `tb_classes_objfpc_run_03.pp`: case `tw26536` prints `PtrUInt(Self)` twice.
+- `tb_classes_delphi_run_03.pp`: case `tw8150d` prints `Pointer(Self)`.
+
+All attempted larger fixtures compiled and ran successfully. The failure was
+the exact output comparison; no assertion or compiler failure was established.
+These four source groups remain separate and unchanged. Other groups in the
+same feature families were successfully consolidated without them.
