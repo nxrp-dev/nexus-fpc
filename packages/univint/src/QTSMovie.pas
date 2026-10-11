@@ -39,28 +39,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -73,29 +62,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -105,23 +76,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -161,11 +115,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -214,157 +164,6 @@ uses MacTypes,Components,Movies,QuickTimeStreaming;
 
 { QuickTime is not available to 64-bit clients }
 
-{$ifc not TARGET_CPU_64}
-
-const
-	kQTSStreamMediaType = FourCharCode('strm');
-
-type
-	QTSSampleDescription = record
-		descSize: SIGNEDLONG;
-		dataFormat: SIGNEDLONG;
-		resvd1: SIGNEDLONG;                 { set to 0}
-		resvd2: SInt16;                 { set to 0}
-		dataRefIndex: SInt16;
-		version: UInt32;
-		resvd3: UInt32;                 { set to 0}
-		flags: SInt32;
-                                              { qt atoms follow:}
-                                              {      long size, long type, some data}
-                                              {      repeat as necessary}
-	end;
-	QTSSampleDescriptionPtr = ^QTSSampleDescription;
-type
-	QTSSampleDescriptionHandle = ^QTSSampleDescriptionPtr;
-const
-	kQTSSampleDescriptionVersion1 = 1;
-
-const
-	kQTSDefaultMediaTimeScale = 600;
-
-{ sample description flags}
-const
-	kQTSSampleDescPassSampleDataAsHandleFlag = $00000001;
-
-
-{============================================================================
-        Stream Media Handler
-============================================================================}
-{-----------------------------------------
-    Info Selectors
------------------------------------------}
-{ all indexes start at 1 }
-
-const
-	kQTSMediaPresentationInfo = FourCharCode('pres'); { QTSMediaPresentationParams* }
-	kQTSMediaNotificationInfo = FourCharCode('noti'); { QTSMediaNotificationParams* }
-	kQTSMediaTotalDataRateInfo = FourCharCode('dtrt'); { UInt32*, bits/sec }
-	kQTSMediaLostPercentInfo = FourCharCode('lspc'); { Fixed* }
-	kQTSMediaNumStreamsInfo = FourCharCode('nstr'); { UInt32* }
-	kQTSMediaIndSampleDescriptionInfo = FourCharCode('isdc'); { QTSMediaIndSampleDescriptionParams* }
-
-
-type
-	QTSMediaPresentationParamsPtr = ^QTSMediaPresentationParams;
-	QTSMediaPresentationParams = record
-		presentationID: QTSPresentation;
-	end;
-type
-	QTSMediaNotificationParamsPtr = ^QTSMediaNotificationParams;
-	QTSMediaNotificationParams = record
-		notificationProc: QTSNotificationUPP;
-		notificationRefCon: UnivPtr;
-		flags: SInt32;
-	end;
-type
-	QTSMediaIndSampleDescriptionParamsPtr = ^QTSMediaIndSampleDescriptionParams;
-	QTSMediaIndSampleDescriptionParams = record
-		index: SInt32;
-		returnedMediaType: OSType;
-		returnedSampleDescription: SampleDescriptionHandle;
-	end;
-{-----------------------------------------
-    QTS Media Handler Selectors
------------------------------------------}
-const
-	kQTSMediaSetInfoSelect = $0100;
-	kQTSMediaGetInfoSelect = $0101;
-	kQTSMediaSetIndStreamInfoSelect = $0102;
-	kQTSMediaGetIndStreamInfoSelect = $0103;
-
-{-----------------------------------------
-    QTS Media Handler functions
------------------------------------------}
-{
- *  QTSMediaSetInfo()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in QuickTime.framework
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in QTStreamLib 4.0 and later
- *    Windows:          in QTSClient.lib 4.0 and later
- }
-function QTSMediaSetInfo( mh: MediaHandler; inSelector: OSType; ioParams: UnivPtr ): ComponentResult; external name '_QTSMediaSetInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  QTSMediaGetInfo()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in QuickTime.framework
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in QTStreamLib 4.0 and later
- *    Windows:          in QTSClient.lib 4.0 and later
- }
-function QTSMediaGetInfo( mh: MediaHandler; inSelector: OSType; ioParams: UnivPtr ): ComponentResult; external name '_QTSMediaGetInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  QTSMediaSetIndStreamInfo()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in QuickTime.framework
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in QTStreamLib 4.0 and later
- *    Windows:          in QTSClient.lib 4.0 and later
- }
-function QTSMediaSetIndStreamInfo( mh: MediaHandler; inIndex: SInt32; inSelector: OSType; ioParams: UnivPtr ): ComponentResult; external name '_QTSMediaSetIndStreamInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  QTSMediaGetIndStreamInfo()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in QuickTime.framework
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in QTStreamLib 4.0 and later
- *    Windows:          in QTSClient.lib 4.0 and later
- }
-function QTSMediaGetIndStreamInfo( mh: MediaHandler; inIndex: SInt32; inSelector: OSType; ioParams: UnivPtr ): ComponentResult; external name '_QTSMediaGetIndStreamInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{============================================================================
-        Hint Media Handler
-============================================================================}
-const
-	kQTSHintMediaType = FourCharCode('hint');
-
-const
-	kQTSHintTrackReference = FourCharCode('hint');
-
-
-{ MixedMode ProcInfo constants for component calls }
-const
-	uppQTSMediaSetInfoProcInfo = $00000FF0;
-	uppQTSMediaGetInfoProcInfo = $00000FF0;
-	uppQTSMediaSetIndStreamInfoProcInfo = $00003FF0;
-	uppQTSMediaGetIndStreamInfoProcInfo = $00003FF0;
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

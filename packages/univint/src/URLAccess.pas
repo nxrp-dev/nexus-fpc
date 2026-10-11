@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -357,38 +307,6 @@ const
 const
 	kURLSSLCipherSuite = 'URLSSLCipherSuite';
 
-{$ifc not TARGET_CPU_64}
-
-{
- *  URLGetURLAccessVersion()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Return the version number ( in the same format as a
- *    NumVersionVariant.whole ) of the URLAccess libraries
- *    available.
- *    URLAccess is deprecated on Mac OS X.  See Technical Q&A 1291 for
- *    more information on the replacements available.
- *     http://developer.apple.com/qa/qa2001/qa1291.html
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetURLAccessVersion( var returnVers: UInt32 ): OSStatus; external name '_URLGetURLAccessVersion';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{$ifc TARGET_RT_MAC_CFM}
-//    #define URLAccessAvailable()    ((URLGetURLAccessVersion != (void*)kUnresolvedCFragSymbolAddress) )
-{$elsec}
-  {$ifc TARGET_RT_MAC_MACHO}
-{ URL Access is always available on OS X }
-//    #define URLAccessAvailable()    (true)
-  {$endc}
-{$endc}  {  }
-
-{$endc} {not TARGET_CPU_64}
 
 type
 	URLNotifyProcPtr = function( userContext: UnivPtr; event: URLEvent; var callbackInfo: URLCallbackInfo ): OSStatus;
@@ -461,224 +379,6 @@ function InvokeURLNotifyUPP( userContext: UnivPtr; event: URLEvent; var callback
 function InvokeURLSystemEventUPP( userContext: UnivPtr; var event: EventRecord; userUPP: URLSystemEventUPP ): OSStatus; external name '_InvokeURLSystemEventUPP';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
 
-{$ifc not TARGET_CPU_64}
-{
- *  URLSimpleDownload()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLSimpleDownload( url: ConstCStringPtr; destination: FSSpecPtr { can be NULL }; destinationHandle: Handle { can be NULL }; openFlags: URLOpenFlags; eventProc: URLSystemEventUPP { can be NULL }; userContext: UnivPtr { can be NULL } ): OSStatus; external name '_URLSimpleDownload';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLDownload()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLDownload( urlRef: URLReference; destination: FSSpecPtr { can be NULL }; destinationHandle: Handle { can be NULL }; openFlags: URLOpenFlags; eventProc: URLSystemEventUPP { can be NULL }; userContext: UnivPtr { can be NULL } ): OSStatus; external name '_URLDownload';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLSimpleUpload()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLSimpleUpload( url: ConstCStringPtr; const (*var*) source: FSSpec; openFlags: URLOpenFlags; eventProc: URLSystemEventUPP { can be NULL }; userContext: UnivPtr { can be NULL } ): OSStatus; external name '_URLSimpleUpload';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLUpload()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLUpload( urlRef: URLReference; const (*var*) source: FSSpec; openFlags: URLOpenFlags; eventProc: URLSystemEventUPP { can be NULL }; userContext: UnivPtr { can be NULL } ): OSStatus; external name '_URLUpload';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLNewReference()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLNewReference( url: ConstCStringPtr; var urlRef: URLReference ): OSStatus; external name '_URLNewReference';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLDisposeReference()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLDisposeReference( urlRef: URLReference ): OSStatus; external name '_URLDisposeReference';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLOpen()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLOpen( urlRef: URLReference; fileSpec: FSSpecPtr { can be NULL }; openFlags: URLOpenFlags; notifyProc: URLNotifyUPP { can be NULL }; eventRegister: URLEventMask; userContext: UnivPtr { can be NULL } ): OSStatus; external name '_URLOpen';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLAbort()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLAbort( urlRef: URLReference ): OSStatus; external name '_URLAbort';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetDataAvailable()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetDataAvailable( urlRef: URLReference; var dataSize: Size ): OSStatus; external name '_URLGetDataAvailable';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetBuffer()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetBuffer( urlRef: URLReference; var buffer: UnivPtr; var bufferSize: Size ): OSStatus; external name '_URLGetBuffer';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLReleaseBuffer()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLReleaseBuffer( urlRef: URLReference; buffer: UnivPtr ): OSStatus; external name '_URLReleaseBuffer';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetProperty()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetProperty( urlRef: URLReference; proprty: ConstCStringPtr; propertyBuffer: UnivPtr; bufferSize: Size ): OSStatus; external name '_URLGetProperty';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetPropertySize()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetPropertySize( urlRef: URLReference; proprty: ConstCStringPtr; var propertySize: Size ): OSStatus; external name '_URLGetPropertySize';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLSetProperty()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLSetProperty( urlRef: URLReference; proprty: ConstCStringPtr; propertyBuffer: UnivPtr; bufferSize: Size ): OSStatus; external name '_URLSetProperty';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetCurrentState()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetCurrentState( urlRef: URLReference; var state: URLState ): OSStatus; external name '_URLGetCurrentState';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetError()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetError( urlRef: URLReference; var urlError: OSStatus ): OSStatus; external name '_URLGetError';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLIdle()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLIdle: OSStatus; external name '_URLIdle';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  URLGetFileInfo()   *** DEPRECATED ***
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in URLAccessLib 1.0 and later
- }
-function URLGetFileInfo( fName: StringPtr; var fType: OSType; var fCreator: OSType ): OSStatus; external name '_URLGetFileInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {$endc} {TARGET_OS_MAC}

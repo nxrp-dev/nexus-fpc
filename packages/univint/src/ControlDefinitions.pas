@@ -42,28 +42,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -76,29 +65,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -108,23 +79,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -164,11 +118,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -291,69 +241,6 @@ const
 const
 	kControlKindEditText = FourCharCode('etxt');
 
-{$ifc not TARGET_CPU_64}
-{
- *  CreateEditTextControl()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CreateEditUnicodeTextControl API instead.
- *
- *  Summary:
- *    Creates a new edit text control.
- *
- *  Discussion:
- *    This control is a legacy control. It is deprecated in favor of
- *    the EditUnicodeText control, which handles Unicode and draws its
- *    text using antialiasing.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window in which the control should be placed. May be NULL
- *      in 10.3 and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    text:
- *      The text of the control. May be NULL.
- *
- *    isPassword:
- *      A Boolean indicating whether the field is to be used as a
- *      password field. Passing false indicates that the field is to
- *      display entered text normally. True means that the field will
- *      be used as a password field and any text typed into the field
- *      will be displayed only as bullets.
- *
- *    useInlineInput:
- *      A Boolean indicating whether or not the control is to accept
- *      inline input. Pass true to to accept inline input, otherwise
- *      pass false.
- *
- *    style:
- *      The control's font style, size, color, and so on. May be NULL.
- *
- *    outControl:
- *      On exit, contains the new control (if noErr is returned as the
- *      result code).
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateEditTextControl( window: WindowRef; const (*var*) boundsRect: Rect; text: CFStringRef { can be NULL }; isPassword: Boolean; useInlineInput: Boolean; {const} style: ControlFontStyleRecPtr { can be NULL }; var outControl: ControlRef ): OSStatus; external name '_CreateEditTextControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{ ControlData tags supported only by the classic EditText control}
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlEditTextTEHandleTag = FourCharCode('than'); { The TEHandle of the text edit record}
@@ -395,46 +282,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIPictureViewClassID CFSTRP('com.apple.HIPictureView')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreatePictureControl()
- *
- *  Summary:
- *    Creates a picture control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounding box of the control.
- *
- *    content:
- *      The descriptor for the picture you want the control to display.
- *
- *    dontTrack:
- *      A Boolean value indicating whether the control should hilite
- *      when it is clicked on. False means hilite and track the mouse.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreatePictureControl( window: WindowRef { can be NULL }; const (*var*) boundsRect: Rect; const (*var*) content: ControlButtonContentInfo; dontTrack: Boolean; var outControl: ControlRef ): OSStatus; external name '_CreatePictureControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Tagged data supported by picture controls }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlPictureHandleTag = FourCharCode('pich'); { PicHandle}
@@ -458,24 +305,6 @@ const
 const
 	kControlKindListBox = FourCharCode('lbox');
 
-{$ifc not TARGET_CPU_64}
-{
- *  CreateListBoxControl()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateListBoxControl( window: WindowRef; const (*var*) boundsRect: Rect; autoSize: Boolean; numRows: SInt16; numColumns: SInt16; horizScroll: Boolean; vertScroll: Boolean; cellHeight: SInt16; cellWidth: SInt16; hasGrowSpace: Boolean; const (*var*) listDef: ListDefSpec; var outControl: ControlRef ): OSStatus; external name '_CreateListBoxControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Tagged data supported by list box }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlListBoxListHandleTag = FourCharCode('lhan'); { ListHandle}
@@ -515,24 +344,6 @@ const
 const
 	kControlKindScrollingTextBox = FourCharCode('stbx');
 
-{$ifc not TARGET_CPU_64}
-{
- *  CreateScrollingTextBoxControl()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateScrollingTextBoxControl( window: WindowRef; const (*var*) boundsRect: Rect; contentResID: SInt16; autoScroll: Boolean; delayBeforeAutoScroll: UInt32; delayBetweenAutoScroll: UInt32; autoScrollAmount: UInt16; var outControl: ControlRef ): OSStatus; external name '_CreateScrollingTextBoxControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Tagged data supported by Scroll Text Box }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlScrollTextBoxDelayBeforeAutoScrollTag = FourCharCode('stdl'); { UInt32 (ticks until autoscrolling starts)}

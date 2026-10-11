@@ -49,9 +49,7 @@ type
           alignment: 0..((1 shl 4)-1);
           refCount: 0..((1 shl 24)-1);
           unused: 0..((1 shl 4)-1);
-          {$if defined(__LP64__)}
           int: 0..((1 shl 32)-1);
-          {$endif}
         );
       end;
     _location: CGFloat;
@@ -92,9 +90,7 @@ type
           rightToLeftDirection: 0..1;
           fixedMultiple: 0..((1 shl 2)-1);
           refCount: 0..((1 shl 19)-1);
-          {$if defined(__LP64__)}
           int: 0..((1 shl 32)-1);
-          {$endif}
         );
       end;
     _defaultTabInterval: CGFloat;

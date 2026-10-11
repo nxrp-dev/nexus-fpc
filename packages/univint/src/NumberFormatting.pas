@@ -36,28 +36,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -70,29 +59,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -102,23 +73,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -158,11 +112,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -273,125 +223,7 @@ type
 	end;
 { index by [fPositive..fZero] }
 	TripleInt							= array [0..2] of FVector;
-{$ifc not TARGET_CPU_64}
-{
- *  StringToNum()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFStringGetIntValue instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFStringGetIntValue instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure StringToNum( const (*var*) theString: Str255; var theNum: SIGNEDLONG ); external name '_StringToNum';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
 
-
-{
- *  NumToString()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFStringCreateWithFormat instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFStringCreateWithFormat instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure NumToString( theNum: SIGNEDLONG; var theString: Str255 ); external name '_NumToString';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  ExtendedToString()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFNumberFormatterCreateStringWithNumber instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFNumberFormatterCreateStringWithNumber instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function ExtendedToString( const (*var*) x: extended80; const (*var*) myCanonical: NumFormatString; const (*var*) partsTable: NumberParts; var outString: Str255 ): FormatStatus; external name '_ExtendedToString';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  StringToExtended()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFNumberFormatterCreateNumberFromString instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFNumberFormatterCreateNumberFromString instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function StringToExtended( const (*var*) source: Str255; const (*var*) myCanonical: NumFormatString; const (*var*) partsTable: NumberParts; var x: extended80 ): FormatStatus; external name '_StringToExtended';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  StringToFormatRec()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFNumberFormatterSetFormat instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFNumberFormatterSetFormat instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function StringToFormatRec( const (*var*) inString: Str255; const (*var*) partsTable: NumberParts; var outString: NumFormatString ): FormatStatus; external name '_StringToFormatRec';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  FormatRecToString()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFNumberFormatterSetFormat instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFNumberFormatterSetFormat instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function FormatRecToString( const (*var*) myCanonical: NumFormatString; const (*var*) partsTable: NumberParts; var outString: Str255; var positions: TripleInt ): FormatStatus; external name '_FormatRecToString';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

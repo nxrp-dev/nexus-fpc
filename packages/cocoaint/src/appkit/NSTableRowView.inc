@@ -41,16 +41,6 @@ type
           _hasDropTargetBackgroundView: 0..1;
           _selectionBlendingMode: 0..1;
           _checkingFontRefColor: 0..1;
-          {$if  not defined(__LP64__)}
-          _anonStruct_NSTableRowView1: record
-            case byte of
-              0: (anonBitField_NSTableRowView1: cuint);
-              1: (data: bitpacked record
-                _reserved2: 0..((1 shl 8)-1);
-              end;
-            );
-                end;
-          {$endif}
         end;
       );
           end;

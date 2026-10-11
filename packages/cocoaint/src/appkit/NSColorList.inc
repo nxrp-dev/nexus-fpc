@@ -30,9 +30,7 @@ type
           hasAttemptedLoadingBundleForDirectory: 0..1;
           isProfileBased: 0..1;
           int: 0..((1 shl 24)-1);
-          {$if defined(__LP64__)}
           int_: 0..((1 shl 32)-1);
-          {$endif}
         );
       end;
     _clAuxiliaryStorage: id;

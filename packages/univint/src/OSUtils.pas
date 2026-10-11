@@ -31,28 +31,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -65,29 +54,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -97,23 +68,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -153,11 +107,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -431,43 +381,6 @@ function Dequeue( qElement: QElemPtr; qHeader: QHdrPtr ): OSErr; external name '
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  MakeDataExecutable()
- *
- *  Summary:
- *    Notifies the system that the specified data is subject to
- *    execution.
- *
- *  Discussion:
- *    On some computer architectures it is necessary to tell the
- *    processor that an area of memory should be made executable.  This
- *    function does the necessary operations ( if possible ) to make it
- *    possible to execute code in the given address range.
- *    MakeDataExecutable is not supported for 64-bit applications. Use
- *    sys_icache_invalidate(3) and/or mprotect(2) as appropriate.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Parameters:
- *
- *    baseAddress:
- *      the starting address to be made executable
- *
- *    length:
- *      the length of the data pointed to by the baseAddress parameter.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.5 and later
- }
-procedure MakeDataExecutable( baseAddress: UnivPtr; length: UNSIGNEDLONG ); external name '_MakeDataExecutable';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  ReadLocation()
@@ -622,29 +535,6 @@ type
 function GetMMUMode: SInt8; inline;
 procedure SwapMMUMode( var mode: SInt8 ); inline;
 
-{$ifc not TARGET_CPU_64}
-{
- *  GetSysPPtr()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Don't use this function; it always returns NULL on Mac OS X.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetSysPPtr: SysPPtr; external name '_GetSysPPtr';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
-    NOTE: SysBeep() has been moved to Sound.h.
- We could not automatically #include Sound.h in this file
- because Sound.h indirectly #include's OSUtils.h which
- would make a circular include.
- }
-{$endc} {not TARGET_CPU_64}
 
 type
 	DeferredTaskProcPtr = procedure( dtParam: SIGNEDLONG );
@@ -692,148 +582,6 @@ type
 		dtReserved: SIGNEDLONG;
 	end;
 	DeferredTaskPtr = ^DeferredTask;
-{$ifc not TARGET_CPU_64}
-{
- *  DTInstall()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Deferred Task Manager is deprecated.  Look into restructuring
- *    your code to use threads, or MPTasks, or some other threading
- *    solution.
- *
- *  Summary:
- *    Adds the specified task record to the deferred-task queue.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function DTInstall( dtTaskPtr: DeferredTaskPtr ): OSErr; external name '_DTInstall';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  DTUninstall()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Deferred Task Manager is deprecated.  Look into restructuring
- *    your code to use threads, or MPTasks, or some other threading
- *    solution.
- *
- *  Summary:
- *    Adds the specified task record to the deferred-task queue.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function DTUninstall( dtTaskPtr: DeferredTaskPtr ): OSErr; external name '_DTUninstall';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  SetCurrentA5()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    You no longer need to use SetCurrentA5() on Mac OS X.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function SetCurrentA5: SIGNEDLONG; external name '_SetCurrentA5';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  SetA5()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    You no longer need to use SetA5() on Mac OS X.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function SetA5( newA5: SIGNEDLONG ): SIGNEDLONG; external name '_SetA5';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  InitUtil()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    It is not necessary to call InitUtil on Mac OS X.  You should
- *    remove all calls to this from your code.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function InitUtil: OSErr; external name '_InitUtil';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  WriteParam()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    This function no longer does anything on Mac OS X; you should
- *    remove all calls to it from your code.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function WriteParam: OSErr; external name '_WriteParam';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  WriteLocation()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    WriteLocation can not be used to set the geographic information
- *    on Mac OS X.  You should remove all calls to this function from
- *    your code.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.0
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure WriteLocation( const (*var*) loc: MachineLocation ); external name '_WriteLocation';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_1, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 {$endc} {TARGET_OS_MAC}
 
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

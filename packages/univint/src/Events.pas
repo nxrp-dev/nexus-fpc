@@ -42,28 +42,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -76,29 +65,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -108,23 +79,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -164,11 +118,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -527,26 +477,6 @@ type
  *    Non-Carbon CFM:   available as macro/inline
  }
 
-{$ifc not TARGET_CPU_64}
-{
- *  GetMouse()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use HIGetMousePosition instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure GetMouse( var mouseLoc: Point ); external name '_GetMouse';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  Button()   *** DEPRECATED ***
@@ -566,71 +496,6 @@ function Button: Boolean; external name '_Button';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  StillDown()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function StillDown: Boolean; external name '_StillDown';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  WaitMouseUp()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function WaitMouseUp: Boolean; external name '_WaitMouseUp';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  KeyTranslate()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use UCKeyTranslate instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function KeyTranslate( transData: {const} UnivPtr; keycode: UInt16; var state: UInt32 ): UInt32; external name '_KeyTranslate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  GetCaretTime()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetCaretTime: UInt32; external name '_GetCaretTime';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
     QuickTime 3.0 supports GetKeys() on unix and win32
@@ -715,124 +580,6 @@ type
 
 type
 	GNEFilterUPP = GetNextEventFilterUPP;
-{$ifc not TARGET_CPU_64}
-{
- *  GetDblTime()
- *
- *  Summary:
- *    Returns the maximum time (in units of 1/60th of a second) allowed
- *    between two consecutive mouse-down events in order for the second
- *    click to be considered a double-click.
- *
- *  Discussion:
- *    In 64-bit applications, you may replace calls to this API with
- *    calls to NXClickTime (declared in
- *    <IOKit/hidsystem/event_status_driver.h>) or with +[NSEvent
- *    doubleClickInterval] (available in Mac OS X 10.6 and later).
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Result:
- *    The maximum time between mouse-downs allowed for a double-click.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetDblTime: UInt32; external name '_GetDblTime';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetEventMask()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure SetEventMask( value: EventMask ); external name '_SetEventMask';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  GetNextEvent()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use ReceiveNextEvent instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetNextEvent( eventMask_: EventMask; var theEvent: EventRecord ): Boolean; external name '_GetNextEvent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  WaitNextEvent()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use ReceiveNextEvent instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function WaitNextEvent( eventMask_: EventMask; var theEvent: EventRecord; sleep: UInt32; mouseRgn: RgnHandle { can be NULL } ): Boolean; external name '_WaitNextEvent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  EventAvail()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FindSpecificEventInQueue instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function EventAvail( eventMask_: EventMask; var theEvent: EventRecord ): Boolean; external name '_EventAvail';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  PostEvent()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use PostEventToQueue or CGEventPost instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function PostEvent( eventNum: EventKind; eventMsg: UInt32 ): OSErr; external name '_PostEvent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  FlushEvents()   *** DEPRECATED ***
@@ -860,32 +607,6 @@ procedure FlushEvents( whichMask: EventMask; stopMask: EventMask ); external nam
 *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  KeyScript()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use TISSelectInputSource API for positive verbs (ScriptCode).
- *     Use TSMDocument properties to restrict input sources:
- *     kTSMDocumentEnabledInputSourcesPropertyTag
- *     kTSMDocumentInputSourceOverridePropertyTag
- *
- *  Summary:
- *    Switch to the specified script's default (last used) input source.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure KeyScript( code: SInt16 ); external name '_KeyScript';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  IsCmdChar()   *** DEPRECATED ***
@@ -923,23 +644,6 @@ function LMGetKeyThresh: SInt16; external name '_LMGetKeyThresh';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  LMSetKeyThresh()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetKeyThresh( value: SInt16 ); external name '_LMSetKeyThresh';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  LMGetKeyRepThresh()
@@ -956,23 +660,6 @@ function LMGetKeyRepThresh: SInt16; external name '_LMGetKeyRepThresh';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  LMSetKeyRepThresh()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetKeyRepThresh( value: SInt16 ); external name '_LMSetKeyRepThresh';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  LMGetKbdLast()
@@ -989,23 +676,6 @@ function LMGetKbdLast: UInt8; external name '_LMGetKbdLast';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  LMSetKbdLast()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetKbdLast( value: UInt8 ); external name '_LMSetKbdLast';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  LMGetKbdType()
@@ -1022,23 +692,6 @@ function LMGetKbdType: UInt8; external name '_LMGetKbdType';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  LMSetKbdType()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure LMSetKbdType( value: UInt8 ); external name '_LMSetKbdType';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 {$endc} {TARGET_OS_MAC}
 
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

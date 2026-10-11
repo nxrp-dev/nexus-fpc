@@ -11,10 +11,6 @@ type
 type
   NSController = objcclass external (NSObject, NSCodingProtocol)
   private
-    {$if  not defined(__LP64__)}
-    _reserved: pointer;
-    _reserved2: pointer;
-    {$endif}
     _specialPurposeType: cint;
     _bindingAdaptor: id;
     _editors: NSMutableArray;
@@ -33,9 +29,6 @@ type
           _reservedController: 0..((1 shl 28)-1);
         );
       end;
-    {$if  not defined(__LP64__)}
-    _reservedOther: NSMutableDictionary;
-    {$endif}
     _modelObservingTracker: id;
     _expectedObservingInfo: id;
     _singleValueAccessor: id;

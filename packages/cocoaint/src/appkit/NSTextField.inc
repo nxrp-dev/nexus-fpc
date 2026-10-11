@@ -14,9 +14,7 @@ type
   private
     _delegate: id;
     _errorAction: SEL;
-    {$if defined(__LP64__)}
     _maxLayoutWidth: CGFloat;
-    {$endif}
   public
     procedure setPlaceholderString(newValue: NSString); message 'setPlaceholderString:';
     function placeholderString: NSString; message 'placeholderString';

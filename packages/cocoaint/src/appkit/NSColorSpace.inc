@@ -36,9 +36,7 @@ type
           storageType: 0..((1 shl 3)-1);
           replacedDuringUnarchiving: 0..1;
           int: 0..((1 shl 20)-1);
-          {$if defined(__LP64__)}
           int_: 0..((1 shl 32)-1);
-          {$endif}
         );
       end;
     __cgColorSpace: pointer;

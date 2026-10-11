@@ -36,28 +36,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -70,29 +59,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -102,23 +73,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -158,11 +112,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -232,172 +182,6 @@ type
 type
 	LocalDateTimeHandle = ^LocalDateTimePtr;
 	{ Classic 32 bit clock conversion routines }
-{$ifc not TARGET_CPU_64}
-{
- *  ConvertLocalTimeToUTC()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use
- *    UCConvertUTCDateTimeToCFAbsoluteTime/CFTimeZoneGetSecondsFromGMT
- *    instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCConvertUTCDateTimeToCFAbsoluteTime and
- *    CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function ConvertLocalTimeToUTC( localSeconds: UInt32; var utcSeconds: UInt32 ): OSStatus; external name '_ConvertLocalTimeToUTC';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ConvertUTCToLocalTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use
- *    UCConvertUTCDateTimeToCFAbsoluteTime/CFTimeZoneGetSecondsFromGMT
- *    instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCConvertUTCDateTimeToCFAbsoluteTime and
- *    CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function ConvertUTCToLocalTime( utcSeconds: UInt32; var localSeconds: UInt32 ): OSStatus; external name '_ConvertUTCToLocalTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{ 64 bit clock conversion routines }
-{
- *  ConvertUTCToLocalDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use
- *    UCConvertUTCDateTimeToCFAbsoluteTime/CFTimeZoneGetSecondsFromGMT
- *    instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCConvertUTCDateTimeToCFAbsoluteTime and
- *    CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function ConvertUTCToLocalDateTime( const (*var*) utcDateTime_: UTCDateTime; var localDateTime_: LocalDateTime ): OSStatus; external name '_ConvertUTCToLocalDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ConvertLocalToUTCDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use
- *    UCConvertUTCDateTimeToCFAbsoluteTime/CFTimeZoneGetSecondsFromGMT
- *    instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCConvertUTCDateTimeToCFAbsoluteTime and
- *    CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function ConvertLocalToUTCDateTime( const (*var*) localDateTime_: LocalDateTime; var utcDateTime_: UTCDateTime ): OSStatus; external name '_ConvertLocalToUTCDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{ Getter and Setter Clock routines using 64 Bit values }
-{
- *  GetUTCDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFAbsoluteTimeGetCurrent instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFAbsoluteTimeGetCurrent instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function GetUTCDateTime( var utcDateTime_: UTCDateTime; options: OptionBits ): OSStatus; external name '_GetUTCDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  SetUTCDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use settimeofday (2) instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Setting the time requires
- *    root privileges. If you must, use settimeofday (2)
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function SetUTCDateTime( const (*var*) utcDateTime_: UTCDateTime; options: OptionBits ): OSStatus; external name '_SetUTCDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  GetLocalDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFAbsoluteTimeGetCurrent/CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFAbsoluteTimeGetCurrent and CFTimeZoneGetSecondsFromGMT instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function GetLocalDateTime( var localDateTime_: LocalDateTime; options: OptionBits ): OSStatus; external name '_GetLocalDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  SetLocalDateTime()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    it without replacement
- *
- *  Discussion:
- *    This function is no longer recommended. There is no replacement.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0.2 and later
- *    Non-Carbon CFM:   in UTCUtils 1.0 and later
- }
-function SetLocalDateTime( const (*var*) localDateTime_: LocalDateTime; options: OptionBits ): OSStatus; external name '_SetLocalDateTime';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

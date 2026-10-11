@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -238,141 +188,7 @@ type
 		tsrScript: ScriptCode;
 		tsrKeyStrokes: Str63;
 	end;
-{$ifc not TARGET_CPU_64}
-type
-	IndexToStringProcPtr = function( item: SInt16; var itemsScript: ScriptCode; var itemsStringPtr: StringPtr; yourDataPtr: UnivPtr ): Boolean;
-	IndexToStringUPP = IndexToStringProcPtr;
-{
- *  NewIndexToStringUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function NewIndexToStringUPP( userRoutine: IndexToStringProcPtr ): IndexToStringUPP; external name '_NewIndexToStringUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
 
-{
- *  DisposeIndexToStringUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-procedure DisposeIndexToStringUPP( userUPP: IndexToStringUPP ); external name '_DisposeIndexToStringUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-{
- *  InvokeIndexToStringUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function InvokeIndexToStringUPP( item: SInt16; var itemsScript: ScriptCode; var itemsStringPtr: StringPtr; yourDataPtr: UnivPtr; userUPP: IndexToStringUPP ): Boolean; external name '_InvokeIndexToStringUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  TypeSelectClear()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use UCTypeSelectFlushSelectorData instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCTypeSelectFlushSelectorData instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-procedure TypeSelectClear( var tsr: TypeSelectRecord ); external name '_TypeSelectClear';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
-        Long ago the implementation of TypeSelectNewKey had a bug that
-        required the high word of D0 to be zero or the function did not work.
-        Although fixed now, we are continuing to clear the high word
-        just in case someone tries to run on an older system.
-    }
-{
- *  TypeSelectNewKey()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use UCTypeSelectAddKeyToSelector instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCTypeSelectAddKeyToSelector instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function TypeSelectNewKey( const (*var*) theEvent: EventRecord; var tsr: TypeSelectRecord ): Boolean; external name '_TypeSelectNewKey';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  TypeSelectFindItem()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use UCTypeSelectFindItem instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCTypeSelectFindItem instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function TypeSelectFindItem( const (*var*) tsr: TypeSelectRecord; listSize: SInt16; selectMode: TSCode; getStringProc: IndexToStringUPP; yourDataPtr: UnivPtr ): SInt16; external name '_TypeSelectFindItem';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{
- *  TypeSelectCompare()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use UCTypeSelectCompare instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    UCTypeSelectCompare instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function TypeSelectCompare( const (*var*) tsr: TypeSelectRecord; testStringScript: ScriptCode; testStringPtr: StringPtr ): SInt16; external name '_TypeSelectCompare';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_4 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

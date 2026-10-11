@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -320,23 +270,6 @@ function OSAGetHandlerNames( scriptingComponent: ComponentInstance; modeFlags: S
 
 
 //#if !__LP64__
-{$ifc not TARGET_CPU_64}
-{
- *  OSAGetAppTerminology()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use OSACopyScriptingDefinition instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function OSAGetAppTerminology( scriptingComponent: ComponentInstance; modeFlags: SInt32; var fileSpec: FSSpec; terminologyID: SInt16; var didLaunch: Boolean; var terminologyList: AEDesc ): OSAError; external name '_OSAGetAppTerminology';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} { TARGET_CPU_64 }
 
 {
  *  OSAGetSysTerminology()
@@ -414,74 +347,6 @@ function OSACopyScriptingDefinitionFromURL( url: CFURLRef; modeFlags: SInt32; va
     Obsolete versions provided for backward compatibility:
 }
 //#if !__LP64__
-{$ifc not TARGET_CPU_64}
-{
- *  ASSetProperty()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function ASSetProperty( scriptingComponent: ComponentInstance; contextID: OSAID; const (*var*) variableName: AEDesc; scriptValueID: OSAID ): OSAError; external name '_ASSetProperty';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  ASGetProperty()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function ASGetProperty( scriptingComponent: ComponentInstance; contextID: OSAID; const (*var*) variableName: AEDesc; var resultingScriptValueID: OSAID ): OSAError; external name '_ASGetProperty';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  ASSetHandler()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function ASSetHandler( scriptingComponent: ComponentInstance; contextID: OSAID; const (*var*) handlerName: AEDesc; compiledScriptID: OSAID ): OSAError; external name '_ASSetHandler';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  ASGetHandler()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function ASGetHandler( scriptingComponent: ComponentInstance; contextID: OSAID; const (*var*) handlerName: AEDesc; var resultingCompiledScriptID: OSAID ): OSAError; external name '_ASGetHandler';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  ASGetAppTerminology()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppleScriptLib 1.1 and later
- }
-function ASGetAppTerminology( scriptingComponent: ComponentInstance; var fileSpec: FSSpec; terminologID: SInt16; var didLaunch: Boolean; var terminologyList: AEDesc ): OSAError; external name '_ASGetAppTerminology';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Errors:
-        errOSASystemError       operation failed
-    }
-{************************************************************************}
-
-
-{$endc}	{ TARGET_CPU_64 }
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

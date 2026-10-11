@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -213,12 +163,6 @@ uses MacTypes,ColorSyncDeprecated,MixedMode,QuickdrawTypes,Events;
 
 {$ALIGN MAC68K}
 
-{$ifc not TARGET_CPU_64}
-const
-{Maximum small fract value, as long}
-	kMaximumSmallFract = $0000FFFF;
-
-{$endc} {not TARGET_CPU_64}
 
 { These are legacy constants. The Color Picker on OS X uses the Cocoa NSColorPanel. }
 const
@@ -246,12 +190,6 @@ const
 	kColorPickerCallColorProcLive = 512;
 
 {$ifc OLDROUTINENAMES}
-{$ifc not TARGET_CPU_64}
-const
-{Maximum small fract value, as long}
-	MaxSmallFract = $0000FFFF;
-
-{$endc} {not TARGET_CPU_64}
 
 const
 	kDefaultWidth = 383;
@@ -272,40 +210,6 @@ const
 
 {$endc} {OLDROUTINENAMES}
 
-{$ifc not TARGET_CPU_64}
-{ A SmallFract value is just the fractional part of a Fixed number,
-which is the low order word.  They can be
-assigned directly to and from INTEGERs. }
-{ Unsigned fraction between 0 and 1 }
-type
-	SmallFract = UInt16;
-	HSVColorPtr = ^HSVColor;
-	HSVColor = record
-		hue: SmallFract;                    { Fraction of circle, red at 0 }
-		saturation: SmallFract;             { 0-1, 0 for gray, 1 for pure color }
-		value: SmallFract;                  { 0-1, 0 for black, 1 for max intensity }
-	end;
-type
-	HSLColorPtr = ^HSLColor;
-	HSLColor = record
-		hue: SmallFract;                    { Fraction of circle, red at 0 }
-		saturation: SmallFract;             { 0-1, 0 for gray, 1 for pure color }
-		lightness: SmallFract;              { 0-1, 0 for black, 1 for white }
-	end;
-type
-	CMYColorPtr = ^CMYColor;
-	CMYColor = record
-		cyan: SmallFract;
-		magenta: SmallFract;
-		yellow: SmallFract;
-	end;
-type
-	PMColor = record
-		profile: CMProfileHandle;
-		color: CMColor;
-	end;
-	PMColorPtr = ^PMColor;
-{$endc} {not TARGET_CPU_64}
 
 type
 	NPMColor = record
@@ -365,103 +269,11 @@ procedure DisposeNColorChangedUPP( userUPP: NColorChangedUPP ); external name '_
 procedure InvokeNColorChangedUPP( userData: SRefCon; var newColor: NPMColor; userUPP: NColorChangedUPP ); external name '_InvokeNColorChangedUPP';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
-{$ifc TARGET_CPU_64}
 
 type
 	ColorChangedUPP = UnivPtr;
 	UserEventUPP = UnivPtr;
-{$elsec}
-type
-	ColorChangedProcPtr = procedure( userData: SInt32; var newColor: PMColor );
-	UserEventProcPtr = function( var event: EventRecord ): Boolean;
-	ColorChangedUPP = ColorChangedProcPtr;
-	UserEventUPP = UserEventProcPtr;
-{
- *  NewColorChangedUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function NewColorChangedUPP( userRoutine: ColorChangedProcPtr ): ColorChangedUPP; external name '_NewColorChangedUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
-{
- *  NewUserEventUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function NewUserEventUPP( userRoutine: UserEventProcPtr ): UserEventUPP; external name '_NewUserEventUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-{
- *  DisposeColorChangedUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-procedure DisposeColorChangedUPP( userUPP: ColorChangedUPP ); external name '_DisposeColorChangedUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-{
- *  DisposeUserEventUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-procedure DisposeUserEventUPP( userUPP: UserEventUPP ); external name '_DisposeUserEventUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-{
- *  InvokeColorChangedUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-procedure InvokeColorChangedUPP( userData: SInt32; var newColor: PMColor; userUPP: ColorChangedUPP ); external name '_InvokeColorChangedUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-{
- *  InvokeUserEventUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function InvokeUserEventUPP( var event: EventRecord; userUPP: UserEventUPP ): Boolean; external name '_InvokeUserEventUPP';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-{$endc} {TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-type
-	ColorPickerInfo = record
-		theColor: PMColor;
-		dstProfile: CMProfileHandle;
-		flags: UInt32;
-		placeWhere: DialogPlacementSpec;
-		dialogOrigin: Point;
-		pickerType: OSType;
-		eventProc: UserEventUPP;
-		colorProc: ColorChangedUPP;
-		colorProcData: UInt32;
-		prompt: Str255;
-		mInfo: PickerMenuItemInfo;
-		newColorChosen: Boolean;
-		filler: SInt8;
-	end;
-{$endc} {not TARGET_CPU_64}
 
 type
 	NColorPickerInfo = record
@@ -471,10 +283,6 @@ type
 		placeWhere: DialogPlacementSpec;            { Currently ignored }
 		dialogOrigin: Point;           { Currently ignored }
 		pickerType: OSType;             { Currently ignored }
-{$ifc not TARGET_CPU_64}
-
-		eventProc: UserEventUPP;              { Ignored }
-{$endc} {not TARGET_CPU_64}
 
 		colorProc: NColorChangedUPP;
 		colorProcData: URefCon;
@@ -484,104 +292,6 @@ type
 		reserved: UInt8;               { Must be 0 }
 	end;
 
-{$ifc not TARGET_CPU_64}
-{
- *  Fix2SmallFract()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function Fix2SmallFract( f: Fixed ): SmallFract; external name '_Fix2SmallFract';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SmallFract2Fix()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function SmallFract2Fix( s: SmallFract ): Fixed; external name '_SmallFract2Fix';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  CMY2RGB()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure CMY2RGB( const (*var*) cColor: CMYColor; var rColor: RGBColor ); external name '_CMY2RGB';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  RGB2CMY()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure RGB2CMY( const (*var*) rColor: RGBColor; var cColor: CMYColor ); external name '_RGB2CMY';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HSL2RGB()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure HSL2RGB( const (*var*) hColor: HSLColor; var rColor: RGBColor ); external name '_HSL2RGB';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  RGB2HSL()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure RGB2HSL( const (*var*) rColor: RGBColor; var hColor: HSLColor ); external name '_RGB2HSL';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HSV2RGB()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure HSV2RGB( const (*var*) hColor: HSVColor; var rColor: RGBColor ); external name '_HSV2RGB';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  RGB2HSV()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure RGB2HSV( const (*var*) rColor: RGBColor; var hColor: HSVColor ); external name '_RGB2HSV';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  GetColor()
@@ -595,20 +305,6 @@ function GetColor( where: Point; const (*var*) prompt: Str255; const (*var*) inC
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  PickColor()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in ColorPickerLib 2.0 and later
- }
-function PickColor( var theColorInfo: ColorPickerInfo ): OSErr; external name '_PickColor';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  NPickColor()

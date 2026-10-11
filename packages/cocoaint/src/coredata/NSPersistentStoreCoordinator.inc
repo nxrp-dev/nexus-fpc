@@ -83,9 +83,7 @@ type
           _reservedFlags: 0..((1 shl 31)-1);
         );
       end;
-    {$ifdef __LP64__}
     _reserved32: cuint32;
-    {$endif}
     _miniLock: clong;
     _additionalPrivateIvars: idPtr;
     _managedObjectModel: NSManagedObjectModel;

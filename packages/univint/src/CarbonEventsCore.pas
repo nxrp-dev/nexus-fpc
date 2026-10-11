@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -1996,31 +1946,6 @@ function HIGetMousePosition( inSpace: HICoordinateSpace; inObject: UnivPtr; var 
 (* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  GetGlobalMouse()
- *
- *  Summary:
- *    Returns the position of the mouse in global coordinates.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    globalMouse:
- *      On exit, contains the mouse position in global coordinates.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in CarbonAccessors.o 1.0 and later
- }
-procedure GetGlobalMouse( var globalMouse: Point ); external name '_GetGlobalMouse';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  GetCurrentButtonState()
@@ -2361,69 +2286,6 @@ function InstallEventLoopTimer( inEventLoop: EventLoopRef; inFireDelay: EventTim
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  InstallEventLoopIdleTimer()
- *
- *  Discussion:
- *    Installs a timer onto the event loop specified. Idle timers are
- *    only called when there is no user activity occurring in the
- *    application. This means that the user is not actively
- *    clicking/typing, and is also not in the middle of tracking a
- *    control, menu, or window. TrackMouseLocation actually disables
- *    all idle timers automatically for you.
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Parameters:
- *
- *    inEventLoop:
- *      The event loop to add the timer.
- *
- *    inDelay:
- *      The delay before firing this timer after a user input event has
- *      come in. For example, if you want to start your timer 2 seconds
- *      after the user stops typing, etc. you would pass 2.0 into this
- *      parameter. Each time the user types a key (or whatever), this
- *      timer is reset. If we are considered to be idle when an idle
- *      timer is installed, the first time it fires will be inDelay
- *      seconds from the time it is installed. So if you installed it
- *      in the middle of control tracking, say, it wouldn't fire until
- *      the user stopped tracking. But if you installed it at app
- *      startup and the user hasn't typed/clicked, it would fire in
- *      inDelay seconds. On Mac OS X 10.3 and earlier, the delay must
- *      be greater than zero. On Mac OS X 10.4 and later, the delay
- *      must be greater than or equal to zero. You cannot use
- *      kEventDurationForever for the delay.
- *
- *    inInterval:
- *      The timer interval (pass 0 for a one-shot timer, which executes
- *      once but does not repeat). You may also pass
- *      kEventDurationForever to create a one-shot timer.
- *
- *    inTimerProc:
- *      The routine to call when the timer fires.
- *
- *    inTimerData:
- *      Data to pass to the timer proc when called.
- *
- *    outTimer:
- *      A reference to the newly installed timer.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function InstallEventLoopIdleTimer( inEventLoop: EventLoopRef; inDelay: EventTimerInterval; inInterval: EventTimerInterval; inTimerProc: EventLoopIdleTimerUPP; inTimerData: UnivPtr; var outTimer: EventLoopTimerRef ): OSStatus; external name '_InstallEventLoopIdleTimer';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  RemoveEventLoopTimer()
@@ -2680,98 +2542,6 @@ function RemoveEventHandler( inHandlerRef: EventHandlerRef ): OSStatus; external
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  InstallStandardEventHandler()
- *
- *  Summary:
- *    Installs the standard event handler (if any) for an event target.
- *
- *  Discussion:
- *    All event targets have default handlers installed on them by the
- *    toolbox to perform certain basic operations common to that type
- *    of target. Some targets also have standard handlers which are not
- *    installed by default, but may be requested. A standard handler
- *    typically provides higher-level behavior for its target. Prior to
- *    Mac OS X 10.5, only  window event targets have a standard
- *    handler; the window standard event handler may also be installed
- *    by setting the kWindowStandardHandlerAttribute flag. In Mac OS X
- *    10.5 and later, the application and menubar event targets also
- *    support standard event handlers. Calling
- *    InstallStandardEventHandler on any other type of target (control,
- *    menu, etc.) has no effect.
- *
- *    In Mac OS X 10.5 and later, InstallStandardEventHandler records
- *    the number of installation requests, and
- *    RemoveStandardEventHandler does not actually remove the standard
- *    handler until the count has been reduced to zero.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inTarget:
- *      The target whose standard handler should be installed.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function InstallStandardEventHandler( inTarget: EventTargetRef ): OSStatus; external name '_InstallStandardEventHandler';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  RemoveStandardEventHandler()
- *
- *  Summary:
- *    Removes the standard event handler (if any) for an event target.
- *
- *  Discussion:
- *    InstallStandardEventHandler records the number of installation
- *    requests, and RemoveStandardEventHandler does not actually remove
- *    the standard handler until the count has been reduced to zero.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inTarget:
- *      The target whose standard handler should be removed.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.5 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function RemoveStandardEventHandler( inTarget: EventTargetRef ): OSStatus; external name '_RemoveStandardEventHandler';
-(* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
-
-
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{  ¥ Adjusting set of event types after a handler is created                           }
-{ After installing a handler with the routine above, you can adjust the event type     }
-{ list telling the toolbox what events to send to that handler by calling the two      }
-{ routines below. If you add an event type twice for the same handler, your handler    }
-{ will only be called once, but it will take two RemoveEventType calls to stop your    }
-{ handler from being called with that event type. In other words, the install count    }
-{ for each event type is maintained by the toolbox. This might allow you, for example  }
-{ to have subclasses of a window object register for types without caring if the base  }
-{ class has already registered for that type. When the subclass removes its types, it  }
-{ can successfully do so without affecting the base class's reception of its event     }
-{ types, yielding eternal bliss.                                                       }
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  AddEventTypesToHandler()

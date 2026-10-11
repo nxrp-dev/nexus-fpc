@@ -21,9 +21,6 @@ type
     _stateImageSize: NSSize;
     _imageSize: NSSize;
     _titleSize: NSSize;
-    {$if  not defined(__LP64__)}
-    _keyEquivalentSize: NSSize;
-    {$endif}
     _size: NSSize;
     _micFlags: bitpacked record
       case byte of
@@ -40,10 +37,6 @@ type
   public
     procedure setMenuItem(newValue: NSMenuItem); message 'setMenuItem:';
     function menuItem: NSMenuItem; message 'menuItem';
-    {$if  not defined(__LP64__)}
-    procedure setMenuView (menuView: NSMenuView); message 'setMenuView:';
-    function menuView: NSMenuView; message 'menuView';
-    {$endif}
     procedure setNeedsSizing(newValue: ObjCBOOL); message 'setNeedsSizing:';
     function needsSizing: ObjCBOOL; message 'needsSizing';
     procedure calcSize; message 'calcSize';

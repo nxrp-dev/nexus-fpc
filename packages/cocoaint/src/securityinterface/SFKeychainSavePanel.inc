@@ -13,23 +13,7 @@ type
 type
   SFKeychainSavePanel = objcclass external (NSSavePanel)
   private
-    {$if (defined(__LP64__))}
     _reserved_SFKeychainSavePanel: id;
-    {$else}
-    _customView: NSView;
-    _message: NSTextField;
-    _password: NSString;
-    _kcFullPathName: NSString;
-    _startPath: NSString;
-    _keychainFileName: NSString;
-    _returnedKeychain: SecKeychainRef;
-    _parentWindowForSheet: NSWindow;
-    _clientDidEndSelector: SEL;
-    _clientDelegate: id;
-    _contextInfo: pointer;
-    _result: OSStatus;
-    _reserved_SFKeychainSavePanel_: id;
-    {$endif}
   public
     class function sharedKeychainSavePanel: SFKeychainSavePanel; message 'sharedKeychainSavePanel';
     function runModalForDirectory_file (path: NSString; name: NSString): NSInteger; message 'runModalForDirectory:file:';

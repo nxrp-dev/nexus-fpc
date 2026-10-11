@@ -68,9 +68,7 @@ type
     _view: NSView;
     _minSize: NSSize;
     _maxSize: NSSize;
-    {$if defined(__LP64__)}
     _toolbarItemReserved: id;
-    {$endif}
   public
     function initWithItemIdentifier (itemIdentifier: NSString): instancetype; message 'initWithItemIdentifier:'; { NS_DESIGNATED_INITIALIZER }
     function itemIdentifier: NSString; message 'itemIdentifier';

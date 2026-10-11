@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -220,191 +170,6 @@ uses MacTypes,ATSUnicodeTypes,TextCommon,ATSTypes;
 { ---------------------------------------------------------------------------- }
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  ATSUGlyphGetIdealMetrics()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontGetGlyphWithName,
- *    CTFontGetVerticalTranslationsForGlyphs,
- *    CTFontGetBoundingRectsForGlyphs, or CTFontGetAdvancesForGlyphs
- *    instead.
- *
- *  Summary:
- *    Obtains resolution-independent font metric information for glyphs
- *    associated with a given style object.
- *
- *  Discussion:
- *    The advance width is the full horizontal width of the glyph as
- *    measured from its origin to the origin of the next glyph on the
- *    line, including the left-side and right-side bearings. For
- *    vertical text, the advance height is the sum of the top-side
- *    bearing, the bounding-box height, and the bottom-side bearing.
- *    You can call the ATSUGlyphGetIdealMetrics function to obtain an
- *    array of ATSGlyphIdealMetrics structures containing values for
- *    the specified glyphs' advance and side bearings.
- *    ATSUGlyphGetIdealMetrics can analyze both horizontal and vertical
- *    text, automatically producing the appropriate bearing values
- *    (oriented for width or height, respectively) for each. You should
- *    call ATSUGlyphGetIdealMetrics to obtain resolution-independent
- *    glyph metrics. To obtain device-adjusted (that is,
- *    resolution-dependent) glyph metrics, call the function
- *    ATSUGlyphGetScreenMetrics.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referring to a font you wish to obtain glyph metrics
- *      from.
- *
- *    iNumOfGlyphs:
- *      The number of glyph IDs you are passing in to be examined. This
- *      value should be equal to the size of the array you are passing
- *      in for the iGlyphIDs parameter.
- *
- *    iGlyphIDs:
- *      An array of glyph IDs referring to glyphs for which you wish to
- *      obtain metrics.
- *
- *    iInputOffset:
- *      A ByteOffset value specifying the offset in bytes between glyph
- *      IDs in the iGlyphIDs array.
- *
- *    oIdealMetrics:
- *      A pointer to memory you have allocated for an array of
- *      ATSGlyphIdealMetrics structures. On return, each structure
- *      contains advance and side-bearing values for a glyph. See
- *      ATSTypes.h for more information regarding the
- *      ATSGlyphIdealMetrics structure.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGlyphGetIdealMetrics( iATSUStyle: ATSUStyle; iNumOfGlyphs: ItemCount; iGlyphIDs: {variable-size-array} GlyphIDPtr; iInputOffset: ByteOffset; oIdealMetrics: {variable-size-array} ATSGlyphIdealMetricsPtr ): OSStatus; external name '_ATSUGlyphGetIdealMetrics';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  ATSUGlyphGetScreenMetrics()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontGetBoundingBox, CTFontGetUnderlinePosition,
- *    CTFontGetUnderlineThickness, CTFontGetSlantAngle,
- *    CTFontGetCapHeight, or CTFontGetXHeight instead.
- *
- *  Summary:
- *    Obtains device-adjusted font metric information for glyphs
- *    associated with a given style object.
- *
- *  Discussion:
- *    You can call the ATSUGlyphGetScreenMetrics function to obtain an
- *    array of ATSGlyphScreenMetrics structures containing values for
- *    the specified glyphs' advance and side bearings, top left,
- *    height, and width. You should call ATSUGlyphGetScreenMetrics to
- *    obtain device-adjusted (that is, resolution-dependent) glyph
- *    metrics. To obtain resolution-independent glyph metrics, call the
- *    function ATSUGlyphGetIdealMetrics.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referring to a font you wish to obtain glyph metrics
- *      from.
- *
- *    iNumOfGlyphs:
- *      The number of glyph IDs you are passing in to be examined. This
- *      value should be equal to the size of the array you are passing
- *      in for the iGlyphIDs parameter.
- *
- *    iGlyphIDs:
- *      An array of glyph IDs referring to glyphs for which you wish to
- *      obtain metrics.
- *
- *    iInputOffset:
- *      A ByteOffset value specifying the offset in bytes between glyph
- *      IDs in the iGlyphIDs array.
- *
- *    iForcingAntiAlias:
- *      A Boolean value indicating whether anti-aliasing is forced for
- *      the style object.
- *
- *    iAntiAliasSwitch:
- *      A Boolean value indicating whether anti-aliasing is currently
- *      on or off.
- *
- *    oScreenMetrics:
- *      A pointer to memory you have allocated for an array of
- *      ATSGlyphScreenMetrics structures. On return, each structure
- *      contains advance and side-bearing values for a glyph. See
- *      ATSTypes.h for more information regarding the
- *      ATSGlyphScreenMetrics structure.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGlyphGetScreenMetrics( iATSUStyle: ATSUStyle; iNumOfGlyphs: ItemCount; iGlyphIDs: {variable-size-array} GlyphIDPtr; iInputOffset: ByteOffset; iForcingAntiAlias: Boolean; iAntiAliasSwitch: Boolean; oScreenMetrics: {variable-size-array} ATSGlyphScreenMetricsPtr ): OSStatus; external name '_ATSUGlyphGetScreenMetrics';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{ ---------------------------------------------------------------------------- }
-{ ATSUI glyph curve access functions and callbacks                             }
-{ ---------------------------------------------------------------------------- }
-{
- *  ATSUGetNativeCurveType()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontCreatePathForGlyph instead.
- *
- *  Summary:
- *    Returns the native curve format for a specific font.
- *
- *  Discussion:
- *    Use this function to decide whether to call
- *    ATSUGlyphGetQuadraticPaths or ATSUGlyphGetCubicPaths. Both
- *    functions will return curves for all valid ATSUI fonts, but if
- *    the curve type you request is not the native curve type of the
- *    font, the curves you get back will be mathematically converted,
- *    rather than native font data. See the definition of ATSCurveType
- *    in ATSTypes.h for possible return values from this function.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referencing a font for which you wish to obtain the
- *      native curve type.
- *
- *    oCurveType:
- *      On return, a value indicating the native curve type of the font
- *      referenced by iATSUStyle. See the definition of ATSCurveType in
- *      ATSTypes.h for a list of possible return values for this
- *      parameter.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGetNativeCurveType( iATSUStyle: ATSUStyle; var oCurveType: ATSCurveType ): OSStatus; external name '_ATSUGetNativeCurveType';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -652,89 +417,6 @@ procedure DisposeATSQuadraticClosePathUPP( userUPP: ATSQuadraticClosePathUPP ); 
 function InvokeATSQuadraticClosePathUPP( callBackDataPtr: UnivPtr; userUPP: ATSQuadraticClosePathUPP ): OSStatus; external name '_InvokeATSQuadraticClosePathUPP';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
 
-{$ifc not TARGET_CPU_64}
-{
- *  ATSUGlyphGetQuadraticPaths()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontCreatePathForGlyph instead.
- *
- *  Summary:
- *    Uses a callback mechanism to obtain a set of Quadratic outlines
- *    for a specified glyph in a specified font.
- *
- *  Discussion:
- *    This function will allow you to use callbacks to obtain the exact
- *    outline of a specified glyph, in quadratic form. Although this
- *    function will always return results for any valid ATSUI font, you
- *    should first use the function ATSUGetNativeCurveType to determine
- *    the native format of the glyph you are interested in. Then,
- *    either call ATSUGlyphGetQuadraticPaths or ATSUGlyphGetCubicPaths
- *    based on the result. Otherwise, you may end up with curves that
- *    are mathematically converted from cubic to quadratic (or vice
- *    versa), instead of getting native font data. See the definitions
- *    of ATSQuadraticNewPathProcPtr, ATSQuadraticLineProcPtr,
- *    ATSQuadraticCurveProcPtr, and ATSQuadraticClosePathProcPtr for
- *    more information about setting up the callbacks.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referring to a font you wish to obtain a set of glyph
- *      outlines from.
- *
- *    iGlyphID:
- *      A ID number referring to the glyph for which you wish to obtain
- *      outline data. Use the ATSUI direct access functions in
- *      ATSUnicodeDirectAccess.h to obtain values to pass for this
- *      parameter.
- *
- *    iNewPathProc:
- *      A pointer to a callback function for quadratic new path
- *      operations. See the definition of ATSQuadraticNewPathProcPtr
- *      for more information about creating, disposing, and invoking
- *      this type of Universal Procedure Pointer.
- *
- *    iLineProc:
- *      A pointer to a callback function for quadratic LineTo
- *      operations. See the definition of ATSQuadraticLineProcPtr for
- *      more information about creating, disposing, and invoking this
- *      type of Universal Procedure Pointer.
- *
- *    iCurveProc:
- *      A pointer to a callback function for quadratic curve
- *      operations. See the definition of ATSQuadraticCurveProcPtr for
- *      more information about creating, disposing, and invoking this
- *      type of Universal Procedure Pointer.
- *
- *    iClosePathProc:
- *      A pointer to a callback function for quadratic close path
- *      operations. See the definition of ATSQuadraticClosePathProcPtr
- *      for more information about creating, disposing, and invoking
- *      this type of Universal Procedure Pointer.
- *
- *    iCallbackDataPtr:
- *      Any valid pointer. Any application specific data you wish to
- *      pass to your callbacks may be sent through this parameter.
- *
- *    oCallbackResult:
- *      On return, status returned by callback functions. If an error
- *      occurs, callbacks may communicate it through this parameter.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGlyphGetQuadraticPaths( iATSUStyle: ATSUStyle; iGlyphID: GlyphID; iNewPathProc: ATSQuadraticNewPathUPP; iLineProc: ATSQuadraticLineUPP; iCurveProc: ATSQuadraticCurveUPP; iClosePathProc: ATSQuadraticClosePathUPP; iCallbackDataPtr: UnivPtr; var oCallbackResult: OSStatus ): OSStatus; external name '_ATSUGlyphGetQuadraticPaths';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -983,203 +665,6 @@ procedure DisposeATSCubicClosePathUPP( userUPP: ATSCubicClosePathUPP ); external
 function InvokeATSCubicClosePathUPP( callBackDataPtr: UnivPtr; userUPP: ATSCubicClosePathUPP ): OSStatus; external name '_InvokeATSCubicClosePathUPP';
 (* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
 
-{$ifc not TARGET_CPU_64}
-{
- *  ATSUGlyphGetCubicPaths()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontCreatePathForGlyph instead.
- *
- *  Summary:
- *    Uses a callback mechanism to obtain a set of Cubic outlines for a
- *    specified glyph in a specified font.
- *
- *  Discussion:
- *    This function will allow you to use callbacks to obtain the exact
- *    outline of a specified glyph, in cubic form. Although this
- *    function will always return results for any valid ATSUI font, you
- *    should first use the function ATSUGetNativeCurveType to determine
- *    the native format of the glyph you are interested in. Then,
- *    either call ATSUGlyphGetQuadraticPaths or ATSUGlyphGetCubicPaths
- *    based on the result. Otherwise, you may end up with curves that
- *    are mathematically converted from quadratic to cubic (or vice
- *    versa), instead of getting native font data. See the definitions
- *    of ATSCubicMoveToProcPtr, ATSCubicLineToProcPtr,
- *    ATSCubicCurveToProcPtr, and ATSCubicClosePathProcPtr for more
- *    information about setting up the callbacks.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referring to a font you wish to obtain a set of glyph
- *      outlines from.
- *
- *    iGlyphID:
- *      A ID number referring to the glyph for which you wish to obtain
- *      outline data. Use the ATSUI direct access functions in
- *      ATSUnicodeDirectAccess.h to obtain values to pass for this
- *      parameter.
- *
- *    iMoveToProc:
- *      A pointer to a callback function for cubic MoveTo operations.
- *      See the definition of ATSCubicMoveToProcPtr for more
- *      information about creating, disposing, and invoking this type
- *      of Universal Procedure Pointer.
- *
- *    iLineToProc:
- *      A pointer to a callback function for cubic LineTo operations.
- *      See the definition of ATSCubicLineToProcPtr for more
- *      information about creating, disposing, and invoking this type
- *      of Universal Procedure Pointer.
- *
- *    iCurveToProc:
- *      A pointer to a callback function for cubic CurveTo operations.
- *      See the definition of ATSCubicCurveToProcPtr for more
- *      information about creating, disposing, and invoking this type
- *      of Universal Procedure Pointer.
- *
- *    iClosePathProc:
- *      A pointer to a callback function for cubic MoveTo operations.
- *      See the definition of ATSCubicClosePathProcPtr for more
- *      information about creating, disposing, and invoking this type
- *      of Universal Procedure Pointer.
- *
- *    iCallbackDataPtr:
- *      Any valid pointer. Any application specific data you wish to
- *      pass to your callbacks may be sent through this parameter.
- *
- *    oCallbackResult:
- *      On return, status returned by callback functions. If an error
- *      occurs, callbacks may communicate it through this parameter.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGlyphGetCubicPaths( iATSUStyle: ATSUStyle; iGlyphID: GlyphID; iMoveToProc: ATSCubicMoveToUPP; iLineToProc: ATSCubicLineToUPP; iCurveToProc: ATSCubicCurveToUPP; iClosePathProc: ATSCubicClosePathUPP; iCallbackDataPtr: UnivPtr { can be NULL }; var oCallbackResult: OSStatus ): OSStatus; external name '_ATSUGlyphGetCubicPaths';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{
- *  ATSUGlyphGetCurvePaths()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTFontCreatePathForGlyph instead.
- *
- *  Summary:
- *    Obtains glyph curve data without the use of callbacks.
- *
- *  Discussion:
- *    This function will return glyph curve data in a single data
- *    structure rather than through the use of callbacks, but you must
- *    parse the data structure yourself. ATSUGlyphGetCubicPaths and
- *    ATSUGlyphGetQuadraticPaths will parse the glyph data for you and
- *    use the callbacks you provide them to give you access to the
- *    individual points on the curves. Typically you use the function
- *    ATSUGlyphGetCurvePaths by calling it twice, as follows: (1) Pass
- *    a valid style and glyphID into the iATSUStyle and iGlyphID
- *    parameters, respectively, 0 for the ioBufferSize parameter, and
- *    NULL for the oPaths parameter. ATSUGlyphGetCurvePaths returns the
- *    size to use for the oPaths array in the ioBufferSize parameter.
- *    (2) Allocate enough space an array of the returned size, then
- *    call the ATSUGlyphGetCurvePaths again, passing a pointer to the
- *    array in the oPaths parameter. On return, the array contains the
- *    glyph outline data.
- *
- *  Parameters:
- *
- *    iATSUStyle:
- *      A style referring to a font you wish to obtain a set of glyph
- *      outlines from.
- *
- *    iGlyphID:
- *      A ID number referring to the glyph for which you wish to obtain
- *      outline data. Use the ATSUI direct access functions in
- *      ATSUnicodeDirectAccess.h to obtain values to pass for this
- *      parameter.
- *
- *    ioBufferSize:
- *      On input, the size of the buffer you have allocated for the
- *      oPaths parameter. On return, the actual size of the data
- *      structure that has been copied into the oPaths parameter.
- *
- *    oPaths:
- *      On return, a data structure containing glyph outline
- *      information. See ATSTypes.h for a definition of this data
- *      structure.
- *
- *  Result:
- *    On success, noErr is returned. See MacErrors.h for possible error
- *    codes.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGlyphGetCurvePaths( iATSUStyle: ATSUStyle; iGlyphID: GlyphID; ioBufferSize: ByteCountPtr; oPaths: ATSUCurvePathsPtr { can be NULL } ): OSStatus; external name '_ATSUGlyphGetCurvePaths';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{ Functions listed beyond this point are either deprecated or not recommended }
-
-{ ---------------------------------------------------------------------------- }
-{ ATSUI glyphInfo access (deprecated)                                          }
-{ ---------------------------------------------------------------------------- }
-{
- *  ATSUGetGlyphInfo()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTRunGetGlyphsPtr,CTRunGetGlyphs, CTRunGetPositionsPtr,
- *    CTRunGetPositions, CTRunGetStringIndicesPtr,
- *    CTRunGetStringIndices, CTRunGetStringRange instead.
- *
- *  Summary:
- *    Obtains a copy of the style and layout information for each glyph
- *    in a line.
- *
- *  Discussion:
- *    Please see ATSUnicodeDirectAccess.h for replacement functions.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUGetGlyphInfo( iTextLayout: ATSUTextLayout; iLineStart: UniCharArrayOffset; iLineLength: UniCharCount; ioBufferSize: ByteCountPtr; oGlyphInfoPtr: ATSUGlyphInfoArrayPtr ): OSStatus; external name '_ATSUGetGlyphInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  ATSUDrawGlyphInfo()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTRunGetGlyphsPtr,CTRunGetGlyphs, CTRunGetPositionsPtr,
- *    CTRunGetPositions, CTRunGetStringIndicesPtr,
- *    CTRunGetStringIndices, CTRunGetStringRange instead.
- *
- *  Summary:
- *    Draws glyphs at the specified location, based on style and layout
- *    information specified for each glyph.
- *
- *  Discussion:
- *    Please see ATSUnicodeDirectAccess.h for replacement functions.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   in ATSUnicodeLib 9.1 and later
- }
-function ATSUDrawGlyphInfo( iGlyphInfoArray: ATSUGlyphInfoArrayPtr; iLocation: Float32Point ): OSStatus; external name '_ATSUDrawGlyphInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

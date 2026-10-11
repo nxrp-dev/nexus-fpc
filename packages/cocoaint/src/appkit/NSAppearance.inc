@@ -17,9 +17,6 @@ type
     _private: pointer;
     _reserved: id;
     _auxiliary: id;
-    {$if  not defined(__LP64__)}
-    _extra:array[0..1] of id;
-    {$endif}
   public
     function name: NSString; message 'name';
     class function currentAppearance: NSAppearance; message 'currentAppearance';

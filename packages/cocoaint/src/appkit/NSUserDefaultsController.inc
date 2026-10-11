@@ -11,10 +11,6 @@ type
 type
   NSUserDefaultsController = objcclass external (NSController)
   private
-    {$if  not defined(__LP64__)}
-    _reserved3: pointer;
-    _reserved4: pointer;
-    {$endif}
     _defaults: NSUserDefaults;
     _valueBuffer: NSMutableDictionary;
     _initialValues: NSDictionary;

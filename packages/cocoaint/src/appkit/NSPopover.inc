@@ -58,18 +58,9 @@ type
     _behavior: NSPopoverBehavior;
     _popoverPrivateData: id;
     _preferredEdge: NSRectEdge;
-    {$if  not defined(__LP64__)}
-    _unused2: NSPoint;
-    {$endif}
     _contentSize: NSSize;
     _positioningRect: NSRect;
-    {$if  not defined(__LP64__)}
-    _unused3: id;
-    {$endif}
     _postCloseBlock: id;
-    {$if  not defined(__LP64__)}
-    _reserved:array[0..0] of id;
-    {$endif}
     _flags: bitpacked record
       case byte of
         0: (_anonBitField__flags0: cuint);

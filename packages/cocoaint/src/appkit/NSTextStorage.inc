@@ -31,9 +31,7 @@ type
           editedMask: 0..((1 shl 8)-1);
           int: 0..((1 shl 8)-1);
           disabled: 0..((1 shl 16)-1);
-          {$if defined(__LP64__)}
           int_: 0..((1 shl 32)-1);
-          {$endif}
         );
       end;
     _layoutManagers: NSMutableArray;

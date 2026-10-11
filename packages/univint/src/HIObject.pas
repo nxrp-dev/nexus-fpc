@@ -51,28 +51,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -85,29 +74,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -117,23 +88,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -173,11 +127,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -1442,54 +1392,6 @@ function HIObjectIsArchivingIgnored( inObject: HIObjectRef ): Boolean; external 
 (* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  HIObjectSetArchivingIgnored()
- *
- *  Discussion:
- *    Call this function to mark or unmark an HIObject as ignored for
- *    archiving. By default, HIObjects are marked as ignored for
- *    archiving. HIObject subclasses that support archiving with the
- *    kEventHIObjectInitialize and kEventHIObjectEncode events must set
- *    their archiving-ignored state to false in order to receive
- *    archiving requests from clients. Typically, an HIObject subclass
- *    will call HIObjectSetArchivingIgnored in its
- *    kEventHIObjectInitialize handler. A client may still reset the
- *    archiving-ignored state to true on a particular object after the
- *    object has been initialized. An HIObject marked as ignored for
- *    archiving will never be requested to encode itself into an
- *    archive.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inObject:
- *      The object whose archiving-ignored state you wish to change.
- *
- *    inIgnored:
- *      A Boolean value indicating whether or not to ignore the object.
- *
- *  Result:
- *    An OSStatus signifying success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIObjectSetArchivingIgnored( inObject: HIObjectRef; inIgnored: Boolean ): OSStatus; external name '_HIObjectSetArchivingIgnored';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
-   Standard custom archive data dictionary keys describing custom initialize event parameters.
-   The name and type keys denote an array of OSTypes represented by CFStrings. Use
-   UTCreateStringForOSType and UTGetOSTypeFromString in UTType.h for CFStringRef <-> OSType
-   conversion. The value key denotes an array of CFType objects.
-}
-{$endc} {not TARGET_CPU_64}
 
 {
  *  kHIObjectCustomDataParameterNamesKey
@@ -1600,82 +1502,6 @@ var kHIObjectCustomDataCDEFProcIDKey: CFStringRef; external name '_kHIObjectCust
 var kHIObjectCustomDataDelegateGroupParametersKey: CFStringRef; external name '_kHIObjectCustomDataDelegateGroupParametersKey'; (* attribute const *)
 (* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
 
-{$ifc not TARGET_CPU_64}
-{
- *  HIObjectCopyCustomArchiveData()
- *
- *  Discussion:
- *    Copies the custom archive data associated with an HIObject that
- *    has been read from or will be written to an archive. Useful for
- *    an archive editor that has read a custom object from an archive
- *    and would like to edit its custom data.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inObject:
- *      The object whose custom archive data you wish to retrieve.
- *
- *    outCustomData:
- *      On return, a CFDictionaryRef containing the custom data. The
- *      client is responsible for releasing the dictionary. NULL will
- *      be returned if there is no custom archive data available.
- *
- *  Result:
- *    An OSStatus signifying success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIObjectCopyCustomArchiveData( inObject: HIObjectRef; var outCustomData: CFDictionaryRef ): OSStatus; external name '_HIObjectCopyCustomArchiveData';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIObjectSetCustomArchiveData()
- *
- *  Discussion:
- *    Retrieves the custom archive data associated with an HIObject
- *    that has been read from or will be written to an archive. Useful
- *    for an archive editor that has edited a custom object's custom
- *    data and would like it to be written to an archive with the
- *    object.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inObject:
- *      The object whose custom archive data you wish to change.
- *
- *    inCustomData:
- *      A CFDictionaryRef containing the custom archive data you would
- *      like to associate with the object. Setting custom data will
- *      replace any existing custom data. Passing NULL will clear the
- *      custom archive data. The dictionary's keys and values must use
- *      CFType callbacks for archiving purposes.
- *
- *  Result:
- *    An OSStatus signifying success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIObjectSetCustomArchiveData( inObject: HIObjectRef; inCustomData: CFDictionaryRef { can be NULL } ): OSStatus; external name '_HIObjectSetCustomArchiveData';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{--------------------------------------------------------------------------------------}
-{  ¥ Delegate API constants                                                            }
-{--------------------------------------------------------------------------------------}
-{$endc} {not TARGET_CPU_64}
 
 
 {

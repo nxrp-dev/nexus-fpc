@@ -35,28 +35,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -69,29 +58,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -101,23 +72,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -157,11 +111,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -662,22 +612,6 @@ function ReleaseIconRef( theIconRef: IconRef ): OSErr; external name '_ReleaseIc
    This call is deprecated. Please use GetIconRefFromFileInfo() instead.
 }
 
-{$ifc not TARGET_CPU_64}
-{
- *  GetIconRefFromFile()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.2
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 8.5 and later
- }
-function GetIconRefFromFile( const (*var*) theFile: FSSpec; var theIconRef: IconRef; var theLabel: SInt16 ): OSErr; external name '_GetIconRefFromFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc}	{ not TARGET_CPU_64 }
 
 {
    GetIconRef
@@ -946,22 +880,6 @@ function RegisterIconRefFromIconFamily( creator: OSType; iconType: OSType; iconF
    when you're done with it.
 }
 
-{$ifc not TARGET_CPU_64}
-{
- *  RegisterIconRefFromResource()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.2
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 8.5 and later
- }
-function RegisterIconRefFromResource( creator: OSType; iconType: OSType; const (*var*) resourceFile: FSSpec; resourceID: SInt16; var theIconRef: IconRef ): OSErr; external name '_RegisterIconRefFromResource';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc}	{ not TARGET_CPU_64 }
 
 { RegisterIconRefFromFSRef}
 
@@ -1055,22 +973,6 @@ function UpdateIconRef( theIconRef: IconRef ): OSErr; external name '_UpdateIcon
    in the specified resource file.
 }
 
-{$ifc not TARGET_CPU_64}
-{
- *  OverrideIconRefFromResource()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.2
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 8.5 and later
- }
-function OverrideIconRefFromResource( theIconRef: IconRef; const (*var*) resourceFile: FSSpec; resourceID: SInt16 ): OSErr; external name '_OverrideIconRefFromResource';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc}	{ not TARGET_CPU_64 }
 
 {
    OverrideIconRef
@@ -1236,45 +1138,6 @@ function IsDataAvailableInIconRef( inIconKind: OSType; inIconRef: IconRef ): Boo
    '****' is a wildcard for all types or all creators.
 }
 
-{$ifc not TARGET_CPU_64}
-{
- *  FlushIconRefs()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.2
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 8.5 and later
- }
-function FlushIconRefs( creator: OSType; iconType: OSType ): OSErr; external name '_FlushIconRefs';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
-   FlushIconRefsByVolume
-
-   This routine disposes of the data for the icons related to the indicated volume
-   if this data can be reacquired, for example if the data is provided from a
-   resource.
-}
-
-{
- *  FlushIconRefsByVolume()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.2
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 8.5 and later
- }
-function FlushIconRefsByVolume( vRefNum: SInt16 ): OSErr; external name '_FlushIconRefsByVolume';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc}	{ not TARGET_CPU_64 }
 
 {
   ==============================================================================
@@ -1345,63 +1208,6 @@ function GetCustomIconsEnabled( vRefNum: SInt16; var customIconsEnabled: Boolean
    when you're done with it.
 }
 
-{$ifc not TARGET_CPU_64}
-{
- *  RegisterIconRefFromIconFile()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version Jagua
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 9.0 and later
- }
-function RegisterIconRefFromIconFile( creator: OSType; iconType: OSType; const (*var*) iconFile: FSSpec; var theIconRef: IconRef ): OSErr; external name '_RegisterIconRefFromIconFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
-   ReadIconFile
-   Read the specified icon file into the icon family handle.
-   The caller is responsible for disposing the iconFamily
-}
-
-{
- *  ReadIconFile()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 9.0 and later
- }
-function ReadIconFile( const (*var*) iconFile: FSSpec; var iconFamily: IconFamilyHandle ): OSErr; external name '_ReadIconFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
-   WriteIconFile
-   Write the iconFamily handle to the specified file
-}
-
-{
- *  WriteIconFile()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in IconServicesLib 9.0 and later
- }
-function WriteIconFile( iconFamily: IconFamilyHandle; const (*var*) iconFile: FSSpec ): OSErr; external name '_WriteIconFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-{$endc}	{ not TARGET_CPU_64 }
 
 { ReadIconFromFSRef}
 

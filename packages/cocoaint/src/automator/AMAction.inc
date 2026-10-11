@@ -48,9 +48,6 @@ type
   public
     function initWithDefinition_fromArchive (dict: NSDictionary; archived: ObjCBOOL): instancetype; message 'initWithDefinition:fromArchive:';
     function initWithContentsOfURL_error (fileURL: NSURL; outError: NSErrorPtr): instancetype; message 'initWithContentsOfURL:error:';
-    {$ifndef __LP64__}
-    function definition: NSMutableDictionary; message 'definition'; deprecated 'available in 10.4 and later but deprecated';
-    {$endif}
     function name: NSString; message 'name';
     function ignoresInput: ObjCBOOL; message 'ignoresInput';
     procedure setSelectedInputType(newValue: NSString); message 'setSelectedInputType:';

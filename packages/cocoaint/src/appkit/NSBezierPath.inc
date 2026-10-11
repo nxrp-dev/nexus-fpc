@@ -64,9 +64,6 @@ type
     _path: pointer;
     _extraSegmentCount: NSInteger;
     _extraSegmentMax: NSInteger;
-    {$if  not defined(__LP64__)}
-    _private:array[0..1] of id;
-    {$endif}
     _bpFlags: bitpacked record
       case byte of
         0: (_anonBitField__bpFlags0: cuint);

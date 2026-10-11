@@ -14,7 +14,6 @@ type
     _menu: NSMenu;
     _title: NSString;
     _keyEquivalent: NSString;
-    {$if defined(__LP64__)}
     _uiid: NSString;
     _repObject: id;
     _submenu: NSMenu;
@@ -23,19 +22,6 @@ type
     _action: SEL;
     _tag: NSInteger;
     _keyEquivalentModifierMask: AnsiChar;
-    {$else}
-    _keyEquivalentModifierMask_: NSUInteger;
-    _userKEGenerationCount: NSInteger;
-    _state: NSInteger;
-    _image: NSImage;
-    _submenu_: NSMenu;
-    _uiid_: NSString;
-    _repObject_: id;
-    _target_: id;
-    _action_: SEL;
-    _tag_: NSInteger;
-    _extraData_: id;
-    {$endif}
     _miFlags: bitpacked record
       case byte of
         0: (_anonBitField__miFlags0: cuint);

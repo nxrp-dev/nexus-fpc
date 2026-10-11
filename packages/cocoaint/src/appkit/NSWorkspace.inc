@@ -40,11 +40,6 @@ type
   NSWorkspace = objcclass external (NSObject)
   private
     _notificationCenter: NSNotificationCenter;
-    {$if  not defined(__LP64__)}
-    deviceStatusCount: cint;
-    applicationStatusCount: cint;
-    _reservedWorkspace1: id;
-    {$endif}
   public
     class function sharedWorkspace: NSWorkspace; message 'sharedWorkspace';
     function notificationCenter: NSNotificationCenter; message 'notificationCenter';

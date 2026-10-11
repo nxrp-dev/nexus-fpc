@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -415,86 +365,6 @@ function ATSUDirectGetLayoutDataArrayPtrFromLineRef( iLineRef: ATSULineRef; iDat
 
 
 { ---------------------------------------------------------------------------- }
-{$ifc not TARGET_CPU_64}
-{
- *  ATSUDirectGetLayoutDataArrayPtrFromTextLayout()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTRunGetGlyphs or CTRunGetPositions instead.
- *
- *  Summary:
- *    Returns the data pointer specified by iDataSelector and
- *    referenced by iTextLayout for the line starting at iLineOffset.
- *
- *  Discussion:
- *    This function simply returns the data pointer specified by
- *    iDataSelector and referenced by iTextLayout for the line starting
- *    at iLineOffset. This data pointer should not be freed directly
- *    after it's been used. Rather, it should be released using
- *    ATSUDirectReleaseLayoutDataArrayPtr. Doing so serves as a signal
- *    to ATSUI that the caller is done with the data. Furthermore, it
- *    may be the case that the pointer returned may be dynamically
- *    allocated one or contain dynamically allocated data. If it's not
- *    properly freed, a memory leak may result. This function may not
- *    be called inside the context of an
- *    ATSUDirectLayoutOperationOverrideUPP callback for the
- *    ATSUTextLayout data that triggered the callback.  All data
- *    returned will be a copy of the data in the object requested. This
- *    means two things: first of all, this means that it's a very
- *    inefficient way of using the data. All of the selectors that
- *    would have returned in constant time now would be forced to
- *    return in order-n time. Second of all, this means that the
- *    developer cannot change any of the data. Any changes the
- *    developer makes to the arrays returned by this API will have no
- *    effect on the layout. Using the
- *    kATSULayoutOperationPostLayoutAdjustment operation selector
- *    override and the ATSUDirectGetLayoutDataArrayPtrFromLineRef is a
- *    great alternative to using this API. Many of the requested arrays
- *    are created by ATSUI only when necessary. This means that it's
- *    possible that this API will return NULL pointer and a count of 0.
- *    In this case, if there's no error returned, the array simply
- *    doesn't exist and the caller should treat all of the entries in
- *    the array that they would have recieved as being 0.
- *
- *  Parameters:
- *
- *    iTextLayout:
- *      The ATSUTextLayout object from which the requested data will
- *      come from.
- *
- *    iLineOffset:
- *      The edge offset that corresponds to the beginning of the range
- *      of text of the line of the requested data. If the text has
- *      multiple lines, then ATSUDirectGetLayoutDataArrayPtrFromLineRef
- *      will need to be called for each of the lines in which the
- *      requested data is needed.
- *
- *    iDataSelector:
- *      The selector for the data that is being requested.
- *
- *    oLayoutDataArrayPtr:
- *      Upon successful return, this parameter will contain a pointer to
- *      an array of the requested values if the ATSUTextLayout passed
- *      in iTextLayout references those values for the line offset
- *      iLineOffset. If this is not the case, then NULL will be
- *      returned. This parameter itself may be set to NULL if only a
- *      count of the entries is needed.
- *
- *    oLayoutDataCount:
- *      Upon successful return, this parameter will contain a count of
- *      the entries in the array returned in oLayoutDataArray.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function ATSUDirectGetLayoutDataArrayPtrFromTextLayout( iTextLayout: ATSUTextLayout; iLineOffset: UniCharArrayOffset; iDataSelector: ATSUDirectDataSelector; oLayoutDataArrayPtr: PtrPtr { can be NULL }; var oLayoutDataCount: ItemCount ): OSStatus; external name '_ATSUDirectGetLayoutDataArrayPtrFromTextLayout';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{ ---------------------------------------------------------------------------- }
-{$endc} {not TARGET_CPU_64}
 
 {
  *  ATSUDirectReleaseLayoutDataArrayPtr()   *** DEPRECATED ***
@@ -538,58 +408,6 @@ function ATSUDirectReleaseLayoutDataArrayPtr( iLineRef: ATSULineRef { can be NUL
 
 
 { ---------------------------------------------------------------------------- }
-{$ifc not TARGET_CPU_64}
-{
- *  ATSUDirectAddStyleSettingRef()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use CTRunGetGlyphsPtr or CTRunGetGlyphs instead.
- *
- *  Summary:
- *    This function will fetch a style index for the
- *    ATSUStyleSettingRef passed in.
- *
- *  Discussion:
- *    This function allows for glyph replacement or substitution from
- *    one layout or line to another layout or line. Not only will it
- *    look up the style index for iStyleSettingRef, but if the
- *    ATSUStyleSettingRef passed in iStyleSettingRef is not yet part of
- *    the line referenced by iLineRef, it will add it. If there is an
- *    outstanding ATSUStyleSettingRef array obtained by using the
- *    kATSUDirectDataStyleSettingATSUStyleSettingRefArray selector, the
- *    pointer obtained for this may no longer be valid after this
- *    function has been called. These pointers should be freed before
- *    calling this function and re-obtained afterwards.
- *
- *  Parameters:
- *
- *    iLineRef:
- *      An ATSULineRef which was passed into a
- *      ATSUDirectLayoutOperationOverrideUPP callback function as a
- *      parameter.
- *
- *    iStyleSettingRef:
- *      The ATSUStyleSettingRef to be looked up or added to the
- *      ATSUTextLayout referenced by iTextLayout for the line starting
- *      at the offset iLineOffset.
- *
- *    oStyleIndex:
- *      Upon successful return, this will parameter will be set to the
- *      index of the ATSUStyleSettingRef passed in iStyleSettingRef for
- *      the line referenced by iLineRef. If the ATSUStyleSettingRef
- *      does not exist, in that context, then it will be added and the
- *      new index will be returned here.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.6
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function ATSUDirectAddStyleSettingRef( iLineRef: ATSULineRef; iStyleSettingRef: ATSUStyleSettingRef; var oStyleIndex: UInt16 ): OSStatus; external name '_ATSUDirectAddStyleSettingRef';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_6 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

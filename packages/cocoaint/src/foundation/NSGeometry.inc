@@ -1,6 +1,5 @@
 { Parsed from Foundation.framework NSGeometry.h }
 
-{$if defined(__LP64__) or defined(TARGET_OS_EMBEDDED) or defined(TARGET_OS_IPHONE) or defined(TARGET_OS_WIN32) or defined(NS_BUILD_32_LIKE_64) or defined(NSGEOMETRY_TYPES_SAME_AS_CGGEOMETRY_TYPES)}
 {$ifdef TYPES}
 type
   NSPoint = CGPoint;
@@ -27,65 +26,6 @@ const
   NSGEOMETRY_TYPES_SAME_AS_CGGEOMETRY_TYPES = 1;
 {$endif}
 
-{$else}
-{$ifdef TYPES}
-type
-  _NSPoint = record
-    x: CGFloat;
-    y: CGFloat;
-  end;
-type
-  NSPoint = _NSPoint;
-type
-  NSPointPtr = ^_NSPoint;
-type
-  _NSPointPtr = ^_NSPoint;
-
-type
-  NSPointPointer = ^NSPoint;
-
-type
-  _NSSize = record
-    width: CGFloat;
-    height: CGFloat;
-  end;
-type
-  NSSize = _NSSize;
-type
-  NSSizePtr = ^_NSSize;
-type
-  _NSSizePtr = ^_NSSize;
-
-type
-  NSSizePointer = ^NSSize;
-
-type
-  _NSRect = record
-    origin: NSPoint;
-    size: NSSize;
-  end;
-type
-  NSRect = _NSRect;
-type
-  NSRectPtr = ^_NSRect;
-type
-  _NSRectPtr = ^_NSRect;
-
-type
-  NSRectPointer = ^NSRect;
-
-const
-  NSMinXEdge = 0;
-  NSMinYEdge = 1;
-  NSMaxXEdge = 2;
-  NSMaxYEdge = 3;
-type
-  NSRectEdge = clong;
-  NSRectEdgePtr = ^NSRectEdge;
-
-{$endif}
-
-{$endif}
 
 {$ifdef TYPES}
 type

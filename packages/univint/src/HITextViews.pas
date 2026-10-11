@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -238,47 +188,6 @@ const
 {$definec kHIStaticTextViewClassID CFSTRP('com.apple.HIStaticTextView')}
 {$endc}
 { Creation API: Carbon only }
-{$ifc not TARGET_CPU_64}
-{
- *  CreateStaticTextControl()
- *
- *  Summary:
- *    Creates a new static text control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window in which the control should be placed. May be NULL
- *      in 10.3 and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    text:
- *      The text of the control. May be NULL.
- *
- *    style:
- *      The control's font style, size, color, and so on. May be NULL.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateStaticTextControl( window: WindowRef { can be NULL }; const (*var*) boundsRect: Rect; text: CFStringRef { can be NULL }; {const} style: ControlFontStyleRecPtr { can be NULL }; var outControl: ControlRef ): OSStatus; external name '_CreateStaticTextControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -607,145 +516,6 @@ const
 	kControlKindHITextView = FourCharCode('hitx');
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  HITextViewCreate()
- *
- *  Summary:
- *    Creates a text view. The new view is initially invisible.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inBoundsRect:
- *      The bounding box of the view. If NULL, the bounds of the view
- *      will be initialized to 0.
- *
- *    inOptions:
- *      There are currently no options. This must be 0.
- *
- *    inTXNFrameOptions:
- *      Any frame options desired for the TXN object creation.
- *
- *    outTextView:
- *      On exit, contains the new view.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HITextViewCreate( {const} inBoundsRect: HIRectPtr { can be NULL }; inOptions: OptionBits; inTXNFrameOptions: TXNFrameOptions; var outTextView: HIViewRef ): OSStatus; external name '_HITextViewCreate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HITextViewGetTXNObject()
- *
- *  Summary:
- *    Obtains the TXNObject that backs the text view.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inTextView:
- *      The text view that contains the TXNObject you wish to retrieve.
- *
- *  Result:
- *    The TXNObject backing the given view.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HITextViewGetTXNObject( inTextView: HIViewRef ): TXNObject; external name '_HITextViewGetTXNObject';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HITextViewSetBackgroundColor()
- *
- *  Summary:
- *    Sets the background color of the view. This allows you to provide
- *    alpha as well. If inColor is NULL, the background of the text
- *    view will not draw.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inTextView:
- *      The text view that you are modifying the background color of.
- *
- *    inColor:
- *      A CGColorRef representing the color or pattern that will fill
- *      the background of the text view. The CGColorRef will be
- *      retained by this API. If the text view already contains a
- *      background color, it will be released prior to the new color
- *      being retained. If inColor is NULL, the background of the text
- *      view will not draw.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HITextViewSetBackgroundColor( inTextView: HIViewRef; inColor: CGColorRef { can be NULL } ): OSStatus; external name '_HITextViewSetBackgroundColor';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HITextViewCopyBackgroundColor()
- *
- *  Summary:
- *    Gets the background color of the view. If the background color
- *    returned is NULL, the background does not draw.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inTextView:
- *      The text view from which you want to obtain the background
- *      color.
- *
- *    outColor:
- *      A CGColorRef representing the color or pattern that is used for
- *      drawing the background of the text view. If the returned value
- *      is NULL, the background does not draw. If the returned
- *      CGColorRef is not NULL, it will be retained on return. You are
- *      responsible for releasing this CGColorRef when you are no
- *      longer referencing it.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HITextViewCopyBackgroundColor( inTextView: HIViewRef; var outColor: CGColorRef ): OSStatus; external name '_HITextViewCopyBackgroundColor';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{---------------------------------------------------------------------------------------}
-{ EditUnicodeText                                                                       }
-{---------------------------------------------------------------------------------------}
-{ This view is only available in Mac OS X.  It is super similar to Edit Text control    }
-{ Use all the same Get/Set tags.  But don't ask for the TEHandle.                       }
-{---------------------------------------------------------------------------------------}
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlEditUnicodeTextProc = 912;
@@ -759,61 +529,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHITextFieldClassID CFSTRP('com.apple.HITextField')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateEditUnicodeTextControl()
- *
- *  Summary:
- *    Creates a new edit text control.
- *
- *  Discussion:
- *    This is the preferred edit text control. Use it instead of the
- *    EditText control. This control handles Unicode and draws its text
- *    using antialiasing, which the other control does not.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window in which the control should be placed. May be NULL
- *      in 10.3 and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    text:
- *      The text of the control. May be NULL.
- *
- *    isPassword:
- *      A Boolean indicating whether the field is to be used as a
- *      password field. Passing false indicates that the field is to
- *      display entered text normally. True means that the field will
- *      be used as a password field and any text typed into the field
- *      will be displayed only as bullets.
- *
- *    style:
- *      The control's font style, size, color, and so on. May be NULL.
- *
- *    outControl:
- *      On exit, contains the new control (if noErr is returned as the
- *      result code).
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.0 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateEditUnicodeTextControl( window: WindowRef; const (*var*) boundsRect: Rect; text: CFStringRef { can be NULL }; isPassword: Boolean; {const} style: ControlFontStyleRecPtr { can be NULL }; var outControl: ControlRef ): OSStatus; external name '_CreateEditUnicodeTextControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Tagged data supported by edit text }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlEditTextStyleTag = kControlFontStyleTag; { ControlFontStyleRec}

@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -344,267 +294,6 @@ const
 const
 	kEventSearchFieldSearchClicked = 2;
 
-{$ifc not TARGET_CPU_64}
-{
- *  HISearchFieldCreate()
- *
- *  Summary:
- *    Creates a search field view. The new view is initially invisible.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inBounds:
- *      The initial bounds of the view. If this parameter is NULL, the
- *      view defaults to have empty bounds ( 0, 0, 0, 0 ).
- *
- *    inAttributes:
- *      The initial attributes of the search field. Indicates whether
- *      the field should contain the cancel icon.
- *
- *    inSearchMenu:
- *      The menu to be associated with this search field. If
- *      inSearchMenu is non-NULL, it will be retained by the search
- *      field and the search icon will be enabled in the left side of
- *      the text field. If this parameter is NULL, the view will not
- *      display the search icon in the left portion of the text field.
- *      You are expected to install handlers on this menu to handle the
- *      visual appearance of the menu (for example, to draw check marks
- *      or enable items when the menu receives the
- *      kEventMenuEnableItems Carbon Event), and to keep track of what
- *      action should be performed by associating HICommands with each
- *      menu item and installing a handler for the (
- *      kEventClassCommand, kEventCommandProcess ) Carbon Event.
- *
- *    inDescriptiveText:
- *      The text to be displayed in the text field when the field does
- *      not have focus and contains no user entered text. This is meant
- *      to be an indication of what the search criteria is. For
- *      example, you may wish to identify to the user that the search
- *      will cover the "Subject" or "Contents" of a selected range of
- *      items. If inDescriptiveText is non-NULL it will be retained by
- *      the search field.
- *
- *    outRef:
- *      On exit, contains the new view.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldCreate( {const} inBounds: HIRectPtr { can be NULL }; inAttributes: OptionBits; inSearchMenu: MenuRef { can be NULL }; inDescriptiveText: CFStringRef { can be NULL }; var outRef: HIViewRef ): OSStatus; external name '_HISearchFieldCreate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldSetSearchMenu()
- *
- *  Summary:
- *    Set the search menu associated with the view.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field to associate the search menu with.
- *
- *    inSearchMenu:
- *      The menu to associate with the search field. If there is
- *      already a menu associated with the search field, that menu will
- *      be released. If inSearchMenu is non-NULL, it will be retained
- *      by the search field and the search icon will be enabled in the
- *      left side of the text field. You are expected to install
- *      handlers on this menu to handle the visual appearance of the
- *      menu (for example, to draw check marks or enable items when the
- *      menu receives the kEventMenuEnableItems Carbon Event), and to
- *      keep track of what action should be performed by associating
- *      HICommands with each menu item and installing a handler for the
- *      ( kEventClassCommand, kEventCommandProcess ) Carbon Event. If
- *      inSearchMenu is NULL, the search icon will be removed from the
- *      left side of the text field and no menu will be associated with
- *      this field.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldSetSearchMenu( inSearchField: HIViewRef; inSearchMenu: MenuRef { can be NULL } ): OSStatus; external name '_HISearchFieldSetSearchMenu';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldGetSearchMenu()
- *
- *  Summary:
- *    Get the menu that is associated with the search field
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field you wish to retrieve the search menu from.
- *
- *    outSearchMenu:
- *      On exit, will contain the menu that is associated with search
- *      field. The menu will _not_ be retained on output and this
- *      parameter cannot be NULL.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldGetSearchMenu( inSearchField: HIViewRef; var outSearchMenu: MenuRef ): OSStatus; external name '_HISearchFieldGetSearchMenu';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldChangeAttributes()
- *
- *  Summary:
- *    Set the attributes for the given search field.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field to change the attributes of.
- *
- *    inAttributesToSet:
- *      The attributes to set.
- *
- *    inAttributesToClear:
- *      The attributes to clear.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldChangeAttributes( inSearchField: HIViewRef; inAttributesToSet: OptionBits; inAttributesToClear: OptionBits ): OSStatus; external name '_HISearchFieldChangeAttributes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldGetAttributes()
- *
- *  Summary:
- *    Returns the attributes of the search field.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field to get the attributes of.
- *
- *    outAttributes:
- *      On exit, will contain the attributes of the search field. This
- *      parameter cannot be NULL.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldGetAttributes( inSearchField: HIViewRef; var outAttributes: OptionBits ): OSStatus; external name '_HISearchFieldGetAttributes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldSetDescriptiveText()
- *
- *  Summary:
- *    Set the description of the search action of the search field.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field to change the description of.
- *
- *    inDescription:
- *      The new description for the search field. If the search field
- *      contains a description, it will be released. If inDescription
- *      is non-NULL, it will be retained by the search field. If it is
- *      NULL, no description will be associated with the search field.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldSetDescriptiveText( inSearchField: HIViewRef; inDescription: CFStringRef { can be NULL } ): OSStatus; external name '_HISearchFieldSetDescriptiveText';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HISearchFieldCopyDescriptiveText()
- *
- *  Summary:
- *    Get the description that is associated with the search field.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSearchField:
- *      The search field you wish to retrieve the description from.
- *
- *    outDescription:
- *      On exit, will contain the description that is associated with
- *      the search field. This parameter cannot be NULL. If there is no
- *      description associated with the search field, outDescription
- *      will be set to NULL. If there is a description, a CFStringRef
- *      will be created that contains the contents of the description.
- *      You posses ownership of this string and will need to release it
- *      when you no longer need it.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HISearchFieldCopyDescriptiveText( inSearchField: HIViewRef; var outDescription: CFStringRef ): OSStatus; external name '_HISearchFieldCopyDescriptiveText';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 

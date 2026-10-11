@@ -12,20 +12,7 @@ type
 type
   SFCertificatePanel = objcclass external (NSPanel)
   private
-    {$if (defined(__LP64__))}
     _reserved_SFCertificatePanel: id;
-    {$else}
-    _certView: SFCertificateView;
-    _panel: NSWindow;
-    _okButton: NSButton;
-    _certTable: NSTableView;
-    _parentWindowForSheet: NSWindow;
-    _clientDidEndSelector: SEL;
-    _clientDelegate: id;
-    _clientContextInfo: pointer;
-    _certDataArray: NSMutableArray;
-    _reserved_SFCertificatePanel_: id;
-    {$endif}
   public
     class function sharedCertificatePanel: SFCertificatePanel; message 'sharedCertificatePanel';
     function runModalForTrust_showGroup (trust: SecTrustRef; showGroup: ObjCBOOL): NSInteger; message 'runModalForTrust:showGroup:';

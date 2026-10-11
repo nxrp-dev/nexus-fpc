@@ -39,10 +39,6 @@ type
     _frame: NSRect;
     _components: NSArray;
     _componentsProvider: OpaqueCBlock;
-    {$if  not defined(__LP64__)}
-    _reserved1: NSInteger;
-    _reserved2: NSInteger;
-    {$endif}
   public
     function initWithPasteboardWriter (pasteboardWriter: NSPasteboardWritingProtocol): instancetype; message 'initWithPasteboardWriter:';
     function item: id; message 'item';

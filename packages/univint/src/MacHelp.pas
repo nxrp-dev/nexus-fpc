@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -677,370 +627,6 @@ function InvokeHMMenuItemContentUPP( const (*var*) inTrackingData: MenuTrackingD
 { API                                                                                      }
 {ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
 { Help Menu }
-{$ifc not TARGET_CPU_64}
-{
- *  HMGetHelpMenu()
- *
- *  Summary:
- *    Returns a menu to which applications may add their own help items.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    outHelpMenu:
- *      On exit, contains the help menu.
- *
- *    outFirstCustomItemIndex:
- *      On exit, contains the menu item index that will be used by the
- *      first item added by the application. This parameter may be NULL.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetHelpMenu( var outHelpMenu: MenuRef; outFirstCustomItemIndex: MenuItemIndexPtr { can be NULL } ): OSStatus; external name '_HMGetHelpMenu';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Installing/Retrieving Content }
-{ Menu title and item help tags are not supported by CarbonLib. They are fully supported on Mac OS X. }
-{ Pass NULL for the inContent parameter of these APIs to remove help content from a control, window, or menu. }
-{
- *  HMSetControlHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetControlHelpContent( inControl: ControlRef; {const} inContent: HMHelpContentPtr { can be NULL } ): OSStatus; external name '_HMSetControlHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetControlHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetControlHelpContent( inControl: ControlRef; var outContent: HMHelpContentRec ): OSStatus; external name '_HMGetControlHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMSetWindowHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetWindowHelpContent( inWindow: WindowRef; {const} inContent: HMHelpContentPtr { can be NULL } ): OSStatus; external name '_HMSetWindowHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetWindowHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetWindowHelpContent( inWindow: WindowRef; var outContent: HMHelpContentRec ): OSStatus; external name '_HMGetWindowHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMSetMenuItemHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetMenuItemHelpContent( inMenu: MenuRef; inItem: MenuItemIndex; {const} inContent: HMHelpContentPtr { can be NULL } ): OSStatus; external name '_HMSetMenuItemHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetMenuItemHelpContent()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetMenuItemHelpContent( inMenu: MenuRef; inItem: MenuItemIndex; var outContent: HMHelpContentRec ): OSStatus; external name '_HMGetMenuItemHelpContent';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Installing/Retrieving Content Callbacks }
-{
- *  HMInstallControlContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMInstallControlContentCallback( inControl: ControlRef; inContentUPP: HMControlContentUPP ): OSStatus; external name '_HMInstallControlContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMInstallWindowContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMInstallWindowContentCallback( inWindow: WindowRef; inContentUPP: HMWindowContentUPP ): OSStatus; external name '_HMInstallWindowContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMInstallMenuTitleContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMInstallMenuTitleContentCallback( inMenu: MenuRef; inContentUPP: HMMenuTitleContentUPP ): OSStatus; external name '_HMInstallMenuTitleContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMInstallMenuItemContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMInstallMenuItemContentCallback( inMenu: MenuRef; inContentUPP: HMMenuItemContentUPP ): OSStatus; external name '_HMInstallMenuItemContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetControlContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetControlContentCallback( inControl: ControlRef; var outContentUPP: HMControlContentUPP ): OSStatus; external name '_HMGetControlContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetWindowContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetWindowContentCallback( inWindow: WindowRef; var outContentUPP: HMWindowContentUPP ): OSStatus; external name '_HMGetWindowContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetMenuTitleContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetMenuTitleContentCallback( inMenu: MenuRef; var outContentUPP: HMMenuTitleContentUPP ): OSStatus; external name '_HMGetMenuTitleContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetMenuItemContentCallback()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetMenuItemContentCallback( inMenu: MenuRef; var outContentUPP: HMMenuItemContentUPP ): OSStatus; external name '_HMGetMenuItemContentCallback';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Enabling and Disabling Help Tags }
-{
- *  HMAreHelpTagsDisplayed()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMAreHelpTagsDisplayed: Boolean; external name '_HMAreHelpTagsDisplayed';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMSetHelpTagsDisplayed()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetHelpTagsDisplayed( inDisplayTags: Boolean ): OSStatus; external name '_HMSetHelpTagsDisplayed';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMSetTagDelay()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetTagDelay( inDelay: Duration ): OSStatus; external name '_HMSetTagDelay';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMGetTagDelay()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMGetTagDelay( var outDelay: Duration ): OSStatus; external name '_HMGetTagDelay';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Displaying tags }
-{
- *  HMDisplayTag()
- *
- *  Summary:
- *    Displays a help tag at a user-defined location.
- *
- *  Discussion:
- *    Prior to Mac OS X 10.4, HMDisplayTag does not retain the help
- *    content that is passed to it, nor release it when the tag is
- *    closed. Your application must ensure that the help content
- *    remains valid as long as the tag may be visible (which
- *    effectively means that your application should never dispose of
- *    help content that is passed to HMDisplayTag). In Mac OS X 10.4
- *    and later, HMDisplayTag makes a copy of the content and releases
- *    the copy when the tag closes, so you can release the content
- *    after HMDisplayTag returns.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inContent:
- *      HMHelpContentRec describing the help tag to be displayed.
- *
- *  Result:
- *    An OSStatus code indicating success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HMDisplayTag( const (*var*) inContent: HMHelpContentRec ): OSStatus; external name '_HMDisplayTag';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HMHideTag()
- *
- *  Summary:
- *    HMHideTag hides the currently visible help tag.  If there is no
- *    current help tag, this call does nothing.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Result:
- *    An OSStatus code indicating success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HMHideTag: OSStatus; external name '_HMHideTag';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{$endc} {TARGET_CPU_64}
 
 
 {
@@ -1061,87 +647,6 @@ const
    }
 	kHMHideTagImmediately = 1 shl 1;
 
-{$ifc not TARGET_CPU_64}
-{
- *  HMHideTagWithOptions()
- *
- *  Summary:
- *    Hides the current help tag, with various options to control how
- *    the tag is hidden.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inOptions:
- *      Options for how the tag should be hidden. kHMHideTagFade and
- *      kHMHideTagImmediately are the only available options.
- *
- *  Result:
- *    An operating system result code. noErr is returned if there is no
- *    tag currently visible.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x
- *    Non-Carbon CFM:   not available
- }
-function HMHideTagWithOptions( inOptions: OptionBits ): OSStatus; external name '_HMHideTagWithOptions';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{--------------------------------------------------------------------------------------}
-{  ¥ DEPRECATED                                                                        }
-{  All functions below this point are either deprecated (they continue to function     }
-{  but are not the most modern nor most efficient solution to a problem), or they are  }
-{  completely unavailable on Mac OS X.                                                 }
-{--------------------------------------------------------------------------------------}
-{
- *  HMSetMenuHelpFromBalloonRsrc()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Though this API is exported from CarbonLib and Mac OS X, it is
- *    completely non-functional.
- *
- *  Summary:
- *    Not really implemented.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetMenuHelpFromBalloonRsrc( inMenu: MenuRef; inHmnuRsrcID: SInt16 ): OSStatus; external name '_HMSetMenuHelpFromBalloonRsrc';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  HMSetDialogHelpFromBalloonRsrc()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Though this API is exported from CarbonLib and Mac OS X, it is
- *    completely non-functional.
- *
- *  Summary:
- *    Not really implemented.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function HMSetDialogHelpFromBalloonRsrc( inDialog: DialogRef; inHdlgRsrcID: SInt16; inItemStart: SInt16 ): OSStatus; external name '_HMSetDialogHelpFromBalloonRsrc';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} {TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

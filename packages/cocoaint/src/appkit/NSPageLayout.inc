@@ -18,11 +18,7 @@ type
     _contextInfo: pointer;
     _presentedPrintInfo: NSPrintInfo;
     _windowController: NSWindowController;
-    {$if defined(__LP64__)}
     _reserved:array[0..3] of id;
-    {$else}
-    _compatibilityPadding:array[0..155] of AnsiChar;
-    {$endif}
   public
     class function pageLayout: NSPageLayout; message 'pageLayout';
     procedure addAccessoryController (accessoryController: NSViewController); message 'addAccessoryController:'; { available in 10_5 }

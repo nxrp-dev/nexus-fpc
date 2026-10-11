@@ -41,9 +41,6 @@ type
       refcount: cint32;
       magic: cuint32;
       layer_: pointer;
-      {$if defined(TARGET_OS_MAC) and not defined(TARGET_RT_64_BIT)}
-      unused1:array[0..7] of pointer;
-      {$endif}
     end;
   public
     class function layer: instancetype; message 'layer';

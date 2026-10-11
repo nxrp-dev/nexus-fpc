@@ -28,11 +28,7 @@ type
     _ppdCreationNum: cint;
     _ppdNodes: pointer;
     _ppdPriv: pointer;
-    {$if defined(__LP64__)}
     _reserved:array[0..2] of id;
-    {$else}
-    _compatibilityPadding:array[0..19] of AnsiChar;
-    {$endif}
   public
     class function printerNames: NSArray; message 'printerNames';
     class function printerTypes: NSArray; message 'printerTypes';

@@ -42,7 +42,6 @@ const
 type
   NSXMLNode = objcclass external (NSObject, NSCopyingProtocol)
   private
-    {$if defined(__LP64__)}
     _parent: NSXMLNode;
     _objectValue: id;
     _anonStruct_NSXMLNode0: record
@@ -55,12 +54,6 @@ type
       );
     end;
     _private: cint32;
-    {$else}
-    _kind_: NSXMLNodeKind;
-    _parent_: NSXMLNode;
-    _index_: cuint32;
-    _objectValue_: id;
-    {$endif}
   public
     function init: instancetype; message 'init'; { NS_DESIGNATED_INITIALIZER }
     function initWithKind (kind: NSXMLNodeKind): instancetype; message 'initWithKind:';

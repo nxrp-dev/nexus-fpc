@@ -32,28 +32,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -66,29 +55,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -98,23 +69,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -154,11 +108,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -279,50 +229,6 @@ type
 { alias record information type }
 type
 	AliasInfoType = SInt16;
-{$ifc not TARGET_CPU_64}
-type
-	AliasFilterProcPtr = function( cpbPtr: CInfoPBPtr; var quitFlag: Boolean; myDataPtr: Ptr ): Boolean;
-	AliasFilterUPP = AliasFilterProcPtr;
-{
- *  NewAliasFilterUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-{ old name was NewAliasFilterProc }
-function NewAliasFilterUPP( userRoutine: AliasFilterProcPtr ): AliasFilterUPP; external name '_NewAliasFilterUPP';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
-{
- *  DisposeAliasFilterUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-procedure DisposeAliasFilterUPP( userUPP: AliasFilterUPP ); external name '_DisposeAliasFilterUPP';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
-
-{
- *  InvokeAliasFilterUPP()
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   available as macro/inline
- }
-function InvokeAliasFilterUPP( cpbPtr: CInfoPBPtr; var quitFlag: Boolean; myDataPtr: Ptr; userUPP: AliasFilterUPP ): Boolean; external name '_InvokeAliasFilterUPP';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
-
-{#if __MACH__
-    #define NewAliasFilterUPP(userRoutine)                      ((AliasFilterUPP)userRoutine)
-    #define DisposeAliasFilterUPP(userUPP)
-    #define InvokeAliasFilterUPP(cpbPtr, quitFlag, myDataPtr, userUPP) (*userUPP)(cpbPtr, quitFlag, myDataPtr)
-#endif}
-
-{$endc} {not TARGET_CPU_64}
 
 type
 	FSAliasFilterProcPtr = function( const (*var*) ref: FSRef; var quitFlag: Boolean; myDataPtr: Ptr ): Boolean;
@@ -816,381 +722,6 @@ procedure SetAliasUserTypeWithPtr( alias: AliasPtr; userType: OSType ); external
 
 { Functions beyond this point are deprecated}
 
-{$ifc not TARGET_CPU_64}
-{
- *  FSMatchAlias()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSMatchAliasBulk instead
- *
- *  Summary:
- *    Given an alias handle and fromFile, match the alias and return
- *    FSRefs to the aliased file(s) and needsUpdate flag
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function FSMatchAlias( {const} fromFile: FSRefPtr { can be NULL }; rulesMask: UNSIGNEDLONG; inAlias: AliasHandle; var aliasCount: SInt16; var aliasList: FSRef; var needsUpdate: Boolean; aliasFilter: AliasFilterUPP; yourDataPtr: UnivPtr ): OSErr; external name '_FSMatchAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_2, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  FSMatchAliasNoUI()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSMatchAliasBulk with the kARMNoUI flag instead
- *
- *  Summary:
- *    variation on FSMatchAlias that does not prompt user with a dialog
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function FSMatchAliasNoUI( {const} fromFile: FSRefPtr { can be NULL }; rulesMask: UNSIGNEDLONG; inAlias: AliasHandle; var aliasCount: SInt16; var aliasList: FSRef; var needsUpdate: Boolean; aliasFilter: AliasFilterUPP; yourDataPtr: UnivPtr ): OSErr; external name '_FSMatchAliasNoUI';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_2, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  NewAlias()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSNewAlias
- *
- *  Summary:
- *    create a new alias between fromFile and target, returns alias
- *    record handle
- *
- *  Discussion:
- *    Create an alias between fromFile and target, and return it in an
- *    AliasHandle. This function is deprecated in Mac OS X 10.4;
- *    instead, you should use FSNewAliasUnicode() because NewAlias()
- *    has problems creating aliases to certain files, including those
- *    which are impossible to represent in an FSSpec.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function NewAlias( {const} fromFile: FSSpecPtr { can be NULL }; const (*var*) target: FSSpec; var alias: AliasHandle ): OSErr; external name '_NewAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  NewAliasMinimal()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSNewAliasMinimalUnicode
- *
- *  Summary:
- *    create a minimal new alias for a target and return alias record
- *    handle
- *
- *  Discussion:
- *    Create a minimal alias for a target, and return it in an
- *    AliasHandle. This function is deprecated in Mac OS X 10.4;
- *    instead, you should use FSNewAliasMinimalUnicode() because
- *    NewAliasMinimalAlias() has problems creating aliases to certain
- *    files, including those which are impossible to represent in an
- *    FSSpec.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function NewAliasMinimal( const (*var*) target: FSSpec; var alias: AliasHandle ): OSErr; external name '_NewAliasMinimal';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  NewAliasMinimalFromFullPath()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSNewAliasMinimalUnicode
- *
- *  Summary:
- *    create a minimal new alias from a target fullpath (optional zone
- *    and server name) and return alias record handle
- *
- *  Discussion:
- *    Create a minimal alias for a target fullpath, and return it in an
- *    AliasHandle. This function is deprecated in Mac OS X 10.4;
- *    instead, you should use FSNewAliasMinimalUnicode() because
- *    NewAliasMinimalFromFullPath() has problems creating aliases to
- *    certain files, including those which are impossible to represent
- *    in an FSSpec.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function NewAliasMinimalFromFullPath( fullPathLength: SInt16; fullPath: {const} UnivPtr; const (*var*) zoneName: Str32; const (*var*) serverName: Str31; var alias: AliasHandle ): OSErr; external name '_NewAliasMinimalFromFullPath';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ResolveAlias()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSResolveAlias() or FSResolveAliasWithMountFlags() instead.
- *
- *  Summary:
- *    given an alias handle and fromFile, resolve the alias, update the
- *    alias record and return aliased filename and wasChanged flag.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function ResolveAlias( {const} fromFile: FSSpecPtr { can be NULL }; alias: AliasHandle; var target: FSSpec; var wasChanged: Boolean ): OSErr; external name '_ResolveAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  GetAliasInfo()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSCopyAliasInfo instead.
- *
- *  Summary:
- *    This call does not work on all aliases. Given an alias handle and
- *    an index specifying requested alias information type, return the
- *    information from alias record as a string. An empty string is
- *    returned when the index is greater than the number of levels
- *    between the target and root.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.0
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetAliasInfo( alias: AliasHandle; itemIndex: AliasInfoType; var theString: Str63 ): OSErr; external name '_GetAliasInfo';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  IsAliasFile()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSIsAliasFile() instead.
- *
- *  Summary:
- *    Return true if the file pointed to by fileFSSpec is an alias file.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.0
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 8.5 and later
- }
-function IsAliasFile( const (*var*) fileFSSpec: FSSpec; var aliasFileFlag: Boolean; var folderFlag: Boolean ): OSErr; external name '_IsAliasFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ResolveAliasWithMountFlags()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSResolveAliasWithMountFlags() instead.
- *
- *  Summary:
- *    Given an AliasHandle, return target file spec. It resolves the
- *    entire alias chain or one step of the chain.  It returns info
- *    about whether the target is a folder or file; and whether the
- *    input file spec was an alias or not.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 8.5 and later
- }
-function ResolveAliasWithMountFlags( {const} fromFile: FSSpecPtr { can be NULL }; alias: AliasHandle; var target: FSSpec; var wasChanged: Boolean; mountFlags: UNSIGNEDLONG ): OSErr; external name '_ResolveAliasWithMountFlags';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ResolveAliasFile()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSResolveAliasFile
- *
- *  Summary:
- *    Given a file spec, return target file spec if input file spec is
- *    an alias. It resolves the entire alias chain or one step of the
- *    chain.  It returns info about whether the target is a folder or
- *    file; and whether the input file spec was an alias or not.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function ResolveAliasFile( var theSpec: FSSpec; resolveAliasChains: Boolean; var targetIsFolder: Boolean; var wasAliased: Boolean ): OSErr; external name '_ResolveAliasFile';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{ Deprecated: Use FSResolveAliasFileWithMountFlags instead}
-{
- *  ResolveAliasFileWithMountFlags()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 8.5 and later
- }
-function ResolveAliasFileWithMountFlags( var theSpec: FSSpec; resolveAliasChains: Boolean; var targetIsFolder: Boolean; var wasAliased: Boolean; mountFlags: UNSIGNEDLONG ): OSErr; external name '_ResolveAliasFileWithMountFlags';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{ Deprecated:  Use FSFollowFinderAlias instead}
-{
- *  FollowFinderAlias()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 8.5 and later
- }
-function FollowFinderAlias( {const} fromFile: FSSpecPtr { can be NULL }; alias: AliasHandle; logon: Boolean; var target: FSSpec; var wasChanged: Boolean ): OSErr; external name '_FollowFinderAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
-   Low Level Routines
-}
-{
- *  UpdateAlias()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    UseFSUpdateAlias
- *
- *  Summary:
- *    given a fromFile-target pair and an alias handle, update the
- *    alias record pointed to by alias handle to represent target as
- *    the new alias.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function UpdateAlias( {const} fromFile: FSSpecPtr { can be NULL }; const (*var*) target: FSSpec; alias: AliasHandle; var wasChanged: Boolean ): OSErr; external name '_UpdateAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  MatchAlias()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSMatchAliasBulk instead
- *
- *  Summary:
- *    Given an alias handle and fromFile, match the alias and return
- *    FSSpecs to the aliased file(s) and needsUpdate flag
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function MatchAlias( {const} fromFile: FSSpecPtr { can be NULL }; rulesMask: UNSIGNEDLONG; alias: AliasHandle; var aliasCount: SInt16; aliasList: FSSpecArrayPtr; var needsUpdate: Boolean; aliasFilter: AliasFilterUPP; yourDataPtr: UnivPtr ): OSErr; external name '_MatchAlias';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ResolveAliasFileWithMountFlagsNoUI()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSResolveAliasFileWithMountFlags passing in the
- *    kResolveAliasFileNoUI flag
- *
- *  Summary:
- *    variation on ResolveAliasFile that does not prompt user with a
- *    dialog
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function ResolveAliasFileWithMountFlagsNoUI( var theSpec: FSSpec; resolveAliasChains: Boolean; var targetIsFolder: Boolean; var wasAliased: Boolean; mountFlags: UNSIGNEDLONG ): OSErr; external name '_ResolveAliasFileWithMountFlagsNoUI';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  MatchAliasNoUI()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FSMatchAliasBulk with the kARMNoUI flag instead
- *
- *  Summary:
- *    variation on MatchAlias that does not prompt user with a dialog
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   not available
- }
-function MatchAliasNoUI( {const} fromFile: FSSpecPtr { can be NULL }; rulesMask: UNSIGNEDLONG; alias: AliasHandle; var aliasCount: SInt16; aliasList: FSSpecArrayPtr; var needsUpdate: Boolean; aliasFilter: AliasFilterUPP; yourDataPtr: UnivPtr ): OSErr; external name '_MatchAliasNoUI';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 

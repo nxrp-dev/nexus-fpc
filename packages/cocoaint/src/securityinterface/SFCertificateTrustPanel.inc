@@ -12,17 +12,7 @@ type
 type
   SFCertificateTrustPanel = objcclass external (SFCertificatePanel)
   private
-    {$if (defined(__LP64__))}
     _reserved_SFCertificateTrustPanel: id;
-    {$else}
-    _splitView: NSSplitView;
-    _messageView: NSTextField;
-    _saveChangesButton: NSButton;
-    _cancelButton: NSButton;
-    _defaultMessage: NSString;
-    _saveChanges: ObjCBOOL;
-    _reserved_SFCertificateTrustPanel_: id;
-    {$endif}
   public
     class function sharedCertificateTrustPanel: SFCertificateTrustPanel; message 'sharedCertificateTrustPanel';
     function runModalForTrust_message (trust: SecTrustRef; message_: NSString): NSInteger; message 'runModalForTrust:message:';

@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -256,67 +206,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIScrollBarClassID CFSTRP('com.apple.HIScrollBar')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateScrollBarControl()
- *
- *  Summary:
- *    Creates a scroll bar control.
- *
- *  Discussion:
- *    This creation API is available in Carbon only.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounding box of the control.
- *
- *    value:
- *      The initial value of the control.
- *
- *    minimum:
- *      The minimum value of the control.
- *
- *    maximum:
- *      The maximum value of the control.
- *
- *    viewSize:
- *      The size of the visible area of the scroll bar content.
- *
- *    liveTracking:
- *      A Boolean indicating whether or not live tracking is enabled
- *      for this scroll bar. If set to true and a valid
- *      liveTrackingProc is also passed in, the callback will be called
- *      repeatedly as the thumb is moved during tracking.  If set to
- *      false, a semi-transparent thumb called a "ghost thumb" will
- *      draw and no live tracking will occur.
- *
- *    liveTrackingProc:
- *      If liveTracking is on, a ControlActionUPP callback to be called
- *      as the control live tracks.  This callback is called repeatedly
- *      as the scroll thumb is moved during tracking.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateScrollBarControl( window: WindowRef; const (*var*) boundsRect: Rect; value: SInt32; minimum: SInt32; maximum: SInt32; viewSize: SInt32; liveTracking: Boolean; liveTrackingProc: ControlActionUPP; var outControl: ControlRef ): OSStatus; external name '_CreateScrollBarControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ These tags are available in Mac OS X or later }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlScrollBarShowsArrowsTag = FourCharCode('arro'); { Boolean whether or not to draw the scroll arrows}
@@ -607,176 +496,6 @@ const
    }
 	kHIScrollViewPageRight = 1 shl 7;
 
-{$ifc not TARGET_CPU_64}
-{
- *  HIScrollViewCreate()
- *
- *  Discussion:
- *    Creates a scroll view. This view has 3 parts, essentially. It can
- *    have one or two scroll bars (horizontal/vertical), and a view to
- *    be scrolled. The view to be scrolled is merely added via
- *    HIViewAddSubview. The scroll view will automatically connect it
- *    up appropriately. By default, the HIScrollView will not
- *    automatically hide the scroll bars if the content fits within the
- *    scrollable view. Use the HIScrollViewSetScrollBarAutoHide API to
- *    enable that feature.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inOptions:
- *      Options for our scroll view. You must specify either a
- *      horizontal or a vertical scroll bar. If neither is passed, an
- *      error is returned.
- *
- *    outView:
- *      The new scroll view.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIScrollViewCreate( inOptions: OptionBits; var outView: HIViewRef ): OSStatus; external name '_HIScrollViewCreate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIScrollViewSetScrollBarAutoHide()
- *
- *  Discussion:
- *    Sets a scroll view's scroll bars to auto-hide when the entire
- *    scrollable view it is managing can be fully displayed in its
- *    bounds. This is similar to the behavior you see in the Preview
- *    application.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inView:
- *      The view to affect.
- *
- *    inAutoHide:
- *      The new auto-hide setting (true == auto-hide).
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIScrollViewSetScrollBarAutoHide( inView: HIViewRef; inAutoHide: Boolean ): OSStatus; external name '_HIScrollViewSetScrollBarAutoHide';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIScrollViewGetScrollBarAutoHide()
- *
- *  Discussion:
- *    Gets a scroll view's current scroll bar auto-hide setting.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inView:
- *      The view to examine.
- *
- *  Result:
- *    A boolean result.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIScrollViewGetScrollBarAutoHide( inView: HIViewRef ): Boolean; external name '_HIScrollViewGetScrollBarAutoHide';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIScrollViewNavigate()
- *
- *  Discussion:
- *    Allows you to programmatically change what portion of a scroll
- *    view's target you are seeing. For example, you can move to the
- *    beginning or end of a document. You can also page up, down, left
- *    and right. In general, you should not call this from embedded
- *    content (i.e. the scrollable view inside the scroll view). For
- *    those cases, you should instead position yourself appropriately
- *    and tell the scroll view you changed via the
- *    kEventScrollableInfoChanged carbon event. This routine merely is
- *    a programmatic way to scroll as one would by hand using the
- *    scroll bars.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inView:
- *      The scroll view to affect.
- *
- *    inAction:
- *      The action to take.
- *
- *  Result:
- *    A operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HIScrollViewNavigate( inView: HIViewRef; inAction: HIScrollViewAction ): OSStatus; external name '_HIScrollViewNavigate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{
- *  HIScrollViewCanNavigate()
- *
- *  Discussion:
- *    Allows you to tell whether it is currently possible to navigate
- *    somehow in a scroll view. For example, if a scroll view is
- *    already at the top of the scrollable content, it is not possible
- *    to navigate upward, so home and page up actions would not be
- *    possible. You might use this function to help you update the
- *    state of menu items or the like.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inView:
- *      The view to examine.
- *
- *    inAction:
- *      The action to test.
- *
- *  Result:
- *    A boolean result.
- *
- *  Availability:
- *    Mac OS X:         in version 10.3 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.3 and later
- *    Non-Carbon CFM:   not available
- }
-function HIScrollViewCanNavigate( inView: HIViewRef; inAction: HIScrollViewAction ): Boolean; external name '_HIScrollViewCanNavigate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

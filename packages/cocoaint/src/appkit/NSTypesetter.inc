@@ -25,11 +25,7 @@ const
 type
   NSTypesetter = objcclass external (NSObject)
   private
-    {$if defined(__LP64__)}
     _reserved: pointer;
-    {$else}
-    _reserved_:array[0..1] of cuint;
-    {$endif}
   public
     procedure setUsesFontLeading(newValue: ObjCBOOL); message 'setUsesFontLeading:';
     function usesFontLeading: ObjCBOOL; message 'usesFontLeading';

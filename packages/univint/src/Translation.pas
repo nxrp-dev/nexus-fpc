@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -247,157 +197,6 @@ type
 	FileTranslationSpecArray = array [0..$7F000000 div SizeOf(FileTranslationSpec)-1] of FileTranslationSpec;
 	FileTranslationSpecArrayPtr = ^FileTranslationSpecArray;
 	FileTranslationSpecArrayHandle = ^FileTranslationSpecArrayPtr;
-{$ifc not TARGET_CPU_64}
-{
- *  GetFileTypesThatAppCanNativelyOpen()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    There is no direct replacement at this time.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function GetFileTypesThatAppCanNativelyOpen( appVRefNumHint: SInt16; appSignature: OSType; var nativeTypes: TypesBlock ): OSErr; external name '_GetFileTypesThatAppCanNativelyOpen';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  ExtendFileTypeList()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use TranslationCreateWithSourceArray instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function ExtendFileTypeList( originalTypeList: {variable-size-array} FileTypePtr; numberOriginalTypes: SInt16; extendedTypeList: {variable-size-array} FileTypePtr; var numberExtendedTypes: SInt16 ): OSErr; external name '_ExtendFileTypeList';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  CanDocBeOpened()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use the Launch Services API instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function CanDocBeOpened( const (*var*) targetDocument: FSSpec; appVRefNumHint: SInt16; appSignature: OSType; nativeTypes: {variable-size-array} FileTypePtr; onlyNative: Boolean; var howToOpen: DocOpenMethod; var howToTranslate: FileTranslationSpec ): OSErr; external name '_CanDocBeOpened';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  GetFileTranslationPaths()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use TranslationCreateWithSourceArray instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function GetFileTranslationPaths( const (*var*) srcDocument: FSSpec; dstDocType: FileType; maxResultCount: UInt16; resultBuffer: FileTranslationSpecArrayPtr ): SInt16; external name '_GetFileTranslationPaths';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  GetPathFromTranslationDialog()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    There is no direct replacement at this time, but all the
- *    necessary information can be obtained from the Launch Services,
- *    Translation Services and Uniform Type Identification APIs.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function GetPathFromTranslationDialog( const (*var*) theDocument: FSSpec; const (*var*) theApplication: FSSpec; typeList: TypesBlockPtr; var howToOpen: DocOpenMethod; var howToTranslate: FileTranslationSpec ): OSErr; external name '_GetPathFromTranslationDialog';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  TranslateFile()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use TranslationPerformForFile or TranslationPerformForURL instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function TranslateFile( const (*var*) sourceDocument: FSSpec; const (*var*) destinationDocument: FSSpec; const (*var*) howToTranslate: FileTranslationSpec ): OSErr; external name '_TranslateFile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  GetDocumentKindString()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use the Launch Services API instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function GetDocumentKindString( docVRefNum: SInt16; docType: OSType; docCreator: OSType; var kindString: Str63 ): OSErr; external name '_GetDocumentKindString';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{
- *  GetTranslationExtensionName()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    There is no direct replacement at this time, but
- *    TranslationCopySourceType and TranslationCopyDestinationType in
- *    conjunction with UTTypeCopyDescription will provide useful user
- *    level information.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function GetTranslationExtensionName( const (*var*) translationMethod: FileTranslationSpec; var extensionName: Str31 ): OSErr; external name '_GetTranslationExtensionName';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -441,26 +240,6 @@ function InvokeGetScrapDataUPP( requestedFormat: ScrapType; dataH: Handle; srcDa
 
 type
 	GetScrapData = GetScrapDataUPP;
-{$ifc not TARGET_CPU_64}
-{
- *  TranslateScrap()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use TranslationPerformForData instead.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in Translation 1.0 and later
- }
-function TranslateScrap( sourceDataGetter: GetScrapDataUPP; sourceDataGetterRefCon: UnivPtr; destinationFormat: ScrapType; destinationData: Handle; progressDialogID: SInt16 ): OSErr; external name '_TranslateScrap';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_3 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {$endc} {TARGET_OS_MAC}

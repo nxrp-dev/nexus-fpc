@@ -18,7 +18,7 @@ begin
     P.Directory:=ADirectory;
 {$endif ALLPACKAGES}
     P.Version:='3.3.1';
-    P.CPUs:=[i386,x86_64,powerpc,powerpc64,aarch64];
+    P.CPUs:=[x86_64,aarch64];
     P.OSes:=[darwin];
     P.Dependencies.Add('univint');
     P.SourcePath.Add('src');
@@ -69,7 +69,6 @@ begin
     T:=P.Targets.AddUnit('PDFKit.pas');
     T:=P.Targets.AddUnit('PreferencePanes.pas');
     T:=P.Targets.AddUnit('PubSub.pas');
-    T:=P.Targets.AddUnit('QTKit.pas');
     T:=P.Targets.AddUnit('QuartzComposer.pas');
     T:=P.Targets.AddUnit('QuartzFilters.pas');
     T:=P.Targets.AddUnit('QuickLook.pas');
@@ -134,7 +133,6 @@ begin
     T:=P.Targets.AddImplicitUnit('DefinedClassesPDFKit.pas');
     T:=P.Targets.AddImplicitUnit('DefinedClassesPreferencePanes.pas');
     T:=P.Targets.AddImplicitUnit('DefinedClassesPubSub.pas');
-    T:=P.Targets.AddImplicitUnit('DefinedClassesQTKit.pas');
     T:=P.Targets.AddImplicitUnit('DefinedClassesQuartzComposer.pas');
     T:=P.Targets.AddImplicitUnit('DefinedClassesQuartzCore.pas');
     T:=P.Targets.AddImplicitUnit('DefinedClassesQuartzFilters.pas');

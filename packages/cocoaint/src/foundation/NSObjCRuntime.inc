@@ -112,7 +112,6 @@ const
 
 {$endif}
 
-{$if defined(__LP64__) or (defined(TARGET_OS_EMBEDDED) and not defined(TARGET_OS_IPHONE)) or defined(TARGET_OS_WIN32) or defined(NS_BUILD_32_LIKE_64)}
 {$ifdef TYPES}
 type
   NSInteger = clong;
@@ -121,16 +120,6 @@ type
   NSUIntegerPtr = ^NSUInteger;
 {$endif}
 
-{$else}
-{$ifdef TYPES}
-type
-  NSInteger = cint;
-  NSIntegerPtr = ^NSInteger;
-  NSUInteger = cuint;
-  NSUIntegerPtr = ^NSUInteger;
-{$endif}
-
-{$endif}
 {$ifdef TYPES}
 const
   NSIntegerMax = LONG_MAX;

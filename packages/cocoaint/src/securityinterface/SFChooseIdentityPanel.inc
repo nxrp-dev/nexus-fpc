@@ -12,24 +12,7 @@ type
 type
   SFChooseIdentityPanel = objcclass external (NSPanel)
   private
-    {$if (defined(__LP64__))}
     _reserved_SFChooseIdentityPanel: id;
-    {$else}
-    _panelMessage: NSTextField;
-    _identityPopup: NSPopUpButton;
-    _certificateView: SFCertificateView;
-    _cancelButton: NSButton;
-    _okButton: NSButton;
-    _indexOfChosenIdentity: cint;
-    _currCertRefDisplayed: SecCertificateRef;
-    _identities: NSArray;
-    _parentWindowForSheet: NSWindow;
-    _panel: NSWindow;
-    _clientDidEndSelector: SEL;
-    _clientDelegate: id;
-    _clientContextInfo: pointer;
-    _reserved_SFChooseIdentityPanel_: id;
-    {$endif}
   public
     class function sharedChooseIdentityPanel: SFChooseIdentityPanel; message 'sharedChooseIdentityPanel';
     function runModalForIdentities_message (identities: NSArray; message_: NSString): NSInteger; message 'runModalForIdentities:message:';

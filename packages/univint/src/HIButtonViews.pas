@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -260,81 +210,6 @@ const
 {$definec kHIPushButtonClassID CFSTRP('com.apple.HIPushButton')}
 {$endc}
 { Creation APIs: Carbon Only }
-{$ifc not TARGET_CPU_64}
-{
- *  CreatePushButtonControl()
- *
- *  Summary:
- *    Creates a push button control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    title:
- *      The control title. May be NULL.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreatePushButtonControl( window: WindowRef; const (*var*) boundsRect: Rect; title: CFStringRef { can be NULL }; var outControl: ControlRef ): OSStatus; external name '_CreatePushButtonControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  CreatePushButtonWithIconControl()
- *
- *  Summary:
- *    Creates a push button control containing an icon or other
- *    graphical content.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    title:
- *      The control title. May be NULL.
- *
- *    icon:
- *      The control graphic content.
- *
- *    iconAlignment:
- *      The alignment of the control graphic content.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreatePushButtonWithIconControl( window: WindowRef; const (*var*) boundsRect: Rect; title: CFStringRef { can be NULL }; var icon: ControlButtonContentInfo; iconAlignment: ControlPushButtonIconAlignment; var outControl: ControlRef ): OSStatus; external name '_CreatePushButtonWithIconControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -423,52 +298,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHICheckBoxClassID CFSTRP('com.apple.HICheckBox')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateCheckBoxControl()
- *
- *  Summary:
- *    Creates a checkbox control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    title:
- *      The control title. May be NULL.
- *
- *    initialValue:
- *      The initial value of the control. Should be zero (off), one
- *      (on), or two (mixed). The control is automatically given a
- *      minimum value of zero and a maximum value of two.
- *
- *    autoToggle:
- *      Whether this control should have auto-toggle behavior. If true,
- *      the control will automatically toggle between on and off states
- *      when clicked.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateCheckBoxControl( window: WindowRef; const (*var*) boundsRect: Rect; title: CFStringRef { can be NULL }; initialValue: SInt32; autoToggle: Boolean; var outControl: ControlRef ): OSStatus; external name '_CreateCheckBoxControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Check Box Values }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlCheckBoxUncheckedValue = 0;
@@ -505,72 +334,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIRadioButtonClassID CFSTRP('com.apple.HIRadioButton')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateRadioButtonControl()
- *
- *  Summary:
- *    Creates a radio button control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounds of the control, in local coordinates of the window.
- *
- *    title:
- *      The control title. May be NULL.
- *
- *    initialValue:
- *      The initial value of the control. Should be zero (off), one
- *      (on), or two (mixed). The control is automatically given a
- *      minimum value of zero and a maximum value of two.
- *
- *    autoToggle:
- *      Whether this control should have auto-toggle behavior. If true,
- *      the control will automatically toggle between on and off states
- *      when clicked. This parameter should be false if the control
- *      will be embedded into a radio group control; in that case, the
- *      radio group will handle setting the correct control value in
- *      response to a click.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateRadioButtonControl( window: WindowRef; const (*var*) boundsRect: Rect; title: CFStringRef { can be NULL }; initialValue: SInt32; autoToggle: Boolean; var outControl: ControlRef ): OSStatus; external name '_CreateRadioButtonControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{   RADIO GROUP (CDEF 26)                                                              }
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{  This control implements a radio group. It is an embedding control and can therefore }
-{  only be used when a control hierarchy is established for its owning window. You     }
-{  should only embed controls that have radio button behavior - currently radio buttons}
-{  and bevel buttons. Specifically, you can embed controls that return the feature bit }
-{  kControlHasRadioBehavior. As controls are embedded into it, the group sets up its   }
-{  value, min, and max to represent the number of embedded items.                      }
-{  The current value of the control is the index of the sub-control that is the current}
-{  'on' radio button. To get the current radio button control handle, you can use the  }
-{  control manager call GetIndexedSubControl, passing in the value of the radio group. }
-{  Note that when creating radio buttons for use in a radio group control, you should  }
-{  not use the autoToggle version of the radio button. The radio group control will    }
-{  handling toggling the radio button values itself; auto-toggle radio buttons do not  }
-{  work properly in a radio group control on Mac OS 9.                                 }
-{  NOTE: This control is only available with Appearance 1.0.1.                         }
-{ Radio Group Proc ID }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlRadioGroupProc = 416;
@@ -584,97 +347,6 @@ const
 {$definec kHIRadioGroupClassID CFSTRP('com.apple.HIRadioGroup')}
 {$endc}
 { Creation API: Carbon Only }
-{$ifc not TARGET_CPU_64}
-{
- *  CreateRadioGroupControl()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateRadioGroupControl( window: WindowRef; const (*var*) boundsRect: Rect; var outControl: ControlRef ): OSStatus; external name '_CreateRadioGroupControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-     BEVEL BUTTON INTERFACE (CDEF 2)
-
-    Bevel buttons allow you to control the content type (pict/icon/etc.), the behavior
-   (pushbutton/toggle/sticky), and the bevel size. You also have the option of
-    attaching a menu to it. When a menu is present, you can specify which way the
-    popup arrow is facing (down or right).
-
-    This is all made possible by overloading the Min, Max, and Value parameters for the
-    control, as well as adjusting the variant. Here's the breakdown of what goes where:
-
-    Parameter                   What Goes Here
-
-    Min                         Hi Byte = Behavior, Lo Byte = content type.
-    Max                         ResID for resource-based content types.
-    Value                       MenuID to attach, 0 = no menu, please.
-
-    The variant is broken down into two halves. The low 2 bits control the bevel type.
-    Bit 2 controls the popup arrow direction (if a menu is present) and bit 3 controls
-    whether or not to use the control's owning window's font.
-
-    Constants for all you need to put this together are below. The values for behaviors
-    are set up so that you can simply add them to the content type for use in the Min
-    parameter of NewControl.
-
-    An example call:
-
-    control = NewControl( window, &bounds, "\p", true, 0, kControlContentIconSuiteRes +
-                            kBehaviorToggles, myIconSuiteID, bevelButtonSmallBevelProc,
-                            0L );
-
-    Attaching a menu:
-
-    control = NewControl( window, &bounds, "\p", true, kMyMenuID,
-            kControlContentIconSuiteRes, myIconSuiteID, bevelButtonSmallBevelProc +
-            kBevelButtonMenuOnRight, 0L );
-
-    This will attach menu ID kMyMenuID to the button, with the popup arrow facing right.
-    This also puts the menu up to the right of the button. You can also specify that a
-    menu can have multiple items checked at once by adding kBehaviorMultiValueMenus
-    into the Min parameter. If you do use multivalue menus, the GetBevelButtonMenuValue
-    helper function will return the last item chosen from the menu, whether or not it
-    was checked.
-
-    NOTE:   Bevel buttons with menus actually have *two* values. The value of the
-            button (on/off), and the value of the menu. The menu value can be gotten
-            with the GetBevelButtonMenuValue helper function.
-
-    Handle-based Content
-
-    You can create your control and then set the content to an existing handle to an
-    icon suite, etc. using the macros below. Please keep in mind that resource-based
-    content is owned by the control, handle-based content is owned by you. The CDEF will
-    not try to dispose of handle-based content. If you are changing the content type of
-    the button on the fly, you must make sure that if you are replacing a handle-
-    based content with a resource-based content to properly dispose of the handle,
-    else a memory leak will ensue.
-
-    Textual Content
-
-    Please note that if a bevel button gets its textual content from the title
-    of the control. To alter the textual content of a bevel button, use the
-    SetControlTitle[WithCFString] API.
-
-    Implicit Menu Arrow Sizing
-
-    Bevel buttons can now have implicit popup menu arrow sizes on Mac OS X 10.5 and later. Use
-    SetControlData(..., kControlSizeTag, ...), where the default control size is
-    kControlSizeAuto. kControlSizeAuto has the bevel button render its popup menu arrow
-    at a size that is dependent on the size of the bevel button -- this is the behavior
-    on Tiger and earlier. kControlSizeNormal has it render the normal size arrow and
-    kControlSizeSmall has it render the arrow small. All other sizes are invalid.
-}
-{ Bevel Button Proc IDs }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlBevelButtonSmallBevelProc = 32;
@@ -731,24 +403,6 @@ const
 {$definec kHIBevelButtonClassID CFSTRP('com.apple.HIBevelButton')}
 {$endc}
 { Creation API: Carbon Only }
-{$ifc not TARGET_CPU_64}
-{
- *  CreateBevelButtonControl()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateBevelButtonControl( window: WindowRef; const (*var*) boundsRect: Rect; title: CFStringRef; thickness: ControlBevelThickness; behavior: ControlBevelButtonBehavior; info: ControlButtonContentInfoPtr; menuID_: MenuID; menuBehavior: ControlBevelButtonMenuBehavior; menuPlacement: ControlBevelButtonMenuPlacement; var outControl: ControlRef ): OSStatus; external name '_CreateBevelButtonControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ Graphic Alignments }
-{$endc} {not TARGET_CPU_64}
 
 type
 	ControlButtonGraphicAlignment = SInt16;
@@ -832,151 +486,6 @@ const
 	kControlBevelButtonIsMultiValueMenuTag = FourCharCode('mult');
 
 { Helper routines are available only thru the shared library/glue. }
-{$ifc not TARGET_CPU_64}
-{
- *  GetBevelButtonMenuValue()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function GetBevelButtonMenuValue( inButton: ControlRef; var outValue: MenuItemIndex ): OSErr; external name '_GetBevelButtonMenuValue';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonMenuValue()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonMenuValue( inButton: ControlRef; inValue: MenuItemIndex ): OSErr; external name '_SetBevelButtonMenuValue';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  GetBevelButtonMenuHandle()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function GetBevelButtonMenuHandle( inButton: ControlRef; var outHandle: MenuHandle ): OSErr; external name '_GetBevelButtonMenuHandle';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-function GetBevelButtonMenuRef__NAME__GetBevelButtonMenuHandle( possibleWindow: WindowRef ): Boolean; external name '_GetBevelButtonMenuRef__NAME__GetBevelButtonMenuHandle';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  GetBevelButtonContentInfo()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function GetBevelButtonContentInfo( inButton: ControlRef; outContent: ControlButtonContentInfoPtr ): OSErr; external name '_GetBevelButtonContentInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonContentInfo()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonContentInfo( inButton: ControlRef; inContent: ControlButtonContentInfoPtr ): OSErr; external name '_SetBevelButtonContentInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonTransform()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonTransform( inButton: ControlRef; transform: IconTransformType ): OSErr; external name '_SetBevelButtonTransform';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonGraphicAlignment()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonGraphicAlignment( inButton: ControlRef; inAlign: ControlButtonGraphicAlignment; inHOffset: SInt16; inVOffset: SInt16 ): OSErr; external name '_SetBevelButtonGraphicAlignment';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonTextAlignment()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonTextAlignment( inButton: ControlRef; inAlign: ControlButtonTextAlignment; inHOffset: SInt16 ): OSErr; external name '_SetBevelButtonTextAlignment';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  SetBevelButtonTextPlacement()
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in AppearanceLib 1.0 and later
- }
-function SetBevelButtonTextPlacement( inButton: ControlRef; inWhere: ControlButtonTextPlacement ): OSErr; external name '_SetBevelButtonTextPlacement';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{   ROUND BUTTON                                                                       }
-{  (CDEF 31)                                                                           }
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{$endc} {not TARGET_CPU_64}
 
 
 {
@@ -1011,54 +520,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIRoundButtonClassID CFSTRP('com.apple.HIRoundButton')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateRoundButtonControl()
- *
- *  Summary:
- *    Creates a new instance of the Round Button Control.
- *
- *  Discussion:
- *    CreateRoundButtonControl is preferred over NewControl because it
- *    allows you to specify the exact set of parameters required to
- *    create the control without overloading parameter semantics.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inWindow:
- *      The WindowRef in which to create the control. May be NULL in
- *      10.3 and later.
- *
- *    inBoundsRect:
- *      The bounding rectangle for the control. The height and width of
- *      the control is fixed (specified by the ControlRoundButtonSize
- *      parameter) and the control will be centered within the
- *      rectangle you specify.
- *
- *    inSize:
- *      The button size; either kControlRoundButtonNormalSize or
- *      kControlRoundButtonLargeSize.
- *
- *    inContent:
- *      Any optional content displayed in the button. Currently only
- *      kControlContentIconRef is supported. May be NULL.
- *
- *    outControl:
- *      On successful exit, this will contain the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.0 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateRoundButtonControl( inWindow: WindowRef { can be NULL }; const (*var*) inBoundsRect: Rect; inSize: ControlRoundButtonSize; inContent: ControlButtonContentInfoPtr { can be NULL }; var outControl: ControlRef ): OSStatus; external name '_CreateRoundButtonControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$ifc OLDROUTINENAMES}
 const

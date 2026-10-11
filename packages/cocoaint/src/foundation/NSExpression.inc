@@ -39,9 +39,7 @@ type
           _reservedExpressionFlags: 0..((1 shl 31)-1);
         );
       end;
-    {$ifdef __LP64__}
     reserved: cuint32;
-    {$endif}
     _expressionType: NSExpressionType;
   public
     class function expressionWithFormat_argumentArray (expressionFormat: NSString; arguments: NSArray): NSExpression; message 'expressionWithFormat:argumentArray:'; { available in 10_6,4_0 }

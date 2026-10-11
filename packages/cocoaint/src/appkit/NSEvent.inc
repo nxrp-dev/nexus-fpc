@@ -41,9 +41,7 @@ const
   NSEventTypeRotate = 18 { available in 10_5 };
   NSEventTypeBeginGesture = 19 { available in 10_5 };
   NSEventTypeEndGesture = 20 { available in 10_5 };
-  {$if defined(__LP64__)}
   NSEventTypeSmartMagnify = 32 { available in 10_8 };
-  {$endif}
   NSEventTypeQuickLook = 33 { available in 10_8 };
 
 type
@@ -80,9 +78,7 @@ const
   NSEventMaskRotate = 1 shl NSEventTypeRotate { available in 10_5 };
   NSEventMaskBeginGesture = 1 shl NSEventTypeBeginGesture { available in 10_5 };
   NSEventMaskEndGesture = 1 shl NSEventTypeEndGesture { available in 10_5 };
-  {$if defined(__LP64__)}
   NSEventMaskSmartMagnify = 1 shl NSEventTypeSmartMagnify { available in 10_8 };
-  {$endif}
   NSAnyEventMask = NSUIntegerMax;
 {$endif}
 
@@ -189,14 +185,12 @@ type
             eventNumber: cint;
             clickCount: cint;
             pressure: single;
-            {$if defined(__LP64__)}
             deltaX: CGFloat;
             deltaY: CGFloat;
             subtype: cint;
             buttonNumber: cshort;
             reserved1: cshort;
             reserved2:array[0..2] of cint;
-            {$endif}
           end;
         );
         1: (
@@ -205,10 +199,8 @@ type
             unmodKeys: NSString;
             keyCode: cushort;
             isARepeat: ObjCBOOL;
-            {$if defined(__LP64__)}
             eventFlags: cint;
             reserved:array[0..4] of cint;
-            {$endif}
           end;
         );
         2: (
@@ -216,9 +208,7 @@ type
             eventNumber_: cint;
             trackingNumber: NSInteger;
             userData: pointer;
-            {$if defined(__LP64__)}
             reserved_:array[0..5] of cint;
-            {$endif}
           end;
         );
         3: (
@@ -226,11 +216,9 @@ type
             deltaX_: CGFloat;
             deltaY_: CGFloat;
             deltaZ: CGFloat;
-            {$if defined(__LP64__)}
             subtype_: cshort;
             reserved1_: cshort;
             reserved2_:array[0..5] of cint;
-            {$endif}
           end;
         );
         4: (
@@ -238,9 +226,7 @@ type
             deltaX_: CGFloat;
             deltaY_: CGFloat;
             deltaZ_: CGFloat;
-            {$if defined(__LP64__)}
             reserved_:array[0..6] of cint;
-            {$endif}
           end;
         );
         5: (
@@ -250,9 +236,7 @@ type
             reserved_: ObjCBOOL;
             value: cint;
             percentage: single;
-            {$if defined(__LP64__)}
             reserved2_:array[0..6] of cint;
-            {$endif}
           end;
         );
         6: (
@@ -260,23 +244,17 @@ type
             subtype_: cint;
             data1: NSInteger;
             data2: NSInteger;
-            {$if defined(__LP64__)}
             reserved_:array[0..5] of cint;
-            {$endif}
           end;
         );
-        {$if defined(__LP64__)}
         7: (
           tabletPointData:array[0..13] of cint;
           tabletProximityData:array[0..13] of cint;
         );
-        {$endif}
     end;
     _eventRef: pointer;
-    {$if defined(__LP64__)}
     reserved1: pointer;
     reserved2: pointer;
-    {$endif}
   public
     function type_: NSEventType; message 'type';
     function modifierFlags: NSEventModifierFlags; message 'modifierFlags';

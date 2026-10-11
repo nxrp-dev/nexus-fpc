@@ -19,9 +19,7 @@ type
           RESERVED: 0..((1 shl 31)-1);
         );
       end;
-    {$if defined(__LP64__)}
     _popupReserved: id;
-    {$endif}
   public
     function initWithFrame_pullsDown (buttonFrame: NSRect; flag: ObjCBOOL): instancetype; message 'initWithFrame:pullsDown:';
     procedure setMenu(newValue: NSMenu); message 'setMenu:';

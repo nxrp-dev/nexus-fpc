@@ -20,6 +20,7 @@ begin
     P.Version:='3.3.1';
     P.SourcePath.Add('src');
     P.OSes:=[darwin,iphonesim,ios];
+    P.CPUs:=[x86_64,aarch64];
     P.Options.Add('-Mmacpas');
 
     P.SupportBuildModes:=[bmOneByOne];
@@ -964,10 +965,6 @@ begin
           AddInclude('src/SKSearch.pas');
           AddInclude('src/SKSummary.pas');
         end;
-
-    P.ExamplePath.Add('examples');
-    P.Targets.AddExampleProgram('controldemo.pas');
-
 
     P.NamespaceMap:='namespaces.lst';
 

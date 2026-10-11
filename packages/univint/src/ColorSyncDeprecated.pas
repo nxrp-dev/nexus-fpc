@@ -30,28 +30,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -64,29 +53,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -96,23 +67,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -152,11 +106,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -1056,101 +1006,6 @@ type
                                               { variable-length data for storage of Unicode strings}
 	end;
 
-{$ifc not TARGET_CPU_64}
-{**********************************************************************}
-{************** ColorSync 1.0 profile specification *******************}
-{**********************************************************************}
-const
-	cmGrayResponse = 0;
-	cmRedResponse = 1;
-	cmGreenResponse = 2;
-	cmBlueResponse = 3;
-	cmCyanResponse = 4;
-	cmMagentaResponse = 5;
-	cmYellowResponse = 6;
-	cmUcrResponse = 7;
-	cmBgResponse = 8;
-	cmOnePlusLastResponse = 9;
-
-
-{ Device types }
-const
-	cmMonitorDevice = FourCharCode('mntr');
-	cmScannerDevice = FourCharCode('scnr');
-	cmPrinterDevice = FourCharCode('prtr');
-
-
-type
-	CMIStringPtr = ^CMIString;
-	CMIString = record
-		theScript: ScriptCode;
-		theString: Str63;
-	end;
-
-{ Profile options }
-const
-	cmPerceptualMatch = $0000; { Default. For photographic images }
-	cmColorimetricMatch = $0001; { Exact matching when possible }
-	cmSaturationMatch = $0002; { For solid colors }
-
-{ Profile flags }
-const
-	cmNativeMatchingPreferred = $00000001; { Default to native not preferred }
-	cmTurnOffCache = $00000002; { Default to turn on CMM cache }
-
-
-type
-	CMMatchOption						= SInt32;
-	CMMatchFlag							= SInt32;
-type
-	CMHeaderPtr = ^CMHeader;
-	CMHeader = record
-		CMMType: OSType;
-		applProfileVersion: UInt32;
-		dataType: OSType;
-		deviceType: OSType;
-		deviceManufacturer: OSType;
-		deviceModel: UInt32;
-		deviceAttributes: array [0..1] of UInt32;
-		profileNameOffset: UInt32;
-		customDataOffset: UInt32;
-		flags: CMMatchFlag;
-		options: CMMatchOption;
-		white: CMXYZColor;
-		black: CMXYZColor;
-	end;
-
-type
-	CMProfileChromaticitiesPtr = ^CMProfileChromaticities;
-	CMProfileChromaticities = record
-		red: CMXYZColor;
-		green: CMXYZColor;
-		blue: CMXYZColor;
-		cyan: CMXYZColor;
-		magenta: CMXYZColor;
-		yellow: CMXYZColor;
-	end;
-
-type
-	CMProfileResponsePtr = ^CMProfileResponse;
-	CMProfileResponse = record
-		counts: array [0..8] of UInt16;
-		data: array [0..0] of UInt16;                { Variable size }
-	end;
-
-type
-	CMProfilePtr = ^CMProfile;
-	CMProfile = record
-		header: CMHeader;
-		profile: CMProfileChromaticities;
-		response: CMProfileResponse;
-		profileName: CMIString;
-		customData: array [0..0] of SInt8;          { Variable size }
-	end;
-
-	CMProfileHandle						= ^CMProfilePtr;
-
-{$endc} {not TARGET_CPU_64}
 
 // #pragma mark --- CMTypes.h ----
 
@@ -1161,17 +1016,6 @@ type
 	CMProfileRef = ^OpaqueCMProfileRef; { an opaque type }
 	CMProfileRefPtr = ^CMProfileRef;  { when a var xx:CMProfileRef parameter can be nil, it is changed to xx: CMProfileRefPtr }
 
-{$ifc not TARGET_CPU_64}
-{ Abstract data type for Profile search result }
-	OpaqueCMProfileSearchRef = record end;
-	CMProfileSearchRef = ^OpaqueCMProfileSearchRef; { an opaque type }
-	CMProfileSearchRefPtr = ^CMProfileSearchRef;  { when a var xx:CMProfileSearchRef parameter can be nil, it is changed to xx: CMProfileSearchRefPtr }
-
-{ Abstract data type for BeginMatching(É) reference }
-	OpaqueCMMatchRef = record end;
-	CMMatchRef = ^OpaqueCMMatchRef; { an opaque type }
-	CMMatchRefPtr = ^CMMatchRef;  { when a var xx:CMMatchRef parameter can be nil, it is changed to xx: CMMatchRefPtr }
-{$endc} {not TARGET_CPU_64}
 
 { Abstract data type for ColorWorld reference }
 	OpaqueCMWorldRef = record end;
@@ -1344,71 +1188,18 @@ function InvokeCMProfileAccessUPP(command: SInt32; offset: SInt32; var size: SIn
 
 {$setc _DECLARE_CS_QD_API_ := 0} { Mac OS X ColorSync QuickDraw API are located in QuickDraw.p[.pas] }
 
-{$ifc not TARGET_CPU_64}
-{$ALIGN MAC68K}
-{$elsec}
 {$packrecords c}
-{$endc}
 
 
 const
 	kDefaultCMMSignature = FourCharCode('appl');
 
-{$ifc not TARGET_CPU_64}
-{ PicComment IDs }
-const
-	cmBeginProfile = 220;
-	cmEndProfile = 221;
-	cmEnableMatching = 222;
-	cmDisableMatching = 223;
-	cmComment = 224;
-
-{ PicComment selectors for cmComment }
-const
-	cmBeginProfileSel = 0;
-	cmContinueProfileSel = 1;
-	cmEndProfileSel = 2;
-	cmProfileIdentifierSel = 3;
-
-{ Defines for version 1.0 CMProfileSearchRecord.fieldMask }
-const
-	cmMatchCMMType = $00000001;
-	cmMatchApplProfileVersion = $00000002;
-	cmMatchDataType = $00000004;
-	cmMatchDeviceType = $00000008;
-	cmMatchDeviceManufacturer = $00000010;
-	cmMatchDeviceModel = $00000020;
-	cmMatchDeviceAttributes = $00000040;
-	cmMatchFlags = $00000080;
-	cmMatchOptions = $00000100;
-	cmMatchWhite = $00000200;
-	cmMatchBlack = $00000400;
-
-{ Defines for version 2.0 CMSearchRecord.searchMask }
-const
-	cmMatchAnyProfile = $00000000;
-	cmMatchProfileCMMType = $00000001;
-	cmMatchProfileClass = $00000002;
-	cmMatchDataColorSpace = $00000004;
-	cmMatchProfileConnectionSpace = $00000008;
-	cmMatchManufacturer = $00000010;
-	cmMatchModel = $00000020;
-	cmMatchAttributes = $00000040;
-	cmMatchProfileFlags = $00000080;
-
-{$endc} {not TARGET_CPU_64}
 
 { Flags for PostScript-related functions }
 const
 	cmPS7bit = 1;
 	cmPS8bit = 2;
 
-{$ifc not TARGET_CPU_64}
-{ Flags for profile embedding functions }
-const
-	cmEmbedWholeProfile = $00000000;
-	cmEmbedProfileIdentifier = $00000001;
-{$endc} {not TARGET_CPU_64}
 
 { Commands for CMFlattenUPP() }
 const
@@ -1443,11 +1234,6 @@ type
 	CMAppleProfileHeaderPtr = ^CMAppleProfileHeader;
 	CMAppleProfileHeader = record
 		case SInt16 of
-{$ifc not TARGET_CPU_64}
-		0: (
-			cm1: CMHeader;
-			);
-{$endc} {not TARGET_CPU_64}
 		1: (
 			cm2: CM2Header;
 			);
@@ -1650,34 +1436,6 @@ type
 			);
 	end;
 
-{$ifc not TARGET_CPU_64}
-{ GetIndexedProfile() search definition}
-type
-	CMProfileSearchRecordPtr = ^CMProfileSearchRecord;
-	CMProfileSearchRecord = record
-		header: CMHeader;
-		fieldMask: UInt32;
-		reserved: array [0..1] of UInt32;
-	end;
-
-	CMProfileSearchRecordHandle			= ^CMProfileSearchRecordPtr;
-
-type
-{ CMNewProfileSearch() search definition }
-	CMSearchRecordPtr = ^CMSearchRecord;
-	CMSearchRecord = record
-		CMMType: OSType;
-		profileClass: OSType;
-		dataColorSpace: OSType;
-		profileConnectionSpace: OSType;
-		deviceManufacturer: UInt32;
-		deviceModel: UInt32;
-		deviceAttributes: array [0..1] of UInt32;
-		profileFlags: UInt32;
-		searchMask: UInt32;
-		filter: CMProfileFilterUPP;
-	end;
-{$endc} {not TARGET_CPU_64}
 
 { CMMIterateUPP() structure }
 type
@@ -1697,32 +1455,6 @@ type
 
 { GetCWInfo() structures }
 
-{$ifc not TARGET_CPU_64}
-
-type
-	CMMInfoRecordPtr = ^CMMInfoRecord;
-	CMMInfoRecord = record
-		CMMType: OSType;
-		CMMVersion: SIGNEDLONG;
-	end;
-
-type
-	CMCWInfoRecordPtr = ^CMCWInfoRecord;
-	CMCWInfoRecord = record
-		cmmCount: UInt32;
-		cmmInfo: array [0..1] of CMMInfoRecord;
-	end;
-
-{ profile identifier structures }
-type
-	CMProfileIdentifierPtr = ^CMProfileIdentifier;
-	CMProfileIdentifier = record
-		profileHeader: CM2Header;
-		calibrationDate: CMDateTime;
-		ASCIIProfileDescriptionLen: UInt32;
-		ASCIIProfileDescription: array [0..0] of AnsiChar; { variable length }
-end;
-{$endc} {not TARGET_CPU_64}
 
 { colorspace masks }
 const
@@ -1867,33 +1599,15 @@ type
 { Profile Locations }
 
 const
-{$ifc not TARGET_CPU_64}
-	CS_MAX_PATH = 256;
-{$elsec}
   CS_MAX_PATH = 1024;
-{$endc} {not TARGET_CPU_64}
 
 
 const
 	cmNoProfileBase = 0;
-{$ifc not TARGET_CPU_64}
-	cmFileBasedProfile = 1;
-	cmHandleBasedProfile = 2;
-	cmPtrBasedProfile = 3;
-	cmProcedureBasedProfile = 4;
-{$endc} {not TARGET_CPU_64}
 	cmPathBasedProfile = 5;
 	cmBufferBasedProfile = 6;
 
 
-{$ifc not TARGET_CPU_64}
-{ This structure is deprecated in Mac OS X 10.5. Use CMPathLocation instead.}
-type
-	CMFileLocationPtr = ^CMFileLocation;
-	CMFileLocation = record
-		spec: FSSpec;
-	end;
-{$endc} {not TARGET_CPU_64}
 
 type
 	CMHandleLocationPtr = ^CMHandleLocation;
@@ -1901,22 +1615,6 @@ type
 		h: Handle;
 	end;
 
-{$ifc not TARGET_CPU_64}
-{ This structure is deprecated in Mac OS X 10.5. Use CMBufferLocation instead.}
-type
-	CMPtrLocationPtr = ^CMPtrLocation;
-	CMPtrLocation = record
-		p: Ptr;
-	end;
-
-{ This structure is deprecated in Mac OS X 10.5.}
-type
-	CMProcedureLocationPtr = ^CMProcedureLocation;
-	CMProcedureLocation = record
-		proc: CMProfileAccessUPP;
-		refCon: UnivPtr;
-	end;
-{$endc} {not TARGET_CPU_64}
 
 type
 	CMPathLocationPtr = ^CMPathLocation;
@@ -1935,22 +1633,9 @@ type
 	CMProfLocPtr = ^CMProfLoc;
 	CMProfLoc = record
 		case SInt16 of
-{$ifc not TARGET_CPU_64}
-		0: (
-			fileLoc: CMFileLocation;
-			);
-{$endc} {not TARGET_CPU_64}
 		1: (
 			handleLoc: CMHandleLocation;
 			);
-{$ifc not TARGET_CPU_64}
-		2: (
-			ptrLoc: CMPtrLocation;
-			);
-		3: (
-			procLoc: CMProcedureLocation;
-			);
-{$endc} {not TARGET_CPU_64}
 		4: (
 			pathLoc: CMPathLocation;
 			);
@@ -2041,11 +1726,6 @@ function CMNewProfile( var prof: CMProfileRef; const (*var*) theProfile: CMProfi
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use NCWNewLinkProfile instead.}
-function CWNewLinkProfile( var prof: CMProfileRef; const (*var*) targetLocation: CMProfileLocation; var profileSet: CMConcatProfileSet ): CMError; external name '_CWNewLinkProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function NCWNewLinkProfile( var prof: CMProfileRef; const (*var*) targetLocation: CMProfileLocation; var profileSet: NCMConcatProfileSet; proc: CMConcatCallBackUPP; refCon: UnivPtr ): CMError; external name '_NCWNewLinkProfile';
@@ -2139,11 +1819,6 @@ function CMValidateProfile( prof: CMProfileRef; var valid: Boolean; var preferre
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use NCMGetProfileLocation instead.}
-function CMGetProfileLocation( prof: CMProfileRef; var location: CMProfileLocation ): CMError; external name '_CMGetProfileLocation';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function NCMGetProfileLocation( prof: CMProfileRef; var theProfile: CMProfileLocation; var locationSize: UInt32 ): CMError; external name '_NCMGetProfileLocation';
@@ -2160,18 +1835,8 @@ function CMProfileCopyICCData( allocator: CFAllocatorRef; prof: CMProfileRef ): 
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use CMCopyProfile instead.}
-function CMFlattenProfile( prof: CMProfileRef; flags: UInt32; proc: CMFlattenUPP; refCon: UnivPtr; var preferredCMMnotfound: Boolean ): CMError; external name '_CMFlattenProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5.}
-function NCMUnflattenProfile( var targetLocation: CMProfileLocation; proc: CMFlattenUPP; refCon: UnivPtr; var preferredCMMnotfound: Boolean ): CMError; external name '_NCMUnflattenProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function CMGetProfileHeader( prof: CMProfileRef; var header: CMAppleProfileHeader ): CMError; external name '_CMGetProfileHeader';
@@ -2246,11 +1911,6 @@ function CMRemoveProfileElement( prof: CMProfileRef; tag: OSType ): CMError; ext
 
 { Accessing Profile Descriptions }
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use CMCopyProfileDescriptionString instead.}
-function CMGetScriptProfileDescription( prof: CMProfileRef; var name: Str255; var code: ScriptCode ): CMError; external name '_CMGetScriptProfileDescription';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function CMGetProfileDescriptions( prof: CMProfileRef; aName: CStringPtr; var aCount: UInt32; var mName: Str255; var mCode: ScriptCode; var uName: UniChar; var uCount: UniCharCount ): CMError; external name '_CMGetProfileDescriptions';
@@ -2309,21 +1969,12 @@ function NCWNewColorWorld( var cw: CMWorldRef; src: CMProfileRef; dst: CMProfile
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-function CWConcatColorWorld( var cw: CMWorldRef; var profileSet: CMConcatProfileSet ): CMError; external name '_CWConcatColorWorld';
-(* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
-{$endc} {not TARGET_CPU_64}
 
 
 function NCWConcatColorWorld( var cw: CMWorldRef; var profileSet: NCMConcatProfileSet; proc: CMConcatCallBackUPP; refCon: UnivPtr ): CMError; external name '_NCWConcatColorWorld';
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5.}
-function CMGetCWInfo( cw: CMWorldRef; var info: CMCWInfoRecord ): CMError; external name '_CMGetCWInfo';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 procedure CWDisposeColorWorld( cw: CMWorldRef ); external name '_CWDisposeColorWorld';
@@ -2378,40 +2029,20 @@ function CMGetSystemProfile( var prof: CMProfileRef ): CMError; external name '_
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use CMSetProfileByAVID instead.}
-function CMSetSystemProfile( const (*var*) profileFileSpec: FSSpec ): CMError; external name '_CMSetSystemProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5. Use CMSetProfileByAVID instead.}
-function NCMSetSystemProfile( const (*var*) profLoc: CMProfileLocation ): CMError; external name '_NCMSetSystemProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function CMGetDefaultProfileBySpace( dataColorSpace: OSType; var prof: CMProfileRef ): CMError; external name '_CMGetDefaultProfileBySpace';
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5.}
-function CMSetDefaultProfileBySpace( dataColorSpace: OSType; prof: CMProfileRef ): CMError; external name '_CMSetDefaultProfileBySpace';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function CMGetDefaultProfileByUse( use: OSType; var prof: CMProfileRef ): CMError; external name '_CMGetDefaultProfileByUse';
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-{ This function is deprecated in Mac OS X 10.5.}
-function CMSetDefaultProfileByUse( use: OSType; prof: CMProfileRef ): CMError; external name '_CMSetDefaultProfileByUse';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 function CMGetProfileByAVID( theID: CMDisplayIDType; var prof: CMProfileRef ): CMError; external name '_CMGetProfileByAVID';
@@ -2436,67 +2067,10 @@ function CMIterateColorSyncFolder( proc: CMProfileIterateUPP; var seed: UInt32; 
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
 
 
-{$ifc not TARGET_CPU_64}
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMGetColorSyncFolderSpec( vRefNum: SInt16; createFolder: Boolean; var foundVRefNum: SInt16; var foundDirID: SIGNEDLONG ): CMError; external name '_CMGetColorSyncFolderSpec';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMNewProfileSearch( var searchSpec: CMSearchRecord; refCon: UnivPtr; var count: UInt32; var searchResult: CMProfileSearchRef ): CMError; external name '_CMNewProfileSearch';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMUpdateProfileSearch( search: CMProfileSearchRef; refCon: UnivPtr; var count: UInt32 ): CMError; external name '_CMUpdateProfileSearch';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-procedure CMDisposeProfileSearch( search: CMProfileSearchRef ); external name '_CMDisposeProfileSearch';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMSearchGetIndProfile( search: CMProfileSearchRef; index: UInt32; var prof: CMProfileRef ): CMError; external name '_CMSearchGetIndProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMSearchGetIndProfileFileSpec( search: CMProfileSearchRef; index: UInt32; var spec: FSSpec ): CMError; external name '_CMSearchGetIndProfileFileSpec';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMCreateProfileIdentifier( prof: CMProfileRef; ident: CMProfileIdentifierPtr; var size: UInt32 ): CMError; external name '_CMCreateProfileIdentifier';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMProfileIdentifierFolderSearch( ident: CMProfileIdentifierPtr; var matchedCount: UInt32; var searchResult: CMProfileSearchRef ): CMError; external name '_CMProfileIdentifierFolderSearch';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMIterateColorSyncFolder instead.}
-function CMProfileIdentifierListSearch( ident: CMProfileIdentifierPtr; var profileList: CMProfileRef; listSize: UInt32; var matchedCount: UInt32; var matchedList: CMProfileRef ): CMError; external name '_CMProfileIdentifierListSearch';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-{$endc} {not TARGET_CPU_64}
 
 
 { Utilities }
 
-{$ifc not TARGET_CPU_64}
-
-function CMGetPreferredCMM( var cmmType: OSType; var prefCMMnotfound: Boolean ): CMError; external name '_CMGetPreferredCMM';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMSetPreferredCMM( cmmType: OSType ): CMError; external name '_CMSetPreferredCMM';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-{$endc} {not TARGET_CPU_64}
 
 function CMIterateCMMInfo( proc: CMMIterateUPP; var count: UInt32; refCon: UnivPtr ): CMError; external name '_CMIterateCMMInfo';
 (* DEPRECATED_IN_MAC_OS_X_VERSION_10_6_AND_LATER *)
@@ -2512,78 +2086,6 @@ function CMLaunchControlPanel( flags: UInt32 ): CMError; external name '_CMLaunc
 
 { Converting Colors }
 
-{$ifc not TARGET_CPU_64}
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertXYZToLab( const (*var*) src: CMColor; const (*var*) white: CMXYZColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertXYZToLab';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertLabToXYZ( const (*var*) src: CMColor; const (*var*) white: CMXYZColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertLabToXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertXYZToLuv( const (*var*) src: CMColor; const (*var*) white: CMXYZColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertXYZToLuv';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertLuvToXYZ( const (*var*) src: CMColor; const (*var*) white: CMXYZColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertLuvToXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertXYZToYxy( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertXYZToYxy';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertYxyToXYZ( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertYxyToXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertRGBFloatBitmap instead.}
-function CMConvertRGBToHLS( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertRGBToHLS';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertRGBFloatBitmap instead.}
-function CMConvertHLSToRGB( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertHLSToRGB';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertRGBFloatBitmap instead.}
-function CMConvertRGBToHSV( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertRGBToHSV';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertRGBFloatBitmap instead.}
-function CMConvertHSVToRGB( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertHSVToRGB';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertRGBFloatBitmap instead.}
-function CMConvertRGBToGray( const (*var*) src: CMColor; var dst: CMColor; count: size_t ): CMError; external name '_CMConvertRGBToGray';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5.}
-function CMConvertXYZToFixedXYZ( const (*var*) src: CMXYZColor; var dst: CMFixedXYZColor; count: size_t ): CMError; external name '_CMConvertXYZToFixedXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5.}
-function CMConvertFixedXYZToXYZ( const (*var*) src: CMFixedXYZColor; var dst: CMXYZColor; count: size_t ): CMError; external name '_CMConvertFixedXYZToXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{ This function is deprecated in Mac OS X 10.5. Use CMConvertXYZFloatBitmap instead.}
-function CMConvertXYZToXYZ( const (*var*) src: CMColor; const (*var*) srcIlluminant: CMXYZColor; var dst: CMColor; const (*var*) dstIlluminant: CMXYZColor; method: CMChromaticAdaptation; count: size_t ): CMError; external name '_CMConvertXYZToXYZ';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-{$endc} {not TARGET_CPU_64}
 
 
 { Working with PostScript }
@@ -2622,9 +2124,6 @@ function CMGetPS2ColorRenderingVMSize( srcProf: CMProfileRef; dstProf: CMProfile
 
 //#pragma mark --- CMFloatBitmap.h ----
 
-{$ifc not TARGET_CPU_64}
-{$ALIGN POWER}
-{$endc} {not TARGET_CPU_64}
 
 
 type
@@ -2829,78 +2328,11 @@ function CMM_GetProperty( cw: CMWorldRef; requestedKey: CFStringRef ): CFTypeRef
 
 //#pragma mark --- CMScriptingPlugin.h ----
 
-{$ifc not TARGET_CPU_64}
-
-
-const
-{ ColorSync Scripting Errors }
-	cmspInvalidImageFile = -4220; { Plugin cannot handle this image file type }
-	cmspInvalidImageSpace = -4221; { Plugin cannot create an image file of this colorspace }
-	cmspInvalidProfileEmbed = -4222; { Specific invalid profile errors }
-	cmspInvalidProfileSource = -4223;
-	cmspInvalidProfileDest = -4224;
-	cmspInvalidProfileProof = -4225;
-	cmspInvalidProfileLink = -4226;
-
-
-{*** embedFlags field  ***}
-{ reserved for future use: currently 0 }
-
-{*** matchFlags field  ***}
-const
-	cmspFavorEmbeddedMask = $00000001; { if bit 0 is 0 then use srcProf profile, if 1 then use profile embedded in image if present}
-
-
-function CMValidImage( const (*var*) spec: FSSpec ): CMError; external name '_CMValidImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMGetImageSpace( const (*var*) spec: FSSpec; var space: OSType ): CMError; external name '_CMGetImageSpace';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMEmbedImage( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean; embProf: CMProfileRef ): CMError; external name '_CMEmbedImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMUnembedImage( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean ): CMError; external name '_CMUnembedImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMMatchImage( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean; qual: UInt32; srcProf: CMProfileRef; srcIntent: UInt32; dstProf: CMProfileRef ): CMError; external name '_CMMatchImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMProofImage( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean; qual: UInt32; srcProf: CMProfileRef; srcIntent: UInt32; dstProf: CMProfileRef; prfProf: CMProfileRef ): CMError; external name '_CMProofImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMLinkImage( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean; qual: UInt32; lnkProf: CMProfileRef; lnkIntent: UInt32 ): CMError; external name '_CMLinkImage';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMCountImageProfiles( const (*var*) spec: FSSpec; var count: UInt32 ): CMError; external name '_CMCountImageProfiles';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMGetIndImageProfile( const (*var*) spec: FSSpec; index: UInt32; var prof: CMProfileRef ): CMError; external name '_CMGetIndImageProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-function CMSetIndImageProfile( const (*var*) specFrom: FSSpec; const (*var*) specInto: FSSpec; repl: Boolean; index: UInt32; prof: CMProfileRef ): CMError; external name '_CMSetIndImageProfile';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 //#pragma mark -- CMDeviceIntegration.h
 
 
-{$ifc not TARGET_CPU_64}
-{$ALIGN MAC68K}
-{$elsec}
 {$packrecords c}
-{$endc} {not TARGET_CPU_64}
 {
     The current versions of the data structure
     containing information on registered devices.
@@ -3237,10 +2669,6 @@ function CMGetDeviceFactoryProfiles( deviceClass: CMDeviceClass; deviceID: CMDev
     @param       profileScope   (in) Scope where information should be stored (or nil to remove all)
     @param       deviceProfiles (in) Profiles to set (or nil to remove all)
 }
-{$ifc not TARGET_CPU_64}
-function CMSetDeviceProfiles( deviceClass: CMDeviceClass; deviceID: CMDeviceID; {const} profileScope: CMDeviceProfileScopePtr { can be NULL }; {const} deviceProfiles: CMDeviceProfileArrayPtr { can be NULL } ): CMError; external name '_CMSetDeviceProfiles';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 {!
@@ -3252,10 +2680,6 @@ function CMSetDeviceProfiles( deviceClass: CMDeviceClass; deviceID: CMDeviceID; 
     @param       arraySize      (in/out) Size of buffer passed in / Returns size of array in bytes
     @param       deviceProfiles (out) Returns list of profile IDs, names, and locations
 }
-{$ifc not TARGET_CPU_64}
-function CMGetDeviceProfiles( deviceClass: CMDeviceClass; deviceID: CMDeviceID; var arraySize: UInt32; var deviceProfiles: CMDeviceProfileArray ): CMError; external name '_CMGetDeviceProfiles';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-{$endc} {not TARGET_CPU_64}
 
 
 {!

@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -247,66 +197,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIPopupButtonClassID CFSTRP('com.apple.HIPopupButton')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreatePopupButtonControl()
- *
- *  Summary:
- *    Creates a popup button control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounding box of the control.
- *
- *    title:
- *      The title of the control.
- *
- *    menuID:
- *      The ID of a menu that should be used by the control. A menu
- *      with this ID should be inserted into the menubar with
- *      InsertMenu(menu, kInsertHierarchicalMenu). You can also pass
- *      -12345 to have the control delay its acquisition of a menu; in
- *      this case, you can build the menu and later provide it to the
- *      control with SetControlData and kControlPopupButtonMenuRefTag
- *      or kControlPopupButtonOwnedMenuRefTag.
- *
- *    variableWidth:
- *      Whether the width of the control is allowed to vary according
- *      to the width of the selected menu item text, or should remain
- *      fixed to the original control bounds width.
- *
- *    titleWidth:
- *      The width of the title.
- *
- *    titleJustification:
- *      The justification of the title.
- *
- *    titleStyle:
- *      A QuickDraw style bitfield indicating the font style of the
- *      title.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreatePopupButtonControl( window: WindowRef { can be NULL }; const (*var*) boundsRect: Rect; title: CFStringRef; menuID_: MenuID; variableWidth: Boolean; titleWidth: SInt16; titleJustification: SInt16; titleStyle: Style; var outControl: ControlRef ): OSStatus; external name '_CreatePopupButtonControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{ These tags are available in 1.0.1 or later of Appearance }
-{$endc} {not TARGET_CPU_64}
 
 const
 	kControlPopupButtonMenuHandleTag = FourCharCode('mhan'); { MenuRef}
@@ -364,55 +254,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHIPopupArrowClassID CFSTRP('com.apple.hipopuparrow')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-
-{
- *  CreatePopupArrowControl()
- *
- *  Summary:
- *    Creates a popup arrow control.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window that should contain the control. May be NULL on 10.3
- *      and later.
- *
- *    boundsRect:
- *      The bounding box of the control.
- *
- *    orientation:
- *      The orientation of the control.
- *
- *    size:
- *      The size of the control.
- *
- *    outControl:
- *      On exit, contains the new control.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreatePopupArrowControl( window: WindowRef { can be NULL }; const (*var*) boundsRect: Rect; orientation: ControlPopupArrowOrientation; size: ControlPopupArrowSize; var outControl: ControlRef ): OSStatus; external name '_CreatePopupArrowControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{--------------------------------------------------------------------------------------}
-{  ¥ DEPRECATED                                                                        }
-{  All declarations below this point are either deprecated (they continue to function  }
-{  but are not the most modern nor most efficient solution to a problem), or they are  }
-{  completely unavailable on Mac OS X.                                                 }
-{--------------------------------------------------------------------------------------}
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{  ¥ Pop-Up Menu Control Constants                                                     }
-{ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ}
-{ Variant codes for the System 7 pop-up menu}
-{$endc} {not TARGET_CPU_64}
 
 const
 	popupFixedWidth = 1 shl 0;

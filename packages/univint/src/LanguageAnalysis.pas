@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -306,317 +256,6 @@ const
 const
 	kLAAllMorphemes = 0;
 
-{$ifc not TARGET_CPU_64}
-{
-    Library version
-}
-{$ifc not TARGET_CPU_64}
-{
- *  LALibraryVersion()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LALibraryVersion: UInt32; external name '_LALibraryVersion';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
-    High level API
-}
-{
- *  LATextToMorphemes()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LATextToMorphemes( context: LAContextRef; preferedEncoding: TextEncoding; textLength: ByteCount; sourceText: ConstLogicalAddress; bufferSize: ByteCount; convertFlags: OptionBits; structureVersion: UInt32; var acceptedLength: ByteCount; resultBuffer: LAMorphemesArrayPtr ): OSStatus; external name '_LATextToMorphemes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
-    Handling Context
-}
-{
- *  LAOpenAnalysisContext()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAOpenAnalysisContext( environ: LAEnvironmentRef; var context: LAContextRef ): OSStatus; external name '_LAOpenAnalysisContext';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LACloseAnalysisContext()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LACloseAnalysisContext( context: LAContextRef ): OSStatus; external name '_LACloseAnalysisContext';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
-    Handling Environment
-}
-{
- *  LAGetEnvironmentList()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAGetEnvironmentList( maxCount: UInt32; var actualCount: UInt32; environmentList: {variable-size-array} LAEnvironmentRefPtr ): OSStatus; external name '_LAGetEnvironmentList';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAGetEnvironmentName()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAGetEnvironmentName( environment: LAEnvironmentRef; var environmentName: Str63 ): OSStatus; external name '_LAGetEnvironmentName';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAGetEnvironmentRef()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAGetEnvironmentRef( const (*var*) targetEnvironmentName: Str63; var environment: LAEnvironmentRef ): OSStatus; external name '_LAGetEnvironmentRef';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LACreateCustomEnvironment()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LACreateCustomEnvironment( baseEnvironment: LAEnvironmentRef; const (*var*) newEnvironmentName: Str63; persistent: Boolean; var newEnvironment: LAEnvironmentRef ): OSStatus; external name '_LACreateCustomEnvironment';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LADeleteCustomEnvironment()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LADeleteCustomEnvironment( environment: LAEnvironmentRef ): OSStatus; external name '_LADeleteCustomEnvironment';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
-    Handling dictionaries
-}
-{
- *  LAOpenDictionary()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAOpenDictionary( environ: LAEnvironmentRef; const (*var*) dictionary: FSSpec ): OSStatus; external name '_LAOpenDictionary';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LACloseDictionary()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LACloseDictionary( environ: LAEnvironmentRef; const (*var*) dictionary: FSSpec ): OSStatus; external name '_LACloseDictionary';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAListAvailableDictionaries()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAListAvailableDictionaries( environ: LAEnvironmentRef; maxCount: ItemCount; var actualCount: ItemCount; dictionaryList: {variable-size-array} FSSpecPtr; opened: {variable-size-array} BooleanPtr ): OSStatus; external name '_LAListAvailableDictionaries';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAAddNewWord()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAAddNewWord( environ: LAEnvironmentRef; const (*var*) dictionary: FSSpec; const (*var*) dataList: AEDesc ): OSStatus; external name '_LAAddNewWord';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
-    Analyzing text
-}
-{
- *  LAMorphemeAnalysis()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAMorphemeAnalysis( context: LAContextRef; text: ConstUniCharArrayPtr; textLength: UniCharCount; var leadingPath: LAMorphemePath; var trailingPath: LAMorphemePath; pathCount: ItemCount; var result: LAMorphemeBundle ): OSStatus; external name '_LAMorphemeAnalysis';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAContinuousMorphemeAnalysis()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAContinuousMorphemeAnalysis( context: LAContextRef; text: ConstUniCharArrayPtr; textLength: UniCharCount; incrementalText: Boolean; var leadingPath: LAMorphemePath; var trailingPath: LAMorphemePath; var modified: Boolean ): OSStatus; external name '_LAContinuousMorphemeAnalysis';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAGetMorphemes()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAGetMorphemes( context: LAContextRef; var result: LAMorphemePath ): OSStatus; external name '_LAGetMorphemes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAShiftMorphemes()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAShiftMorphemes( context: LAContextRef; morphemeCount: ItemCount; var path: LAMorphemePath; var shiftedLength: UniCharCount ): OSStatus; external name '_LAShiftMorphemes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{
- *  LAResetAnalysis()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The Language Analysis Manager is deprecated. Use
- *    CFStringTokenizer instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in ApplicationServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in LanguageAnalysisLib 1.0 and later
- }
-function LAResetAnalysis( context: LAContextRef ): OSStatus; external name '_LAResetAnalysis';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER_BUT_DEPRECATED_IN_MAC_OS_X_VERSION_10_5 *)
-
-
-{$endc} {not TARGET_CPU_64}
-
-{$endc} {not TARGET_CPU_64}
 
 {
     Check Language Analysis Manager availability

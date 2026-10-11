@@ -35,28 +35,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -69,29 +58,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -101,23 +72,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -157,11 +111,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -299,106 +249,7 @@ function Gestalt( selector: OSType; var response: SInt32 ): OSErr; external name
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_8, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  ReplaceGestalt()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use NewGestaltValue instead wherever possible.
- *
- *  Summary:
- *    Replaces the gestalt function associated with a selector.
- *
- *  Discussion:
- *    The ReplaceGestalt function replaces the selector function
- *    associated with an existing selector code.
- *
- *    So that your function can call the function previously associated
- *    with the selector, ReplaceGestalt places the address of the old
- *    selector function in the oldGestaltFunction parameter. If
- *    ReplaceGestalt returns an error of any type, then the value of
- *    oldGestaltFunction is undefined.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Parameters:
- *
- *    selector:
- *      the selector to replace
- *
- *    gestaltFunction:
- *      a UPP for the new selector function
- *
- *    oldGestaltFunction:
- *      on exit, a pointer to the UPP of the previously associated with
- *      the specified selector
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function ReplaceGestalt( selector: OSType; gestaltFunction: SelectorFunctionUPP; var oldGestaltFunction: SelectorFunctionUPP ): OSErr; external name '_ReplaceGestalt';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
 
-
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  NewGestalt()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use NewGestaltValue instead wherever possible.
- *
- *  Summary:
- *    Adds a selector code to those already recognized by Gestalt.
- *
- *  Discussion:
- *    The NewGestalt function registers a specified selector code with
- *    the Gestalt Manager so that when the Gestalt function is called
- *    with that selector code, the specified selector function is
- *    executed. Before calling NewGestalt, you must define a selector
- *    function callback. See SelectorFunctionProcPtr for a description
- *    of how to define your selector function.
- *
- *    Registering with the Gestalt Manager is a way for software such
- *    as system extensions to make their presence known to potential
- *    users of their services.
- *
- *    In Mac OS X, the selector and replacement value are on a
- *    per-context basis. That means they are available only to the
- *    application or other code that installs them. You cannot use this
- *    function to make information available to another process.
- *
- *    A Gestalt selector registered with NewGestalt() can not be
- *    deleted.
- *
- *  Mac OS X threading:
- *    Thread safe since version 10.3
- *
- *  Parameters:
- *
- *    selector:
- *      the selector to create
- *
- *    gestaltFunction:
- *      a UPP for the new selector function, which Gestalt executes
- *      when it receives the new selector code. See
- *      SelectorFunctionProcPtr for more information on the callback
- *      you need to provide.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.3
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function NewGestalt( selector: OSType; gestaltFunction: SelectorFunctionUPP ): OSErr; external name '_NewGestalt';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_3, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  NewGestaltValue()

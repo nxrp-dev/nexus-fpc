@@ -44,9 +44,7 @@ type
     _tabHeight: CGFloat;
     _tabViewItemWithKeyView: NSTabViewItem;
     _originalNextKeyView: NSView;
-    {$if defined(__LP64__)}
     _tabViewMinimumSizeConstraint: NSLayoutConstraint;
-    {$endif}
     _delegateRespondTo: bitpacked record
       case byte of
         0: (_anonBitField__delegateRespondTo0: cuint);

@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -372,327 +322,6 @@ const
    }
 	kHIComboBoxNumVisibleItemsTag = FourCharCode('cbni'); { UInt32}
 
-{$ifc not TARGET_CPU_64}
-{
- *  HIComboBoxCreate()
- *
- *  Summary:
- *    Creates a combo box view. The new view is initially invisible.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    boundsRect:
- *      The bounding box of the view.
- *
- *    text:
- *      The default text in the editable portion of the view. Can be
- *      NULL.
- *
- *    style:
- *      The font style of the both editable text and the text in the
- *      disclosure list. Can be NULL.
- *
- *    list:
- *      The default values available in the disclosure list. Can be
- *      NULL.
- *
- *    inAttributes:
- *      The default attributes of the combo box.
- *
- *    outComboBox:
- *      On exit, contains the new view.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxCreate( const (*var*) boundsRect: HIRect; text: CFStringRef { can be NULL }; {const} style: ControlFontStyleRecPtr { can be NULL }; list: CFArrayRef { can be NULL }; inAttributes: OptionBits; var outComboBox: HIViewRef ): OSStatus; external name '_HIComboBoxCreate';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxGetItemCount()
- *
- *  Summary:
- *    Get the number of items in the combo box disclosure list.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box.
- *
- *  Result:
- *    The number of items in the combo box disclosure list.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxGetItemCount( inComboBox: HIViewRef ): ItemCount; external name '_HIComboBoxGetItemCount';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxInsertTextItemAtIndex()
- *
- *  Summary:
- *    Inserts a CFString in the disclosure list
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose disclosure list the text will be inserted
- *      in.
- *
- *    inIndex:
- *      The index that the text should be inserted in. If the index
- *      does not fall within the number of items in the combo box list,
- *      it will be appended to the end of the list.
- *
- *    inText:
- *      The text item to be inserted in the combo box disclosure list.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxInsertTextItemAtIndex( inComboBox: HIViewRef; inIndex: CFIndex; inText: CFStringRef ): OSStatus; external name '_HIComboBoxInsertTextItemAtIndex';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxAppendTextItem()
- *
- *  Summary:
- *    Appends a text item to the combo box disclosure list.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose disclosure list the text will be appended
- *      to.
- *
- *    inText:
- *      The text item to be appended to the combo box disclosure list.
- *
- *    outIndex:
- *      On exit, the index of the new item. Can be NULL if the caller
- *      does not require this information.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxAppendTextItem( inComboBox: HIViewRef; inText: CFStringRef; outIndex: CFIndexPtr { can be NULL } ): OSStatus; external name '_HIComboBoxAppendTextItem';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxCopyTextItemAtIndex()
- *
- *  Summary:
- *    Copy the text from the combo box disclosure list
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box that contains the text item you would like to
- *      copy.
- *
- *    inIndex:
- *      The index of the text item. Will return paramErr if the index
- *      is out of bounds of the combo box list.
- *
- *    outString:
- *      A copy of the string at the given index. Remember this is now
- *      your copy that you will need to release.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxCopyTextItemAtIndex( inComboBox: HIViewRef; inIndex: CFIndex; var outString: CFStringRef ): OSStatus; external name '_HIComboBoxCopyTextItemAtIndex';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxRemoveItemAtIndex()
- *
- *  Summary:
- *    Remove an item from a combo box disclosure list.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box that contains the disclosure list that you would
- *      like to remove an item from.
- *
- *    inIndex:
- *      The index of the item to remove.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxRemoveItemAtIndex( inComboBox: HIViewRef; inIndex: CFIndex ): OSStatus; external name '_HIComboBoxRemoveItemAtIndex';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxChangeAttributes()
- *
- *  Summary:
- *    Change the attributes of a combo box
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose attributes you would like to change.
- *
- *    inAttributesToSet:
- *      The attributes to set.
- *
- *    inAttributesToClear:
- *      The attributes to clear.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxChangeAttributes( inComboBox: HIViewRef; inAttributesToSet: OptionBits; inAttributesToClear: OptionBits ): OSStatus; external name '_HIComboBoxChangeAttributes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxGetAttributes()
- *
- *  Summary:
- *    Get the attributes of a combo box.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose attributes you would like to obtain.
- *
- *    outAttributes:
- *      The attributes of the combo box.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.2 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.2 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxGetAttributes( inComboBox: HIViewRef; var outAttributes: OptionBits ): OSStatus; external name '_HIComboBoxGetAttributes';
-(* AVAILABLE_MAC_OS_X_VERSION_10_2_AND_LATER *)
-
-
-{
- *  HIComboBoxIsListVisible()
- *
- *  Summary:
- *    Returns whether the combo box list is currently disclosed.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose list visibility you would like to obtain.
- *
- *  Result:
- *    A boolean value indicating whether the combo box list is
- *    disclosed (true) or hidden (false).
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxIsListVisible( inComboBox: HIViewRef ): Boolean; external name '_HIComboBoxIsListVisible';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIComboBoxSetListVisible()
- *
- *  Summary:
- *    Hides or shows the combo box list.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inComboBox:
- *      The combo box whose list will be hidden or shown.
- *
- *    inVisible:
- *      A boolean value indicating whether you wish to hide the list
- *      (false) or show the list (true).
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIComboBoxSetListVisible( inComboBox: HIViewRef; inVisible: Boolean ): OSStatus; external name '_HIComboBoxSetListVisible';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

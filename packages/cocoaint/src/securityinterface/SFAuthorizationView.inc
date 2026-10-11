@@ -22,20 +22,7 @@ type
 type
   SFAuthorizationView = objcclass external (NSView)
   private
-    {$if (defined(__LP64__))}
     _reserved_SFAuthorizationView: id;
-    {$else}
-    _button: SFAnimatedLockButton;
-    _textButton: NSButton;
-    _authorizationRights: AuthorizationRightsPtr;
-    _authorization: SFAuthorization;
-    _delegate: id;
-    _currentState: SFAuthorizationViewState;
-    _authorized: ObjCBOOL;
-    _timeInterval: NSTimeInterval;
-    _flags: AuthorizationFlags;
-    _privateData: id;
-    {$endif}
   public
     procedure setString (authorizationString_: AuthorizationString); message 'setString:';
     procedure setAuthorizationRights (authorizationRights: AuthorizationRightsPtr); message 'setAuthorizationRights:';

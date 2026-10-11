@@ -31,28 +31,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -65,29 +54,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -97,23 +68,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -153,11 +107,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -1342,70 +1292,6 @@ procedure MPBlockClear( address: LogicalAddress; size: ByteCount ); external nam
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_7, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  MPDataToCode()   *** DEPRECATED ***
- *
- *  Mac OS X threading:
- *    Thread safe
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.7
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in MPLibrary 2.0 and later
- }
-procedure MPDataToCode( address: LogicalAddress; size: ByteCount ); external name '_MPDataToCode';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_7, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{ NOTE:    MPDataToCode is not supported for 64-bit applications. Use mprotect(2) instead.}
-
-
-{
-   ¤
-   ===========================================================================================
-   Exception/Debugging Services
-   ============================
-}
-
-
-{
-   -------------------------------------------------------------------------------------------
-   *** Important Note ***
-   ----------------------
-
-   The functions MPExtractTaskState and MPSetTaskState infer the size of the "info" buffer
-   from the "kind" parameter.  A given value for MPTaskStateKind will always refer to a
-   single specific physical buffer layout.  Should new register sets be added, or the size
-   or number of any registers change, new values of MPTaskStateKind will be introduced to
-   refer to the new buffer layouts.
-
-   The following types for the buffers are in MachineExceptions. The correspondence between
-   MPTaskStateKind values and MachineExceptions types is:
-
-        kMPTaskStateRegisters               -> RegisterInformation
-        kMPTaskStateFPU                     -> FPUInformation
-        kMPTaskStateVectors                 -> VectorInformation
-        kMPTaskStateMachine                 -> MachineInformation
-        kMPTaskState32BitMemoryException    -> ExceptionInfo for old-style 32-bit memory exceptions
-
-    For reference, on PowerPC the MachineExceptions types contain:
-
-        RegisterInformation -> The GPRs, 32 values of 64 bits each.
-        FPUInformation      -> The FPRs plus FPSCR, 32 values of 64 bits each, one value of
-                                32 bits.
-        VectorInformation   -> The AltiVec vector registers plus VSCR and VRSave, 32 values
-                                of 128 bits each, one value of 128 bits, and one 32 bit value.
-        MachineInformation  -> The CTR, LR, PC, each of 64 bits.  The CR, XER, MSR, MQ,
-                                exception kind, and DSISR, each of 32 bits.  The 64 bit DAR.
-        ExceptionInfo       -> Only memory exceptions are specified, 4 fields of 32 bits each.
-                                Note that this type only covers memory exceptions on 32-bit CPUs!
-   The following types are declared here:
-        kMPTaskStateTaskInfo                -> MPTaskInfo
-}
-
-
-{$endc} {not TARGET_CPU_64}
 
 const
 { Values for the TaskStateKind to MPExtractTaskState and MPSetTaskState.}

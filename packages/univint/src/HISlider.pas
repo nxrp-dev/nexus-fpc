@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -294,199 +244,6 @@ const
 {$ifc USE_CFSTR_CONSTANT_MACROS}
 {$definec kHISliderClassID CFSTRP('com.apple.HISlider')}
 {$endc}
-{$ifc not TARGET_CPU_64}
-{
- *  CreateSliderControl()
- *
- *  Summary:
- *    Creates a slider control with the specified settings.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    window:
- *      The window in which to create the slider.
- *
- *    boundsRect:
- *      The bounds with which to create the slider.
- *
- *    value:
- *      The initial value of the slider. Should be in the range of the
- *      minimum and maximum values.
- *
- *    minimum:
- *      The minimum value of the slider. Should be less than the
- *      maximum.
- *
- *    maximum:
- *      The maximum value of the slider. Should be greater than the
- *      minimum.
- *
- *    orientation:
- *      The orientation of the slider.
- *
- *    numTickMarks:
- *      The number of tick marks of the slider. The orientation must
- *      not support tick marks if this value is non-zero.
- *
- *    liveTracking:
- *
- *    liveTrackingProc:
- *
- *    outControl:
- *      A pointer to a ControlRef in which to store a reference to the
- *      created slider.
- *
- *  Result:
- *    An operating system status code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        in CarbonLib 1.1 and later
- *    Non-Carbon CFM:   not available
- }
-function CreateSliderControl( window: WindowRef; const (*var*) boundsRect: Rect; value: SInt32; minimum: SInt32; maximum: SInt32; orientation: ControlSliderOrientation; numTickMarks: UInt16; liveTracking: Boolean; liveTrackingProc: ControlActionUPP; var outControl: ControlRef ): OSStatus; external name '_CreateSliderControl';
-(* AVAILABLE_MAC_OS_X_VERSION_10_0_AND_LATER *)
-
-
-{
- *  HISliderGetThumbOrientation()
- *
- *  Summary:
- *    Get the orientation of the thumb of a slider.
- *
- *  Discussion:
- *    Available only on Mac OS X 10.5 and later.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSlider:
- *      A reference to the slider from which to retrieve the thumb
- *      orientation.
- *
- *  Result:
- *    The current thumb orientation of the specified slider. The
- *    incoming slider reference must be valid or the return value is
- *    undefined.
- *
- *  Availability:
- *    Mac OS X:         in version 10.5 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function HISliderGetThumbOrientation( inSlider: HIViewRef ): ControlSliderOrientation; external name '_HISliderGetThumbOrientation';
-(* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
-
-
-{
- *  HISliderSetThumbOrientation()
- *
- *  Summary:
- *    Set the orientation of the thumb of a slider.
- *
- *  Discussion:
- *    Available only on Mac OS X 10.5 and later. This call may change
- *    the bounds needed to draw the slider fully. If changing the
- *    orientation so that tick marks will appear/disappear, be sure to
- *    resize the control to its optimal size if necessary.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSlider:
- *      A reference to the slider from which to retrieve the thumb
- *      orientation.
- *
- *    inOrientation:
- *      A ControlSliderOrientation for the desired thumb orientation.
- *
- *  Result:
- *    An OSStatus code indicating success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.5 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function HISliderSetThumbOrientation( inSlider: HIViewRef; inOrientation: ControlSliderOrientation ): OSStatus; external name '_HISliderSetThumbOrientation';
-(* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
-
-
-{
- *  HISliderGetTickMarkCount()
- *
- *  Summary:
- *    Get the tick mark count of a slider.
- *
- *  Discussion:
- *    Available only on Mac OS X 10.5 and later.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSlider:
- *      A reference to the slider for which to get the tick mark count.
- *
- *  Result:
- *    The current tick mark count of the specified slider. The incoming
- *    slider reference must be valid or the return value is undefined.
- *
- *  Availability:
- *    Mac OS X:         in version 10.5 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function HISliderGetTickMarkCount( inSlider: HIViewRef ): ItemCount; external name '_HISliderGetTickMarkCount';
-(* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
-
-
-{
- *  HISliderSetTickMarkCount()
- *
- *  Summary:
- *    Set the tick mark count of a slider. Tick marks will not appear
- *    on a slider unless its orientation is pointy (i.e.
- *    kControlSliderPointsDownOrRight/UpOrLeft) This call may change
- *    the bounds needed to draw the slider fully. If changing the tick
- *    mark count so that tick marks will appear/disappear, be sure to
- *    resize the control to its optimal size if necessary.
- *
- *  Discussion:
- *    Available only on Mac OS X 10.5 and later.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inSlider:
- *      A reference to the slider for which to set the tick mark count.
- *
- *    inNumTicks:
- *      The desired number of tick marks.
- *
- *  Result:
- *    An OSStatus code indicating success or failure.
- *
- *  Availability:
- *    Mac OS X:         in version 10.5 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function HISliderSetTickMarkCount( inSlider: HIViewRef; inNumTicks: ItemCount ): OSStatus; external name '_HISliderSetTickMarkCount';
-(* AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

@@ -40,28 +40,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -74,29 +63,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -106,23 +77,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -162,11 +116,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -231,115 +181,6 @@ type
  * picture header. If the URL does not begin PICT data at one
  * of these places in the data fork then the QDPictRef returned will be NULL.
 }
-{$ifc not TARGET_CPU_64}
-{
- *  QDPictCreateWithProvider()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function QDPictCreateWithProvider( provider: CGDataProviderRef ): QDPictRef; external name '_QDPictCreateWithProvider';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Create a QDPict reference from `url'.
- * It is assumed that either the first byte or the 513th byte of data
- * in the file referenced by the URL is the first byte of the
- * picture header. If the URL does not begin PICT data at one
- * of these places in the data fork then the QDPictRef returned will be NULL.
-}
-{
- *  QDPictCreateWithURL()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function QDPictCreateWithURL( url: CFURLRef ): QDPictRef; external name '_QDPictCreateWithURL';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Increment the retain count of `pictRef' and return it.  All
- * pictRefs are created with an initial retain count of 1. }
-{
- *  QDPictRetain()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function QDPictRetain( pictRef: QDPictRef ): QDPictRef; external name '_QDPictRetain';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Decrement the retain count of `pictRef'.  If the retain count reaches 0,
- * then free it and any associated resources. }
-{
- *  QDPictRelease()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-procedure QDPictRelease( pictRef: QDPictRef ); external name '_QDPictRelease';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Return the Picture Bounds of the QuickDraw picture represented by `pictRef'. This
-    rectangle is in the default user space with one unit = 1/72 inch.
-}
-{
- *  QDPictGetBounds()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function QDPictGetBounds( pictRef: QDPictRef ): CGRect; external name '_QDPictGetBounds';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Return the resolution of the QuickDraw picture represented by `pictRef'.
-    This data, together with the CGRect returned by QDPictGetBounds, can be
-    used to compute the size of the picture in pixels, which is what QuickDraw
-    really records into pictures.
-}
-{
- *  QDPictGetResolution()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-procedure QDPictGetResolution( pictRef: QDPictRef; var xRes: Float32; var yRes: Float32 ); external name '_QDPictGetResolution';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{ Draw `pictRef' in the rectangular area specified by `rect'.
- * The PICT bounds of the page is scaled, if necessary, to fit into
- * `rect'. To get unscaled results, supply a rect the size of the rect
- * returned by QDPictGetBounds.
-}
-{
- *  QDPictDrawToCGContext()
- *
- *  Availability:
- *    Mac OS X:         in version 10.1 and later in ApplicationServices.framework [32-bit only]
- *    CarbonLib:        not available
- *    Non-Carbon CFM:   not available
- }
-function QDPictDrawToCGContext( ctx: CGContextRef; rect: CGRect; pictRef: QDPictRef ): OSStatus; external name '_QDPictDrawToCGContext';
-(* AVAILABLE_MAC_OS_X_VERSION_10_1_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}{$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}
 

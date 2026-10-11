@@ -19,9 +19,7 @@ type
           _reservedPredicateFlags: 0..((1 shl 31)-1);
         );
       end;
-    {$ifdef __LP64__}
     reserved: cuint32;
-    {$endif}
   public
     class function predicateWithFormat_argumentArray (predicateFormat: NSString; arguments: NSArray): NSPredicate; message 'predicateWithFormat:argumentArray:';
     class function predicateWithFormat (predicateFormat: NSString): NSPredicate; varargs; message 'predicateWithFormat:';

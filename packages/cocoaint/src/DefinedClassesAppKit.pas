@@ -85,9 +85,6 @@ type
   NSMenu = objcclass external;
   NSMenuItem = objcclass external;
   NSMenuItemCell = objcclass external;
-  NSMenuView = objcclass external;
-  NSMovie = objcclass external;
-  NSMovieView = objcclass external;
   NSMutableFontCollection = objcclass external;
   NSMutableParagraphStyle = objcclass external;
   NSNib = objcclass external;
@@ -126,7 +123,6 @@ type
   NSPrintPanel = objcclass external;
   NSPrinter = objcclass external;
   NSProgressIndicator = objcclass external;
-  NSQuickDrawView = objcclass external;
   NSResponder = objcclass external;
   NSRotationGestureRecognizer = objcclass external;
   NSRuleEditor = objcclass external;
@@ -146,7 +142,6 @@ type
   NSShadow = objcclass external;
   NSSharingService = objcclass external;
   NSSharingServicePicker = objcclass external;
-  NSSimpleHorizontalTypesetter = objcclass external;
   NSSlider = objcclass external;
   NSSliderCell = objcclass external;
   NSSound = objcclass external;
@@ -364,7 +359,6 @@ type
   NSUserActivity = objcclass external;
   NSUserDefaults = objcclass external;
   NSWindowAuxiliary = objcclass external;
-  QTMovie = objcclass external;
   _NSImageAuxiliary = objcclass external;
   _NSOVRowEntry = objcclass external;
   _NSViewAuxiliary = objcclass external;

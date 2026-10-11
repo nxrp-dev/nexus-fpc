@@ -14,9 +14,7 @@ type
     _titleWidth: CGFloat;
     _titleCell: id;
     _titleEndPoint: CGFloat;
-    {$if defined(__LP64__)}
     _preferredTextFieldWidth: CGFloat;
-    {$endif}
   public
     function initTextCell (aString: NSString): instancetype; message 'initTextCell:';
     function titleWidth (aSize: NSSize): CGFloat; message 'titleWidth:';

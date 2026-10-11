@@ -84,9 +84,6 @@ type
     _fontEffectsBox: id;
     _sizeStyle: cint;
     _mode: NSInteger;
-    {$if  not defined(__LP64__)}
-    _fpUnused:array[0..70] of id;
-    {$endif}
   public
     class function sharedFontPanel: NSFontPanel; message 'sharedFontPanel';
     class function sharedFontPanelExists: ObjCBOOL; message 'sharedFontPanelExists';

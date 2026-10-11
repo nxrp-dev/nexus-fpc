@@ -31,28 +31,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -65,29 +54,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -97,23 +68,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -153,11 +107,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -1030,28 +980,6 @@ const
 	smKCHRCache = 38;   {Returns pointer to KCHR cache}
 	smRegionCode = 40;    {Returns current region code (verXxx)}
 
-{$ifc not TARGET_CPU_64}
-const
-	smVersion = 0;    {Script Manager version number}
-	smMunged = 2;    {Globals change count}
-	smEnabled = 4;    {Count of enabled scripts, incl Roman}
-	smBidirect = 6;    {At least one bidirectional script}
-	smFontForce = 8;    {Force font flag}
-	smIntlForce = 10;   {Force intl flag}
-	smForced = 12;   {Script was forced to system script}
-	smDefault = 14;   {Script was defaulted to Roman script}
-	smPrint = 16;   {Printer action routine}
-	smLastScript = 20;   {Last keyboard script}
-	smSysRef = 24;   {System folder refNum}
-	smKeyCache = 26;   {obsolete}
-	smKeySwap = 28;   {Swapping table handle}
-	smGenFlags = 30;   {General flags long}
-	smOverride = 32;   {Script override flags}
-	smCharPortion = 34;   {Ch vs SpExtra proportion}
-	smDoubleByte = 36;   {Flag for double-byte script installed}
-	smKeyDisableState = 42;    {Returns current keyboard disable state}
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  GetScriptManagerVariable()   *** DEPRECATED ***
@@ -1140,14 +1068,6 @@ function SetScriptManagerVariable( selector: SInt16; param: SIGNEDLONG ): OSErr;
 (* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$ifc not TARGET_CPU_64}
-{ Values for script redraw flag. }
-const
-	smRedrawChar = 0;    {Redraw character only}
-	smRedrawWord = 1;    {Redraw entire word (2-byte systems)}
-	smRedrawLine = -1;    {Redraw entire line (bidirectional systems)}
-
-{$endc} {not TARGET_CPU_64}
 
 { Bits in the smScriptFlags word }
 {  (bits above 8 are non-static) }
@@ -1168,449 +1088,10 @@ const
 { GetScriptVariable and SetScriptVariable verbs (deprecated). }
 { Note: Verbs private to script systems are negative, while }
 { those general across script systems are non-negative. }
-{$ifc not TARGET_CPU_64}
-const
-	smScriptVersion = 0;    {Script software version}
-	smScriptMunged = 2;    {Script entry changed count}
-	smScriptEnabled = 4;    {Script enabled flag}
-	smScriptRight = 6;    {Right to left flag}
-	smScriptJust = 8;    {Justification flag}
-	smScriptRedraw = 10;   {Word redraw flag}
-	smScriptSysFond = 12;   {Preferred system font}
-	smScriptAppFond = 14;   {Preferred Application font}
-	smScriptBundle = 16;   {Beginning of itlb verbs}
-	smScriptNumber = 16;   {Script itl0 id}
-	smScriptDate = 18;   {Script itl1 id}
-	smScriptSort = 20;   {Script itl2 id}
-	smScriptFlags = 22;   {flags word}
-	smScriptToken = 24;   {Script itl4 id}
-	smScriptEncoding = 26;   {id of optional itl5, if present}
-	smScriptLang = 28;   {Current language for script}
-	smScriptNumDate = 30;   {Script Number/Date formats.}
-	smScriptKeys = 32;   {Script KCHR id}
-	smScriptIcon = 34;   {ID # of SICN or kcs#/kcs4/kcs8 suite}
-	smScriptPrint = 36;   {Script printer action routine}
-	smScriptTrap = 38;   {Trap entry pointer}
-	smScriptCreator = 40;   {Script file creator}
-	smScriptFile = 42;   {Script file name}
-	smScriptName = 44;   {Script name}
-                                        { There is a hole here for old Kanji private verbs 46-76 }
-	smScriptMonoFondSize = 78;   {default monospace FOND (hi) & size (lo)}
-	smScriptPrefFondSize = 80;   {preferred FOND (hi) & size (lo)}
-	smScriptSmallFondSize = 82;   {default small FOND (hi) & size (lo)}
-	smScriptSysFondSize = 84;   {default system FOND (hi) & size (lo)}
-	smScriptAppFondSize = 86;   {default app FOND (hi) & size (lo)}
-	smScriptHelpFondSize = 88;   {default Help Mgr FOND (hi) & size (lo)}
-	smScriptValidStyles = 90;   {mask of valid styles for script}
-	smScriptAliasStyle = 92;    {style (set) to use for aliases}
-
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{ WorldScript private verbs }
-{ special negative verbs for Get/SetScriptVariable that were associated with WorldScriptI }
-{ move them here to be public }
-const
-	smLayoutCache = -309; { HiWrd(param) is # entries, LoWrd is max input length}
-	smOldVerbSupport = -311; { param is added to old verbs to map to WSI verb}
-	smSetKashidas = -291; { param is ON or OFF, old verb = -36}
-	smSetKashProp = -287; { param is kashida proportion, old verb = -32}
-	smScriptSysBase = -281; { param is associated font to use w/ system font (old verb = -26)}
-	smScriptAppBase = -283; { param is associated font to use w/ app font (old verb = -28)}
-	smScriptFntBase = -285; { param is associated font to use w/ all other fonts (old verb = -30)}
-	smScriptLigatures = -263; { old verb = -8}
-	smScriptNumbers = -267;  { old verb = -12}
-
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  GetScriptVariable()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The replacement for GetScriptVariable depends on the selector
- *    used with it. Many of the selectors refer to information that is
- *    not meaningful on a Unicode system, or refer to details of the
- *    Script Manager itself; in general there is no replacement
- *    functionality for these.
- *    Selectors that have meaningful replacements are as follows (these
- *    are not direct replacements; they provide analogous but more
- *    modern functionality):
- *    1. smScriptLang - This was typically used with the system script
- *    to determine the system language. Instead, to obtain the user's
- *    preferred UI language, do:
- *    CFArrayRef langArray = (CFArrayRef)CFPreferencesCopyAppValue(
- *    CFSTR("AppleLanguages"), kCFPreferencesCurrentApplication );  //
- *
- *    the first entry in langArray indicates the preferred language.
- *    For Mac OS X 10.5 there is also a proposed API to return this.
- *
- *    2. Font selectors smScriptSysFond / smScriptSysFondSize,
- *    smScriptAppFond / smScriptAppFondSize,  smScriptMonoFondSize,
- *    smScriptPrefFondSize, smScriptSmallFondSize, smScriptHelpFondSize
- *    - On Mac OS X you generally do not need to worry about setting an
- *    appropriate font based on character script to ensure that
- *    characters are displayed correctly; Unicode encoding and font
- *    fallbacks (to automatically find a font that can display a
- *    character) take care of this.
- *    However for cases where you do need to do this (such as Carbon
- *    applications that handle non-Unicode text), the CoreText function
- *    CTFontCreateUIFontForLanguage (available in 10.5 and later)
- *    provides a way to get a CTFontRef for a specified language and UI
- *    usage.
- *    3. Script resource ID selectors smScriptNumber, smScriptDate,
- *    smScriptSort, smScriptToken - These were used in several ways.
- *    Sometimes they were used to get a resource ID so specific fields
- *    in the resource could be examined (e.g. to determine the
- *    appropriate decimal separator or time format). For this usage
- *    CFLocaleGetValue can now be used with an appropriate key (e.g.
- *    kCFLocaleDecimalSeparator) to get similar information (Much of
- *    the information associated with the resource specified by
- *    smScriptToken is not relevant for a Unicode system). Another
- *    usage was to get a resource ID (or a Handle) to pass to some
- *    other system function. For text sorting, this is replaced by the
- *    collation functionality in CFString. For formatting of times,
- *    dates, and numbers, this is replaced by functionality in
- *    CFLocale, CFDateFormatter, CFNumberFormatter.
- *    4. smScriptKeys - To determine an appropriate keyboard input
- *    source for a particular language, use
- *    TISCopyInputSourceForLanguage.
- *    5. smScriptIcon - To obtain an icon for a particular keyboard
- *    input source, use TISGetInputSourceProperty with the
- *    kTISPropertyIconRef or kTISPropertyIconImageURL key.
- *
- *  Summary:
- *    Check the value of a script system's variables.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetScriptVariable( script: SInt16; selector: SInt16 ): SIGNEDLONG; external name '_GetScriptVariable';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  SetScriptVariable()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The primary (perhaps only) recent usage of SetScriptVariable is
- *    to set a specific keyboard layout, as follows:
- *    err = SetScriptVariable(aScript, smScriptKeys, aKeyLayoutID);
- *    //
- *    KeyScript(aScript); //
- *    The replacement depends on whether the goal is to set the
- *    keyboard layout globally or for a specific TSMDocument.
- *    To set it globally, use TISSelectInputSource.
- *    To set it for a specific document, use the TSMDocument property
- *    kTSMDocumentInputSourceOverridePropertyTag.
- *
- *  Summary:
- *    Set the value of (some of) a script system's variables.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function SetScriptVariable( script: SInt16; selector: SInt16; param: SIGNEDLONG ): OSErr; external name '_SetScriptVariable';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
 
 
-{$endc} {not TARGET_CPU_64}
-
-{$ifc not TARGET_CPU_64}
-{
- *  GetSysDirection()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    The preferred replacement is +[NSParagraphStyle
- *    defaultWritingDirectionForLanguage:]. If you cannot use that, you
- *    may instead call CFLocaleGetLanguageCharacterDirection for the UI
- *    language in which the application is running. See discussion.
- *
- *  Discussion:
- *    Although GetSysDirection ostensibly provided an overall system
- *    direction, it was patched by the Language Manager in Classic Mac
- *    OS to provide a direction appropriate for the application that
- *    was running. This is similar to the desired behavior in Mac OS X,
- *    in which an application is normally interested in the text
- *    direction associated with the user-interface language in which it
- *    is running (e.g. the first language in the array returned by
- *    CFBundleCopyPreferredLocalizationsFromArray when given the
- *    application's bundle localizations).
- *
- *    Calling +[NSParagraphStyle defaultWritingDirectionForLanguage:]
- *    is the preferred way to determine this. If that is not possible
- *    for your application, then an alternative is to call
- *    CFLocaleGetLanguageCharacterDirection for the application's
- *    user-interface language (determined as described above).
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetSysDirection: SInt16; external name '_GetSysDirection';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  SetSysDirection()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    No longer needed on MacOS X.
- *
- *  Discussion:
- *    This function is obsolete.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure SetSysDirection( value: SInt16 ); external name '_SetSysDirection';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  FontScript()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use ATSFontFamilyGetEncoding instead.
- *
- *  Discussion:
- *    This function returns the ScriptCode of the font of the Quickdraw
- *    grafPort or - if that font is Roman and the smFontForce flag is
- *    true - it returns the system ScriptCode. Both the Quickdraw
- *    grafPort and the ScriptCode type are deprecated. Instead, you can
- *    obtain the TextEncoding for an ATSFontFamilyRef using the
- *    function ATSFontFamilyGetEncoding. To get an ATSFontFamilyRef for
- *    a (deprecated) Quickdraw-style FMFontFamily ID, use the
- *    deprecated Quickdraw function FMGetATSFontFamilyRefFromFontFamily.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function FontScript: SInt16; external name '_FontScript';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  IntlScript()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use ATSFontFamilyGetEncoding instead.
- *
- *  Discussion:
- *    This function returns the ScriptCode of the font of the Quickdraw
- *    grafPort or - if the smIntlForce flag is true - it returns the
- *    system ScriptCode. Both the Quickdraw grafPort and the ScriptCode
- *    type are deprecated. Instead, you can obtain the TextEncoding for
- *    an ATSFontFamilyRef using the function ATSFontFamilyGetEncoding.
- *    To get an ATSFontFamilyRef for a (deprecated) Quickdraw-style
- *    FMFontFamily ID, use the deprecated Quickdraw function
- *    FMGetATSFontFamilyRefFromFontFamily.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function IntlScript: SInt16; external name '_IntlScript';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  FontToScript()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Use FMGetATSFontFamilyRefFromFontFamily +
- *    ATSFontFamilyGetEncoding instead.
- *
- *  Discussion:
- *    This function returns the ScriptCode associated with a Quickdraw
- *    FMFontFamily ID. Both the FMFontFamily type and the ScriptCode
- *    type are deprecated. Instead, you can obtain the TextEncoding for
- *    an ATSFontFamilyRef using the function ATSFontFamilyGetEncoding.
- *    To get an ATSFontFamilyRef for a FMFontFamily ID, use the
- *    deprecated Quickdraw function FMGetATSFontFamilyRefFromFontFamily.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function FontToScript( fontNumber: SInt16 ): SInt16; external name '_FontToScript';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  CharacterByteType()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use the combination of CFString, UCGetCharProperty and
- *    CFCharacterSet  instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use the
- *    combination of CFString, UCGetCharProperty and CFCharacterSet
- *    instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function CharacterByteType( textBuf: Ptr; textOffset: SInt16; script: ScriptCode ): SInt16; external name '_CharacterByteType';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  CharacterType()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use the combination of CFString, UCGetCharProperty and
- *    CFCharacterSet  instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use the
- *    combination of CFString, UCGetCharProperty and CFCharacterSet
- *    instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function CharacterType( textBuf: Ptr; textOffset: SInt16; script: ScriptCode ): SInt16; external name '_CharacterType';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  TransliterateText()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use CFStringTransform instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use
- *    CFStringTransform instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function TransliterateText( srcHandle: Handle; dstHandle: Handle; target: SInt16; srcMask: SIGNEDLONG; script: ScriptCode ): OSErr; external name '_TransliterateText';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  FillParseTable()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    use the combination of CFString, UCGetCharProperty and
- *    CFCharacterSet  instead.
- *
- *  Discussion:
- *    This function is no longer recommended. Please use the
- *    combination of CFString, UCGetCharProperty and CFCharacterSet
- *    instead.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function FillParseTable( var table: CharByteTable; script: ScriptCode ): Boolean; external name '_FillParseTable';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  GetIntlResource()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    Depending on the information that GetIntlResource was being
- *    called to obtain, it can be replaced by the use of
- *    CFLocaleCopyCurrent to get an appropriate CFLocaleRef followed by
- *    one of the following:
- *
- *    - CFLocaleGetValue with keys such as kCFLocaleUsesMetricSystem,
- *    kCFLocaleDecimalSeparator, kCFLocaleCurrencySymbol.
- *
- *    - CFDateFormatterCreate to get an appropriate CFDateFormatterRef,
- *    followed by CFDateFormatterCopyProperty with keys such as
- *    kCFDateFormatterMonthSymbols, kCFDateFormatterWeekdaySymbols,
- *    kCFDateFormatterAMSymbol.
- *
- *    - CFNumberFormatterCreate to get an appropriate
- *    CFNumberFormatterRef, followed by CFNumberFormatterCopyProperty
- *    with keys such as kCFNumberFormatterCurrencyDecimalSeparator,
- *    kCFNumberFormatterMinusSign, kCFNumberFormatterPercentSymbol,
- *    kCFNumberFormatterNegativePrefix.
- *
- *  Discussion:
- *    GetIntlResource was used to get a handle to the specified
- *    international resource type (e.g. 'itl0', 'itl1', 'itl2, 'itl4').
- *    Typically the resource handle was then used to obtain
- *    locale-specific information, or was passed to a function that
- *    performed - for example - string comparison. GetIntlResource is
- *    no longer recommended; please use the replacements described in
- *    the "deprecated" section.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.5
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function GetIntlResource( theID: SInt16 ): Handle; external name '_GetIntlResource';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_5, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  ClearIntlResourceCache()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    No longer needed on MacOS X.
- *
- *  Discussion:
- *    This function is obsolete.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure ClearIntlResourceCache; external name '_ClearIntlResourceCache';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{
- *  GetIntlResourceTable()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    No longer needed on MacOS X.
- *
- *  Discussion:
- *    This function is obsolete.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-procedure GetIntlResourceTable( script: ScriptCode; tableCode: SInt16; var itlHandle: Handle; var offset: SIGNEDLONG; var length: SIGNEDLONG ); external name '_GetIntlResourceTable';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {
  *  GetScriptUtilityAddress()
@@ -1702,26 +1183,6 @@ procedure GetIntlResourceTable( script: ScriptCode; tableCode: SInt16; var itlHa
  }
 
 
-{$ifc not TARGET_CPU_64}
-{
- *  IntlTokenize()   *** DEPRECATED ***
- *
- *  Deprecated:
- *    No longer needed on MacOS X.
- *
- *  Discussion:
- *    This function is obsolete.
- *
- *  Availability:
- *    Mac OS X:         in version 10.0 and later in CoreServices.framework [32-bit only] but deprecated in 10.4
- *    CarbonLib:        in CarbonLib 1.0 and later
- *    Non-Carbon CFM:   in InterfaceLib 7.1 and later
- }
-function IntlTokenize( tokenParam: TokenBlockPtr ): TokenResults; external name '_IntlTokenize';
-(* __OSX_AVAILABLE_BUT_DEPRECATED(__MAC_10_0, __MAC_10_4, __IPHONE_NA, __IPHONE_NA) *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}

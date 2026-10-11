@@ -41,9 +41,6 @@ type
   NSVisualEffectView = objcclass external (NSView)
   private
     _NSVisualEffectViewInternal: NSVisualEffectViewInternalPtr;
-    {$if  not defined(__LP64__)}
-    _reserved:array[0..59] of cuint8;
-    {$endif}
     _anonStruct_NSVisualEffectView0: record
       case byte of
         0: (anonBitField_NSVisualEffectView0: cuint);

@@ -41,9 +41,7 @@ type
           RESERVED: 0..((1 shl 19)-1);
         );
       end;
-    {$if defined(__LP64__)}
     _popupReserved: id;
-    {$endif}
   public
     function initTextCell_pullsDown (stringValue_: NSString; pullDown: ObjCBOOL): instancetype; message 'initTextCell:pullsDown:';
     procedure setMenu(newValue: NSMenu); message 'setMenu:';

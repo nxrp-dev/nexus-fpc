@@ -307,22 +307,10 @@ type
   private
     bytes: PAnsiChar;
     numBytes: cint;
-    {$if defined(__LP64__)}
     _unused: cint;
-    {$endif}
   end;
 
 type
   NSConstantString = objcclass external (NSSimpleCString)
   end;
-{$endif}
-
-{$if defined(__LP64__)}
-
-{$else}
-{$ifdef EXTERNAL_SYMBOLS}
-var
-  _NSConstantStringClassReference: pointer; cvar; external;
-{$endif}
-
 {$endif}

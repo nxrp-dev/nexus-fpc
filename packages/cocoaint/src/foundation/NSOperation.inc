@@ -48,9 +48,7 @@ type
   private
     _private: id;
     _private1: cint32;
-    {$if defined(__LP64__)}
     _private1b: cint32;
-    {$endif}
   public
     procedure start; message 'start';
     procedure main; message 'main';

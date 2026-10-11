@@ -32,20 +32,8 @@ type
     _normalizedPosition: NSPoint;
     _privateFlags: NSInteger;
     _view: NSView;
-    {$if  not defined(__LP64__)}
-    _reserved1: id;
-    _reserved2: id;
-    _reserved3: id;
-    _reserved4: id;
-    {$endif}
     _device: id;
     _deviceSize: NSSize;
-    {$if  not defined(__LP64__)}
-    _reserved5: id;
-    _reserved6: id;
-    _reserved7: id;
-    _reserved8: id;
-    {$endif}
   public
     function identity: id; message 'identity';
     function phase: NSTouchPhase; message 'phase';

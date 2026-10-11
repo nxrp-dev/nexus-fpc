@@ -152,7 +152,6 @@
 {$include NSToolbar.inc}
 {$include NSTabViewController.inc}
 {$include NSTabViewItem.inc}
-{$include NSMenuView.inc}
 {$include NSPopUpButtonCell.inc}
 {$include NSAffineTransform.inc}
 {$include NSBezierPath.inc}
@@ -161,10 +160,7 @@
 {$include NSStatusBarButton.inc}
 {$include NSStatusItem.inc}
 {$include NSSound.inc}
-{$include NSMovie.inc}
-{$include NSMovieView.inc}
 {$include NSPDFImageRep.inc}
-{$include NSQuickDrawView.inc}
 {$include NSDrawer.inc}
 {$include NSOpenGL.inc}
 {$include NSOpenGLLayer.inc}
@@ -180,7 +176,6 @@
 {$include NSGlyphInfo.inc}
 {$include NSShadow.inc}
 {$include NSTypesetter.inc}
-{$include NSSimpleHorizontalTypesetter.inc}
 {$include NSATSTypesetter.inc}
 {$include NSSearchField.inc}
 {$include NSSearchFieldCell.inc}

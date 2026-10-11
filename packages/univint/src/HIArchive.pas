@@ -41,28 +41,17 @@ interface
     {$setc USE_CFSTR_CONSTANT_MACROS := TRUE}
 {$endc}
 
-{$ifc defined CPUPOWERPC and defined CPUI386}
-	{$error Conflicting initial definitions for CPUPOWERPC and CPUI386}
-{$endc}
 {$ifc defined FPC_BIG_ENDIAN and defined FPC_LITTLE_ENDIAN}
 	{$error Conflicting initial definitions for FPC_BIG_ENDIAN and FPC_LITTLE_ENDIAN}
 {$endc}
 
-{$ifc not defined __ppc__ and defined CPUPOWERPC32}
-	{$setc __ppc__ := 1}
-{$elsec}
 	{$setc __ppc__ := 0}
-{$endc}
 {$ifc not defined __ppc64__ and defined CPUPOWERPC64}
 	{$setc __ppc64__ := 1}
 {$elsec}
 	{$setc __ppc64__ := 0}
 {$endc}
-{$ifc not defined __i386__ and defined CPUI386}
-	{$setc __i386__ := 1}
-{$elsec}
 	{$setc __i386__ := 0}
-{$endc}
 {$ifc not defined __x86_64__ and defined CPUX86_64}
 	{$setc __x86_64__ := 1}
 {$elsec}
@@ -75,29 +64,11 @@ interface
   {$setc __arm64__ := 0}
 {$endc}
 
-{$ifc defined cpu64}
   {$setc __LP64__ := 1}
-{$elsec}
-  {$setc __LP64__ := 0}
-{$endc}
 
 
-{$ifc defined __ppc__ and __ppc__ and defined __i386__ and __i386__}
-	{$error Conflicting definitions for __ppc__ and __i386__}
-{$endc}
 
-{$ifc defined __ppc__ and __ppc__}
-	{$setc TARGET_CPU_PPC := TRUE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := FALSE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __ppc64__ and __ppc64__}
+{$ifc defined __ppc64__ and __ppc64__}
 	{$setc TARGET_CPU_PPC := FALSE}
 	{$setc TARGET_CPU_PPC64 := TRUE}
 	{$setc TARGET_CPU_X86 := FALSE}
@@ -107,23 +78,6 @@ interface
 	{$setc TARGET_OS_MAC := TRUE}
 	{$setc TARGET_OS_IPHONE := FALSE}
 	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-	{$setc TARGET_OS_EMBEDDED := FALSE}
-{$elifc defined __i386__ and __i386__}
-	{$setc TARGET_CPU_PPC := FALSE}
-	{$setc TARGET_CPU_PPC64 := FALSE}
-	{$setc TARGET_CPU_X86 := TRUE}
-	{$setc TARGET_CPU_X86_64 := FALSE}
-	{$setc TARGET_CPU_ARM := FALSE}
-	{$setc TARGET_CPU_ARM64 := FALSE}
-{$ifc defined iphonesim}
- 	{$setc TARGET_OS_MAC := FALSE}
-	{$setc TARGET_OS_IPHONE := TRUE}
-	{$setc TARGET_IPHONE_SIMULATOR := TRUE}
-{$elsec}
-	{$setc TARGET_OS_MAC := TRUE}
-	{$setc TARGET_OS_IPHONE := FALSE}
-	{$setc TARGET_IPHONE_SIMULATOR := FALSE}
-{$endc}
 	{$setc TARGET_OS_EMBEDDED := FALSE}
 {$elifc defined __x86_64__ and __x86_64__}
 	{$setc TARGET_CPU_PPC := FALSE}
@@ -163,11 +117,7 @@ interface
 	{$error __ppc__ nor __ppc64__ nor __i386__ nor __x86_64__ nor __arm__ nor __arm64__ is defined.}
 {$endc}
 
-{$ifc defined __LP64__ and __LP64__ }
   {$setc TARGET_CPU_64 := TRUE}
-{$elsec}
-  {$setc TARGET_CPU_64 := FALSE}
-{$endc}
 
 {$ifc defined FPC_BIG_ENDIAN}
 	{$setc TARGET_RT_BIG_ENDIAN := TRUE}
@@ -376,353 +326,6 @@ const
    }
 	kHIArchiveDecodingForEditor = 1 shl 1;
 
-{$ifc not TARGET_CPU_64}
-{
- *  HIArchiveGetTypeID()
- *
- *  Summary:
- *    Returns the CFType identifier for an HIArchive object.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Result:
- *    A CFTypeID unique to HIArchive instances.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveGetTypeID: CFTypeID; external name '_HIArchiveGetTypeID';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveCreateForEncoding()
- *
- *  Summary:
- *    Creates an HIArchive for use in encoding object information.
- *
- *  Discussion:
- *    The created HIArchiveRef is a CFType and must be released via
- *    CFRelease.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    outEncoder:
- *      An HIArchive reference which receives the created HIArchive on
- *      return.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveCreateForEncoding( var outEncoder: HIArchiveRef ): OSStatus; external name '_HIArchiveCreateForEncoding';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveEncodeBoolean()
- *
- *  Summary:
- *    Adds a keyed boolean value to the provided archive.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inEncoder:
- *      An HIArchiveRef to which the boolean value is added.
- *
- *    inKey:
- *      The key associated with the boolean value used for later
- *      decoding.
- *
- *    inBoolean:
- *      The boolean value to be encoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveEncodeBoolean( inEncoder: HIArchiveRef; inKey: CFStringRef; inBoolean: Boolean ): OSStatus; external name '_HIArchiveEncodeBoolean';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveEncodeNumber()
- *
- *  Summary:
- *    Adds a keyed number value to the provided archive.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inEncoder:
- *      An HIArchiveRef to which the number value is added.
- *
- *    inKey:
- *      The key associated with the number value used for later
- *      decoding.
- *
- *    inNumberType:
- *      A CFNumberType describing the type of number value being
- *      encoded.
- *
- *    inNumberValue:
- *      The number value to be encoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveEncodeNumber( inEncoder: HIArchiveRef; inKey: CFStringRef; inNumberType: CFNumberType; inNumberValue: {const} UnivPtr ): OSStatus; external name '_HIArchiveEncodeNumber';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveEncodeCFType()
- *
- *  Summary:
- *    Adds a keyed CFType to the provided archive.
- *
- *  Discussion:
- *    Encodes basic and property list based CFTypes including HIObjects
- *    supporting the archiving protocol. If the HIObject supports the
- *    archiving protocol, it will receive the kEventHIObjectEncode
- *    event during which it should encode all relevant state
- *    information. The kEventParamHIArchive parameter contains the
- *    archive into which data should be added.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inEncoder:
- *      An HIArchiveRef to which the CFType is added.
- *
- *    inKey:
- *      The key associated with the CFType used for later decoding.
- *
- *    inCFType:
- *      The CFType to be encoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveEncodeCFType( inEncoder: HIArchiveRef; inKey: CFStringRef; inCFType: CFTypeRef ): OSStatus; external name '_HIArchiveEncodeCFType';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveCopyEncodedData()
- *
- *  Summary:
- *    Returns the encoded archive as a CFDataRef.
- *
- *  Discussion:
- *    Compresses the archived data for storage and returns it as a
- *    CFDataRef. After the archived data is compressed, no further
- *    information may be encoded. Do not call this routine until the
- *    encoding process is complete.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inEncoder:
- *      An HIArchiveRef into which the archived data was compiled.
- *
- *    outData:
- *      A CFData reference which receives the compressed archive data
- *      on return.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveCopyEncodedData( inEncoder: HIArchiveRef; var outData: CFDataRef ): OSStatus; external name '_HIArchiveCopyEncodedData';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveCreateForDecoding()
- *
- *  Summary:
- *    Creates an HIArchive for use in decoding the object information
- *    contained in the provided CFData reference.
- *
- *  Discussion:
- *    The created HIArchiveRef is a CFType and must be released via
- *    CFRelease.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inData:
- *      A CFDataRef containing a previously encoded archive.
- *
- *    inOptions:
- *      The only option supported by this routine at present is
- *      kHIArchiveDecodeSuperclassForUnregisteredObjects. You may also
- *      pass zero for this parameter to get the default behavior.
- *
- *    outDecoder:
- *      An HIArchive reference which receives the created HIArchive on
- *      return.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveCreateForDecoding( inData: CFDataRef; inOptions: OptionBits; var outDecoder: HIArchiveRef ): OSStatus; external name '_HIArchiveCreateForDecoding';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveDecodeBoolean()
- *
- *  Summary:
- *    Pulls a keyed boolean value from the provided archive.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inDecoder:
- *      An HIArchiveRef from which the boolean value is pulled.
- *
- *    inKey:
- *      The key associated with the boolean value used while encoding.
- *
- *    outBoolean:
- *      The boolean value to be decoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveDecodeBoolean( inDecoder: HIArchiveRef; inKey: CFStringRef; var outBoolean: Boolean ): OSStatus; external name '_HIArchiveDecodeBoolean';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveDecodeNumber()
- *
- *  Summary:
- *    Pulls a keyed number value from the provided archive.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inDecoder:
- *      An HIArchiveRef from which the number value is pulled.
- *
- *    inKey:
- *      The key associated with the number value used while encoding.
- *
- *    inNumberType:
- *      A CFNumberType describing the type of number value being
- *      encoded.
- *
- *    outNumberValue:
- *      The number value to be decoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveDecodeNumber( inDecoder: HIArchiveRef; inKey: CFStringRef; inNumberType: CFNumberType; outNumberValue: UnivPtr ): OSStatus; external name '_HIArchiveDecodeNumber';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{
- *  HIArchiveCopyDecodedCFType()
- *
- *  Summary:
- *    Pulls a keyed CFType from the provided archive.
- *
- *  Discussion:
- *    Decodes basic and property list based CFTypes and HIObjects. If
- *    the CFType is an HIObject, it will be constructed and receive the
- *    kEventHIObjectInitialize event. The kEventParamHIArchive
- *    parameter contains the archive from which data should be
- *    retrieved.
- *
- *  Mac OS X threading:
- *    Not thread safe
- *
- *  Parameters:
- *
- *    inDecoder:
- *      An HIArchiveRef from which the CFType value is pulled.
- *
- *    inKey:
- *      The key associated with the CFType used while encoding.
- *
- *    outCFType:
- *      The CFType to be decoded.
- *
- *  Result:
- *    An operating system result code.
- *
- *  Availability:
- *    Mac OS X:         in version 10.4 and later in Carbon.framework [32-bit only]
- *    CarbonLib:        not available in CarbonLib 1.x, is available on Mac OS X version 10.4 and later
- *    Non-Carbon CFM:   not available
- }
-function HIArchiveCopyDecodedCFType( inDecoder: HIArchiveRef; inKey: CFStringRef; var outCFType: CFTypeRef ): OSStatus; external name '_HIArchiveCopyDecodedCFType';
-(* AVAILABLE_MAC_OS_X_VERSION_10_4_AND_LATER *)
-
-
-{$endc} {not TARGET_CPU_64}
 
 {$endc} {TARGET_OS_MAC}
 {$ifc not defined MACOSALLINCLUDE or not MACOSALLINCLUDE}
