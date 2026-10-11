@@ -1,3 +1,4 @@
+{ Also covers identical original fixture tisdigit3.pp. }
 program tgetnumericvalue3;
 
 {$ifdef FPC}
