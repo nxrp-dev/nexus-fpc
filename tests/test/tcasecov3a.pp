@@ -1,3 +1,4 @@
+{ Also covers identical original fixture tcasecov3b.pp. }
 { %result=201 }
 {$mode iso}
 
