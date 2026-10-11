@@ -55,6 +55,18 @@ var
 var tw1061_vlcnt:longint;
 {$pop}
 
+{ Case tw1222.pp }
+{$push}
+CONST
+    tw1222_c1=$80000000;
+    tw1222_c2=$80000001;
+    tw1222_c3=$80000002;
+    tw1222_c4=$80000003;
+    tw1222_cm=$80000007;
+
+VAR tw1222_v:dword;
+{$pop}
+
 begin
   { Case tb0034.pp }
   {$push}
@@ -166,6 +178,26 @@ begin
    11:writeln(11);
    end;
 end;
+  {$pop}
+
+  { Case tw1222.pp }
+  {$push}
+BEGIN
+  tw1222_v:=tw1222_c2;
+  CASE (tw1222_v AND tw1222_cm) OF
+    tw1222_c1,tw1222_c2:writeln('case c1,c2');
+    tw1222_c3,tw1222_c4:
+    begin
+      writeln('case c3,c4');
+      halt(1);
+    end;
+  ELSE
+    begin
+      writeln('case failed, but it should not');
+      halt(1);
+    end;
+  END;
+END;
   {$pop}
 
 end.
