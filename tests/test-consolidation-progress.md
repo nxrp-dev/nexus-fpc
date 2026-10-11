@@ -19,3 +19,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_variants_fpc_consolidated_01.pp` | 9 | 1 |
 | `tbs/tb_floating_point_delphi_consolidated_01.pp` | 5 | 1 |
 | `tbs/tb_floating_point_delphi_consolidated_02.pp` | 3 | 1 |
+| `tbs/tb_floating_point_fpc_consolidated_03.pp` | 5 | 1 |
