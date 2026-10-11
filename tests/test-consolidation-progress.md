@@ -83,3 +83,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `tbs/tb_classes_objfpc_consolidated_01.pp` | 19 | 1 |
 | `tbs/tb_control_flow_fpc_consolidated_02.pp` | 22 | 1 |
 | `tbs/tb_integers_objfpc_consolidated_01.pp` | 18 | 1 |
+| `tbs/tb_interfaces_delphi_consolidated_01.pp` | 3 | 1 |

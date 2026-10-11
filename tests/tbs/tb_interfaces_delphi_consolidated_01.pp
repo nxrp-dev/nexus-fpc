@@ -1,17 +1,24 @@
+{ Consolidated interfaces regressions; original case IDs and assertions are retained. }
+program nexus_consolidated_tests;
+{$mode delphi}
+uses sysutils;
+
+{ Case tb_interfaces_delphi_run_01.pp }
+{$push}
 { Interfaces regression cases; original case IDs are retained below. }
 
-{$mode delphi}
 
-uses SysUtils;
+
+
 
 { Case tw11862.pp }
 {$push}
 {$ifdef fpc}
-{$mode delphi}
+
 {$endif}
 
 type
-  tw11862_ttesttype = (testgetchild,testparent,testparentex);
+  tw11862_ttesttype = (tb_interfaces_delphi_run_01_testgetchild,tb_interfaces_delphi_run_01_testparent,tb_interfaces_delphi_run_01_testparentex);
 
   tw11862_itest = interface(IInterface)
     ['{FE6B16A6-A898-4B09-A46E-0AAC5E0A4E14}']
@@ -42,7 +49,7 @@ function tw11862_ttest.tw11862_parent: tw11862_itest;
 begin;
 writeln('ttest.parent');
 Result := nil;
-if (tw11862_test<>testparent) then
+if (tw11862_test<>tb_interfaces_delphi_run_01_testparent) then
   halt(1);
 end;
 
@@ -52,7 +59,7 @@ function tw11862_ttest.tw11862_parentex: tw11862_itestex;
 begin;
 writeln('ttest.parentex');
 Result := nil;
-if (tw11862_test<>testparentex) then
+if (tw11862_test<>tb_interfaces_delphi_run_01_testparentex) then
   halt(1);
 end;
 
@@ -60,7 +67,7 @@ function tw11862_ttest.tw11862_getchild: tw11862_itestex;
 begin;
 WriteLn('TTest.GetChild');
 Result := nil;
-if (tw11862_test<>testgetchild) then
+if (tw11862_test<>tb_interfaces_delphi_run_01_testgetchild) then
   halt(1);
 end;
 
@@ -76,7 +83,7 @@ var tw11862_e: tw11862_itestex;
 
 { Case tw14092.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw14092_iintf = interface(IUnknown)
@@ -126,7 +133,7 @@ var
 
 { Case tw2647.pp }
 {$push}
-{$mode Delphi}
+
 type
   tw2647_isenslogon = interface (IDispatch)
   ['{d597bab3-5b9f-11d1-8dd2-00aa004abd5e}']
@@ -142,7 +149,7 @@ type
 
 { Case tw3183a.pp }
 {$push}
-{$mode delphi}
+
 type
   tw3183a_ta = interface
     function tw3183a_a: longint;
@@ -155,7 +162,7 @@ type
 
 { Case tw8018.pp }
 {$push}
-{$mode delphi}
+
 
 type
   tw8018_itest = interface(iunknown)
@@ -189,7 +196,7 @@ var
 { Case tb0571.pp }
 {$push}
 {$ifdef fpc}
-{$mode delphi}
+
 {$endif fpc}
 
 { Some (delphi) applications expect that the QueryInterface method is invoked as first
@@ -243,6 +250,131 @@ begin
 end;
 {$pop}
 
+
+{$pop}
+
+{ Case tw2177.pp }
+{$push}
+
+{ Source provided for Free Pascal Bug Report 2177 }
+{ Submitted by "Rimgaudas" on  2002-10-14 }
+{ e-mail: rimga@ktl.mii.lt }
+{$ifdef fpc}{$endif}
+
+
+
+type
+  tw2177_ii= interface
+  ['{616D9683-88DC-4D1C-B847-1293DDFBACF7}']
+    procedure Show;stdcall;
+  end;
+
+  tw2177_Twii= class(TObject, tw2177_ii)
+    s: string;
+    function QueryInterface(constref IID: TGUID; out Obj): Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+    function _AddRef: Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+    function _Release: Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+
+    procedure Show;stdcall;
+  end;
+
+  {________doomy interfaces______}
+  function tw2177_Twii.QueryInterface(constref IID: TGUID; out Obj): Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+  begin
+    result:= -1;
+  end;
+
+  function tw2177_Twii._AddRef: Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+  begin
+    result:= -1;
+  end;
+
+  function tw2177_Twii._Release: Longint; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+  begin
+    result:= -1;
+  end;
+  {________doomy interfaces______}
+
+
+  procedure tw2177_Twii.Show;stdcall;
+  begin
+    WriteLn(s);
+  end;
+
+var
+  tw2177_wii: tw2177_twii;
+  tw2177_i: tw2177_ii;
+
+
+{$pop}
+
+{ Case tw3829.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 3829 }
+{ Submitted by "Thomas Schatzl" on  2005-03-25 }
+{ e-mail:  }
+
+
+
+
+type
+  tw3829_IAny = interface  ['{A40AEE53-8C88-4DD2-9F14-05A8C1A64849}']
+  end;
+
+  tw3829_TAny = class(TInterfacedObject, tw3829_IAny)
+  end;
+
+var
+  tw3829_a : tw3829_TAny;
+
+
+{$pop}
+
+begin
+
+{ Case tb_interfaces_delphi_run_01.pp }
+{$push}
+
+{$push}
+{$ifdef fpc}
+
+{$endif}
+{$pop}
+{$push}
+
+{$pop}
+{$push}
+
+{$pop}
+{$push}
+
+{$pop}
+{$push}
+
+{$pop}
+{$push}
+{$ifdef fpc}
+
+{$endif fpc}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$else}
+{$ENDIF}
+{$pop}
 begin
   { Case tw11862.pp }
   {$push}
@@ -251,11 +383,11 @@ begin
   begin
 tw11862_e := tw11862_ttest.Create;
   WriteLn('Calling GetChild');
-  tw11862_test:=testgetchild;
+  tw11862_test:=tb_interfaces_delphi_run_01_testgetchild;
   tw11862_e.tw11862_getchild();
-  tw11862_test:=testparentex;
+  tw11862_test:=tb_interfaces_delphi_run_01_testparentex;
   tw11862_e.tw11862_parent;
-  tw11862_test:=testparent;
+  tw11862_test:=tb_interfaces_delphi_run_01_testparent;
   tw11862_e2:=tw11862_e;
   tw11862_e2.tw11862_parent;
   WriteLn('Stop');
@@ -320,5 +452,61 @@ begin
   tb0571_r._Release;
 end;
   {$pop}
+
+end;
+{$pop}
+
+{ Case tw2177.pp }
+{$push}
+{$ifdef fpc}
+
+{$endif}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+{$IFNDEF WINDOWS}
+{$ELSE}
+{$ENDIF}
+begin
+  try
+    tw2177_wii:= tw2177_Twii.create;
+    tw2177_wii.s:='OK';
+    tw2177_i:= tw2177_ii(tw2177_wii);
+    tw2177_i.Show;
+  except       //excepts
+    on EInvalidCast do WriteLn('Invalid Cast');
+  else
+    WriteLn('Problem');
+    halt(1);
+  end;
+end;
+{$pop}
+
+{ Case tw3829.pp }
+{$push}
+
+begin
+  tw3829_a:=tw3829_TAny.Create;
+
+  (tw3829_a as tw3829_IAny)._Addref();
+
+  if (supports(tw3829_a, tw3829_IAny)) then
+    writeln('ok')
+  else
+    halt(1);
+end;
+{$pop}
 
 end.
