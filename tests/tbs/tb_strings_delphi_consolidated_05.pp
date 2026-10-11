@@ -1,7 +1,50 @@
-{$ifndef macos}{$APPTYPE CONSOLE}{$endif}
-{$ifdef fpc}{$mode delphi}{$endif}
+{ Consolidated strings regressions; original case IDs and assertions are retained. }
+program nexus_consolidated_tests;
+{$mode delphi}
 
-procedure wideansi;
+{ Case tw8191.pp }
+{$push}
+
+
+{$APPTYPE CONSOLE}
+
+{$ifdef fpc}
+  
+{$endif}
+
+{$R+}
+
+function tw8191_Test: Boolean;
+var
+  s: shortstring;
+  p: PChar;
+begin
+  s := '1234567890';
+  p := PChar(@s[1]);
+  Inc(p,4);
+
+  Result :=
+   (p[-4] = '1') and
+   (p[-3] = '2') and
+   (p[-2] = '3') and
+   (p[-1] = '4') and
+   (p[ 0] = '5') and
+   (p[ 1] = '6') and
+   (p[ 2] = '7') and
+   (p[ 3] = '8') and
+   (p[ 4] = '9') and
+   (p[ 5] = '0');
+end;
+
+
+{$pop}
+
+{ Case tarray6.pp }
+{$push}
+{$ifndef macos}{$APPTYPE CONSOLE}{$endif}
+{$ifdef fpc}{$endif}
+
+procedure tarray6_wideansi;
 var
   S: AnsiString = 'abcd';
   pc: PChar = 'abcd';
@@ -47,7 +90,7 @@ begin
   WriteLn;
 end;
 
-procedure wideshort;
+procedure tarray6_wideshort;
 var
   S: ShortString = 'abcd';
   pc: PChar = 'abcd';
@@ -93,7 +136,66 @@ begin
   WriteLn;
 end;
 
+
+{$pop}
+
+{ Case tcpstr14.pp }
+{$push}
+
+{$apptype console}
+{$H+}
+
+type
+  tcpstr14_t866 = type AnsiString(866);
+var
+  tcpstr14_s866: tcpstr14_t866;
+
+{$pop}
+
 begin
-  wideshort;
-  wideansi;
+
+{ Case tw8191.pp }
+{$push}
+{$APPTYPE CONSOLE}
+{$ifdef fpc}
+
+{$endif}
+{$R+}
+begin
+  if not tw8191_Test then
+    halt(1);
+  WriteLn('ok');
+end;
+{$pop}
+
+{ Case tarray6.pp }
+{$push}
+{$ifndef macos}
+{$APPTYPE CONSOLE}
+{$endif}
+{$ifdef fpc}
+
+{$endif}
+{$IFDEF FPC}
+{$ENDIF}
+{$IFDEF FPC}
+{$ENDIF}
+begin
+  tarray6_wideshort;
+  tarray6_wideansi;
+end;
+{$pop}
+
+{ Case tcpstr14.pp }
+{$push}
+{$apptype console}
+
+{$H+}
+begin
+  Str(123, tcpstr14_s866);
+  if StringCodePage(tcpstr14_s866) <> 866 then
+    halt(1);
+end;
+{$pop}
+
 end.
