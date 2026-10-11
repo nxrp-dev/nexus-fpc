@@ -119,6 +119,78 @@ begin
 end;
 {$pop}
 
+{ Case tw28702.pp }
+{$push}
+var
+  tw28702_l: longint;
+{$pop}
+
+{ Case tw26230.pp }
+{$push}
+const
+    tw26230_c1 = 86400000000; //MCS in a day
+
+var
+    tw26230_ainput,
+        tw26230_product : Int64;
+{$pop}
+
+{ Case tw18082.pp }
+{$push}
+var
+  tw18082_l: longint;
+{$ifdef cpu64}
+  tw18082_i: int64;
+{$endif}
+{$pop}
+
+{ Case tw2037.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 2037 }
+{ Submitted by "David Hagler" on  2002-07-11 }
+{ e-mail: david@avimark.net }
+{$R-}
+
+const
+  tw2037_file_flag_write_through = -2147483648;
+  tw2037_file_attribute_normal = 128;
+
+var
+  tw2037_anattr : cardinal;
+{$pop}
+
+{ Case tw15633.pp }
+{$push}
+var tw15633_value : word;
+    tw15633_code : Longint;
+{$pop}
+
+{ Case tw3774.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 3774 }
+{ Submitted by "Sergey@michint" on  2005-03-11 }
+{ e-mail:  }
+{$C+}
+
+var
+  tw3774_i, tw3774_ec: Integer;
+{$pop}
+
+{ Case tw39523.pp }
+{$push}
+var
+  tw39523_w: Word;
+  tw39523_code: Integer;
+{$pop}
+
+{ Case tw8177a.pp }
+{$push}
+var
+  tw8177a_s : string;
+  tw8177a_i : longint;
+  tw8177a_err : word;
+{$pop}
+
 begin
   { Case tw0802.pp }
   {$push}
@@ -280,6 +352,137 @@ BEGIN
   if tw21029_f(1)<>254 then
     halt(1);
 END;
+  {$pop}
+
+  { Case tw28702.pp }
+  {$push}
+
+begin
+  tw28702_l:=5;
+  { dummy random to prevent constant propagation }
+  if ((tw28702_l+random(1))div -1)<>-5 then
+    halt(1);
+end;
+  {$pop}
+
+  { Case tw26230.pp }
+  {$push}
+
+begin
+    tw26230_ainput := 1;
+    //asm int3 end; //debug trap; `disassemble`
+    tw26230_product := tw26230_ainput * tw26230_c1;
+    WriteLn(tw26230_ainput, ' * ', tw26230_c1, ' = ', tw26230_product);
+    if tw26230_product <> 86400000000 then
+    begin
+      Writeln('Error!');
+      Halt(1);
+    end
+    else
+      Writeln('Ok');
+end;
+  {$pop}
+
+  { Case tw18082.pp }
+  {$push}
+
+begin
+  tw18082_l:=-123;
+  if interlockedcompareexchange(tw18082_l,-1,124)<>-123 then
+    halt(1);
+  if tw18082_l<>-123 then
+    halt(2);
+  if interlockedcompareexchange(tw18082_l,-1,-123)<>-123 then
+    halt(3);
+  if tw18082_l<>-1 then
+    halt(4);
+
+{$ifdef cpu64}
+  tw18082_i:=-123;
+  if interlockedcompareexchange64(tw18082_i,-1,124)<>-123 then
+    halt(5);
+  if tw18082_i<>-123 then
+    halt(6);
+  if interlockedcompareexchange64(tw18082_i,-1,-123)<>-123 then
+    halt(7);
+  if tw18082_i<>-1 then
+    halt(8);
+{$endif}
+end;
+  {$pop}
+
+  { Case tw2037.pp }
+  {$push}
+{$R-}
+begin
+  tw2037_anattr := tw2037_file_flag_write_through or tw2037_file_attribute_normal;
+end;
+  {$pop}
+
+  { Case tw15633.pp }
+  {$push}
+
+begin
+  Val('4294901772', tw15633_value, tw15633_code);
+  writeln(tw15633_code);
+  if tw15633_code<>6 then
+    halt(1);
+end;
+  {$pop}
+
+  { Case tw3774.pp }
+  {$push}
+{$C+}
+begin
+  Val('0x123', tw3774_i, tw3774_ec);
+  Assert(tw3774_ec=0);
+  Assert(tw3774_i=$123);
+  writeln('ok');
+end;
+  {$pop}
+
+  { Case tw39523.pp }
+  {$push}
+
+begin
+  Val('-1',tw39523_w,tw39523_code);
+  writeln('Code: ',tw39523_code); //outputs: 2
+  if tw39523_code<>1 then
+    halt(1);
+  Val('-0x1',tw39523_w,tw39523_code);
+  writeln('Code: ',tw39523_code); //outputs: 4
+  if tw39523_code<>1 then
+    halt(2);
+end;
+  {$pop}
+
+  { Case tw8177a.pp }
+  {$push}
+
+begin
+  tw8177a_s:='';
+  val(tw8177a_s,tw8177a_i,tw8177a_err);
+  if tw8177a_err=0 then
+    begin
+      Writeln('Error: empty string is a valid input for val function');
+      Halt(1);
+    end
+  else
+    begin
+      Writeln('Correct: empty string is a not valid input for val function');
+    end;
+  tw8177a_s:=#0;
+  val(tw8177a_s,tw8177a_i,tw8177a_err);
+  if tw8177a_err=0 then
+    begin
+      Writeln('Error: #0 string is a valid input for val function');
+      Halt(1);
+    end
+  else
+    begin
+      Writeln('Correct: #0 string is a not valid input for val function');
+    end;
+end;
   {$pop}
 
 end.
