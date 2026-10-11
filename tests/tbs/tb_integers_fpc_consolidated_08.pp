@@ -3,6 +3,13 @@
 program nexus_consolidated_tests;
 {$mode fpc}
 
+{ Case tb_integers_fpc_consolidated_06.pp }
+{$push}
+{ Consolidated integers regressions; original case IDs and assertions are retained. }
+
+
+
+
 { Case tb0676.pp }
 {$push}
 
@@ -106,6 +113,62 @@ var
 
 {$pop}
 
+
+{$pop}
+
+{ Case tpointermath3.pp }
+{$push}
+
+
+
+
+type
+  tpointermath3_PByte = ^Byte;
+var
+  tpointermath3_PB: tpointermath3_PByte;
+
+{$pop}
+
+{ Case tthlp20.pp }
+{$push}
+
+
+{ test that "type helper" is parsed as "type alias" + "type name" if modeswitch typehelpers is not set }
+
+
+
+type
+  tthlp20_helper = LongInt;
+
+  tthlp20_TTest = type tthlp20_helper;
+
+
+{$pop}
+
+begin
+
+{ Case tb_integers_fpc_consolidated_06.pp }
+{$push}
+
+{$push}
+{$warn 4110 error}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$inline on}
+{$EXTENDEDSYNTAX OFF}
+{$pop}
+{$push}
+{$pop}
+{$push}
+{$TypedAddress on}
+{$pop}
+{$push}
+{$optimization regvar on}
+{$pop}
+{$push}
+{$pop}
 begin
 
 { Case tb0676.pp }
@@ -174,6 +237,27 @@ begin
 
  // project1.lpr(17,19) Error: Internal error 121120001
  tw31596_offset := PtrInt(IInterface(TInterfacedObject(1))) - 1;
+end;
+{$pop}
+
+end;
+{$pop}
+
+{ Case tpointermath3.pp }
+{$push}
+
+begin
+  // in FPC/ObjFPC mode pointer math is ON by default
+  tpointermath3_PB := tpointermath3_PB + 1;
+  WriteLn(tpointermath3_PB[1]);
+end;
+{$pop}
+
+{ Case tthlp20.pp }
+{$push}
+
+begin
+
 end;
 {$pop}
 
