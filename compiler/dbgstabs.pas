@@ -26,6 +26,7 @@ unit dbgstabs;
 interface
 
     uses
+      tpcompilerreal,
       cclasses,
       systems,dbgbase,cgbase,
       symconst,symtype,symdef,symsym,symtable,symbase,
@@ -757,8 +758,6 @@ implementation
           s64currency,
           s64comp:
             ss:=def_stabstr_evaluate(def,'r$1;-${savesize};0;',[def_stab_number(s32inttype)]);
-          else
-            internalerror(200509261);
         end;
         write_def_stabstr(list,def,ss);
       end;
@@ -1604,7 +1603,7 @@ implementation
             st:='i'+tostr(sym.value.valueordptr);
           constreal:
             begin
-              system.str(pbestreal(sym.value.valueptr)^,st);
+              st:=realtostr(pbestreal(sym.value.valueptr)^);
               st := 'r'+st;
             end;
           else

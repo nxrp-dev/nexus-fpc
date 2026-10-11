@@ -32,6 +32,7 @@ unit aasmtai;
 interface
 
     uses
+       tpcompilerreal,
        cutils,cclasses,
        globtype,systems,
        cpuinfo,cpubase,
@@ -150,7 +151,6 @@ interface
           aitrealconst_s32bit,
           aitrealconst_s64bit,
           aitrealconst_s80bit,
-          aitrealconst_s128bit,
           aitrealconst_s64comp
         );
 
@@ -620,17 +620,15 @@ interface
           savesize: byte;
           value: record
             case tairealconsttype of
-              aitrealconst_s32bit: (s32val: ts32real);
-              aitrealconst_s64bit: (s64val: ts64real);
-              aitrealconst_s80bit: (s80val: ts80real);
-              aitrealconst_s128bit: (s128val: ts128real);
-              aitrealconst_s64comp: (s64compval: ts64comp);
+              aitrealconst_s32bit: (s32val: Single);
+              aitrealconst_s64bit: (s64val: Double);
+              aitrealconst_s80bit: (s80val: bestreal);
+              aitrealconst_s64comp: (s64compval: Int64);
           end;
-          constructor create_s32real(val: ts32real);
-          constructor create_s64real(val: ts64real);
-          constructor create_s80real(val: ts80real; _savesize: byte);
-          constructor create_s128real(val: ts128real);
-          constructor create_s64compreal(val: ts64comp);
+          constructor create_s32real(val: Single);
+          constructor create_s64real(val: Double);
+          constructor create_s80real(val: bestreal; _savesize: byte);
+          constructor create_s64compreal(val: Int64);
           constructor ppuload(t: taitype;ppufile: tcompilerppufile); override;
           procedure ppuwrite(ppufile: tcompilerppufile); override;
           function getcopy:tlinkedlistitem;override;
@@ -1939,7 +1937,7 @@ implementation
                                TAI_realconst
  ****************************************************************************}
 
-    constructor tai_realconst.create_s32real(val: ts32real);
+    constructor tai_realconst.create_s32real(val: Single);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1949,7 +1947,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s64real(val: ts64real);
+    constructor tai_realconst.create_s64real(val: Double);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1959,7 +1957,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s80real(val: ts80real; _savesize: byte);
+    constructor tai_realconst.create_s80real(val: bestreal; _savesize: byte);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1969,17 +1967,7 @@ implementation
       end;
 
 
-    constructor tai_realconst.create_s128real(val: ts128real);
-      begin
-        inherited create;
-        typ:=ait_realconst;
-        realtyp:=aitrealconst_s128bit;
-        savesize:=16;
-        value.s128val:=val;
-      end;
-
-
-    constructor tai_realconst.create_s64compreal(val: ts64comp);
+    constructor tai_realconst.create_s64compreal(val: Int64);
       begin
         inherited create;
         typ:=ait_realconst;
@@ -1995,22 +1983,18 @@ implementation
         realtyp:=tairealconsttype(ppufile.getbyte);
         case realtyp of
           aitrealconst_s32bit:
-            value.s32val:=ppufile.getreal;
+            value.s32val:=Single(ppufile.getreal);
           aitrealconst_s64bit:
-            value.s64val:=ppufile.getreal;
+            value.s64val:=Double(ppufile.getreal);
           aitrealconst_s80bit:
             value.s80val:=ppufile.getreal;
-          aitrealconst_s128bit:
-            value.s128val:=ppufile.getreal;
           aitrealconst_s64comp:
-            value.s64compval:=comp(ppufile.getint64);
+            value.s64compval:=ppufile.getint64;
         end;
       end;
 
 
     procedure tai_realconst.ppuwrite(ppufile: tcompilerppufile);
-      var
-        c: comp;
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(realtyp));
@@ -2021,12 +2005,9 @@ implementation
             ppufile.putreal(value.s64val);
           aitrealconst_s80bit:
             ppufile.putreal(value.s80val);
-          aitrealconst_s128bit:
-            ppufile.putreal(value.s128val);
           aitrealconst_s64comp:
             begin
-              c:=comp(value.s64compval);
-              ppufile.putint64(int64(c));
+              ppufile.putint64(value.s64compval);
             end
         end;
       end;
@@ -2052,8 +2033,6 @@ implementation
             result:=8;
           aitrealconst_s80bit:
             result:=10;
-          aitrealconst_s128bit:
-            result:=16;
         end;
       end;
 

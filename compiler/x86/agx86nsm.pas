@@ -70,7 +70,6 @@ interface
       protected
         function single2str(d: single): string; override;
         function double2str(d: double): string; override;
-        function extended2str(e: extended): string; override;
       public
         destructor Destroy;override;
         procedure WriteTree(p:TAsmList);override;
@@ -201,21 +200,6 @@ interface
       end;
 
 
-    function TX86NasmAssembler.extended2str(e: extended): string;
-      var
-         hs : string;
-         p : longint;
-      begin
-         str(e,hs);
-      { nasm expects a lowercase e }
-         p:=pos('E',hs);
-         if p>0 then
-          hs[p]:='e';
-         p:=pos('+',hs);
-         if p>0 then
-          delete(hs,p,1);
-         extended2str:=lower(hs);
-      end;
 
 
     destructor TX86NasmAssembler.Destroy;

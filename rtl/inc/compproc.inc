@@ -172,7 +172,7 @@ Function fpc_Val_Real_ShortStr(const s : shortstring; out code : ValSInt): ValRe
 Function fpc_Val_SInt_ShortStr(DestSize: SizeInt; Const S: ShortString; out Code: ValSInt): ValSInt; compilerproc;
 Function fpc_Val_UInt_Shortstr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; compilerproc;
 function fpc_val_enum_shortstr(str2ordindex:pointer;const s:shortstring;out code:valsint):longint; compilerproc;
-Function fpc_Val_Currency_ShortStr(const s : shortstring; out Code : ValSInt): currency; compilerproc;
+Function fpc_Val_Currency_ShortStr(const AText : shortstring; out ACode : ValSInt): currency; compilerproc;
 {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}
 {$ifndef FPUNONE}
 Function fpc_Val_Real_AnsiStr(Const S : RawByteString; out Code : ValSInt): ValReal; compilerproc;

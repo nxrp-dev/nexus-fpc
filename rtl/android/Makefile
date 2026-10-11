@@ -1984,7 +1984,11 @@ INITCDIR=$(OSDIR)
 endif
 endif
 ifndef DOSDIR
+ifdef UNIXINC
+DOSDIR=$(UNIXINC)
+else
 DOSDIR=$(OSDIR)
+endif
 NSDOSDIR=$(NSDIR)/$(DOSDIR)
 endif
 ifndef OS2DIR
@@ -2434,17 +2438,17 @@ System.CMem$(PPUEXT) : $(NSINC)/System.CMem.pp $(CMEM_DEPS)
 ifndef PTYPESINCDIR
   PTYPESINCDIR=$(OSDIR)
 endif
+ifndef UNXINC
+  UNXINC=$(OSDIR)
+endif
 BASEUNIX_DEPS=$(BASEUNIXDIR)/baseunix.pp  $(UNIXINC)/ctypes.inc  \
-	      $(UNIXINC)/bunxh.inc $(UNIXINC)/gensigset.inc $(PTYPESINCDIR)/ptypes.inc $(OSDIR)/errno.inc \
+	      $(UNIXINC)/bunxh.inc $(UNIXINC)/gensigset.inc $(PTYPESINCDIR)/ptypes.inc $(UNXINC)/errno.inc \
 	      $(UNIXTYPEUNIT)$(PPUEXT) $(SYSTEMUNIT)$(PPUEXT) \
 	      $(BASEUNIX_DEPS_OS) $(BASEUNIX_DEPS_CPU) 
 baseunix$(PPUEXT): $(BASEUNIX_DEPS)
 	$(COMPILER) $(BASEUNIX_OPT) $<
 UnixApi.Base$(PPUEXT): $(NSINC)/UnixApi.Base.pp $(BASEUNIX_DEPS) 
 	$(COMPILER) $(BASEUNIX_OPT) $<
-ifndef UNXINC
-  UNXINC=$(OSDIR)
-endif
 UNIX_DEPS=$(UNIXINC)/unix.pp \
 	 $(STRINGSUNIT)$(PPUEXT) $(SYSTEMUNIT)$(PPUEXT) $(BASEUNIXUNIT)$(PPUEXT) \
 	 $(UNIXUTILUNIT)$(PPUEXT) \

@@ -26,6 +26,7 @@ unit ncpucon;
 interface
 
     uses
+      tpcompilerreal,
       node,ncgcon,cpubase;
 
     type
@@ -73,7 +74,7 @@ interface
               location.register,value_real));
           end
         { cast and compare the bit pattern as we cannot handle -0.0 }
-        else if bestrealrec(value_real).Data=0 then
+        else if IsPosZero(value_real) then
           begin
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);

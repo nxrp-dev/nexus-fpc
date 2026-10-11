@@ -186,7 +186,6 @@ type
     RefUnits: array of string;
     SourceFiles: TPpuContainerDef;
     LongVersion: Cardinal;
-    ByteSizeOfPpuReal : byte; { size of real constants embedded inside PPU }
 
     constructor Create(AParent: TPpuContainerDef); override;
     destructor Destroy; override;
@@ -391,7 +390,7 @@ type
     constructor Create(AParent: TPpuContainerDef); override;
   end;
 
-  TPpuFloatType = (pftSingle, pftDouble, pftExtended, pftComp, pftCurrency, pftFloat128);
+  TPpuFloatType = (pftSingle, pftDouble, pftExtended, pftComp, pftCurrency);
 
   { TPpuFloatDef }
   TPpuFloatDef = class(TPpuDef)

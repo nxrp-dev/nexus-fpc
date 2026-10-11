@@ -82,7 +82,7 @@ Type
 Implementation
 
   uses
-    cutils,verbose,globals,aoptutils,
+    tpcompilerreal,cutils,verbose,globals,aoptutils,
     systems,
     cpuinfo,
     cgobj,procinfo,

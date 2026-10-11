@@ -26,6 +26,7 @@ unit entfile;
 interface
 
   uses
+    tpcompilerreal,
     systems,globtype,constexp,cstreams,nxentrybuffer;
 
 const
@@ -203,8 +204,7 @@ const
 {$endif generic_cpu}
 
 type
-  { bestreal is defined based on the target architecture }
-  entryreal=bestreal;
+  { Compiler constants retain binary80 precision on every host and target. }
 
   { common part of the header for all kinds of entry files }
   tentryheader=record
@@ -317,8 +317,7 @@ type
     function getpuint:{$ifdef generic_cpu}qword{$else}puint{$ifdef USEINLINE}; inline{$endif}{$endif};
     function getptruint:{$ifdef generic_cpu}qword{$else}TConstPtrUInt{$ifdef USEINLINE}; inline{$endif}{$endif};
     function getaword:{$ifdef generic_cpu}qword{$else}aword{$ifdef USEINLINE}; inline{$endif}{$endif};
-    function  getreal:entryreal;
-    function  getrealsize(sizeofreal : longint):entryreal;
+    function  getreal:bestreal;
     function  getrealbytesize:byte;
     function  getboolean:boolean; {$ifdef USEINLINE}inline;{$endif}
     function  getstring:ShortString;
@@ -345,7 +344,7 @@ type
     procedure putpuint(i:puint); {$ifdef USEINLINE}inline;{$endif}
     procedure putptruint(v:TConstPtrUInt); {$ifdef USEINLINE}inline;{$endif}
     procedure putaword(i:aword); {$ifdef USEINLINE}inline;{$endif}
-    procedure putreal(d:entryreal);
+    procedure putreal(d:bestreal);
     procedure putboolean(b:boolean); {$ifdef USEINLINE}inline;{$endif}
     procedure putstring(const s:ShortString); {$ifdef USEINLINE}inline;{$endif}
     procedure putansistring(const s:ansistring);
@@ -358,23 +357,9 @@ type
 implementation
 
   uses
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-    sfpux80,math,
-{$endif FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
+
     cutils;
 
-
-function swapendian_entryreal(d:entryreal):entryreal;
-type
-  entryreal_bytes=array[0..sizeof(d)-1] of byte;
-var
-  i:0..sizeof(d)-1;
-begin
-  for i:=low(entryreal_bytes) to high(entryreal_bytes) do
-    entryreal_bytes(result)[i]:=entryreal_bytes(d)[high(entryreal_bytes)-i];
-end;
 
 {*****************************************************************************
                               tentryfile
@@ -1276,229 +1261,41 @@ begin
 {$endif}
 end;
 
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-{ i8086,i386 and x86_64 normally have 80bit float type for
-  entryreal, but this is not supported
-  on CPUs without 80bit floats.
-  Special code is required to handle this. }
-const
-  sizeof_floatx80 = 10;
-type
-  floatx80_byte_array=array[0..sizeof_floatx80-1] of byte;
-  pentryreal=^entryreal;
 
-function swapendian_floatx80entryreal(d:floatx80_byte_array):floatx80_byte_array;
+
+function tentryfile.getreal:bestreal;
 var
-  i:0..sizeof(d)-1;
+  lDouble: TDoubleRec;
+{$ifdef FPC_HAS_TYPE_EXTENDED}
+  lExtended: TExtended80Rec;
+{$endif}
 begin
-  for i:=low(floatx80_byte_array) to high(floatx80_byte_array) do
-    result[i]:=d[high(floatx80_byte_array)-i];
-end;
-
-{$endif FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
-
-function tentryfile.getrealsize(sizeofreal : longint):entryreal;
-var
-  e : entryreal;
-  d : double;
-  di : qword;{ integer of same size as double }
-  s : single;
-  si : dword; { integer of same size as single }
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-  floatx80_ba : floatx80_byte_array;
-  floatx80_e: floatx80;
-local_softfloat_exception_mask : TFPUExceptionMask;
-  high : word;
-  qlow : qword;
-  f64 : float64;
-  i:byte;
-{$endif}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
-begin
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-  if sizeofreal=sizeof(floatx80_byte_array) then
+  if getrealbytesize=8 then
     begin
-{$ifdef DEBUG_PPU}
-      ppu_log('getrealsize(sizeofreal='+tostr(sizeofreal)+')='));
-      inc_log_level;
-{$endif}
-      if entryidx+sizeof(floatx80_ba)>entry.size then
-       begin
-         error:=true;
-         result:=0;
-{$ifdef DEBUG_PPU}
-         ppu_log_val(realtostr(result));
-         dec_log_level;
-{$endif}
-         exit;
-       end;
-      readdata(floatx80_ba,sizeof(floatx80_ba));
-      if change_endian then
-	floatx80_ba:=swapendian_floatx80entryreal(floatx80_ba);
-{$ifdef FPC_BIG_ENDIAN}
-      floatx80_e.high:=pword(@floatx80_ba[0])^;
-      floatx80_e.low:=unaligned(pqword(@floatx80_ba[2])^);
-{$else}
-      floatx80_e.high:=pword(@floatx80_ba[8])^;
-      floatx80_e.low:=pqword(@floatx80_ba[0])^;
-{$endif}
-      local_softfloat_exception_mask:=softfloat_exception_mask;
-      softfloat_exception_mask:=[float_flag_invalid,float_flag_denormal,float_flag_divbyzero,float_flag_overflow,float_flag_underflow,float_flag_inexact];
-      f64:=floatx80_to_float64(floatx80_e);
-      result:=pentryreal(@f64)^;
-      softfloat_exception_mask:=local_softfloat_exception_mask;
-      inc(entryidx,sizeof(floatx80_ba));
-{$ifdef DEBUG_PPU}
-      ppu_log_val(realtostr(result));
-      dec_log_level;
-{$endif}
-      exit;
-    end;
-{$endif FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
-  if sizeofreal=sizeof(e) then
-    begin
-{$ifdef DEBUG_PPU}
-      ppu_log('getrealsize(sizeofreal='+tostr(sizeofreal)+')=');
-      inc_log_level;
-{$endif}
-      if entryidx+sizeof(e)>entry.size then
-       begin
-         error:=true;
-         result:=0;
-{$ifdef DEBUG_PPU}
-         ppu_log_val(realtostr(result));
-         dec_log_level;
-{$endif}
-         exit;
-       end;
-      readdata(e,sizeof(e));
-      if change_endian then
-        result:=swapendian_entryreal(e)
-      else
-        result:=e;
-      inc(entryidx,sizeof(e));
-{$ifdef DEBUG_PPU}
-      ppu_log_val(realtostr(result));
-      dec_log_level;
-{$endif}
-      exit;
-    end;
-  if sizeofreal=sizeof(d) then
-    begin
-{$ifdef DEBUG_PPU}
-      ppu_log('getrealsize(sizeofreal='+tostr(sizeofreal)+')=');
-      inc_log_level;
-{$endif}
-      if entryidx+sizeof(d)>entry.size then
-       begin
-         error:=true;
-         result:=0;
-{$ifdef DEBUG_PPU}
-         ppu_log_val(realtostr(result));
-         dec_log_level;
-{$endif}
-         exit;
-       end;
-      readdata(d,sizeof(d));
-      if change_endian then
-        begin
-          di:=swapendian(pqword(@d)^);
-          d:=pdouble(@di)^;
-        end;
-      result:=d;
-      inc(entryidx,sizeof(d));
-      result:=d;
-{$ifdef DEBUG_PPU}
-      ppu_log_val(realtostr(result));
-      dec_log_level;
-{$endif}
-      exit;
-    end;
-  if sizeofreal=sizeof(s) then
-    begin
-{$ifdef DEBUG_PPU}
-      ppu_log('getrealsize(sizeofreal='+tostr(sizeofreal)+')=');
-      inc_log_level;
-{$endif}
-      if entryidx+sizeof(s)>entry.size then
-       begin
-         error:=true;
-         result:=0;
-{$ifdef DEBUG_PPU}
-         ppu_log_val(realtostr(result));
-         dec_log_level;
-{$endif}
-         exit;
-       end;
-      readdata(s,sizeof(s));
-      if change_endian then
-        begin
-          si:=swapendian(pdword(@s)^);
-          s:=psingle(@si)^;
-        end;
-      result:=s;
-      inc(entryidx,sizeof(s));
-      result:=s;
-{$ifdef DEBUG_PPU}
-      ppu_log_val(realtostr(result));
-      dec_log_level;
-{$endif}
-      exit;
-    end;
-  error:=true;
-  result:=0.0;
-end;
-
-
-function tentryfile.getreal:entryreal;
-var
-  d : entryreal;
-  hd : double;
-begin
-  if target_info.system=system_x86_64_win64 then
-    begin
-      hd:=getrealsize(sizeof(hd));
-      getreal:=hd;
+      lDouble:=TDoubleRec(getqword);
+      Result:=lDouble.Value;
     end
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-  else
-    if target_info.cpu in [cpu_i386, cpu_x86_64] then
-      begin
-        d:=getrealsize(sizeof(floatx80_byte_array));
-	getreal:=d;
-      end
-{$endif def FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
   else
     begin
-      d:=getrealsize(sizeof(d));
-      getreal:=d;
+{$ifdef FPC_HAS_TYPE_EXTENDED}
+      lExtended.Frac:=getqword;
+      lExtended._Exp:=getword;
+      Result:=lExtended.Value;
+{$else}
+      { An ARM host cannot consume an x86 unit's real constants. }
+      error:=true;
+      Result:=0;
+{$endif}
     end;
 end;
 
 function tentryfile.getrealbytesize:byte;
 begin
-  if target_info.system=system_x86_64_win64 then
-    getrealbytesize:=sizeof(double)
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
+  if target_info.cpu in [cpu_i386,cpu_x86_64] then
+    Result:=10
   else
-    if target_info.cpu in [cpu_i386, cpu_x86_64] then
-      getrealbytesize:=sizeof(floatx80_byte_array)
-{$endif def FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
-  else
-    { this relies on the fact that
-      entryreal=bestreal and ppureal=bestreal }
-    getrealbytesize:=sizeof(entryreal);
+    Result:=8;
 end;
-
 
 function tentryfile.getboolean:boolean;
 begin
@@ -1933,67 +1730,25 @@ begin
 end;
 
 
-procedure tentryfile.putreal(d:entryreal);
+procedure tentryfile.putreal(d:bestreal);
 var
-  hd : double;
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-  floatx80_ba : floatx80_byte_array;
-  floatx80_e : floatx80;
-  f64 : float64;
-  local_softfloat_exception_mask : TFPUExceptionMask;
-  i:byte;
-{$endif FPC_SOFT_FFPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
+  lDouble: TDoubleRec;
 begin
-  if target_info.system=system_x86_64_win64 then
+  if getrealbytesize=8 then
     begin
-{$ifdef DEBUG_PPU}
-      ppu_log('putreal,size='+tostr(sizeof(hd)));
-      inc_log_level;
-      ppu_log_val(realtostr(d));
-{$endif}
-      hd:=d;
-      putdata(hd,sizeof(hd));
+      lDouble.Value:=d;
+      putqword(QWord(lDouble));
     end
-{$ifndef FPC_HAS_TYPE_EXTENDED}
-{$ifdef FPC_SOFT_FPUX80}
-  else if target_info.cpu in [cpu_i386, cpu_x86_64] then
-    begin
-{$ifdef DEBUG_PPU}
-      ppu_log('putreal,size='+tostr(sizeof(floatx80_e)));
-      inc_log_level;
-{$endif}
-      local_softfloat_exception_mask:=softfloat_exception_mask;
-      softfloat_exception_mask:=[float_flag_invalid,float_flag_denormal,float_flag_divbyzero,float_flag_overflow,float_flag_underflow,float_flag_inexact];
-      f64:=float64(d);
-      floatx80_e:=float64_to_floatx80(f64);
-      softfloat_exception_mask:=local_softfloat_exception_mask;
-{$ifdef FPC_BIG_ENDIAN}
-      pword(@floatx80_ba[0])^:=floatx80_e.high;
-      unaligned(pqword(@floatx80_ba[2])^):=floatx80_e.low;
-{$else}
-      pword(@floatx80_ba[8])^:=floatx80_e.high;
-      pqword(@floatx80_ba[0])^:=floatx80_e.low;
-{$endif}
-      putdata(floatx80_ba,sizeof(floatx80_ba));
-    end
-{$endif FPC_SOFT_FPUX80}
-{$endif ndef FPC_HAS_TYPE_EXTENDED}
   else
     begin
-{$ifdef DEBUG_PPU}
-      ppu_log('putreal,size='+tostr(sizeof(d)));
-      inc_log_level;
-      ppu_log_val(realtostr(d));
+{$ifdef FPC_HAS_TYPE_EXTENDED}
+      putqword(TExtended80Rec(d).Frac);
+      putword(TExtended80Rec(d)._Exp);
+{$else}
+      internalerrorproc(2026101101);
 {$endif}
-      putdata(d,sizeof(entryreal));
     end;
-{$ifdef DEBUG_PPU}
-  dec_log_level;
-{$endif}
 end;
-
 
 procedure tentryfile.putboolean(b:boolean);
 begin

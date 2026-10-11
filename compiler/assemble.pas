@@ -32,6 +32,7 @@ interface
 
 
     uses
+      tpcompilerreal,
       SysUtils,
       systems,globtype,globals,aasmbase,aasmtai,aasmdata,ogbase,owbase,finput;
 
@@ -157,7 +158,6 @@ interface
         function WriteComments(var hp: tai): boolean;
         function single2str(d : single) : string; virtual;
         function double2str(d : double) : string; virtual;
-        function extended2str(e : extended) : string; virtual;
         function sleb128tostr(a : int64) : string;
         function uleb128tostr(a : qword) : string;
         Function DoPipe:boolean; virtual;
@@ -263,12 +263,7 @@ Implementation
       omfbase,
       ogomf,
 {$endif OMFOBJSUPPORT}
-{$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-{$else}
-{$ifdef FPC_SOFT_FPUX80}
-      sfpux80,
-{$endif FPC_SOFT_FPUX80}
-{$endif}
+
       cscript,fmodule,verbose,
       cpubase,cpuinfo,triplet,
       aasmcpu;
@@ -713,16 +708,6 @@ Implementation
          double2str:='0d'+hs
       end;
 
-    function TExternalAssembler.extended2str(e : extended) : string;
-      var
-         hs : string;
-      begin
-         str(e,hs);
-      { replace space with + }
-         if hs[1]=' ' then
-          hs[1]:='+';
-         extended2str:='0d'+hs
-      end;
 
     function TExternalAssembler.sleb128tostr(a: int64): string;
       var
@@ -1137,34 +1122,13 @@ Implementation
     procedure TExternalAssembler.WriteRealConstAsBytes(hp: tai_realconst; const dbdir: string; do_line: boolean);
       var
         pdata: pbyte;
-        index, step, swapmask, real_byte_count: longint;
+        index, step, real_byte_count: longint;
         ssingle: single;
         ddouble: double;
-{$ifdef FPC_COMP_IS_INT64}
         ccomp: int64;
-{$else}
-        ccomp: comp;
-{$endif}
-        comp_data_size : byte;
-{$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-        eextended: extended;
-{$else}
-{$ifdef FPC_SOFT_FPUX80}
-{$define USE_SOFT_FLOATX80}
-        f32 : float32;
-        f64 : float64;
-        eextended: floatx80;
-        gap_ofs_low,gap_ofs_high : byte;
-        gap_index, gap_size : byte;
-        has_gap : boolean;
-{$endif}
-{$endif cpuextended}
+        eextended: bestreal;
       begin
-{$ifdef USE_SOFT_FLOATX80}
-        has_gap:=false;
-        gap_index:=0;
-        gap_size:=0;
-{$endif USE_SOFT_FLOATX80}
+
         if do_line then
           begin
             case tai_realconst(hp).realtyp of
@@ -1172,40 +1136,16 @@ Implementation
                 writer.AsmWriteLn(asminfo^.comment+'s32bit real value: '+single2str(tai_realconst(hp).value.s32val));
               aitrealconst_s64bit:
                 writer.AsmWriteLn(asminfo^.comment+'s64bit real value: '+double2str(tai_realconst(hp).value.s64val));
-{$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-              { can't write full 80 bit floating point constants yet on non-x86 }
               aitrealconst_s80bit:
-                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+extended2str(tai_realconst(hp).value.s80val));
-{$else}
-{$ifdef USE_SOFT_FLOATX80}
-{$push}{$warn 6018 off} { Unreachable code due to compile time evaluation }
-             aitrealconst_s80bit:
-               begin
-                      if sizeof(tai_realconst(hp).value.s80val) = sizeof(double) then
-                   writer.AsmWriteLn(asminfo^.comment+'Emulated s80bit real value (on s64bit): '+double2str(tai_realconst(hp).value.s80val))
-                      else if sizeof(tai_realconst(hp).value.s80val) = sizeof(single) then
-                   writer.AsmWriteLn(asminfo^.comment+'Emulated s80bit real value (on s32bit): '+single2str(tai_realconst(hp).value.s80val))
-                else
-                      internalerror(2017091901);
-                     end;
-{$pop}
-{$endif}
-{$endif cpuextended}
+                writer.AsmWriteLn(asminfo^.comment+'s80bit real value: '+realtostr(tai_realconst(hp).value.s80val));
               aitrealconst_s64comp:
                 begin
-                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+extended2str(tai_realconst(hp).value.s64compval));
-                  comp_data_size:=sizeof(comp);
-                  if (comp_data_size<>tai_realconst(hp).datasize) then
-                    writer.AsmWriteLn(asminfo^.comment+'s64comp value type size is '+tostr(comp_data_size)+' but datasize is '+tostr(tai_realconst(hp).datasize));
+                  writer.AsmWriteLn(asminfo^.comment+'s64comp real value: '+tostr(tai_realconst(hp).value.s64compval));
                 end
-              else
-                internalerror(2014050604);
             end;
           end;
         writer.AsmWrite(dbdir);
-        { generic float writing code: get start address of value, then write
-          byte by byte. Can't use fields directly, because e.g ts64comp is
-          defined as extended on x86 }
+        { Write the exact stored representation, including binary80 and Comp. }
         case tai_realconst(hp).realtyp of
           aitrealconst_s32bit:
             begin
@@ -1217,75 +1157,16 @@ Implementation
               ddouble:=double(tai_realconst(hp).value.s64val);
               pdata:=@ddouble;
             end;
-{$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-          { can't write full 80 bit floating point constants yet on non-x86 }
           aitrealconst_s80bit:
             begin
-              eextended:=extended(tai_realconst(hp).value.s80val);
+              eextended:=tai_realconst(hp).value.s80val;
               pdata:=@eextended;
             end;
-{$else}
-{$ifdef USE_SOFT_FLOATX80}
-{$push}{$warn 6018 off} { Unreachable code due to compile time evaluation }
-          aitrealconst_s80bit:
-            begin
-              if sizeof(tai_realconst(hp).value.s80val) = sizeof(double) then
-                begin
-                  f64:=float64(double(tai_realconst(hp).value.s80val));
-                  if float64_is_signaling_nan(f64)<>0 then
-                    begin
-                      f64.low := 0;
-                      f64.high := longword($fff80000);
-                    end;
-                  eextended:=float64_to_floatx80(f64);
-                end
-              else if sizeof(tai_realconst(hp).value.s80val) = sizeof(single) then
-                begin
-                  f32:=float32(single(tai_realconst(hp).value.s80val));
-                  if float32_is_signaling_nan(f32)<>0 then
-                    begin
-                      f32 := longword($ffc00000);
-                    end;
-                  eextended:=float32_to_floatx80(f32);
-                end
-              else
-                internalerror(2017091902);
-              pdata:=@eextended;
-              if sizeof(eextended)>10 then
-                begin
-                  gap_ofs_high:=(pbyte(@eextended.high) - pbyte(@eextended));
-                  gap_ofs_low:=(pbyte(@eextended.low) - pbyte(@eextended));
-                  if (gap_ofs_low<gap_ofs_high) then
-                    begin
-                      gap_index:=gap_ofs_low+sizeof(eextended.low);
-                      gap_size:=gap_ofs_high-gap_index;
-                    end
-                  else
-                    begin
-                      gap_index:=gap_ofs_high+sizeof(eextended.high);
-                      gap_size:=gap_ofs_low-gap_index;
-                    end;
-                  if source_info.endian<>target_info.endian then
-                      gap_index:=gap_index+gap_size-1;
-                  has_gap:=gap_size <> 0;
-                end
-              else
-                has_gap:=false;
-            end;
-{$pop}
-{$endif}
-{$endif cpuextended}
           aitrealconst_s64comp:
             begin
-{$ifdef FPC_COMP_IS_INT64}
-              ccomp:=system.trunc(tai_realconst(hp).value.s64compval);
-{$else}
-              ccomp:=comp(tai_realconst(hp).value.s64compval);
-{$endif}
+              ccomp:=tai_realconst(hp).value.s64compval;
               pdata:=@ccomp;
             end;
-          else
-            internalerror(2014051001);
         end;
         real_byte_count:=tai_realconst(hp).datasize;
         { write bytes in inverse order if source and target endianess don't
@@ -1293,11 +1174,7 @@ Implementation
         if source_info.endian<>target_info.endian then
           begin
             { go from back to front }
-{$ifdef USE_SOFT_FLOATX80}
-            if has_gap then
-              index:=sizeof(eextended)-1
-            else
-{$endif USE_SOFT_FLOATX80}
+
               index:=real_byte_count-1;
             step:=-1;
           end
@@ -1306,13 +1183,9 @@ Implementation
             index:=0;
             step:=1;
           end;
-          swapmask:=0;
         repeat
-{$ifdef USE_SOFT_FLOATX80}
-          if has_gap and (index=gap_index) then
-            index:=index+step*gap_size;
-{$endif USE_SOFT_FLOATX80}
-          writer.AsmWrite(tostr(pdata[index xor swapmask]));
+
+          writer.AsmWrite(tostr(pdata[index]));
           inc(index,step);
           dec(real_byte_count);
           if real_byte_count<>0 then
@@ -2124,27 +1997,11 @@ Implementation
         zerobuf : array[0..63] of byte;
         relative_reloc: boolean;
         pdata : pointer;
-	real_byte_count, index, step : longint;
+	real_byte_count, index : longint;
         ssingle : single;
         ddouble : double;
-        {$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-        eextended : extended;
-        {$else}
-        {$ifdef USE_SOFT_FLOATX80}
-        f32 : float32;
-        f64 : float64;
-        eextended : floatx80;
-        has_gap : boolean;
-        gap_ofs_low,gap_ofs_high : byte;
-        gap_index, gap_size : byte;
-        {$endif}
-        {$endif}
-{$ifdef FPC_COMP_IS_INT64}
-        ccomp: int64;
-{$else}
-        ccomp: comp;
-{$endif}
-        comp_data_size : byte;
+        eextended: bestreal;
+        ccomp: Int64;
         tmp    : word;
         cpu: tcputype;
         ddword : dword;
@@ -2159,11 +2016,7 @@ Implementation
         fillchar(zerobuf,sizeof(zerobuf),0);
         fillchar(objsym,sizeof(objsym),0);
         fillchar(objsymend,sizeof(objsymend),0);
-{$ifdef USE_SOFT_FLOATX80}
-        has_gap:=false;
-        gap_index:=0;
-        gap_size:=0;
-{$endif USE_SOFT_FLOATX80}
+
         { main loop }
         while assigned(hp) do
          begin
@@ -2216,125 +2069,33 @@ Implementation
                  case tai_realconst(hp).realtyp of
                    aitrealconst_s32bit:
                      begin
-                       ssingle:=single(tai_realconst(hp).value.s32val);
+                       ssingle:=tai_realconst(hp).value.s32val;
                        pdata:=@ssingle;
                      end;
                    aitrealconst_s64bit:
                      begin
-                       ddouble:=double(tai_realconst(hp).value.s64val);
+                       ddouble:=tai_realconst(hp).value.s64val;
                        pdata:=@ddouble;
                      end;
-         {$if defined(cpuextended) and defined(FPC_HAS_TYPE_EXTENDED)}
-                   { can't write full 80 bit floating point constants yet on non-x86 }
                    aitrealconst_s80bit:
                      begin
-                       eextended:=extended(tai_realconst(hp).value.s80val);
+                       eextended:=tai_realconst(hp).value.s80val;
                        pdata:=@eextended;
                      end;
-         {$else}
-         {$ifdef USE_SOFT_FLOATX80}
-           {$push}{$warn 6018 off} { Unreachable code due to compile time evaluation }
-                   aitrealconst_s80bit:
-                     begin
-                       if sizeof(tai_realconst(hp).value.s80val) = sizeof(double) then
-                         begin
-                           f64:=float64(double(tai_realconst(hp).value.s80val));
-                           if float64_is_signaling_nan(f64)<>0 then
-                             begin
-                               f64.low := 0;
-                               f64.high := longword($fff80000);
-                             end;
-                           eextended:=float64_to_floatx80(f64);
-                         end
-                       else if sizeof(tai_realconst(hp).value.s80val) = sizeof(single) then
-                         begin
-                           f32:=float32(single(tai_realconst(hp).value.s80val));
-                           if float32_is_signaling_nan(f32)<>0 then
-                             begin
-                               f32 := longword($ffc00000);
-                             end;
-                           eextended:=float32_to_floatx80(f32);
-                         end
-                       else
-                         internalerror(2017091903);
-                       pdata:=@eextended;
-                       if sizeof(eextended)>10 then
-                         begin
-                           gap_ofs_high:=(pbyte(@eextended.high) - pbyte(@eextended));
-                           gap_ofs_low:=(pbyte(@eextended.low) - pbyte(@eextended));
-                           if (gap_ofs_low<gap_ofs_high) then
-                             begin
-                               gap_index:=gap_ofs_low+sizeof(eextended.low);
-                               gap_size:=gap_ofs_high-gap_index;
-                             end
-                           else
-                             begin
-                               gap_index:=gap_ofs_high+sizeof(eextended.high);
-                               gap_size:=gap_ofs_low-gap_index;
-                             end;
-                           if source_info.endian<>target_info.endian then
-                             gap_index:=gap_index+gap_size-1;
-                           has_gap:=gap_size <> 0;
-                         end
-                       else
-                         has_gap:=false;
-                     end;
-           {$pop}
-         {$endif}
-         {$endif cpuextended}
                    aitrealconst_s64comp:
                      begin
-{$ifdef FPC_COMP_IS_INT64}
-                       ccomp:=system.trunc(tai_realconst(hp).value.s64compval);
-{$else}
-                       ccomp:=comp(tai_realconst(hp).value.s64compval);
-{$endif}
+                       ccomp:=tai_realconst(hp).value.s64compval;
                        pdata:=@ccomp;
                      end;
-                   else
-                     internalerror(2015030501);
                  end;
                  if source_info.endian<>target_info.endian then
-                   { write bytes in inverse order if source and target endianess don't match }
                    begin
-                     { go from back to front }
-{$ifdef USE_SOFT_FLOATX80}
-                     if has_gap then
-                       index:=sizeof(eextended)-1
-                     else
-{$endif USE_SOFT_FLOATX80}
-                       index:=real_byte_count-1;
-                     step:=-1;
-                   end
-                 else
-                   begin
-                     index:=0;
-                     step:=1;
-                   end;
-                 if (source_info.endian<>target_info.endian)
-                   {$ifdef USE_SOFT_FLOATX80} or has_gap{$endif} then
-                   begin
-                     d:=0;
-                     repeat
-{$ifdef USE_SOFT_FLOATX80}
-                       if has_gap and (index=gap_index) then
-                         index:=index+step*gap_size;
-{$endif USE_SOFT_FLOATX80}
-                       lebbuf[d]:=pbyte(pdata)[index];
-                       inc(index,step);
-                       dec(real_byte_count);
-                       inc(d);
-                     until real_byte_count=0;
-		     { d now bares the count value }
+                     for index:=0 to real_byte_count-1 do
+                       lebbuf[index]:=pbyte(pdata)[real_byte_count-1-index];
                      pdata:=@lebbuf;
-                     ObjData.writebytes(pdata^,d);
-                     ObjData.writebytes(zerobuf,tai_realconst(hp).savesize-d);
-                   end
-		 else
-                   begin
-                     ObjData.writebytes(pdata^,tai_realconst(hp).datasize);
-                     ObjData.writebytes(zerobuf,tai_realconst(hp).savesize-tai_realconst(hp).datasize);
-		   end;
+                   end;
+                 ObjData.writebytes(pdata^,real_byte_count);
+                 ObjData.writebytes(zerobuf,tai_realconst(hp).savesize-real_byte_count);
                end;
              ait_string :
                ObjData.writebytes(Tai_string(hp).str,Tai_string(hp).len);

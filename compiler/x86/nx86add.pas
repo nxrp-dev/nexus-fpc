@@ -26,6 +26,7 @@ unit nx86add;
   interface
 
     uses
+      tpcompilerreal,
       symtype,
       cgbase,
       cpubase,

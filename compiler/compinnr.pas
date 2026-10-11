@@ -152,7 +152,6 @@ type
      in_fma_single       = 133,
      in_fma_double       = 134,
      in_fma_extended     = 135,
-     in_fma_float128     = 136,
 
      { the min/max intrinsics must follow the x86 sse
        behaviour of min/max regarding handling
@@ -176,8 +175,6 @@ type
      in_min_int64        = 146,
      in_max_qword        = 147,
      in_max_int64        = 148,
-     in_min_quad         = 149,
-     in_max_quad         = 150,
 
 { MMX functions }
 { these constants are used by the mmx unit }

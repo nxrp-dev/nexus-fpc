@@ -26,7 +26,8 @@ unit globals;
 interface
 
     uses
-{$ifdef windows}
+tpcompilerreal,
+    {$ifdef windows}
       windows,
 {$endif}
 {$ifdef hasunix}
@@ -563,7 +564,7 @@ Const
     function  GetEnvPChar(const envname:ansistring):pchar;
     procedure FreeEnvPChar(p:pchar);
 
-    function is_number_float(d : double) : boolean;
+    function is_number_float(d : bestreal) : boolean;
     { discern +0.0 and -0.0 }
     function get_real_sign(r: bestreal): longint;
 
@@ -1003,31 +1004,15 @@ implementation
       {$endif}
       end;
 
-      function is_number_float(d : double) : boolean;
-        var
-           bytearray : array[0..7] of byte;
-        begin
-          move(d,bytearray,8);
-          { only 1.1 save, 1.0.x will use always little endian }
-{$ifdef FPC_BIG_ENDIAN}
-          result:=((bytearray[0] and $7f)<>$7f) or ((bytearray[1] and $f0)<>$f0);
-{$else FPC_BIG_ENDIAN}
-          result:=((bytearray[7] and $7f)<>$7f) or ((bytearray[6] and $f0)<>$f0);
-{$endif FPC_BIG_ENDIAN}
-        end;
+      function is_number_float(d : bestreal) : boolean;
+      begin
+        Result:=bestrealrec(d).SpecialType in
+          [fsZero,fsNZero,fsDenormal,fsNDenormal,fsPositive,fsNegative];
+      end;
 
     function get_real_sign(r: bestreal): longint;
-      var
-        p: pbyte;
       begin
-        p := pbyte(@r);
-{$ifdef FPC_LITTLE_ENDIAN}
-        inc(p,sizeof(r)-1);
-{$endif}
-        if (p^ and $80) = 0 then
-          result := 1
-        else
-          result := -1;
+        if bestrealrec(r).Sign then Result:=-1 else Result:=1;
       end;
 
     function convertdoublerec(d : tcompdoublerec) : tcompdoublerec;{$ifdef USEINLINE}inline;{$endif}
@@ -1035,50 +1020,15 @@ implementation
         result:=d;
       end;
 
-{$if defined(aarch64) or not defined(FPC_HAS_TYPE_EXTENDED)}
-    const
-      BestRealZeroLayoutCheck = 1 div Ord(SizeOf(bestreal) = SizeOf(double));
-
     function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result:=(QWord(TCompDoubleRec(value).bytes)=0);
+        Result:=bestrealrec(value).SpecialType=fsZero;
       end;
 
     function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
       begin
-        Result:=(QWord(TCompDoubleRec(value).bytes)=QWord(MathNegZero.bytes));
+        Result:=bestrealrec(value).SpecialType=fsNZero;
       end;
-{$else}
-    const
-      BestRealZeroLayoutCheck = 1 div Ord(SizeOf(bestreal) <> SizeOf(double));
-
-    function IsPosZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
-      var
-        X, Count: Integer;
-        ByteArray: PByte;
-      begin
-        Result:=False;
-        ByteArray:=@value;
-        Count:=SizeOf(bestreal);
-
-        { Read raw bytes of floating-point value - must be all zeroes }
-        Result:=(CompareByte(ByteArray^,MathPosZero.bytes,Count)=0);
-      end;
-
-    function IsNegZero(value: bestreal): boolean; {$ifdef USEINLINE}inline;{$endif USEINLINE}
-      var
-        X, Count: Integer;
-        ByteArray: PByte;
-      begin
-        Result:=False;
-        ByteArray:=@value;
-        Count:=SizeOf(bestreal);
-
-        { Read raw bytes of floating-point value - must be all zeroes except
-          for the most significant (sign) bit }
-        Result:=(CompareByte(ByteArray^,MathNegZero.bytes,Count)=0);
-      end;
-{$endif}
 
     { '('D1:'00000000-'D2:'0000-'D3:'0000-'D4:'0000-000000000000)' }
     function string2guid(const s: string; var GUID: TGUID): boolean;

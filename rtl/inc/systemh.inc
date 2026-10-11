@@ -144,10 +144,11 @@ Type
 
 {$ifdef CPUX86_64}
 {$ifdef FPC_HAS_TYPE_EXTENDED}
-  { win64 doesn't support the legacy fpu }
   {$define DEFAULT_EXTENDED}
   {$define SUPPORT_EXTENDED}
+{$ifndef FPC_COMP_IS_INT64}
   {$define SUPPORT_COMP}
+{$endif}
   {$ifndef FPUNONE}
     ValReal = Extended;
   {$endif}

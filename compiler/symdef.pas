@@ -25,7 +25,8 @@ unit symdef;
 interface
 
     uses
-       { common }
+       tpcompilerreal,
+    { common }
        cclasses,widestr,
        { global }
        globtype,globals,tokens,constexp,
@@ -3665,8 +3666,6 @@ implementation
            s64real,
            s64currency,
            s64comp : savesize:=8;
-         else
-           savesize:=0;
          end;
       end;
 
@@ -3675,7 +3674,7 @@ implementation
       const
         floattype2vardef : array[tfloattype] of longint = (
           varSingle,varDouble,varUndefined,varUndefined,
-          varUndefined,varCurrency,varUndefined);
+          varUndefined,varCurrency);
       begin
         if (upper(typename)='TDATETIME') and
           assigned(owner) and
@@ -3704,7 +3703,7 @@ implementation
     function tfloatdef.GetTypeName : string;
       const
         names : array[tfloattype] of string[20] = (
-          'Single','Double','Extended','CExtended','Comp','Currency','Float128');
+          'Single','Double','Extended','CExtended','Comp','Currency');
       begin
          GetTypeName:=names[floattype];
       end;
@@ -5948,7 +5947,7 @@ implementation
                           end;
                       end;
                     constreal :
-                      str(pbestreal(hpc.value.valueptr)^,hs);
+                      hs:=realtostr(pbestreal(hpc.value.valueptr)^);
                     constpointer :
                       hs:=tostr(hpc.value.valueordptr);
                     constord :
@@ -7360,7 +7359,7 @@ implementation
 
            floattype2str : array[tfloattype] of string[1] = (
              'f','d','e','e',
-             'd','d','g');
+             'd','d');
 {$endif NAMEMANGLING_GCC2}
 
         var

@@ -1,238 +1,95 @@
-# Compiler package regressions
+﻿# Compiler package regressions
 
-## Linux glibc
-
-Run `python3 tests/dynamic-packages/run_linux_package_sdk_tests.py` on x86-64
-Linux for clean source-only normal/smart SDK builds, fresh/cached runtime tests,
-ordinary compiler/export checks and source-free relocation. For an existing SDK,
-use `run_linux_package_tests.py --sdk <directory>`; `--cached` and `--smart` select
-those configurations. See the [Linux implementation and SDK guide](../../nexusfpc-dynamic-packages-linux.md).
-
-## Metadata
-
-This suite covers dynamic-package backlog items 1–4 without enabling packages in
-any production target. It builds an isolated Win64 compiler and a test driver
-linked against the same compiler units. The driver enables the package capability
-only inside its own process for graph validation and compile-only consumption.
+Windows package validation uses PowerShell and the standard package-enabled
+compiler. Build from the stock **FPC 3.2.2 i386-win32** bootstrap; a new Nexus
+seed is not required. LLVM Clang/LLD, RC and readobj must be on `PATH`.
 
 From the repository root:
 
 ```powershell
-python tests\dynamic-packages\run_package_metadata_tests.py
+./tests/dynamic-packages/Run-PackageSDKTests.ps1 `
+  -BootstrapBin C:/lazarus/fpc/3.2.2/bin/i386-win32 `
+  -OutputRoot output/package-validation -FullSuite
 ```
 
-Requirements: Python 3, an FPC 3.2.2 Win64 bootstrap (default
-`C:\lazarus\fpc\3.2.2\bin\x86_64-win64\ppcx64.exe`), and matching NexusFPC RTL
-units already built in `rtl\units\x86_64-win64`. Use `--bootstrap` to select a
-different bootstrap location. Outputs go to a new temporary directory, printed
-on success. `--output-root` accepts an empty directory; `--compiler-build` reuses
-an isolated build directory and incrementally rebuilds its compiler before testing.
-Neither option should point at the repository's production compiler directory.
+Use a new or empty output directory. The runner copies tracked and new,
+non-ignored compiler/RTL/build/example sources into an isolated source snapshot.
+It builds one matching SDK for each normal/smart-link configuration through
+`Build-NexusFPCPackageSDK.ps1` and the shared `NexusFPCBootstrapSeed.ps1`.
+`-FullSuite` adds all Windows package suites and the Extended/shared-RTL math
+regressions. Omit it to run just SDK construction and relocation checks.
+Each suite writes `steps.json` and individual command logs. Expected failures
+must match both their exit status and diagnostic text. Tests execute sequentially;
+the native DLL probes run in separate Pascal processes.
 
-The suite records each command, exit code, and log path in `steps.json`. It checks:
-
-- Case-insensitive identity, display spelling, duplicate diagnostics, and promotion
-  from an indirect requirement to a direct one.
-- Valid diamond dependencies, self/indirect cycles, and cycles involving a package
-  being built that does not yet have a PCP.
-- Conflicting owners in both dependency orders and the existing parser diagnostic
-  for containing a unit already supplied by a required package.
-- Real writer/reader round-trip, unchanged original PPU, repeated loading,
-  independent bounded unit streams, and independently encoded version-4 metadata.
-- Empty/multiple-unit containers, opposite-endian metadata, metadata crossing the
-  entry buffer boundary, and malformed headers, counts, names, entries, checksums,
-  offset tables, overlapping ranges, and embedded PPU headers.
-- Compilation using a PCP while the packaged unit's source, standalone PPU, and
-  object file are unavailable. This includes resumable loading of its dependencies.
-- Continued rejection of package declarations by the production compiler.
-
-On 2026-10-09 all 70 steps passed. The existing `tests/unit-exports` suite supplies
-separate ordinary EXE/DLL build, export, runtime, cached-unit, and smart-link coverage.
-
-The source-free consumer uses `-Cn`: this proves compile-time PCP consumption,
-not package linking, shared RTL identity, or runtime loading/unloading. There is
-no historical PCP corpus here; current coverage uses independently encoded v4
-fixtures and real compiler-generated PPUs. Item 16 deliberately replaces the
-experimental v3 format; old package containers must be rebuilt.
-
-## Experimental Win64 linking and symbols
+Individual suites accept an existing matching SDK:
 
 ```powershell
-python tests\dynamic-packages\run_package_link_tests.py
+./tests/dynamic-packages/Run-PackageMetadataTests.ps1 -SdkRoot SDK -OutputRoot output/pkg-metadata
+./tests/dynamic-packages/Run-PackageLinkTests.ps1 -SdkRoot SDK -OutputRoot output/pkg-link
+./tests/dynamic-packages/Run-PackageRuntimeTests.ps1 -SdkRoot SDK -OutputRoot output/pkg-runtime
+./tests/dynamic-packages/Run-PackageLoaderTests.ps1 -SdkRoot SDK -OutputRoot output/pkg-loader
+./tests/dynamic-packages/Run-ThreadvarPackageTests.ps1 -SdkRoot SDK -OutputRoot output/pkg-threadvar
 ```
 
-This runner first builds the isolated compiler/driver and runs the metadata suite,
-then builds real `.ppk` providers and consumers through the normal package parser
-and linker. It additionally requires 64-bit Python and LLVM tools on `PATH`.
-It accepts the same `--source-root`, `--bootstrap`, `--compiler-build`, and
-`--output-root` options as the metadata runner.
+Metadata/link/runtime use the complete SDK build, including its matching static
+RTL and staged compiler sources under `work/`. Loader/threadvar use the SDK
+compile helper and accept `-SmartLink` with a matching smart SDK.
 
-Each of four cases uses fresh directories: ordinary and smart linking, each with
-freshly compiled or cached source-hidden units. The provider's source, PPU, and
-object are hidden before consumer compilation; the distribution contains only
-PCP and DLL files. Cached unit hashes must remain unchanged.
+## Coverage
 
-The suite checks PE exports/imports and loads the two DLLs into a separate native
-Python process for each case. It verifies:
+| Suite | Checks |
+| --- | --- |
+| Metadata | Case-insensitive identities, display spelling, direct-requirement promotion, duplicate diagnostics, diamonds, self/indirect/building-package cycles, conflicting owners in both orders, real writer round-trip, unchanged source PPU, repeated loading and bounded unit streams. Independently encoded NXP v4 containers include empty/multiple units, opposite-endian metadata, 1,600 requirements crossing the buffer boundary, malformed headers/counts/names/entries/checksums/tables, overlapping ranges and malformed/foreign embedded units. Source-free PCP consumption and normal compiler package declarations are tested. |
+| Link | Normal/smart linking with fresh/cached units. Only PCP/DLL files remain available to consumers; cached PPU/object hashes must stay unchanged. PE imports must resolve to exports. Native probes check writable globals, class/enum/record RTTI, VMTs, resources, public aliases, procedure pointers, parent/inherited dispatch, managed-record metadata and inline implementation-helper calls. Negative cases cover missing System/units and duplicate owners. |
+| Runtime | Four fresh/cached, normal/smart configurations. Independent descriptor inspection checks ABI, compiler/target/RTL identity, owners, dependencies, native handles and inactive contexts after native loading. Synthetic lifecycle checks and real hosts cover diamond initialization once, reverse finalization, rollback, resumable cleanup, shared objects/strings/arrays/interfaces, typed exceptions, resources, wide constants and unreferenced contained units. All cross-image imports must resolve. |
+| SDK | Source-only normal/smart builds; unchanged input sources; ordinary static hosts without nxrtl imports. Relocation copies only SDK distribution files and provider PCP/DLL pairs, hides the original source and SDK, then builds/runs console and GUI hosts. Exact lifecycle output, PE target/subsystem, runtime DLL set and unchanged SDK hashes are checked. |
+| Loader | Console/GUI startup import inspection and runtime-only relocation; repeated loads, diamond retention, identity, factories, managed values, exceptions, resources, registry/callback cleanup, component-handler restoration, native unmapping, reload and startup pins. Separate processes exercise initialization/finalization/cleanup failures, active/new dependencies, TLS, nested calls, missing/non-package/duplicate images and SDK/ABI/dependency mismatches. Failed compilation/linking and stale consumers must preserve publication; mismatched PCP/DLL pairs and tampered manifests must be rejected. |
+| Threadvar | One startup owner and 24 late owners, imported variables, 32-byte alignment, managed strings, directory growth without moving variables, unload/reload, independent native references and initialization rollback. No worker threads are created. |
+| Compiler real | Extended package parameters/results/callbacks/records/var parameters, Math ABI and unchanged shared-RTL numeric regressions. |
 
-- Shared writable-global address and values across both images.
-- Class VMT, class/enum/record RTTI, and resource-string record identity.
-- Public aliases, imported procedure calls, and procedure-pointer calls through
-  either the provider or a consumer import thunk.
-- Parent-class references in generated VMTs, inheritance, virtual dispatch, and
-  inherited method calls.
-- Managed-record initialization metadata, initialization/finalization helper
-  imports, and the Win64 exception-handler symbol.
-- Inlined code that calls an exported implementation-only helper.
-- Clean diagnostics for a package without System, missing contained units, and
-  duplicate unit ownership.
+`NX_BaseCounter` and the other `NX_Base*`/`NX_Consumer*` symbols are test exports,
+unrelated to the profiler. Native loading in the symbol/descriptor probes only
+maps DLLs; generated EXE startup or `LoadPackage` performs Pascal activation.
+The source-free metadata consumer uses `-Cn`; linking and lifecycle are verified
+by the other suites.
 
-`NX_BaseCounter` and the other `NX_Base*`/`NX_Consumer*` names are test export
-aliases, unrelated to `packages/nexusprofiler` or the removed `nexus/` experiment.
-All test orchestration and the package parser continuation use sequential
-execution; this work introduces no threads or parallel compilation mechanism.
+The PowerShell migration preserves the cases from the retired Windows metadata,
+link, runtime, SDK and loader Python runners. It shares SDK construction instead
+of separately bootstrapping obsolete stock-Win64 compiler builds in every suite.
+Native descriptor checks derive the compatibility revision from current source;
+there is no stale hard-coded revision 35 expectation. Current artifacts use
+NXP v4 and NXU header 208, compatibility revision **39**.
 
-The final run on 2026-10-09 passed 28 runner steps: the complete 70-step metadata
-suite plus 27 linking, symbol, and diagnostic checks. Logs are in
-`C:\Users\kcollins\AppData\Local\Temp\nxpkg-link-7oh1gfgu`.
+## Timings
 
-### Runtime boundary
-
-The consumer is a second package DLL. The provider includes `System` and `ObjPas`
-through the existing implicit-unit ownership rule. Native loading plus probes
-using static object storage and nil managed values establish symbol sharing;
-they do not establish automatic Pascal package lifecycle or a supported shared
-RTL startup. Resource coverage verifies the record address, not resource loading.
-Exception-handler coverage verifies linking, not cross-image exception unwinding.
-
-The earlier standalone EXE startup failure is covered by the shared RTL suite
-below. The symbol-only runner no longer expects or counts that historical failure.
-
-The standard Win64 and Linux x86-64 compilers now support packages. Metadata uses
-NXP v4 and NXU header 208 with compatibility revision 36; rebuild existing units.
-
-## Shared RTL and explicit startup activation (items 6-10)
+For a sequential comparison of two fully bootstrapped Win64 trees:
 
 ```powershell
-python tests\dynamic-packages\run_package_runtime_tests.py
+./tests/dynamic-packages/Run-PackageSupportBenchmarks.ps1 `
+  -BaselineRoot BASELINE -CandidateRoot CANDIDATE `
+  -OutputRoot output/package-timings
 ```
 
-This builds an isolated standard compiler and
-matching package-enabled RTL from source. It needs the default FPC 3.2.2 bootstrap,
-64-bit Python, and LLVM tools on PATH. It uses the checked-in target capabilities.
-Outputs, command records (`steps.json`), PE import/export reports, descriptor JSON,
-and application output go to a new temporary directory. `--output-root` can reuse
-a development output directory; omit it for a fresh validation build.
+The runner warms caches, alternates baseline/candidate order, checks runtime
+checksums, and saves every wall-time sample plus median/minimum/maximum,
+compiler/RTL hashes and executable sizes in `timings.json`. Run it without other
+builds or benchmarks competing for the machine. It compares fixture builds,
+compiler rebuilds, writable globals and managed-value workloads.
 
-Four configurations cover fresh and cached units with normal and smart linking.
-Only PCP/DLL files are distributed; original provider sources, PPUs, and objects
-are hidden. Cached artifacts must retain their hashes. Checks include:
+## Linux glibc
 
-- Descriptor version/layout, compiler/target/System identity, unit ownership,
-  dependencies, native image handles, and zero initialization during native loading.
-- Every inter-package and EXE package import resolves to the provider's exports,
-  including anonymous managed-field RTTI.
-- Independent module contexts; diamond initialization exactly once; reverse
-  finalization; invalid descriptor, duplicate owner, and dependency-cycle rejection.
-- A real EXE and packages sharing class/RTTI identity, objects allocated and freed
-  across images, strings, dynamic arrays, interfaces, and typed exception unwinding.
-- Resource strings, wide-string constants, and metadata for contained units not
-  directly referenced by the EXE, using existing main-thread storage.
-- Failed activation rolls back completed units while preserving active dependencies;
-  synthetic cleanup failures preserve the original exception. Interrupted normal
-  finalization can resume without repeating callbacks.
+The existing Linux harnesses are unchanged by the Windows migration:
+`run_linux_package_sdk_tests.py` covers source-only normal/smart SDK construction,
+fresh/cached runtime cases, ordinary compiler/export checks and relocation.
+`run_linux_package_tests.py` accepts an existing SDK. Linux threadvar and timing
+harnesses remain separately named with the `run_linux_` prefix.
+No Linux execution is implied by a Windows bootstrap or cross-RTL build.
 
-The approved contract is in [the runtime design](../../nexusfpc-dynamic-packages-runtime-design.md).
-The foundation owns System/ObjPas/SysUtils; generated EXE startup explicitly
-activates packages. Native LoadLibrary only maps them. This low-level suite uses
-caller-held mappings; the managed LoadPackage/UnloadPackage suite below exercises
-native release and registry cleanup. The unified threadvar suite below covers
-late-loaded TLS within the single-threaded package lifecycle contract.
-No worker threads or new synchronization were introduced.
-
-Final 2026-10-09 runtime validation passed **99/99 steps** from a fresh directory:
-`C:\Users\kcollins\AppData\Local\Temp\nxpkg-runtime-tbns3jyv`. The corresponding
-ordinary/full-cross build results are recorded in the
-[gap analysis](../../nexusfpc-dynamic-packages-gap-analysis.md#implementation-results-items-6-10).
-
-## Package SDK workflow (item 11)
-
-The [SDK guide](../../examples/dynamic-packages/README.md) documents the reusable
-PowerShell build and compile helpers and checked-in console/GUI examples.
-Both workflows now build `compiler/pp.pas`, the standard compiler entry point.
-Package support is enabled by the normal Win64/Linux x86-64 target definitions.
-SDK regressions also build and run static hosts and verify that they have no
-shared-RTL imports. Older validation records below describe their original runs.
-
-```powershell
-python tests\dynamic-packages\run_package_sdk_tests.py
-```
-
-This runner copies tracked and new, non-ignored compiler/RTL/script/example files
-into a source-only snapshot, without compiler message includes or prebuilt RTL
-units. It builds and runs the examples in normal and smart-link modes, checks
-that the source snapshot is unchanged, and copies only the SDK distribution and
-provider PCP/DLL pairs. It then hides the original source and SDK directories and
-rebuilds/runs both hosts from the relocated distribution. Checks include PE
-subsystem selection, shared identity, cross-image managed ownership, dependency
-initialization once, reverse finalization, and unchanged SDK artifacts.
-
-Requirements: Python 3.9+, Git, Windows PowerShell, the FPC 3.2.2 Win64 bootstrap,
-and LLVM Clang/LLD on PATH. `--bootstrap-bin` selects another bootstrap location;
-`--output-root` must be empty. `--build-timeout` controls the allowance for each
-fresh SDK build (default 1800 seconds); other steps retain their shorter timeout.
-All commands and results are recorded under the
-printed output directory.
-
-Validation on 2026-10-09 passed **19/19 workflow checks**:
-`C:\Users\kcollins\AppData\Local\Temp\nxpkg-sdk-1ej_6isf`. The shared-entry-point
-runtime suite also passed **99/99**, and ordinary EXE/DLL coverage passed **32/32**;
-see the [item 11 results](../../nexusfpc-dynamic-packages-gap-analysis.md#implementation-results-item-11).
-
-## Late loading, unloading and publication (items 12-14 and 16)
-
-```powershell
-python tests\dynamic-packages\run_package_loader_tests.py
-python tests\dynamic-packages\run_package_loader_tests.py --smart
-```
-
-Each run builds a fresh SDK unless `--sdk-root` selects an existing matching
-normal/smart SDK. `--output-root` must be new or empty. LLVM RC and readobj are
-required in addition to the SDK prerequisites. Commands and output are recorded
-in `steps.json` and per-check logs.
-
-Console/GUI hosts prove implementation DLLs are absent from startup imports and
-run from relocated directories containing only runtime EXEs/DLLs. Coverage includes
-repeated loads, diamond retention, class/RTTI identity, factories and managed
-strings, typed exceptions, native/string resources, image-owned registry and
-callback cleanup, restoration of overridden component initialization handlers,
-native unmapping, reload and startup pinning.
-
-Separate processes inject initialization/finalization/cleanup failures, exercise
-new and already active dependencies, initialize/finalize/reload new TLS, reject nested lifecycle calls,
-missing/non-package images, duplicate images, SDK/ABI/dependency mismatches, and
-verify exception destruction before rollback releases the DLL. Failed compiler
-and linker invocations preserve the previous generation, as do rejected stale
-consumers. Artifact checks reject mismatched PCP/DLL pairs and manifest tampering.
-
-The [load/unload design](../../nexusfpc-dynamic-packages-load-unload-design.md)
-records the current contract, tradeoffs and final validation results.
-
-## Unified threadvar storage
-
-Rebuild a matching SDK, then run the same sequential suite on Windows or Linux:
-
-```text
-python tests/dynamic-packages/run_threadvar_package_tests.py --sdk SDK_DIRECTORY --output NEW_DIRECTORY
-```
-
-The suite checks a startup owner and 24 late owners, shared imported variables,
-32-byte explicit alignment, managed strings, directory growth without moving
-variables, repeated unload/reload, an independent native loader reference, and
-initialization rollback. It creates no worker threads. Existing ordinary thread
-manager and Win64 DLL contract tests validate the reused platform adapters.
-The ordinary `tests/test/tthreadvarpointer.pp` regression also checks direct and
-interior pointers into threadvar blocks through HeapTrc on both platforms.
-
-The [design and validation report](../../nexusfpc-threadvar-design.md) records the
-new ABI, measured costs and the remaining multithreaded lifecycle restriction.
+See the [Linux guide](../../nexusfpc-dynamic-packages-linux.md),
+[SDK guide](../../examples/dynamic-packages/README.md),
+[runtime design](../../nexusfpc-dynamic-packages-runtime-design.md),
+[load/unload design](../../nexusfpc-dynamic-packages-load-unload-design.md),
+[threadvar design](../../nexusfpc-threadvar-design.md) and
+[native floating-point policy and validation](../../nexusfpc-native-real-design.md).
+The ordinary EXE/DLL and Win64 ABI suites remain separate integration checks.

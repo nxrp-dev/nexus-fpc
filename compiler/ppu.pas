@@ -43,7 +43,7 @@ const
   CurrentPPUVersion = 208;
   { for any other changes to the ppu format, increase this version number
     (it's a cardinal) }
-  CurrentPPULongVersion = 36;
+  CurrentPPULongVersion = 39;
 
 { unit flags }
   uf_big_endian          = $000004;
@@ -56,9 +56,6 @@ const
   uf_little_endian       = $001000;
 
 type
-  { bestreal is defined based on the target architecture }
-  ppureal=bestreal;
-
   { set type aliases. We cast all sets to a corresponding array type so
     that if the set changes size, compilation will fail and we know that
     we have have to increase the ppu version }
@@ -158,18 +155,6 @@ implementation
     comphook,
     globals,
     fpchash;
-
-
-function swapendian_ppureal(d:ppureal):ppureal;
-
-type ppureal_bytes=array[0..sizeof(d)-1] of byte;
-
-var i:0..sizeof(d)-1;
-
-begin
-  for i:=low(ppureal_bytes) to high(ppureal_bytes) do
-    ppureal_bytes(swapendian_ppureal)[i]:=ppureal_bytes(d)[high(ppureal_bytes)-i];
-end;
 
 
 {*****************************************************************************

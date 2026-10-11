@@ -48,10 +48,6 @@ function llvm_experimental_constrained_sqrt(val: double; rounding, exceptions: L
 function llvm_sqrt_f80(val: cextended): cextended; compilerproc; external name 'llvm.sqrt.x86_fp80';
 function llvm_experimental_constrained_sqrt(val: cextended; rounding, exceptions: LLVMMetadata): cextended; external name 'llvm.experimental.constrained.sqrt.x86_fp80';
 {$endif}
-{$ifdef SUPPORT_FLOAT128}
-function llvm_sqrt_f128(val: float128): float128; compilerproc; external name 'llvm.sqrt.f128';
-function llvm_experimental_constrained_sqrt(val: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.sqrt.f128';
-{$endif}
 
 function llvm_fma_f32(a, b, c: single): single; compilerproc; external name 'llvm.fma.f32';
 function llvm_experimental_constrained_fma(a, b, c: single; rounding, exceptions: LLVMMetadata): single; external name 'llvm.experimental.constrained.fma.f32';
@@ -60,10 +56,6 @@ function llvm_experimental_constrained_fma(a, b, c: double; rounding, exceptions
 {$ifdef SUPPORT_EXTENDED}
 function llvm_fma_f80(a, b, c: cextended): cextended; compilerproc; external name 'llvm.fma.x86_fp80';
 function llvm_experimental_constrained_fma(a, b, c: cextended; rounding, exceptions: LLVMMetadata): cextended; external name 'llvm.experimental.constrained.fma.x86_fp80';
-{$endif}
-{$ifdef SUPPORT_FLOAT128}
-function llvm_fma_f128(a, b, c: float128): float128; compilerproc; external name 'llvm.fma.f128';
-function llvm_experimental_constrained_fma(a, b, c: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.fma.f128';
 {$endif}
 
 function llvm_experimental_constrained_fadd(a, b: single; rounding, exceptions: LLVMMetadata): single; external name 'llvm.experimental.constrained.fadd.f32';
@@ -80,12 +72,6 @@ function llvm_experimental_constrained_fsub(a, b: extended; rounding, exceptions
 function llvm_experimental_constrained_fmul(a, b: extended; rounding, exceptions: LLVMMetadata): extended; external name 'llvm.experimental.constrained.fmul.x86_fp80';
 function llvm_experimental_constrained_fdiv(a, b: extended; rounding, exceptions: LLVMMetadata): extended; external name 'llvm.experimental.constrained.fdiv.x86_fp80';
 {$endif}
-{$ifdef SUPPORT_FLOAT128}
-function llvm_experimental_constrained_fadd(a, b: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.fadd.f128';
-function llvm_experimental_constrained_fsub(a, b: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.fsub.f128';
-function llvm_experimental_constrained_fmul(a, b: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.fmul.f128';
-function llvm_experimental_constrained_fdiv(a, b: float128; rounding, exceptions: LLVMMetadata): float128; external name 'llvm.experimental.constrained.fdiv.f128';
-{$endif}
 
 function llvm_experimental_constrained_fptrunc_f32_f64(a: double; rounding, exceptions: LLVMMetadata): single; compilerproc; external name 'llvm.experimental.constrained.fptrunc.f32.f64';
 function llvm_experimental_constrained_fpext_f64_f32(a: single; exceptions: LLVMMetadata): double; compilerproc; external name 'llvm.experimental.constrained.fpext.f64.f32';
@@ -94,16 +80,6 @@ function llvm_experimental_constrained_fptrunc_f32_f80(a: extended; rounding, ex
 function llvm_experimental_constrained_fptrunc_f64_f80(a: extended; rounding, exceptions: LLVMMetadata): double; compilerproc; external name 'llvm.experimental.constrained.fptrunc.f64.x86_fp80';
 function llvm_experimental_constrained_fpext_f80_f32(a: single; exceptions: LLVMMetadata): extended; compilerproc; external name 'llvm.experimental.constrained.fpext.x86_fp80.f32';
 function llvm_experimental_constrained_fpext_f80_f64(a: double; exceptions: LLVMMetadata): extended; compilerproc; external name 'llvm.experimental.constrained.fpext.x86_fp80.f64';
-{$ifdef SUPPORT_FLOAT128}
-function llvm_experimental_constrained_fptrunc_f128_f80(a: extended; rounding, exceptions: LLVMMetadata): float128; compilerproc; external name 'llvm.experimental.constrained.fptrunc.f128.x86_fp80';
-function llvm_experimental_constrained_fpext_f80_f32(a: float128; exceptions: LLVMMetadata): extended; compilerproc; external name 'llvm.experimental.constrained.fpext.x86_fp80.f128';
-{$endif}
-{$endif}
-{$ifdef SUPPORT_FLOAT128}
-function llvm_experimental_constrained_fptrunc_f32_f128(a: float128; rounding, exceptions: LLVMMetadata): single; compilerproc; external name 'llvm.experimental.constrained.fptrunc.f32.f128';
-function llvm_experimental_constrained_fptrunc_f64_f128(a: float128; rounding, exceptions: LLVMMetadata): double; compilerproc; external name 'llvm.experimental.constrained.fptrunc.f64.f128';
-function llvm_experimental_constrained_fpext_f128_f32(a: single; exceptions: LLVMMetadata): float128; compilerproc; external name 'llvm.experimental.constrained.fpext.f128.f32';
-function llvm_experimental_constrained_fpext_f128_f64(a: double; exceptions: LLVMMetadata): float128; compilerproc; external name 'llvm.experimental.constrained.fpext.f128.f64';
 {$endif}
 
 { only include the cases that may trigger rounding }

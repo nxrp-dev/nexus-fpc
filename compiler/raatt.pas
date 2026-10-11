@@ -26,6 +26,7 @@ unit raatt;
   interface
 
     uses
+      tpcompilerreal,
       { common }
       cutils,cclasses,
       { global }
@@ -900,7 +901,7 @@ unit raatt;
                 Consume(AS_INTNUM);
                 if negativ then
                  expr:='-'+expr;
-                val(expr,r,code);
+                Val(expr,r,code);
                 if code<>0 then
                  Begin
                    r:=0;
@@ -919,7 +920,7 @@ unit raatt;
                  Delete(expr,1,2);
                 if negativ then
                  expr:='-'+expr;
-                val(expr,r,code);
+                Val(expr,r,code);
                 if code<>0 then
                  Begin
                    r:=0;

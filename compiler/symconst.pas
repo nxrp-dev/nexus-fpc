@@ -83,7 +83,6 @@ const
   ftExtended = 2;
   ftComp     = 3;
   ftCurr     = 4;
-  ftFloat128 = 5;
 
   mkProcedure        = 0;
   mkFunction         = 1;

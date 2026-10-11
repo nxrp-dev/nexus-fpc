@@ -26,6 +26,7 @@ unit scanner;
 interface
 
     uses
+       tpcompilerreal,
        cclasses,
        globtype,globals,constexp,version,tokens,
        symtype,symdef,symsym,
@@ -1207,7 +1208,7 @@ type
       d: bestreal;
       code: integer;
     begin
-      val(s,d,code);
+      Val(s,d,code);
       if code=0 then
         result:=texprvalue.create_real(d)
       else
@@ -1519,7 +1520,7 @@ type
         constresourcestring:
           SetString(result,pchar(value.valueptr),value.len);
         constreal:
-          str(pbestreal(value.valueptr)^,result);
+          result:=realtostr(pbestreal(value.valueptr)^);
         constset:
           begin
             result:=',';

@@ -26,6 +26,7 @@ Unit RAUtils;
 Interface
 
 Uses
+  tpcompilerreal,
   cutils,cclasses,
   globtype,aasmbase,aasmtai,aasmdata,cpubase,cpuinfo,cgbase,cgutils,
   symconst,symbase,symtype,symdef,symsym,constexp,symcpu;
@@ -1798,12 +1799,12 @@ end;
   {***********************************************************************}
     Begin
        case real_typ of
-          s32real : p.concat(tai_realconst.create_s32real(value));
+          s32real : p.concat(tai_realconst.create_s32real(Single(value)));
           s64real :
-             p.concat(tai_realconst.create_s64real(value));
+             p.concat(tai_realconst.create_s64real(Double(value)));
           s80real : p.concat(tai_realconst.create_s80real(value,s80floattype.size));
           sc80real : p.concat(tai_realconst.create_s80real(value,sc80floattype.size));
-          s64comp : p.concat(tai_realconst.create_s64compreal(trunc(value)));
+          s64comp : p.concat(tai_realconst.create_s64compreal(Trunc(value)));
           else
             internalerror(2014050608);
        end;

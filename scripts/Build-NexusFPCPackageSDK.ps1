@@ -2,12 +2,12 @@
 .SYNOPSIS
 Build an isolated experimental Win64 package SDK from an FPC 3.2.2 bootstrap.
 .EXAMPLE
-.\scripts\Build-NexusFPCPackageSDK.ps1 -OutputRoot C:\temp\nxpkg-sdk -BuildExamples
+.\scripts\Build-NexusFPCPackageSDK.ps1 -OutputRoot output\nxpkg-sdk -BuildExamples
 #>
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
-    [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64',
+    [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\i386-win32',
     [string]$OutputRoot,
     [switch]$BuildExamples,
     [switch]$RunExamples,
@@ -15,6 +15,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
+. (Join-Path $PSScriptRoot 'NexusFPCBootstrapSeed.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $BootstrapBin = (Resolve-Path -LiteralPath $BootstrapBin).Path
@@ -28,14 +29,14 @@ foreach ($directory in @($SourceRoot,$BootstrapBin,$OutputRoot)) {
 if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $OutputRoot -Force)) {
     throw 'OutputRoot must be new or empty. Each SDK is a matching compiler/RTL build.'
 }
-$bootstrap = Join-Path $BootstrapBin 'ppcx64.exe'
+$bootstrap = Join-Path $BootstrapBin 'ppc386.exe'
 $make = Join-Path $BootstrapBin 'make.exe'
-$bootstrapRtl = [IO.Path]::GetFullPath((Join-Path $BootstrapBin '..\..\units\x86_64-win64\rtl'))
+$bootstrapRtl = [IO.Path]::GetFullPath((Join-Path $BootstrapBin '..\..\units\i386-win32\rtl'))
 foreach ($inputPath in @($bootstrap,$make,"$SourceRoot\compiler\pp.pas","$bootstrapRtl\system.ppu")) {
     if (-not (Test-Path -LiteralPath $inputPath)) { throw "Missing build input: $inputPath" }
 }
-if ((& $bootstrap -iV) -ne '3.2.2' -or (& $bootstrap -iTP) -ne 'x86_64' -or (& $bootstrap -iTO) -ne 'win64') {
-    throw 'Requires an FPC 3.2.2 Win64 bootstrap.'
+if ((& $bootstrap -iV) -ne '3.2.2' -or (& $bootstrap -iTP) -ne 'i386' -or (& $bootstrap -iTO) -ne 'win32') {
+    throw 'Requires an FPC 3.2.2 Win32 bootstrap with hardware80 arithmetic.'
 }
 foreach ($tool in @('clang.exe','lld-link.exe')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw "$tool must be on PATH." }
@@ -45,12 +46,10 @@ $bin = Join-Path $OutputRoot 'bin'
 $packages = Join-Path $OutputRoot 'packages'
 $units = Join-Path $OutputRoot 'units'
 $logs = Join-Path $OutputRoot 'logs'
-$compilerSource = Join-Path $work 'compiler-source'
-$compilerUnits = Join-Path $work 'compiler-units'
 $rtl = Join-Path $work 'rtl-units'
 $rtlBin = Join-Path $work 'rtl-bin'
 $foundation = Join-Path $work 'nxrtl'
-foreach ($directory in @($bin,$packages,$units,$logs,$compilerSource,$compilerUnits,$rtl,$rtlBin,$foundation)) {
+foreach ($directory in @($bin,$packages,$units,$logs,$rtl,$rtlBin,$foundation)) {
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
 }
 $steps = [Collections.Generic.List[object]]::new()
@@ -68,25 +67,9 @@ function Invoke-PackageStep([string]$Name,[string]$Executable,[string[]]$StepArg
     Write-Host "PASS $Name"
 }
 
-# Stage source files only. Compiler PPUs and generated message includes from an
-# earlier ordinary bootstrap cannot leak into this compiler build.
-$originalCompiler = Join-Path $SourceRoot 'compiler'
-foreach ($file in Get-ChildItem -LiteralPath $originalCompiler -Recurse -File) {
-    if ($file.Extension -notin @('.pas','.pp','.inc') -or $file.Name -in @('msgtxt.inc','msgidx.inc')) { continue }
-    $destination = Join-Path $compilerSource $file.FullName.Substring($originalCompiler.Length+1)
-    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
-    Copy-Item -LiteralPath $file.FullName -Destination $destination
-}
-$bootstrapOptions = @('-n',"-Fu$bootstrapRtl","-FU$compilerUnits")
-Invoke-PackageStep 'message-generator' $bootstrap ($bootstrapOptions + @("-FE$work","$compilerSource\utils\msg2inc.pp"))
-Invoke-PackageStep 'messages' "$work\msg2inc.exe" @("$SourceRoot\compiler\msg\errore.msg","$compilerSource\msg",'msg')
-$compilerOptions = $bootstrapOptions + @('-O2','-dx86_64',"-Fu$compilerUnits","-FE$bin")
-foreach ($part in @('','x86_64','x86','systems')) {
-    $directory = Join-Path $compilerSource $part
-    $compilerOptions += @("-Fu$directory","-Fi$directory")
-}
-Invoke-PackageStep 'compiler' $bootstrap ($compilerOptions + @('-oppcx64.exe',"$compilerSource\pp.pas"))
+$seed = New-NexusFPCBootstrapSeed -SourceRoot $SourceRoot -BootstrapBin $BootstrapBin -OutputRoot (Join-Path $work 'seed')
 $compiler = Join-Path $bin 'ppcx64.exe'
+Copy-Item -LiteralPath $seed.Compiler -Destination $compiler
 $oldPath = $env:PATH
 try {
     $env:PATH = "$BootstrapBin;$oldPath"

@@ -192,26 +192,15 @@ implementation
 
      function tx86inlinenode.first_pi : tnode;
       begin
-        if (tfloatdef(pbestrealtype^).floattype=s80real) then
-          begin
-            expectloc:=LOC_FPUREGISTER;
-            first_pi := nil;
-          end
-        else
-          result:=inherited;
+        expectloc:=LOC_FPUREGISTER;
+        Result:=nil;
       end;
 
 
      function tx86inlinenode.first_arctan_real : tnode;
       begin
-
-        if (tfloatdef(pbestrealtype^).floattype=s80real) then
-          begin
-            expectloc:=LOC_FPUREGISTER;
-            first_arctan_real := nil;
-          end
-        else
-          result:=inherited;
+        expectloc:=LOC_FPUREGISTER;
+        Result:=nil;
       end;
 
      function tx86inlinenode.first_abs_real : tnode;
@@ -243,37 +232,20 @@ implementation
 
      function tx86inlinenode.first_ln_real : tnode;
       begin
-        if (tfloatdef(pbestrealtype^).floattype=s80real) then
-          begin
-            expectloc:=LOC_FPUREGISTER;
-            first_ln_real := nil;
-          end
-        else
-          result:=inherited;
+        expectloc:=LOC_FPUREGISTER;
+        Result:=nil;
       end;
 
      function tx86inlinenode.first_cos_real : tnode;
       begin
-
-        if (tfloatdef(pbestrealtype^).floattype=s80real) then
-          begin
-            expectloc:=LOC_FPUREGISTER;
-            result:=nil;
-          end
-        else
-          result:=inherited;
+        expectloc:=LOC_FPUREGISTER;
+        Result:=nil;
       end;
 
      function tx86inlinenode.first_sin_real : tnode;
       begin
-
-        if (tfloatdef(pbestrealtype^).floattype=s80real) then
-          begin
-            expectloc:=LOC_FPUREGISTER;
-            result:=nil;
-          end
-        else
-          result:=inherited;
+        expectloc:=LOC_FPUREGISTER;
+        Result:=nil;
       end;
 
 

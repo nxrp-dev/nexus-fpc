@@ -22,15 +22,8 @@ Interface
     globtype;
 
 Type
-   bestreal = double;
-   bestrealrec = TDoubleRec;
-   ts32real = single;
-   ts64real = double;
-   ts80real = type extended;
-   ts128real = type extended;
-   ts64comp = comp;
 
-   pbestreal=^bestreal;
+
 
    { possible supported processors for this target }
    tcputype =

@@ -1,8 +1,111 @@
 # Unexpected failures encountered during test consolidation
 
-The sections below preserve the consolidation findings. The correction pass
-addresses the local failures listed below; numeric/directive questions and
-grouping-only output differences remain separate for discussion.
+The sections below preserve the consolidation findings and subsequent fixes.
+The approved numeric implementation supersedes the earlier deferred numeric
+recommendations. Grouping-only output differences remain separate.
+
+## 2026-10-11: native floating-point policy supersedes software80
+
+The owner subsequently chose hardware80 Extended on x86 (including Win64),
+Double Extended on ARM, and host-native compiler arithmetic. Currency/Comp keep
+their existing representations. NXU long revision 38 replaces revision 37;
+rebuild all compiler/RTL/package artifacts together.
+
+See [the native floating-point decisions and results](../nexusfpc-native-real-design.md)
+for the current implementation. The software80 results below are preserved as
+historical evidence and do not describe the current evaluator. Its exact
+high-precision transcendental contract is deliberately retired; the unchanged
+reference corpus remains available to measure the native math differences.
+
+The native implementation passes all 680 consolidated group checks and the
+unchanged original numeric regressions. The final clean bootstrap passes all
+13 retained RTL targets, 34 Win32 and 42 Win64 focused numeric steps, and all
+51 Win64/LLD contract steps. Package Extended ABI and shared-RTL math checks
+also pass. The design record distinguishes these results from the 665 measured
+native transcendental differences; it records the accepted accuracy tradeoff
+and the platforms not executed locally.
+
+## Historical: approved Currency and software80 implementation
+
+The existing compiler pipeline now uses software binary80 real constants on all
+hosts, completing the earlier soft80 integration across literal parsing,
+folding, comparisons, PPU import/export and assembly emission. The parser,
+expression tree, type system, target directives and runtime numeric ABI remain
+in place. Ln, Exp, ArcTan, Sin and Cos use existing software binary128 arithmetic
+for guard precision before rounding to binary80. There is one numeric path.
+
+Currency literal conversion retains exact scaled values, including adjacent
+endpoints and the positive magnitude parsed before negating the negative limit.
+Range state survives copied and serialized nodes. Lowered Currency operands
+continue to emit their existing integer payload; a multiplication factor with
+its scale removed is not rescaled during emission.
+
+A one-line mask-width correction in the existing `softfpu.pp`
+`roundAndPackInt64` prevents rounding increments from erasing upper integer bits.
+The bootstrap and package SDK scripts now build the current software arithmetic
+units against the stock bootstrap RTL. The generic integer multiplication
+implementation is shared through an include for older bootstrap System units.
+
+NXU long revision **37** replaces 36. Real payloads are fixed ten-byte values;
+saved real nodes also carry Currency range state. Rebuild the compiler, RTL,
+packages and cached units together. See [the regression README](compiler-real/README.md)
+for the implementation contract, test commands and independent reference source.
+
+Validation:
+
+- All seven unchanged original Win32 regressions pass normally and with `-O2`
+  using both Win64-hosted and native-i386 compilers: **28 original checks**.
+  The two hosts emit identical assembly for all seven fixtures and the separate
+  diagnostic probe in both variants. `tw11308` requires no directive change.
+- **All 680 consolidated group checks pass**, covering 170 groups on Win32 and
+  Win64, normally and with `-O2`.
+- **2,617 independent high-precision vectors match exactly** for the five
+  transcendental functions. The corpus includes 32 very large trigonometric
+  inputs evaluated independently at 17024 bits. It passes on Win64 and Win32,
+  normally and with `-O2`, including native-i386 host builds.
+- Fresh/cached PPU tests, Currency endpoint and rejection tests, signed zero,
+  literal limits, Single/Double rounding boundaries, and integer-rounding cases
+  pass. Win64-hosted and native-i386 compilers read each other's Win32 PPUs.
+- Focused AArch64 Linux RTL compilation and Win32 DWARF compile/run checks pass.
+- A fresh package SDK, console/GUI lifecycle examples and shared-RTL consumers
+  of `tw1737`, `ttrig` and `twrstr8` pass.
+- The final clean native bootstrap and all 13 retained target RTL builds pass,
+  with the same 14 native warning lines. Linux FmtBCD and `-CfNONE` heaptrc
+  checks also pass. These are build checks, not execution on every target.
+- The final bootstrapped compilers pass the Win32 and Win64 numeric suites,
+  including fresh/cached PPUs and reference vectors. The Win64/LLD contract
+  suite passes with the final bootstrapped compiler. All seven original Win32
+  fixtures and the diagnostic probe also pass again with the final bootstrap,
+  normally and with `-O2` (`results-bootstrap.json`).
+
+Validation evidence is under `output/numeric-repair`. The authoritative full
+build is `bootstrap-complete.log`, with detailed logs in
+`bootstrap-complete/20261011-075901-84256a1e`. Final numeric-suite logs are
+`tests-bootstrap-win32.log` and `tests-bootstrap-win64.log`; contract results
+are in `win64-contracts.log`. Earlier failed or superseded build attempts are
+retained as diagnostic evidence, not successful validation.
+
+Compilation timing used baseline and repaired production compilers with their
+matching RTLs. Median compiler-process CPU times were:
+
+| Workload | Trials per compiler | Baseline | Repaired | Difference |
+| --- | ---: | ---: | ---: | ---: |
+| 50,000 floating-constant expressions | 7 | 453 ms | 734 ms | +62.1% |
+| Rebuild the same unchanged compiler sources with `-B -O2` | 3 | 15.203 s | 14.922 s | -1.9% |
+
+The second result shows no measured slowdown in that workload; the small
+difference is not evidence of a speed improvement. Other builds were running,
+so wall times were too variable for comparison. The stress test deliberately
+concentrates software arithmetic and is not a prediction for typical projects.
+Raw measurements and commands are in `timing-final/results.json`,
+`timing-final/compiler-results.json` and their adjacent PowerShell scripts.
+The cost is compilation work, not a switch to software arithmetic in generated
+applications. PPU revision 37 requires rebuilding existing compiled units.
+
+Implementation issues found by the expanded tests were corrected before this
+validation: insufficient digits in AArch64 immediate text, a rescaled optimized
+Currency multiplication factor, the negated Currency endpoint, and the software
+integer-rounding mask. No original test assertions were weakened.
 
 ## 2026-10-11: correction pass
 
@@ -75,6 +178,133 @@ for the requested discussion; do not introduce a redesign to make them pass.
 `tw41865c` passes on Win64 after the local scaling correction. Its Win32 compile
 rejection needs to be considered against its intended target coverage; this
 patch does not add Currency div/mod support to floating-backed Currency.
+
+### 2026-10-11: completed numeric evaluation
+
+Evaluated the committed correction baseline `3a473100`. No production compiler,
+RTL, build configuration, or checked-in test fixture was changed in this
+evaluation. PowerShell orchestration, copied fixtures, diagnostic programs and
+logs are under `output/numeric-evaluation`.
+
+The problem is real, but it is a compiler-host precision limitation rather than
+a general failure of Win32 runtime arithmetic. It also affects Windows-hosted
+x86-64 Linux compilation; treating it as exclusively a 32-bit issue would be
+incorrect. This finding does not authorize a replacement constant evaluator.
+
+#### What soft80 actually supplies
+
+`FPC_SOFT_FPUX80` is already enabled in the cross-compiler build. The underlying
+software floating-point library has 80-bit arithmetic routines, but the compiler
+does not use them as its general constant evaluator. Its `bestreal` remains the
+host's `Extended`, which is Double on the current Win64 host.
+
+- `compiler/pexpr.pas:2041` parses real literals into `bestreal`.
+- `compiler/assemble.pas:1240` widens the already-rounded Double to an 80-bit
+  representation when emitting an Extended constant.
+- `compiler/entfile.pas:1351` narrows an imported 80-bit PPU value to Double.
+
+Consequently, enabling soft80 does not restore digits or exponent range lost
+before emission. Changing a test's FPU or excess-precision setting does not
+change the precision of the compiler executable itself.
+
+#### Controlled comparisons
+
+Ran seven original fixtures with two compiler hosts and seven configurations:
+default, O2, EXCESSPRECISION ON, EXCESSPRECISION OFF, MINFPCONSTPREC 64,
+EXCESSPRECISION ON plus MINFPCONSTPREC 64, and SSE2. Both compiler hosts used the
+same Win32 RTL. All 98 compilations succeeded.
+
+- Native-i386 compiler: all seven tests pass in every configuration (49 runs).
+- Win64-hosted i386 cross-compiler: the six originally deferred tests plus
+  `tw0788` fail under default/O2. Only `tw11308` is corrected by MINFPCONSTPREC 64.
+- The MINFPCONSTPREC correction also passes cross-compiler O2 and native Win64
+  normal/O2 checks. The fixture assertions were unchanged in these copies.
+- All relevant compiler sources match the successful bootstrap source; the
+  differences in `assemble.pas` and `entfile.pas` are only line endings.
+
+| Fixture | Isolated finding | Scope of a possible correction |
+|---|---|---|
+| `tw11308` | MINFPCONSTPREC 64 gives the expected `1.58` and `0.58`. The emitted numeric bytes are unchanged; the formatting call receives the Double type indicator instead of Extended. | Explicit fixture precision setting; no compiler change. |
+| `tw6493` | The Extended literal is emitted as zero. Runtime `Val` of the same decimal produces the correct nonzero smallest denormal. | General 80-bit literal limitation. Runtime parse/format coverage can use an exact bit-pattern reference, while literal coverage stays a recorded compiler limitation. |
+| `tw25122` | Both large Extended literals have incorrect low mantissa bits. Runtime parsing produces exactly the byte arrays already asserted by the fixture. | Genuine 80-bit literal-precision coverage; do not weaken its expected bytes. |
+| `tfloatrecs` | The calculated Pi fraction is correct; its decimal comparison constant loses low bits. Runtime parsing of that same reference decimal matches the actual fraction exactly. | Separate the RTL record-helper check from the compiler-literal limitation. |
+| `tcurrency1` | `922337203685477` assigned to Currency becomes `922337203685476.9664`. The multiplication produces the correct value, but is compared against this incorrectly compiled expected value. | Currency constant conversion and emission, rather than multiplication code generation. |
+| `tb_currency_default_run_01` | The minimum literal ends in `.5808` instead of `.5807`. A separate probe also finds that the positive maximum literal becomes the negative minimum. | Currency constant handling; the positive-to-negative result is material, not just formatting noise. |
+| `tw0788` | The compiler folds `ArcTan(1)` at host precision. Evaluating both sides at runtime gives exact equality in the probe. | Separate runtime trigonometry coverage from host-dependent constant folding. |
+
+The maximum Currency probe is:
+
+```pascal
+const
+  cMaxCurrency: Currency = 922337203685477.5807;
+```
+
+The Win64-hosted Win32 compiler emits raw `$8000000000000000`, which represents
+`-922337203685477.5808`. The native-i386 compiler and native Win64 target emit
+the correct value. A Windows-hosted x86-64 Linux compile emits the same wrong
+Currency bytes and the same imprecise Extended literals. Linux evidence is
+successful compile/object/assembly inspection, not Linux execution.
+
+#### Independent upstream verification of FPC_SOFT_FPUX80
+
+Rechecked the owner's specific soft80 hypothesis against unmodified upstream
+FPCSource revision `a6c342346ec1ec32fa5b41e555b3efcd020c086f` (2026-10-11).
+Downloaded compiler/RTL source and all generated outputs are isolated under
+`output/numeric-evaluation/upstream-audit`.
+
+- Built a fresh Win64-hosted i386 compiler with `-dFPC_SOFT_FPUX80`, using stock
+  FPC 3.2.2 and its host RTL. Built the matching upstream Win32 RTL. All seven
+  unchanged fixtures compiled, then reproduced their failures normally and
+  with `-O2`: 14 runs. The diagnostic probe reproduced the same wrong Extended
+  and Currency values previously observed in Nexus.
+- Independently built an upstream Win64 compiler, rebuilt the upstream Win64
+  host RTL with `-dFPC_SOFT_FPUX80`, then rebuilt the i386 compiler with that
+  host RTL and the same define, using a separate fresh compiler-unit directory.
+  All seven failures reproduced again normally and with `-O2`: another 14 runs.
+- A probe importing that second compiler's actual `cpuinfo` unit reports
+  `SizeOf(bestreal)=8` and `SizeOf(Extended)=8`, while the rebuilt host RTL
+  exposes `SizeOf(TExtended80Rec)=10`. Direct software 80-bit arithmetic correctly
+  preserves `(1 + 2^-60) - 1`. The software arithmetic implementation works;
+  enabling it does not make the compiler use it for `bestreal` arithmetic.
+- The original upstream [soft80 emission commit](https://github.com/fpc/FPCSource/commit/735f9363d8568745acff44ce25e0d637b5e31b8a)
+  explicitly converts an existing Double/Single value into 80-bit output.
+  Current upstream still uses native `Extended` for `bestreal`. The associated
+  `ufloatx80` unit supplies arithmetic operators, but the compiler does not use
+  that unit as its constant-evaluation type.
+
+Evidence: `results.json`, `soft-host-results.json`, the individual compile/run
+logs, and `hostsoft80probe-run.log` in the audit directory. These results rule
+out a missing soft80 define in either the compiler or its host RTL as the fix
+for these reproductions. They establish an inherited upstream limitation, not
+the necessity of a general evaluator redesign. Production source, build policy,
+and original test assertions remain unchanged.
+
+#### Bounded next steps and tradeoffs for discussion
+
+1. Give `tw11308` an explicit Double constant-precision contract. This is a
+   verified local fixture correction; it has not been applied to the original.
+2. Prioritize a bounded Currency-constant correction. The compiler already
+   parses a separate exact Currency value (`pexpr.pas:2063`) and serializes that
+   field in PPUs (`ncon.pas:483`). Floating-backed Currency conversion, constant
+   pooling and emission still pass through `bestreal` (`ncnv.pas:3895`,
+   `ncgcon.pas:98`, `ngtcon.pas:736`). Preserving scaled Int64 values through
+   those paths is a candidate for a focused fix without replacing general
+   real-constant evaluation or changing the runtime Currency ABI. This is a
+   source-based proposal, not an implemented or regression-validated patch.
+3. Keep exact 80-bit literal/folding failures explicitly recorded. Correcting
+   runtime-focused test references can preserve their intended coverage, but
+   must not be described as fixing the compiler's 80-bit constant limitation.
+4. If full 80-bit compilation is needed immediately, the existing native-i386
+   compiler is a demonstrated working option for these Win32 tests. Using it
+   as a supported build tool adds compiler-host/build maintenance and a smaller
+   process address space. No automatic fallback or new build route was added.
+
+A literal-parser-only fix would not cover constant arithmetic and PPU import,
+so it should not be promised as complete Extended support. A general evaluator
+replacement, Win64 Extended/ABI change, or product threading change is outside
+this evaluation. The recommendation is to handle the fixture configuration and
+bounded Currency work separately, then decide how much 80-bit cross-compilation
+support is actually required.
 
 ## 2026-10-10: stock-compiler bootstrap
 

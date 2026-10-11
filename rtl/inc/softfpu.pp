@@ -693,7 +693,7 @@ begin
         inc(absZ0);
         if ( absZ0 = 0 ) then
           goto overflow;
-        absZ0 := absZ0 and not( ord( bits64( absZ1 shl 1 ) = 0 ) and roundNearestEven );
+        absZ0 := absZ0 and not( bits64(ord( bits64( absZ1 shl 1 ) = 0 ) and roundNearestEven) );
     end;
     z := absZ0;
     if ( zSign<>0 ) then

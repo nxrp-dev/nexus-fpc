@@ -26,6 +26,7 @@ unit ninl;
 interface
 
     uses
+       tpcompilerreal,
        node,htypechk,symtype,compinnr;
 
     type
@@ -2066,21 +2067,6 @@ implementation
 
 {$maxfpuregisters 0}
 
-    function getpi : bestreal;
-      begin
-      {$ifdef x86}
-        { x86 has pi in hardware }
-        result:=pi;
-      {$else x86}
-        {$ifdef cpuextended}
-          result:=MathPiExtended.Value;
-        {$else cpuextended}
-          result:=MathPi.Value;
-        {$endif cpuextended}
-      {$endif x86}
-      end;
-
-
     function tinlinenode.simplify(forinline : boolean): tnode;
 
       function do_lowhigh(def:tdef) : tnode;
@@ -2168,7 +2154,7 @@ implementation
                   result:=crealconstnode.create(MathQNaN.Value,pbestrealtype^)
               end
           else
-            result:=crealconstnode.create(ln(r),pbestrealtype^)
+            result:=crealconstnode.create(Ln(r),pbestrealtype^)
         end;
 
 
@@ -2183,7 +2169,7 @@ implementation
             else
               result:=crealconstnode.create(MathQNaN.Value,pbestrealtype^)
           else
-            result:=crealconstnode.create(sqrt(r),pbestrealtype^)
+            result:=crealconstnode.create(Sqrt(r),pbestrealtype^)
         end;
 
 
@@ -2795,7 +2781,7 @@ implementation
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
                     begin
-                      result:=crealconstnode.create(exp(getconstrealvalue),pbestrealtype^);
+                      result:=crealconstnode.create(Exp(getconstrealvalue),pbestrealtype^);
                       if (trealconstnode(result).value_real=MathInf.Value) and
                          floating_point_range_check_error then
                         begin
@@ -2809,13 +2795,13 @@ implementation
                   if left.nodetype in [ordconstn,realconstn] then
                     begin
                       vr:=getconstrealvalue;
-                      if (vr>=9223372036854775807.99) or (vr<=-9223372036854775808.0) then
+                      if (vr>=bestreal(QWord($8000000000000000))) or (vr<bestreal(Low(Int64))) then
                         begin
                           message3(type_e_range_check_error_bounds,realtostr(vr),'-9223372036854775808.0','9223372036854775807.99..');
                           result:=cordconstnode.create(1,s64inttype,false)
                         end
                       else
-                        result:=cordconstnode.create(trunc(vr),s64inttype,true)
+                        result:=cordconstnode.create(Trunc(vr),s64inttype,true)
                     end
                 end;
               in_round_real :
@@ -2825,49 +2811,49 @@ implementation
                      (left.nodetype in [ordconstn,realconstn]) then
                     begin
                       vr:=getconstrealvalue;
-                      if (vr>=9223372036854775807.5) or (vr<=-9223372036854775808.5) then
+                      if (vr>=bestreal(High(Int64))+bestreal(0.5)) or (vr<bestreal(Low(Int64))) then
                         begin
                           message3(type_e_range_check_error_bounds,realtostr(vr),'-9223372036854775808.49..','9223372036854775807.49..');
                           result:=cordconstnode.create(1,s64inttype,false)
                         end
                       else
-                        result:=cordconstnode.create(round(vr),s64inttype,true)
+                        result:=cordconstnode.create(Round(vr),s64inttype,true)
                     end
                 end;
               in_frac_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(frac(getconstrealvalue))
+                    setconstrealvalue(Frac(getconstrealvalue))
                 end;
               in_int_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(int(getconstrealvalue));
+                    setconstrealvalue(Int(getconstrealvalue));
                 end;
               in_pi_real :
                  begin
                    if block_type=bt_const then
-                     setconstrealvalue(getpi)
+                     setconstrealvalue(Pi)
                  end;
               in_cos_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(cos(getconstrealvalue))
+                    setconstrealvalue(Cos(getconstrealvalue))
                 end;
               in_sin_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(sin(getconstrealvalue))
+                    setconstrealvalue(Sin(getconstrealvalue))
                 end;
               in_arctan_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(arctan(getconstrealvalue))
+                    setconstrealvalue(ArcTan(getconstrealvalue))
                 end;
               in_abs_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(abs(getconstrealvalue))
+                    setconstrealvalue(Abs(getconstrealvalue))
                 end;
               in_abs_long:
                 begin
@@ -2882,7 +2868,7 @@ implementation
               in_sqr_real :
                 begin
                   if left.nodetype in [ordconstn,realconstn] then
-                    setconstrealvalue(sqr(getconstrealvalue))
+                    setconstrealvalue((getconstrealvalue*getconstrealvalue))
                 end;
               in_sqrt_real :
                 begin
@@ -3236,7 +3222,7 @@ implementation
              (p.nodetype=typeconvn) and
              (ttypeconvnode(p).left.resultdef.typ=floatdef) and
              (p.flags*[nf_explicit,nf_internal]=[]) and
-             (tfloatdef(ttypeconvnode(p).left.resultdef).floattype in (floattypes*[s32real,s64real,s80real,sc80real,s128real])) then
+             (tfloatdef(ttypeconvnode(p).left.resultdef).floattype in (floattypes*[s32real,s64real,s80real,sc80real])) then
             begin
               hnode:=ttypeconvnode(p).left;
               ttypeconvnode(p).left:=nil;
@@ -3272,7 +3258,7 @@ implementation
           { in case the system helper was declared with overloads for different types,
             keep those }
           else if (p.resultdef.typ=floatdef) and
-             (tfloatdef(p.resultdef).floattype in (floattypes*[s32real,s64real,s80real,sc80real,s128real])) then
+             (tfloatdef(p.resultdef).floattype in (floattypes*[s32real,s64real,s80real,sc80real])) then
             result:=p.resultdef
           else
             begin
@@ -4025,9 +4011,9 @@ implementation
                     handled via inlined system helpers (-> no need for special
                     handling of s64currency/s64comp for them) }
                   if inlinenumber=in_trunc_real then
-                    removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real,s128real,s64currency,s64comp])
+                    removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real,s64currency,s64comp])
                   else
-                    removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real,s128real,s64comp]);
+                    removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real,s64comp]);
                   if (inlinenumber=in_trunc_real) and
                      is_currency(temp_pnode^.resultdef) and
                      (nf_is_currency in temp_pnode^.flags) then
@@ -4066,7 +4052,7 @@ implementation
                   else
                     temp_pnode := @left;
                   set_varstate(temp_pnode^,vs_read,[vsf_must_be_valid]);
-                  resultdef:=removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real,s128real]);
+                  resultdef:=removefloatupcasts(temp_pnode^,[s32real,s64real,s80real,sc80real]);
                 end;
 
 {$ifdef SUPPORT_MMX}
@@ -4184,8 +4170,7 @@ implementation
                 end;
               in_fma_single,
               in_fma_double,
-              in_fma_extended,
-              in_fma_float128:
+              in_fma_extended:
                 begin
                   set_varstate(tcallparanode(left).left,vs_read,[vsf_must_be_valid]);
                   set_varstate(tcallparanode(tcallparanode(left).right).left,vs_read,[vsf_must_be_valid]);
@@ -4745,8 +4730,7 @@ implementation
            result:=first_unbox;
          in_fma_single,
          in_fma_double,
-         in_fma_extended,
-         in_fma_float128:
+         in_fma_extended:
            result:=first_fma;
          in_max_longint,
          in_max_dword,
@@ -4792,7 +4776,7 @@ implementation
 
     function tinlinenode.first_pi : tnode;
       begin
-        result:=crealconstnode.create(getpi,pbestrealtype^);
+        result:=crealconstnode.create(Pi,pbestrealtype^);
       end;
 
 

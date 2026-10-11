@@ -1110,7 +1110,6 @@ var
         old_docrc:=ppufile.do_crc;
         ppufile.do_crc:=false;
         ppufile.putlongint(longint(CurrentPPULongVersion));
-        ppufile.putbyte(ppufile.getrealbytesize);
         ppufile.putset(tppuset4(moduleflags));
         ppufile.writeentry(ibextraheader);
         ppufile.do_crc:=old_docrc;
@@ -1508,7 +1507,6 @@ var
     procedure tppumodule.readextraheader;
       begin
         longversion:=cardinal(ppufile.getlongint);
-        bytesizeofppureal:=ppufile.getbyte;
         ppufile.getset(tppuset4(moduleflags));
       end;
 

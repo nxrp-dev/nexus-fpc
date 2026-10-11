@@ -90,7 +90,6 @@
      must be defined as "ValReal" before including this file. Also, kind of
      the "ValReal" must be further specified with the following defines (in
      order of priority):
-         SUPPORT_FLOAT128
          SUPPORT_EXTENDED
          SUPPORT_DOUBLE
          SUPPORT_SINGLE
@@ -378,13 +377,7 @@ const
     {$undef grisu1_inline}
 {$endif}
 
-{$if defined(SUPPORT_FLOAT128)}
-    {$undef  VALREAL_32}
-    {$undef  VALREAL_64}
-    {$undef  VALREAL_80}
-    {$define VALREAL_128}
-
-{$elseif defined(SUPPORT_EXTENDED)}
+{$if defined(SUPPORT_EXTENDED)}
     {$undef  VALREAL_32}
     {$undef  VALREAL_64}
     {$define VALREAL_80}

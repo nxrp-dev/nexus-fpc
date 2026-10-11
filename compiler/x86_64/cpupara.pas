@@ -968,14 +968,6 @@ unit cpupara;
                     classes[0].typ:=X86_64_INTEGER_CLASS;
                     result:=1;
                   end;
-                s128real:
-                  begin
-                    classes[0].typ:=X86_64_SSE_CLASS;
-                    classes[0].def:=carraydef.getreusable_no_free(s32floattype,2);
-                    classes[1].typ:=X86_64_SSEUP_CLASS;
-                    classes[1].def:=carraydef.getreusable_no_free(s32floattype,2);
-                    result:=2;
-                  end;
               end;
             end;
           recorddef:
@@ -1457,8 +1449,6 @@ unit cpupara;
                   paraloc^.register:=NR_FPU_RESULT_REG;
                   paraloc^.size:=retcgsize;
                 end;
-              else
-                internalerror(200405034);
             end;
           end
         else
@@ -1740,7 +1730,8 @@ unit cpupara;
             { cheat for now, we should copy the value to an mm reg as well (FK) }
             if varargsparas and
                use_ms_abi and
-               (paralocdef.typ = floatdef) then
+               (paralocdef.typ = floatdef) and
+               (paracgsize in [OS_F32,OS_F64]) then
               begin
                 loc[1].typ:=X86_64_NO_CLASS;
                 if paracgsize=OS_F64 then

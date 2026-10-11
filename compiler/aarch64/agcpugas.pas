@@ -832,7 +832,7 @@ unit agcpugas;
               getopstr:=getreferencestring(asminfo,o.ref^);
           top_realconst:
             begin
-              str(o.val_real,Result);
+              Result:=realtostr(o.val_real);
               Result:='#'+Result;
             end;
           top_regset:

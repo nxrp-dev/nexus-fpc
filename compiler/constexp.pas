@@ -27,17 +27,7 @@ unit constexp;
 
 interface
 
-{Avoid dependency on cpuinfo because the cpu directory isn't
- searched during utils building.}
-{$ifdef GENERIC_CPU}
-type  bestreal=extended;
-{$else}
-{$ifdef x86}
-type  bestreal=extended;
-{$else}
-type  bestreal=double;
-{$endif}
-{$endif}
+uses tpcompilerreal;
 
 type  Tconstexprint=record
         function is_negative: boolean; inline;

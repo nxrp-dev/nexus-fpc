@@ -26,6 +26,7 @@ unit ncon;
 interface
 
     uses
+      tpcompilerreal,
       globtype,widestr,constexp,
       node,
       aasmbase,aasmcnst,cpuinfo,globals,
@@ -39,6 +40,9 @@ interface
        end;
 
        trealconstnode = class(tconstnode)
+        private
+          FCurrencyRange: (crValid, crPositiveLimit, crOverflow);
+        public
           typedef : tdef;
           typedefderef : tderef;
           value_real : bestreal;
@@ -46,6 +50,10 @@ interface
           lab_real : tasmlabel;
           constructor create(v : bestreal;def:tdef);virtual;
           constructor create_currency_scalar(def:tdef);
+          function CurrencyScaledValue: Int64;
+          procedure SetCurrencyValue(const AValue: bestreal);
+          procedure SetCurrencyLiteral(const AText: ShortString);
+          procedure NegateValue;
           constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
@@ -231,7 +239,7 @@ interface
 implementation
 
     uses
-      cutils,
+      cutils,utcurrencyparse,
       verbose,systems,sysutils,ppu,
       defcmp,defutil,procinfo,
       aasmdata,aasmtai,
@@ -437,21 +445,19 @@ implementation
            InternalError(2002022402);
          inherited create(realconstn);
          typedef:=def;
+         SetCurrencyValue(v);
          case tfloatdef(def).floattype of
            s32real:
-             v:=single(v);
+             v:=Single(v);
            s64real:
-             v:=double(v);
+             v:=Double(v);
            s80real,
            sc80real,
            s64comp,
            s64currency:
-             v:=extended(v);
-           s128real:
-             internalerror(2013102701);
+               ; { Keep the host's native precision. }
          end;
          value_real:=v;
-         value_currency:=v;
          lab_real:=nil;
       end;
 
@@ -460,6 +466,86 @@ implementation
         Create(10000.0,def);
         Include(flags,nf_internal);
         Include(flags,nf_is_currency);
+      end;
+
+
+    function trealconstnode.CurrencyScaledValue: Int64;
+      begin
+        if nf_is_currency in flags then
+          Result:=Round(value_real)
+        else
+          begin
+            if FCurrencyRange<>crValid then
+              CGMessage(parser_e_range_check_error);
+            Move(value_currency,Result,SizeOf(Result));
+          end;
+      end;
+
+    procedure trealconstnode.SetCurrencyValue(const AValue: bestreal);
+      var
+        lScaled: bestreal;
+        lRaw: Int64;
+      begin
+        lScaled:=AValue*bestreal(10000);
+        FCurrencyRange:=crValid;
+        if lScaled=bestreal(QWord($8000000000000000)) then
+          begin
+            { The parser sees this magnitude before unary minus. }
+            FCurrencyRange:=crPositiveLimit;
+            lRaw:=Low(Int64);
+          end
+        else
+          begin
+            if not is_number_float(lScaled) or
+               (lScaled>=bestreal(QWord($8000000000000000))) or
+               (lScaled<bestreal(Low(Int64))) then
+              begin
+                FCurrencyRange:=crOverflow;
+                lRaw:=0;
+              end
+            else
+              lRaw:=Round(lScaled);
+          end;
+        Move(lRaw,value_currency,SizeOf(lRaw));
+      end;
+
+    procedure trealconstnode.SetCurrencyLiteral(const AText: ShortString);
+      var
+        lCode: Integer;
+        lRaw: Int64;
+      begin
+        value_currency:=ParseCurrencyLiteral(AText,lCode);
+        if lCode=0 then
+          FCurrencyRange:=crValid
+        else
+          begin
+            FCurrencyRange:=crOverflow;
+            { Preserve the unsigned magnitude of Low(Int64) until unary minus.
+              Parse decimal digits directly, including on Double-only hosts. }
+            if (Length(AText)<255) and (AText<>'') and (AText[1]<>'-') then
+              begin
+                value_currency:=ParseCurrencyLiteral('-'+AText,lCode);
+                Move(value_currency,lRaw,SizeOf(lRaw));
+                if (lCode=0) and (lRaw=Low(Int64)) then
+                  FCurrencyRange:=crPositiveLimit;
+              end;
+          end;
+      end;
+
+    procedure trealconstnode.NegateValue;
+      var
+        lRaw: Int64;
+      begin
+        value_real:=-value_real;
+        Move(value_currency,lRaw,SizeOf(lRaw));
+        if FCurrencyRange=crPositiveLimit then
+          FCurrencyRange:=crValid
+        else if (FCurrencyRange=crValid) and (lRaw=Low(Int64)) then
+          FCurrencyRange:=crPositiveLimit;
+        {$push}{$Q-}
+        lRaw:=-lRaw;
+        {$pop}
+        Move(lRaw,value_currency,SizeOf(lRaw));
       end;
 
     constructor trealconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
@@ -471,6 +557,11 @@ implementation
         value_real:=ppufile.getreal;
         i:=ppufile.getint64;
         value_currency:=PCurrency(@i)^;
+        FCurrencyRange:=crValid;
+        case ppufile.getbyte of
+          1: FCurrencyRange:=crPositiveLimit;
+          2: FCurrencyRange:=crOverflow;
+        end;
         lab_real:=tasmlabel(ppufile.getasmsymbol);
       end;
 
@@ -481,6 +572,7 @@ implementation
         ppufile.putderef(typedefderef);
         ppufile.putreal(value_real);
         ppufile.putint64(PInt64(@value_currency)^);
+        ppufile.putbyte(Ord(FCurrencyRange));
         ppufile.putasmsymbol(lab_real);
       end;
 
@@ -507,6 +599,7 @@ implementation
          n.typedef:=typedef;
          n.value_real:=value_real;
          n.value_currency:=value_currency;
+         n.FCurrencyRange:=FCurrencyRange;
          n.lab_real:=lab_real;
          dogetcopy:=n;
       end;
@@ -529,31 +622,26 @@ implementation
             case tfloatdef(resultdef).floattype of
               s32real :
                 begin
-                  if ts32real(value_real)=MathInf.Value then
+                  if Single(value_real)=MathInf.Value then
                     CGMessage(parser_e_range_check_error);
                 end;
               s64real:
                 begin
-                  if ts64real(value_real)=MathInf.Value then
+                  if Double(value_real)=MathInf.Value then
                     CGMessage(parser_e_range_check_error);
                 end;
               s80real,
               sc80real:
                 begin
-                  if ts80real(value_real)=MathInf.Value then
+                  if value_real=MathInf.Value then
                     CGMessage(parser_e_range_check_error);
                 end;
               s64comp,
               s64currency:
                 begin
-                  if (value_real>9223372036854775807.0) or
-                     (value_real<-9223372036854775808.0) then
+                  if (value_real>bestreal(High(Int64))) or
+                     (value_real<bestreal(Low(Int64))) then
                     CGMessage(parser_e_range_check_error)
-                end;
-              s128real:
-                begin
-                  if ts128real(value_real)=MathInf.Value then
-                    CGMessage(parser_e_range_check_error);
                 end;
             end;
           end;
@@ -570,7 +658,7 @@ implementation
     function trealconstnode.simplify(forinline : boolean) : tnode;
       begin
         result:=nil;
-        if (frac(value_real)<>0.0) and is_currency(resultdef) and not (nf_is_currency in flags) then
+        if (Frac(value_real)<>0.0) and is_currency(resultdef) and not (nf_is_currency in flags) then
           begin
             { Unfortunately we can't safely store unscaled Currency values with
               fractional components in a cross-platform way, so scale it here
@@ -592,7 +680,7 @@ implementation
           (
            (
             (tfloatdef(typedef).floattype=s64currency) and
-            (value_currency=trealconstnode(p).value_currency)
+            (CurrencyScaledValue=trealconstnode(p).CurrencyScaledValue)
            )
            or
            (
@@ -623,7 +711,7 @@ implementation
     procedure trealconstnode.printnodedata(var t: text);
       begin
         inherited printnodedata(t);
-        write(t,printnodeindention,'value = ',value_real);
+        write(t,printnodeindention,'value = ',realtostr(value_real));
         if is_currency(resultdef) then
           writeln(t,', value_currency = ',value_currency)
         else
@@ -634,21 +722,19 @@ implementation
       begin
         case tfloatdef(typedef).floattype of
           s32real:
-            tcb.emit_tai(tai_realconst.create_s32real(value_real),typedef);
+            tcb.emit_tai(tai_realconst.create_s32real(Single(value_real)),typedef);
           s64real:
-            tcb.emit_tai(tai_realconst.create_s64real(value_real),typedef);
+            tcb.emit_tai(tai_realconst.create_s64real(Double(value_real)),typedef);
           s80real:
             tcb.emit_tai(tai_realconst.create_s80real(value_real,s80floattype.size),typedef);
           sc80real:
             tcb.emit_tai(tai_realconst.create_s80real(value_real,sc80floattype.size),typedef);
           s64comp:
             { the round is necessary for native compilers where comp isn't a float }
-            tcb.emit_tai(tai_realconst.create_s64compreal(round(value_real)),typedef);
+            tcb.emit_tai(tai_realconst.create_s64compreal(Round(value_real)),typedef);
           s64currency:
-            { we don't need to multiply by 10000 here }
-            tcb.emit_tai(tai_realconst.create_s64compreal(round(value_real)),typedef);
-          s128real:
-            internalerror(2019070804);
+            { Lowered Currency nodes already contain the integer payload. }
+            tcb.emit_tai(tai_realconst.create_s64compreal(Round(value_real)),typedef);
         end;
         result:=resultdef.size;
       end;
@@ -657,7 +743,7 @@ implementation
     procedure TRealConstNode.XMLPrintNodeData(var T: Text);
       begin
         inherited XMLPrintNodeData(T);
-        WriteLn(T, printnodeindention, '<value>', value_real, '</value>');
+        WriteLn(T, printnodeindention, '<value>', realtostr(value_real), '</value>');
       end;
 {$endif DEBUG_NODE_XML}
 

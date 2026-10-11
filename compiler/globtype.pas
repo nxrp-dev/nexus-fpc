@@ -770,7 +770,7 @@ interface
         as well in rtl/inc/real2str.inc }
       tfloattype = (
         s32real,s64real,s80real,sc80real { the C "long double" type on x86 },
-        s64comp,s64currency,s128real
+        s64comp,s64currency
       );
 
     type

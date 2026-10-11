@@ -37,21 +37,7 @@ function get_cmdline:PAnsiChar; deprecated 'use paramstr' ;
 property cmdline:PAnsiChar read get_cmdline;
 
 
-{$ifdef FPC_SOFT_FPUX80}
-{$define FPC_SOFTFLOAT_FLOATX80}
-{$define LOAD_SOFTFPU}
-{$endif}
 
-{$ifdef FPC_SOFT_FPU128}
-{$define FPC_SOFTFLOAT_FLOAT128}
-{$define FPC_LOAD_SOFTFPU}
-{$endif}
-
-{$ifdef FPC_LOAD_SOFTFPU}
-{$define fpc_softfpu_interface}
-{$i softfpu.pp}
-{$undef fpc_softfpu_interface}
-{$endif FPC_LOAD_SOFTFPU}
 
 
 {$ifdef android}
@@ -69,25 +55,6 @@ const
 procedure OsSetupEntryInformation(constref info: TEntryInformation); forward;
 {$endif FPC_HAS_INDIRECT_ENTRY_INFORMATION}
 
-{$ifdef FPC_LOAD_SOFTFPU}
-
-{$define fpc_softfpu_implementation}
-{$i softfpu.pp}
-{$undef fpc_softfpu_implementation}
-
-{ we get these functions and types from the softfpu code }
-{$define FPC_SYSTEM_HAS_float64}
-{$define FPC_SYSTEM_HAS_float32}
-{$define FPC_SYSTEM_HAS_flag}
-{$define FPC_SYSTEM_HAS_extractFloat64Frac0}
-{$define FPC_SYSTEM_HAS_extractFloat64Frac1}
-{$define FPC_SYSTEM_HAS_extractFloat64Exp}
-{$define FPC_SYSTEM_HAS_extractFloat64Sign}
-{$define FPC_SYSTEM_HAS_ExtractFloat32Frac}
-{$define FPC_SYSTEM_HAS_extractFloat32Exp}
-{$define FPC_SYSTEM_HAS_extractFloat32Sign}
-
-{$endif FPC_LOAD_SOFTFPU}
 
 {$define HAS_GETCPUCOUNT}
 

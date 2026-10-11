@@ -2475,18 +2475,10 @@ extoptcycle:
 	$(MAKE) cycle RTLOPT="$(RTLOPT) -n -glttt -CRriot -dEXTDEBUG -dDEBUG_ALL_OPT" LOCALOPT="$(LOCALOPT) -n -glttt -CRriot -dEXTDEBUG -dDEBUG_ALL_OPT" ALLOW_WARNINGS=1
 cvstest:
 	$(MAKE) cycle 'LOCALOPT=-n -Se' 'RTLOPT=-n -Se'
-ifeq ($(findstring -dFPC_SOFT_FPUX80,$(LOCALOPT)),)
-ifeq ($(OS_SOURCE),win64)
-  EXCLUDE_80BIT_TARGETS=1
-endif
-ifneq ($(findstring $(CPU_SOURCE),aarch64),)
-  EXCLUDE_80BIT_TARGETS=1
-endif
-endif
-ifndef EXCLUDE_80BIT_TARGETS
-FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
+ifeq ($(CPU_SOURCE),aarch64)
+FULL_TARGETS=$(filter-out i386 x86_64 $(PPC_TARGET),$(CYCLETARGETS))
 else
-FULL_TARGETS=$(filter-out x86_64,$(filter-out $(PPC_TARGET),$(CYCLETARGETS)))
+FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
 endif
 full: fullcycle
 fullcycle:

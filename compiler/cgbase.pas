@@ -136,7 +136,7 @@ interface
        TCgSize = (OS_NO,
                   OS_8,   OS_16,   OS_32,   OS_64,   OS_128,
                   OS_S8,  OS_S16,  OS_S32,  OS_S64,  OS_S128,
-                 { single, double, extended, comp, float128 }
+                 { single, double, extended, comp, 128-bit floating/vector transfer }
                   OS_F32, OS_F64,  OS_F80,  OS_C64,  OS_F128,
                  { multi-media sizes, describes only the register size but not how it is split,
                    this information must be passed separately }
@@ -317,10 +317,7 @@ interface
          1,  2,  4,  8, 16, 32, 64);
 
        tfloat2tcgsize: array[tfloattype] of tcgsize =
-         (OS_F32,OS_F64,OS_F80,OS_F80,OS_C64,OS_C64,OS_F128);
-
-       tcgsize2tfloat: array[OS_F32..OS_C64] of tfloattype =
-         (s32real,s64real,s80real,s64comp);
+         (OS_F32,OS_F64,OS_F80,OS_F80,OS_C64,OS_C64);
 
        tvarregable2tcgloc : array[tvarregable] of tcgloc = (LOC_VOID,
           LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER,LOC_CREGISTER);

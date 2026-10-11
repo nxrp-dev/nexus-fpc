@@ -26,6 +26,7 @@ unit ncnv;
 interface
 
     uses
+       tpcompilerreal,
        node,
        symtype,
        defutil,defcmp,
@@ -872,10 +873,11 @@ implementation
                 end
               else
                 begin
-                  if is_constrealnode(p) and
-                     not(nf_explicit in p.flags) then
+                  if (is_constrealnode(p) and not(nf_explicit in p.flags)) or
+                     ((target_info.system=system_x86_64_win64) and is_extended(p.resultdef)) then
                     MessagePos(p.fileinfo,type_w_double_c_varargs);
                   if (tfloatdef(p.resultdef).floattype in [s32real,s64currency]) or
+                     ((target_info.system=system_x86_64_win64) and is_extended(p.resultdef)) or
                      (is_constrealnode(p) and
                       not(nf_explicit in p.flags)) then
                     p:=ctypeconvnode.create(p,s64floattype);
@@ -1673,13 +1675,7 @@ implementation
         { Convert constants directly, else call Round() }
         if left.nodetype=realconstn then
           begin
-            if (nf_is_currency in left.flags) then
-              result:=cordconstnode.create(round(trealconstnode(left).value_real),resultdef,false)
-            else
-              { Try to use the value stored directly in value_currency to
-                minimise rounding errors and compiler errors (Currency won't be
-                floating-point) }
-              result:=cordconstnode.create(PInt64(@trealconstnode(left).value_currency)^,resultdef,false);
+            result:=cordconstnode.create(trealconstnode(left).CurrencyScaledValue,resultdef,false);
             include(result.flags,nf_is_currency);
           end
         else

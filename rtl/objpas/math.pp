@@ -96,14 +96,7 @@ interface
        { natural size for the processor                          }
        { WARNING : changing float type will                      }
        { break all assembler code  PM                            }
-{$if defined(FPC_HAS_TYPE_FLOAT128)}
-      type
-         Float = Float128;
-
-      const
-         MinFloat = MinFloat128;
-         MaxFloat = MaxFloat128;
-{$elseif defined(FPC_HAS_TYPE_EXTENDED)}
+{$if defined(FPC_HAS_TYPE_EXTENDED)}
       type
          Float = extended;
 
@@ -3585,9 +3578,7 @@ function IsInfinite(const d : Extended): Boolean; overload;
 
 function copysign(x,y: float): float;
 begin
-{$if defined(FPC_HAS_TYPE_FLOAT128)}
-  {$error copysign not yet implemented for float128}
-{$elseif defined(FPC_HAS_TYPE_EXTENDED)}
+{$if defined(FPC_HAS_TYPE_EXTENDED)}
   TSplitExtended(x).w:=(TSplitExtended(x).w and $7fff) or (TSplitExtended(y).w and $8000);
 {$elseif defined(FPC_HAS_TYPE_DOUBLE)}
   {$if defined(FPC_BIG_ENDIAN)}

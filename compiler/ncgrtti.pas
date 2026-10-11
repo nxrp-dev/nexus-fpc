@@ -1502,9 +1502,8 @@ implementation
 
         procedure floatdef_rtti(def:tfloatdef);
         const
-          {tfloattype = (s32real,s64real,s80real,sc80real,s64bit,s128bit);}
           translate : array[tfloattype] of byte =
-             (ftSingle,ftDouble,ftExtended,ftExtended,ftComp,ftCurr,ftFloat128);
+             (ftSingle,ftDouble,ftExtended,ftExtended,ftComp,ftCurr);
         begin
            write_header(tcb,def,tkFloat);
            tcb.begin_anonymous_record(

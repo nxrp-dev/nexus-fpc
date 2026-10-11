@@ -27,6 +27,7 @@ unit ncgcon;
 interface
 
     uses
+       tpcompilerreal,
        aasmbase,
        symtype,
        ncon;
@@ -89,16 +90,15 @@ implementation
       { constants are actually supported by the target processor? (JM) }
       const
         floattype2ait:array[tfloattype] of tairealconsttype=
-          (aitrealconst_s32bit,aitrealconst_s64bit,aitrealconst_s80bit,aitrealconst_s80bit,aitrealconst_s64comp,aitrealconst_s64comp,aitrealconst_s128bit);
+          (aitrealconst_s32bit,aitrealconst_s64bit,aitrealconst_s80bit,aitrealconst_s80bit,aitrealconst_s64comp,aitrealconst_s64comp);
 
       { Since the value is stored always as bestreal, we share a single pool
-        between all float types. This requires type and hiloswapped flag to
+        between all float types. This requires the type to
         be matched along with the value }
       type
         tfloatkey = record
           value: bestreal;
           typ: tfloattype;
-          swapped: boolean;
         end;
 
       var
@@ -134,35 +134,25 @@ implementation
                   case realait of
                     aitrealconst_s32bit :
                       begin
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s32real(ts32real(value_real)));
+                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s32real(Single(value_real)));
                       end;
 
                     aitrealconst_s64bit :
                       begin
-                          current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(ts64real(value_real)));
+                          current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(Double(value_real)));
                      end;
 
                     aitrealconst_s80bit :
                       begin
                         current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,tfloatdef(resultdef).size));
                       end;
-{$ifdef cpufloat128}
-                    aitrealconst_s128bit :
-                      begin
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s128real(value_real));
-                      end;
-{$endif cpufloat128}
 
                     { the round is necessary for native compilers where comp isn't a float }
                     aitrealconst_s64comp :
-                      if (value_real>9223372036854775807.0) or (value_real<-9223372036854775808.0) then
+                      if (value_real>bestreal(High(Int64))) or (value_real<bestreal(Low(Int64))) then
                         message(parser_e_range_check_error)
                       else
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64compreal(round(value_real)));
-{$ifndef cpufloat128}
-                    else
-                      internalerror(10120);
-{$endif not cpufloat128}
+                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64compreal(Round(value_real)));
                   end;
                   if (tf_needs_symbol_size in target_info.flags) then
                     current_asmdata.asmlists[al_typedconsts].concat(Tai_symbol_end.Create(lastlabel));

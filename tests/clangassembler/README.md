@@ -77,5 +77,5 @@ were built, force their rebuild first. With the bootstrap tools on PATH:
 ```powershell
 make -C compiler compiler "FPC=$($PWD.Path -replace '\\','/')/compiler/ppcx64.exe" `
     CPU_TARGET=x86_64 OS_TARGET=win64 PPC_TARGET=x86_64 `
-    CPU_UNITDIR=x86_64_cross EXENAME=ppcrossx64.exe 'LOCALOPT=-dFPC_SOFT_FPUX80 -B'
+    CPU_UNITDIR=x86_64_cross EXENAME=ppcrossx64.exe 'LOCALOPT=-B'
 ```

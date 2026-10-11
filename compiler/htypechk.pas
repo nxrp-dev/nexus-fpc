@@ -3238,10 +3238,9 @@ implementation
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_chari64,tve_chari64,tve_dblcurrency,tve_incompatible);
-{ TODO: fixme for 128 bit floats }
         variantfloatdef_cl: array[tfloattype] of tvariantequaltype =
           (tve_single,tve_dblcurrency,tve_extended,tve_extended,
-           tve_dblcurrency,tve_dblcurrency,tve_extended);
+           tve_dblcurrency,tve_dblcurrency);
         variantstringdef_cl: array[tstringtype] of tvariantequaltype =
           (tve_sstring,tve_astring,tve_astring,tve_wstring,tve_ustring);
       begin

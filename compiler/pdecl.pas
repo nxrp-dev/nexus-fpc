@@ -26,7 +26,8 @@ unit pdecl;
 interface
 
     uses
-      { common }
+      tpcompilerreal,
+    { common }
       cclasses,
       { global }
       globtype,

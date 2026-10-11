@@ -40,6 +40,7 @@ unit dbgdwarf;
 interface
 
     uses
+      tpcompilerreal,
       cclasses,globtype,
       cgbase,
       aasmbase,aasmtai,aasmdata,
@@ -1470,8 +1471,6 @@ implementation
                 DW_AT_encoding,DW_FORM_data1,DW_ATE_signed,
                 DW_AT_byte_size,DW_FORM_data1,8
                 ]);
-          else
-            internalerror(200601289);
         end;
         finish_entry;
       end;
@@ -2844,18 +2843,18 @@ implementation
                 s32real:
                   begin
                     current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_8bit(4));
-                    current_asmdata.asmlists[al_dwarf_info].concat(tai_realconst.create_s32real(pbestreal(sym.value.valueptr)^));
+                    current_asmdata.asmlists[al_dwarf_info].concat(tai_realconst.create_s32real(Single(pbestreal(sym.value.valueptr)^)));
                   end;
                 s64real:
                   begin
                     current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_8bit(8));
-                    current_asmdata.asmlists[al_dwarf_info].concat(tai_realconst.create_s64real(pbestreal(sym.value.valueptr)^));
+                    current_asmdata.asmlists[al_dwarf_info].concat(tai_realconst.create_s64real(Double(pbestreal(sym.value.valueptr)^)));
                   end;
                 s64comp,
                 s64currency:
                   begin
                     current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_8bit(8));
-                    current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_64bit_unaligned(trunc(pbestreal(sym.value.valueptr)^)));
+                    current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_64bit_unaligned(Trunc(pbestreal(sym.value.valueptr)^)));
                   end;
                 s80real,
                 sc80real:
@@ -2863,8 +2862,6 @@ implementation
                     current_asmdata.asmlists[al_dwarf_info].concat(tai_const.create_8bit(sym.constdef.size));
                     current_asmdata.asmlists[al_dwarf_info].concat(tai_realconst.create_s80real(pextended(sym.value.valueptr)^,sym.constdef.size));
                   end;
-                else
-                  internalerror(200601291);
               end;
             end;
           else

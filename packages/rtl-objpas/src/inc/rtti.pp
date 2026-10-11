@@ -7524,7 +7524,11 @@ begin
           end;
         ftComp   :
           begin
+{$ifdef FPC_COMP_IS_INT64}
+            Values.Cp := Round(GetFloatProp(TObject(Instance), FPropInfo));
+{$else}
             Values.Cp := Comp(GetFloatProp(TObject(Instance), FPropInfo));
+{$endif}
             TValue.Make(@Values.Cp, FPropInfo^.PropType, Result);
           end;
       end;

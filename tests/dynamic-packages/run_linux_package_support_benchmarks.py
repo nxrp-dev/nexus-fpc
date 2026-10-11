@@ -1,4 +1,4 @@
-"""Sequential before/after static-build timings using two fully bootstrapped trees."""
+"""Sequential before/after static-build timings using two fully bootstrapped Linux trees."""
 import argparse
 import hashlib
 import json
@@ -23,8 +23,8 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     roots = dict(baseline=args.baseline_root.resolve(), candidate=args.candidate_root.resolve())
-    windows = platform.system() == 'Windows'
-    suffix, target = ('.exe', 'x86_64-win64') if windows else ('', 'x86_64-linux')
+
+    suffix, target = '', 'x86_64-linux'
     fixture = Path(__file__).resolve().parent / 'benchmarks'
     source = out / 'source'
     shutil.copytree(fixture, source)

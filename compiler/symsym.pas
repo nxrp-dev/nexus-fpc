@@ -25,7 +25,8 @@ unit symsym;
 interface
 
     uses
-       { common }
+       tpcompilerreal,
+    { common }
        sysutils,cutils,compinnr,
        { target }
        globtype,globals,widestr,constexp,
@@ -1613,7 +1614,7 @@ implementation
          psmall_set = ^small_set;
       var
         pap : tpropaccesslisttypes;
-        d : entryreal;
+        d : bestreal;
         s : single;
         aset : small_set;
       begin
@@ -1626,7 +1627,7 @@ implementation
          if ppo_default_is_single in propoptions then
            begin
              d:=ppufile.getreal;
-	     s:=d;
+	     s:=Single(d);
              default:=plongint(@s)^;
            end
          else if ppo_default_is_set in propoptions then

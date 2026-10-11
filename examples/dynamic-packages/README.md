@@ -17,16 +17,21 @@ build and run both example applications:
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
 ```
 
-Run this from the checkout root. Requirements are Windows x64, FPC 3.2.2 at
-`C:\lazarus\fpc\3.2.2\bin\x86_64-win64` (override with `-BootstrapBin`), and
+Run this from the checkout root. Requirements are Windows x64, FPC 3.2.2 Win32 at
+`C:\lazarus\fpc\3.2.2\bin\i386-win32` (override with `-BootstrapBin`), and
 LLVM `clang.exe` and `lld-link.exe` on PATH. No previous NexusFPC build is needed.
 GNU make requires the checkout, bootstrap and SDK output paths to have no spaces.
 
 The script prints its SDK directory under `output\NexusFPCPackages`. Set
-`-OutputRoot C:\temp\nxpkg-sdk` to choose a new or empty directory. `-BuildExamples`
+`-OutputRoot output\nxpkg-sdk` to choose a new or empty directory. `-BuildExamples`
 builds without running; `-RunExamples` builds and checks both applications.
 `-SmartLink` applies smart linking to the foundation, example packages and hosts.
 All steps run sequentially.
+
+The Win32 bootstrap supplies hardware80 arithmetic for the first x64 seed;
+the resulting SDK compiler is native Win64. See the
+[native floating-point policy](../../nexusfpc-native-real-design.md) for the
+Extended ABI and rebuild requirements.
 
 The console example prints a success line. The GUI example uses the Windows GUI
 subsystem and writes its result to a file; it deliberately creates no window.
@@ -175,7 +180,7 @@ To verify fresh source builds and source-free relocation in both normal and smar
 link modes:
 
 ```powershell
-python tests\dynamic-packages\run_package_sdk_tests.py
-python tests\dynamic-packages\run_package_loader_tests.py
-python tests\dynamic-packages\run_package_loader_tests.py --smart
+./tests/dynamic-packages/Run-PackageSDKTests.ps1 `
+  -BootstrapBin C:/lazarus/fpc/3.2.2/bin/i386-win32 `
+  -OutputRoot output/package-validation -FullSuite
 ```

@@ -29,19 +29,8 @@ Interface
     globtype;
 
 Type
-   bestreal = extended;
-{$ifdef FPC_HAS_TYPE_EXTENDED}
-   bestrealrec = TExtended80Rec;
-{$else}
-   bestrealrec = TDoubleRec;
-{$endif}
-   ts32real = single;
-   ts64real = double;
-   ts80real = extended;
-   ts128real = type extended;
-   ts64comp = type extended;
 
-   pbestreal=^bestreal;
+
 
    { possible supported processors for this target }
    tcputype =

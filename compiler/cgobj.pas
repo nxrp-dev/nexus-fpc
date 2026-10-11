@@ -2365,18 +2365,24 @@ implementation
       var
          hr : tregister;
          hs : tmmshuffle;
+         lRegisterSize: tcgsize;
       begin
          cgpara.check_simple_location;
-         hr:=getmmregister(list,cgpara.location^.size);
-         a_loadmm_ref_reg(list,size,cgpara.location^.size,ref,hr,shuffle);
+         lRegisterSize:=cgpara.location^.size;
+         { An ABI may carry a scalar float in an integer argument slot, e.g.
+           Win64 C varargs. Its temporary SSE register still needs a float size. }
+         if lRegisterSize in [OS_32,OS_S32,OS_64,OS_S64] then
+           lRegisterSize:=int_float_cgsize(tcgsize2size[lRegisterSize]);
+         hr:=getmmregister(list,lRegisterSize);
+         a_loadmm_ref_reg(list,size,lRegisterSize,ref,hr,shuffle);
          if realshuffle(shuffle) then
            begin
              hs:=shuffle^;
              removeshuffles(hs);
-             a_loadmm_reg_cgpara(list,cgpara.location^.size,hr,cgpara,@hs);
+             a_loadmm_reg_cgpara(list,lRegisterSize,hr,cgpara,@hs);
            end
          else
-           a_loadmm_reg_cgpara(list,cgpara.location^.size,hr,cgpara,shuffle);
+           a_loadmm_reg_cgpara(list,lRegisterSize,hr,cgpara,shuffle);
       end;
 
 

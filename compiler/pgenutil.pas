@@ -27,7 +27,8 @@ unit pgenutil;
 interface
 
 uses
-  { common }
+  tpcompilerreal,
+    { common }
   cclasses,
   { global }
   globtype,

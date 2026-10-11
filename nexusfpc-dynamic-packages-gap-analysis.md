@@ -90,7 +90,7 @@ and [ctask.pas](compiler/ctask.pas):
 The continuation is ordinary sequential compiler state handling. No threads,
 parallel execution, or prototype code from the removed `nexus/` folder were added.
 
-The [link suite](tests/dynamic-packages/run_package_link_tests.py) builds a provider
+The [link suite](tests/dynamic-packages/Run-PackageLinkTests.ps1) builds a provider
 and a dependent package DLL, distributes only their PCP/DLL artifacts, inspects
 PE imports/exports, and runs native probes. Four configurations pass: fresh and
 cached units with smart linking off and on. The provider's original source, PPU,

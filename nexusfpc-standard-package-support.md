@@ -46,7 +46,7 @@ IDE package integration, or automatic source-catalog dependency resolution.
 
 ## Timing method
 
-`tests/dynamic-packages/run_package_support_benchmarks.py` compares two fully
+`tests/dynamic-packages/Run-PackageSupportBenchmarks.ps1` compares two fully
 bootstrapped compiler/RTL trees without rebuilding either tree in place. It compiles
 identical input sources with `-n -O2 -B`, uses private output directories, warms
 the tools and caches, alternates baseline/candidate order, and records seven samples
@@ -64,9 +64,9 @@ memory, or every application's workload. Do not run other validation jobs during
 the timed samples.
 
 ```powershell
-python tests\dynamic-packages\run_package_support_benchmarks.py `
-  --baseline-root C:\gitdev\nps-base --candidate-root C:\gitdev\nps `
-  --output C:\gitdev\nps-out\timings
+./tests/dynamic-packages/Run-PackageSupportBenchmarks.ps1 `
+  -BaselineRoot BASELINE -CandidateRoot CANDIDATE `
+  -OutputRoot output/package-timings
 ```
 
 ## Validation and results

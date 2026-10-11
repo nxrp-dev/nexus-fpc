@@ -857,26 +857,11 @@ cvstest:
 # 3. clean and recompile rtl if DOWPOCYCLE is set
 # 4. build all supported cross compilers except the
 #    current PPC_TARGET which was already build
-# unless FPC_SUPPORT_X87_TYPES_ON_WIN64 is set,
-# win64 cannot compile targets that require 80bit real support.
-# This is also the case for other CPUs that don't support
-# 80bit real type, unless -dFPC_SOFT_FPUX80
-# option is used.
-
-ifeq ($(findstring -dFPC_SOFT_FPUX80,$(LOCALOPT)),)
-ifeq ($(OS_SOURCE),win64)
-  EXCLUDE_80BIT_TARGETS=1
-endif
-
-ifneq ($(findstring $(CPU_SOURCE),aarch64),)
-  EXCLUDE_80BIT_TARGETS=1
-endif
-endif
-
-ifndef EXCLUDE_80BIT_TARGETS
-FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
+# Native ARM compilers do not build x86 targets requiring binary80 constants.
+ifeq ($(CPU_SOURCE),aarch64)
+FULL_TARGETS=$(filter-out i386 x86_64 $(PPC_TARGET),$(CYCLETARGETS))
 else
-FULL_TARGETS=$(filter-out x86_64,$(filter-out $(PPC_TARGET),$(CYCLETARGETS)))
+FULL_TARGETS=$(filter-out $(PPC_TARGET),$(CYCLETARGETS))
 endif
 
 full: fullcycle

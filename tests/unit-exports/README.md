@@ -10,4 +10,7 @@ Linux: run `python3 Run-NXLinuxUnitExports.py --compiler <compiler> --rtl <match
 
 Linux coverage includes fresh/cached programs and shared libraries, procedure aliases and original mangled names, initialized exported data, and smart linking. Shared-library exports are resolved and called using Python ctypes; static programs call the unit exports through external C ABI declarations. Cached unit source is hidden and object/PPU hashes must stay unchanged. An unrelated unused routine must still disappear during smart linking. Duplicate export names and Linux's unsupported ordinals must retain their diagnostics.
 
-On compiler hosts without native 80-bit extended support, `fpcdefs.inc` selects the existing `FPC_SOFT_FPUX80` implementation for the x86-64 compiler. This allows the ordinary bootstrap compiler to emit Linux extended constants without special build flags.
+Building an x86 compiler requires a host compiler with native hardware80 Extended.
+The Windows bootstrap script starts with stock FPC 3.2.2 Win32 and produces native
+Win64 tools. There is no software80 compiler fallback; see the
+[native floating-point policy](../../nexusfpc-native-real-design.md).

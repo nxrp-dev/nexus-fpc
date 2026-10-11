@@ -15,19 +15,20 @@
 {$ASMMODE GAS}
 
 {$ifdef FPC_HAS_TYPE_EXTENDED}
+{ Named parameters and ordinary frames cover both Win64 shadow space and SysV. }
 {$define FPC_MATH_HAS_ARCTAN2}
-function arctan2(y,x : float) : float;assembler;nostackframe;
+function arctan2(y,x : float) : float;assembler;
   asm
-     fldt 8(%rsp)
-     fldt 24(%rsp)
+     fldt y
+     fldt x
      fpatan
      fwait
   end;
 
 {$define FPC_MATH_HAS_TAN}
-function tan(x : float) : float;assembler;nostackframe;
+function tan(x : float) : float;assembler;
   asm
-    fldt 8(%rsp)
+    fldt x
     fptan
     fstp %st
     fwait
@@ -35,9 +36,9 @@ function tan(x : float) : float;assembler;nostackframe;
 
 
 {$define FPC_MATH_HAS_COTAN}
-function cotan(x : float) : float;assembler;nostackframe;
+function cotan(x : float) : float;assembler;
   asm
-    fldt 8(%rsp)
+    fldt x
     fptan
     fdivp %st,%st(1)
     fwait
@@ -45,10 +46,10 @@ function cotan(x : float) : float;assembler;nostackframe;
 
 
 {$define FPC_MATH_HAS_LOG2}
-function log2(x : float) : float;assembler;nostackframe;
+function log2(x : float) : float;assembler;
   asm
     fld1
-    fldt 8(%rsp)
+    fldt x
     fyl2x
     fwait
   end;
@@ -56,24 +57,19 @@ function log2(x : float) : float;assembler;nostackframe;
 
 
 {$define FPC_MATH_HAS_SINCOS}
+{$asmmode intel}
 {$ifdef FPC_HAS_TYPE_EXTENDED}
 procedure sincos(theta : extended;out sinus,cosinus : extended);assembler;
 asm
-    fldt theta
+    fld tbyte ptr theta
     fsincos
-{$ifdef FPC_ABI_WIN64}
-    fstpl (%r8)
-    fstpl (%rdx)
-{$else FPC_ABI_WIN64}
-    fstpt (%rsi)
-    fstpt (%rdi)
-{$endif FPC_ABI_WIN64}
+    fstp tbyte ptr [cosinus]
+    fstp tbyte ptr [sinus]
     fwait
   end;
 {$endif FPC_HAS_TYPE_EXTENDED}
 
 
-{$asmmode intel}
 procedure sincos(theta : double;out sinus,cosinus : double);assembler;
   var
     t : double;

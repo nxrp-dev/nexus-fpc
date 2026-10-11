@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.ppu` | `NXU` | Header 208; long compatibility revision 36 |
+| Compiled unit | `.ppu` | `NXU` | Header 208; long compatibility revision 39 |
 | Compiler package metadata | `.pcp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -27,6 +27,11 @@ The retired-target cleanup advances the compatibility revision to 36. Removing
 obsolete target switches changes the settings recorded in generic token streams;
 obsolete module flags are removed too. Rebuild ordinary units and package SDKs.
 The `NXU208` family/header and `NXP004` package container remain unchanged.
+
+The Currency correction used revision 37 for saved range state. The subsequent
+[native floating-point policy](nexusfpc-native-real-design.md) advances it to 38:
+Win64 Extended is binary80, and real payloads use ten bytes for x86 targets or
+eight bytes for ARM targets. The runtime compiler identity includes this revision.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`
@@ -70,7 +75,7 @@ bits 31.. 0: unit compatibility revision (32 bits)
 ```
 
 `NexusCompilerIdentity` constructs the value without narrowing it to the host
-pointer size. Current inputs `(208, $c181, 34)` produce `$00d0c18100000022`.
+pointer size. Current inputs `(208, $c181, 38)` produce `$00d0c18100000026`.
 The descriptor version advances from 3 to 4 because the field's meaning changed,
 although its size and offsets did not. Runtime registration compares the complete
 identity before activation. The runtime family is already identified by `NXPK`.
@@ -83,8 +88,9 @@ signatures are rejected. This intentionally breaks binary artifact compatibility
 Third-party PPU parsers must learn `NXU` before they can inspect these files; use
 the rebuilt Nexus utilities. Source-based tools do not need a new file extension.
 
-The repository bootstrap script builds a seed compiler against the installed
-FPC 3.2.2 RTL, then uses that seed to generate Nexus RTL units before cycling.
+The Windows repository bootstrap starts with stock FPC 3.2.2 i386-win32 and its
+matching RTL. It builds an x64 seed, then the new Win64 RTL and native compiler
+before the normal cycle, retaining native hardware80 arithmetic at every step.
 The bootstrap compiler therefore never has to read `NXU` files. Use an isolated
 source checkout for the script's clean/full build:
 

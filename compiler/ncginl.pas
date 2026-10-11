@@ -218,8 +218,7 @@ implementation
                second_seg;
             in_fma_single,
             in_fma_double,
-            in_fma_extended,
-            in_fma_float128:
+            in_fma_extended:
                second_fma;
             in_max_longint,
             in_max_dword,

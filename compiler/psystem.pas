@@ -295,14 +295,9 @@ implementation
         pvmt_name:='pvmt';
  {$ifdef x86}
         create_fpu_types;
-{$ifndef FPC_SUPPORT_X87_TYPES_ON_WIN64}
         if target_info.system=system_x86_64_win64 then
-          begin
-            s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true);
-            pbestrealtype:=@s64floattype;
-          end
+          s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true)
         else
-{$endif FPC_SUPPORT_X87_TYPES_ON_WIN64}
           s64currencytype:=cfloatdef.create(s64currency,true);
 {$endif x86}
 {$ifdef aarch64}
@@ -360,8 +355,8 @@ implementation
             addtype('Extended',pbestrealtype^);
             { CExtended corresponds to the C version of the Extended type
               (either "long double" or "double") }
-            if target_info.system in systems_android then
-              { Android has "long double"="double" even for x86 }
+            if target_info.system in (systems_android+[system_x86_64_win64]) then
+              { Microsoft C and Android x86 use Double at this boundary. }
               addtype('CExtended',s64floattype)
             else
               if tfloatdef(pbestrealtype^).floattype=s80real then
@@ -370,9 +365,7 @@ implementation
                 addtype('CExtended',pbestrealtype^);
           end;
 {$ifdef x86}
-{$ifndef FPC_SUPPORT_X87_TYPES_ON_WIN64}
         if target_info.system<>system_x86_64_win64 then
-{$endif FPC_SUPPORT_X87_TYPES_ON_WIN64}
           addtype('Comp',cfloatdef.create(s64comp,true));
 {$endif x86}
         addtype('Currency',s64currencytype);
@@ -566,11 +559,6 @@ implementation
         oldcurrentmodule : tmodule;
         pvmt_name : shortstring;
       begin
-{$ifndef FPC_SUPPORT_X87_TYPES_ON_WIN64}
-        if target_info.system=system_x86_64_win64 then
-          pbestrealtype:=@s64floattype;
-{$endif FPC_SUPPORT_X87_TYPES_ON_WIN64}
-
         oldcurrentmodule:=current_module;
         set_current_module(nil);
         loadtype('byte',u8inttype);

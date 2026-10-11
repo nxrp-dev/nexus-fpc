@@ -33,6 +33,7 @@ unit cpubase;
   interface
 
     uses
+      tpcompilerreal,
       cutils,cclasses,
       globtype,globals,
       cpuinfo,
@@ -687,14 +688,14 @@ unit cpubase;
       case ft of
         s32real:
           begin
-            singlerec.value:=value;
+            singlerec.value:=Single(value);
             singlerec:=tcompsinglerec(NtoLE(DWord(singlerec)));
             Result:=(singlerec.bytes[0]=0) and (singlerec.bytes[1]=0) and ((singlerec.bytes[2] and 7)=0)  and
               (((singlerec.bytes[3] and $7e)=$40) or ((singlerec.bytes[3] and $7e)=$3e));
           end;
         s64real:
           begin
-            doublerec.value:=value;
+            doublerec.value:=Double(value);
             doublerec:=tcompdoublerec(NtoLE(QWord(doublerec)));
             Result:=(doublerec.bytes[0]=0) and (doublerec.bytes[1]=0) and (doublerec.bytes[2]=0) and
                     (doublerec.bytes[3]=0) and (doublerec.bytes[4]=0) and (doublerec.bytes[5]=0) and

@@ -29,6 +29,7 @@ unit nadd;
 interface
 
     uses
+      tpcompilerreal,
       node,symtype;
 
     type
@@ -147,7 +148,7 @@ implementation
       ppu;
 
 const
-    BestRealRecMatchesBestReal = 1 div Ord(SizeOf(bestrealrec) = SizeOf(bestreal));
+    BestRealLayoutCheck = 1 div Ord(SizeOf(bestrealrec) = SizeOf(bestreal));
     swap_relation: array [ltn..unequaln] of Tnodetype=(gtn, gten, ltn, lten, equaln, unequaln);
 
 {*****************************************************************************
@@ -159,7 +160,7 @@ const
     function getbestreal(t1,t2 : tdef) : tdef;
       const
         floatweight : array[tfloattype] of byte =
-          (2,3,4,5,0,1,6);
+          (2,3,4,5,0,1);
       begin
         if t1.typ=floatdef then
           begin
@@ -1131,7 +1132,7 @@ const
                           begin
                             { We actually lack a scalar - try to scale
                               the smallest to minimise precision errors }
-                            if (abs(rvd) > abs(lvd)) then
+                            if (Abs(rvd) > Abs(lvd)) then
                               lvd:=lvd*BestReal(10000.0)
                             else
                               rvd:=rvd*BestReal(10000.0);
@@ -1160,7 +1161,7 @@ const
                     else if lvd=0 then
                       t:=crealconstnode.create(1.0,resultrealdef)
                     else
-                      t:=crealconstnode.create(exp(ln(lvd)*rvd),resultrealdef);
+                      t:=crealconstnode.create(Exp(Ln(lvd)*rvd),resultrealdef);
                   end;
                 slashn :
                   begin
@@ -1354,13 +1355,11 @@ const
           ) and
           (((cs_opt_fastmath in current_settings.optimizerswitches) and (rt=ordconstn)) or
            ((cs_opt_fastmath in current_settings.optimizerswitches) and (rt=realconstn) and
-            (bestrealrec(trealconstnode(right).value_real).SpecialType in [fsPositive,fsNegative])
+            (is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real<>0))
            ) or
            ((rt=realconstn) and
-            (bestrealrec(trealconstnode(right).value_real).SpecialType in [fsPositive,fsNegative]) and
-            { mantissa returns the mantissa/fraction without the hidden 1, so power of two means only the hidden
-              bit is set => mantissa must be 0 }
-            (bestrealrec(trealconstnode(right).value_real).Mantissa=0)
+            (is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real<>0)) and
+            (bestrealrec(trealconstnode(right).value_real).Mantissa(True)=BestRealHiddenBit)
            )
           ) then
           case rt of
@@ -3651,15 +3650,11 @@ const
                       begin
                         { if left is a currency integer constant, we can get rid of the factor 10000 }
                         { int64(...) causes a cast on currency, so it is the currency value multiplied by 10000 }
-                        if (left.nodetype=realconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((trunc(trealconstnode(left).value_real) mod 10000)=0) then
+                        if (left.nodetype=realconstn) and (is_currency(left.resultdef)) and (nf_is_currency in left.flags) and ((Trunc(trealconstnode(left).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value_real and value_currency contain valid values }
-{$ifdef FPC_CURRENCY_IS_INT64}
-                            trealconstnode(left).value_currency:=pint64(@(trealconstnode(left).value_currency))^ div 10000;
-{$else}
-                            trealconstnode(left).value_currency:=trealconstnode(left).value_currency/BestReal(10000.0);
-{$endif}
                             trealconstnode(left).value_real:=trealconstnode(left).value_real/BestReal(10000.0);
+                            trealconstnode(left).SetCurrencyValue(trealconstnode(left).value_real);
                             Exclude(left.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -3667,15 +3662,11 @@ const
                             hp:=getcopy;
                           end
                         { or if right is an integer constant, we can get rid of its factor 10000 }
-                        else if (right.nodetype=realconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((trunc(trealconstnode(right).value_real) mod 10000)=0) then
+                        else if (right.nodetype=realconstn) and (is_currency(right.resultdef)) and (nf_is_currency in right.flags) and ((Trunc(trealconstnode(right).value_real) mod 10000)=0) then
                           begin
                             { trealconstnode expects that value and value_currency contain valid values }
-{$ifdef FPC_CURRENCY_IS_INT64}
-                            trealconstnode(right).value_currency:=pint64(@(trealconstnode(right).value_currency))^ div 10000;
-{$else}
-                            trealconstnode(right).value_currency:=trealconstnode(right).value_currency/BestReal(10000.0);
-{$endif}
                             trealconstnode(right).value_real:=trealconstnode(right).value_real/BestReal(10000.0);
+                            trealconstnode(right).SetCurrencyValue(trealconstnode(right).value_real);
                             Exclude(right.flags,nf_is_currency);
                             Include(flags,nf_is_currency);
 
@@ -4485,8 +4476,6 @@ const
                inlinennr:=in_fma_double;
               s80real:
                inlinennr:=in_fma_extended;
-              s128real:
-               inlinennr:=in_fma_float128;
               else
                 internalerror(2014042601);
             end;

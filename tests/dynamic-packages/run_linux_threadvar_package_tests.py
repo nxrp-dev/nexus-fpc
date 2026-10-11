@@ -1,7 +1,6 @@
-"""Sequential unified threadvar regressions on a matching Windows or Linux SDK."""
+"""Sequential unified threadvar regressions on a matching Linux SDK."""
 import argparse
 import json
-import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -22,7 +21,7 @@ def main():
     source, packages, host = [out / p for p in ('source', 'packages', 'host')]
     for p in (source, packages, host):
         p.mkdir()
-    windows = os.name == 'nt'
+
     steps = []
 
     def run(name, command, cwd=out):
@@ -37,27 +36,11 @@ def main():
         print('PASS', name, flush=True)
 
     def compile(name, path, required=(), program=False):
-        if windows:
-            def quote(value):
-                return "'" + str(value).replace("'", "''") + "'"
-            script = out / (name + '.ps1')
-            expression = ('& ' + quote(root / 'scripts/Invoke-NexusFPCPackageCompile.ps1') +
-                          ' -SdkRoot ' + quote(sdk) + ' -Source ' + quote(path) +
-                          ' -Kind ' + ('Console' if program else 'Package') +
-                          ' -OutputDirectory ' + quote(host if program else packages) +
-                          ' -PackagePath ' + quote(packages))
-            if required:
-                expression += ' -RequiredPackages @(' + ','.join(map(quote, required)) + ')'
-            script.write_text("$ErrorActionPreference='Stop'\ntry {\n" + expression +
-                              "\n} catch { Write-Output $_.Exception.Message; exit 1 }\n")
-            command = ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass',
-                       '-File', script]
-        else:
-            command = [sys.executable, sdk / 'bin/compile_linux_package.py', '--sdk', sdk,
-                       '--source', path, '--kind', 'program' if program else 'package',
-                       '--output', host if program else packages, '--package-path', packages]
-            for requirement in required:
-                command += ['--require', requirement]
+        command = [sys.executable, sdk / 'bin/compile_linux_package.py', '--sdk', sdk,
+                   '--source', path, '--kind', 'program' if program else 'package',
+                   '--output', host if program else packages, '--package-path', packages]
+        for requirement in required:
+            command += ['--require', requirement]
         run(name, command)
 
     shutil.copy2(fixtures / 'threadvar_contracts.pas', source)
@@ -89,9 +72,9 @@ def main():
 
     distribution = selected(host)
     for p in selected(packages).iterdir():
-        if p.suffix.lower() in ('.dll', '.so'):
+        if p.suffix.lower() in ('.so',):
             shutil.copy2(p, distribution)
-    executable = distribution / ('threadvar_package_host.exe' if windows else 'threadvar_package_host')
+    executable = distribution / 'threadvar_package_host'
     run('runtime', [executable], distribution)
     assert 'PASS unified package threadvars' in (out / 'runtime.log').read_text()
 

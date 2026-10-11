@@ -27,6 +27,7 @@ unit pdecvar;
 interface
 
     uses
+      tpcompilerreal,
       cclasses,
       symtable,symsym,symdef,symtype;
 
@@ -752,7 +753,7 @@ implementation
                       p.default:=0;
                     realconstn:
                       begin
-                        s:=single(trealconstnode(pt).value_real);
+                        s:=Single(trealconstnode(pt).value_real);
                         p.default:=plongint(@s)^;
                         include(p.propoptions,ppo_default_is_single);
                       end;

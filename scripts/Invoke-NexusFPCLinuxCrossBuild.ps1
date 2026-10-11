@@ -84,7 +84,6 @@ try {
             "PPC_TARGET=$cpu", "CPU_UNITDIR=$($cpu)_cross",
             'RELEASE=1'
         )
-        if ($cpu -in @('i386', 'x86_64')) { $common += 'LOCALOPT=-dFPC_SOFT_FPUX80' }
         Invoke-MakeStep "compiler-$cpu-linux-clean-units" (@('-C', (Join-Path $SourceRoot 'compiler'),
             "${cpu}_cross_clean", "CYCLETARGETS=${cpu}_cross") + $common)
         if ($cpu -eq 'aarch64') {

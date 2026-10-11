@@ -12,12 +12,6 @@
 {$endif}
 {$interfaces corba}
 
-{ An x86-64 compiler can target Linux's 80-bit extended type even when
-  its host RTL (for example Win64) only provides double precision. }
-{$if defined(x86_64) and not defined(FPC_HAS_TYPE_EXTENDED)}
-  {$define FPC_SOFT_FPUX80}
-{$endif}
-
 { This reduces the memory requirements a lot }
 {$PACKENUM 1}
 {$PACKSET 1}
@@ -110,7 +104,6 @@
   {$define cpu64bitalu}
   {$define cpu64bitaddr}
   {$define cpuextended}
-  {$define cpufloat128}
   {$define cputargethasfixedstack}
   {$define cpumm}
   {$define cpurox}
@@ -121,6 +114,12 @@
   {$define fpucapabilities}
   {$define support_rodata}
 {$endif x86_64}
+
+{ x86 code generation requires a native binary80 compiler host. This also
+  rejects obsolete Win64 bootstrap compilers whose Extended is Double. }
+{$if defined(x86) and not defined(FPC_HAS_TYPE_EXTENDED)}
+  {$fatal Building an x86 compiler requires a compiler with hardware Extended support}
+{$endif}
 
 
 
@@ -163,10 +162,4 @@
 
 {$ifdef LLVM}
 {$fatal LLVM code generation has been removed}
-{$endif}
-
-{$if not defined(FPC_HAS_TYPE_EXTENDED) and defined(i386)}
-{$ifndef FPC_SOFT_FPUX80}
-{$error Cross-compiling from systems without support for an 80 bit extended floating point type to i386 is not yet supported at this time }
-{$endif}
 {$endif}

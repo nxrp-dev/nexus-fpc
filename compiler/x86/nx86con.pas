@@ -26,6 +26,7 @@ unit nx86con;
 interface
 
     uses
+       tpcompilerreal,
        node,ncon,ncgcon;
 
     type

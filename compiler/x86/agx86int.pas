@@ -29,6 +29,7 @@ unit agx86int;
 interface
 
     uses
+      tpcompilerreal,
       cpubase,constexp,
       aasmbase,aasmtai,aasmdata,aasmcpu,assemble,cgutils;
 
@@ -41,8 +42,6 @@ interface
       public
         function single2str(d : single) : string; override;
         function double2str(d : double) : string; override;
-        function extended2str(e : extended) : string; override;
-        function comp2str(d : bestreal) : string;
         procedure WriteTree(p:TAsmList);override;
         procedure WriteAsmList;override;
         procedure WriteExternals;
@@ -211,34 +210,8 @@ implementation
          double2str:=lower(hs);
       end;
 
-    function TX86IntelAssembler.extended2str(e : extended) : string;
-      var
-         hs : string;
-         p : byte;
-      begin
-         str(e,hs);
-      { nasm expects a lowercase e }
-         p:=pos('E',hs);
-         if p>0 then
-          hs[p]:='e';
-         p:=pos('+',hs);
-         if p>0 then
-          delete(hs,p,1);
-         extended2str:=lower(hs);
-      end;
 
 
-    function TX86IntelAssembler.comp2str(d : bestreal) : string;
-      type
-        pdouble = ^double;
-      var
-        c  : comp;
-        dd : pdouble;
-      begin
-         c:=comp(d);
-         dd:=pdouble(@c); { this makes a bitwise copy of c into a double }
-         comp2str:=double2str(dd^);
-      end;
 
     { MASM supports aligns up to 8192 }
     function alignstr(b : longint) : string;
@@ -606,12 +579,8 @@ implementation
                    writer.AsmWriteLn(#9#9'DD'#9+single2str(tai_realconst(hp).value.s32val));
                  aitrealconst_s64bit:
                    writer.AsmWriteLn(#9#9'DQ'#9+double2str(tai_realconst(hp).value.s64val));
-                 aitrealconst_s80bit:
-                   writer.AsmWriteLn(#9#9'DT'#9+extended2str(tai_realconst(hp).value.s80val));
-                 aitrealconst_s64comp:
-                   writer.AsmWriteLn(#9#9'DQ'#9+extended2str(tai_realconst(hp).value.s64compval));
-                 else
-                   internalerror(2014050606);
+                 aitrealconst_s80bit,aitrealconst_s64comp:
+                   WriteRealConstAsBytes(tai_realconst(hp),#9#9'DB'#9,false);
                end;
              end;
            ait_string :

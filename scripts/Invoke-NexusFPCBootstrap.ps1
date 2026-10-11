@@ -1,10 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
-Clean or bootstrap native Windows x86-64 NexusFPC using FPC 3.2.2.
+Clean or bootstrap native Windows x86-64 NexusFPC using FPC 3.2.2 Win32.
 .DESCRIPTION
 Uses GNU make explicitly and follows the Free Pascal source tree's documented
-clean/all bootstrap flow after building a seed compiler against the installed RTL.
-The seed can generate the current threadvar ABI before the first RTL cycle.
+clean/all bootstrap flow after a hardware80 seed transition: stock i386-win32
+builds an x64 cross compiler, the current Win64 RTL, then a native Win64 compiler.
+The native seed supports the current Extended and threadvar ABIs.
 Use -RegenerateMakefiles after changing build definitions
 or pruning targets so FPC's generated package/utility registration and Makefiles are
 refreshed from the current source tree before bootstrapping.
@@ -23,7 +24,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBoots
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
-    [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64',
+    [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\i386-win32',
     [string]$LogRoot,
     [string]$NdkRoot,
     [switch]$RegenerateMakefiles,
@@ -33,14 +34,15 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'NexusFPCBootstrapSeed.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 if (-not $LogRoot) { $LogRoot = Join-Path $PSScriptRoot '..\output\NexusFPCBootstrap' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $BootstrapBin = (Resolve-Path -LiteralPath $BootstrapBin).Path
-$compiler = Join-Path $BootstrapBin 'ppcx64.exe'
+$compiler = Join-Path $BootstrapBin 'ppc386.exe'
 $make = Join-Path $BootstrapBin 'make.exe'
 $data2inc = Join-Path $BootstrapBin 'data2inc.exe'
-$bootstrapUnits = Join-Path $BootstrapBin '..\..\units\x86_64-win64'
+$bootstrapUnits = Join-Path $BootstrapBin '..\..\units\i386-win32'
 foreach ($path in @($compiler, $make, $data2inc, $bootstrapUnits,
     "$SourceRoot\Makefile.fpc", "$SourceRoot\compiler\pp.pas",
     "$SourceRoot\rtl\inc\Makefile.rtl", "$SourceRoot\packages\fpmake.pp",
@@ -50,8 +52,8 @@ foreach ($path in @($compiler, $make, $data2inc, $bootstrapUnits,
 if ((& $compiler -iV) -ne '3.2.2' -or $LASTEXITCODE -ne 0) {
     throw 'Bootstrap compiler must be FPC 3.2.2.'
 }
-if ((& $compiler -iTP) -ne 'x86_64' -or (& $compiler -iTO) -ne 'win64') {
-    throw 'This helper requires the native x86_64-win64 bootstrap compiler.'
+if ((& $compiler -iTP) -ne 'i386' -or (& $compiler -iTO) -ne 'win32') {
+    throw 'This helper requires FPC 3.2.2 i386-win32 for hardware80 bootstrap arithmetic.'
 }
 $makeVersion = & $make --version
 if ($LASTEXITCODE -ne 0 -or ($makeVersion -join "`n") -notmatch '^GNU Make') {
@@ -123,34 +125,6 @@ function Get-GitBash {
         if (Test-Path -LiteralPath $candidate) { return $candidate }
     }
     throw "Unable to locate Git Bash from $($gitCommand.Source)."
-}
-
-function New-BootstrapSeed {
-    # The installed compiler cannot generate the current System threadvar ABI.
-    # Compile the new compiler against its installed RTL first, without mixing
-    # either compiler's PPUs into the ordinary self-hosting cycle.
-    $seedRoot = Join-Path $runRoot 'seed'
-    $seedSource = Join-Path $seedRoot 'source'
-    $seedUnits = Join-Path $seedRoot 'units'
-    New-Item -ItemType Directory -Path $seedSource, $seedUnits -Force | Out-Null
-    $originalCompiler = Join-Path $SourceRoot 'compiler'
-    foreach ($file in Get-ChildItem -LiteralPath $originalCompiler -Recurse -File) {
-        if ($file.Extension -notin @('.pas', '.pp', '.inc') -or
-            $file.Name -in @('msgtxt.inc', 'msgidx.inc')) { continue }
-        $destination = Join-Path $seedSource $file.FullName.Substring($originalCompiler.Length + 1)
-        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
-        Copy-Item -LiteralPath $file.FullName -Destination $destination
-    }
-    $options = @('-n', "-Fu$bootstrapUnits\rtl", "-FU$seedUnits", "-FE$seedRoot")
-    Invoke-BootstrapStep 'seed-message-generator' $seedRoot $compiler ($options + @("$seedSource\utils\msg2inc.pp"))
-    Invoke-BootstrapStep 'seed-messages' $seedRoot "$seedRoot\msg2inc.exe" @(
-        "$SourceRoot\compiler\msg\errore.msg", "$seedSource\msg", 'msg')
-    $options += @('-O2', '-dx86_64', "-Fu$seedUnits")
-    foreach ($part in @('', 'x86_64', 'x86', 'systems')) {
-        $directory = Join-Path $seedSource $part
-        $options += @("-Fu$directory", "-Fi$directory")
-    }
-    Invoke-BootstrapStep 'seed-compiler' $seedRoot $compiler ($options + @("$seedSource\pp.pas"))
 }
 
 function Update-FpmakeAggregates {
@@ -343,8 +317,8 @@ function Invoke-FullMatrix([datetime]$NativeStarted) {
         foreach ($unit in @('system', 'heaptrc')) { Assert-FreshRTLUnit $target $unit $since }
     }
 
-    # The native package build covers Extended=Double. Compile FmtBCD on Linux
-    # as well, where its distinct Extended conversion operators must exist.
+    # Native Win64 and Linux both expose distinct Extended conversion operators.
+    # Compile FmtBCD for Linux as well to cover its cross-target path.
     $nativeFmtBCD = Get-Item -LiteralPath (Join-Path $SourceRoot 'packages\rtl-objpas\units\x86_64-win64\fmtbcd.ppu') -ErrorAction Stop
     if ($nativeFmtBCD.LastWriteTime -lt $NativeStarted) { throw "Native bootstrap did not refresh $($nativeFmtBCD.FullName)" }
     $fmtbcdDir = Join-Path $runRoot 'fmtbcd-x86_64-linux'
@@ -409,8 +383,8 @@ try {
         Write-Host "Logs: $runRoot"
         return
     }
-    New-BootstrapSeed
-    $seedCompiler = Join-Path $runRoot 'seed\pp.exe'
+    $seed = New-NexusFPCBootstrapSeed -SourceRoot $SourceRoot -BootstrapBin $BootstrapBin -OutputRoot (Join-Path $runRoot 'seed')
+    $seedCompiler = $seed.Compiler
     $seedVersion = & $seedCompiler -iV
     if ($LASTEXITCODE -ne 0) { throw 'Seed compiler did not report its version.' }
     $makeArguments = @("FPC=$seedCompiler", "REQUIREDVERSION=$seedVersion", 'CPU_TARGET=x86_64', 'OS_TARGET=win64')

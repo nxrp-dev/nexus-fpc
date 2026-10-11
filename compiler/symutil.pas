@@ -26,6 +26,7 @@ unit symutil;
 interface
 
     uses
+       tpcompilerreal,
        symconst,symbase,symtype,symsym;
 
     function is_funcret_sym(p:TSymEntry):boolean;

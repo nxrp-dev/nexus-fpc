@@ -26,6 +26,7 @@ unit pexpr;
 interface
 
     uses
+      tpcompilerreal,
       symtype,symdef,symbase,
       node,ncal,compinnr,
       tokens,globtype,globals,constexp,
@@ -2036,9 +2037,8 @@ implementation
       var
         d : bestreal;
         code : integer;
-        cur : currency;
       begin
-        val(s,d,code);
+        Val(s,d,code);
         if code<>0 then
          begin
            Message(parser_e_error_in_real);
@@ -2051,16 +2051,14 @@ implementation
             exit;
           end;
         if (current_settings.minfpconstprec=s32real) and
-           (d = single(d)) then
+           (d = Single(d)) then
           result:=crealconstnode.create(d,s32floattype)
         else if (current_settings.minfpconstprec=s64real) and
-                (d = double(d)) then
+                (d = Double(d)) then
           result:=crealconstnode.create(d,s64floattype)
         else
           result:=crealconstnode.create(d,pbestrealtype^);
-        val(current_scanner.pattern,cur,code);
-        if code=0 then
-          trealconstnode(result).value_currency:=cur;
+        trealconstnode(result).SetCurrencyLiteral(s);
       end;
 {$pop}
 
@@ -4134,7 +4132,7 @@ implementation
                  if code<>0 then
                    begin
                      { finally float }
-                     val(current_scanner.pattern,d,code);
+                     Val(current_scanner.pattern,d,code);
                      if code<>0 then
                        begin
                           Message(parser_e_invalid_integer);
@@ -4358,8 +4356,7 @@ implementation
                             end
                           else if tbinarynode(p1).left.nodetype=realconstn then
                             begin
-                              trealconstnode(tbinarynode(p1).left).value_real:=-trealconstnode(tbinarynode(p1).left).value_real;
-                              trealconstnode(tbinarynode(p1).left).value_currency:=-trealconstnode(tbinarynode(p1).left).value_currency;
+                              trealconstnode(tbinarynode(p1).left).NegateValue;
                               p1:=cunaryminusnode.create(p1);
                             end
                           else

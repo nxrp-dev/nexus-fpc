@@ -30,7 +30,7 @@ unit cutils;
 interface
 
   uses
-    constexp;
+    tpcompilerreal,constexp;
 
   type
     Tcharset=set of char;
@@ -102,7 +102,7 @@ interface
     function GetToken(var s:ShortString;endchar:char):ShortString;
     function GetToken(var s:ansistring;endchar:char):ansistring;
     procedure uppervar(var s : ShortString);
-    function realtostr(e:extended):string;{$ifdef USEINLINE}inline;{$endif}
+    function realtostr(e:bestreal):string;{$ifdef USEINLINE}inline;{$endif}
     function tostr(i : qword) : string;{$ifdef USEINLINE}inline;{$endif}overload;
     function tostr(i : int64) : string;{$ifdef USEINLINE}inline;{$endif}overload;
     function tostr(i : longint) : string;{$ifdef USEINLINE}inline;{$endif}overload;
@@ -950,7 +950,7 @@ implementation
       end;
 
 
-   function realtostr(e:extended):string;{$ifdef USEINLINE}inline;{$endif}
+   function realtostr(e:bestreal):string;{$ifdef USEINLINE}inline;{$endif}
      begin
         str(e,result);
      end;

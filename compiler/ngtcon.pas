@@ -26,6 +26,7 @@ unit ngtcon;
 interface
 
     uses
+      tpcompilerreal,
       globtype,cclasses,constexp,
       aasmbase,aasmdata,aasmtai,aasmcnst,
       node,nbas,
@@ -719,7 +720,7 @@ function get_next_varsym(def: tabstractrecorddef; const SymList:TFPHashObjectLis
                   end
                 { allow bootstrapping }
                 else if is_constrealnode(node) then
-                  intvalue:=PInt64(@trealconstnode(node).value_currency)^
+                  intvalue:=trealconstnode(node).CurrencyScaledValue
                 else
                   begin
                     intvalue:=0;
@@ -749,23 +750,23 @@ function get_next_varsym(def: tabstractrecorddef; const SymList:TFPHashObjectLis
 
         case def.floattype of
            s32real :
-             ftcb.emit_tai(tai_realconst.create_s32real(ts32real(value)),def);
+             ftcb.emit_tai(tai_realconst.create_s32real(Single(value)),def);
            s64real :
-               ftcb.emit_tai(tai_realconst.create_s64real(ts64real(value)),def);
+               ftcb.emit_tai(tai_realconst.create_s64real(Double(value)),def);
            s80real :
              ftcb.emit_tai(tai_realconst.create_s80real(value,s80floattype.size),def);
            sc80real :
              ftcb.emit_tai(tai_realconst.create_s80real(value,sc80floattype.size),def);
            s64comp :
              { the round is necessary for native compilers where comp isn't a float }
-             ftcb.emit_tai(tai_realconst.create_s64compreal(round(value)),def);
+             ftcb.emit_tai(tai_realconst.create_s64compreal(Round(value)),def);
            s64currency:
-             if nf_is_currency in node.flags then
-               ftcb.emit_tai(tai_realconst.create_s64compreal(round(value)),def)
+             if is_constrealnode(node) then
+               ftcb.emit_tai(tai_realconst.create_s64compreal(trealconstnode(node).CurrencyScaledValue),def)
+             else if nf_is_currency in node.flags then
+               ftcb.emit_tai(tai_realconst.create_s64compreal(Round(value)),def)
              else
-               ftcb.emit_tai(tai_realconst.create_s64compreal(round(value*10000)),def);
-           s128real:
-             ftcb.emit_tai(tai_realconst.create_s128real(value),def);
+               ftcb.emit_tai(tai_realconst.create_s64compreal(Round(value*10000)),def);
         end;
       end;
 

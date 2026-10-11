@@ -26,6 +26,7 @@ unit aasmcpu;
 interface
 
 uses
+  tpcompilerreal,
   cclasses,globtype,globals,verbose,
   aasmbase,aasmtai,aasmdata,aasmsym,
   ogbase,

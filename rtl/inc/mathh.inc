@@ -125,7 +125,7 @@ procedure float_raise(i: TFPUExceptionMask);
       TFloatSpecial = (fsZero,fsNZero,fsDenormal,fsNDenormal,fsPositive,fsNegative,
                        fsInf,fsNInf,fsNaN,fsInvalidOp);
 
-{$if defined(SUPPORT_EXTENDED) or defined(FPC_SOFT_FPUX80)}
+{$ifdef SUPPORT_EXTENDED}
       TExtended80Rec = packed record
       private
       const
@@ -150,13 +150,9 @@ procedure float_raise(i: TFPUExceptionMask);
 {$else ENDIAN_LITTLE}
           2: (_Exp: Word; Frac : QWord);
 {$endif ENDIAN_LITTLE}
-{$ifdef SUPPORT_EXTENDED}
           3: (Value: Extended);
-{$else}
-          3: (Value: array[0..9] of Byte);
-{$endif}
       end;
-{$endif SUPPORT_EXTENDED or FPC_SOFT_FPUX80}
+{$endif SUPPORT_EXTENDED}
 
 {$ifdef SUPPORT_DOUBLE}
       TDoubleRec = packed record
@@ -221,7 +217,4 @@ procedure float_raise(i: TFPUExceptionMask);
 {$ifdef SUPPORT_EXTENDED}
     function FMAExtended(e1,e2,e3 : extended) : extended;[internproc:fpc_in_fma_extended];
 {$endif SUPPORT_EXTENDED}
-{$ifdef SUPPORT_FLOAT128}
-    function FMAFloat128(f1,f2,f3 : float128) : float128;[internproc:fpc_in_fma_float128];
-{$endif SUPPORT_FLOAT128}
 

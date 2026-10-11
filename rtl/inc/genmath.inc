@@ -1867,7 +1867,7 @@ function FPower10(val: Extended; Power: Longint): Extended;
   end;
 {$endif SUPPORT_EXTENDED}
 
-{$if defined(SUPPORT_EXTENDED) or defined(FPC_SOFT_FPUX80)}
+{$ifdef SUPPORT_EXTENDED}
 function TExtended80Rec.Mantissa(IncludeHiddenBit: Boolean = False) : QWord;
   begin
     if IncludeHiddenbit then
@@ -1878,11 +1878,7 @@ function TExtended80Rec.Mantissa(IncludeHiddenBit: Boolean = False) : QWord;
 
 function TExtended80Rec.Fraction : Extended;
   begin
-{$ifdef SUPPORT_EXTENDED}
     Result:=system.frac(Value);
-{$else}
-    Result:=Frac / Double (1 shl 63) / 2.0;
-{$endif}
   end;
 
 
@@ -1978,11 +1974,7 @@ function TExtended80Rec.SpecialType : TFloatSpecial;
 
 procedure TExtended80Rec.BuildUp(const _Sign: Boolean; const _Mantissa: QWord; const _Exponent: Longint);
 begin
-{$ifdef SUPPORT_EXTENDED}
   Value := 0.0;
-{$else SUPPORT_EXTENDED}
-  FillChar(Value, SizeOf(Value),0);
-{$endif SUPPORT_EXTENDED}
   if (_Mantissa=0) and (_Exponent=0) then
     SetExp(0)
   else
@@ -1990,7 +1982,7 @@ begin
   SetSign(_Sign);
   Frac := _Mantissa;
 end;
-{$endif SUPPORT_EXTENDED or FPC_SOFT_FPUX80}
+{$endif SUPPORT_EXTENDED}
 
 
 {$ifdef SUPPORT_DOUBLE}
