@@ -442,6 +442,66 @@ function tb0306_tobject2.rname : string;
   end;
 {$pop}
 
+{ Case tb0405.pp }
+{$push}
+{$ifdef fpc}{$endif}
+
+var
+  tb0405_err : boolean;
+
+type
+  tb0405_tc1=class
+    constructor Create;overload;
+  end;
+
+  tb0405_tc2=class(tb0405_tc1)
+    constructor Create(l:longint=0);overload;
+  end;
+
+constructor tb0405_tc1.create;
+begin
+  writeln('tc1.create()');
+end;
+
+constructor tb0405_tc2.create(l:longint);
+begin
+  writeln('tc2.create()');
+  tb0405_err:=false;
+end;
+
+var
+  tb0405_c : tb0405_tc2;
+{$pop}
+
+{ Case tb0299.pp }
+{$push}
+type
+   tb0299_tmyclass = class of tmyobject;
+
+   tmyobject = class
+   end;
+
+{ only a stupid test routine }
+function tb0299_getanchestor(tb0299_c : System.TClass) : System.TClass;
+
+  var
+     tb0299_l : longint;
+
+  begin
+     tb0299_getanchestor:=tobject;
+     tb0299_l:=tb0299_l+1;
+  end;
+
+var
+   tb0299_classref : System.TClass;
+   tb0299_myclassref : tb0299_tmyclass;
+
+const
+   tb0299_constclassref1 : System.TClass = tobject;
+   tb0299_constclassref2 : System.TClass = nil;
+   tb0299_constclassref3 : System.TClass = tobject;
+{$pop}
+
 begin
   { Case tb0228.pp }
   {$push}
@@ -566,6 +626,42 @@ begin
    tb0306_c2:=tb0306_tobject2;
    tb0306_o2:=tb0306_c2.create;
    tb0306_o2.destroy;
+end;
+  {$pop}
+
+  { Case tb0405.pp }
+  {$push}
+begin
+  tb0405_err:=true;
+  tb0405_c:=tb0405_tc2.create();
+  tb0405_c.free;
+  if tb0405_err then
+   begin
+     writeln('Error!');
+     halt(1);
+   end;
+end;
+  {$pop}
+
+  { Case tb0299.pp }
+  {$push}
+begin
+   { simple test }
+   tb0299_classref:=tb0299_classref;
+   { more difficult }
+   tb0299_classref:=tb0299_myclassref;
+   tb0299_classref:=tobject;
+   tb0299_myclassref:=tmyobject;
+
+   tb0299_classref:=tb0299_getanchestor(tb0299_myclassref);
+   if (upcase(tb0299_constclassref1.classname)<>'TOBJECT') or
+     (tb0299_constclassref2<>nil) or
+     (upcase(tb0299_myclassref.classname)<>'TMYOBJECT') or
+     (upcase(tb0299_classref.classname)<>'TOBJECT') then
+     begin
+        writeln('Error');
+        halt(1);
+     end;
 end;
   {$pop}
 
