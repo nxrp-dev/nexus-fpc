@@ -68,3 +68,23 @@ All attempted larger fixtures compiled and ran successfully. The failure was
 the exact output comparison; no assertion or compiler failure was established.
 These four source groups remain separate and unchanged. Other groups in the
 same feature families were successfully consolidated without them.
+
+## 2026-10-10: resumed full consolidation scan
+
+Validated with the fresh compiler built from `db37cbcd`, matching Win64 RTL/packages,
+Clang/LLD, and the standard test driver. Each fixture below remains separate.
+Commands and complete diagnostics are retained under `output/test-consolidation`.
+
+| Fixture | Variant | Observed failure |
+|---|---|---|
+| `tbs/tw1592.pp` | normal | Runtime error 216 |
+| `tbs/tw1592.pp` | O2 | Runtime error 216 |
+| `tbs/tw0788.pp` | normal | EOverflow: Floating point overflow |
+| `tbs/tw0788.pp` | O2 | EAccessViolation: Access violation |
+| `tbs/tw41865c.pp` | normal | Exitcode: 1 (expected 0) |
+| `tbs/tw41865c.pp` | O2 | Exitcode: 1 (expected 0) |
+| `tbs/tw41282.pp` | O2 | tw41282.pp(9,3) Fatal: Internal error 200409241; Fatal: Compilation aborted |
+| `test/twrstr8.pp` | normal | Exitcode: 1 (expected 0) |
+| `test/twrstr8.pp` | O2 | Exitcode: 1 (expected 0) |
+| `test/units/system/ttrig.pp` | normal | Runtime error 216 |
+| `test/units/system/ttrig.pp` | O2 | Runtime error 216 |
