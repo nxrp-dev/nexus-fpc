@@ -68,3 +68,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/tb_floating_point_fpc_consolidated_01.pp` | 5 | 1 |
 | `test/tb_integers_fpc_consolidated_01.pp` | 21 | 1 |
 | `test/tb_integers_fpc_consolidated_02.pp` | 4 | 1 |
+| `test/tb_integers_macpas_consolidated_01.pp` | 7 | 1 |
