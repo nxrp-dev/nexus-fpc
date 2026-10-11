@@ -109,3 +109,4 @@ Unexpected failures are recorded in [the failure notes](test-consolidation-failu
 | `test/tb_files_iso_consolidated_01.pp` | 3 | 1 |
 | `test/tb_generics_objfpc_consolidated_03.pp` | 5 | 1 |
 | `test/tb_integers_delphi_consolidated_01.pp` | 6 | 1 |
+| `test/tb_integers_fpc_consolidated_03.pp` | 5 | 1 |
