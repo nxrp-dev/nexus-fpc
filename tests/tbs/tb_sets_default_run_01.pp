@@ -1,4 +1,9 @@
-{ Sets regression cases; original case IDs are retained below. }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode fpc}
+
+
+{ Source group: tb_sets_default_run_01.pp }
+{$push}
 
 { Case tb0138.pp }
 {$push}
@@ -20,7 +25,7 @@ Var
 { Problem with enum sets in args                       OK 0.99.11 (PFV) }
 
 type tb0197_byteset = set of byte;
-     tb0197_enumset = set of (zero,one,two,three);
+     tb0197_enumset = set of (tb0197_zero,tb0197_one,tb0197_two,tb0197_three);
 
 function tb0197_test(s : tb0197_byteset) : boolean;
 begin
@@ -36,7 +41,7 @@ function tb0197_testenum(s : tb0197_enumset) : boolean;
 begin
   tb0197_testenum:=false;
 
-  if zero in s then
+  if tb0197_zero in s then
     begin
        Writeln('Contains zero !');
        tb0197_testenum:=true;
@@ -223,6 +228,198 @@ var
   tw40358_rs : tw40358_regset;
 {$pop}
 
+
+{$pop}
+
+{ Source group: tb_sets_default_run_02.pp }
+{$push}
+
+{ Case tw10033.pp }
+{$push}
+// tests writing of high()/low() of enumeration values, i.e.
+// writing and reading of rtti for enums, both "dense" and
+// "sparse" enumerations (different rtti is generated and
+// different code used for generating and reading)
+type
+  // "dense" unnamed enumeration
+  tw10033_txx = set of (_one, _two, _three);
+  // "sparse" unnamed enumeration
+  tw10033_tyy = set of (_zero := 0, _ten := 10, _twenty := 20);
+
+  // "dense" enumeration
+  tw10033_tx = (one,two,three);
+  tw10033_txxx = set of tw10033_tx;
+  // "sparse" enumeration
+  tw10033_ty = (zero := 0, ten := 10, twenty := 20);
+  tw10033_tyyy = set of tw10033_ty;
+
+procedure tw10033_error(number : longint);
+begin
+  writeln('error ', number);
+  halt(number);
+end;
+
+var
+  tw10033_x : tw10033_txxx;
+  tw10033_y : tw10033_tyyy;
+  tw10033_err : word;
+
+  tw10033__x : tw10033_txx;
+  tw10033__y : tw10033_tyy;
+{$pop}
+
+{ Case tw4477.pp }
+{$push}
+{ Source provided for Free Pascal Bug Report 4477 }
+{ Submitted by "Alexey Moiseitsev" on  2005-10-30 }
+{ e-mail: himeraster@gmail.com }
+var tw4477_f : set of boolean;
+{$pop}
+
+{ Case tw4606.pp }
+{$push}
+{$packset 1}
+type
+  tw4606_tlettersset=set of 'a'..'z';
+{$pop}
+
+{ Case tw6735.pp }
+{$push}
+type
+  tw6735_t=packed set of 0..7;
+{$pop}
+
+{ Case tw9167.pp }
+{$push}
+type
+  tw9167_tshiftstateenum = (ssShift, ssAlt, ssCtrl,
+    ssLeft, ssRight, ssMiddle, ssDouble,
+    // Extra additions
+    ssMeta, ssSuper, ssHyper, ssAltGr, ssCaps, ssNum,
+    ssScroll,ssTriple,ssQuad);
+
+{$packset 1}
+  tw9167_tshiftstate = set of tw9167_tshiftstateenum;
+{$packset default}
+
+var
+  tw9167_s: tw9167_tshiftstate;
+  tw9167_ss: tw9167_tshiftstateenum;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_set_expressions_default_run_01.pp }
+{$push}
+
+{ Case tb0173.pp }
+{$push}
+{ Old file: tbs0206.pp }
+{ sets with variable ranges doesn't work                OK 0.99.11 (PFV) }
+
+CONST tb0173_a:char='A';tb0173_z:char='Z';
+VAR tb0173_s:set of char;tb0173_c:char;
+{$pop}
+
+{ Case tb0216.pp }
+{$push}
+{ Old file: tbs0255.pp }
+{ internal error 10 with in and function calls         OK 0.99.12 (FK) }
+
+
+function tb0216_a: char;
+begin
+  tb0216_a:='c';
+end;
+{$pop}
+
+{ Case tb0017.pp }
+{$push}
+{ Old file: tbs0021.pp }
+{  tests compatibility of empty sets with other set and the evaluation of constant sets                  OK 0.9.3 }
+
+{ tests constant set evaluation }
+
+var
+   tb0017_a : set of byte;
+
+const
+   tb0017_b : set of byte = [0..255]+[9];
+
+type
+   tb0017_tcommandset = set of byte;
+
+const
+tb0017_cmzoom = 10;
+tb0017_cmclose = 5;
+tb0017_cmresize = 8;
+tb0017_cmnext = 12;
+tb0017_cmprev = 15;
+
+CONST
+   tb0017_curcommandset : tb0017_tcommandset = ([0..255] -
+        [tb0017_cmzoom, tb0017_cmclose, tb0017_cmresize, tb0017_cmnext, tb0017_cmprev]);
+   tb0017_commands : tb0017_tcommandset = [];
+
+var
+   tb0017_commandsetchanged : boolean;
+
+PROCEDURE tb0017_disablecommands (tb0017_commands: tb0017_tcommandset);
+
+   BEGIN
+      {$IFNDEF PPC_FPK}                                  { FPK bug }
+      tb0017_commandsetchanged := tb0017_commandsetchanged OR
+        (tb0017_curcommandset * tb0017_commands <> []);                { Set changed flag }
+      {$ENDIF}
+      tb0017_curcommandset := tb0017_curcommandset - tb0017_commands;         { Update command set }
+   END;
+{$pop}
+
+{ Case tb0154.pp }
+{$push}
+{ Old file: tbs0184.pp }
+{ multiple copies of the same constant set are stored in executable OK 0.99.9 (PFV) }
+
+{ multiple copies of the constant sets are stored in the assembler file when
+  they are needed more than once}
+
+Var tb0154_bset: Set of Byte;
+    tb0154_sset: Set of 0..31;
+    tb0154_b,tb0154_c: byte;
+    tb0154_s: 0..31;
+{$pop}
+
+{ Case tb0041.pp }
+{$push}
+{ Old file: tbs0046.pp }
+{  problems with sets with values over 128 due to sign extension (already fixed ) but also for SET_IN_BYTE }
+
+{$R-}
+
+type tb0041_byteset = set of byte;
+     tb0041_bl = record tb0041_i,tb0041_j : longint;
+          end;
+const tb0041_set1 : tb0041_byteset = [1,50,220];
+      tb0041_set2 : tb0041_byteset = [55];
+var tb0041_i : longint;
+    tb0041_b : tb0041_bl;
+
+    function tb0041_bi : longint;
+
+    begin
+       tb0041_bi:=tb0041_b.tb0041_i;
+    end;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_sets_default_run_01.pp }
+  {$push}
+
+
 begin
   { Case tb0138.pp }
   {$push}
@@ -241,7 +438,7 @@ tb0138_weekend := [saturday, sunday];
   begin
 if tb0197_test([1..5,8]) then halt(1);
   if not tb0197_test([0,8,15]) then halt(1);
-  if not tb0197_testenum([zero,two]) then halt(1);
+  if not tb0197_testenum([tb0197_zero,tb0197_two]) then halt(1);
   end;
   {$pop}
 
@@ -361,6 +558,152 @@ tw40358_rs:=[1,3,38,46];
   tw40358_print_regset(tw40358_rs);
   WriteLn('ok');
   end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_sets_default_run_02.pp }
+  {$push}
+
+
+begin
+  { Case tw10033.pp }
+  {$push}
+
+  begin
+writeln(low(tw10033__x));
+  writeln(high(tw10033__x));
+
+  writeln(low(tw10033__y));
+  writeln(high(tw10033__y));
+
+  writeln(low(tw10033_x));
+  writeln(high(tw10033_x));
+
+  writeln(low(tw10033_y));
+  writeln(high(tw10033_y));
+  end;
+  {$pop}
+
+  { Case tw4606.pp }
+  {$push}
+{$packset 1}
+  begin
+if sizeof(tw4606_tlettersset)<>4 then
+    begin
+      writeln(sizeof(tw4606_tlettersset));
+      halt(1);
+    end;
+  end;
+  {$pop}
+
+  { Case tw9167.pp }
+  {$push}
+{$packset 1}
+{$packset default}
+  begin
+tw9167_s := [];
+  tw9167_ss:=ssShift;
+  include(tw9167_s,tw9167_ss);
+  include(tw9167_s,ssSuper);
+  if not(ssShift in tw9167_s) or
+     not(ssSuper in tw9167_s) then
+    halt(1);
+  if not(tw9167_ss in tw9167_s) then
+    halt(2);
+  end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_set_expressions_default_run_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0173.pp }
+  {$push}
+BEGIN
+ tb0173_s:=[tb0173_a..tb0173_z];
+ for tb0173_c:=#0 to #255 do
+  if tb0173_c in tb0173_s then
+   write(tb0173_c);
+ writeln;
+END;
+  {$pop}
+
+  { Case tb0216.pp }
+  {$push}
+begin
+  if #12 in [tb0216_a, tb0216_a, tb0216_a, tb0216_a, tb0216_a] then ; { <--- }
+end;
+  {$pop}
+
+  { Case tb0017.pp }
+  {$push}
+begin
+   tb0017_a:=[byte(1)]+[byte(2)];
+end;
+  {$pop}
+
+  { Case tb0154.pp }
+  {$push}
+Begin
+  tb0154_bset := tb0154_bset + [tb0154_b];  {creates a big, empty set}
+  tb0154_bset := tb0154_bset + [tb0154_c];  {creates another one}
+  tb0154_bset := tb0154_bset + [3];  {creates a big set with element three set}
+  tb0154_bset := tb0154_bset + [3];  {and another one}
+
+  tb0154_sset := tb0154_sset + [5];  {creates a small set containing 5}
+  tb0154_sset := tb0154_sset + [tb0154_s];  {creates a small, empty set}
+  tb0154_sset := tb0154_sset + [5];  {creates another small set containing 5}
+  tb0154_sset := tb0154_sset + [tb0154_s];  {creates another small, empty set}
+
+{BTW: small constant sets don't have to be stored separately in the
+ executable, as they're simple 32 bit constants, like longints!}
+
+End;
+  {$pop}
+
+  { Case tb0041.pp }
+  {$push}
+{$R-}
+begin
+tb0041_set1:=tb0041_set1+tb0041_set2;
+writeln('set 1 = [1,50,55,220]');
+tb0041_i:=50;
+if tb0041_i in tb0041_set1 then
+  writeln(tb0041_i,' is in set1');
+tb0041_i:=220;
+if tb0041_i in tb0041_set1 then
+  writeln(tb0041_i,' is in set1');
+tb0041_i:=$100+220;
+if tb0041_i in tb0041_set1 then
+  writeln(tb0041_i,' is in set1');
+tb0041_i:=-35;
+if tb0041_i in tb0041_set1 then
+  writeln(tb0041_i,' is in set1');
+tb0041_b.tb0041_i:=50;
+tb0041_i:=$100+220;
+if tb0041_i in [50,220] then
+  writeln(tb0041_i,' is in [50,220]');
+if tb0041_bi in [50,220] then
+  writeln(tb0041_b.tb0041_i,' is in [50,220]');
+tb0041_b.tb0041_i:=220;
+if tb0041_bi in [50,220] then
+  writeln(tb0041_b.tb0041_i,' is in [50,220]');
+tb0041_b.tb0041_i:=-36;
+if tb0041_bi in [50,220] then
+  writeln(tb0041_b.tb0041_i,' is in [50,220]');
+end;
+  {$pop}
+
+
+end;
   {$pop}
 
 end.
