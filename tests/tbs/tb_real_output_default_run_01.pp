@@ -26,6 +26,20 @@ var
 var tb0134_x,tb0134_y:real;
 {$pop}
 
+{ Case tw0810.pp }
+{$push}
+var tw0810_i:byte;
+    tw0810_e:extended;
+    tw0810_s:string;
+{$pop}
+
+{ Case tw1104.pp }
+{$push}
+var
+  tw1104_r1,tw1104_r2 : extended;
+  tw1104_code : integer;
+{$pop}
+
 begin
   { Case tb0096.pp }
   {$push}
@@ -52,6 +66,33 @@ tb0134_x:=5.6;
 tb0134_y:=45.789;
 write(tb0134_y:2:3,tb0134_x:3:4);
 {write(y:3.2,x:5.2);}
+end;
+  {$pop}
+
+  { Case tw0810.pp }
+  {$push}
+begin
+tw0810_e:=103; (*1003,100003,1000003*)
+for tw0810_i:=0 to 17 do
+    begin
+    str(tw0810_e:0:tw0810_i,tw0810_s);
+    writeln(tw0810_s);
+    end;
+
+end;
+  {$pop}
+
+  { Case tw1104.pp }
+  {$push}
+begin
+  val('.',tw1104_r1,tw1104_code);
+  if tw1104_r1<>0.0 then
+   writeln('error with val(".")');
+  val('.E',tw1104_r2,tw1104_code);
+  if tw1104_r2<>0.0 then
+   writeln('error with val(".E")');
+  if (tw1104_r1<>0.0) or (tw1104_r2<>0.0) then
+   halt(1);
 end;
   {$pop}
 
