@@ -1,5 +1,9 @@
-{ Character literals, comparisons, sized strings and ordinal/Boolean conversions. }
-{ Original case IDs and variable scopes are retained below. }
+{ Consolidated feature cases; original case IDs and settings are retained below. }
+{$mode fpc}
+
+
+{ Source group: tb_char_literals_default_run_01.pp }
+{$push}
 
 { Case tb0242.pp }
 {$push}
@@ -77,6 +81,166 @@ var
    tb0401_b1,tb0401_b2 : boolean;
    tb0401_c : char;
 {$pop}
+
+
+{$pop}
+
+{ Source group: tb_string_literals_default_run_01.pp }
+{$push}
+
+{ Case tb0109.pp }
+{$push}
+{ Old file: tbs0128.pp }
+{ problem with ^[                                       OK 0.99.6 (PFV) }
+
+{ ^ followed by a letter must be interpreted differently
+  depending on context }
+
+const
+   tb0109_arrowkeysorfirstletter='arrow keys '^]^r^z' or First letter.   ';
+{$pop}
+
+{ Case tb0124.pp }
+{$push}
+{ Old file: tbs0143.pp }
+{ cannot concat string and array of char in $X+ mode    OK 0.99.7 (PFV) }
+
+
+
+const
+  tb0124_string1 : string = 'hello ';
+  tb0124_string2 : array[1..5] of char = 'there';
+var
+  tb0124_s : string;
+{$pop}
+
+{ Case tb0568.pp }
+{$push}
+{ this is allowed now, even in $H- mode because '....' is handled as array in this case (FK) }
+var
+  tb0568_i : integer;
+{$pop}
+
+{ Case tb0634.pp }
+{$push}
+var
+  tb0634_s, tb0634_s1, tb0634_s2, tb0634_s3, tb0634_s4: String;
+{$pop}
+
+{ Case tb0333.pp }
+{$push}
+{ Old file: tbs0001.pp }
+{  tests a bugs in the .ascii output (#0 and too long)  OK 0.9.2 }
+
+  const
+      tb0333_teststr : string = ' '#9#255#0;
+{$pop}
+
+{ Case tb0078.pp }
+{$push}
+{ Old file: tbs0090.pp }
+{  shows PChar comparison problem                        OK 0.99.7 (PFV) }
+
+{$X+}
+var
+ tb0078_mystr : array[0..4] of char;
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_string_operations_default_run_01.pp }
+{$push}
+
+{ Case tb0503.pp }
+{$push}
+procedure tb0503_testansi;
+var
+  s, q: ansistring;
+begin
+  s := 'hell';
+  s := s+'o';
+  q := '"';
+  q := q+'''';
+  s := s + q + s + 'abc';
+  if (s <> 'hello"''helloabc') then
+    halt(1);
+  s := 'hell';
+  s := s+'o';
+  s := q+s+q;
+  if (s <> '"''hello"''') then
+    halt(2);
+end;
+
+
+procedure tb0503_testshort;
+var
+  s, q: shortstring;
+begin
+  s := 'hell';
+  s := s+'o';
+  q := '"';
+  q := q+'''';
+  s := s + q + s + 'abc';
+  if (s <> 'hello"''helloabc') then
+    halt(3);
+  s := 'hell';
+  s := s+'o';
+  s := q+s+q;
+  if (s <> '"''hello"''') then
+    halt(4);
+end;
+{$pop}
+
+{ Case tb0619.pp }
+{$push}
+var
+  tb0619_ss: ShortString;
+  tb0619_us: UnicodeString;
+  tb0619_ws: WideString;
+  tb0619_as: AnsiString;
+  tb0619_i: LongInt;
+{$pop}
+
+{ Case tb0714.pp }
+{$push}
+var
+  tb0714_s : string[20];
+{$pop}
+
+
+{$pop}
+
+{ Source group: tb_string_conversions_fpc_run_01.pp }
+{$push}
+
+{ Case tb0413.pp }
+{$push}
+var
+   tb0413_s : ansistring;
+   tb0413_ss : shortstring;
+   tb0413_as : ansistring;
+   tb0413_c : char;
+{$pop}
+
+{ Case tb0441.pp }
+{$push}
+operator :=(tb0441_x:ShortInt)RESULT:ShortString;
+  begin
+    Val(RESULT,tb0441_x);
+  end;
+
+var
+  tb0441_s:ShortString;
+{$pop}
+
+
+{$pop}
+
+begin
+  { Source group: tb_char_literals_default_run_01.pp }
+  {$push}
+
 
 begin
   { Case tb0242.pp }
@@ -171,6 +335,190 @@ begin
    tb0401_c:=char(tb0401_b2);
    if tb0401_c<>#1 then
      halt(1);
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_string_literals_default_run_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0109.pp }
+  {$push}
+begin
+   writeln(ord(^)));
+end;
+  {$pop}
+
+  { Case tb0124.pp }
+  {$push}
+begin
+  tb0124_s:=tb0124_string1+tb0124_string2;
+  writeln(tb0124_string1+tb0124_string2);
+end;
+  {$pop}
+
+  { Case tb0568.pp }
+  {$push}
+begin
+  { String constants can't exceed 255 chars }
+  tb0568_i:=length('12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890');
+  if tb0568_i<>290 then
+    halt(1);
+end;
+  {$pop}
+
+  { Case tb0634.pp }
+  {$push}
+begin
+  tb0634_s := Concat('Hello', ' ', 'World');
+  if tb0634_s <> 'Hello World' then
+    Halt(1);
+  tb0634_s := Concat('Hello');
+  if tb0634_s <> 'Hello' then
+    Halt(2);
+  tb0634_s1 := 'Hello';
+  tb0634_s2 := 'Free';
+  tb0634_s3 := 'Pascal';
+  tb0634_s4 := 'World';
+  tb0634_s := Concat(tb0634_s1, ' ', tb0634_s2, ' ', tb0634_s3, ' ', tb0634_s4);
+  if tb0634_s <> 'Hello Free Pascal World' then
+    Halt(3);
+  tb0634_s := Concat(Concat(tb0634_s1, ' ', tb0634_s2), ' ', Concat(tb0634_s3, ' ', tb0634_s4));
+  if tb0634_s <> 'Hello Free Pascal World' then
+    Halt(4);
+  Writeln('ok');
+end;
+  {$pop}
+
+  { Case tb0333.pp }
+  {$push}
+begin
+      writeln(tb0333_teststr);
+      tb0333_teststr := 'gaga';
+      writeln(tb0333_teststr);
+      if tb0333_teststr<>'gaga' then halt(1);
+end;
+  {$pop}
+
+  { Case tb0078.pp }
+  {$push}
+{$X+}
+Begin
+  if tb0078_mystr = #0#0#0#0 then
+  Begin
+  end;
+  tb0078_mystr:=#0#0#0#0;
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_string_operations_default_run_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0503.pp }
+  {$push}
+begin
+  tb0503_testansi;
+  tb0503_testshort;
+end;
+  {$pop}
+
+  { Case tb0619.pp }
+  {$push}
+begin
+  tb0619_ss := 'Test';
+  Delete(tb0619_ss, 2, 1);
+  if tb0619_ss <> 'Tst' then
+    Halt(1);
+  Insert('Foo', tb0619_ss, 2);
+  if tb0619_ss <> 'TFoost' then
+    Halt(2);
+
+  tb0619_us := 'Test';
+  Delete(tb0619_us, 2, 1);
+  if tb0619_us <> 'Tst' then
+    Halt(3);
+  Insert('Foo', tb0619_us, 2);
+  if tb0619_ss <> 'TFoost' then
+    Halt(4);
+
+  tb0619_ws := 'Test';
+  Delete(tb0619_ws, 2, 1);
+  if tb0619_ws <> 'Tst' then
+    Halt(5);
+  Insert('Foo', tb0619_ws, 2);
+  if tb0619_ss <> 'TFoost' then
+    Halt(6);
+
+  tb0619_as := 'Test';
+  Delete(tb0619_as, 2, 1);
+  if tb0619_as <> 'Tst' then
+    Halt(7);
+  Insert('Foo', tb0619_as, 2);
+  if tb0619_ss <> 'TFoost' then
+    Halt(8);
+
+  tb0619_ss := 'Test';
+  Insert(#$41, tb0619_ss, 2);
+  if tb0619_ss <> 'TAest' then
+    Halt(9);
+end;
+  {$pop}
+
+  { Case tb0714.pp }
+  {$push}
+begin
+  setlength(tb0714_s,21);
+  if length(tb0714_s)>sizeof(tb0714_s)-1 then
+    halt(1);
+end;
+  {$pop}
+
+
+end;
+  {$pop}
+
+  { Source group: tb_string_conversions_fpc_run_01.pp }
+  {$push}
+
+
+begin
+  { Case tb0413.pp }
+  {$push}
+begin
+   tb0413_as:='ansistring';
+   tb0413_ss:='shortstring';
+   tb0413_c:='C';
+   tb0413_s:=tb0413_s+tb0413_as;
+   tb0413_s:=tb0413_s+tb0413_c;
+   tb0413_s:=tb0413_s+tb0413_ss;
+   tb0413_s:=tb0413_s+tb0413_s;
+   if tb0413_s<>'ansistringCshortstringansistringCshortstring' then
+     begin
+        writeln('Problem with ansistring appending');
+        halt(1);
+     end;
+end;
+  {$pop}
+
+  { Case tb0441.pp }
+  {$push}
+begin
+  tb0441_s:=12;
+end;
+  {$pop}
+
+
 end;
   {$pop}
 
