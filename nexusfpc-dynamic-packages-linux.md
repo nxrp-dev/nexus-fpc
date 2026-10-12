@@ -131,6 +131,31 @@ platform filenames and probes; applications need only the SysUtils package API.
 
 ## Historical verification and retained tests
 
+### Native Forge consumer verification, 2026-10-12
+
+- Built the current Forge sources for native Linux using a preserved matching
+  NexusFPC compiler and static RTL; no compiler/SDK bootstrap was performed.
+- Used a private copy of an existing NXP004/ABI-4 SDK. Its older `ppcpkg` filename
+  was restaged as `bin/ppcx64`; the two Python helpers and their manifest entries
+  were omitted. Compiler, foundation and startup bytes were unchanged.
+- The native Forge recipe built and published a provider and application which
+  ran successfully. Full startup and late-load console examples then passed with
+  ordinary and smart linking, including exact lifecycle traces, resources,
+  registries, unload/reload, and execution from `/`.
+- Executables had no R_X86_64_COPY relocations. Compile failure and a stale
+  provider replacement both left current.json and every selected artifact unchanged.
+- All 51 Forge tests passed with zero unfreed heap blocks. The new ELF group
+  covers descriptor/dependency reads, truncation, section counts, table links,
+  relocation symbol indexes, ABI mismatch, external pointers and string bounds.
+  A Windows package/application build still ran successfully after this change.
+
+Evidence: `C:/gitdev/nexus/output/ForgeIdentity/linux-native-consumer/` and
+`C:/gitdev/nexus/output/ForgeVerification/package-linux-tests.log`. These outputs
+are disposable; the implementation, recipes, instructions and this record are
+kept in source. Native Linux SDK construction remains deferred.
+
+### Earlier compiler/runtime verification
+
 The Python runners were removed on 2026-10-12 by owner direction. Their cases are
 recorded in [the nxtest backlog](tests/python-runner-retirement.md); Pascal fixtures
 remain. The results below are historical, not a claim that nxtest already runs

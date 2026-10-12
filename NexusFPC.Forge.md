@@ -303,6 +303,16 @@ The final suite log is `C:/gitdev/nexus/output/ForgeVerification/package-consume
 The recipes, behavior and results are recorded here so those disposable validation
 directories can be removed without losing the implementation or its instructions.
 
+The remaining Linux Python consumer helpers were subsequently replaced by the
+same native preparation/publication operations plus ELF validation and the
+`LinuxPackageBuild` / `LinuxPackageApplication` recipes. All ten source Python
+scripts are removed: two build helpers and eight test runners. Per owner direction,
+the runner cases are recorded in [the nxtest backlog](tests/python-runner-retirement.md)
+with retained Pascal fixtures and git recovery references; they were not replaced
+with another ad hoc harness. Linux ordinary/smart startup and late-load examples
+passed, as did the expanded 51-test Forge suite and a Windows consumer build.
+See [Linux verification](nexusfpc-dynamic-packages-linux.md#native-forge-consumer-verification-2026-10-12).
+
 ## Release policy
 
 The compiler uses the standard `-O2 -Ur -Xs` release settings. Bootstrap clears
