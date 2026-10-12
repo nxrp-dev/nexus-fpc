@@ -105,17 +105,14 @@ with new files.
 
 ## Verification
 
-The focused regression runner compiles real upstream and Nexus units. It checks
+The retired focused regression runner compiled real upstream and Nexus units. It checked
 same-number family rejection in both directions, foreign-family rejection before
 target-field interpretation, header and long revisions, source fallback,
 utility exit behavior, both metadata validators, and identity boundaries above
 255 through the maximum 32-bit revision.
 
-```powershell
-python tests\artifact-identity\run_artifact_identity_tests.py --sdk C:\temp\nxpkg-sdk --output C:\temp\nx-artifact-tests
-```
-
-`--sdk` must name a freshly rebuilt Windows package SDK; `--output` must be empty.
+The Python runner was removed on 2026-10-12. Its cases and retained fixtures are
+listed in the [nxtest backlog](tests/python-runner-retirement.md#artifact-identity).
 The package metadata regressions also reject an upstream-family package with the
 same numeric revision and a foreign-family embedded unit. Runtime tests inspect
 the emitted v4 descriptor and exact compiler identity. Lifecycle tests reject

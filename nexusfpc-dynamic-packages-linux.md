@@ -32,7 +32,7 @@ and other references into a package before unloading it.
 | Lifecycle and cleanup | Existing synchronous dependency accounting, activation, reverse finalization, rollback and failure retention are reused. Classes, aliases, enum aliases, component handlers, conversion callbacks, resources and explicit application cleanup hooks follow Linux image ownership. |
 | Native resources | Each package exports its own resource location. The shared internal-resource implementation looks up resources with the image's native handle. |
 | Dependency preservation | Declared requirements remain in PCP metadata and native linkage even when no symbols use them. Imported units retain native `$LINKLIB` requirements without copying provider unit objects into consumers. |
-| SDK and publication | Existing SDK consumption/publication helpers validate PCP/ELF identity pairs without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
+| SDK and publication | Native Forge operations validate PCP/ELF identity pairs without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
 
 The core changes are in `compiler/pkgutil.pas`, `compiler/pmodules.pas`, the Linux
 linker and ELF/assembler writers, `rtl/linux/sysinitpkg.pp`, the System package
@@ -45,7 +45,8 @@ Core make infrastructure, `build_linux_package_sdk.py`, and its WSL wrapper have
 been retired. Native Linux-hosted compiler and SDK construction must be ported
 to Forge before fresh Linux SDKs can be built again. That work remains deferred
 by owner choice; this retirement does not remove Linux package compiler/RTL code,
-the `nxrtl.ppk` declaration, startup units, examples or publication helpers.
+the `nxrtl.ppk` declaration, startup units or examples. Existing SDK consumption
+and publication now use native Forge; the Python helpers have been retired.
 
 The [Forge cross matrix](NexusFPC.Forge.md) still builds Windows-hosted Linux
 compilers and base RTLs. It does not yet produce a native Linux runtime-package
@@ -61,20 +62,63 @@ contains MyUnit;
 end.
 ```
 
-Compile with the matching SDK helper:
+Use native Linux Forge with its language definitions and these composed groups
+(adjust the installation and SDK paths):
 
-```sh
-python3 /var/tmp/nexus-linux-sdk/bin/compile_linux_package.py \
-  --source /project/mypackage.ppk --kind package --output /project/providers
-python3 /var/tmp/nexus-linux-sdk/bin/compile_linux_package.py \
-  --source /project/app.pas --kind program --require mypackage \
-  --package-path /project/providers --output /project/application
+```text
+dialect "/nexus/projects/forge/language/Forge.nxscript";
+module LinuxPackageBuild "/nexus/projects/forge/examples/LinuxPackageBuild.nxscript";
+module LinuxPackageApplication "/nexus/projects/forge/examples/LinuxPackageApplication.nxscript";
+Project Build {
+    Id: "MyProject.LinuxPackages";
+    Group Provider (LinuxPackageBuild) {
+        PackageBuildPrepare Prepare (LinuxPackageBuild.Prepare) {
+            SDKDirectory: "/project/sdk";
+            WorkDirectory: "/project/build/provider";
+        }
+        FPC Compile (LinuxPackageBuild.Compile) {
+            EntryPoint: "/project/mypackage.ppk";
+        }
+        PackageBundlePublish Publish (LinuxPackageBuild.Publish) {
+            Name: "mypackage"; Kind: Package; OutputDirectory: "/project/providers";
+        }
+    }
+    Group App (LinuxPackageApplication) {
+        PackageBuildPrepare Prepare (LinuxPackageApplication.Prepare) {
+            SDKDirectory: "/project/sdk";
+            WorkDirectory: "/project/build/app";
+            PackageDirectories: ["/project/providers"];
+        }
+        FPC Compile (LinuxPackageApplication.Compile) {
+            EntryPoint: "/project/app.pas";
+            RequiredPackages: [mypackage];
+        }
+        PackageBundlePublish Publish (LinuxPackageApplication.Publish) {
+            Name: "app"; OutputDirectory: "/project/application";
+        }
+    }
+}
 ```
 
-`--unit-path`, `--package-path` and `--require` can be repeated. Use lowercase,
-matching package declaration/file basenames. Keep all package dependencies from
-the same SDK together. To replace a provider, rebuild it and its consumers in a
-new bundle; replacing an already published provider in place is rejected.
+Run `nxforge /input=/project/Build.nxscript`. Supply absolute SDK/work paths;
+each group deletes its dedicated work directory before building. Extra `UnitPaths`
+and `RequiredPackages` belong to the FPC child. Application composition includes
+`nxrtl`; its array properties append additional requirements. Set `SmartLinkUnits`
+and `SmartLink` to True on a child to enable smart linking.
+
+The existing Linux Format 2 SDK manifest identifies `x86_64-linux-gnu`, uses
+lowercase keys and must cover `bin/ppcx64`, the shared foundation and startup
+artifacts. Keep these matched. New bundles use the same Format/Files/Generation
+manifest structure as Win64; raw matching PCP/SO directories are also accepted.
+Rebuild distributions from older helper-generated manifests before consuming them.
+Use lowercase, matching package declaration/file basenames. To replace a provider
+with existing consumers, rebuild the dependent distribution in a new directory.
+
+The groups preserve PIC, PIE, `$ORIGIN`, rpath-link, no-COPY/no-text-relocation
+linking, RELRO and eager binding. Native publication checks the executable's
+identity and dependencies as well as package PCP/ELF pairs, preserves Unix file
+permissions, and atomically selects only complete generations. Neither Python
+nor PowerShell is invoked by these builds.
 
 `current.json` identifies the runnable generation. Deployment needs only the
 executable and its `.so` files together; PCPs are build inputs. `$ORIGIN` RUNPATH
@@ -87,18 +131,10 @@ platform filenames and probes; applications need only the SysUtils package API.
 
 ## Historical verification and retained tests
 
-The historical `run_linux_package_sdk_tests.py` workflow depends on the retired
-SDK builder. Its fixtures and assertions are retained for later nxtest work;
-it is no longer a source-build entry point. The results below record the earlier
-normal/smart SDK, lifecycle, publication, export and source-free relocation runs.
-
-For an existing SDK:
-
-```sh
-python3 tests/dynamic-packages/run_linux_package_tests.py --sdk /var/tmp/nexus-linux-sdk
-```
-
-Add `--smart` and/or `--cached` for those configurations. Assertions include shared
+The Python runners were removed on 2026-10-12 by owner direction. Their cases are
+recorded in [the nxtest backlog](tests/python-runner-retirement.md); Pascal fixtures
+remain. The results below are historical, not a claim that nxtest already runs
+these cases. Assertions include shared
 class/RTTI identity, strings/arrays/interfaces, cross-image destruction and typed
 exceptions, initialization/finalization order, real late mapping, actual unmapping
 and reload, resource lookup/translation, registry cleanup, failure retention,

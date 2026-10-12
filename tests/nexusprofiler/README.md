@@ -2,19 +2,10 @@
 
 ## Compiler-injected runtime and cached PPUs
 
-From the repository root:
-
-```powershell
-python tests\nexusprofiler\run_profile_cache_tests.py
-```
-
-Requires a built native Win64 NexusFPC compiler and matching RTL, Python 3, and
-LLVM tools on PATH. `--compiler` and `--rtl` select a candidate build.
-`--output-root` accepts a new or empty directory. By default, the runner creates
-a fresh temporary directory and records commands, expected exit codes, and logs
-in `steps.json`.
-
-The 41 steps cover:
+The Python mixed-cache runner was removed on 2026-10-12. Its cases, fixture
+paths and exact trace assertions are recorded in the
+[nxtest backlog](../python-runner-retirement.md#profiler-mixed-caches).
+The historical 41 steps covered:
 
 - A profiled runtime PPU followed by an ordinary trace-probe build and a profiled
   application using the same unit cache. The application rebuilds the invalidated

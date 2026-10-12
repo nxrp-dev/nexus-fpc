@@ -1,18 +1,8 @@
 # Compiler regressions recovered from test consolidation
 
-Run the focused checks with the repository compiler and Win64 RTL:
-
-```powershell
-python tests/compiler-regressions/run_compiler_regressions.py
-```
-
-Use `--compiler`, `--rtl`, and an empty `--output-root` to select another native
-compiler, its matching RTL, and a persistent results directory. Commands and
-results are recorded in `results.json`; each compile/run has its own log.
-Execution is sequential.
-
-The runner uses the same Pascal fixtures as the normal test suite rather than
-generating another copy of the tests. It covers:
+The Python runner was removed on 2026-10-12. Its additional orchestration checks
+are recorded in the [nxtest backlog](../python-runner-retirement.md#compiler-generic-sets-and-corba-strings).
+The Pascal fixtures remain and cover:
 
 - Generic `set of T` declarations and runtime operations in Delphi and ObjFPC
   modes, including enum/Byte specializations and unused generic declarations.
@@ -29,7 +19,7 @@ generating another copy of the tests. It covers:
 
 The normal test suite discovers the `t*.pp` fixtures in `tbs`, `tbf`, and
 `webtbf`. The saved-unit consumer also uses its standard `RECOMPILE` directive.
-The focused runner adds the source-hidden PPU check and optimization variant.
+The future nxtest integration must retain the source-hidden PPU check and optimization variant.
 
 See [the recovery report](../../nexusfpc-compiler-regression-recovery.md) for the
 original failure, compiler correction, and recorded validation.

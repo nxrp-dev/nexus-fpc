@@ -85,11 +85,10 @@ compiler rebuilds, writable globals and managed-value workloads.
 
 ## Linux glibc
 
-The existing Linux harnesses are unchanged by the Windows migration:
-`run_linux_package_sdk_tests.py` covers source-only normal/smart SDK construction,
-fresh/cached runtime cases, ordinary compiler/export checks and relocation.
-`run_linux_package_tests.py` accepts an existing SDK. Linux threadvar and timing
-harnesses remain separately named with the `run_linux_` prefix.
+The Python Linux runners were removed on 2026-10-12. Their package lifecycle,
+ELF/publication, source-hidden cache, SDK relocation, threadvar and benchmark
+cases are recorded in the [nxtest backlog](../python-runner-retirement.md).
+The Pascal fixtures remain; there is no replacement ad hoc runner.
 No Linux execution is implied by a Windows bootstrap or cross-RTL build.
 
 See the [Linux guide](../../nexusfpc-dynamic-packages-linux.md),

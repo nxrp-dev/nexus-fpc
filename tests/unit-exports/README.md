@@ -6,9 +6,12 @@ The old compiler fails the fresh private-export case. Interface-visible unit exp
 
 For Windows-hosted Linux compilers and matching RTLs, use the [Forge cross matrix](../../NexusFPC.Forge.md). The historical `Build-NXLinuxExportRTL.ps1` invokes removed make targets; its replacement belongs in the later nxtest work.
 
-Linux: run `python3 Run-NXLinuxUnitExports.py --compiler <compiler> --rtl <matching-Linux-RTL>`. The RTL must include `system`, `objpas`, `si_prc`, `si_dll`, `fpintres` and the `abitag` loader object. The runner needs GNU ld/nm and Python 3. It also accepts a Windows cross compiler under WSL, with `--assembler-dir 'C:/Program Files/LLVM/bin'` and all source, RTL and output paths beneath `/mnt/<drive>`.
+The Python Linux runner was removed on 2026-10-12. Its exact exports, expected
+values, cache checks and diagnostics are recorded in the
+[nxtest backlog](../python-runner-retirement.md#linux-unit-exports).
+The Pascal program, library and unit fixtures remain.
 
-Linux coverage includes fresh/cached programs and shared libraries, procedure aliases and original mangled names, initialized exported data, and smart linking. Shared-library exports are resolved and called using Python ctypes; static programs call the unit exports through external C ABI declarations. Cached unit source is hidden and object/PPU hashes must stay unchanged. An unrelated unused routine must still disappear during smart linking. Duplicate export names and Linux's unsupported ordinals must retain their diagnostics.
+Required Linux coverage includes fresh/cached programs and shared libraries, procedure aliases and original mangled names, initialized exported data, and smart linking. A Pascal probe should resolve shared-library exports; static programs call the unit exports through external C ABI declarations. Cached unit source is hidden and object/PPU hashes must stay unchanged. An unrelated unused routine must still disappear during smart linking. Duplicate export names and Linux's unsupported ordinals must retain their diagnostics.
 
 Building an x86 compiler requires a host compiler with native hardware80 Extended.
 The Windows bootstrap script starts with stock FPC 3.2.2 Win32 and produces native

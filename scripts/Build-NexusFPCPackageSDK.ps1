@@ -50,7 +50,6 @@ if ($OutputRoot -ine $sdk) {
         Copy-Item -LiteralPath (Join-Path $sdk $name) -Destination $OutputRoot -Recurse
     }
 }
-$bin = Join-Path $OutputRoot 'bin'
 Write-Host "Package SDK ready: $OutputRoot. Build log: $log"
 
 if ($BuildExamples -or $RunExamples) {

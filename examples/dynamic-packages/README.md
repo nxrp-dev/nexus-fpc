@@ -52,18 +52,20 @@ The required log is initialization `BLRH`, success, then finalization `h,r,l,b`.
 | Path | Purpose |
 | --- | --- |
 | `bin\ppcx64.exe` | Standard compiler, supporting both static and runtime package builds. |
-| `bin\Invoke-NexusFPCPackageCompile.ps1` | Reusable package/application build helper. |
-| `bin\NexusFPCPackageArtifacts.ps1` | Metadata/image checks and atomic bundle publication used by the helper. |
+| `forge\PackageBuild.nxscript` | Reusable ordered package/application build group. |
+| `forge\FPC.mustache` | Compiler command template used by the group. |
 | `packages\nxrtl.pcp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
 | `units\` | Matching per-image `SysInitPkg` and native resource adapter. |
 | `sdk.json` | Format 2 SDK identity and enforced compiler/foundation/startup artifact hashes. |
 | `work\` | Forge build intermediates; excluded from exported/distributed SDKs. |
 | `examples\packages\current.json` | Selects a complete immutable generation of provider PCP/DLL pairs. |
 
-Copy `bin`, `packages`, `units`, and `sdk.json` together to relocate the SDK. Keep
+Copy `bin`, `packages`, `units`, `forge`, and `sdk.json` together to relocate the SDK. Keep
 dependent packages from the same SDK build together. Only DLLs alongside the EXE
 are required to run an application; the compiler, PCPs and startup units are build
-inputs. Build helpers verify SDK and bundle hashes and paired PCP/DLL identities.
+inputs. Native Forge operations verify SDK and bundle hashes and paired PCP/DLL identities.
+Forge with its matching language definitions, LLVM Clang/LLD, and the release
+tools (including `fpcres.exe` for resources) must be available to build consumers.
 The wrapper saves Forge's build log at `build/forge-bootstrap/package-sdk-forge.log`.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
@@ -76,7 +78,7 @@ upstream and previous Nexus binary artifacts must be rebuilt.
 
 Use a `.ppk` whose basename matches the package name. List `nxrtl` and other
 required packages in its `requires` clause; place contained unit sources beside
-the declaration or supply `-UnitPath`. For example:
+the declaration or supply FPC `UnitPaths`. For example:
 
 ```pascal
 package mypackage;
@@ -85,39 +87,85 @@ contains MyUnit;
 end.
 ```
 
-From PowerShell, compile and publish its PCP/DLL pair:
+Compose the SDK group in `C:/project/Build.nxscript` (adjust the installed paths):
 
-```powershell
-$sdk = 'C:\temp\nxpkg-sdk'
-$compile = "$sdk\bin\Invoke-NexusFPCPackageCompile.ps1"
-& $compile -SdkRoot $sdk -Kind Package -Source C:\project\mypackage.ppk -OutputDirectory C:\project\distribution
-& $compile -SdkRoot $sdk -Kind Console -Source C:\project\app.pas -RequiredPackages mypackage -PackagePath C:\project\distribution -OutputDirectory C:\project\app
+```text
+dialect "C:/gitdev/nexus/projects/forge/language/Forge.nxscript";
+module PackageBuild "C:/project/sdk/forge/PackageBuild.nxscript";
+Project Build {
+    Id: "MyProject.PackageBuild";
+    Group Provider (PackageBuild) {
+        PackageBuildPrepare Prepare (PackageBuild.Prepare) {
+            SDKDirectory: "C:/project/sdk";
+            WorkDirectory: "C:/project/build/package";
+        }
+        FPC Compile (PackageBuild.Compile) {
+            EntryPoint: "C:/project/mypackage.ppk";
+        }
+        PackageBundlePublish Publish (PackageBuild.Publish) {
+            Name: "mypackage"; Kind: Package;
+            OutputDirectory: "C:/project/distribution";
+        }
+    }
+    Group Application (PackageBuild) {
+        PackageBuildPrepare Prepare (PackageBuild.Prepare) {
+            SDKDirectory: "C:/project/sdk";
+            WorkDirectory: "C:/project/build/app";
+            PackageDirectories: ["C:/project/distribution"];
+        }
+        FPC Compile (PackageBuild.Compile) {
+            EntryPoint: "C:/project/app.pas";
+            RequiredPackages: [nxrtl, mypackage];
+            ConsoleApplication: True;
+        }
+        PackageBundlePublish Publish (PackageBuild.Publish) {
+            Name: "app"; Kind: Console;
+            OutputDirectory: "C:/project/app";
+        }
+    }
+}
 ```
 
-Use `-Kind GUI` for a GUI-subsystem host. `-RequiredPackages` and `-PackagePath`
-accept arrays; applications automatically include `nxrtl`. The supplied package
-directories must contain all required PCP/DLL pairs. The helper copies DLLs from
-those directories next to the EXE, rejecting different DLLs with the same name.
-It does not acquire or select package versions. Each invocation writes a fresh
-`work-<id>` directory with `compile.log` and `build.json`. After compilation,
-linking and identity checks succeed, it writes `generation-<id>` with a hash
+Run `nxforge /input=C:/project/Build.nxscript`. Use `GUIApplication: True` and
+`Kind: GUI` for a GUI host. Set `SmartLinkUnits: True` and `SmartLink: True` on
+the FPC child for smart linking. Application requirements explicitly include
+`nxrtl`; package declarations specify their own requirements.
+
+The group's cleanup deletes its `WorkDirectory` recursively on each invocation;
+use a dedicated build directory, separate from sources and published outputs.
+Explicit child composition retains the group's inherited settings. Supply
+absolute SDK/work paths in this reusable group, as shown above. Preparation
+writes `package.cfg` and `package-build.json` into the work directory, then FPC
+runs there. The supplied package directories must contain all required PCP/DLL
+pairs. Publication copies those DLLs next to the EXE, rejecting different DLLs
+with the same name. It does not acquire or select package versions.
+After compilation, linking and identity checks succeed, it writes `generation-<id>` with a hash
 manifest and atomically selects it through `current.json`. Failed builds leave
-the preceding selection intact. Build helpers accept either the distribution
+the preceding selection intact. Forge accepts either the distribution
 directory or its selected generation; both paths verify an available manifest.
 
-Resolve an application generation before running or copying it:
+Use the generation reported by Forge when running or copying an application.
+Existing source-tree example/test callers retain a thin PowerShell adapter:
 
 ```powershell
-. "$sdk\bin\NexusFPCPackageArtifacts.ps1"
-$app = Get-NexusPackageBundle C:\project\app
-& "$app\app.exe"
+./scripts/Invoke-NexusFPCPackageCompile.ps1 -SdkRoot C:\project\sdk -Kind Package `
+    -Source C:\project\mypackage.ppk -OutputDirectory C:\project\distribution
 ```
+
+That adapter writes a composed `build-<name>.nxscript` and captures Forge output
+in `build-<name>.log`; compilation, validation and publication run in Forge.
+It is not shipped in the SDK. Its application mode supplies `nxrtl` automatically.
 
 Rebuilding a provider changes its build ID. If existing consumers in the bundle
 still require the old ID, publication rejects the update. Build the replacement
 provider and its consumers in dependency order into a new distribution directory.
 Previous generations and diagnostic work directories are retained; removal is
-an explicit caller operation. Build/publication is intended for sequential use.
+an explicit caller operation. The reusable group clears its configured work
+directory; the adapter assigns a fresh one per call. Build/publication is intended
+for sequential use. A failed copy can leave an unselected generation.
+
+This native migration is temporary: SDK layout, artifact validation and bundle
+publication policy currently live in Forge and remain subject to architectural review.
 
 The foundation is a minimal RTL closure, not all FPC library packages. Extra units
 must be built with this SDK and assigned to a package or the host as appropriate.
@@ -128,7 +176,7 @@ Do not add ordinary-build RTL unit directories to a package application's path.
 Build a real plugin example against an existing SDK:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot C:\temp\nxpkg-sdk -OutputRoot C:\temp\nxpkg-late -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot C:\project\sdk -OutputRoot C:\project\late-examples -RunExamples
 ```
 
 This additionally requires `llvm-rc.exe`. The console and GUI hosts import a

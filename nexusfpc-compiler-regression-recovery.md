@@ -27,14 +27,10 @@ include files let the Delphi/ObjFPC and default/short-string variants exercise
 the same assertions. Additional fixtures cover invalid specializations and
 generic set fields loaded from a saved unit.
 
-The standard test suite discovers these fixtures normally. The sequential
-`tests/compiler-regressions/run_compiler_regressions.py` runner uses those same
-fixtures, adds optimized runs, hides the compiled generic unit's source, and
-checks that subsequent consumers leave its compiled artifacts unchanged.
-
-```powershell
-python tests/compiler-regressions/run_compiler_regressions.py
-```
+The standard test suite discovers these fixtures normally. The former Python
+runner added optimized runs and source-hidden cached-unit checks. It was removed
+on 2026-10-12; those requirements are preserved in the
+[nxtest backlog](tests/python-runner-retirement.md#compiler-generic-sets-and-corba-strings).
 
 The later `String[4]` truncation assertion, which had not been included in the
 interrupted session's saved results, was verified against the baseline compiler

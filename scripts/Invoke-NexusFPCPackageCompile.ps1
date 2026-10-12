@@ -1,11 +1,10 @@
 <#
 .SYNOPSIS
-Compile an experimental Win64 package, console host, or GUI host using a package SDK.
+Invoke the native Forge package build from existing PowerShell example/test callers.
 .DESCRIPTION
-Package declarations specify their own requirements. Applications explicitly list
-their required packages; nxrtl is always included. Additional package directories
-must contain the complete matching PCP/DLL dependency set. No dependency acquisition
-or late loading is performed. Native commands and diagnostics are saved in logs.
+This transitional adapter supplies a Forge document and captures its output.
+SDK checks, compiler execution, dependency checks and publication belong to Forge.
+New consumers should compose the SDK's forge/PackageBuild.nxscript directly.
 #>
 [CmdletBinding()]
 param(
@@ -16,57 +15,52 @@ param(
     [string[]]$RequiredPackages = @(),
     [string[]]$PackagePath = @(),
     [string[]]$UnitPath = @(),
-    [switch]$SmartLink
+    [switch]$SmartLink,
+    [string]$Forge
 )
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
-$SdkRoot = (Resolve-Path -LiteralPath $SdkRoot).Path
-$Source = (Resolve-Path -LiteralPath $Source).Path
-$OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
-$compiler = Join-Path $SdkRoot 'bin\ppcx64.exe'
-$sdkUnits = Join-Path $SdkRoot 'units'
-foreach ($inputPath in @($compiler, "$SdkRoot\sdk.json", "$sdkUnits\sysinitpkg.ppu")) {
-    if (-not (Test-Path -LiteralPath $inputPath -PathType Leaf)) { throw "Missing SDK input: $inputPath" }
-}
-if (-not (Get-Command clang.exe -ErrorAction SilentlyContinue) -or
-    -not (Get-Command lld-link.exe -ErrorAction SilentlyContinue)) { throw 'LLVM Clang and LLD must be on PATH.' }
-$sdk = Get-Content -LiteralPath "$SdkRoot\sdk.json" -Raw | ConvertFrom-Json
-if ($sdk.Format -ne 2 -or $sdk.SDKIdentity -notmatch '^[0-9A-Fa-f]{64}$') { throw 'Requires a version-2 package SDK.' }
-foreach ($artifact in $sdk.Artifacts) {
-    if ((Get-FileHash -LiteralPath (Join-Path $SdkRoot $artifact.Path)).Hash -ne $artifact.SHA256) {
-        throw "SDK artifact differs from its recorded build: $($artifact.Path)"
-    }
-}
-$packageDirectories = @((Get-NexusPackageBundle (Join-Path $SdkRoot 'packages')))
-foreach ($directory in $PackagePath) { $packageDirectories += Get-NexusPackageBundle $directory }
-$unitDirectories = @((Split-Path -Parent $Source))
-foreach ($directory in $UnitPath) { $unitDirectories += (Resolve-Path -LiteralPath $directory).Path }
-New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
-$work = Join-Path $OutputDirectory ('work-' + [guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $work | Out-Null
+$nexusRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../nexus'))
+if (-not $Forge) { $Forge = Join-Path $nexusRoot 'output/NexusForge-next/x86_64-win64/nxforge.exe' }
+$Forge = (Resolve-Path -LiteralPath $Forge).Path
+function ScriptPath([string]$Path) { '"'+[IO.Path]::GetFullPath($Path).Replace('\','/')+'"' }
+$sdk = ScriptPath $SdkRoot
+$sourcePath = ScriptPath $Source
+$output = ScriptPath $OutputDirectory
+$dialect = ScriptPath (Join-Path $nexusRoot 'projects/forge/language/Forge.nxscript')
+$recipe = ScriptPath (Join-Path $SdkRoot 'forge/PackageBuild.nxscript')
 $name = [IO.Path]::GetFileNameWithoutExtension($Source)
-$arguments = @('-n','-Mobjfpc',"-Fj$($sdk.SDKIdentity)",('-Fk'+[guid]::NewGuid().ToString('N')),"-Fu$sdkUnits","-FU$work","-FE$work")
-foreach ($directory in $packageDirectories) { $arguments += @("-Fp$directory","-Fl$directory") }
-foreach ($directory in $unitDirectories) { $arguments += "-Fu$directory" }
-if ($SmartLink) { $arguments += @('-CX','-XX') }
-if ($Kind -ne 'Package') {
-    foreach ($package in (@('nxrtl') + $RequiredPackages | Select-Object -Unique)) {
-        if ($package -notmatch '^[A-Za-z_][A-Za-z0-9_.]*$') { throw "Invalid package name: $package" }
-        $arguments += "-FP$package"
-    }
-    if ($Kind -eq 'GUI') { $arguments += '-WG' } else { $arguments += '-WC' }
+if ($name -notmatch '^[A-Za-z_][A-Za-z0-9_.-]*$') { throw 'Invalid package/application filename.' }
+foreach ($package in $RequiredPackages) {
+    if ($package -notmatch '^[A-Za-z_][A-Za-z0-9_.]*$') { throw "Invalid package name: $package" }
 }
-$arguments += $Source
-$log = Join-Path $work 'compile.log'
-Push-Location -LiteralPath $work
+$paths = (@($PackagePath | ForEach-Object { ScriptPath $_ })) -join ', '
+$units = (@($UnitPath | ForEach-Object { ScriptPath $_ })) -join ', '
+$required = (@('nxrtl') + $RequiredPackages | Select-Object -Unique | ForEach-Object { '"'+$_+'"' }) -join ', '
+$application = ''
+if ($Kind -eq 'Console') { $application = "RequiredPackages: [$required]; ConsoleApplication: True;" }
+if ($Kind -eq 'GUI') { $application = "RequiredPackages: [$required]; GUIApplication: True;" }
+$smart = if ($SmartLink) { 'True' } else { 'False' }
+New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+$work = ScriptPath (Join-Path $OutputDirectory ('work-'+[guid]::NewGuid().ToString('N')))
+$document = @"
+dialect $dialect;
+module PackageBuild $recipe;
+Project Build {
+    Id: "NXRP.PackageBuild.$name";
+    Group Steps (PackageBuild) {
+        PackageBuildPrepare Prepare (PackageBuild.Prepare) { SDKDirectory: $sdk; WorkDirectory: $work; PackageDirectories: [$paths]; }
+        FPC Compile (PackageBuild.Compile) { EntryPoint: $sourcePath; UnitPaths: [$units]; SmartLinkUnits: $smart; SmartLink: $smart; $application }
+        PackageBundlePublish Publish (PackageBuild.Publish) { Name: "$name"; Kind: $Kind; OutputDirectory: $output; }
+    }
+}
+"@
+$inputFile = Join-Path $OutputDirectory "build-$name.nxscript"
+[IO.File]::WriteAllText($inputFile,$document,[Text.UTF8Encoding]::new($false))
+$log = Join-Path $OutputDirectory "build-$name.log"
 try {
     $ErrorActionPreference = 'Continue'
-    & $compiler @arguments *> $log
+    & $Forge "/input=$inputFile" *> $log
     $code = $LASTEXITCODE
-} finally { Pop-Location; $ErrorActionPreference = 'Stop' }
-[pscustomobject]@{ Source=$Source; Kind=$Kind; Compiler=$compiler; Arguments=$arguments;
-    ExitCode=$code; Log=$log } | ConvertTo-Json -Depth 5 | Set-Content "$work\build.json" -Encoding UTF8
-if ($code -ne 0) { throw "Compilation failed ($code). Details: $log" }
-$published = Publish-NexusPackageBundle -OutputDirectory $OutputDirectory -Work $work -Name $name `
-    -Kind $Kind -SDKIdentity $sdk.SDKIdentity -PackageDirectories $packageDirectories
-Write-Host "Built $Kind $name. Bundle: $published. Log: $log"
+} finally { $ErrorActionPreference = 'Stop' }
+if ($code -ne 0) { throw "Forge package build failed. Details: $log`n$([IO.File]::ReadAllText($log))" }
+Write-Host "Built $Kind $name with Forge. Log: $log"

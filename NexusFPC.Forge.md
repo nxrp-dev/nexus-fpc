@@ -171,7 +171,7 @@ The output is `build/forge-bootstrap/distribution/`:
   for the 13 targets. The internal `buildrtl` build helper is excluded.
 - `build-identity.json`: the identity captured by the bootstrap.
 - `package-sdk/x86_64-win64/`: compiler, shared `nxrtl` PCP/DLL, per-image startup
-  units, package compilation helpers and the SDK manifest. Build intermediates
+  units, the Forge package build recipe/template and the SDK manifest. Build intermediates
   are excluded. This is the Win64 runtime-package SDK, separate from the static
   target RTL directories.
 
@@ -240,9 +240,25 @@ The SDK identity hashes the compiler, actual compiled RTL inputs, staged RTL
 sources and captured build options. Each foundation build receives a fresh package
 build ID. The manifest operation checks the resulting PCP/DLL identity pair without
 loading the DLL, then hashes the compiler, foundation and startup artifacts. Both
-operations use the existing ordered group execution. SDK generation no longer
-invokes PowerShell; the distributed consumer compile/artifact helpers and optional
-example-build wrapper remain PowerShell scripts.
+operations use the existing ordered group execution. SDK generation and consumer
+compilation no longer invoke PowerShell internally. The SDK ships
+`forge/PackageBuild.nxscript` and `forge/FPC.mustache`; it does not ship PowerShell
+compile/artifact helpers. Consumers compose the group with their SDK, source,
+provider, work and output paths using the installed Forge language definitions.
+
+`PackageBuildPrepare` verifies the SDK and selected PCP/DLL dependencies and
+writes the compiler response file plus the input hash record. The ordinary FPC
+child compiles in the work directory. `PackageBundlePublish` checks unchanged
+inputs, matching identities and dependency build IDs before copying a complete
+generation and atomically updating `current.json`. Rejected builds preserve the
+previous selection. The group explicitly clears its dedicated work directory.
+
+This is a temporary native migration of SDK policy, pending the owner's later
+architecture review. The source `Invoke-NexusFPCPackageCompile.ps1` remains a
+thin Forge-document/log adapter for existing example/test callers. The separate
+PowerShell artifact helper still serves older test utilities and example run
+selection; native package builds do not call it. No general dependency resolver,
+version selection or new execution lifecycle was introduced.
 
 `Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
 the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
@@ -264,6 +280,28 @@ compiler-query failures and preservation of an existing manifest on failure.
 Evidence is under `C:/gitdev/nexus/output/ForgeIdentity/package-sdk*.log` and
 `C:/gitdev/nexus/output/ForgeVerification/package-sdk*.log`. Compiler source and
 cross-target recipes were unchanged; the full compiler matrix was not rerun.
+
+The native consumer migration was also verified on 2026-10-12:
+
+- The exported SDK contained the Forge recipe/template and no PowerShell helpers.
+  Builds used relocated SDK paths containing spaces.
+- All eight application runs passed: console and GUI hosts, startup and late
+  loading, ordinary and smart-linked. Checks covered shared identity, managed
+  ownership, initialization/finalization, resources, registries, unload and reload.
+- The documented Forge-only two-group package/application example compiled and
+  ran, printing `forge-native-package-ok`.
+- Rebuilding a provider while its existing dependents required the old build ID
+  was rejected. An intentional application compilation failure was also rejected.
+  Both retained the previous `current.json` byte for byte.
+- The expanded 50-test Forge suite passed with zero unfreed heap blocks.
+  Regression coverage includes the named FPC package switches, preparation and
+  publication order, unchanged input hashes, paired identities, exact dependency
+  builds, manifest tampering, selection paths and preservation of published output.
+
+Consumer logs are under `C:/gitdev/nexus/output/ForgeIdentity/package-consumers/`.
+The final suite log is `C:/gitdev/nexus/output/ForgeVerification/package-consumer-tests-final.log`.
+The recipes, behavior and results are recorded here so those disposable validation
+directories can be removed without losing the implementation or its instructions.
 
 ## Release policy
 
@@ -468,8 +506,9 @@ The following obsolete infrastructure has been removed:
   must invoke Forge on an appropriately provisioned host.
 - The native Linux SDK make builder and its WSL wrapper. Native Linux-hosted
   compiler/SDK construction through Forge remains deferred. Linux runtime,
-  package declarations, startup sources and existing SDK consumption/publication
-  helpers remain available; the Windows-hosted Linux cross builds are unchanged.
+  package declarations and startup sources remain. Existing Linux SDK consumption
+  and publication now use native Forge; the Python helpers are removed.
+  The Windows-hosted Linux cross builds are unchanged.
 
 The `packages/` and `tests/` recipes are retained under the owner's separate
 package-selection and nxtest work. They are not build entry points for the
