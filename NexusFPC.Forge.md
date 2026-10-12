@@ -234,12 +234,15 @@ The SDK build does not regenerate the compiler, rebuild the base RTL with make,
 or modify the bootstrap RTL cache. Release assembly invokes this same group and
 ships its public files; no alternative SDK build path is maintained.
 
-`Write-NexusFPCPackageSDK.ps1` writes identity response files and the final Format 2
-manifest. The SDK identity hashes the compiler, actual compiled RTL inputs, staged
-RTL sources and captured build options. Each foundation build receives a fresh
-package build ID. The helper checks the resulting PCP/DLL identity pair before
-writing the manifest with hashes of the compiler, foundation and startup artifacts.
-It performs no compilation. Forge and NexusScript require no changes for this recipe.
+Native Forge `PackageSDKOptions` writes the identity response files before the
+FPC children run; `PackageSDKManifest` writes the final Format 2 manifest afterward.
+The SDK identity hashes the compiler, actual compiled RTL inputs, staged RTL
+sources and captured build options. Each foundation build receives a fresh package
+build ID. The manifest operation checks the resulting PCP/DLL identity pair without
+loading the DLL, then hashes the compiler, foundation and startup artifacts. Both
+operations use the existing ordered group execution. SDK generation no longer
+invokes PowerShell; the distributed consumer compile/artifact helpers and optional
+example-build wrapper remain PowerShell scripts.
 
 `Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
 the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
@@ -247,6 +250,20 @@ it no longer accepts a seed directory. Its `-SmartLink` option applies to exampl
 consumers. The foundation has one standard release build, usable by both ordinary
 and smart-linked consumers. See the [SDK guide](examples/dynamic-packages/README.md)
 for the layout and developer commands.
+
+The native SDK metadata migration was verified on 2026-10-12 using nxbuild and
+NexusFPC. The isolated `Build:PackageSDK` completed in 4.49 seconds. Its SDK
+identity and all nine artifact hashes matched the retired PowerShell writer
+on the same inputs. After removing that writer from the isolated checkout,
+the SDK built again and the relocated console and GUI examples passed with
+ordinary and smart-linked consumers: shared identity, managed ownership,
+initialization and finalization. The 50-test Forge suite passed with no
+unfreed heap blocks; coverage includes deterministic fingerprints, new build
+IDs, ordered output consumption, malformed PCP/PE input, identity mismatches,
+compiler-query failures and preservation of an existing manifest on failure.
+Evidence is under `C:/gitdev/nexus/output/ForgeIdentity/package-sdk*.log` and
+`C:/gitdev/nexus/output/ForgeVerification/package-sdk*.log`. Compiler source and
+cross-target recipes were unchanged; the full compiler matrix was not rerun.
 
 ## Release policy
 
@@ -282,23 +299,45 @@ Pascal executor and the NexusScript implementation are unchanged.
 
 ## Build identity
 
-The bootstrap runs `scripts/Write-NexusFPCBuildIdentity.ps1` after staging source.
-It captures the full Git HEAD commit and a `-dirty` suffix when tracked or
+The bootstrap runs Forge's native `BuildIdentity` operation after staging source.
+`Repository` selects the source checkout and `OutputDirectory` selects the seed
+directory. It captures the full Git HEAD commit and a `-dirty` suffix when tracked or
 untracked, non-ignored files differ. This identifies the base revision and dirty
 state; it is not a fingerprint of the uncommitted changes. A Git checkout is
 required for this recipe.
 
-The helper writes `seed/source/revision.inc`, `seed/build-identity.json`, and
-`seed/build-options.cfg`. Compiler builds enable the existing `REVINC` define.
+The operation writes `seed/source/revision.inc`, `seed/build-identity.json`, and
+`seed/build-options.cfg` directly, using Git on PATH with no PowerShell writer.
+It requires staged `source/version.pas` and validates the timestamp before
+writing any of the three files. Compiler builds enable the existing `REVINC` define.
 The response file freezes `%DATE%` and `%TIME%` using the HEAD commit timestamp
 in UTC, or `SOURCE_DATE_EPOCH` when supplied. The stock 3.2.2 seed lacks `-DD`;
 it embeds the revision, while every subsequent Nexus compiler stage uses the
 fixed date/time. The temporary stock-built seed is not a distribution artifact.
 
+This is an intentionally contained implementation: Forge currently owns these
+three FPC file formats in `utNXForgeBuildIdentity.pas`. It does not introduce
+runtime NexusScript values or change Render's preparation behavior. The retired
+PowerShell writer's checks now belong to the NexusForge test suite.
+
 Cross builds reuse the captured identity and staged source. They do not relabel
 that source using the current checkout's revision. Both native and cross recipes
 finish their compiler construction with `Test-NexusFPCBuildIdentity.ps1`, which
 checks `-iW` and `-iD` against the captured record and fails on a mismatch.
+
+The native identity replacement was verified on 2026-10-12 with Forge and its
+tests rebuilt through nxbuild using NexusFPC. All 48 Forge checks passed with
+zero unfreed heap blocks, including a fixed `SOURCE_DATE_EPOCH` environment,
+clean/dirty/untracked source, repeatability, invalid timestamps, and failure
+ordering. The isolated native bootstrap passed in 139.13 seconds; generations
+two and three share SHA-256
+`819773E900312FEE25C5BF3BFAB9D76F1CAD9F50718B9CE6B2BB9C2A2670B89F`.
+Release-tool validation passed for 18 tools, 29 execution steps, and 64 table
+comparisons. A representative i386-win32 cross build passed in 25.40 seconds,
+preserved the identity record byte for byte, verified its compiler identity,
+and ran its smoke executable successfully. The other cross targets were not
+rerun for this metadata-only change. Logs are under
+`C:/gitdev/nexus/output/ForgeIdentity` and `output/ForgeVerification`.
 
 ## Verification
 

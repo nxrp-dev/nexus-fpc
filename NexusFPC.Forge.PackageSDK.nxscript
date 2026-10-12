@@ -27,10 +27,9 @@ Group RuntimePackageSDK {
         Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pp";
         Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
     }
-    Run PackageIdentity {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "powershell.exe";
-        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCPackageSDK.ps1", "-Phase", "Options"];
+    PackageSDKOptions PackageIdentity {
+        BootstrapDirectory: "build/forge-bootstrap";
+        OutputDirectory: "build/forge-bootstrap/package-sdk";
     }
     FPC SharedRTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
@@ -75,17 +74,15 @@ Group RuntimePackageSDK {
         OptimizationLevel: 2;
         GenerateReleaseUnitFiles: True;
     }
-    CopyFile CompileHelper {
-        Source: "scripts/Invoke-NexusFPCPackageCompile.ps1";
-        Destination: "build/forge-bootstrap/package-sdk/bin/Invoke-NexusFPCPackageCompile.ps1";
+    CopyFile ConsumerBuild {
+        Source: "../../nexus/projects/forge/examples/PackageBuild.nxscript";
+        Destination: "build/forge-bootstrap/package-sdk/forge/PackageBuild.nxscript";
     }
-    CopyFile ArtifactHelper {
-        Source: "scripts/NexusFPCPackageArtifacts.ps1";
-        Destination: "build/forge-bootstrap/package-sdk/bin/NexusFPCPackageArtifacts.ps1";
+    CopyFile ConsumerCompilerTemplate {
+        Source: "../../nexus/projects/forge/examples/FPC.mustache";
+        Destination: "build/forge-bootstrap/package-sdk/forge/FPC.mustache";
     }
-    Run SDKManifest {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "powershell.exe";
-        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCPackageSDK.ps1", "-Phase", "Manifest"];
+    PackageSDKManifest SDKManifest {
+        Directory: "build/forge-bootstrap/package-sdk";
     }
 }

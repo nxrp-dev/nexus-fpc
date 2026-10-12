@@ -7,6 +7,7 @@ param(
     [Parameter(Mandatory=$true)][string]$SdkRoot,
     [Parameter(Mandatory=$true)][string]$OutputRoot,
     [string]$SourceRoot = (Join-Path $PSScriptRoot '..'),
+    [string]$Forge,
     [switch]$SmartLink,
     [switch]$RunExamples
 )
@@ -34,12 +35,12 @@ $packages = Join-Path $OutputRoot 'packages'
 New-Item -ItemType Directory -Path $packages | Out-Null
 $compile = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
 foreach ($item in @(@('contracts','democontracts'),@('base','pluginbase'),@('left','pluginleft'),@('right','pluginright'))) {
-    & $compile -SdkRoot $SdkRoot -Kind Package -Source "$source\$($item[0])\$($item[1]).ppk" `
+    & $compile -Forge $Forge -SdkRoot $SdkRoot -Kind Package -Source "$source\$($item[0])\$($item[1]).ppk" `
         -PackagePath $packages -OutputDirectory $packages -SmartLink:$SmartLink
 }
 foreach ($kind in @('Console','GUI')) {
     $name = 'late_'+$kind.ToLowerInvariant()
-    & $compile -SdkRoot $SdkRoot -Kind $kind -Source "$source\host\$name.pas" `
+    & $compile -Forge $Forge -SdkRoot $SdkRoot -Kind $kind -Source "$source\host\$name.pas" `
         -RequiredPackages democontracts -PackagePath $packages -OutputDirectory "$OutputRoot\$name" -SmartLink:$SmartLink
     if ($RunExamples) {
         $app = Get-NexusPackageBundle "$OutputRoot\$name"

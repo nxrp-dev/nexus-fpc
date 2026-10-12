@@ -47,10 +47,9 @@ Project Bootstrap Build[Bootstrap] {
         IncludeMasks: ["*.pas", "*.pp", "*.ppk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
         ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
     }
-    Run CaptureBuildIdentity {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "powershell.exe";
-        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCBuildIdentity.ps1", "-SourceRoot", "."];
+    BuildIdentity CaptureBuildIdentity {
+        Repository: ".";
+        OutputDirectory: "build/forge-bootstrap/seed";
     }
     Group GenerateTables (CompilerTables) {}
     FPC BuildMessageGenerator {

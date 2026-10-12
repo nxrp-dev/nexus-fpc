@@ -46,7 +46,7 @@ try {
 if ($code -ne 0) { throw "Forge package SDK build failed ($code). Details: $log" }
 if ($OutputRoot -ine $sdk) {
     New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
-    foreach ($name in @('bin','packages','units','sdk.json')) {
+    foreach ($name in @('bin','packages','units','forge','sdk.json')) {
         Copy-Item -LiteralPath (Join-Path $sdk $name) -Destination $OutputRoot -Recurse
     }
 }
@@ -57,14 +57,14 @@ if ($BuildExamples -or $RunExamples) {
     $exampleSource = Join-Path $SourceRoot 'examples\dynamic-packages'
     $examplePackages = Join-Path $OutputRoot 'examples\packages'
     New-Item -ItemType Directory -Force -Path $examplePackages | Out-Null
-    $helper = Join-Path $bin 'Invoke-NexusFPCPackageCompile.ps1'
+    $helper = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
     foreach ($name in @('demotypes','demoleft','demoright')) {
-        & $helper -SdkRoot $OutputRoot -Source "$exampleSource\$name\$name.ppk" -Kind Package `
+        & $helper -Forge $Forge -SdkRoot $OutputRoot -Source "$exampleSource\$name\$name.ppk" -Kind Package `
             -PackagePath $examplePackages -OutputDirectory $examplePackages -SmartLink:$SmartLink
     }
     foreach ($kind in @('Console','GUI')) {
         $name = 'demo_' + $kind.ToLowerInvariant()
-        & $helper -SdkRoot $OutputRoot -Source "$exampleSource\host\$name.pas" -Kind $kind `
+        & $helper -Forge $Forge -SdkRoot $OutputRoot -Source "$exampleSource\host\$name.pas" -Kind $kind `
             -RequiredPackages demotypes,demoleft,demoright -PackagePath $examplePackages `
             -OutputDirectory "$OutputRoot\examples\$name" -SmartLink:$SmartLink
         if ($RunExamples) {
