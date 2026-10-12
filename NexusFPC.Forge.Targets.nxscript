@@ -9,7 +9,7 @@ Environment CrossTarget Build[Cross] TargetCPU[i386] TargetOS[linux] {
     Directory: "build/forge-bootstrap/cross/i386-linux";
     Compiler: @CrossTarget.Directory + "/ppcross386.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/linux";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/linux";
     TargetOS: "linux";
     Triple: "i386-unknown-linux-gnu";
     ExecutableSuffix: "";
@@ -21,7 +21,7 @@ Environment CrossTarget Build[Cross] TargetCPU[x86_64] TargetOS[linux] {
     Directory: "build/forge-bootstrap/cross/x86_64-linux";
     Compiler: @CrossTarget.Directory + "/ppcrossx64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/linux";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/linux";
     TargetOS: "linux";
     Triple: "x86_64-unknown-linux-gnu";
     ExecutableSuffix: "";
@@ -33,7 +33,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[linux] {
     Directory: "build/forge-bootstrap/cross/aarch64-linux";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/linux";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/linux";
     TargetOS: "linux";
     Triple: "aarch64-unknown-linux-gnu";
     ExecutableSuffix: "";
@@ -45,7 +45,7 @@ Environment CrossTarget Build[Cross] TargetCPU[i386] TargetOS[win32] {
     Directory: "build/forge-bootstrap/cross/i386-win32";
     Compiler: @CrossTarget.Directory + "/ppcross386.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/win32";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/win32";
     TargetOS: "win32";
     Triple: "i686-w64-windows-gnu";
     ExecutableSuffix: ".exe";
@@ -57,7 +57,7 @@ Environment CrossTarget Build[Cross] TargetCPU[x86_64] TargetOS[win64] {
     Directory: "build/forge-bootstrap/cross/x86_64-win64";
     Compiler: @CrossTarget.Directory + "/ppcrossx64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/win64";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/win64";
     TargetOS: "win64";
     Triple: "x86_64-windows-gnu";
     ExecutableSuffix: ".exe";
@@ -69,7 +69,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[win64] {
     Directory: "build/forge-bootstrap/cross/aarch64-win64";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/win64";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/win64";
     TargetOS: "win64";
     Triple: "aarch64-windows-gnu";
     ExecutableSuffix: ".exe";
@@ -81,7 +81,7 @@ Environment CrossTarget Build[Cross] TargetCPU[x86_64] TargetOS[android] {
     Directory: "build/forge-bootstrap/cross/x86_64-android";
     Compiler: @CrossTarget.Directory + "/ppcrossx64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/android";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/android";
     TargetOS: "android";
     Triple: "x86_64-linux-android";
     ExecutableSuffix: "";
@@ -93,7 +93,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[android] {
     Directory: "build/forge-bootstrap/cross/aarch64-android";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/android";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/android";
     TargetOS: "android";
     Triple: "aarch64-linux-android";
     ExecutableSuffix: "";
@@ -105,7 +105,7 @@ Environment CrossTarget Build[Cross] TargetCPU[x86_64] TargetOS[darwin] {
     Directory: "build/forge-bootstrap/cross/x86_64-darwin";
     Compiler: @CrossTarget.Directory + "/ppcrossx64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/darwin";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/darwin";
     TargetOS: "darwin";
     Triple: "x86_64-apple-darwin";
     ExecutableSuffix: "";
@@ -117,7 +117,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[darwin] {
     Directory: "build/forge-bootstrap/cross/aarch64-darwin";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/darwin";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/darwin";
     TargetOS: "darwin";
     Triple: "aarch64-apple-darwin";
     ExecutableSuffix: "";
@@ -129,7 +129,7 @@ Environment CrossTarget Build[Cross] TargetCPU[x86_64] TargetOS[iphonesim] {
     Directory: "build/forge-bootstrap/cross/x86_64-iphonesim";
     Compiler: @CrossTarget.Directory + "/ppcrossx64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/darwin";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/darwin";
     TargetOS: "iphonesim";
     Triple: "x86_64-apple-ios-simulator";
     ExecutableSuffix: "";
@@ -141,7 +141,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[iphonesim] {
     Directory: "build/forge-bootstrap/cross/aarch64-iphonesim";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/darwin";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/darwin";
     TargetOS: "iphonesim";
     Triple: "aarch64-apple-ios-simulator";
     ExecutableSuffix: "";
@@ -153,7 +153,7 @@ Environment CrossTarget Build[Cross] TargetCPU[aarch64] TargetOS[ios] {
     Directory: "build/forge-bootstrap/cross/aarch64-ios";
     Compiler: @CrossTarget.Directory + "/ppcrossa64.exe";
     RTL: @CrossTarget.Directory + "/rtl";
-    RTLDirectory: "rtl/darwin";
+    RTLDirectory: "build/forge-bootstrap/seed/rtl/darwin";
     TargetOS: "ios";
     Triple: "aarch64-apple-ios";
     ExecutableSuffix: "";

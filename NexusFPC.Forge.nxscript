@@ -4,17 +4,20 @@
 // Native: /targets=Build:Bootstrap
 // Cross:  /targets=Build:Cross,TargetCPU:aarch64,TargetOS:linux
 //
-// Bootstrap stages the compiler sources, generates messages, builds the Win32
+// Bootstrap stages compiler/RTL sources, generates messages and tables, builds the Win32
 // seed and native Win64 compiler, then verifies native generations two and three.
 // Cross builds use that native compiler and target-filtered configurations.
 // See NexusFPC.Forge.md for the retained targets and tool prerequisites.
-// Package and utility builds remain to be added.
+// Other package and utility builds remain to be added.
 
 dialect "../../nexus/projects/forge/language/Forge.nxscript";
 
 module "NexusFPC.Forge.Config.nxscript";
+module CompilerTables "NexusFPC.Forge.Tables.nxscript";
 
-Group Bootstrap Build[Bootstrap] {
+Project Bootstrap Build[Bootstrap] {
+    Id: "NXRP.FPC.Bootstrap";
+    Outputs: [Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe", RTL: "build/forge-bootstrap/cycle3/rtl64"];
     CreateDirectory SeedBin {
         Path: "build/forge-bootstrap/seed/bin";
     }
@@ -26,14 +29,18 @@ Group Bootstrap Build[Bootstrap] {
         Destination: "build/forge-bootstrap/seed/source";
         Recursive: True;
         CleanDestination: True;
-        IncludeMasks: ["*.pas", "*.pp", "*.inc"];
-        ExcludeNames: "msgtxt.inc;msgidx.inc";
+        IncludeMasks: ["*.pas", "*.pp", "*.inc", "*.dat"];
+        ExcludeNames: "msgtxt.inc;msgidx.inc;a64att.inc;a64atts.inc;a64nop.inc;a64op.inc;a64tab.inc;ra64con.inc;ra64dwa.inc;ra64nor.inc;ra64num.inc;ra64rni.inc;ra64sri.inc;ra64sta.inc;ra64std.inc;ra64sup.inc;i386att.inc;i386atts.inc;i386int.inc;i386nop.inc;i386op.inc;i386prop.inc;i386tab.inc;r386ari.inc;r386att.inc;r386con.inc;r386dwrf.inc;r386int.inc;r386iri.inc;r386nasm.inc;r386nor.inc;r386nri.inc;r386num.inc;r386ot.inc;r386rni.inc;r386sri.inc;r386stab.inc;r386std.inc;r8664ari.inc;r8664att.inc;r8664con.inc;r8664dwrf.inc;r8664int.inc;r8664iri.inc;r8664nasm.inc;r8664nor.inc;r8664num.inc;r8664ot.inc;r8664rni.inc;r8664sri.inc;r8664stab.inc;r8664std.inc;x8664ats.inc;x8664att.inc;x8664int.inc;x8664nop.inc;x8664op.inc;x8664pro.inc;x8664tab.inc;cx86mminnr.inc;x86mmtype.inc;x86mmfirst.inc;x86mmsecond.inc;cpummprocs.inc;cpumminnr.inc";
     }
-    CopyFile StageCurrencyParser {
-        Source: "rtl/inc/currval.inc";
-        Destination: "build/forge-bootstrap/seed/rtl/inc/currval.inc";
-        Overwrite: True;
+    CopyFile StageRTL {
+        Source: "rtl";
+        Destination: "build/forge-bootstrap/seed/rtl";
+        Recursive: True;
+        CleanDestination: True;
+        IncludeMasks: ["*.pas", "*.pp", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
+        ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
     }
+    Group GenerateTables (CompilerTables) {}
     FPC BuildMessageGenerator {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
@@ -84,10 +91,10 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildSeedSystem {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/win64/system.pp"];
-        EntryPoint: "rtl/win64/system.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/system.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
-        IncludePaths: ["rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc"];
+        IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -95,176 +102,176 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildSeedObjPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/objpas/objpas.pp"];
-        EntryPoint: "rtl/objpas/objpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedWindows {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/win64/windows.pp"];
-        EntryPoint: "rtl/win64/windows.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedSysUtils {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/win/sysutils.pp"];
-        EntryPoint: "rtl/win/sysutils.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedRTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/win64/buildrtl.pp"];
-        EntryPoint: "rtl/win64/buildrtl.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedUUChar {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/inc/uuchar.pp"];
-        EntryPoint: "rtl/inc/uuchar.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedMacPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/inc/macpas.pp"];
-        EntryPoint: "rtl/inc/macpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedISO7185 {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/inc/iso7185.pp"];
-        EntryPoint: "rtl/inc/iso7185.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedCodePages {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/charmaps/cpall.pas"];
-        EntryPoint: "rtl/charmaps/cpall.pas";
+        Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedLineInfo {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/inc/lineinfo.pp"];
-        EntryPoint: "rtl/inc/lineinfo.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedDwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/inc/lnfodwrf.pp"];
-        EntryPoint: "rtl/inc/lnfodwrf.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedIntrinsics {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/seed32.exe";
-        Source: ["rtl/x86_64/intrinsics.pp"];
-        EntryPoint: "rtl/x86_64/intrinsics.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/seed/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/seed/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
@@ -305,10 +312,10 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle1System {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/win64/system.pp"];
-        EntryPoint: "rtl/win64/system.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/system.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
-        IncludePaths: ["rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc"];
+        IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -316,176 +323,176 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle1ObjPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/objpas/objpas.pp"];
-        EntryPoint: "rtl/objpas/objpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Windows {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/win64/windows.pp"];
-        EntryPoint: "rtl/win64/windows.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1SysUtils {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/win/sysutils.pp"];
-        EntryPoint: "rtl/win/sysutils.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1RTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/win64/buildrtl.pp"];
-        EntryPoint: "rtl/win64/buildrtl.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1UUChar {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/inc/uuchar.pp"];
-        EntryPoint: "rtl/inc/uuchar.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1MacPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/inc/macpas.pp"];
-        EntryPoint: "rtl/inc/macpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1ISO7185 {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/inc/iso7185.pp"];
-        EntryPoint: "rtl/inc/iso7185.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1CodePages {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/charmaps/cpall.pas"];
-        EntryPoint: "rtl/charmaps/cpall.pas";
+        Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1LineInfo {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/inc/lineinfo.pp"];
-        EntryPoint: "rtl/inc/lineinfo.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Dwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/inc/lnfodwrf.pp"];
-        EntryPoint: "rtl/inc/lnfodwrf.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Intrinsics {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/seed/bin/ppcx64.exe";
-        Source: ["rtl/x86_64/intrinsics.pp"];
-        EntryPoint: "rtl/x86_64/intrinsics.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle1/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle1/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
@@ -519,10 +526,10 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle2System {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/win64/system.pp"];
-        EntryPoint: "rtl/win64/system.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/system.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
-        IncludePaths: ["rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc"];
+        IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -530,176 +537,176 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle2ObjPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/objpas/objpas.pp"];
-        EntryPoint: "rtl/objpas/objpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Windows {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/win64/windows.pp"];
-        EntryPoint: "rtl/win64/windows.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2SysUtils {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/win/sysutils.pp"];
-        EntryPoint: "rtl/win/sysutils.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2RTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/win64/buildrtl.pp"];
-        EntryPoint: "rtl/win64/buildrtl.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2UUChar {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/inc/uuchar.pp"];
-        EntryPoint: "rtl/inc/uuchar.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2MacPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/inc/macpas.pp"];
-        EntryPoint: "rtl/inc/macpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2ISO7185 {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/inc/iso7185.pp"];
-        EntryPoint: "rtl/inc/iso7185.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2CodePages {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/charmaps/cpall.pas"];
-        EntryPoint: "rtl/charmaps/cpall.pas";
+        Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2LineInfo {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/inc/lineinfo.pp"];
-        EntryPoint: "rtl/inc/lineinfo.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Dwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/inc/lnfodwrf.pp"];
-        EntryPoint: "rtl/inc/lnfodwrf.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Intrinsics {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle1/ppcx64.exe";
-        Source: ["rtl/x86_64/intrinsics.pp"];
-        EntryPoint: "rtl/x86_64/intrinsics.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle2/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle2/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
@@ -733,10 +740,10 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle3System {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/win64/system.pp"];
-        EntryPoint: "rtl/win64/system.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/system.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
-        IncludePaths: ["rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc"];
+        IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -744,176 +751,176 @@ Group Bootstrap Build[Bootstrap] {
     FPC BuildCycle3ObjPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/objpas/objpas.pp"];
-        EntryPoint: "rtl/objpas/objpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Windows {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/win64/windows.pp"];
-        EntryPoint: "rtl/win64/windows.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/windows.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/windows.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3SysUtils {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/win/sysutils.pp"];
-        EntryPoint: "rtl/win/sysutils.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3RTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/win64/buildrtl.pp"];
-        EntryPoint: "rtl/win64/buildrtl.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/win64/buildrtl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/win64/buildrtl.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3UUChar {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/inc/uuchar.pp"];
-        EntryPoint: "rtl/inc/uuchar.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3MacPas {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/inc/macpas.pp"];
-        EntryPoint: "rtl/inc/macpas.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3ISO7185 {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/inc/iso7185.pp"];
-        EntryPoint: "rtl/inc/iso7185.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3CodePages {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/charmaps/cpall.pas"];
-        EntryPoint: "rtl/charmaps/cpall.pas";
+        Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3LineInfo {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/inc/lineinfo.pp"];
-        EntryPoint: "rtl/inc/lineinfo.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Dwarf {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/inc/lnfodwrf.pp"];
-        EntryPoint: "rtl/inc/lnfodwrf.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Intrinsics {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/cycle2/ppcx64.exe";
-        Source: ["rtl/x86_64/intrinsics.pp"];
-        EntryPoint: "rtl/x86_64/intrinsics.pp";
+        Source: ["build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/rtl/x86_64/intrinsics.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         UnitPaths: [
-            "build/forge-bootstrap/cycle3/rtl64", "rtl/win", "rtl/inc",
-            "rtl/objpas", "rtl/x86_64"
+            "build/forge-bootstrap/cycle3/rtl64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/x86_64"
         ];
         IncludePaths: [
-            "rtl/win64", "rtl/inc", "rtl/x86_64", "rtl/win64/x86_64", "rtl/win", "rtl/win/wininc",
-            "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes"
+            "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+            "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
         DisableDefaultConfigFiles: True;
     }
@@ -946,7 +953,9 @@ Group Bootstrap Build[Bootstrap] {
     }
 }
 
-Group Cross Build[Cross] {
+Project Cross Build[Cross] {
+    Id: "NXRP.FPC.Cross";
+    Outputs: [Compiler: @CrossTarget.Compiler, RTL: @CrossTarget.RTL];
     DeletePath CleanCross {
         Path: @CrossTarget.Directory;
         Recursive: True;
@@ -957,239 +966,239 @@ Group Cross Build[Cross] {
 
     Group LinuxRTL TargetOS[linux] {
         Clang BuildAbiTag (CrossAssembly) TargetCPU[x86_64] {
-            Source: ["rtl/linux/x86_64/abitag.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/linux/x86_64/abitag.as"];
             Output: @CrossTarget.RTL + "/abitag.o";
         }
         Clang Buildprt0 (CrossAssembly) TargetCPU[aarch64] {
-            Source: ["rtl/linux/aarch64/prt0.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/linux/aarch64/prt0.as"];
             Output: @CrossTarget.RTL + "/prt0.o";
         }
         Clang Builddllprt0 (CrossAssembly) TargetCPU[aarch64] {
-            Source: ["rtl/linux/aarch64/dllprt0.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/linux/aarch64/dllprt0.as"];
             Output: @CrossTarget.RTL + "/dllprt0.o";
         }
         Clang Buildcprt0 (CrossAssembly) TargetCPU[aarch64] {
-            Source: ["rtl/linux/aarch64/cprt0.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/linux/aarch64/cprt0.as"];
             Output: @CrossTarget.RTL + "/cprt0.o";
         }
         FPC BuildCrossSystem (CrossRTL) {
-            Source: ["rtl/linux/system.pp"];
-            EntryPoint: "rtl/linux/system.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/system.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/system.pp";
             CompileSystemUnit: True;
             LabelAndGoto: True;
         }
         FPC BuildCrossObjPas (CrossRTL) {
-            Source: ["rtl/objpas/objpas.pp"];
-            EntryPoint: "rtl/objpas/objpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         }
         FPC Build_si_prc (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/linux/si_prc.pp"];
-            EntryPoint: "rtl/linux/si_prc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/si_prc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/si_prc.pp";
         }
         FPC Build_si_c (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/linux/si_c.pp"];
-            EntryPoint: "rtl/linux/si_c.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/si_c.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/si_c.pp";
         }
         FPC Build_si_dll (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/linux/si_dll.pp"];
-            EntryPoint: "rtl/linux/si_dll.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/si_dll.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/si_dll.pp";
         }
         FPC Build_si_c21 (CrossRTL) TargetCPU[i386] {
-            Source: ["rtl/linux/si_c21.pp"];
-            EntryPoint: "rtl/linux/si_c21.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/si_c21.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/si_c21.pp";
         }
         FPC Build_si_uc (CrossRTL) TargetCPU[i386] {
-            Source: ["rtl/linux/si_uc.pp"];
-            EntryPoint: "rtl/linux/si_uc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/si_uc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/si_uc.pp";
         }
         FPC BuildCrossIntrinsics (CrossRTL) {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
         }
         FPC Build_fpintres (CrossRTL) {
-            Source: ["rtl/inc/fpintres.pp"];
-            EntryPoint: "rtl/inc/fpintres.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/fpintres.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpintres.pp";
         }
         FPC Build_uuchar (CrossRTL) {
-            Source: ["rtl/inc/uuchar.pp"];
-            EntryPoint: "rtl/inc/uuchar.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         }
         FPC Build_unixtype (CrossRTL) {
-            Source: ["rtl/unix/unixtype.pp"];
-            EntryPoint: "rtl/unix/unixtype.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixtype.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixtype.pp";
         }
         FPC Build_ctypes (CrossRTL) {
-            Source: ["rtl/inc/ctypes.pp"];
-            EntryPoint: "rtl/inc/ctypes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/ctypes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/ctypes.pp";
         }
         FPC Build_baseunix (CrossRTL) {
-            Source: ["rtl/unix/baseunix.pp"];
-            EntryPoint: "rtl/unix/baseunix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/baseunix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/baseunix.pp";
         }
         FPC Build_strings (CrossRTL) {
-            Source: ["rtl/inc/strings.pp"];
-            EntryPoint: "rtl/inc/strings.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/strings.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/strings.pp";
         }
         FPC Build_macpas (CrossRTL) {
-            Source: ["rtl/inc/macpas.pp"];
-            EntryPoint: "rtl/inc/macpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         }
         FPC Build_iso7185 (CrossRTL) {
-            Source: ["rtl/inc/iso7185.pp"];
-            EntryPoint: "rtl/inc/iso7185.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         }
         FPC Build_extpas (CrossRTL) {
-            Source: ["rtl/inc/extpas.pp"];
-            EntryPoint: "rtl/inc/extpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pp";
         }
         FPC Build_syscall (CrossRTL) {
-            Source: ["rtl/unix/syscall.pp"];
-            EntryPoint: "rtl/unix/syscall.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/syscall.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/syscall.pp";
         }
         FPC Build_unixutil (CrossRTL) {
-            Source: ["rtl/unix/unixutil.pp"];
-            EntryPoint: "rtl/unix/unixutil.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixutil.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixutil.pp";
         }
         FPC Build_heaptrc (CrossRTL) {
-            Source: ["rtl/inc/heaptrc.pp"];
-            EntryPoint: "rtl/inc/heaptrc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pp";
         }
         FPC Build_lineinfo (CrossRTL) {
-            Source: ["rtl/inc/lineinfo.pp"];
-            EntryPoint: "rtl/inc/lineinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         }
         FPC Build_lnfodwrf (CrossRTL) {
-            Source: ["rtl/inc/lnfodwrf.pp"];
-            EntryPoint: "rtl/inc/lnfodwrf.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         }
         FPC Build_termio (CrossRTL) {
-            Source: ["rtl/linux/termio.pp"];
-            EntryPoint: "rtl/linux/termio.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/termio.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/termio.pp";
         }
         FPC Build_unix (CrossRTL) {
-            Source: ["rtl/unix/unix.pp"];
-            EntryPoint: "rtl/unix/unix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unix.pp";
         }
         FPC Build_linux (CrossRTL) {
-            Source: ["rtl/linux/linux.pp"];
-            EntryPoint: "rtl/linux/linux.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/linux.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/linux.pp";
         }
         FPC Build_initc (CrossRTL) {
-            Source: ["rtl/unix/initc.pp"];
-            EntryPoint: "rtl/unix/initc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/initc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/initc.pp";
         }
         FPC Build_cmem (CrossRTL) {
-            Source: ["rtl/inc/cmem.pp"];
-            EntryPoint: "rtl/inc/cmem.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/cmem.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/cmem.pp";
         }
         FPC Build_linuxvcs (CrossRTL) {
-            Source: ["rtl/linux/linuxvcs.pp"];
-            EntryPoint: "rtl/linux/linuxvcs.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/linuxvcs.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/linuxvcs.pp";
         }
         FPC Build_sysutils (CrossRTL) {
-            Source: ["rtl/unix/sysutils.pp"];
-            EntryPoint: "rtl/unix/sysutils.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/sysutils.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/sysutils.pp";
         }
         FPC Build_typinfo (CrossRTL) {
-            Source: ["rtl/objpas/typinfo.pp"];
-            EntryPoint: "rtl/objpas/typinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/typinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/typinfo.pp";
             LabelAndGoto: True;
         }
         FPC Build_math (CrossRTL) {
-            Source: ["rtl/objpas/math.pp"];
-            EntryPoint: "rtl/objpas/math.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/math.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/math.pp";
         }
         FPC Build_charset (CrossRTL) {
-            Source: ["rtl/inc/charset.pp"];
-            EntryPoint: "rtl/inc/charset.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/charset.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/charset.pp";
         }
         FPC Build_cpall (CrossRTL) {
-            Source: ["rtl/charmaps/cpall.pas"];
-            EntryPoint: "rtl/charmaps/cpall.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         }
         FPC Build_character (CrossRTL) {
-            Source: ["rtl/objpas/character.pas"];
-            EntryPoint: "rtl/objpas/character.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/character.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/character.pas";
         }
         FPC Build_unixcp (CrossRTL) {
-            Source: ["rtl/unix/unixcp.pp"];
-            EntryPoint: "rtl/unix/unixcp.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixcp.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixcp.pp";
         }
         FPC Build_getopts (CrossRTL) {
-            Source: ["rtl/inc/getopts.pp"];
-            EntryPoint: "rtl/inc/getopts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/getopts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/getopts.pp";
         }
         FPC Build_errors (CrossRTL) {
-            Source: ["rtl/unix/errors.pp"];
-            EntryPoint: "rtl/unix/errors.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/errors.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/errors.pp";
         }
         FPC Build_dl (CrossRTL) {
-            Source: ["rtl/unix/dl.pp"];
-            EntryPoint: "rtl/unix/dl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dl.pp";
         }
         FPC Build_dynlibs (CrossRTL) {
-            Source: ["rtl/inc/dynlibs.pas"];
-            EntryPoint: "rtl/inc/dynlibs.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/dynlibs.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/dynlibs.pas";
         }
         FPC Build_types (CrossRTL) {
-            Source: ["rtl/objpas/types.pp"];
-            EntryPoint: "rtl/objpas/types.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/types.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/types.pp";
         }
         FPC Build_sysconst (CrossRTL) {
-            Source: ["rtl/objpas/sysconst.pp"];
-            EntryPoint: "rtl/objpas/sysconst.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/sysconst.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/sysconst.pp";
         }
         FPC Build_fpwidestring (CrossRTL) {
-            Source: ["rtl/objpas/fpwidestring.pp"];
-            EntryPoint: "rtl/objpas/fpwidestring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp";
         }
         FPC Build_cthreads (CrossRTL) {
-            Source: ["rtl/unix/cthreads.pp"];
-            EntryPoint: "rtl/unix/cthreads.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/cthreads.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/cthreads.pp";
         }
         FPC Build_sortbase (CrossRTL) {
-            Source: ["rtl/inc/sortbase.pp"];
-            EntryPoint: "rtl/inc/sortbase.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/sortbase.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/sortbase.pp";
         }
         FPC Build_classes (CrossRTL) {
-            Source: ["rtl/unix/classes.pp"];
-            EntryPoint: "rtl/unix/classes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/classes.pp";
         }
         FPC Build_fgl (CrossRTL) {
-            Source: ["rtl/objpas/fgl.pp"];
-            EntryPoint: "rtl/objpas/fgl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pp";
         }
         FPC Build_rtlconsts (CrossRTL) {
-            Source: ["rtl/objpas/rtlconsts.pp"];
-            EntryPoint: "rtl/objpas/rtlconsts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp";
         }
         FPC Build_dos (CrossRTL) {
-            Source: ["rtl/unix/dos.pp"];
-            EntryPoint: "rtl/unix/dos.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dos.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dos.pp";
         }
         FPC Build_cwstring (CrossRTL) {
-            Source: ["rtl/unix/cwstring.pp"];
-            EntryPoint: "rtl/unix/cwstring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/cwstring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/cwstring.pp";
         }
         FPC Build_unix98pty (CrossRTL) {
-            Source: ["rtl/unix/unix98pty.pp"];
-            EntryPoint: "rtl/unix/unix98pty.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unix98pty.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unix98pty.pp";
         }
         FPC Build_cpu (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/cpu.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp";
         }
         FPC Build_ports (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/unix/ports.pp"];
-            EntryPoint: "rtl/unix/ports.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/ports.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/ports.pp";
         }
         FPC Build_x86 (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/unix/x86.pp"];
-            EntryPoint: "rtl/unix/x86.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/x86.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/x86.pp";
         }
         FPC Build_mmx (CrossRTL) TargetCPU[i386] {
-            Source: ["rtl/i386/mmx.pp"];
-            EntryPoint: "rtl/i386/mmx.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/i386/mmx.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/i386/mmx.pp";
         }
     }
     Group WindowsRTL TargetOS[win32, win64] {
@@ -1200,52 +1209,52 @@ Group Cross Build[Cross] {
             LabelAndGoto: True;
         }
         FPC BuildWindowsObjPas (CrossRTL) {
-            Source: ["rtl/objpas/objpas.pp"];
-            EntryPoint: "rtl/objpas/objpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         }
         FPC BuildWindowsAPI (CrossRTL) {
             Source: [@CrossTarget.RTLDirectory + "/windows.pp"];
             EntryPoint: @CrossTarget.RTLDirectory + "/windows.pp";
         }
         FPC BuildWindowsSysUtils (CrossRTL) {
-            Source: ["rtl/win/sysutils.pp"];
-            EntryPoint: "rtl/win/sysutils.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/win/sysutils.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/win/sysutils.pp";
         }
         FPC BuildWindowsRTL (CrossRTL) {
             Source: [@CrossTarget.RTLDirectory + "/buildrtl.pp"];
             EntryPoint: @CrossTarget.RTLDirectory + "/buildrtl.pp";
         }
         FPC BuildWindowsUUChar (CrossRTL) {
-            Source: ["rtl/inc/uuchar.pp"];
-            EntryPoint: "rtl/inc/uuchar.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         }
         FPC BuildWindowsMacPas (CrossRTL) {
-            Source: ["rtl/inc/macpas.pp"];
-            EntryPoint: "rtl/inc/macpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         }
         FPC BuildWindowsISO7185 (CrossRTL) {
-            Source: ["rtl/inc/iso7185.pp"];
-            EntryPoint: "rtl/inc/iso7185.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         }
         FPC BuildWindowsCodePages (CrossRTL) {
-            Source: ["rtl/charmaps/cpall.pas"];
-            EntryPoint: "rtl/charmaps/cpall.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         }
         FPC BuildWindowsLineInfo (CrossRTL) {
-            Source: ["rtl/inc/lineinfo.pp"];
-            EntryPoint: "rtl/inc/lineinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         }
         FPC BuildWindowsDwarf (CrossRTL) {
-            Source: ["rtl/inc/lnfodwrf.pp"];
-            EntryPoint: "rtl/inc/lnfodwrf.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         }
         FPC BuildWindowsIntrinsics (CrossRTL) {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
         }
         FPC BuildWindowsCPU (CrossRTL) TargetCPU[i386, x86_64] {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/cpu.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp";
         }
         FPC BuildWindowsSignals (CrossRTL) TargetCPU[i386, x86_64] {
             Source: [@CrossTarget.RTLDirectory + "/signals.pp"];
@@ -1254,400 +1263,400 @@ Group Cross Build[Cross] {
     }
     Group AndroidRTL TargetOS[android] {
         Clang BuildAndroid_prt0 (CrossAssembly) {
-            Source: ["rtl/android/prt0.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/android/prt0.as"];
             Output: @CrossTarget.RTL + "/prt0.o";
         }
         Clang BuildAndroid_dllprt0 (CrossAssembly) {
-            Source: ["rtl/android/dllprt0.as"];
+            Source: ["build/forge-bootstrap/seed/rtl/android/dllprt0.as"];
             Output: @CrossTarget.RTL + "/dllprt0.o";
         }
         FPC BuildAndroidSystem (CrossRTL) {
-            Source: ["rtl/linux/system.pp"];
-            EntryPoint: "rtl/linux/system.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/system.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/system.pp";
             CompileSystemUnit: True;
             LabelAndGoto: True;
         }
         FPC BuildAndroidObjPas (CrossRTL) {
-            Source: ["rtl/objpas/objpas.pp"];
-            EntryPoint: "rtl/objpas/objpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         }
         FPC BuildAndroidIntrinsics (CrossRTL) {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
         }
         FPC BuildAndroid_fpintres (CrossRTL) {
-            Source: ["rtl/inc/fpintres.pp"];
-            EntryPoint: "rtl/inc/fpintres.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/fpintres.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpintres.pp";
         }
         FPC BuildAndroid_uuchar (CrossRTL) {
-            Source: ["rtl/inc/uuchar.pp"];
-            EntryPoint: "rtl/inc/uuchar.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         }
         FPC BuildAndroid_unixtype (CrossRTL) {
-            Source: ["rtl/unix/unixtype.pp"];
-            EntryPoint: "rtl/unix/unixtype.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixtype.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixtype.pp";
         }
         FPC BuildAndroid_ctypes (CrossRTL) {
-            Source: ["rtl/inc/ctypes.pp"];
-            EntryPoint: "rtl/inc/ctypes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/ctypes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/ctypes.pp";
         }
         FPC BuildAndroid_baseunix (CrossRTL) {
-            Source: ["rtl/unix/baseunix.pp"];
-            EntryPoint: "rtl/unix/baseunix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/baseunix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/baseunix.pp";
         }
         FPC BuildAndroid_strings (CrossRTL) {
-            Source: ["rtl/inc/strings.pp"];
-            EntryPoint: "rtl/inc/strings.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/strings.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/strings.pp";
         }
         FPC BuildAndroid_macpas (CrossRTL) {
-            Source: ["rtl/inc/macpas.pp"];
-            EntryPoint: "rtl/inc/macpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         }
         FPC BuildAndroid_iso7185 (CrossRTL) {
-            Source: ["rtl/inc/iso7185.pp"];
-            EntryPoint: "rtl/inc/iso7185.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         }
         FPC BuildAndroid_extpas (CrossRTL) {
-            Source: ["rtl/inc/extpas.pp"];
-            EntryPoint: "rtl/inc/extpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pp";
         }
         FPC BuildAndroid_syscall (CrossRTL) {
-            Source: ["rtl/unix/syscall.pp"];
-            EntryPoint: "rtl/unix/syscall.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/syscall.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/syscall.pp";
         }
         FPC BuildAndroid_unixutil (CrossRTL) {
-            Source: ["rtl/unix/unixutil.pp"];
-            EntryPoint: "rtl/unix/unixutil.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixutil.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixutil.pp";
         }
         FPC BuildAndroid_heaptrc (CrossRTL) {
-            Source: ["rtl/inc/heaptrc.pp"];
-            EntryPoint: "rtl/inc/heaptrc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pp";
         }
         FPC BuildAndroid_lineinfo (CrossRTL) {
-            Source: ["rtl/inc/lineinfo.pp"];
-            EntryPoint: "rtl/inc/lineinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         }
         FPC BuildAndroid_lnfodwrf (CrossRTL) {
-            Source: ["rtl/inc/lnfodwrf.pp"];
-            EntryPoint: "rtl/inc/lnfodwrf.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         }
         FPC BuildAndroid_termio (CrossRTL) {
-            Source: ["rtl/linux/termio.pp"];
-            EntryPoint: "rtl/linux/termio.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/termio.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/termio.pp";
         }
         FPC BuildAndroid_unix (CrossRTL) {
-            Source: ["rtl/unix/unix.pp"];
-            EntryPoint: "rtl/unix/unix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unix.pp";
         }
         FPC BuildAndroid_linux (CrossRTL) {
-            Source: ["rtl/linux/linux.pp"];
-            EntryPoint: "rtl/linux/linux.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/linux.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/linux.pp";
         }
         FPC BuildAndroid_initc (CrossRTL) {
-            Source: ["rtl/unix/initc.pp"];
-            EntryPoint: "rtl/unix/initc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/initc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/initc.pp";
         }
         FPC BuildAndroid_cmem (CrossRTL) {
-            Source: ["rtl/inc/cmem.pp"];
-            EntryPoint: "rtl/inc/cmem.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/cmem.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/cmem.pp";
         }
         FPC BuildAndroid_linuxvcs (CrossRTL) {
-            Source: ["rtl/linux/linuxvcs.pp"];
-            EntryPoint: "rtl/linux/linuxvcs.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/linux/linuxvcs.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/linux/linuxvcs.pp";
         }
         FPC BuildAndroid_sysutils (CrossRTL) {
-            Source: ["rtl/unix/sysutils.pp"];
-            EntryPoint: "rtl/unix/sysutils.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/sysutils.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/sysutils.pp";
         }
         FPC BuildAndroid_typinfo (CrossRTL) {
-            Source: ["rtl/objpas/typinfo.pp"];
-            EntryPoint: "rtl/objpas/typinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/typinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/typinfo.pp";
             LabelAndGoto: True;
         }
         FPC BuildAndroid_math (CrossRTL) {
-            Source: ["rtl/objpas/math.pp"];
-            EntryPoint: "rtl/objpas/math.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/math.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/math.pp";
         }
         FPC BuildAndroid_charset (CrossRTL) {
-            Source: ["rtl/inc/charset.pp"];
-            EntryPoint: "rtl/inc/charset.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/charset.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/charset.pp";
         }
         FPC BuildAndroid_cpall (CrossRTL) {
-            Source: ["rtl/charmaps/cpall.pas"];
-            EntryPoint: "rtl/charmaps/cpall.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         }
         FPC BuildAndroid_character (CrossRTL) {
-            Source: ["rtl/objpas/character.pas"];
-            EntryPoint: "rtl/objpas/character.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/character.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/character.pas";
         }
         FPC BuildAndroid_unixcp (CrossRTL) {
-            Source: ["rtl/unix/unixcp.pp"];
-            EntryPoint: "rtl/unix/unixcp.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixcp.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixcp.pp";
         }
         FPC BuildAndroid_getopts (CrossRTL) {
-            Source: ["rtl/inc/getopts.pp"];
-            EntryPoint: "rtl/inc/getopts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/getopts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/getopts.pp";
         }
         FPC BuildAndroid_errors (CrossRTL) {
-            Source: ["rtl/unix/errors.pp"];
-            EntryPoint: "rtl/unix/errors.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/errors.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/errors.pp";
         }
         FPC BuildAndroid_dl (CrossRTL) {
-            Source: ["rtl/unix/dl.pp"];
-            EntryPoint: "rtl/unix/dl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dl.pp";
         }
         FPC BuildAndroid_dynlibs (CrossRTL) {
-            Source: ["rtl/inc/dynlibs.pas"];
-            EntryPoint: "rtl/inc/dynlibs.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/dynlibs.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/dynlibs.pas";
         }
         FPC BuildAndroid_types (CrossRTL) {
-            Source: ["rtl/objpas/types.pp"];
-            EntryPoint: "rtl/objpas/types.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/types.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/types.pp";
         }
         FPC BuildAndroid_sysconst (CrossRTL) {
-            Source: ["rtl/objpas/sysconst.pp"];
-            EntryPoint: "rtl/objpas/sysconst.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/sysconst.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/sysconst.pp";
         }
         FPC BuildAndroid_fpwidestring (CrossRTL) {
-            Source: ["rtl/objpas/fpwidestring.pp"];
-            EntryPoint: "rtl/objpas/fpwidestring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp";
         }
         FPC BuildAndroid_cthreads (CrossRTL) {
-            Source: ["rtl/unix/cthreads.pp"];
-            EntryPoint: "rtl/unix/cthreads.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/cthreads.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/cthreads.pp";
         }
         FPC BuildAndroid_sortbase (CrossRTL) {
-            Source: ["rtl/inc/sortbase.pp"];
-            EntryPoint: "rtl/inc/sortbase.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/sortbase.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/sortbase.pp";
         }
         FPC BuildAndroid_classes (CrossRTL) {
-            Source: ["rtl/unix/classes.pp"];
-            EntryPoint: "rtl/unix/classes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/classes.pp";
         }
         FPC BuildAndroid_fgl (CrossRTL) {
-            Source: ["rtl/objpas/fgl.pp"];
-            EntryPoint: "rtl/objpas/fgl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pp";
         }
         FPC BuildAndroid_rtlconsts (CrossRTL) {
-            Source: ["rtl/objpas/rtlconsts.pp"];
-            EntryPoint: "rtl/objpas/rtlconsts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp";
         }
         FPC BuildAndroid_dos (CrossRTL) {
-            Source: ["rtl/unix/dos.pp"];
-            EntryPoint: "rtl/unix/dos.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dos.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dos.pp";
         }
         FPC BuildAndroid_cwstring (CrossRTL) {
-            Source: ["rtl/android/cwstring.pp"];
-            EntryPoint: "rtl/android/cwstring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/android/cwstring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/android/cwstring.pp";
         }
         FPC BuildAndroidCPU (CrossRTL) TargetCPU[x86_64] {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/cpu.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp";
         }
     }
     Group AppleRTL TargetOS[darwin, iphonesim, ios] {
         FPC BuildAppleSystem (CrossRTL) {
-            Source: ["rtl/bsd/system.pp"];
-            EntryPoint: "rtl/bsd/system.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/bsd/system.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/bsd/system.pp";
             CompileSystemUnit: True;
             LabelAndGoto: True;
         }
         FPC BuildAppleObjPas (CrossRTL) {
-            Source: ["rtl/objpas/objpas.pp"];
-            EntryPoint: "rtl/objpas/objpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/objpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/objpas.pp";
         }
         FPC BuildAppleIntrinsics (CrossRTL) {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/intrinsics.pp";
         }
         FPC BuildApple_sysinit (CrossRTL) {
-            Source: ["rtl/darwin/sysinit.pas"];
-            EntryPoint: "rtl/darwin/sysinit.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/darwin/sysinit.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/darwin/sysinit.pas";
         }
         FPC BuildApple_uuchar (CrossRTL) {
-            Source: ["rtl/inc/uuchar.pp"];
-            EntryPoint: "rtl/inc/uuchar.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/uuchar.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/uuchar.pp";
         }
         FPC BuildApple_unixtype (CrossRTL) {
-            Source: ["rtl/unix/unixtype.pp"];
-            EntryPoint: "rtl/unix/unixtype.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixtype.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixtype.pp";
         }
         FPC BuildApple_ctypes (CrossRTL) {
-            Source: ["rtl/inc/ctypes.pp"];
-            EntryPoint: "rtl/inc/ctypes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/ctypes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/ctypes.pp";
         }
         FPC BuildApple_macpas (CrossRTL) {
-            Source: ["rtl/inc/macpas.pp"];
-            EntryPoint: "rtl/inc/macpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/macpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/macpas.pp";
         }
         FPC BuildApple_iso7185 (CrossRTL) {
-            Source: ["rtl/inc/iso7185.pp"];
-            EntryPoint: "rtl/inc/iso7185.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/iso7185.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/iso7185.pp";
         }
         FPC BuildApple_extpas (CrossRTL) {
-            Source: ["rtl/inc/extpas.pp"];
-            EntryPoint: "rtl/inc/extpas.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/extpas.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/extpas.pp";
         }
         FPC BuildApple_strings (CrossRTL) {
-            Source: ["rtl/inc/strings.pp"];
-            EntryPoint: "rtl/inc/strings.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/strings.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/strings.pp";
         }
         FPC BuildApple_sysctl (CrossRTL) {
-            Source: ["rtl/bsd/sysctl.pp"];
-            EntryPoint: "rtl/bsd/sysctl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/bsd/sysctl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/bsd/sysctl.pp";
         }
         FPC BuildApple_baseunix (CrossRTL) {
-            Source: ["rtl/unix/baseunix.pp"];
-            EntryPoint: "rtl/unix/baseunix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/baseunix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/baseunix.pp";
         }
         FPC BuildApple_unixutil (CrossRTL) {
-            Source: ["rtl/unix/unixutil.pp"];
-            EntryPoint: "rtl/unix/unixutil.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixutil.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixutil.pp";
         }
         FPC BuildApple_unix (CrossRTL) {
-            Source: ["rtl/unix/unix.pp"];
-            EntryPoint: "rtl/unix/unix.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unix.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unix.pp";
         }
         FPC BuildApple_initc (CrossRTL) {
-            Source: ["rtl/unix/initc.pp"];
-            EntryPoint: "rtl/unix/initc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/initc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/initc.pp";
         }
         FPC BuildApple_cmem (CrossRTL) {
-            Source: ["rtl/inc/cmem.pp"];
-            EntryPoint: "rtl/inc/cmem.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/cmem.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/cmem.pp";
         }
         FPC BuildApple_dynlibs (CrossRTL) {
-            Source: ["rtl/inc/dynlibs.pas"];
-            EntryPoint: "rtl/inc/dynlibs.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/dynlibs.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/dynlibs.pas";
         }
         FPC BuildApple_dos (CrossRTL) {
-            Source: ["rtl/unix/dos.pp"];
-            EntryPoint: "rtl/unix/dos.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dos.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dos.pp";
         }
         FPC BuildApple_dl (CrossRTL) {
-            Source: ["rtl/unix/dl.pp"];
-            EntryPoint: "rtl/unix/dl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/dl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/dl.pp";
         }
         FPC BuildApple_blockrtl (CrossRTL) {
-            Source: ["rtl/inc/blockrtl.pp"];
-            EntryPoint: "rtl/inc/blockrtl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/blockrtl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/blockrtl.pp";
         }
         FPC BuildApple_typinfo (CrossRTL) {
-            Source: ["rtl/objpas/typinfo.pp"];
-            EntryPoint: "rtl/objpas/typinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/typinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/typinfo.pp";
             LabelAndGoto: True;
         }
         FPC BuildApple_sortbase (CrossRTL) {
-            Source: ["rtl/inc/sortbase.pp"];
-            EntryPoint: "rtl/inc/sortbase.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/sortbase.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/sortbase.pp";
         }
         FPC BuildApple_fgl (CrossRTL) {
-            Source: ["rtl/objpas/fgl.pp"];
-            EntryPoint: "rtl/objpas/fgl.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fgl.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fgl.pp";
         }
         FPC BuildApple_classes (CrossRTL) {
-            Source: ["rtl/unix/classes.pp"];
-            EntryPoint: "rtl/unix/classes.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/classes.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/classes.pp";
         }
         FPC BuildApple_math (CrossRTL) {
-            Source: ["rtl/objpas/math.pp"];
-            EntryPoint: "rtl/objpas/math.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/math.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/math.pp";
         }
         FPC BuildApple_types (CrossRTL) {
-            Source: ["rtl/objpas/types.pp"];
-            EntryPoint: "rtl/objpas/types.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/types.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/types.pp";
         }
         FPC BuildApple_charset (CrossRTL) {
-            Source: ["rtl/inc/charset.pp"];
-            EntryPoint: "rtl/inc/charset.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/charset.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/charset.pp";
         }
         FPC BuildApple_cpall (CrossRTL) {
-            Source: ["rtl/charmaps/cpall.pas"];
-            EntryPoint: "rtl/charmaps/cpall.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/charmaps/cpall.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/charmaps/cpall.pas";
         }
         FPC BuildApple_character (CrossRTL) {
-            Source: ["rtl/objpas/character.pas"];
-            EntryPoint: "rtl/objpas/character.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/character.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/character.pas";
         }
         FPC BuildApple_getopts (CrossRTL) {
-            Source: ["rtl/inc/getopts.pp"];
-            EntryPoint: "rtl/inc/getopts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/getopts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/getopts.pp";
         }
         FPC BuildApple_heaptrc (CrossRTL) {
-            Source: ["rtl/inc/heaptrc.pp"];
-            EntryPoint: "rtl/inc/heaptrc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/heaptrc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/heaptrc.pp";
         }
         FPC BuildApple_lineinfo (CrossRTL) {
-            Source: ["rtl/inc/lineinfo.pp"];
-            EntryPoint: "rtl/inc/lineinfo.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lineinfo.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lineinfo.pp";
         }
         FPC BuildApple_lnfodwrf (CrossRTL) {
-            Source: ["rtl/inc/lnfodwrf.pp"];
-            EntryPoint: "rtl/inc/lnfodwrf.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/lnfodwrf.pp";
         }
         FPC BuildApple_lnfogdb (CrossRTL) {
-            Source: ["rtl/unix/lnfogdb.pp"];
-            EntryPoint: "rtl/unix/lnfogdb.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/lnfogdb.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/lnfogdb.pp";
         }
         FPC BuildApple_errors (CrossRTL) {
-            Source: ["rtl/unix/errors.pp"];
-            EntryPoint: "rtl/unix/errors.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/errors.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/errors.pp";
         }
         FPC BuildApple_termio (CrossRTL) {
-            Source: ["rtl/darwin/termio.pp"];
-            EntryPoint: "rtl/darwin/termio.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/darwin/termio.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/darwin/termio.pp";
         }
         FPC BuildApple_sysconst (CrossRTL) {
-            Source: ["rtl/objpas/sysconst.pp"];
-            EntryPoint: "rtl/objpas/sysconst.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/sysconst.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/sysconst.pp";
         }
         FPC BuildApple_cthreads (CrossRTL) {
-            Source: ["rtl/unix/cthreads.pp"];
-            EntryPoint: "rtl/unix/cthreads.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/cthreads.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/cthreads.pp";
         }
         FPC BuildApple_rtlconsts (CrossRTL) {
-            Source: ["rtl/objpas/rtlconsts.pp"];
-            EntryPoint: "rtl/objpas/rtlconsts.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/rtlconsts.pp";
         }
         FPC BuildApple_cwstring (CrossRTL) {
-            Source: ["rtl/unix/cwstring.pp"];
-            EntryPoint: "rtl/unix/cwstring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/cwstring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/cwstring.pp";
         }
         FPC BuildApple_bsd (CrossRTL) {
-            Source: ["rtl/bsd/bsd.pas"];
-            EntryPoint: "rtl/bsd/bsd.pas";
+            Source: ["build/forge-bootstrap/seed/rtl/bsd/bsd.pas"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/bsd/bsd.pas";
         }
         FPC BuildApple_sysutils (CrossRTL) {
-            Source: ["rtl/unix/sysutils.pp"];
-            EntryPoint: "rtl/unix/sysutils.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/sysutils.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/sysutils.pp";
         }
         FPC BuildApple_fpwidestring (CrossRTL) {
-            Source: ["rtl/objpas/fpwidestring.pp"];
-            EntryPoint: "rtl/objpas/fpwidestring.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/objpas/fpwidestring.pp";
         }
         FPC BuildApple_fpintres (CrossRTL) {
-            Source: ["rtl/inc/fpintres.pp"];
-            EntryPoint: "rtl/inc/fpintres.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/fpintres.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpintres.pp";
         }
         FPC BuildApple_fpextres (CrossRTL) {
-            Source: ["rtl/inc/fpextres.pp"];
-            EntryPoint: "rtl/inc/fpextres.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/fpextres.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/fpextres.pp";
         }
         FPC BuildApple_objc (CrossRTL) {
-            Source: ["rtl/inc/objc.pp"];
-            EntryPoint: "rtl/inc/objc.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/objc.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/objc.pp";
         }
         FPC BuildApple_objcbase (CrossRTL) {
-            Source: ["rtl/inc/objcbase.pp"];
-            EntryPoint: "rtl/inc/objcbase.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/inc/objcbase.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/inc/objcbase.pp";
         }
         FPC BuildApple_unixcp (CrossRTL) {
-            Source: ["rtl/unix/unixcp.pp"];
-            EntryPoint: "rtl/unix/unixcp.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/unix/unixcp.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/unix/unixcp.pp";
         }
         FPC BuildAppleCPU (CrossRTL) TargetCPU[x86_64] {
-            Source: ["rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
-            EntryPoint: "rtl/" + @CrossTarget.Architecture + "/cpu.pp";
+            Source: ["build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp"];
+            EntryPoint: "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture + "/cpu.pp";
         }
     }
     WriteTextFile CrossSmokeSource TargetOS[linux, win32, win64] {

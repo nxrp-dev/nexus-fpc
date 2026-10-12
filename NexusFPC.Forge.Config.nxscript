@@ -36,14 +36,14 @@ FPC CrossRTL Build[Cross] TargetOS[linux] {
     UnitOutput: @CrossTarget.RTL;
     UnitPaths: [
         @CrossTarget.RTL,
-        "rtl/linux", "rtl/unix", "rtl/inc", "rtl/objpas",
-        "rtl/" + @CrossTarget.Architecture,
-        "rtl/linux/" + @CrossTarget.Architecture
+        "build/forge-bootstrap/seed/rtl/linux", "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/objpas",
+        "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture
     ];
     IncludePaths: [
-        "rtl/linux", "rtl/inc", "rtl/" + @CrossTarget.Architecture,
-        "rtl/unix", "rtl/linux/" + @CrossTarget.Architecture,
-        "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+        "build/forge-bootstrap/seed/rtl/linux", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
     DisableDefaultConfigFiles: True;
     GenerateReleaseUnitFiles: True;
@@ -65,14 +65,14 @@ FPC CrossRTL Build[Cross] TargetOS[win32, win64] {
     UnitOutput: @CrossTarget.RTL;
     UnitPaths: [
         @CrossTarget.RTL,
-        @CrossTarget.RTLDirectory, "rtl/win", "rtl/inc", "rtl/objpas",
-        "rtl/" + @CrossTarget.Architecture
+        @CrossTarget.RTLDirectory, "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/objpas",
+        "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture
     ];
     IncludePaths: [
-        @CrossTarget.RTLDirectory, "rtl/inc", "rtl/" + @CrossTarget.Architecture,
+        @CrossTarget.RTLDirectory, "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture,
         @CrossTarget.RTLDirectory + "/" + @CrossTarget.Architecture,
-        "rtl/win", "rtl/win/wininc",
-        "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+        "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
+        "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
     DisableDefaultConfigFiles: True;
     GenerateReleaseUnitFiles: True;
@@ -89,14 +89,14 @@ FPC CrossRTL Build[Cross] TargetOS[android] {
     UnitOutput: @CrossTarget.RTL;
     UnitPaths: [
         @CrossTarget.RTL,
-        "rtl/android", "rtl/linux", "rtl/unix", "rtl/inc", "rtl/objpas",
-        "rtl/" + @CrossTarget.Architecture, "rtl/linux/" + @CrossTarget.Architecture
+        "build/forge-bootstrap/seed/rtl/android", "build/forge-bootstrap/seed/rtl/linux", "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/objpas",
+        "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture, "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture
     ];
     IncludePaths: [
-        "rtl/android", "rtl/inc", "rtl/" + @CrossTarget.Architecture,
-        "rtl/unix", "rtl/android/" + @CrossTarget.Architecture, "rtl/linux",
-        "rtl/linux/" + @CrossTarget.Architecture,
-        "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+        "build/forge-bootstrap/seed/rtl/android", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/android/" + @CrossTarget.Architecture, "build/forge-bootstrap/seed/rtl/linux",
+        "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
     DisableDefaultConfigFiles: True;
     GenerateReleaseUnitFiles: True;
@@ -111,14 +111,14 @@ FPC CrossRTL Build[Cross] TargetOS[darwin, iphonesim, ios] {
     UnitOutput: @CrossTarget.RTL;
     UnitPaths: [
         @CrossTarget.RTL,
-        "rtl/darwin", "rtl/bsd", "rtl/unix", "rtl/inc", "rtl/objpas",
-        "rtl/" + @CrossTarget.Architecture
+        "build/forge-bootstrap/seed/rtl/darwin", "build/forge-bootstrap/seed/rtl/bsd", "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/objpas",
+        "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture
     ];
     IncludePaths: [
-        "rtl/darwin", "rtl/inc", "rtl/" + @CrossTarget.Architecture,
-        "rtl/unix", "rtl/bsd", "rtl/bsd/" + @CrossTarget.Architecture,
-        "rtl/darwin/" + @CrossTarget.Architecture,
-        "rtl/objpas", "rtl/objpas/sysutils", "rtl/objpas/classes", "rtl/charmaps"
+        "build/forge-bootstrap/seed/rtl/darwin", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/bsd", "build/forge-bootstrap/seed/rtl/bsd/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/darwin/" + @CrossTarget.Architecture,
+        "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
     Defines: [FPC_USE_LIBC];
     DisableDefaultConfigFiles: True;

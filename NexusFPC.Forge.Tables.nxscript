@@ -1,0 +1,113 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+// Composed after staging source; every output is generated inside the build tree.
+Group CompilerTables {
+    FPC Build_mkx86ins {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86ins.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86ins.pp";
+        Output: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
+        UnitOutput: "build/forge-bootstrap/seed/units32";
+        UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
+        DisableDefaultConfigFiles: True;
+    }
+    FPC Build_mkx86reg {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86reg.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86reg.pp";
+        Output: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
+        UnitOutput: "build/forge-bootstrap/seed/units32";
+        UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
+        DisableDefaultConfigFiles: True;
+    }
+    FPC Build_mkx86inl {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86inl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86inl.pp";
+        Output: "build/forge-bootstrap/seed/bin/mkx86inl.exe";
+        UnitOutput: "build/forge-bootstrap/seed/units32";
+        UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
+        DisableDefaultConfigFiles: True;
+    }
+    FPC Build_mka64ins {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64ins.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64ins.pp";
+        Output: "build/forge-bootstrap/seed/bin/mka64ins.exe";
+        UnitOutput: "build/forge-bootstrap/seed/units32";
+        UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
+        DisableDefaultConfigFiles: True;
+    }
+    FPC Build_mka64reg {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64reg.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64reg.pp";
+        Output: "build/forge-bootstrap/seed/bin/mka64reg.exe";
+        UnitOutput: "build/forge-bootstrap/seed/units32";
+        UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
+        DisableDefaultConfigFiles: True;
+    }
+    Run X86Instructions {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run X64Instructions {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run X86Registers {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/i386";
+        Arguments: ["i386"];
+    }
+    Run X64Registers {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/x86_64";
+        Arguments: ["x86_64"];
+    }
+    Run A64Instructions {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mka64ins.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/aarch64";
+
+    }
+    Run A64Registers {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mka64reg.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/aarch64";
+
+    }
+    Run X86Intrinsics {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/seed/bin/mkx86inl.exe";
+        WorkingDirectory: "build/forge-bootstrap/seed/source/x86";
+
+    }
+    CopyFile Stage_i386_cpummprocs {
+        Source: "build/forge-bootstrap/seed/source/x86/cpummprocs.inc";
+        Destination: "build/forge-bootstrap/seed/rtl/i386/cpummprocs.inc";
+    }
+    CopyFile Stage_i386_cpumminnr {
+        Source: "build/forge-bootstrap/seed/source/x86/cpumminnr.inc";
+        Destination: "build/forge-bootstrap/seed/rtl/i386/cpumminnr.inc";
+    }
+    CopyFile Stage_x86_64_cpummprocs {
+        Source: "build/forge-bootstrap/seed/source/x86/cpummprocs.inc";
+        Destination: "build/forge-bootstrap/seed/rtl/x86_64/cpummprocs.inc";
+    }
+    CopyFile Stage_x86_64_cpumminnr {
+        Source: "build/forge-bootstrap/seed/source/x86/cpumminnr.inc";
+        Destination: "build/forge-bootstrap/seed/rtl/x86_64/cpumminnr.inc";
+    }
+}
