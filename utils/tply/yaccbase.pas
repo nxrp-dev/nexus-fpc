@@ -237,8 +237,8 @@ uses YaccMsgs;
 function newStr(str : String) : StrPtr;
   var strp : StrPtr;
   begin
-    getmem(strp, succ(length(str)));
-    move(str, strp^, succ(length(str)));
+    new(strp);
+    strp^ := str;
     newStr := strp;
   end(*newStr*);
 

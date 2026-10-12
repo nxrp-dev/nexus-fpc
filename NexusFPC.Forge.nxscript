@@ -3,21 +3,28 @@
 //
 // Native: /targets=Build:Bootstrap
 // Cross:  /targets=Build:Cross,TargetCPU:aarch64,TargetOS:linux
+// Tools:  /targets=Build:Tools (requires a completed Bootstrap)
+// PackageSDK: /targets=Build:PackageSDK (requires a completed Bootstrap)
+// Release: /targets=Build:Release (requires Bootstrap and the full Cross matrix)
 //
 // Bootstrap stages compiler/RTL sources, generates messages and tables, builds the Win32
 // seed and native Win64 compiler, then verifies native generations two and three.
 // Cross builds use that native compiler and target-filtered configurations.
 // See NexusFPC.Forge.md for the retained targets and tool prerequisites.
-// Other package and utility builds remain to be added.
+// Bootstrap also builds the Win64 release tools. Other packages await owner selection.
 
 dialect "../../nexus/projects/forge/language/Forge.nxscript";
 
 module "NexusFPC.Forge.Config.nxscript";
 module CompilerTables "NexusFPC.Forge.Tables.nxscript";
+module ReleaseTools "NexusFPC.Forge.Tools.nxscript";
+module RuntimePackageSDK "NexusFPC.Forge.PackageSDK.nxscript";
+module ReleaseAssembly "NexusFPC.Forge.Release.nxscript";
 
 Project Bootstrap Build[Bootstrap] {
     Id: "NXRP.FPC.Bootstrap";
-    Outputs: [Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe", RTL: "build/forge-bootstrap/cycle3/rtl64"];
+    Outputs: [Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe", RTL: "build/forge-bootstrap/cycle3/rtl64", Identity: "build/forge-bootstrap/seed/build-identity.json", Tools: "build/forge-bootstrap/tools/bin"];
+    DeletePath CleanSeed { Path: "build/forge-bootstrap/seed"; Recursive: True; }
     CreateDirectory SeedBin {
         Path: "build/forge-bootstrap/seed/bin";
     }
@@ -37,8 +44,13 @@ Project Bootstrap Build[Bootstrap] {
         Destination: "build/forge-bootstrap/seed/rtl";
         Recursive: True;
         CleanDestination: True;
-        IncludeMasks: ["*.pas", "*.pp", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
+        IncludeMasks: ["*.pas", "*.pp", "*.ppk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
         ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
+    }
+    Run CaptureBuildIdentity {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCBuildIdentity.ps1", "-SourceRoot", "."];
     }
     Group GenerateTables (CompilerTables) {}
     FPC BuildMessageGenerator {
@@ -77,7 +89,8 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/source/x86",
             "build/forge-bootstrap/seed/source/systems"
         ];
-        Defines: [x86_64];
+        Defines: [x86_64, REVINC, RELEASE];
+        StripSymbols: True;
         OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
@@ -95,6 +108,9 @@ Project Bootstrap Build[Bootstrap] {
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/seed/rtl64";
         IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -113,6 +129,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedWindows {
@@ -129,6 +148,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedSysUtils {
@@ -145,6 +167,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedRTL {
@@ -161,6 +186,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedUUChar {
@@ -177,6 +205,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedMacPas {
@@ -193,6 +224,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedISO7185 {
@@ -209,6 +243,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedCodePages {
@@ -225,6 +262,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedLineInfo {
@@ -241,6 +281,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedDwarf {
@@ -257,6 +300,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildSeedIntrinsics {
@@ -273,6 +319,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     DeletePath CleanNativeSeedUnits {
@@ -301,8 +350,11 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/source/x86",
             "build/forge-bootstrap/seed/source/systems"
         ];
-        Defines: [x86_64];
+        Defines: [x86_64, REVINC, RELEASE];
+        StripSymbols: True;
         OptimizationLevel: 2;
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
         DisableDefaultConfigFiles: True;
     }
     // Native generation 1 rebuilds the RTL and compiler with the preceding compiler.
@@ -316,6 +368,9 @@ Project Bootstrap Build[Bootstrap] {
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle1/rtl64";
         IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -334,6 +389,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Windows {
@@ -350,6 +408,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1SysUtils {
@@ -366,6 +427,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1RTL {
@@ -382,6 +446,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1UUChar {
@@ -398,6 +465,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1MacPas {
@@ -414,6 +484,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1ISO7185 {
@@ -430,6 +503,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1CodePages {
@@ -446,6 +522,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1LineInfo {
@@ -462,6 +541,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Dwarf {
@@ -478,6 +560,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Intrinsics {
@@ -494,6 +579,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle1Compiler {
@@ -515,8 +603,11 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/source/x86",
             "build/forge-bootstrap/seed/source/systems"
         ];
-        Defines: [x86_64];
+        Defines: [x86_64, REVINC, RELEASE];
+        StripSymbols: True;
         OptimizationLevel: 2;
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
         DisableDefaultConfigFiles: True;
     }
     // Native generation 2 rebuilds the RTL and compiler with the preceding compiler.
@@ -530,6 +621,9 @@ Project Bootstrap Build[Bootstrap] {
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle2/rtl64";
         IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -548,6 +642,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Windows {
@@ -564,6 +661,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2SysUtils {
@@ -580,6 +680,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2RTL {
@@ -596,6 +699,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2UUChar {
@@ -612,6 +718,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2MacPas {
@@ -628,6 +737,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2ISO7185 {
@@ -644,6 +756,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2CodePages {
@@ -660,6 +775,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2LineInfo {
@@ -676,6 +794,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Dwarf {
@@ -692,6 +813,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Intrinsics {
@@ -708,6 +832,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle2Compiler {
@@ -729,8 +856,11 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/source/x86",
             "build/forge-bootstrap/seed/source/systems"
         ];
-        Defines: [x86_64];
+        Defines: [x86_64, REVINC, RELEASE];
+        StripSymbols: True;
         OptimizationLevel: 2;
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
         DisableDefaultConfigFiles: True;
     }
     // Native generation 3 rebuilds the RTL and compiler with the preceding compiler.
@@ -744,6 +874,9 @@ Project Bootstrap Build[Bootstrap] {
         EntryPoint: "build/forge-bootstrap/seed/rtl/win64/system.pp";
         UnitOutput: "build/forge-bootstrap/cycle3/rtl64";
         IncludePaths: ["build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
         CompileSystemUnit: True;
         LabelAndGoto: True;
@@ -762,6 +895,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Windows {
@@ -778,6 +914,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3SysUtils {
@@ -794,6 +933,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3RTL {
@@ -810,6 +952,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3UUChar {
@@ -826,6 +971,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3MacPas {
@@ -842,6 +990,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3ISO7185 {
@@ -858,6 +1009,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3CodePages {
@@ -874,6 +1028,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3LineInfo {
@@ -890,6 +1047,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Dwarf {
@@ -906,6 +1066,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Intrinsics {
@@ -922,6 +1085,9 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/rtl/win64", "build/forge-bootstrap/seed/rtl/inc", "build/forge-bootstrap/seed/rtl/x86_64", "build/forge-bootstrap/seed/rtl/win64/x86_64", "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
             "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes"
         ];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
+        OptimizationLevel: 2;
         DisableDefaultConfigFiles: True;
     }
     FPC BuildCycle3Compiler {
@@ -943,14 +1109,42 @@ Project Bootstrap Build[Bootstrap] {
             "build/forge-bootstrap/seed/source/x86",
             "build/forge-bootstrap/seed/source/systems"
         ];
-        Defines: [x86_64];
+        Defines: [x86_64, REVINC, RELEASE];
+        StripSymbols: True;
         OptimizationLevel: 2;
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+        GenerateReleaseUnitFiles: True;
         DisableDefaultConfigFiles: True;
     }
     CompareFiles VerifyBootstrap {
         Left: "build/forge-bootstrap/cycle2/ppcx64.exe";
         Right: "build/forge-bootstrap/cycle3/ppcx64.exe";
     }
+    Run VerifyBuildIdentity {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", "build/forge-bootstrap/cycle3/ppcx64.exe"];
+    }
+    Group BuildReleaseTools (ReleaseTools) {}
+}
+
+Project Tools Build[Tools] {
+    Id: "NXRP.FPC.Tools";
+    Outputs: [Bin: "build/forge-bootstrap/tools/bin", Driver: "build/forge-bootstrap/tools/bin/fpc.exe", ResourceCompiler: "build/forge-bootstrap/tools/bin/fpcres.exe"];
+    Group BuildReleaseTools (ReleaseTools) {}
+}
+
+Project Release Build[Release] {
+    Id: "NXRP.FPC.Release";
+    Outputs: [Directory: "build/forge-bootstrap/distribution", Bin: "build/forge-bootstrap/distribution/bin/x86_64-win64", Config: "build/forge-bootstrap/distribution/bin/x86_64-win64/fpc.cfg", Identity: "build/forge-bootstrap/distribution/build-identity.json", PackageSDK: "build/forge-bootstrap/distribution/package-sdk/x86_64-win64"];
+    Group BuildRuntimePackageSDK (RuntimePackageSDK) {}
+    Group AssembleRelease (ReleaseAssembly) {}
+}
+
+Project PackageSDK Build[PackageSDK] {
+    Id: "NXRP.FPC.PackageSDK";
+    Outputs: [Directory: "build/forge-bootstrap/package-sdk", Manifest: "build/forge-bootstrap/package-sdk/sdk.json", Packages: "build/forge-bootstrap/package-sdk/packages", Units: "build/forge-bootstrap/package-sdk/units"];
+    Group BuildRuntimePackageSDK (RuntimePackageSDK) {}
 }
 
 Project Cross Build[Cross] {
@@ -963,6 +1157,11 @@ Project Cross Build[Cross] {
     CreateDirectory CrossCompilerUnits { Path: @CrossTarget.Directory + "/compiler-units"; }
     CreateDirectory CrossRTLUnits { Path: @CrossTarget.RTL; }
     FPC BuildCrossCompiler (CrossCompiler) {}
+    Run VerifyCrossBuildIdentity {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Test-NexusFPCBuildIdentity.ps1", "-Compiler", @CrossTarget.Compiler];
+    }
 
     Group LinuxRTL TargetOS[linux] {
         Clang BuildAbiTag (CrossAssembly) TargetCPU[x86_64] {

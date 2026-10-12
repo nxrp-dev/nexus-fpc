@@ -253,7 +253,7 @@ begin
         { handle comment }
         readln(infile,s);
         inc(line);
-        while (s[1]=' ') do
+        while (s<>'') and (s[1]=' ') do
          delete(s,1,1);
         if (s='') or (s[1]=';') then
           continue;

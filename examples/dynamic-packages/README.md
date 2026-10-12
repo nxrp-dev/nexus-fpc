@@ -10,23 +10,29 @@ The [Linux SDK guide](../../nexusfpc-dynamic-packages-linux.md) covers the x86-6
 glibc implementation, WSL wrapper, native Python tools and Linux regression suite.
 The console and late-loading examples are shared between the two platforms.
 
-Build a matching compiler, shared RTL package, and per-image startup units, then
-build and run both example applications:
+Build the compiler with Forge, then build the shared RTL package and per-image
+startup units and run both example applications:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+./scripts/Build-NexusFPCPackageSDK.ps1 -RunExamples
 ```
 
-Run this from the checkout root. Requirements are Windows x64, FPC 3.2.2 Win32 at
-`C:\lazarus\fpc\3.2.2\bin\i386-win32` (override with `-BootstrapBin`), and
-LLVM `clang.exe` and `lld-link.exe` on PATH. No previous NexusFPC build is needed.
-GNU make requires the checkout, bootstrap and SDK output paths to have no spaces.
+Run this from the checkout root. Requirements are Windows x64, NexusForge,
+and LLVM `clang.exe` and `lld-link.exe` on PATH. The initial Forge bootstrap uses
+FPC 3.2.2 Win32 at `C:\fpc\3.2.2\bin\i386-win32`. SDK construction reuses that
+completed bootstrap's native Win64 compiler, compiled RTL and staged sources.
+It invokes no make and needs no seed installation once Bootstrap is complete.
+See the [Forge build guide](../../NexusFPC.Forge.md#runtime-package-sdk).
 
-The script prints its SDK directory under `output\NexusFPCPackages`. Set
-`-OutputRoot output\nxpkg-sdk` to choose a new or empty directory. `-BuildExamples`
-builds without running; `-RunExamples` builds and checks both applications.
-`-SmartLink` applies smart linking to the foundation, example packages and hosts.
-All steps run sequentially.
+The script delegates to Forge's `Build:PackageSDK` target and prints its SDK
+directory at `build/forge-bootstrap/package-sdk`. Set `-Forge` to select the
+Forge executable, or `-OutputRoot output\nxpkg-sdk` to export the SDK to a new or
+empty directory. `-BuildExamples` builds without running; `-RunExamples` builds
+and checks both applications. `-SmartLink` applies to the example packages and
+hosts; the shared foundation uses the standard release settings in every SDK.
+All steps run sequentially. Forge's `Build:Release` also builds and ships the
+SDK under `distribution/package-sdk/x86_64-win64`.
 
 The Win32 bootstrap supplies hardware80 arithmetic for the first x64 seed;
 the resulting SDK compiler is native Win64. See the
@@ -50,13 +56,14 @@ The required log is initialization `BLRH`, success, then finalization `h,r,l,b`.
 | `packages\nxrtl.pcp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
 | `units\` | Matching per-image `SysInitPkg` and native resource adapter. |
 | `sdk.json` | Format 2 SDK identity and enforced compiler/foundation/startup artifact hashes. |
-| `logs\`, `work\` | Build commands, diagnostics and intermediate files; not required by consumers. |
+| `work\` | Forge build intermediates; excluded from exported/distributed SDKs. |
 | `examples\packages\current.json` | Selects a complete immutable generation of provider PCP/DLL pairs. |
 
 Copy `bin`, `packages`, `units`, and `sdk.json` together to relocate the SDK. Keep
 dependent packages from the same SDK build together. Only DLLs alongside the EXE
 are required to run an application; the compiler, PCPs and startup units are build
 inputs. Build helpers verify SDK and bundle hashes and paired PCP/DLL identities.
+The wrapper saves Forge's build log at `build/forge-bootstrap/package-sdk-forge.log`.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
 the compiler, RTL, units and packages together for `NXP004` package metadata,
@@ -176,11 +183,6 @@ Delphi binary compatibility and arbitrary compiler/text-model combinations are
 outside this experimental SDK contract. The recorded
 [tradeoffs](../../nexusfpc-dynamic-packages-load-unload-design.md) explain the limits.
 
-To verify fresh source builds and source-free relocation in both normal and smart
-link modes:
-
-```powershell
-./tests/dynamic-packages/Run-PackageSDKTests.ps1 `
-  -BootstrapBin C:/lazarus/fpc/3.2.2/bin/i386-win32 `
-  -OutputRoot output/package-validation -FullSuite
-```
+The old `Run-PackageSDKTests.ps1` source-only bootstrap harness predates the Forge
+SDK workflow. It is not maintained as a Forge build dependency. Regression-test
+consolidation and integration belong to the later nxtest work.

@@ -1,0 +1,258 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+// Win64 release tools. Dependencies are compiled from staged source, never installed PPUs.
+module "NexusFPC.Forge.Tools.Config.nxscript";
+
+Group ReleaseTools {
+    DeletePath CleanTools { Path: "build/forge-bootstrap/tools"; Recursive: True; }
+    CreateDirectory ToolBin { Path: "build/forge-bootstrap/tools/bin"; }
+    CopyFile StageTools {
+        Source: "utils";
+        Destination: "build/forge-bootstrap/tools/source";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc", "*.cft", "*.cfg", "*.ini", "*.cod"];
+        ExcludeNames: "units;bin;fpccfg.inc;fpcfg.inc;fpini.inc";
+    }
+    CopyFile Stage_rtl_objpas {
+        Source: "packages/rtl-objpas/src";
+        Destination: "build/forge-bootstrap/tools/packages/rtl-objpas/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_rtl_extra {
+        Source: "packages/rtl-extra/src";
+        Destination: "build/forge-bootstrap/tools/packages/rtl-extra/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_base {
+        Source: "packages/fcl-base/src";
+        Destination: "build/forge-bootstrap/tools/packages/fcl-base/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_res {
+        Source: "packages/fcl-res/src";
+        Destination: "build/forge-bootstrap/tools/packages/fcl-res/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_json {
+        Source: "packages/fcl-json/src";
+        Destination: "build/forge-bootstrap/tools/packages/fcl-json/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_fcl_process {
+        Source: "packages/fcl-process/src";
+        Destination: "build/forge-bootstrap/tools/packages/fcl-process/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_paszlib {
+        Source: "packages/paszlib/src";
+        Destination: "build/forge-bootstrap/tools/packages/paszlib/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_hash {
+        Source: "packages/hash/src";
+        Destination: "build/forge-bootstrap/tools/packages/hash/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_fpmkunit {
+        Source: "packages/fpmkunit/src";
+        Destination: "build/forge-bootstrap/tools/packages/fpmkunit/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CopyFile Stage_tplylib {
+        Source: "packages/tplylib/src";
+        Destination: "build/forge-bootstrap/tools/packages/tplylib/src";
+        Recursive: True;
+        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
+    }
+    CreateDirectory Units_fpc { Path: "build/forge-bootstrap/tools/units/fpc"; }
+    FPC Build_fpc (HostTool) {
+        Defines: [x86_64];
+        Source: ["build/forge-bootstrap/seed/source/utils/fpc.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/fpc.pp";
+        Output: "build/forge-bootstrap/tools/bin/fpc.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/fpc";
+    }
+    CreateDirectory Units_ppufiles { Path: "build/forge-bootstrap/tools/units/ppufiles"; }
+    FPC Build_ppufiles (PPUTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/ppufiles.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/ppufiles.pp";
+        Output: "build/forge-bootstrap/tools/bin/ppufiles.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/ppufiles";
+    }
+    CreateDirectory Units_ppumove { Path: "build/forge-bootstrap/tools/units/ppumove"; }
+    FPC Build_ppumove (PPUTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/ppumove.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/ppumove.pp";
+        Output: "build/forge-bootstrap/tools/bin/ppumove.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/ppumove";
+    }
+    CreateDirectory Units_mkx86ins { Path: "build/forge-bootstrap/tools/units/mkx86ins"; }
+    FPC Build_mkx86ins (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86ins.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86ins.pp";
+        Output: "build/forge-bootstrap/tools/bin/mkx86ins.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/mkx86ins";
+    }
+    CreateDirectory Units_mkx86reg { Path: "build/forge-bootstrap/tools/units/mkx86reg"; }
+    FPC Build_mkx86reg (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86reg.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86reg.pp";
+        Output: "build/forge-bootstrap/tools/bin/mkx86reg.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/mkx86reg";
+    }
+    CreateDirectory Units_mkx86inl { Path: "build/forge-bootstrap/tools/units/mkx86inl"; }
+    FPC Build_mkx86inl (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86inl.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86inl.pp";
+        Output: "build/forge-bootstrap/tools/bin/mkx86inl.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/mkx86inl";
+    }
+    CreateDirectory Units_mka64ins { Path: "build/forge-bootstrap/tools/units/mka64ins"; }
+    FPC Build_mka64ins (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64ins.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64ins.pp";
+        Output: "build/forge-bootstrap/tools/bin/mka64ins.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/mka64ins";
+    }
+    CreateDirectory Units_mka64reg { Path: "build/forge-bootstrap/tools/units/mka64reg"; }
+    FPC Build_mka64reg (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64reg.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64reg.pp";
+        Output: "build/forge-bootstrap/tools/bin/mka64reg.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/mka64reg";
+    }
+    CreateDirectory Units_msg2inc { Path: "build/forge-bootstrap/tools/units/msg2inc"; }
+    FPC Build_msg2inc (HostTool) {
+        Source: ["build/forge-bootstrap/seed/source/utils/msg2inc.pp"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/msg2inc.pp";
+        Output: "build/forge-bootstrap/tools/bin/msg2inc.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/msg2inc";
+    }
+    CreateDirectory Units_data2inc { Path: "build/forge-bootstrap/tools/units/data2inc"; }
+    FPC Build_data2inc (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/data2inc.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/data2inc.pp";
+        Output: "build/forge-bootstrap/tools/bin/data2inc.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/data2inc";
+    }
+    CreateDirectory Units_ppdep { Path: "build/forge-bootstrap/tools/units/ppdep"; }
+    FPC Build_ppdep (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/ppdep.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/ppdep.pp";
+        Output: "build/forge-bootstrap/tools/bin/ppdep.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/ppdep";
+    }
+    CreateDirectory Units_rstconv { Path: "build/forge-bootstrap/tools/units/rstconv"; }
+    FPC Build_rstconv (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/rstconv.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/rstconv.pp";
+        Output: "build/forge-bootstrap/tools/bin/rstconv.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/rstconv";
+    }
+    CreateDirectory Units_bin2obj { Path: "build/forge-bootstrap/tools/units/bin2obj"; }
+    FPC Build_bin2obj (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/bin2obj.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/bin2obj.pp";
+        Output: "build/forge-bootstrap/tools/bin/bin2obj.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/bin2obj";
+    }
+    CreateDirectory Units_postw32 { Path: "build/forge-bootstrap/tools/units/postw32"; }
+    FPC Build_postw32 (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/postw32.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/postw32.pp";
+        Output: "build/forge-bootstrap/tools/bin/postw32.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/postw32";
+    }
+    CreateDirectory Units_fpcres { Path: "build/forge-bootstrap/tools/units/fpcres"; }
+    FPC Build_fpcres (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/fpcres/fpcres.pas"];
+        EntryPoint: "build/forge-bootstrap/tools/source/fpcres/fpcres.pas";
+        Output: "build/forge-bootstrap/tools/bin/fpcres.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/fpcres";
+    }
+    CreateDirectory Units_fpcreslipo { Path: "build/forge-bootstrap/tools/units/fpcreslipo"; }
+    FPC Build_fpcreslipo (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/fpcreslipo/fpcreslipo.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/fpcreslipo/fpcreslipo.pp";
+        Output: "build/forge-bootstrap/tools/bin/fpcreslipo.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/fpcreslipo";
+    }
+    CreateDirectory Units_rmwait { Path: "build/forge-bootstrap/tools/units/rmwait"; }
+    FPC Build_rmwait (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/rmwait/rmwait.pas"];
+        EntryPoint: "build/forge-bootstrap/tools/source/rmwait/rmwait.pas";
+        Output: "build/forge-bootstrap/tools/bin/rmwait.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/rmwait";
+    }
+    CreateDirectory Units_plex { Path: "build/forge-bootstrap/tools/units/plex"; }
+    FPC Build_plex (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/tply/plex.pas"];
+        EntryPoint: "build/forge-bootstrap/tools/source/tply/plex.pas";
+        Output: "build/forge-bootstrap/tools/bin/plex.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/plex";
+        LabelAndGoto: True;
+    }
+    CreateDirectory Units_pyacc { Path: "build/forge-bootstrap/tools/units/pyacc"; }
+    FPC Build_pyacc (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/tply/pyacc.pas"];
+        EntryPoint: "build/forge-bootstrap/tools/source/tply/pyacc.pas";
+        Output: "build/forge-bootstrap/tools/bin/pyacc.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/pyacc";
+        LabelAndGoto: True;
+    }
+    Run Generate_DefaultConfig {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
+        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpc.cft", "build/forge-bootstrap/tools/source/fpcmkcfg/fpccfg.inc", "DefaultConfig"];
+    }
+    Run Generate_fpcfg {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
+        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpinc.cfg", "build/forge-bootstrap/tools/source/fpcmkcfg/fpcfg.inc", "fpcfg"];
+    }
+    Run Generate_fpini {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
+        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpinc.ini", "build/forge-bootstrap/tools/source/fpcmkcfg/fpini.inc", "fpini"];
+    }
+    CreateDirectory Units_fpcmkcfg { Path: "build/forge-bootstrap/tools/units/fpcmkcfg"; }
+    // Enable macros before the compiler parses the command-line version definitions.
+    WriteTextFile ConfigGeneratorOptions {
+        Path: "build/forge-bootstrap/tools/fpcmkcfg.cfg";
+        Text: "-Sm";
+    }
+    FPC Build_fpcmkcfg (HostTool) {
+        Source: ["build/forge-bootstrap/tools/source/fpcmkcfg/fpcmkcfg.pp"];
+        EntryPoint: "build/forge-bootstrap/tools/source/fpcmkcfg/fpcmkcfg.pp";
+        Output: "build/forge-bootstrap/tools/bin/fpcmkcfg.exe";
+        UnitOutput: "build/forge-bootstrap/tools/units/fpcmkcfg";
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/tools/fpcmkcfg.cfg"];
+        Defines: ["package_version_major:=3", "package_version_minor:=3", "package_version_micro:=1", "package_version_build:=0"];
+    }
+    CopyFile LexerSkeleton {
+        Source: "build/forge-bootstrap/tools/source/tply/yylex.cod";
+        Destination: "build/forge-bootstrap/tools/bin/yylex.cod";
+    }
+    CopyFile ParserSkeleton {
+        Source: "build/forge-bootstrap/tools/source/tply/yyparse.cod";
+        Destination: "build/forge-bootstrap/tools/bin/yyparse.cod";
+    }
+    CopyFile NativeCompiler {
+        Source: "build/forge-bootstrap/cycle3/ppcx64.exe";
+        Destination: "build/forge-bootstrap/tools/bin/ppcx64.exe";
+    }
+    Run VerifyReleaseTools {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tests/forge/Test-ReleaseTools.ps1", "-SourceRoot", "."];
+    }
+}

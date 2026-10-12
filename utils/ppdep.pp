@@ -65,9 +65,9 @@ function UCase(Const Hstr:string):string;
 var
   i : longint;
 begin
+  SetLength(UCase,Length(Hstr));
   for i:=1to Length(Hstr) do
    UCase[i]:=Upcase(Hstr[i]);
-  SetLength(UCase,Length(Hstr));
 end;
 
 
@@ -76,6 +76,7 @@ var
   i      : longint;
   NoPath : boolean;
 begin
+  SetLength(FixFn,Length(s));
   NoPath:=true;
   for i:=length(s) downto 1 do
    begin
@@ -97,7 +98,6 @@ begin
       FixFn[i]:=s[i];
      end;
    end;
-  SetLength(FixFn,Length(s));
 end;
 
 

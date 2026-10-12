@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Kevin Collins.
+# SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+# NexusFPC Windows-hosted release. Paths follow the compiler after relocation.
+# LLVM tools must be on PATH. Supply platform SDK/sysroot options when needed.
+-Fu%basepath%/units/$FPCTARGET/rtl
+-FD$FPCBINDIR
+-Aas-clang
+-XLL
+#IFDEF ANDROID
+-Cg
+#ENDIF

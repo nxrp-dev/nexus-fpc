@@ -16,7 +16,9 @@ From the nexus-fpc root, build the native Win64 compiler and RTL:
 The bootstrap uses the stock Win32 seed at
 `C:\fpc\3.2.2\bin\i386-win32\ppc386.exe`, generates compiler messages and tables, and
 builds three native compiler/RTL generations. It requires cycles two and three
-to match byte for byte.
+to match byte for byte, then builds and checks the Win64 release tools.
+The public outputs are `build/forge-bootstrap/cycle3/ppcx64.exe`, `cycle3/rtl64`,
+and `build/forge-bootstrap/tools/bin`.
 
 Then select a cross target, for example:
 
@@ -52,8 +54,8 @@ Generated files stay under the ignored `build/forge-bootstrap/` directory.
 A cross build cleans only its own `cross/<cpu>-<os>` output directory.
 It preserves the native bootstrap and other cross targets.
 
-No make or fpmake process is used. Package and utility builds remain to be
-translated into the recipe.
+No make or fpmake process is used. Other packages are deferred while the owner
+selects them individually; migrating them does not block this compiler release.
 
 ## Generated compiler inputs
 
@@ -71,8 +73,306 @@ can use them. Native and cross builds both consume this staged source. The
 checkout's source and generated includes are never overwritten. The checked-in
 includes remain available to other build workflows.
 
-The final `CompareFiles VerifyBootstrap` belongs to the Bootstrap Project and
-must succeed before the build succeeds. The Package/Project contract adds no
+`CompareFiles VerifyBootstrap` belongs to the Bootstrap Project and must succeed
+before the build succeeds. The Package/Project contract adds no
 special bootstrap executor, implicit FPC call, cache, or success shortcut.
-No make/fpmake process is used for these generation steps. Package and remaining
-utility recipes are still separate migration work.
+No make/fpmake process is used for these generation steps.
+
+## Release tools
+
+`NexusFPC.Forge.Tools.nxscript` runs as an ordered Group at the end of Bootstrap.
+To rebuild just the tools after a completed bootstrap:
+
+```powershell
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Tools
+```
+
+The Tools Project exports its binary directory, driver and resource compiler.
+It builds these 20 Win64 tools using the verified native compiler:
+
+| Purpose | Executables |
+| --- | --- |
+| Compiler launcher and PPU tools | `fpc`, `ppufiles`, `ppumove` |
+| Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
+| Data, dependencies and translations | `data2inc`, `bin2obj`, `ppdep`, `rstconv` |
+| Resources and executable metadata | `fpcres`, `fpcreslipo`, `postw32` |
+| Configuration and file utility | `fpcmkcfg`, `rmwait` |
+| Lexer/parser generators | `plex`, `pyacc` |
+
+The output directory includes `ppcx64.exe` beside `fpc.exe`, and `yylex.cod` and
+`yyparse.cod` beside their generators. The launcher can therefore find its native
+compiler without an installed FPC on PATH. The Release Project adds the matching
+target RTLs and compiler-relative configuration for application unit searches.
+
+Each tools build clears its own output tree, stages tool and required package
+source, and uses separate unit directories for each executable. It consumes no
+installed package PPUs. `data2inc` regenerates all three embedded `fpcmkcfg`
+templates before that program compiles; checked-in generated copies are excluded.
+Tools use the captured bootstrap date/time. A tools-only build reads the current
+utility/package sources and the previously staged compiler sources.
+
+Makefile generators (`fpcmake`/`fpgmake`) and the JVM resource utility (`fpcjres`)
+are intentionally excluded. `fpcmkcfg` still links the existing `fpmkunit` library
+for its configuration helpers; it does not run make or fpmake. Removing that
+library dependency is separate from migrating the build recipes.
+
+The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
+PPU reading, dependency and translation output, configuration rendering,
+resource conversion/sharing, generated lexer/parser compilation and execution,
+and regeneration of the compiler tables/messages. `ppumove`, `postw32` and
+`rmwait` receive help/startup checks, not exhaustive behavioral tests.
+
+Runtime checks required small source corrections: `ppdep` now sizes string
+results before writing them; the lexer/parser helpers allocate strings normally;
+lexer nodes use typed allocation including alignment padding; and the instruction/
+register generators check for empty lines before indexing. No compiler backend
+or Forge engine changes were required. `ppdep` remains a line-oriented scanner:
+its fixture places the program and uses clauses on separate lines.
+
+## Release assembly
+
+After Bootstrap and all 13 Cross builds have completed, assemble the distribution:
+
+```powershell
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Release
+```
+
+The Release Project exposes Directory, Bin, Config, Identity and PackageSDK outputs.
+It first builds the runtime-package SDK described below. Its ordered children
+in `NexusFPC.Forge.Release.nxscript` validate the remaining build inputs,
+copy the artifacts, generate configuration with the newly built `fpcmkcfg`, and
+verify the relocated distribution. It consumes completed Bootstrap/Cross builds
+and does not silently omit missing targets. SDK construction and input checks
+run before clearing the previous distribution.
+
+The output is `build/forge-bootstrap/distribution/`:
+
+- `bin/x86_64-win64/`: the 20 release tools, lexer/parser skeletons, `ppcx64`,
+  `ppcross386`, `ppcrossa64`, and `fpc.cfg`.
+- `units/<cpu>-<os>/rtl/`: compiled RTL units, objects and associated resources
+  for the 13 targets. The internal `buildrtl` build helper is excluded.
+- `build-identity.json`: the identity captured by the bootstrap.
+- `package-sdk/x86_64-win64/`: compiler, shared `nxrtl` PCP/DLL, per-image startup
+  units, package compilation helpers and the SDK manifest. Build intermediates
+  are excluded. This is the Win64 runtime-package SDK, separate from the static
+  target RTL directories.
+
+The cross builds produce identical compiler binaries for each CPU across their
+operating systems. Preflight verifies that equality before shipping one compiler
+per CPU. The driver selects that compiler with `-P`; `-T` selects its target OS
+and matching RTL. For example, from the distribution's binary directory:
+
+```powershell
+& .\fpc.exe app.pas
+& .\fpc.exe -Pi386 -Twin32 app.pas
+& .\fpc.exe -Paarch64 -Tlinux app.pas
+```
+
+`scripts/NexusFPC.Release.cft` generates a small configuration using the compiler's
+existing `$FPCBINDIR` and `$FPCTARGET` macros. These are FPC configuration macros,
+not NexusScript reference syntax. No checkout, seed installation, or machine-specific
+path is embedded. The compiler retains its normal configuration overrides.
+
+LLVM tools must be on PATH; the release selects the existing Clang assembler
+and LLD linker paths. LLVM, Android NDKs, Apple SDKs and platform sysroots are
+external prerequisites and are not bundled by this assembly. Application links
+that require SDKs/sysroots still need those toolchains and their options.
+
+`Test-ReleaseDistribution.ps1` checks copied artifacts, then copies the release
+to a new path containing spaces. With installed compiler paths and configuration
+environment variables removed from its test process, it compiles against all 13
+target RTLs and checks that every loaded PPU belongs to the relocated target.
+It also links six Windows/Linux smoke programs, runs the Win64 and Win32 programs,
+exercises the shipped resource tool, and verifies that a missing RTL produces a
+failure. Android and Apple checks compile units only; they do not validate SDK
+linking or execution. Evidence stays in `build/forge-bootstrap/release-checks/`.
+
+Other package builds and their runtime-package distribution artifacts remain
+outside this assembly until the owner selects them.
+
+The relocation check exposed a Windows LLD response-file quoting defect when a
+library directory contained spaces and ended in a backslash. The two `/libpath:`
+emitters now normalize separators to forward slashes before quoting, preserving
+the directory while preventing its final backslash from escaping the closing quote.
+
+## Runtime-package SDK
+
+After Bootstrap, build just the Win64 SDK with:
+
+```powershell
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:PackageSDK
+```
+
+The PackageSDK Project exposes Directory, Manifest, Packages and Units outputs.
+Its group in `NexusFPC.Forge.PackageSDK.nxscript` copies the verified native
+compiler and matching RTL into an isolated SDK work directory, compiles `nxrtl`
+with an FPC child, then compiles `SysInitPkg` against that package with a second
+FPC child. Only the per-image resource adapter and startup units enter the public
+SDK unit directory; the provider metadata comes from `nxrtl.pcp`.
+
+All RTL/package source comes from the bootstrap staging tree, including the
+`.ppk` declaration now staged by Bootstrap. Rebuild older bootstraps that lack it.
+The SDK build does not regenerate the compiler, rebuild the base RTL with make,
+or modify the bootstrap RTL cache. Release assembly invokes this same group and
+ships its public files; no alternative SDK build path is maintained.
+
+`Write-NexusFPCPackageSDK.ps1` writes identity response files and the final Format 2
+manifest. The SDK identity hashes the compiler, actual compiled RTL inputs, staged
+RTL sources and captured build options. Each foundation build receives a fresh
+package build ID. The helper checks the resulting PCP/DLL identity pair before
+writing the manifest with hashes of the compiler, foundation and startup artifacts.
+It performs no compilation. Forge and NexusScript require no changes for this recipe.
+
+`Build-NexusFPCPackageSDK.ps1` now delegates to the Forge target. It can export
+the public SDK files to `-OutputRoot` and retains its optional example builds/runs;
+it no longer accepts a seed directory. Its `-SmartLink` option applies to example
+consumers. The foundation has one standard release build, usable by both ordinary
+and smart-linked consumers. See the [SDK guide](examples/dynamic-packages/README.md)
+for the layout and developer commands.
+
+## Release policy
+
+The compiler uses the standard `-O2 -Ur -Xs` release settings. Bootstrap clears
+its seed outputs as well as each native generation, so seed PPUs and options
+files cannot carry over from an earlier build. Cross recipes use the final
+ordinary native compiler and RTL. Stripping removes compiler debugging symbols.
+
+The owner explicitly declined additional whole-program optimization passes on
+2026-10-11 after measurement. The WPO recipe and the Forge settings added for it
+have been removed. WPO is not a remaining make-parity requirement for our compiler
+release. This decision concerns how we build the compiler; it does not remove
+existing compiler optimization features available to application developers.
+
+The evaluated WPO build was 2.67% smaller, but the timing difference was within
+observed variation. Compiling the same compiler source with fresh unit directories,
+identical options and ordinary RTL gave these medians after one warm-up per
+compiler and three measured samples in alternating order:
+
+| Compiler | Median compile seconds | Executable bytes |
+| --- | ---: | ---: |
+| Ordinary `-O2`, stripped | 14.208 | 4,407,296 |
+| Evaluated WPO build, stripped | 14.151 | 4,289,536 |
+
+Both compiler variants produced identical output executables across all eight
+compilations. The 0.4% timing change did not establish a useful speed improvement.
+The additional build passes and maintenance cost were therefore rejected. Measurement evidence remains in
+`C:/gitdev/nexus/output/ForgeRelease/benchmark`.
+
+Forge's additions are limited to the FPC definition/template settings
+`StripSymbols` and `ResponseFiles`, plus their tests and documentation. Forge's
+Pascal executor and the NexusScript implementation are unchanged.
+
+## Build identity
+
+The bootstrap runs `scripts/Write-NexusFPCBuildIdentity.ps1` after staging source.
+It captures the full Git HEAD commit and a `-dirty` suffix when tracked or
+untracked, non-ignored files differ. This identifies the base revision and dirty
+state; it is not a fingerprint of the uncommitted changes. A Git checkout is
+required for this recipe.
+
+The helper writes `seed/source/revision.inc`, `seed/build-identity.json`, and
+`seed/build-options.cfg`. Compiler builds enable the existing `REVINC` define.
+The response file freezes `%DATE%` and `%TIME%` using the HEAD commit timestamp
+in UTC, or `SOURCE_DATE_EPOCH` when supplied. The stock 3.2.2 seed lacks `-DD`;
+it embeds the revision, while every subsequent Nexus compiler stage uses the
+fixed date/time. The temporary stock-built seed is not a distribution artifact.
+
+Cross builds reuse the captured identity and staged source. They do not relabel
+that source using the current checkout's revision. Both native and cross recipes
+finish their compiler construction with `Test-NexusFPCBuildIdentity.ps1`, which
+checks `-iW` and `-iD` against the captured record and fails on a mismatch.
+
+## Verification
+
+The runtime-package SDK migration passed in the isolated checkout:
+
+- Fresh native bootstrap and all 32 existing release-tool checks: 243.68 seconds;
+  compiler generations two and three were byte-identical. The native compiler
+  also matched the previous full-matrix compiler, so the 13 cross builds were
+  reused and their compiler equality was checked again by release preflight.
+- Standalone `Build:PackageSDK`: 17.10 seconds. All 183 copied RTL artifacts still
+  matched the bootstrap cache after SDK construction.
+- The PowerShell wrapper passed with both an exported SDK in a path containing
+  spaces and its default output directory. Existing console and GUI examples
+  passed in ordinary and smart-link modes, including identity, managed ownership
+  and exact initialization/finalization order.
+- `Build:Release`, including SDK construction and all 23 existing distribution
+  checks: 186.98 seconds. All 12 shipped SDK files matched their build outputs and
+  the relocated copies. SDK work directories and examples were excluded.
+- A consumer compiled through the shipped helper in the relocated distribution
+  ran successfully and printed `forge-package-sdk-ok`.
+
+Evidence is under `C:/gitdev/nexus/output/ForgeRelease`: `package-sdk-bootstrap*`,
+`package-sdk-build*`, `package-sdk-examples*`, `package-sdk-smart-*`,
+`package-sdk-release*`, `package-sdk-rtl-copy.json`, and
+`package-sdk-shipped-check/result.json`. These are local validation results;
+no new ad hoc regression suite or Forge test integration was added in this pass.
+
+The release assembly pass, including the Windows LLD path correction, passed
+in the isolated checkout:
+
+- Clean bootstrap and its 32 release-tool checks: 145.45 seconds; cycles two
+  and three were byte-identical.
+- All 13 cross compiler/RTL builds: 415.44 seconds total, no failures.
+- All 51 Win64/LLD contract checks passed.
+- Release assembly and verification: 53.51 seconds. All 23 execution checks
+  passed, including compilation for all 13 relocated targets, six linked
+  programs, two executed programs and the expected missing-RTL rejection.
+- The distribution contains 20 tools, three compiler binaries and 2,499 RTL
+  unit/object/resource files. Copied artifacts matched their build inputs.
+- Preflight rejected stale cross compilers before modifying the previous release.
+
+Evidence is under `C:/gitdev/nexus/output/ForgeRelease`: `distribution-bootstrap*`,
+`distribution-cross-*`, `distribution-win64-contracts/`, `distribution-build*`,
+and `distribution-preflight-results.json`. The isolated build's `release-checks/`
+contains individual relocation logs and `results.json`. Apple/Android application
+linking and non-Windows execution remain untested.
+
+The preceding tools/release-policy pass without WPO also passed in an isolated checkout:
+
+- Clean native bootstrap including release tools: 123.85 seconds; cycles two and
+  three and the compiler copied beside the driver were byte-identical.
+- Release tools: all 20 built, all 32 execution steps passed, all 64 generated
+  table includes and both message includes matched the bootstrap outputs.
+- The new driver also compiled and ran a Win32 program and selected the AArch64
+  cross compiler through an explicit compiler search path.
+- Forge: the existing 47-test run passed with no failures or unfreed memory
+  blocks. This tools pass did not change Forge source, definitions or templates.
+- Win64/LLD contracts: all 51 steps passed using the new compiler, RTL and the
+  newly Forge-built `fpcres`.
+- All 13 Windows-hosted cross compiler/RTL targets passed in the preceding matrix
+  run. This pass produced the identical native compiler. Each cross compiler
+  was byte-identical to its earlier output produced by the evaluated WPO compiler.
+- Win32 and Win64 smoke programs ran successfully. Linux smoke programs linked;
+  non-Windows execution and Apple/Android application linking were not tested.
+- Identity tests covered clean, modified and untracked source, fixed UTC epochs,
+  repeatability, invalid epochs and the default commit date. The identity verifier
+  also rejected deliberately incorrect revision and date records.
+
+Evidence is under `C:/gitdev/nexus/output/ForgeRelease`: `tools-bootstrap.log`,
+`tools-bootstrap-result.json`, `tools-win64-contracts/`, `driver-cross/`, and the
+isolated build's `tools/checks/` cover the release tools pass. The `standard-*`
+logs record the preceding compiler/cross matrix; `benchmark/` preserves the measurements
+behind the release policy. Timings are observations, not performance guarantees.
+
+## Remaining make migration
+
+The Windows-hosted compiler bootstrap, standard release settings, generated inputs,
+release tools, retained cross-target compiler/base RTL matrix, configuration
+generation, Win64 runtime-package SDK construction and compiler distribution
+assembly no longer invoke make. Existing
+make-based automation entry points must be replaced or retired before deleting
+their make infrastructure. Other package recipes and their runtime-package
+artifacts are deferred to the owner's individual package decisions and do not
+block the basic compiler release. Linux-hosted builds remain deferred by owner
+choice.
+
+Dynamic-library and runtime-package support is standard compiler functionality
+on supported targets. Developers choose static linking or runtime packages;
+there are no separate compiler editions for those choices. Distribution recipes
+must produce the units and runtime-package artifacts those choices require.
+Historical make shared/smart targets are not an independent migration requirement.
+
+Ad hoc regression-suite integration is explicitly excluded from this migration.
+Testing will move to nxtest through later work; maintaining additional Forge
+integration for the current ad hoc suites is not a prerequisite for retiring make.

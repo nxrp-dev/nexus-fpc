@@ -11,15 +11,19 @@
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
+    [string]$Compiler,
+    [string]$Units,
+    [string]$ResourceCompiler,
     [string]$OutputRoot = (Join-Path $env:TEMP ('nxwc-' + [guid]::NewGuid().ToString('N').Substring(0,8)))
 )
 $ErrorActionPreference = 'Stop'
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..\..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
-$compiler = Join-Path $SourceRoot 'compiler\ppcx64.exe'
-$units = Join-Path $SourceRoot 'rtl\units\x86_64-win64'
-$fpcres = Join-Path $SourceRoot 'utils\fpcres\bin\x86_64-win64\fpcres.exe'
+if (-not $Compiler) { $Compiler = Join-Path $SourceRoot 'compiler\ppcx64.exe' }
+if (-not $Units) { $Units = Join-Path $SourceRoot 'rtl\units\x86_64-win64' }
+if (-not $ResourceCompiler) { $ResourceCompiler = Join-Path $SourceRoot 'utils\fpcres\bin\x86_64-win64\fpcres.exe' }
+$fpcres = $ResourceCompiler
 $tools = @{}
 foreach ($name in @('clang','lld-link','llvm-dlltool','llvm-rc','llvm-readobj')) {
     $tools[$name] = (Get-Command ($name+'.exe') -ErrorAction Stop).Source

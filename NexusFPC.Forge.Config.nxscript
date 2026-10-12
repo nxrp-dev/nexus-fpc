@@ -22,8 +22,10 @@ FPC CrossCompiler Build[Cross] {
         "build/forge-bootstrap/seed/source/" + @CrossTarget.SharedBackend,
         "build/forge-bootstrap/seed/source/systems"
     ];
-    Defines: [@CrossTarget.Architecture];
+    Defines: [@CrossTarget.Architecture, REVINC, RELEASE];
+    StripSymbols: True;
     OptimizationLevel: 2;
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
     DisableDefaultConfigFiles: True;
 }
 
@@ -45,7 +47,9 @@ FPC CrossRTL Build[Cross] TargetOS[linux] {
         "build/forge-bootstrap/seed/rtl/unix", "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture,
         "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
     DisableDefaultConfigFiles: True;
+    OptimizationLevel: 2;
     GenerateReleaseUnitFiles: True;
 }
 
@@ -74,7 +78,9 @@ FPC CrossRTL Build[Cross] TargetOS[win32, win64] {
         "build/forge-bootstrap/seed/rtl/win", "build/forge-bootstrap/seed/rtl/win/wininc",
         "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
     DisableDefaultConfigFiles: True;
+    OptimizationLevel: 2;
     GenerateReleaseUnitFiles: True;
 }
 
@@ -98,7 +104,9 @@ FPC CrossRTL Build[Cross] TargetOS[android] {
         "build/forge-bootstrap/seed/rtl/linux/" + @CrossTarget.Architecture,
         "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
     DisableDefaultConfigFiles: True;
+    OptimizationLevel: 2;
     GenerateReleaseUnitFiles: True;
 }
 
@@ -121,7 +129,9 @@ FPC CrossRTL Build[Cross] TargetOS[darwin, iphonesim, ios] {
         "build/forge-bootstrap/seed/rtl/objpas", "build/forge-bootstrap/seed/rtl/objpas/sysutils", "build/forge-bootstrap/seed/rtl/objpas/classes", "build/forge-bootstrap/seed/rtl/charmaps"
     ];
     Defines: [FPC_USE_LIBC];
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
     DisableDefaultConfigFiles: True;
+    OptimizationLevel: 2;
     GenerateReleaseUnitFiles: True;
 }
 

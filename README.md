@@ -18,20 +18,22 @@ when moving from an earlier build; upstream compiled units cannot be reused.
 
 ## Experimental Win64 dynamic packages
 
-Build an isolated package SDK and validate console/GUI examples from a fresh checkout:
+Complete the [Forge bootstrap](NexusFPC.Forge.md), then build the package SDK
+and validate its console/GUI examples:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCPackageSDK.ps1 -RunExamples
 ```
 
 See the [package SDK guide](examples/dynamic-packages/README.md) for prerequisites,
-distribution, and application build commands. This is an opt-in experimental
-compiler; ordinary builds retain their existing target capabilities.
+distribution, and application build commands. Runtime-package support is standard
+in the compiler on Win64 x86-64 and Linux x86-64/glibc; developers choose static
+linking or runtime packages. This SDK recipe targets Win64 x86-64.
 
 Build and run real late-loading console/GUI examples against that SDK:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot C:\temp\nxpkg-sdk -OutputRoot C:\temp\nxpkg-late -RunExamples
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Build-NexusFPCLatePackageExamples.ps1 -SdkRoot build\forge-bootstrap\package-sdk -OutputRoot output\nxpkg-late -RunExamples
 ```
 
 Use the SDK path printed by the first command. Late loading is synchronous.

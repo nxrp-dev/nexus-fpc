@@ -1,115 +1,57 @@
 <#
 .SYNOPSIS
-Build an isolated experimental Win64 package SDK from an FPC 3.2.2 bootstrap.
+Build the Win64 runtime-package SDK with Forge after a completed Bootstrap.
 .EXAMPLE
-.\scripts\Build-NexusFPCPackageSDK.ps1 -OutputRoot output\nxpkg-sdk -BuildExamples
+.\scripts\Build-NexusFPCPackageSDK.ps1 -OutputRoot output\nxpkg-sdk -RunExamples
 #>
 [CmdletBinding()]
 param(
     [string]$SourceRoot,
-    [string]$BootstrapBin = 'C:\lazarus\fpc\3.2.2\bin\i386-win32',
+    [string]$Forge,
     [string]$OutputRoot,
     [switch]$BuildExamples,
     [switch]$RunExamples,
+    # Consumer compilation option; the SDK foundation has one standard build.
     [switch]$SmartLink
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'NexusFPCPackageArtifacts.ps1')
-. (Join-Path $PSScriptRoot 'NexusFPCBootstrapSeed.ps1')
 if (-not $SourceRoot) { $SourceRoot = Join-Path $PSScriptRoot '..' }
 $SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
-$BootstrapBin = (Resolve-Path -LiteralPath $BootstrapBin).Path
-if (-not $OutputRoot) {
-    $OutputRoot = Join-Path $SourceRoot ('output\NexusFPCPackages\' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+if (-not $Forge) { $Forge = Join-Path $SourceRoot '../../nexus/output/NexusForge-next/x86_64-win64/nxforge.exe' }
+$Forge = (Resolve-Path -LiteralPath $Forge).Path
+$bootstrap = Join-Path $SourceRoot 'build/forge-bootstrap'
+$sdk = [IO.Path]::GetFullPath((Join-Path $bootstrap 'package-sdk'))
+if (-not (Test-Path -LiteralPath (Join-Path $bootstrap 'cycle3/ppcx64.exe'))) {
+    throw 'Run NexusFPC.Forge.nxscript /targets=Build:Bootstrap before building the package SDK.'
 }
-$OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
-foreach ($directory in @($SourceRoot,$BootstrapBin,$OutputRoot)) {
-    if ($directory -match '\s') { throw "The RTL GNU make build requires paths without whitespace: $directory" }
-}
-if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $OutputRoot -Force)) {
-    throw 'OutputRoot must be new or empty. Each SDK is a matching compiler/RTL build.'
-}
-$bootstrap = Join-Path $BootstrapBin 'ppc386.exe'
-$make = Join-Path $BootstrapBin 'make.exe'
-$bootstrapRtl = [IO.Path]::GetFullPath((Join-Path $BootstrapBin '..\..\units\i386-win32\rtl'))
-foreach ($inputPath in @($bootstrap,$make,"$SourceRoot\compiler\pp.pas","$bootstrapRtl\system.ppu")) {
-    if (-not (Test-Path -LiteralPath $inputPath)) { throw "Missing build input: $inputPath" }
-}
-if ((& $bootstrap -iV) -ne '3.2.2' -or (& $bootstrap -iTP) -ne 'i386' -or (& $bootstrap -iTO) -ne 'win32') {
-    throw 'Requires an FPC 3.2.2 Win32 bootstrap with hardware80 arithmetic.'
-}
-foreach ($tool in @('clang.exe','lld-link.exe')) {
-    if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw "$tool must be on PATH." }
-}
-$work = Join-Path $OutputRoot 'work'
-$bin = Join-Path $OutputRoot 'bin'
-$packages = Join-Path $OutputRoot 'packages'
-$units = Join-Path $OutputRoot 'units'
-$logs = Join-Path $OutputRoot 'logs'
-$rtl = Join-Path $work 'rtl-units'
-$rtlBin = Join-Path $work 'rtl-bin'
-$foundation = Join-Path $work 'nxrtl'
-foreach ($directory in @($bin,$packages,$units,$logs,$rtl,$rtlBin,$foundation)) {
-    New-Item -ItemType Directory -Force -Path $directory | Out-Null
-}
-$steps = [Collections.Generic.List[object]]::new()
-function Invoke-PackageStep([string]$Name,[string]$Executable,[string[]]$StepArgs,[string]$Directory=$work) {
-    $log = Join-Path $logs ($Name + '.log')
-    Push-Location -LiteralPath $Directory
-    try {
-        $ErrorActionPreference = 'Continue'
-        & $Executable @StepArgs *> $log
-        $code = $LASTEXITCODE
-    } finally { Pop-Location; $ErrorActionPreference = 'Stop' }
-    $steps.Add([pscustomobject]@{Name=$Name;Command=@($Executable)+$StepArgs;ExitCode=$code;Log=$log})
-    $steps.ToArray() | ConvertTo-Json -Depth 5 | Set-Content "$logs\steps.json" -Encoding UTF8
-    if ($code -ne 0) { throw "$Name failed ($code). Details: $log" }
-    Write-Host "PASS $Name"
-}
-
-$seed = New-NexusFPCBootstrapSeed -SourceRoot $SourceRoot -BootstrapBin $BootstrapBin -OutputRoot (Join-Path $work 'seed')
-$compiler = Join-Path $bin 'ppcx64.exe'
-Copy-Item -LiteralPath $seed.Compiler -Destination $compiler
-$oldPath = $env:PATH
-try {
-    $env:PATH = "$BootstrapBin;$oldPath"
-    Invoke-PackageStep 'matching-rtl' $make @('-s','-C',"$SourceRoot\rtl\win64",'all',
-        "FPC=$($compiler.Replace('\','/'))",'CPU_TARGET=x86_64','OS_TARGET=win64',
-        "COMPILER_UNITTARGETDIR=$($rtl.Replace('\','/'))","COMPILER_TARGETDIR=$($rtlBin.Replace('\','/'))",
-        "FPCMADE=$($work.Replace('\','/'))/rtl.fpcmade",'OPT=-n')
-} finally { $env:PATH = $oldPath }
-# One conservative SDK identity binds this compiler and its complete RTL sources.
-$identityParts = @((Get-FileHash -LiteralPath $compiler).Hash,('SmartLink='+[bool]$SmartLink))
-foreach ($file in Get-ChildItem -LiteralPath "$SourceRoot\rtl" -Recurse -File | Sort-Object FullName) {
-    if ($file.Extension -in @('.pp','.pas','.inc')) {
-        $identityParts += $file.FullName.Substring($SourceRoot.Length) + ':' + (Get-FileHash -LiteralPath $file.FullName).Hash
+if (-not $OutputRoot) { $OutputRoot = $sdk }
+$OutputRoot = [IO.Path]::GetFullPath($OutputRoot).TrimEnd('\','/')
+if ($OutputRoot -ine $sdk) {
+    if ($OutputRoot.StartsWith($sdk+'\',[StringComparison]::OrdinalIgnoreCase) -or
+        $sdk.StartsWith($OutputRoot+'\',[StringComparison]::OrdinalIgnoreCase)) {
+        throw 'OutputRoot must not overlap the Forge SDK build directory.'
+    }
+    if ((Test-Path -LiteralPath $OutputRoot) -and (Get-ChildItem -LiteralPath $OutputRoot -Force)) {
+        throw 'OutputRoot must be new or empty.'
     }
 }
-$hash = [Security.Cryptography.SHA256]::Create()
-try { $sdkIdentity = [BitConverter]::ToString($hash.ComputeHash([Text.Encoding]::UTF8.GetBytes(($identityParts -join "`n")))).Replace('-','') }
-finally { $hash.Dispose() }
-$packageOptions = @('-n','-Mobjfpc',"-Fj$sdkIdentity",('-Fk'+[guid]::NewGuid().ToString('N')), "-Fu$rtl")
-if ($SmartLink) { $packageOptions += @('-CX','-XX') }
-# Compile the declaration away from rtl/win64: a source beside the input file
-# takes precedence over a cached System PPU in a later unit search directory.
-Copy-Item -LiteralPath "$SourceRoot\rtl\win64\nxrtl.ppk" -Destination $foundation
-Invoke-PackageStep 'shared-rtl' $compiler ($packageOptions + @("-Fu$SourceRoot\rtl\inc",
-    "-FU$foundation","-FE$foundation","$foundation\nxrtl.ppk"))
-Copy-Item -LiteralPath "$foundation\nxrtl.pcp","$foundation\nxrtl.dll" -Destination $packages
-# These are per-image adapters. All provider unit metadata comes from nxrtl.pcp.
-Copy-Item -LiteralPath "$rtl\fpintres.ppu","$rtl\fpintres.o","$rtl\libimpfpintres.a" -Destination $units
-Copy-Item -LiteralPath "$SourceRoot\rtl\win64\sysinitpkg.pp" -Destination $work
-Invoke-PackageStep 'host-startup' $compiler @('-n','-Mobjfpc',"-Fu$units","-Fp$packages","-Fl$packages",
-    '-FPnxrtl',"-Fj$sdkIdentity","-FU$units","$work\sysinitpkg.pp")
-Copy-Item -LiteralPath "$SourceRoot\scripts\Invoke-NexusFPCPackageCompile.ps1","$SourceRoot\scripts\NexusFPCPackageArtifacts.ps1" -Destination $bin
-$artifacts = @()
-foreach ($file in @((Get-Item -LiteralPath $compiler)) + @(Get-ChildItem -LiteralPath $units,$packages -File)) {
-    $artifacts += [pscustomobject]@{Path=$file.FullName.Substring($OutputRoot.Length+1);SHA256=(Get-FileHash -LiteralPath $file.FullName).Hash}
+$log = Join-Path $bootstrap 'package-sdk-forge.log'
+Push-Location -LiteralPath $SourceRoot
+try {
+    $ErrorActionPreference = 'Continue'
+    & $Forge /input=NexusFPC.Forge.nxscript /targets=Build:PackageSDK *> $log
+    $code = $LASTEXITCODE
+} finally { Pop-Location; $ErrorActionPreference = 'Stop' }
+if ($code -ne 0) { throw "Forge package SDK build failed ($code). Details: $log" }
+if ($OutputRoot -ine $sdk) {
+    New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
+    foreach ($name in @('bin','packages','units','sdk.json')) {
+        Copy-Item -LiteralPath (Join-Path $sdk $name) -Destination $OutputRoot -Recurse
+    }
 }
-[pscustomobject]@{Format=2;Target='x86_64-win64';Experimental=$true;Foundation='nxrtl';
-    CompilerVersion=(& $compiler -iV);SmartLink=[bool]$SmartLink;SDKIdentity=$sdkIdentity;Artifacts=$artifacts} |
-    ConvertTo-Json -Depth 5 | Set-Content "$OutputRoot\sdk.json" -Encoding UTF8
-Write-Host "Package SDK ready: $OutputRoot"
+$bin = Join-Path $OutputRoot 'bin'
+Write-Host "Package SDK ready: $OutputRoot. Build log: $log"
 
 if ($BuildExamples -or $RunExamples) {
     $exampleSource = Join-Path $SourceRoot 'examples\dynamic-packages'
@@ -128,7 +70,7 @@ if ($BuildExamples -or $RunExamples) {
         if ($RunExamples) {
             $directory = Get-NexusPackageBundle (Join-Path $OutputRoot "examples\$name")
             $result = Join-Path $directory 'result.log'
-            $process = Start-Process -FilePath "$directory\$name.exe" -ArgumentList $result `
+            $process = Start-Process -FilePath "$directory\$name.exe" -ArgumentList ('"'+$result+'"') `
                 -WorkingDirectory $directory -WindowStyle Hidden -PassThru
             if (-not $process.WaitForExit(30000)) {
                 $process.Kill()

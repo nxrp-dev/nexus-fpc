@@ -1,0 +1,91 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+// Win64 runtime-package SDK, using the completed native bootstrap.
+
+Group RuntimePackageSDK {
+    CompareFiles RequireCompletedBootstrap {
+        Left: "build/forge-bootstrap/cycle2/ppcx64.exe";
+        Right: "build/forge-bootstrap/cycle3/ppcx64.exe";
+    }
+    DeletePath CleanPackageSDK { Path: "build/forge-bootstrap/package-sdk"; Recursive: True; }
+    CopyFile Compiler {
+        Source: "build/forge-bootstrap/cycle3/ppcx64.exe";
+        Destination: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
+    }
+    CopyFile MatchingRTL {
+        Source: "build/forge-bootstrap/cycle3/rtl64";
+        Destination: "build/forge-bootstrap/package-sdk/work/rtl-units";
+        Recursive: True;
+        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+    }
+    CopyFile FoundationDeclaration {
+        Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.ppk";
+        Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
+    }
+    CopyFile StartupSource {
+        Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pp";
+        Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+    }
+    Run PackageIdentity {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCPackageSDK.ps1", "-Phase", "Options"];
+    }
+    FPC SharedRTL {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
+        Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
+        Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
+        UnitOutput: "build/forge-bootstrap/package-sdk/work/nxrtl";
+        UnitPaths: ["build/forge-bootstrap/package-sdk/work/rtl-units", "build/forge-bootstrap/seed/rtl/inc"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/package-sdk/work/foundation.cfg"];
+        Mode: "objfpc";
+        DisableDefaultConfigFiles: True;
+        OptimizationLevel: 2;
+        GenerateReleaseUnitFiles: True;
+        StripSymbols: True;
+    }
+    CopyFile FoundationMetadata {
+        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.pcp";
+        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.pcp";
+    }
+    CopyFile FoundationImage {
+        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
+        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.dll";
+    }
+    CopyFile PerImageResourceAdapter {
+        Source: "build/forge-bootstrap/package-sdk/work/rtl-units";
+        Destination: "build/forge-bootstrap/package-sdk/units";
+        Recursive: True;
+        IncludeMasks: ["fpintres.ppu", "fpintres.o", "libimpfpintres.a"];
+    }
+    FPC HostStartup {
+        Template: "../../nexus/projects/forge/examples/FPC.mustache";
+        Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
+        Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pp"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+        UnitOutput: "build/forge-bootstrap/package-sdk/units";
+        UnitPaths: ["build/forge-bootstrap/package-sdk/units"];
+        LibraryPaths: ["build/forge-bootstrap/package-sdk/packages"];
+        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/package-sdk/work/startup.cfg"];
+        Mode: "objfpc";
+        DisableDefaultConfigFiles: True;
+        OptimizationLevel: 2;
+        GenerateReleaseUnitFiles: True;
+    }
+    CopyFile CompileHelper {
+        Source: "scripts/Invoke-NexusFPCPackageCompile.ps1";
+        Destination: "build/forge-bootstrap/package-sdk/bin/Invoke-NexusFPCPackageCompile.ps1";
+    }
+    CopyFile ArtifactHelper {
+        Source: "scripts/NexusFPCPackageArtifacts.ps1";
+        Destination: "build/forge-bootstrap/package-sdk/bin/NexusFPCPackageArtifacts.ps1";
+    }
+    Run SDKManifest {
+        Template: "../../nexus/projects/forge/examples/Run.mustache";
+        Executable: "powershell.exe";
+        Arguments: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/Write-NexusFPCPackageSDK.ps1", "-Phase", "Manifest"];
+    }
+}

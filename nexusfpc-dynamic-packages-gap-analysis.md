@@ -224,6 +224,11 @@ remain outside this milestone. Every registered image must remain mapped.
 
 ## Implementation results: item 11
 
+Historical milestone results follow. The current compiler has standard package
+support, and the [Forge SDK recipe](NexusFPC.Forge.md#runtime-package-sdk) now
+uses the completed ordinary bootstrap. The dedicated compiler and source-only
+SDK bootstrap described below have been superseded.
+
 The [SDK build script](scripts/Build-NexusFPCPackageSDK.ps1) builds a dedicated
 experimental `ppcpkg` compiler from FPC 3.2.2, a matching RTL, the checked-in
 `nxrtl.ppk` foundation, and per-image startup/resource adapters into an isolated

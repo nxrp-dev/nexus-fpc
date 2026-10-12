@@ -1,0 +1,52 @@
+// Copyright (c) 2026 Kevin Collins.
+// SPDX-License-Identifier: MPL-2.0-no-copyleft-exception
+
+FPC HostTool {
+    Template: "../../nexus/projects/forge/examples/FPC.mustache";
+    Compiler: "build/forge-bootstrap/cycle3/ppcx64.exe";
+    UnitPaths: [
+        "build/forge-bootstrap/cycle3/rtl64",
+        "build/forge-bootstrap/tools/packages/rtl-objpas/src/inc",
+        "build/forge-bootstrap/tools/packages/rtl-objpas/src/win",
+        "build/forge-bootstrap/tools/packages/rtl-extra/src/inc",
+        "build/forge-bootstrap/tools/packages/rtl-extra/src/win",
+        "build/forge-bootstrap/tools/packages/fcl-base/src",
+        "build/forge-bootstrap/tools/packages/fcl-base/src/win",
+        "build/forge-bootstrap/tools/packages/fcl-res/src",
+        "build/forge-bootstrap/tools/packages/fcl-json/src",
+        "build/forge-bootstrap/tools/packages/fcl-process/src",
+        "build/forge-bootstrap/tools/packages/paszlib/src",
+        "build/forge-bootstrap/tools/packages/hash/src",
+        "build/forge-bootstrap/tools/packages/fpmkunit/src",
+        "build/forge-bootstrap/tools/packages/tplylib/src"
+    ];
+    IncludePaths: [
+        "build/forge-bootstrap/tools/packages/rtl-objpas/src/inc",
+        "build/forge-bootstrap/tools/packages/rtl-objpas/src/win",
+        "build/forge-bootstrap/tools/packages/rtl-objpas/src/x86_64",
+        "build/forge-bootstrap/tools/packages/rtl-extra/src/inc",
+        "build/forge-bootstrap/tools/packages/rtl-extra/src/win",
+        "build/forge-bootstrap/tools/packages/fcl-base/src",
+        "build/forge-bootstrap/tools/packages/fcl-base/src/win",
+        "build/forge-bootstrap/tools/packages/fcl-base/src/dummy",
+        "build/forge-bootstrap/tools/packages/fcl-process/src",
+        "build/forge-bootstrap/tools/packages/fcl-process/src/win",
+        "build/forge-bootstrap/tools/packages/fcl-process/src/winall"
+    ];
+    ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg"];
+    DisableDefaultConfigFiles: True;
+    OptimizationLevel: 2;
+    GenerateReleaseUnitFiles: True;
+    StripSymbols: True;
+}
+
+FPC PPUTool (HostTool) {
+    Defines: [GENERIC_CPU];
+    UnitPaths: [
+        "build/forge-bootstrap/cycle3/rtl64",
+        "build/forge-bootstrap/seed/source",
+        "build/forge-bootstrap/seed/source/generic",
+        "build/forge-bootstrap/seed/source/systems"
+    ];
+    IncludePaths: ["build/forge-bootstrap/seed/source"];
+}
