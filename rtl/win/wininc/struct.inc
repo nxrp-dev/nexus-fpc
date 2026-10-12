@@ -1121,7 +1121,7 @@ Const
      M128A = record
           Low: ULONGLONG;
           High: LONGLONG;
-       end {$ifndef VER3_2} align 16 {$endif}; // Also implicitly aligns CONTEXT to 16 bytes as required.
+       end align 16; // Also implicitly aligns CONTEXT to 16 bytes as required.
      _M128A = M128A;
      TM128A = M128A;
      PM128A = ^TM128A;

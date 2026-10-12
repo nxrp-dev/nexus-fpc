@@ -13,7 +13,7 @@
 
  **********************************************************************}
 
-Function  FpLink (const existing : RawByteString; const newone : RawByteString): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpLink (const existing : RawByteString; const newone : RawByteString): cInt;
 var
   SystemExistingFileName, SystemNewOneFileName: RawByteString;
 Begin
@@ -22,7 +22,7 @@ Begin
   FpLink:=FpLink(PAnsiChar(SystemExistingFileName),PAnsiChar(SystemNewOneFileName));
 End;
 
-Function  FpMkfifo (const path : RawByteString; Mode : TMode): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpMkfifo (const path : RawByteString; Mode : TMode): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -30,7 +30,7 @@ Begin
   FpMkfifo:=FpMkfifo(PAnsiChar(SystemPath),mode);
 End;
 
-Function  FpChmod (const path : RawByteString; Mode : TMode): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpChmod (const path : RawByteString; Mode : TMode): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -38,7 +38,7 @@ Begin
   FpChmod:=FpChmod(PAnsiChar(SystemPath),mode);
 End;
 
-Function  FpChown (const path : RawByteString; owner : TUid; group : TGid): cInt;{$ifdef VER2_0}inline;{$endif}
+Function  FpChown (const path : RawByteString; owner : TUid; group : TGid): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -46,7 +46,7 @@ Begin
   FpChown:=FpChown(PAnsiChar(SystemPath),owner,group);
 End;
 
-Function  FpUtime (const path : RawByteString; times : putimbuf): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpUtime (const path : RawByteString; times : putimbuf): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -55,7 +55,7 @@ Begin
 End;
 
 {
-Function  FpGetcwd (const path:RawByteString; siz:TSize):RawByteString; {$ifdef VER2_0}inline;{$endif}
+Function  FpGetcwd (const path:RawByteString; siz:TSize):RawByteString;
 var
   SystemPath: RawByteString;
 Begin
@@ -79,7 +79,7 @@ Begin
     end;
 End;
 
-Function  FpExecve (const path : RawByteString; argv : PPAnsiChar; envp: PPAnsiChar): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpExecve (const path : RawByteString; argv : PPAnsiChar; envp: PPAnsiChar): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -87,7 +87,7 @@ Begin
   FpExecve:=FpExecve (PAnsiChar(SystemPath),argv,envp);
 End;
 
-Function  FpExecv (const path : RawByteString; argv : PPAnsiChar): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpExecv (const path : RawByteString; argv : PPAnsiChar): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -96,7 +96,7 @@ Begin
 End;
 
 
-Function  FpChdir (const path : RawByteString): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpChdir (const path : RawByteString): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -104,7 +104,7 @@ Begin
   FpChDir:=FpChdir(PAnsiChar(SystemPath));
 End;
 
-Function  FpOpen (const path : RawByteString; flags : cInt; Mode: TMode):cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpOpen (const path : RawByteString; flags : cInt; Mode: TMode):cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -113,7 +113,7 @@ Begin
 End;
 
 
-Function  FpMkdir (const path : RawByteString; Mode: TMode):cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpMkdir (const path : RawByteString; Mode: TMode):cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -121,7 +121,7 @@ Begin
   FpMkdir:=FpMkdir(PAnsiChar(SystemPath),mode);
 End;
 
-Function  FpUnlink (const path : RawByteString): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpUnlink (const path : RawByteString): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -129,7 +129,7 @@ Begin
   FpUnlink:=FpUnlink(PAnsiChar(SystemPath));
 End;
 
-Function  FpRmdir (const path : RawByteString): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpRmdir (const path : RawByteString): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -137,7 +137,7 @@ Begin
   FpRmdir:=FpRmdir(PAnsiChar(SystemPath));
 End;
 
-Function  FpRename (const old  : RawByteString; const newpath: RawByteString): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpRename (const old  : RawByteString; const newpath: RawByteString): cInt;
 var
   OldSystemPath, NewSystemPath: RawByteString;
 Begin
@@ -146,7 +146,7 @@ Begin
   FpRename:=FpRename(PAnsiChar(OldSystemPath),PAnsiChar(NewSystemPath));
 End;
 
-Function  FpStat (const path: RawByteString; var buf : stat): cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpStat (const path: RawByteString; var buf : stat): cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -173,7 +173,7 @@ Begin
   fpLstat:=fplstat(filename,@info);
 end;
 
-Function FpAccess (const pathname : RawByteString; aMode : cInt): cInt; {$ifdef VER2_0}inline;{$endif}
+Function FpAccess (const pathname : RawByteString; aMode : cInt): cInt;
 var
   SystemPathName: RawByteString;
 Begin
@@ -181,7 +181,7 @@ Begin
   FpAccess:=FpAccess(PAnsiChar(SystemPathName),amode);
 End;
 
-Function  FPFStat(var F:Text;Var Info:stat):Boolean; {$ifdef VER2_0}inline;{$endif}
+Function  FPFStat(var F:Text;Var Info:stat):Boolean;
 {
   Get all information on a text file, and return it in info.
 }
@@ -189,7 +189,7 @@ begin
   FPFStat:=FPFstat(TextRec(F).Handle,INfo)=0;
 end;
 
-Function  FPFStat(var F:File;Var Info:stat):Boolean; {$ifdef VER2_0}inline;{$endif}
+Function  FPFStat(var F:File;Var Info:stat):Boolean;
 {
   Get all information on a untyped file, and return it in info.
 }
@@ -223,25 +223,25 @@ function xFpread(fd: cint; buf: PAnsiChar; nbytes : size_t): ssize_t; cdecl; ext
 function xFpread(fd: cint; buf: PAnsiChar; nbytes : size_t): ssize_t; external name 'FPC_SYSC_READ';
 {$endif}
 
-Function  FpRead           (fd : cInt;var buf; nbytes : TSize): TSsize; {$ifdef VER2_0}inline;{$endif}
+Function  FpRead           (fd : cInt;var buf; nbytes : TSize): TSsize;
 
 begin
   FPRead:=xFpRead(fd,PAnsiChar(@buf),nbytes);
 end;
 
-Function  FpWrite          (fd : cInt;const buf; nbytes : TSize): TSsize; {$ifdef VER2_0}inline;{$endif}
+Function  FpWrite          (fd : cInt;const buf; nbytes : TSize): TSsize;
 begin
  FpWrite:=FpWrite(fd,PAnsiChar(@buf),nbytes);
 end;
 
 {$ifdef linux}
-function  FppRead           (fd : cInt;var buf; nbytes : TSize; offset:Toff): TSsize; {$ifdef VER2_0}inline;{$endif}
+function  FppRead           (fd : cInt;var buf; nbytes : TSize; offset:Toff): TSsize;
 
 begin
   FppRead:=FppRead(fd,PAnsiChar(@buf),nbytes,offset);
 end;
 
-function  FppWrite          (fd : cInt;const buf; nbytes : TSize; offset:Toff): TSsize; {$ifdef VER2_0}inline;{$endif}
+function  FppWrite          (fd : cInt;const buf; nbytes : TSize; offset:Toff): TSsize;
 
 begin
   FppWrite:=FppWrite(fd,PAnsiChar(@buf),nbytes,offset);
@@ -254,13 +254,13 @@ const
                 S_IWGRP OR S_IRGRP OR
                 S_IWOTH OR S_IROTH;
 
-Function  FpOpen    (path : PAnsiChar; flags : cInt):cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpOpen    (path : PAnsiChar; flags : cInt):cInt;
 
 begin
  FpOpen:=FpOpen(path,flags,MODE_FPOPEN);
 end;
 
-Function  FpOpen    (const path : RawByteString; flags : cInt):cInt; {$ifdef VER2_0}inline;{$endif}
+Function  FpOpen    (const path : RawByteString; flags : cInt):cInt;
 var
   SystemPath: RawByteString;
 Begin
@@ -282,7 +282,7 @@ begin
  FpOpen:=FpOpen(@path[1],flags,Mode);
 end;
 
-Function  FpOpendir (const dirname : RawByteString): pDir; {$ifdef VER2_0}inline;{$endif}
+Function  FpOpendir (const dirname : RawByteString): pDir;
 var
   SystemDirName: RawByteString;
 Begin
@@ -291,7 +291,7 @@ Begin
 End;
 
 
-Function  FpOpendir (dirname : shortString): pDir; {$ifdef VER2_0}inline;{$endif}
+Function  FpOpendir (dirname : shortString): pDir;
 Begin
   dirname:=dirname+#0;
   FpOpenDir:=FpOpenDir(PAnsiChar(@dirname[1]));
@@ -371,7 +371,7 @@ begin
   fpDup2:=fpDup2(filerec(oldfile).handle,filerec(newfile).handle);
 end;
 
-function  fptime    :time_t;  {$ifdef VER2_0}inline;{$endif}
+function  fptime    :time_t;
 var t:time_t;
 begin
   fptime:=fptime(t);

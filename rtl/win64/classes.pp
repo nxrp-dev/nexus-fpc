@@ -16,15 +16,12 @@
 {$mode objfpc}
 {$H+}
 {$modeswitch advancedrecords}
-{$IF FPC_FULLVERSION>=30301}
 {$modeswitch FUNCTIONREFERENCES}
-{$define FPC_HAS_REFERENCE_PROCEDURE}
 
 {$ifdef CPUAARCH64}
    {$define FPC_USE_INTRINSICS}
 {$endif}
 
-{$endif}
 
 { determine the type of the resource/form file }
 { $define Win16Res}
@@ -68,13 +65,11 @@ uses
 { Also set FPC_USE_INTRINSICS for i386 and x86_64,
   but only after _USES clause as there
   is not intinsics unit for those CPUs }
-{$IF FPC_FULLVERSION>=30301}
 
 {$if defined(CPUI386) or defined(CPUX86_64)}
    {$define FPC_USE_INTRINSICS}
 {$endif}
 
-{$endif}
 
 type
   TWndMethod = procedure(var msg : TMessage) of object;

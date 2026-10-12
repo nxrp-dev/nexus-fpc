@@ -37,9 +37,7 @@ type
    packed
 {$endif FPC_REQUIRES_PROPER_ALIGNMENT}
    record
-     {$ifndef VER3_2}
      common: TRttiDataCommon;
-     {$endif not VER3_2}
      case TTypeKind of
        tkArray: (
          elSize : SizeUInt;
@@ -227,30 +225,6 @@ function int_array_to_dynarray_copy(psrc : pointer;ti : pointer;
     ) : fpc_stub_dynarray;[external name 'FPC_ARR_TO_DYNARR_COPY'];
 
 
-{$if defined(VER3_2)}
-function fpc_dynarray_copy(psrc : pointer;ti : pointer;
-    lowidx,count:tdynarrayindex) : fpc_stub_dynarray;[Public,Alias:'FPC_DYNARR_COPY'];compilerproc;
-  var
-    realpsrc : pdynarray;
-    eletype,tti : pointer;
-    elesize : sizeint;
-  begin
-     fpc_dynarray_clear(pointer(result),ti);
-     if psrc=nil then
-       exit;
-     realpsrc:=pdynarray(psrc-sizeof(tdynarray));
-
-     tti:=aligntoqword(ti+2+PByte(ti)[1]);
-     elesize:=pdynarraytypedata(tti)^.elSize;
-     { only set if type needs finalization }
-     if assigned(pdynarraytypedata(tti)^.elType) then
-       eletype:=pdynarraytypedata(tti)^.elType^
-     else
-       eletype:=nil;
-
-     fpc_array_to_dynarray_copy(psrc,ti,lowidx,count,realpsrc^.high+1,elesize,eletype);
-  end;
-{$endif VER3_2}
 
 { copy a custom array (open/dynamic/static) to dynamic array }
 function fpc_array_to_dynarray_copy(psrc : pointer;ti : pointer;

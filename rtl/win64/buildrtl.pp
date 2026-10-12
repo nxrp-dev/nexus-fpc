@@ -15,9 +15,8 @@ uses
   System.TypInfo, System.FGL, System.Classes,
   System.CharSet, System.Character, System.GetOpts,
   System.FPWideString,
-  WinApi.ShareMem, System.ExeInfo, WinApi.WinDirs,
-  {$ifndef CPUAARCH64}System.CPU, WinApi.Signals,{$endif}
-  System.SoftFPU, System.SoftFpuX80, System.SoftFpu128, System.UFloatX80, System.UFloat128;
+  WinApi.ShareMem, System.ExeInfo, WinApi.WinDirs
+  {$ifndef CPUAARCH64}, System.CPU, WinApi.Signals{$endif};
 {$ELSE FPC_DOTTEDUNITS}
 uses
   sysinit,
@@ -31,9 +30,8 @@ uses
   typinfo, fgl, classes,
   charset, character, getopts,
   fpwidestring,
-  sharemem, exeinfo,  windirs,
-  {$ifndef CPUAARCH64}cpu, signals,{$endif}
-  softfpu, sfpux80, sfpu128, ufloatx80, ufloat128;
+  sharemem, exeinfo,  windirs
+  {$ifndef CPUAARCH64}, cpu, signals{$endif};
 {$ENDIF FPC_DOTTEDUNITS}
 
 implementation

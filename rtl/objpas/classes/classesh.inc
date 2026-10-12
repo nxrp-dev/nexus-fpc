@@ -197,11 +197,7 @@ Type
   EObserver = Class(Exception);
 
   IObserver = interface;
-{$IFDEF FPC_HAS_REFERENCE_PROCEDURE}
   TObserverToggleEvent = reference to procedure(const aObserver: IObserver; const aValue: Boolean);
-{$ELSE}
-  TObserverToggleEvent = procedure(const aObserver: IObserver; const aValue: Boolean) of object;
-{$ENDIF}
 
   IObserver = interface
     ['{B03253D8-7720-4B68-B10A-E3E79B91ECD3}']
@@ -266,11 +262,7 @@ Type
     property FormatLink: IEditFormatLink read GetFormatLink;
   end;
 
-{$IFDEF FPC_HAS_REFERENCE_PROCEDURE}
   TObserverGetCurrentEvent = reference to function: TVarRec;
-{$ELSE}
-  TObserverGetCurrentEvent = function: TVarRec of object;
-{$ENDIF}
 
   IEditGridLinkObserver = interface(IEditLinkObserver)
     ['{A911B648-E1E5-4EEC-9FEE-D8E62FFA0E71}']
@@ -318,13 +310,8 @@ Type
 
   TObservers = class
   public type
-{$IFDEF FPC_HAS_REFERENCE_PROCEDURE}
     TCanObserveEvent = reference to function(const aID: Integer): Boolean;
     TObserverAddedEvent = reference to procedure(const aID: Integer; const aObserver: IObserver);
-{$ELSE}
-    TCanObserveEvent = function(const aID: Integer): Boolean of object;
-    TObserverAddedEvent = procedure(const aID: Integer; const aObserver: IObserver) of object;
-{$ENDIF}
   private type
 
     { TIDArray }
@@ -2225,9 +2212,7 @@ type
   EThreadDestroyCalled = class(EThread);
   TSynchronizeProcVar = procedure;
   TThreadMethod = procedure of object;
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
   TThreadProcedure = reference to procedure;
-{$endif}
 
   TThreadReportStatus = Procedure(Const status : String) of Object;
 
@@ -2250,9 +2235,7 @@ type
     PThreadQueueEntry = ^TThreadQueueEntry;
     TThreadQueueEntry = record
       Method: TThreadMethod;
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
       ThreadProc: TThreadProcedure;
-{$endif}
       Thread: TThread;
       Exception: TObject;
       SyncEvent: PRtlEvent;
@@ -2282,9 +2265,7 @@ type
     class function GetCurrentThread: TThread; static;
     class function GetIsSingleProcessor: Boolean; static; inline;
     class procedure InternalQueue(aThread: TThread; aMethod: TThreadMethod; aQueueIfMain: Boolean; aExecuteAfter: TDateTime); static;
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     class procedure InternalQueue(aThread: TThread; aProcedure: TThreadProcedure; aQueueIfMain: Boolean; aExecuteAfter: TDateTime); static;
-{$endif}
     procedure CallOnTerminate;
     function GetPriority: TThreadPriority;
     procedure SetPriority(Value: TThreadPriority);
@@ -2302,13 +2283,9 @@ type
     procedure TerminatedSet; virtual;
     procedure Execute; virtual; abstract;
     procedure Synchronize(AMethod: TThreadMethod);
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     procedure Synchronize(AProcedure : TThreadProcedure);
-{$endif}
     procedure Queue(aMethod: TThreadMethod);
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     procedure Queue(aProcedure: TThreadProcedure);
-{$endif}
     procedure ForceQueue(aMethod: TThreadMethod); inline;
     property ReturnValue: Integer read FReturnValue write FReturnValue;
     property Terminated: Boolean read FTerminated;
@@ -2329,26 +2306,18 @@ type
                        const StackSize: SizeUInt = DefaultStackSize);
     destructor Destroy; override;
     class function CreateAnonymousThread(aProc: TProcedure): TThread; static;
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     class function CreateAnonymousThread(aProc: TThreadProcedure): TThread; static;
-    {$ENDIF}
     class function CreateAnonymousThread(aProc: TThreadMethod): TThread; static;
     class procedure NameThreadForDebugging(aThreadName: UnicodeString; aThreadID: TThreadID = TThreadID(-1)); static; inline;
     class procedure NameThreadForDebugging(aThreadName: AnsiString; aThreadID: TThreadID = TThreadID(-1)); static; inline;
     class procedure SetReturnValue(aValue: Integer); static;
     class function CheckTerminated: Boolean; static;
     class procedure Synchronize(AThread: TThread; AMethod: TThreadMethod);
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     class procedure Synchronize(AThread: TThread; AProcedure : TThreadProcedure);
-    {$endif}
     class procedure Queue(aThread: TThread; aMethod: TThreadMethod); static;
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     class procedure Queue(aThread: TThread; AProcedure : TThreadProcedure); static;
-    {$endif}
     class procedure ForceQueue(aThread: TThread; aMethod: TThreadMethod; aDelay : Integer = 0); inline; static;
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     class procedure ForceQueue(aThread: TThread; aMethod: TThreadProcedure; aDelay : Integer = 0); inline; static;
-    {$endif}
     class procedure RemoveQueuedEvents(aThread: TThread; aMethod: TThreadMethod); static;
     class procedure RemoveQueuedEvents(aMethod: TThreadMethod); static;
     class procedure RemoveQueuedEvents(aThread: TThread); static;

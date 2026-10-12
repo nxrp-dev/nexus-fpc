@@ -25,8 +25,8 @@ arithmetic, literal limits, Single/Double rounding boundaries, signed zero,
 Currency endpoints and rejected overflow, fresh/cached PPUs, Extended mixed
 parameters/records/callbacks, RTTI, and exception recovery. Win64 also builds a tiny
 Clang/LLD C DLL to verify Microsoft callbacks and varargs across register/stack
-argument slots. The RTL software integer-rounding regression remains covered
-independently; the compiler no longer uses that software arithmetic.
+argument slots. The standalone SoftFloat units and their dedicated integer-rounding
+regression have been retired; native rounding remains covered by `tcompilerreal`.
 Math ABI coverage includes Extended SinCos output widths and guards, ArcTan2,
 Tan, Cotan and Log2, including Win64's different parameter locations.
 

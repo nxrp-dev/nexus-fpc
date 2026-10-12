@@ -97,9 +97,9 @@ asm
   movl    %esp,initialstkptr
 {$endif FPC_PIC}
 
-{$if (FPC_FULLVERSION>30200) and not defined(FPC_USE_LIBC)}
+{$ifndef FPC_USE_LIBC}
   call    InitTLS
-{$endif FPC_FULLVERSION>30200 and not FPC_USE_LIBC}
+{$endif not FPC_USE_LIBC}
 
   xorl    %ebp,%ebp
   call    PASCALMAIN

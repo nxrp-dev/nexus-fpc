@@ -104,13 +104,8 @@ inc/lstrings.pp=namespaced/common/System.LStrings.pp
 inc/nothreads.pp=namespaced/common/System.NoThreads.pp
 inc/objc.pp=namespaced/common/System.ObjC.pp
 inc/objcbase.pp=namespaced/common/System.ObjCBase.pp
-inc/sfpu128.pp=namespaced/common/System.SoftFpu128.pp
-inc/sfpux80.pp=namespaced/common/System.SoftFpuX80.pp
-inc/softfpu.pp=namespaced/common/System.SoftFPU.pp
 inc/sortbase.pp=namespaced/common/System.SortBase.pp
 inc/strings.pp=namespaced/common/System.Strings.pp
-inc/ufloat128.pp=namespaced/common/System.UFloat128.pp
-inc/ufloatx80.pp=namespaced/common/System.UFloatX80.pp
 linux/fpcylix.pp=linux/System.FPCylix.pp
 {s*:linux/}=namespaced/common/
 {i+:linux/}

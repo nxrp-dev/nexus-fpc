@@ -483,9 +483,7 @@ type
 {$packrecords c}
   Penum_typedata=^Tenum_typedata;
   Tenum_typedata={$ifndef FPC_REQUIRES_PROPER_ALIGNMENT}packed{$endif}record
-{$ifndef VER3_2}
     Common: TRttiDataCommon;
-{$endif not VER3_2}
     case TTypeKind of
       tkInt64,tkQWord,tkInteger,tkChar,tkEnumeration,tkBool,tkWChar: (
          OrdType : Byte;
@@ -1159,10 +1157,10 @@ Function int_Val_SInt_ShortStr(DestSize: SizeInt; Const S: ShortString; out Code
 {$ifndef FPC_HAS_INT_VAL_UINT_SHORTSTR}
 {$define FPC_HAS_INT_VAL_UINT_SHORTSTR}
 { Forward the destination width from the managed-string Val wrappers. }
-Function int_Val_UInt_ShortStr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; [external name 'FPC_VAL_UINT_SHORTSTR'];
+Function int_Val_UInt_ShortStr(DestSize: SizeInt; Const S: ShortString; out Code: ValSInt): ValUInt; [external name 'FPC_VAL_UINT_SHORTSTR'];
 {$endif FPC_HAS_INT_VAL_UINT_SHORTSTR}
 
-Function fpc_Val_UInt_Shortstr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_SHORTSTR']; compilerproc;
+Function fpc_Val_UInt_Shortstr(DestSize: SizeInt; Const S: ShortString; out Code: ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_SHORTSTR']; compilerproc;
 var
   sp,ns : SizeInt;
   u : SizeUInt;
@@ -1180,7 +1178,7 @@ begin
       Exit;
     end;
 
-  digitsLeft:=ValData.MaxDigits[0, vc.baseIndex, BsrDWord(ValNonZeroDestSize({$ifndef VER3_2}DestSize{$else}sizeof(fpc_Val_UInt_Shortstr){$endif}))];
+  digitsLeft:=ValData.MaxDigits[0, vc.baseIndex, BsrDWord(ValNonZeroDestSize(DestSize))];
   prev:=0;
   repeat
     u:=SizeUint(ord(s[sp])-ord('0'));
@@ -1201,7 +1199,7 @@ begin
    begin
      if sp<=ns then { If the loop was stopped not by sp>ns check... }
        u:=ValData.ValueArray[ord(s[sp-1])-ord('0')]; { Then recover previous u. }
-     if prev>ValUInt(High(result) {$ifndef VER3_2} shr (bitsizeof(result)-8*DestSize) {$endif}-u) div ValNonZeroBase(vc.base) then
+     if prev>ValUInt(High(result) shr (bitsizeof(result)-8*DestSize)-u) div ValNonZeroBase(vc.base) then
        dec(sp);
    end;
 

@@ -3094,7 +3094,6 @@ function fpc_PopCnt_qword(AValue : QWord): QWord;[Public,Alias:'FPC_POPCNT_QWORD
   end;
 {$endif}
 
-{$if not (defined(VER3_2))}
 {$push}
 {$R-,Q-}
 
@@ -3541,4 +3540,3 @@ end;
 {$endif cpu64}
 
 {$pop}
-{$endif VER3_2}

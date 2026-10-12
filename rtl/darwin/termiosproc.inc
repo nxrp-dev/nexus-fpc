@@ -18,7 +18,7 @@
                          IOCtl and Termios calls
 ******************************************************************************}
 
-Function TCGetAttr(fd:cint;var tios:TermIOS):cint; {$ifdef VER2_0}inline;{$endif}
+Function TCGetAttr(fd:cint;var tios:TermIOS):cint;
 begin
   TCGETAttr:=fpIoCtl(Fd,TIOCGETA,@tios);
 end;
@@ -41,13 +41,13 @@ begin
   TCSetAttr:=fpIOCtl(fd,nr,@Tios);
 end;
 
-Procedure CFSetISpeed(var tios:TermIOS;speed:Cardinal); {$ifdef VER2_0}inline;{$endif}
+Procedure CFSetISpeed(var tios:TermIOS;speed:Cardinal);
 begin
   tios.c_ispeed:=speed; {Probably the Bxxxx speed constants}
 end;
 
 
-Procedure CFSetOSpeed(var tios:TermIOS;speed:Cardinal); {$ifdef VER2_0}inline;{$endif}
+Procedure CFSetOSpeed(var tios:TermIOS;speed:Cardinal);
 begin
    tios.c_ospeed:=speed;
 end;
@@ -79,7 +79,7 @@ end;
 
 function real_tcsendbreak(fd,duration: cint): cint; cdecl; external name 'tcsendbreak';
 
-Function TCSendBreak(fd,duration:cint):cint;{$ifdef VER2_0}inline;{$endif}
+Function TCSendBreak(fd,duration:cint):cint;
 begin
   TCSendBreak:=real_tcsendbreak(fd,duration);
 end;
@@ -87,13 +87,13 @@ end;
 
 function real_tcsetpgrp(fd: cint; pgrp: pid_t): cint; cdecl; external name 'tcsetpgrp';
 
-Function TCSetPGrp(fd,id:cint):cint;{$ifdef VER2_0}inline;{$endif}
+Function TCSetPGrp(fd,id:cint):cint;
 begin
   TCSetPGrp:=real_tcsetpgrp(fd,id);;
 end;
 
 
-Function TCGetPGrp(fd:cint;var id:cint):cint;{$ifdef VER2_0}inline;{$endif}
+Function TCGetPGrp(fd:cint;var id:cint):cint;
 var
   pid: pid_t;
 begin
@@ -106,7 +106,7 @@ end;
 
 function real_tcdrain(fd: cint): cint; cdecl; external name 'tcdrain';
 
-Function TCDrain(fd:cint):cint;{$ifdef VER2_0}inline;{$endif}
+Function TCDrain(fd:cint):cint;
 begin
   TCDrain:=fpIOCtl(fd,TIOCDRAIN,nil); {Should set timeout to 1 first?}
 end;
@@ -114,14 +114,14 @@ end;
 
 function real_tcflow(fd,act:cint): cint; cdecl; external name 'tcflow';
 
-Function TCFlow(fd,act:cint):cint; {$ifdef VER2_0}inline;{$endif}
+Function TCFlow(fd,act:cint):cint;
 begin
   TCFlow:=real_tcflow(fd,act);
 end;
 
 function real_tcflush(fd,qsel: cint): cint; cdecl; external name 'tcflush';
 
-Function TCFlush(fd,qsel:cint):cint;  {$ifdef VER2_0}inline;{$endif}
+Function TCFlush(fd,qsel:cint):cint;
 begin
   TCFlush:=real_tcflush(fd,qsel);
 end;
@@ -137,7 +137,7 @@ begin
 end;
 
 
-Function IsATTY(var f: text):cint;  {$ifdef VER2_0}inline;{$endif}
+Function IsATTY(var f: text):cint;
 {
   Idem as previous, only now for text variables.
 }

@@ -767,7 +767,7 @@ interface
 
     type
       { float types -- warning, this enum/order is used internally by the RTL
-        as well in rtl/inc/real2str.inc }
+        as well in rtl/inc/flt_conv.inc }
       tfloattype = (
         s32real,s64real,s80real,sc80real { the C "long double" type on x86 },
         s64comp,s64currency

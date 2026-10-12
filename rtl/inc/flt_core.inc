@@ -37,9 +37,6 @@
 type
     // "Do-It-Yourself Floating Point" structure
     TDIY_FP = record
-      {$ifdef VALREAL_128}
-        fh : qword;
-      {$endif}
       {$ifdef VALREAL_32}
         f : dword;
       {$else}
@@ -56,7 +53,7 @@ type
         e10 : integer;
     end;
 
-{$if defined(VALREAL_80) or defined(VALREAL_128)}
+{$ifdef VALREAL_80}
 
 (****************************************************************************
  * diy_util_add
@@ -64,16 +61,12 @@ type
  * Helper routine: summ of multiword unsigned integers
  *
  * Used by:
- *   [80,128] diy_fp_cached_power10
- *   [80,128] diy_fp_multiply
- *   [80,128] float<->ASCII
+ *   [80] diy_fp_cached_power10
+ *   [80] diy_fp_multiply
+ *   [80] float<->ASCII
  *
  ****************************************************************************)
-{$ifdef VALREAL_80}
 procedure diy_util_add( var xh: dword; var xl: qword; const yh: dword; const yl: qword ); {$ifdef grisu1_inline}inline;{$endif}
-{$else VALREAL_128}
-procedure diy_util_add( var xh, xl: qword; const yh, yl: qword ); {$ifdef grisu1_inline}inline;{$endif}
-{$endif VALREAL_*}
 var
     temp: qword;
 begin
@@ -88,24 +81,16 @@ end;
  * Helper routine: left shift of multiword unsigned integer
  *
  * Used by:
- *   [80,128] float<->ASCII
+ *   [80] float<->ASCII
  *
  ****************************************************************************)
-{$ifdef VALREAL_80}
 procedure diy_util_shl( var h: dword; var l: qword; const count: integer );
-{$else VALREAL_128}
-procedure diy_util_shl( var h, l: qword; const count: integer );
-{$endif VALREAL_*}
 begin
     if ( count = 0 ) then
         exit;
 {$ifdef grisu1_debug}
     assert( count > 0 );
-  {$ifdef VALREAL_80}
     assert( count < 96 );
-  {$else VALREAL_128}
-    assert( count < 128 );
-  {$endif VALREAL_*}
 {$endif grisu1_debug}
     if ( count = 1 ) then
     begin
@@ -121,19 +106,13 @@ begin
         l := 0;
         exit;
     end;
-  {$ifdef VALREAL_80}
     if ( count = 32 ) then
         h := hi( l )
     else
-  {$endif VALREAL_80}
     if ( count < 32 ) then
         h := ( h shl count ) + ( hi( l ) shr ( 32 - count ) )
     else
-  {$ifdef VALREAL_80}
         h := ( l shr ( 64 - count ) );
-  {$else VALREAL_128}
-        h := ( h shl count ) + ( l shr ( 64 - count ) );
-  {$endif VALREAL_*}
     l := ( l shl count );
 end;
 
@@ -143,14 +122,10 @@ end;
  * Helper routine: right shift of multiword unsigned integer
  *
  * Used by:
- *   [80,128] float<->ASCII
+ *   [80] float<->ASCII
  *
  ****************************************************************************)
-{$ifdef VALREAL_80}
 procedure diy_util_shr( var h: dword; var l: qword; const count: integer );
-{$else VALREAL_128}
-procedure diy_util_shr( var h, l: qword; const count: integer );
-{$endif VALREAL_*}
 begin
     if ( count = 0 ) then
         exit;
@@ -168,26 +143,20 @@ begin
     if ( count < 64 ) then
     begin
         l := ( qword( h ) shl ( ( - count ) and 63 ) ) or ( l shr count );
-      {$ifdef VALREAL_80}
         if ( count >= 32 ) then
             h := 0
         else
-      {$endif VALREAL_80}
             h := h shr count;
         exit;
     end;
-  {$ifdef VALREAL_80}
     if ( count < 96 ) then
-  {$else VALREAL_128}
-    if ( count < 128 ) then
-  {$endif VALREAL_*}
         l := h shr ( count and 63 )
     else
         l := 0;
     h := 0;
 end;
 
-{$endif VALREAL_80 | VALREAL_128}
+{$endif VALREAL_80}
 
 (****************************************************************************
  * diy_fp_multiply
@@ -248,7 +217,7 @@ end;
 (*-------------------------------------------------------
  | u32_mul_u32_to_u64 [local]
  |
- | Local routine of the "diy_fp_multiply"; common to float64..float128:
+ | Local routine of the "diy_fp_multiply"; common to float64..floatx80:
  |     uint32 * uint32 -> uint64
  |
  *-------------------------------------------------------*)
@@ -325,52 +294,6 @@ begin
     end;
 end;
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-//***************** 128-bit ********************
-var
-    a, b, c, d, u, v, w, z: dword;
-    au, av, aw, az, bu, bv, bw, bz, cu, cv, cw, cz, du, dv, dw, dz, t1, t2: qword;
-begin
-    a := hi( x.fh ); b := x.fh; c := hi( x.f ); d := x.f;
-    u := hi( y.fh ); v := y.fh; w := hi( y.f ); z := y.f;
-    au := u32_mul_u32_to_u64( a, u );
-    bu := u32_mul_u32_to_u64( b, u );
-    cu := u32_mul_u32_to_u64( c, u );
-    du := u32_mul_u32_to_u64( d, u );
-    av := u32_mul_u32_to_u64( a, v );
-    bv := u32_mul_u32_to_u64( b, v );
-    cv := u32_mul_u32_to_u64( c, v );
-    dv := u32_mul_u32_to_u64( d, v );
-    aw := u32_mul_u32_to_u64( a, w );
-    bw := u32_mul_u32_to_u64( b, w );
-    cw := u32_mul_u32_to_u64( c, w );
-    dw := u32_mul_u32_to_u64( d, w );
-    az := u32_mul_u32_to_u64( a, z );
-    bz := u32_mul_u32_to_u64( b, z );
-    cz := u32_mul_u32_to_u64( c, z );
-    dz := u32_mul_u32_to_u64( d, z );
-    t1 := ( dz shr 32 ) + lo( cz ) + lo( dw );
-    t1 := ( t1 shr 32 ) + hi( cz ) + hi( dw ) + lo( bz ) + lo( cw ) + lo( dv );
-    t1 := qword( C_1_SHL_31 ) // round
-        + hi( t1 ) + hi( bz ) + hi( cw ) + hi( dv ) + lo( az ) + lo( bw ) + lo( cv ) + lo( du );
-    t2 := ( t1 shr 32 ) + hi( az ) + hi( bw ) + hi( cv ) + hi( du ) + lo( aw ) + lo( bv ) + lo( cu );
-    t1 := ( t2 shr 32 ) + hi( aw ) + hi( bv ) + hi( cu ) + lo( av ) + lo( bu );
-    diy_fp_multiply.f := ( t1 shl 32 ) + lo( t2 );
-    diy_fp_multiply.fh := au + hi( av ) + hi( bu ) + hi( t1 );
-    diy_fp_multiply.e := x.e + y.e + 128;
-    if normalize then with diy_fp_multiply do
-    begin
-        if ( hi( fh ) and C_1_SHL_31 = 0 ) then
-        begin
-            diy_util_add( fh, f, fh, f );
-            dec( e );
-        end;
-      {$ifdef grisu1_debug}
-        assert( hi( fh ) and C_1_SHL_31 <> 0 );
-      {$endif grisu1_debug}
-    end;
-end;
-{$endif VALREAL_128}
 
 (****************************************************************************
  * diy_fp_cached_power10
@@ -533,82 +456,13 @@ const
     );
 {$endif VALREAL_80}
 //**************************************
-{$ifdef VALREAL_128}
-const
-    // alpha =-125; gamma = -2
-    // full cache: 1E-5032 .. 1E+4995, step = 1E+37
-    // sparse = 1/16
-    C_PWR10_DELTA = 37;
-    C_PWR10_COUNT = 272;
-    base: array [ 0 .. 15 ] of TDIY_FP_Power_of_10 = (
-        ( c: ( fh: qword($D1476E2C07286FAA); f: qword($1AF5AF660DB4AEE2); e:  -1111 ); e10:  -296 ),
-        ( c: ( fh: qword($C4CE17B399107C22); f: qword($CB550FB4384D21D4); e:   -988 ); e10:  -259 ),
-        ( c: ( fh: qword($B913179899F68584); f: qword($28E2557B59846E3F); e:   -865 ); e10:  -222 ),
-        ( c: ( fh: qword($AE0B158B4738705E); f: qword($9624AB50B148D446); e:   -742 ); e10:  -185 ),
-        ( c: ( fh: qword($A3AB66580D5FDAF5); f: qword($C13E60D0D2E0EBBA); e:   -619 ); e10:  -148 ),
-        ( c: ( fh: qword($99EA0196163FA42E); f: qword($504BCED1BF8E4E46); e:   -496 ); e10:  -111 ),
-        ( c: ( fh: qword($90BD77F3483BB9B9); f: qword($B1C6F22B5E6F48C3); e:   -373 ); e10:   -74 ),
-        ( c: ( fh: qword($881CEA14545C7575); f: qword($7E50D64177DA2E55); e:   -250 ); e10:   -37 ),
-        ( c: ( fh: qword($8000000000000000); f: qword($0000000000000000); e:   -127 ); e10:     0 ),
-        ( c: ( fh: qword($F0BDC21ABB48DB20); f: qword($1E86D40000000000); e:     -5 ); e10:    37 ),
-        ( c: ( fh: qword($E264589A4DCDAB14); f: qword($C696963C7EED2DD2); e:    118 ); e10:    74 ),
-        ( c: ( fh: qword($D4E5E2CDC1D1EA96); f: qword($6C9E18AC7007C91A); e:    241 ); e10:   111 ),
-        ( c: ( fh: qword($C83553C5C8965D3D); f: qword($6F92829494E5ACC7); e:    364 ); e10:   148 ),
-        ( c: ( fh: qword($BC4665B596706114); f: qword($873D5D9F0DDE1FEF); e:    487 ); e10:   185 ),
-        ( c: ( fh: qword($B10D8E1456105DAD); f: qword($7425A83E872C5F47); e:    610 ); e10:   222 ),
-        ( c: ( fh: qword($A67FF273B8460356); f: qword($8A892ABAF368F137); e:    733 ); e10:   259 )
-    );
-    factor_plus: array [ 0 .. 7 ] of TDIY_FP_Power_of_10 = (
-        ( c: ( fh: qword($BF87DECC3576D3D1); f: qword($49738B9F99B4642D); e:   1839 ); e10:   592 ),
-        ( c: ( fh: qword($8F4C0691750E8305); f: qword($0A40DE037C9AD730); e:   3806 ); e10:  1184 ),
-        ( c: ( fh: qword($D66B8D68727E5D97); f: qword($56BC4BF837B34968); e:   5772 ); e10:  1776 ),
-        ( c: ( fh: qword($A06C0BD4CE9DB63F); f: qword($D51AF6A3244A6983); e:   7739 ); e10:  2368 ),
-        ( c: ( fh: qword($F00B82D75A7ADBC5); f: qword($B8787D891AB45D5B); e:   9705 ); e10:  2960 ),
-        ( c: ( fh: qword($B397FD9A22D732D7); f: qword($AE7EDAA76FBBD923); e:  11672 ); e10:  3552 ),
-        ( c: ( fh: qword($865DB7A9CCD2839E); f: qword($0367500A8E9A1790); e:  13639 ); e10:  4144 ),
-        ( c: ( fh: qword($C90E78C7FCBEE713); f: qword($F3BE171A27BF81DB); e:  15605 ); e10:  4736 )
-    );
-    factor_minus: array [ 0 .. 7 ] of TDIY_FP_Power_of_10 = (
-        ( c: ( fh: qword($AB15B5D22F85DC7A); f: qword($E66FEACEB7836F69); e:  -2094 ); e10:  -592 ),
-        ( c: ( fh: qword($E4AC057C4237088F); f: qword($4C7284F9EDDA793D); e:  -4061 ); e10: -1184 ),
-        ( c: ( fh: qword($98D24C2FD2DCB34C); f: qword($EC42875C0B22B986); e:  -6027 ); e10: -1776 ),
-        ( c: ( fh: qword($CC42DD5CB5091819); f: qword($1D8106CCF8EE85B4); e:  -7994 ); e10: -2368 ),
-        ( c: ( fh: qword($8881FC6C10CF2430); f: qword($3CA163B873AA88A6); e:  -9960 ); e10: -2960 ),
-        ( c: ( fh: qword($B674CE73BF10EA47); f: qword($4FE1E9B0FCDF7B3D); e: -11927 ); e10: -3552 ),
-        ( c: ( fh: qword($F3DEFE25478E074A); f: qword($0E85FC7F4EDBD3CB); e: -13894 ); e10: -4144 ),
-        ( c: ( fh: qword($A2FAA242A3BD093C); f: qword($C62364C260A887E2); e: -15860 ); e10: -4736 )
-    );
-    corrector: array [ 0 .. C_PWR10_COUNT - 1 ] of shortint = (
-      // extra mantissa correction [ulp; signed]
-        1,  0,  1,  0,  1,  1,  0,  0,  0,  0,  0,  1,  0,  0,  2,  0,
-       -1, -1,  0, -1,  0, -1,  0,  0, -1,  0,  0,  0,  0,  0,  0,  0,
-        1,  0,  0,  0,  1, -1,  0, -1, -1,  1,  0,  1,  0,  0,  1,  1,
-        0, -2,  0,  0,  0, -1,  0,  0,  0,  0, -2,  0,  0,  0,  0,  0,
-        0, -1,  1,  0,  1,  0,  0, -1,  0,  1,  0,  0,  1,  0,  1,  1,
-        1, -1,  0,  0,  1, -1,  0,  0,  0,  1,  0,  1,  1, -1,  1,  1,
-        0,  0,  1,  0,  0,  0, -1,  0, -1,  0,  0,  0,  0,  0,  0,  1,
-        0,  0,  2,  1,  0, -1, -1, -1, -1,  0, -1,  1,  0, -1,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0, -1,  1, -1, -1,  0, -1,  0, -1,  0,  0,  0,  0,  0,
-        1, -1,  2,  1,  2,  0, -1,  1,  0,  0,  0,  1,  2,  0,  1,  1,
-        0,  0,  1,  0,  1,  0,  0,  0,  0,  1,  0,  1,  1,  0,  1,  1,
-        0,  0,  0,  1,  0, -1, -1,  0, -1,  0,  0,  0,  0,  0,  0,  1,
-       -1, -1,  0,  0,  0,  0,  0, -1, -1,  0,  0,  0,  1,  0,  0,  0,
-        0,  0,  1,  0, -1,  0,  0,  0, -1,  0, -1,  0,  1,  0,  0, -1,
-        0, -1,  1, -1,  1, -1,  0, -1,  0,  1, -1,  0,  1,  1,  1,  1,
-        0, -1,  1, -1,  0, -2,  0, -1, -1,  0, -1,  0,  0, -1,  0,  0
-    );
-{$endif VALREAL_128}
 //**************************************
-{$ifndef VALREAL_32} // common for float64..float128
+{$ifndef VALREAL_32} // common for float64..floatx80
 var
     i, xmul, inod, min10: integer;
     A: TDIY_FP_Power_of_10;
   {$ifdef VALREAL_80}
     ch: dword;
-  {$endif}
-  {$ifdef VALREAL_128}
-    ch: qword;
   {$endif}
     cx: shortint;
 begin
@@ -666,7 +520,7 @@ begin
     if ( cx <> 0 ) then
   {$ifdef VALREAL_64}
         inc( factor.c.f, int64( cx ) );
-  {$else VALREAL_80 | VALREAL_128}
+  {$else VALREAL_80}
     begin
         ch := 0;
         if ( cx < 0 ) then
@@ -676,7 +530,7 @@ begin
   {$endif VALREAL_*}
     //
 end;
-{$endif VALREAL_64..VALREAL_128}
+{$endif VALREAL_64 | VALREAL_80}
 
 (*==========================================================================*
  *                                                                          *
@@ -714,14 +568,6 @@ const
     C_GRISU_GAMMA = 30;
     RT_NATIVE = RT_S80REAL;
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-    C_FRAC2_BITS  = 112;
-    C_EXP2_BIAS   = 16383;
-    C_DIY_FP_Q    = 128;
-    C_GRISU_ALPHA =-125;
-    C_GRISU_GAMMA =-2;
-    RT_NATIVE = RT_S128REAL;
-{$endif VALREAL_128}
 
 (****************************************************************************)
     // handy const
@@ -732,24 +578,17 @@ const
 {$if defined(VALREAL_64) or defined(VALREAL_80)}
     C_MANT2_INTEGER = qword(1) shl C_FRAC2_BITS;
 {$endif VALREAL_64 | VALREAL_80}
-{$ifdef VALREAL_128}
-    C_MANT2_INTEGER_H = qword(1) shl ( C_FRAC2_BITS - 64 );
-{$endif VALREAL_128}
 
     C_MAX_WIDTH = 255; // shortstring
 
-{$ifdef fpc_softfpu_implementation}
-    C_NO_MIN_WIDTH = -1; // just for convenience
-{$else}
     C_NO_MIN_WIDTH = -32767; // this value is the one used internally by FPC
-{$endif}
 
 type
     TAsciiDigits = array [ 0 .. 39 ] of byte;
 
 (*-------------------------------------------------------
  | gen_digits_32 [local]
- | gen_digits_64 [local] (used only for float64..float128 -> ASCII)
+ | gen_digits_64 [local] (used only for float64..floatx80 -> ASCII)
  |
  | These routines perform conversion of 32-bit/64-bit unsigned integer
  | to the sequence of byte-sized decimal digits.
@@ -843,7 +682,7 @@ begin
     inc( n_digits, gen_digits_32( buf, pos + n_digits, splitl, n_digits <> 0 ) );
     gen_digits_64 := n_digits;
 end;
-{$endif VALREAL_64..VALREAL_128}
+{$endif VALREAL_64 | VALREAL_80}
 
 (*-------------------------------------------------------
  | round_digits [local]
@@ -1259,7 +1098,7 @@ begin
       end;
 end;
 
-{$if defined(VALREAL_80) or defined(VALREAL_128)}
+{$ifdef VALREAL_80}
 {$ifndef FPC_SYSTEM_HAS_U128_DIV_U64_TO_U64}
 (*-------------------------------------------------------
  | u128_div_u64_to_u64 [local]
@@ -1332,7 +1171,7 @@ begin
     u128_div_u64_to_u64 := true;
 end;
 {$endif FPC_SYSTEM_HAS_U128_DIV_U64_TO_U64}
-{$endif VALREAL_80 | VALREAL_128}
+{$endif VALREAL_80}
 
 (*-------------------------------------------------------
  | count_leading_zero [local]
@@ -1352,7 +1191,7 @@ begin
 end;
 {$endif VALREAL_*}
 
-{$if defined(VALREAL_80) or defined(VALREAL_128)}
+{$ifdef VALREAL_80}
 (*-------------------------------------------------------
  | make_frac_mask [local]
  |
@@ -1360,11 +1199,7 @@ end;
  |     result := ( 1 shl one.e ) - 1
  |
  *-------------------------------------------------------*)
-{$ifdef VALREAL_80}
 procedure make_frac_mask( out h: dword; out l: qword; one_e: integer ); {$ifdef grisu1_inline}inline;{$endif}
-{$else VALREAL_128}
-procedure make_frac_mask( out h, l: qword; one_e: integer ); {$ifdef grisu1_inline}inline;{$endif}
-{$endif VALREAL_*}
 begin
   {$ifdef grisu1_debug}
     assert( one_e <= 0 );
@@ -1373,7 +1208,7 @@ begin
     if ( one_e <= - 64 ) then
     begin
         l := qword( -1 );
-        h := ( {$ifdef VALREAL_128} qword {$else} dword {$endif} ( 1 ) shl ( - one_e - 64 ) ) - 1;
+        h := (  dword  ( 1 ) shl ( - one_e - 64 ) ) - 1;
     end
     else
     begin
@@ -1381,7 +1216,7 @@ begin
         h := 0;
     end;
 end;
-{$endif VALREAL_80 | VALREAL_128}
+{$endif VALREAL_80}
 
 (*-------------------------------------------------------
  | k_comp [local]
@@ -1392,102 +1227,6 @@ end;
  |
  *-------------------------------------------------------*)
 function k_comp( e, alpha{, gamma}: integer ): integer;
-{$ifdef fpc_softfpu_implementation}
-///////////////
-//
-// Assuming no HardFloat available.
-// Note: using softfpu here significantly slows down overall
-// conversion performance, so we use integers.
-//
-const
-    D_LOG10_2: TDIY_FP = // log10(2) = 0.301029995663981195213738894724493027
-      {$ifdef VALREAL_32}
-        ( f: dword($9A209A85); e: -33 );
-      {$endif}
-      {$ifdef VALREAL_64}
-        ( f: qword($9A209A84FBCFF799); e: -65 );
-      {$endif}
-      {$ifdef VALREAL_80}
-        ( f: qword($FBCFF7988F8959AC); fh: dword($9A209A84); e: -97 );
-      {$endif}
-      {$ifdef VALREAL_128}
-        ( fh: qword($9A209A84FBCFF798); f: qword($8F8959AC0B7C9178); e: -129 );
-      {$endif}
-var
-    x, n: integer;
-    y, z: TDIY_FP;
-  {$ifdef VALREAL_32}
-    mask_one: dword;
-  {$else not VALREAL_32}
-    mask_one: qword;
-  {$endif}
-  {$ifdef VALREAL_80}
-    mask_oneh: dword;
-  {$endif}
-  {$ifdef VALREAL_128}
-    mask_oneh: qword;
-  {$endif}
-    plus, round_up: boolean;
-begin
-    x := alpha - e;
-    if ( x = 0 ) then
-    begin
-        k_comp := 0;
-        exit;
-    end;
-    plus := ( x > 0 );
-    if plus then
-        y.f := x
-    else
-        y.f := - x;
-    round_up := plus;
-    n := C_DIY_FP_Q - 1 - BSRdword( y.f );
-  {$if defined(VALREAL_32) or defined(VALREAL_64)}
-    y.f := y.f shl n;
-  {$else VALREAL_80 | VALREAL_128}
-    y.fh := 0;
-    diy_util_shl( y.fh, y.f, n );
-  {$endif VALREAL_*}
-    y.e := - n;
-    z := diy_fp_multiply( y, D_LOG10_2, false );
-    if ( z.e <= - C_DIY_FP_Q ) then
-    begin
-        round_up := plus and ( 0 <>
-  {$if defined(VALREAL_32) or defined(VALREAL_64)}
-          z.f
-  {$else VALREAL_80 | VALREAL_128}
-          z.f or z.fh
-  {$endif}
-        );
-        n := 0;
-    end
-    else
-    begin
-        if plus then
-        begin
-          {$if defined(VALREAL_32) or defined(VALREAL_64)}
-            mask_one := ( {$ifdef VALREAL_64} qword {$else} dword {$endif} ( 1 ) shl ( - z.e ) ) - 1;
-            round_up := ( z.f and mask_one <> 0 );
-          {$else VALREAL_80 | VALREAL_128}
-            make_frac_mask( mask_oneh, mask_one, z.e );
-            round_up := ( z.f and mask_one <> 0 ) or ( z.fh and mask_oneh <> 0 );
-          {$endif VALREAL_*}
-        end;
-      {$if defined(VALREAL_32) or defined(VALREAL_64)}
-        n := z.f shr ( - z.e );
-      {$else VALREAL_80 | VALREAL_128}
-        diy_util_shr( z.fh, z.f, - z.e );
-        n := z.f;
-      {$endif VALREAL_*}
-    end;
-    if not plus then
-        n := - n;
-    if round_up then
-        k_comp := n + 1
-    else
-        k_comp := n;
-end;
-{$else not fpc_softfpu_implementation}
 ///////////////
 //
 // HardFloat implementation
@@ -1524,7 +1263,6 @@ begin
             inc( n ); // round-up
     k_comp := n;
 end;
-{$endif fpc_softfpu_implementation}
 
 (****************************************************************************)
 var
@@ -1540,10 +1278,6 @@ var
     templ: qword;
     fh, one_maskh, temph: dword;
   {$endif VALREAL_80}
-  {$ifdef VALREAL_128}
-    templ: qword;
-    fh, one_maskh, temph: qword;
-  {$endif VALREAL_128}
     one_e: integer;
     one_mask, f: dword;
     buf: TAsciiDigits;
@@ -1585,7 +1319,7 @@ begin
     w := unpack_float( v, minus );
 
     // Handle Zero
-    if ( w.e = 0 ) and ( w.f {$ifdef VALREAL_128} or w.fh {$endif} = 0 ) then
+    if ( w.e = 0 ) and ( w.f  = 0 ) then
     begin
         buf[0] := 0; // to avoid "warning: uninitialized"
         if ( frac_digits >= 0 ) then
@@ -1623,9 +1357,6 @@ begin
       {$ifdef VALREAL_80}
         if ( w.f = qword(C_MANT2_INTEGER) ) then
       {$endif VALREAL_80}
-      {$ifdef VALREAL_128}
-        if ( w.fh or w.f = 0 ) then
-      {$endif VALREAL_128}
         begin
            // Inf
            return_special( str, n, C_STR_INF, min_width );
@@ -1637,11 +1368,7 @@ begin
            n := 0;
        {$endif}
        {$ifndef GRISU1_F2A_NO_SNAN}
-         {$ifdef VALREAL_128}
-           if ( w.fh and ( C_MANT2_INTEGER_H shr 1 ) = 0 ) then
-         {$else}
            if ( w.f and ( C_MANT2_INTEGER shr 1 ) = 0 ) then
-         {$endif}
                return_special( str, n, C_STR_SNAN, min_width )
            else
        {$endif GRISU1_F2A_NO_SNAN}
@@ -1654,38 +1381,27 @@ begin
     if ( w.e <> 0 ) then
     begin
         // normal
-    {$ifdef VALREAL_128}
-        w.fh := w.fh or C_MANT2_INTEGER_H;
-    {$else not VALREAL_128}
       {$ifndef VALREAL_80}
         w.f := w.f or C_MANT2_INTEGER;
       {$endif not VALREAL_80}
-    {$endif VALREAL_*}
         n := C_DIY_FP_Q - C_FRAC2_BITS - 1;
     end
     else
     begin
         // denormal
-    {$ifdef VALREAL_128}
-        if ( w.fh = 0 ) then
-            n := count_leading_zero( w.f ) + 64
-        else
-            n := count_leading_zero( w.fh );
-    {$else not VALREAL_128}
       {$ifdef VALREAL_80}
         // also handle pseudo-denormals
         n := count_leading_zero( w.f ) + 32;
       {$else VALREAL_32 | VALREAL_64}
         n := count_leading_zero( w.f );
       {$endif VALREAL_*}
-    {$endif VALREAL_*}
         inc( w.e );
     end;
 
     // Final normalization
   {$if defined(VALREAL_32) or defined(VALREAL_64)}
     w.f := w.f shl n;
-  {$else VALREAL_80 | VALREAL_128}
+  {$else VALREAL_80}
     diy_util_shl( w.fh, w.f, n );
   {$endif VALREAL_*}
     dec( w.e, C_EXP2_BIAS + n + C_FRAC2_BITS );
@@ -1750,13 +1466,8 @@ begin
     end;
   {$endif VALREAL_80}
 
-  {$ifdef VALREAL_128}
-    fl := D.f;
-    templ := D.fh;
-    diy_util_shr( templ, fl, - D.e );
-  {$endif VALREAL_128}
 
-  {$if defined(VALREAL_80) or defined(VALREAL_128)}
+  {$ifdef VALREAL_80}
     if ( templ = 0 ) then
         n_digits_have := gen_digits_64( buf, 0, fl )
     else
@@ -1768,7 +1479,7 @@ begin
         n_digits_have := gen_digits_64( buf, 0, templ );
         inc( n_digits_have, gen_digits_64( buf, n_digits_have, fl, n_digits_have > 0 ) );
     end;
-  {$endif VALREAL_80 | VALREAL_128}
+  {$endif VALREAL_80}
 
     dot_pos := n_digits_have;
 
@@ -1786,7 +1497,7 @@ begin
         one_maskl := qword( 1 ) shl ( - D.e ) - 1;
         fl := D.f and one_maskl;
       {$endif VALREAL_64}
-      {$if defined(VALREAL_80) or defined(VALREAL_128)}
+      {$ifdef VALREAL_80}
         make_frac_mask( one_maskh, one_maskl, D.e );
         fl := D.f and one_maskl;
         fh := D.fh and one_maskh;
@@ -1819,7 +1530,7 @@ begin
             f := ord( fl or fh <> 0 );
             break;
         end;
-      {$endif VALREAL_80 | VALREAL_128}
+      {$endif VALREAL_80}
 
       {$ifndef VALREAL_32}
         // 64-bit loop
@@ -1889,7 +1600,6 @@ end;
 
 (****************************************************************************)
 
-{$ifndef fpc_softfpu_implementation}
 procedure str_real_iso( len, f: longint; d: ValReal; real_type: treal_type; out s: shortstring );
 var
     i: integer;
@@ -1902,7 +1612,6 @@ begin
             break; // only one "E" expected
         end;
 end;
-{$endif not fpc_softfpu_implementation}
 
 (*==========================================================================*
  *                                                                          *
@@ -1938,13 +1647,6 @@ const
     C_FRAC2_BITS = 63;
     C_EXP2_BIAS  = 16383;
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-    C_MAX_DIGITS_ACCEPTED = 38;
-    C_EXP10_OVER = 10000;
-    C_DIY_FP_Q   = 128;
-    C_FRAC2_BITS = 112;
-    C_EXP2_BIAS  = 16383;
-{$endif VALREAL_128}
 
 (****************************************************************************)
     // handy const
@@ -1953,10 +1655,6 @@ const
     C_DIY_EXP_TO_FLT = C_DIY_FP_Q - 1 + C_EXP2_BIAS;
     C_DIY_ROUND_BIT  = 1 shl ( C_DIY_SHR_TO_FLT - 1 );
     C_DIY_ROUND_MASK = ( C_DIY_ROUND_BIT shl 2 ) - 1;
-{$ifdef VALREAL_128}
-    C_FLT_INT_BITh   = qword(1) shl ( C_FRAC2_BITS - 64 );
-    C_FLT_FRAC_MASKh = C_FLT_INT_BITh - 1;
-{$else not VALREAL_128}
   {$ifdef VALREAL_32}
     C_FLT_INT_BIT    = dword(1) shl C_FRAC2_BITS;
     C_FLT_FRAC_MASK  = C_FLT_INT_BIT - 1;
@@ -1964,7 +1662,6 @@ const
     C_FLT_INT_BIT    = qword(1) shl C_FRAC2_BITS;
     C_FLT_FRAC_MASK  = qword(C_FLT_INT_BIT) - 1;
   {$endif VALREAL_*}
-{$endif VALREAL_*}
 
     // specials
 {$ifdef VALREAL_32}
@@ -1988,16 +1685,6 @@ const
   {$endif GRISU1_A2F_NO_SNAN}
     C_FLT_MANT_QNAN = qword($C000000000000000);
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-    C_FLT_MANT_INFh  = qword($0000000000000000);
-    C_FLT_MANT_INF   = qword($0000000000000000);
-  {$ifndef GRISU1_A2F_NO_SNAN}
-    C_FLT_MANT_SNANh = qword($0000400000000000);
-    C_FLT_MANT_SNAN  = qword($0000000000000000);
-  {$endif GRISU1_A2F_NO_SNAN}
-    C_FLT_MANT_QNANh = qword($0000800000000000);
-    C_FLT_MANT_QNAN  = qword($0000000000000000);
-{$endif VALREAL_128}
 
 (*-------------------------------------------------------
  | factor_10_inexact [local]
@@ -2088,47 +1775,6 @@ const
         ( c: ( f: qword($697392D2DDE50BD2); fh: dword($AA242499); e: -215 ); e10: -36 )
     );
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-    factor: array [ 0 .. 36 ] of TDIY_FP_Power_of_10 = (
-        ( c: ( fh: qword($8000000000000000); f: qword($0000000000000000); e: -127 ); e10:   0 ),
-        ( c: ( fh: qword($CCCCCCCCCCCCCCCC); f: qword($CCCCCCCCCCCCCCCD); e: -131 ); e10:  -1 ),
-        ( c: ( fh: qword($A3D70A3D70A3D70A); f: qword($3D70A3D70A3D70A4); e: -134 ); e10:  -2 ),
-        ( c: ( fh: qword($83126E978D4FDF3B); f: qword($645A1CAC083126E9); e: -137 ); e10:  -3 ),
-        ( c: ( fh: qword($D1B71758E219652B); f: qword($D3C36113404EA4A9); e: -141 ); e10:  -4 ),
-        ( c: ( fh: qword($A7C5AC471B478423); f: qword($0FCF80DC33721D54); e: -144 ); e10:  -5 ),
-        ( c: ( fh: qword($8637BD05AF6C69B5); f: qword($A63F9A49C2C1B110); e: -147 ); e10:  -6 ),
-        ( c: ( fh: qword($D6BF94D5E57A42BC); f: qword($3D32907604691B4D); e: -151 ); e10:  -7 ),
-        ( c: ( fh: qword($ABCC77118461CEFC); f: qword($FDC20D2B36BA7C3D); e: -154 ); e10:  -8 ),
-        ( c: ( fh: qword($89705F4136B4A597); f: qword($31680A88F8953031); e: -157 ); e10:  -9 ),
-        ( c: ( fh: qword($DBE6FECEBDEDD5BE); f: qword($B573440E5A884D1B); e: -161 ); e10: -10 ),
-        ( c: ( fh: qword($AFEBFF0BCB24AAFE); f: qword($F78F69A51539D749); e: -164 ); e10: -11 ),
-        ( c: ( fh: qword($8CBCCC096F5088CB); f: qword($F93F87B7442E45D4); e: -167 ); e10: -12 ),
-        ( c: ( fh: qword($E12E13424BB40E13); f: qword($2865A5F206B06FBA); e: -171 ); e10: -13 ),
-        ( c: ( fh: qword($B424DC35095CD80F); f: qword($538484C19EF38C94); e: -174 ); e10: -14 ),
-        ( c: ( fh: qword($901D7CF73AB0ACD9); f: qword($0F9D37014BF60A10); e: -177 ); e10: -15 ),
-        ( c: ( fh: qword($E69594BEC44DE15B); f: qword($4C2EBE687989A9B4); e: -181 ); e10: -16 ),
-        ( c: ( fh: qword($B877AA3236A4B449); f: qword($09BEFEB9FAD487C3); e: -184 ); e10: -17 ),
-        ( c: ( fh: qword($9392EE8E921D5D07); f: qword($3AFF322E62439FCF); e: -187 ); e10: -18 ),
-        ( c: ( fh: qword($EC1E4A7DB69561A5); f: qword($2B31E9E3D06C32E5); e: -191 ); e10: -19 ),
-        ( c: ( fh: qword($BCE5086492111AEA); f: qword($88F4BB1CA6BCF584); e: -194 ); e10: -20 ),
-        ( c: ( fh: qword($971DA05074DA7BEE); f: qword($D3F6FC16EBCA5E03); e: -197 ); e10: -21 ),
-        ( c: ( fh: qword($F1C90080BAF72CB1); f: qword($5324C68B12DD6338); e: -201 ); e10: -22 ),
-        ( c: ( fh: qword($C16D9A0095928A27); f: qword($75B7053C0F178294); e: -204 ); e10: -23 ),
-        ( c: ( fh: qword($9ABE14CD44753B52); f: qword($C4926A9672793543); e: -207 ); e10: -24 ),
-        ( c: ( fh: qword($F79687AED3EEC551); f: qword($3A83DDBD83F52205); e: -211 ); e10: -25 ),
-        ( c: ( fh: qword($C612062576589DDA); f: qword($95364AFE032A819D); e: -214 ); e10: -26 ),
-        ( c: ( fh: qword($9E74D1B791E07E48); f: qword($775EA264CF55347E); e: -217 ); e10: -27 ),
-        ( c: ( fh: qword($FD87B5F28300CA0D); f: qword($8BCA9D6E188853FC); e: -221 ); e10: -28 ),
-        ( c: ( fh: qword($CAD2F7F5359A3B3E); f: qword($096EE45813A04330); e: -224 ); e10: -29 ),
-        ( c: ( fh: qword($A2425FF75E14FC31); f: qword($A1258379A94D028D); e: -227 ); e10: -30 ),
-        ( c: ( fh: qword($81CEB32C4B43FCF4); f: qword($80EACF948770CED7); e: -230 ); e10: -31 ),
-        ( c: ( fh: qword($CFB11EAD453994BA); f: qword($67DE18EDA5814AF2); e: -234 ); e10: -32 ),
-        ( c: ( fh: qword($A6274BBDD0FADD61); f: qword($ECB1AD8AEACDD58E); e: -237 ); e10: -33 ),
-        ( c: ( fh: qword($84EC3C97DA624AB4); f: qword($BD5AF13BEF0B113F); e: -240 ); e10: -34 ),
-        ( c: ( fh: qword($D4AD2DBFC3D07787); f: qword($955E4EC64B44E864); e: -244 ); e10: -35 ),
-        ( c: ( fh: qword($AA242499697392D2); f: qword($DDE50BD1D5D0B9EA); e: -247 ); e10: -36 )
-    );
-{$endif VALREAL_128}
 var
     i: integer;
     a, b: TDIY_FP_Power_of_10;
@@ -2187,26 +1833,6 @@ begin
     //
 end;
 {$endif VALREAL_80}
-{$ifdef VALREAL_128}
-procedure add_digit( var h, l: qword; digit: byte ); {$ifdef grisu1_inline}inline;{$endif}
-var
-    templ, temph, temp1, temp2: qword;
-begin
-    templ := l;
-    temph := h;
-    diy_util_shl( temph, templ, 3 );
-    //
-    temp1 := lo(l);
-    inc( temp1, lo(templ) + temp1 + digit );
-    //
-    temp2 := hi(l);
-    inc( temp2, hi(templ) + temp2 + hi(temp1) );
-    //
-    inc( h, temph + h + hi(temp2) );
-    l := ( temp2 shl 32 ) + lo(temp1);
-    //
-end;
-{$endif VALREAL_128}
 
 (*-------------------------------------------------------
  | count_leading_zero [local] <<<duplicate>>>
@@ -2262,9 +1888,6 @@ var
 {$ifdef VALREAL_80}
     mantissa_h: dword;
 {$endif}
-{$ifdef VALREAL_128}
-    mantissa_h, bit_round_h, bit_round_mask_h: qword;
-{$endif}
     dig_num, exp10, overflow, n, src_pos, src_len: integer;
     exp_read, exp_temp: longint;
     b, dig_round, dig_sticky: byte;
@@ -2280,14 +1903,14 @@ begin
 
     // Pre-initialize result
 {$ifdef GRISU1_A2F_ERROR_RET0}
-    pack_float( val_real, false, 0, {$ifdef VALREAL_128} 0, {$endif} 0 );
+    pack_float( val_real, false, 0,  0 );
 {$else}
   {-ifdef GRISU1_A2F_NO_SNAN}
     // "real indefinite"
-    pack_float( val_real, true, C_EXP2_SPECIAL, {$ifdef VALREAL_128} C_FLT_MANT_QNANh, {$endif} C_FLT_MANT_QNAN );
+    pack_float( val_real, true, C_EXP2_SPECIAL,  C_FLT_MANT_QNAN );
 (*{-else}
     // SNaN is preferable for catching uninitialized variables access, but may cause troubles with implicit float type conversions
-    pack_float( val_real, false, C_EXP2_SPECIAL, {$ifdef VALREAL_128} C_FLT_MANT_SNANh, {$endif} C_FLT_MANT_SNAN );
+    pack_float( val_real, false, C_EXP2_SPECIAL,  C_FLT_MANT_SNAN );
   {-endif}*)
 {$endif}
 
@@ -2330,18 +1953,12 @@ begin
     if special then
     begin
         mantissa := C_FLT_MANT_INF;
-{$ifdef VALREAL_128}
-        mantissa_h := C_FLT_MANT_INFh;
-{$endif}
         if not match_special( src_pos, src, C_STR_INF ) then
         begin
           {$ifndef GRISU1_A2F_NO_SNAN}
             if match_special( src_pos, src, C_STR_SNAN ) then
             begin
                 mantissa := C_FLT_MANT_SNAN;
-{$ifdef VALREAL_128}
-                mantissa_h := C_FLT_MANT_SNANh;
-{$endif}
             end
             else
           {$endif GRISU1_A2F_NO_SNAN}
@@ -2351,16 +1968,13 @@ begin
                 minus := TRUE;
               {$endif}
                 mantissa := C_FLT_MANT_QNAN;
-{$ifdef VALREAL_128}
-                mantissa_h := C_FLT_MANT_QNANh;
-{$endif}
             end
             else
                 special := false;
         end;
         if special then
         begin
-            pack_float( val_real, minus, C_EXP2_SPECIAL, {$ifdef VALREAL_128} mantissa_h, {$endif} mantissa );
+            pack_float( val_real, minus, C_EXP2_SPECIAL,  mantissa );
             src_pos := 0;
         end;
         err_pos := src_pos;
@@ -2370,9 +1984,9 @@ begin
     // consume mantissa digits skipping leading zeroes
     // empty mantissa ("0.E#", ".0E#", ".E#", "E#") is allowed at least in D5
     mantissa := 0;
-{$if defined(VALREAL_80) or defined(VALREAL_128)}
+{$ifdef VALREAL_80}
     mantissa_h := 0;
-{$endif VALREAL_80 | VALREAL_128}
+{$endif VALREAL_80}
     dig_num := 0;
     exp10 := 0;
     dig_round := 0;
@@ -2393,7 +2007,7 @@ begin
             // normal digit
 {$if defined(VALREAL_32) or defined(VALREAL_64)}
             inc( mantissa, ( mantissa shl 3 ) + mantissa + b )
-{$else VALREAL_80 | VALREAL_128}
+{$else VALREAL_80}
             add_digit( mantissa_h, mantissa, b )
 {$endif VALREAL_*}
         else
@@ -2433,7 +2047,7 @@ begin
                 // normal digit
 {$if defined(VALREAL_32) or defined(VALREAL_64)}
                 inc( mantissa, ( mantissa shl 3 ) + mantissa + b );
-{$else VALREAL_80 | VALREAL_128}
+{$else VALREAL_80}
                 add_digit( mantissa_h, mantissa, b );
 {$endif VALREAL_*}
                 dec( exp10 ); // move the dot to the left
@@ -2461,7 +2075,7 @@ begin
     begin
         // round-up
         inc( mantissa );
-{$if defined(VALREAL_80) or defined(VALREAL_128)}
+{$ifdef VALREAL_80}
         if ( mantissa = 0 ) then
             inc( mantissa_h );
 {$endif VALREAL_*}
@@ -2529,10 +2143,10 @@ begin
     end;
 
     // zero [or negative exponent overflow]
-    if ( mantissa {$if defined(VALREAL_80) or defined(VALREAL_128)} or mantissa_h {$endif} = 0 )
+    if ( mantissa {$ifdef VALREAL_80} or mantissa_h {$endif} = 0 )
     or ( exp10 <= - C_EXP10_OVER ) then
     begin
-        pack_float( val_real, minus, 0, {$ifdef VALREAL_128} 0, {$endif} 0 ); // +0|-0
+        pack_float( val_real, minus, 0,  0 ); // +0|-0
         err_pos := 0;
         exit;
     end;
@@ -2546,7 +2160,7 @@ begin
 {$if defined(VALREAL_32) or defined(VALREAL_64)}
         n := count_leading_zero( mantissa );
         D.f := mantissa shl n;
-{$else VALREAL_80 | VALREAL_128}
+{$else VALREAL_80}
         if ( mantissa_h = 0 ) then
             n := count_leading_zero( mantissa ) + sizeof( mantissa_h ) * 8
         else
@@ -2581,12 +2195,12 @@ begin
             D.f := D.f shr 1;
             inc( D.e );
         end;
-{$else VALREAL_80 or VALREAL_128}
+{$else VALREAL_80}
         diy_util_shr( D.fh, D.f, C_DIY_SHR_TO_FLT );
         if ( b <> 0 ) then
             diy_util_add( D.fh, D.f, 0, b );
         // handle round overflow
-        if ( D.fh {$ifdef VALREAL_128} and ( C_FLT_INT_BITh shl 1 ) {$endif} <> 0 ) then
+        if ( D.fh  <> 0 ) then
         begin
             diy_util_shr( D.fh, D.f, 1 );
             inc( D.e );
@@ -2629,58 +2243,29 @@ begin
 {$if defined(VALREAL_64) or defined(VALREAL_80)}
             bit_round := qword(1) shl ( n - 1 );
 {$endif VALREAL_64 | VALREAL_80}
-{$ifdef VALREAL_128}
-            bit_round := 1;
-            bit_round_h := 0;
-            diy_util_shl( bit_round_h, bit_round, n - 1 );
-            // mask for ulp and all least bits including the round one
-            bit_round_mask := bit_round;
-            bit_round_mask_h := bit_round_h;
-            diy_util_shl( bit_round_mask_h, bit_round_mask, 2 );
-            if ( bit_round_mask = 0 ) then
-                dec( bit_round_mask_h );
-            dec( bit_round_mask );
-{$else not VALREAL_128}
             // mask for ulp and all least bits including the round one
             bit_round_mask := ( bit_round shl 2 ) - 1;
             // Note[floatx80]: works correctly despite the overflow is ignored in extreme case "D.e=-C_FRAC2_BITS"
-{$endif VALREAL_*}
             // round increment
-            if ( D.f and bit_round_mask = bit_round ) {$ifdef VALREAL_128} and ( D.fh and bit_round_mask_h = bit_round_h ) {$endif} then
+            if ( D.f and bit_round_mask = bit_round )  then
                 // round to even and already even -> no round-up
                 b := 0
             else
-                b := ord( ( D.f and bit_round ) {$ifdef VALREAL_128} or ( D.fh and bit_round_h ) {$endif} <> 0 );
+                b := ord( ( D.f and bit_round )  <> 0 );
             // shift and round
             if ( D.e = - C_FRAC2_BITS ) then
             begin
                 // extreme case: rounding may result in either lowest denormal or zero
-              {$ifdef VALREAL_128}
-                D.fh := 0;
-              {$endif VALREAL_128}
                 D.f := b;
                 if ( b = 0 ) then
                     overflow := -1; // underflow
             end
             else
-          {$ifdef VALREAL_128}
-            begin
-                diy_util_shr( D.fh, D.f, n );
-                if ( b <> 0 ) then
-                    diy_util_add( D.fh, D.f, 0, b );
-            end;
-          {$else not VALREAL_128}
                 D.f := ( D.f shr n ) + b;
-          {$endif VALREAL_*}
             D.e := 0;
 {$ifdef grisu1_debug}
-          {$ifdef VALREAL_128}
-            assert( ( D.f or D.fh <> 0 ) or ( overflow = -1 ) );
-            assert( D.fh and not C_FLT_FRAC_MASKh = 0 );
-          {$else not VALREAL_128}
             assert( ( D.f <> 0 ) or ( overflow = -1 ) );
             assert( D.f and not C_FLT_FRAC_MASK = 0 );
-          {$endif VALREAL_*}
 {$endif grisu1_debug}
         end
         else
@@ -2697,17 +2282,10 @@ begin
           {$if defined(VALREAL_64) or defined(VALREAL_80)}
             assert( D.f and not qword(C_FLT_FRAC_MASK) = qword(C_FLT_INT_BIT) );
           {$endif VALREAL_64 | VALREAL_80}
-          {$ifdef VALREAL_128}
-            assert( D.fh and not C_FLT_FRAC_MASKh = C_FLT_INT_BITh );
-          {$endif VALREAL_128}
 {$endif grisu1_debug}
         {$ifndef VALREAL_80}
            // clear the implicit integer bit
-          {$ifdef VALREAL_128}
-            D.fh := D.fh and C_FLT_FRAC_MASKh;
-          {$else not VALREAL_128}
             D.f := D.f and C_FLT_FRAC_MASK;
-          {$endif VALREAL_*}
         {$endif not VALREAL_80}
         end;
     end;
@@ -2716,18 +2294,18 @@ begin
     if ( overflow < 0 ) then
     begin
         // underflow [+0|-0]
-        pack_float( val_real, minus, 0, {$ifdef VALREAL_128} 0, {$endif} 0 );
+        pack_float( val_real, minus, 0,  0 );
     end
     else
     if ( overflow > 0 ) then
     begin
         // overflow [+Inf|-Inf]
-        pack_float( val_real, minus, C_EXP2_SPECIAL, {$ifdef VALREAL_128} C_FLT_MANT_INFh, {$endif} C_FLT_MANT_INF );
+        pack_float( val_real, minus, C_EXP2_SPECIAL,  C_FLT_MANT_INF );
     end
     else
     begin
         // no error
-        pack_float( val_real, minus, D.e, {$ifdef VALREAL_128} D.fh, {$endif} D.f );
+        pack_float( val_real, minus, D.e,  D.f );
     end;
     err_pos := 0;
 

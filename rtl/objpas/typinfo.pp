@@ -139,10 +139,6 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
        );
 {$pop}
 
-{$IF FPC_FULLVERSION>=30301}
-{$DEFINE HAVE_INVOKEHELPER}
-{$DEFINE HAVE_HIDDENTHUNKCLASS}
-{$ENDIF}
 
 {$MINENUMSIZE DEFAULT}
 
@@ -159,9 +155,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
       TTypeKinds = set of TTypeKind;
       ShortStringBase = string[255];
 
-      {$IFDEF HAVE_INVOKEHELPER}
       TInvokeHelper = procedure(Instance : Pointer; Args : PPointer);
-      {$ENDIF}
 
       PParameterLocation = ^TParameterLocation;
       TParameterLocation =
@@ -268,9 +262,6 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
 
 {$PACKRECORDS C}
 
-{$if not defined(VER3_2)}
-{$define PROVIDE_ATTR_TABLE}
-{$endif}
 
       TAttributeProc = function : TCustomAttribute;
 
@@ -415,9 +406,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         Kind: TMethodKind;
         ParamCount: Word;
         StackSize: SizeInt;
-        {$IFDEF HAVE_INVOKEHELPER}
         InvokeHelper : TInvokeHelper;
-        {$ENDIF}
         NamePtr: PShortString;
         { Params: array[0..ParamCount - 1] of TVmtMethodParam }
         { ResultLocs: PParameterLocations (if ResultType != Nil) }
@@ -491,16 +480,12 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         Kind: TMethodKind;
         ParamCount: Word;
         StackSize: SizeInt;
-        {$IFDEF HAVE_INVOKEHELPER}
         InvokeHelper : TInvokeHelper;
-        {$ENDIF}
         NamePtr: PShortString;
         Flags: Byte;
         VmtIndex: Smallint;
-        {$IFNDEF VER3_2}
         CodeAddress : CodePointer;
         AttributeTable : PAttributeTable;
-        {$ENDIF}
         property Name: ShortString read GetName;
         property Param[Index: Word]: PVmtMethodParam read GetParam;
         property ResultLocs: PParameterLocations read GetResultLocs;
@@ -552,9 +537,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         FieldType: PPTypeInfo;
         Flags: Byte;
         Name: PShortString;
-      {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-      {$endif}
         property FieldVisibility: TVisibilityClass read GetVisibility;
         property StrictVisibility: Boolean read GetStrictVisibility;
         property Tail: Pointer read GetTail;
@@ -608,9 +591,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
       packed
       {$endif FPC_REQUIRES_PROPER_ALIGNMENT}
       record
-        {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-        {$endif}
         case TTypeKind of
           tkRecord: (
             Terminator: Pointer;
@@ -650,15 +631,11 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         Kind: TMethodKind;
         ParamCount: Word;
         StackSize: SizeInt;
-        {$IFDEF HAVE_INVOKEHELPER}
         InvokeHelper : TInvokeHelper;
-        {$ENDIF}
         NamePtr: PShortString;
         Flags: Byte;
-        {$IFNDEF VER3_2}
         CodeAddress : CodePointer;
         AttributeTable : PAttributeTable;
-        {$ENDIF}
         { Params: array[0..ParamCount - 1] of TRecMethodParam }
         { ResultLocs: PParameterLocations (if ResultType != Nil) }
         property Name: ShortString read GetName;
@@ -704,17 +681,13 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         property PropertyTable: PPropData read GetPropertyTable;
         property MethodTable: PIntfMethodTable read GetMethodTable;
       public
-      {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-      {$endif}
       case TTypeKind of
         tkInterface: (
           Parent: PPTypeInfo;
           Flags: TIntfFlagsBase;
           GUID: TGUID;
-          {$IFDEF HAVE_HIDDENTHUNKCLASS}
           ThunkClass : PPTypeInfo;
-          {$ENDIF}
           UnitNameField: ShortString;
           { PropertyTable: TPropData }
           { MethodTable: TIntfMethodTable }
@@ -747,17 +720,13 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         property PropertyTable: PPropData read GetPropertyTable;
         property MethodTable: PIntfMethodTable read GetMethodTable;
       public
-      {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-      {$endif}
         case TTypeKind of
           tkInterface: (
             Parent: PPTypeInfo;
             Flags : TIntfFlagsBase;
             IID: TGUID;
-            {$IFDEF HAVE_HIDDENTHUNKCLASS}
             ThunkClass : PPTypeInfo;
-            {$ENDIF}
             UnitNameField: ShortString;
             { IIDStr: ShortString; }
             { PropertyTable: TPropData }
@@ -794,9 +763,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         property ExRTTITable: PPropDataEx read GetExPropertyTable;
         property ExMethodTable : PVmtMethodExTable Read GetExMethodTable;
       public
-        {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-        {$endif}
         case TTypeKind of
           tkClass: (
             ClassType : TClass;
@@ -837,9 +804,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         property MethodTable: PRecordMethodTable read GetMethodTable;
         property ExRTTITable: PPropDataEx read GetExPropertyTable;
       public
-        {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable: PAttributeTable;
-        {$endif}
         case TTypeKind of
       tkRecord:
         (
@@ -910,9 +875,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         { tkPointer }
         property RefType: PTypeInfo read GetRefType;
       public
-         {$ifdef PROVIDE_ATTR_TABLE}
          AttributeTable : PAttributeTable;
-         {$endif}
          case TTypeKind of
             tkUnKnown,tkLString,tkWString,tkVariant,tkUString:
               ();
@@ -1129,9 +1092,7 @@ procedure UnregisterModuleTypeInfo(Module: HMODULE);
         IsStatic : Boolean;
         PropParams : PPropParams;
 
-        {$ifdef PROVIDE_ATTR_TABLE}
         AttributeTable : PAttributeTable;
-        {$endif}
         Name : ShortString;
         property PropType: PTypeInfo read GetPropType;
         property Tail: Pointer read GetTail;
@@ -1325,9 +1286,7 @@ function GetPropAttribute(PropInfo: PPropInfo; AttributeNr: Word): TCustomAttrib
 
 function GetAttribute(AttributeTable: PAttributeTable; AttributeNr: Word): TCustomAttribute;
 
-{$IFDEF HAVE_INVOKEHELPER}
 procedure CallInvokeHelper(aTypeInfo : PTypeInfo; Instance: Pointer; const aMethod : String; aArgs : PPointer);
-{$ENDIF}
 
 // Auxiliary routines, which may be useful
 Function GetEnumName(TypeInfo : PTypeInfo;Value : Integer) : string;
@@ -1411,16 +1370,11 @@ begin
 end;
 
 function GetAttributeTable(TypeInfo: PTypeInfo): PAttributeTable;
-{$ifdef PROVIDE_ATTR_TABLE}
 var
   TD: PTypeData;
 begin
   TD := GetTypeData(TypeInfo);
   Result:=TD^.AttributeTable;
-{$else}
-begin
-  Result:=Nil;
-{$endif}
 end;
 
 function GetPropData(TypeInfo : PTypeInfo; TypeData: PTypeData) : PPropData; inline;
@@ -1443,11 +1397,7 @@ end;
 
 function GetPropAttribute(PropInfo: PPropInfo; AttributeNr: Word): TCustomAttribute;
 begin
-{$ifdef PROVIDE_ATTR_TABLE}
   Result := GetAttribute(PropInfo^.AttributeTable, AttributeNr);
-{$else}
-  Result := Nil;
-{$endif}
 end;
 
 Function GetEnumName(TypeInfo : PTypeInfo;Value : Integer) : string;
@@ -4375,9 +4325,7 @@ function TExtendedVmtFieldEntry.GetTail: Pointer;
 begin
 
   Result := PByte(@Name) + SizeOf(Pointer) ;
-  {$ifdef PROVIDE_ATTR_TABLE}
   Result := Result + SizeOf(Pointer) ;
-  {$ENDIF}
 end;
 
 function TExtendedVmtFieldEntry.GetVisibility: TVisibilityClass;
@@ -4629,11 +4577,7 @@ var
 
 begin
   if ParamCount = 0 then
-{$IFNDEF VER3_2}
     Result := PByte(@CodeAddress) + SizeOf(CodePointer)+SizeOf(AttributeTable)
-{$ELSE}
-    Result := PByte(@VmtIndex) + SizeOf(VmtIndex)
-{$ENDIF}
   else
     Result:=Param[ParamCount-1]^.GetTail;
   if Assigned(ResultType) then
@@ -4655,9 +4599,7 @@ end;
 function TRecMethodExEntry.GetParamsStart: PByte;
 begin
   Result:=PByte(aligntoptr(PByte(@NamePtr) + SizeOf(NamePtr)+SizeOf(FLags)));
-  {$IFNDEF VER3_2}
   Result:=Result+SizeOf(CodeAddress)+SizeOf(AttributeTable);
-  {$ENDIF}
 end;
 
 function TRecMethodExEntry.GetMethodVisibility: TVisibilityClass;
@@ -5132,7 +5074,6 @@ begin
     end;
 end;
 
-{$IFDEF HAVE_INVOKEHELPER}
 procedure CallInvokeHelper(Instance: Pointer; aMethod : PIntfMethodEntry; aArgs : PPointer);
 
 begin
@@ -5182,6 +5123,5 @@ begin
     Raise EArgumentException.CreateFmt('Interface %s has no method %s.',[aTypeInfo^.Name,aMethod]);
   CallInvokeHelper(Instance,MethodEntry,aArgs);
 end;
-{$ENDIF HAVE_INVOKEHELPER}
 
 end.

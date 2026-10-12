@@ -498,37 +498,18 @@ end;
     *                      z    = (z-x[i])*2**24
     *
     *
-    *      y[]     output result in an array of double precision numbers.
-    *              The dimension of y[] is:
-    *                      24-bit  precision       1
-    *                      53-bit  precision       2
-    *                      64-bit  precision       2
-    *                      113-bit precision       3
-    *              The actual value is the sum of them. Thus for 113-bit
-    *              precision, one may have to do something like:
-    *
-    *              long double t,w,r_head, r_tail;
-    *              t = (long double)y[2] + (long double)y[1];
-    *              w = (long double)y[0];
-    *              r_head = t+w;
-    *              r_tail = w - (r_head - t);
+    *      y[]     output result in y[0] and y[1]. Their sum is the
+    *              remainder, using the original 64-bit precision mode.
     *
     *      e0      The exponent of x[0]. Must be <= 16360 or you need to
     *              expand the ipio2 table.
     *
     *      nx      dimension of x[]
     *
-    *      prec    an integer indicating the precision:
-    *                      0       24  bits (single)
-    *                      1       53  bits (double)
-    *                      2       64  bits (extended)
-    *                      3       113 bits (quad)
-    *
     * Here is the description of some local variables:
     *
     *      jk      jk+1 is the initial number of terms of ipio2[] needed
-    *              in the computation. The recommended value is 2,3,4,
-    *              6 for single, double, extended,and quad.
+    *              in the computation. This routine uses jk = 4.
     *
     *      jz      local integer variable indicating the number of
     *              terms of ipio2[] used.
@@ -590,15 +571,13 @@ end;
         $91615E, $E61B08, $659985, $5F14A0, $68408D, $FFD880,
         $4D7327, $310606, $1556CA, $73A8C9, $60E27B, $C08C6B);
 
-      init_jk: array[0..3] of integer = (2,3,4,6); {initial value for jk}
       two24:  double = 16777216.0;                 {2^24}
       twon24: double = 5.9604644775390625e-08;     {1/2^24}
 
     type
-      TDA02 = array[0..2] of double; { 3 elements is enough for float128 }
+      TDA02 = array[0..2] of double; { Three 24-bit chunks hold a Double input. }
 
-    { inline to make use of the fact prec is always 2. }
-    function k_rem_pio2(const x: TDA02; out y: TDA02; e0, nx, prec: integer): sizeint; inline;
+    function k_rem_pio2(const x: TDA02; out y: TDA02; e0, nx: integer): sizeint; inline;
     var
       i,ih,j,jz,jx,jv,jp,jk,carry,k,n,q0: longint;
       t: longint;
@@ -607,7 +586,7 @@ end;
       z,fw: double;
     begin
       {initialize jk}
-      jk := init_jk[prec];
+      jk := 4;
       jp := jk;
 
       {determine jx,jv,q0, note that 3>q0}
@@ -770,68 +749,20 @@ end;
       end;
 
       {compress fq[] into y[]}
-      case prec of
-        0:
-        begin
-          fw := 0.0;
-          for i:=jz downto 0 do
-            fw := fw + fq[i];
-          if ih=0 then
-            y[0] := fw
-          else
-            y[0] := -fw;
-        end;
-
-        1, 2:
-        begin
-          fw := 0.0;
-          for i:=jz downto 0 do
-            fw := fw + fq[i];
-          if ih=0 then
-            y[0] := fw
-          else
-            y[0] := -fw;
-          fw := fq[0]-fw;
-          for i:=1 to jz do
-            fw := fw + fq[i];
-          if ih=0 then
-            y[1] := fw
-          else
-            y[1] := -fw;
-        end;
-
-        3:
-        begin
-          {painful}
-          for i:=jz downto 1 do
-          begin
-            fw     := fq[i-1]+fq[i];
-            fq[i]  := fq[i]+(fq[i-1]-fw);
-            fq[i-1]:= fw;
-          end;
-          for i:=jz downto 2 do
-          begin
-            fw     := fq[i-1]+fq[i];
-            fq[i]  := fq[i]+(fq[i-1]-fw);
-            fq[i-1]:= fw;
-          end;
-          fw := 0.0;
-          for i:=jz downto 2 do
-            fw := fw + fq[i];
-          if ih=0 then
-          begin
-            y[0] := fq[0];
-            y[1] := fq[1];
-            y[2] := fw;
-          end
-          else
-          begin
-            y[0] := -fq[0];
-            y[1] := -fq[1];
-            y[2] := -fw;
-          end;
-        end;
-      end;
+      fw := 0.0;
+      for i:=jz downto 0 do
+        fw := fw + fq[i];
+      if ih=0 then
+        y[0] := fw
+      else
+        y[0] := -fw;
+      fw := fq[0]-fw;
+      for i:=1 to jz do
+        fw := fw + fq[i];
+      if ih=0 then
+        y[1] := fw
+      else
+        y[1] := -fw;
       k_rem_pio2 := n and 7;
     end;
 
@@ -859,7 +790,7 @@ end;
       tx[2] := (z-tx[1])*two24;
       nx := 3;
       while (tx[nx-1]=0.0) do dec(nx);  { skip zero terms }
-      result := k_rem_pio2(tx,ty,e0,nx,2);
+      result := k_rem_pio2(tx,ty,e0,nx);
       z := ty[0] + ty[1];
       if x<0 then
       begin
@@ -1698,24 +1629,17 @@ end;
 
 {$ifndef FPC_SYSTEM_HAS_FRAC}
 {$push}
-{$ifndef VER3_2}
 { if we have to check manually fpu exceptions, then force the result assignment statement here to
   throw one }
 {$CHECKFPUEXCEPTIONS+}
 { turn off fastmath as it converts zero/zero into 0 and thus not raising an exception }
 {$OPTIMIZATION NOFASTMATH}
-{$endif VER3_2}
 function fpc_frac_real(d : ValReal) : ValReal;compilerproc;
   begin
     { Nan or +/-Inf }
     if (float64high(d) and $7ff00000)=$7ff00000 then
       { return NaN }
-{$ifdef VER3_2}
-      { fix bootstrapping with 3.2 on arm-linux }
-      result := (d-d)/0.0
-{$else VER3_2}
       result := zero/zero
-{$endif VER3_2}
     else
       result := d - Int(d);
   end;

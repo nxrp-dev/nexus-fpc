@@ -97,9 +97,9 @@ procedure _FPC_proc_start; assembler; nostackframe; public name '_start';
     movq    initialstkptr@GOTPCREL(%rip),%rax
     movq    %rsp,(%rax)
 
-{$if (FPC_FULLVERSION>30200) and not defined(FPC_USE_LIBC)}
+{$ifndef FPC_USE_LIBC}
     call    InitTLS
-{$endif FPC_FULLVERSION>30200 and not FPC_USE_LIBC}
+{$endif not FPC_USE_LIBC}
 
     xorq    %rbp, %rbp
     call    PASCALMAIN

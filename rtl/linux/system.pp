@@ -585,11 +585,9 @@ begin
     result := stklen;
 end;
 
-{$if FPC_FULLVERSION>30300}
 {$ifdef CPUI386}
 {$I abitag.inc}
 {$endif CPUI386}
-{$endif FPC_FULLVERSION>30300}
 
 begin
 {$if defined(i386) and not defined(FPC_USE_LIBC)}

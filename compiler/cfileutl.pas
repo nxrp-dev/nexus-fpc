@@ -137,36 +137,12 @@ interface
 
 function Unix2AmigaPath(path: String): String;
 
-{$if FPC_FULLVERSION < 20701}
-type
-  TRawByteSearchRec = TSearchRec;
-{$endif}
-
-
 implementation
 
     uses
       Comphook,
       Globals;
 
-{$undef AllFilesMaskIsInRTL}
-
-{$if (FPC_VERSION > 2)}
-  {$define AllFilesMaskIsInRTL}
-{$endif FPC_VERSION}
-
-{$if (FPC_VERSION = 2) and (FPC_RELEASE > 2)}
-  {$define AllFilesMaskIsInRTL}
-{$endif}
-
-{$if (FPC_VERSION = 2) and (FPC_RELEASE = 2) and (FPC_PATCH > 0)}
-  {$define AllFilesMaskIsInRTL}
-{$endif}
-
-{$ifndef AllFilesMaskIsInRTL}
-  const
-    AllFilesMask = '*';
-{$endif not AllFilesMaskIsInRTL}
     var
       DirCache : TDirectoryCache;
 

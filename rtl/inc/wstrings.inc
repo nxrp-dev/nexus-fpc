@@ -795,7 +795,7 @@ begin
     end;
 end;
 
-Function fpc_Val_UInt_WideStr ({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S : WideString; out Code : ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_WIDESTR']; compilerproc;
+Function fpc_Val_UInt_WideStr (DestSize: SizeInt; Const S : WideString; out Code : ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_WIDESTR']; compilerproc;
 Var
   SS: ShortString;
 begin
@@ -805,7 +805,7 @@ begin
   else
     begin
       SS:=ShortString(S);
-      fpc_Val_UInt_WideStr := int_Val_UInt_ShortStr({$ifndef VER3_2}DestSize,{$endif VER3_2}SS,Code);
+      fpc_Val_UInt_WideStr := int_Val_UInt_ShortStr(DestSize,SS,Code);
     end;
 end;
 

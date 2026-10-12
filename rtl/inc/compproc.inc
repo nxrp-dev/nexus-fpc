@@ -65,10 +65,6 @@ Procedure fpc_shortstr_insert(const source:shortstring;var s:shortstring;index:S
 Procedure fpc_shortstr_insert_char(source:AnsiChar;var s:shortstring;index:SizeInt); compilerproc:fpc_in_insert_x_y_z;
 
 {$ifdef FPC_HAS_FEATURE_DYNARRAYS}
-{$if defined(VER3_2)}
-function fpc_dynarray_copy(psrc : pointer;ti : pointer;
-    lowidx,count:tdynarrayindex) : fpc_stub_dynarray;compilerproc;
-{$endif VER3_2}
 function fpc_array_to_dynarray_copy(psrc : pointer;ti : pointer;
     lowidx,count,maxcount:tdynarrayindex;
     elesize : sizeint;
@@ -170,14 +166,14 @@ procedure fpc_chararray_Currency(c : Currency;len,fr : SizeInt;out a : array of 
 Function fpc_Val_Real_ShortStr(const s : shortstring; out code : ValSInt): ValReal; compilerproc;
 {$endif}
 Function fpc_Val_SInt_ShortStr(DestSize: SizeInt; Const S: ShortString; out Code: ValSInt): ValSInt; compilerproc;
-Function fpc_Val_UInt_Shortstr({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S: ShortString; out Code: ValSInt): ValUInt; compilerproc;
+Function fpc_Val_UInt_Shortstr(DestSize: SizeInt; Const S: ShortString; out Code: ValSInt): ValUInt; compilerproc;
 function fpc_val_enum_shortstr(str2ordindex:pointer;const s:shortstring;out code:valsint):longint; compilerproc;
 Function fpc_Val_Currency_ShortStr(const AText : shortstring; out ACode : ValSInt): currency; compilerproc;
 {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}
 {$ifndef FPUNONE}
 Function fpc_Val_Real_AnsiStr(Const S : RawByteString; out Code : ValSInt): ValReal; compilerproc;
 {$endif}
-Function fpc_Val_UInt_AnsiStr ({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S : RawByteString; out Code : ValSInt): ValUInt; compilerproc;
+Function fpc_Val_UInt_AnsiStr (DestSize: SizeInt; Const S : RawByteString; out Code : ValSInt): ValUInt; compilerproc;
 Function fpc_Val_SInt_AnsiStr (DestSize: SizeInt; Const S : RawByteString; out Code : ValSInt): ValSInt; compilerproc;
 Function fpc_Val_Currency_AnsiStr(Const S : RawByteString; out Code : ValSInt): Currency; compilerproc;
 function fpc_Val_enum_ansistr(str2ordindex:pointer;const s:RawByteString;out code:valsint):longint; compilerproc;
@@ -189,7 +185,7 @@ function fpc_Val_enum_ansistr(str2ordindex:pointer;const s:RawByteString;out cod
   Function fpc_Val_Real_WideStr(Const S : WideString; out Code : ValSInt): ValReal; compilerproc;
   {$endif}
   Function fpc_Val_SInt_WideStr (DestSize: SizeInt; Const S : WideString; out Code : ValSInt): ValSInt; compilerproc;
-  Function fpc_Val_UInt_WideStr ({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S : WideString; out Code : ValSInt): ValUInt; compilerproc;
+  Function fpc_Val_UInt_WideStr (DestSize: SizeInt; Const S : WideString; out Code : ValSInt): ValUInt; compilerproc;
   function fpc_val_Enum_WideStr (str2ordindex:pointer;const s:WideString;out code:valsint):longint;compilerproc;
   Function fpc_Val_Currency_WideStr(Const S : WideString; out Code : ValSInt): Currency; compilerproc;
   {$endif ndef FPC_WIDESTRING_EQUAL_UNICODESTRING}
@@ -197,7 +193,7 @@ function fpc_Val_enum_ansistr(str2ordindex:pointer;const s:RawByteString;out cod
   Function fpc_Val_Real_UnicodeStr(Const S : UnicodeString; out Code : ValSInt): ValReal; compilerproc;
   {$endif}
   Function fpc_Val_SInt_UnicodeStr (DestSize: SizeInt; Const S : UnicodeString; out Code : ValSInt): ValSInt; compilerproc;
-  Function fpc_Val_UInt_UnicodeStr ({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S : UnicodeString; out Code : ValSInt): ValUInt; compilerproc;
+  Function fpc_Val_UInt_UnicodeStr (DestSize: SizeInt; Const S : UnicodeString; out Code : ValSInt): ValUInt; compilerproc;
   function fpc_val_Enum_UnicodeStr(str2ordindex:pointer;const s:UnicodeString;out code:valsint):longint;compilerproc;
   Function fpc_Val_Currency_UnicodeStr(Const S : UnicodeString; out Code : ValSInt): Currency; compilerproc;
 {$endif FPC_HAS_FEATURE_WIDESTRINGS}
@@ -224,10 +220,8 @@ Function fpc_Val_int64_UnicodeStr (Const S : UnicodeString; out Code : ValSInt):
 
 
 {$ifdef FPC_HAS_FEATURE_ANSISTRINGS}
-{ A glitch in FPC 3.2.2 prevents inline from working properly here on
-  ARM (causes a dangling pointer and hence heap corruption). }
-Procedure fpc_ansistr_decr_ref (Var S : Pointer); compilerproc; {$if FPC_FULLVERSION>30202}inline;{$ifend}
-Procedure fpc_ansistr_incr_ref (S : Pointer); compilerproc; {$if FPC_FULLVERSION>30202}inline;{$ifend}
+Procedure fpc_ansistr_decr_ref (Var S : Pointer); compilerproc; inline;
+Procedure fpc_ansistr_incr_ref (S : Pointer); compilerproc; inline;
 Procedure fpc_AnsiStr_Assign (Var DestS : Pointer;S2 : Pointer); compilerproc;
 Procedure fpc_AnsiStr_Concat (Var DestS : RawByteString;const S1,S2 : RawByteString;cp : TSystemCodePage); compilerproc;
 Procedure fpc_AnsiStr_Concat_multi (Var DestS : RawByteString;const sarr:array of RawByteString;cp : TSystemCodePage); compilerproc;
@@ -473,13 +467,9 @@ Procedure fpc_Read_Text_UInt_Iso(var f : Text; out u : ValUInt); compilerproc;
 Procedure fpc_Read_Text_Float(var f : Text; out v :ValReal); compilerproc;
 Procedure fpc_Read_Text_Float_Iso(var f : Text; out v : ValReal); compilerproc;
 {$endif}
-{$ifdef VER3_2}
-procedure fpc_read_text_enum(str2ordindex:pointer;var t:text;out ordinal:longint); compilerproc;
-{$else VER3_2}
 procedure fpc_read_text_enum_longint(str2ordindex:pointer;var t:text;out ordinal:longint); compilerproc;
 procedure fpc_read_text_enum_smallint(str2ordindex:pointer;var t:text;out ordinal:smallint); compilerproc;
 procedure fpc_read_text_enum_shortint(str2ordindex:pointer;var t:text;out ordinal:shortint); compilerproc;
-{$endif VER3_2}
 procedure fpc_Read_Text_Currency(var f : Text; out v : Currency); compilerproc;
 procedure fpc_Read_Text_Currency_Iso(var f : Text; out v : Currency); compilerproc;
 {$ifndef CPU64}
@@ -558,7 +548,6 @@ function fpc_popcnt_word(AValue : Word): Word;compilerproc;
 function fpc_popcnt_dword(AValue : DWord): DWord;compilerproc;
 function fpc_popcnt_qword(AValue : QWord): QWord;compilerproc;
 
-{$if not (defined(VER3_2))}
 function fpc_atomic_inc_8(var Target: shortint): shortint;compilerproc;
 function fpc_atomic_inc_16(var Target: smallint): smallint;compilerproc;
 function fpc_atomic_inc_32(var Target: longint): longint;compilerproc;
@@ -588,7 +577,6 @@ function fpc_atomic_cmp_xchg_8(var Target: shortint; NewValue: shortint; Compara
 function fpc_atomic_cmp_xchg_16(var Target: smallint; NewValue: smallint; Comparand: smallint): smallint;compilerproc;
 function fpc_atomic_cmp_xchg_32(var Target: longint; NewValue: longint; Comparand: longint): longint;compilerproc;
 function fpc_atomic_cmp_xchg_64(var Target: int64; NewValue: int64; Comparand: int64): int64;compilerproc;
-{$endif VER3_2}
 
 {$ifndef FPUNONE}
 function fpc_abs_real(d : ValReal) : ValReal;compilerproc;
@@ -666,10 +654,8 @@ procedure fpc_addref_array(data,typeinfo: pointer; count: SizeInt); compilerproc
 procedure fpc_decref_array(data,typeinfo: pointer; count: sizeint); compilerproc;
 Function fpc_Copy (Src, Dest, TypeInfo : Pointer) : SizeInt; compilerproc;
 Procedure fpc_Copy_proc (Src, Dest, TypeInfo : Pointer); compilerproc; inline;
-{$ifdef FPC_MANAGED_MOVE}
 Function fpc_Copy_with_move_semantics (Src, Dest, TypeInfo : Pointer) : SizeInt; compilerproc;
 Procedure fpc_Copy_with_move_semantics_proc (Src, Dest, TypeInfo : Pointer); compilerproc; inline;
-{$endif FPC_MANAGED_MOVE}
 {$endif FPC_HAS_FEATURE_RTTI}
 
 

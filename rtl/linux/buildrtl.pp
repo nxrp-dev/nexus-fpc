@@ -20,8 +20,7 @@ unit buildrtl;
 
       System.TypInfo, System.SortBase, System.FGL, System.Classes,
       System.CharSet, System.Character, System.GetOpts,
-      System.FPWideString, fpintres, System.CodePages.All,
-      System.SoftFPU, System.SoftFpuX80, System.SoftFpu128, System.UFloatX80, System.UFloat128;
+      System.FPWideString, fpintres, System.CodePages.All;
 {$ELSE FPC_DOTTEDUNITS}
     uses
       si_prc,
@@ -40,8 +39,7 @@ unit buildrtl;
 
       typinfo, sortbase, fgl, classes,
       charset, character, getopts,
-      fpwidestring, fpintres,
-      softfpu, sfpux80, ufloatx80, sfpu128, ufloat128;
+      fpwidestring, fpintres;
 {$ENDIF FPC_DOTTEDUNITS}
   implementation
 

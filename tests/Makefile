@@ -1616,7 +1616,7 @@ endif
 endif
 LOGFILES=$(TEST_LOG) $(TEST_LONGLOG) $(TEST_FAILLIST) $(TEST_SEPLOG)
 LOGEXT=.testlog .tbslog .tbflog .webtbflog
-TESTUNITDIRS=system dos crt objects strings sysutils math sharemem strutils matrix lineinfo ucomplex fpwidestring cpu fmtbcd windows classes character dateutil fpcunit softfpu variants sortbase sortalgs linux unixutil types nullable contnrs convutils
+TESTUNITDIRS=system dos crt objects strings sysutils math sharemem strutils matrix lineinfo ucomplex fpwidestring cpu fmtbcd windows classes character dateutil fpcunit variants sortbase sortalgs linux unixutil types nullable contnrs convutils
 TESTDIRECTDIRS=
 TESTSUBDIRS=cg cg/variants cg/cdecl cpu16 library opt $(addprefix units/,$(TESTUNITDIRS))
 TESTPACKAGESDIRS=bzip2 cocoaint fcl-base fcl-db fcl-image fcl-registry fcl-xml hash rtl-objpas univint webtbs win-base zlib

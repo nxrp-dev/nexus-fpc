@@ -190,12 +190,9 @@ RTLCONSTSUNIT=System.RtlConsts
 SAM3X8EUNIT=EmbeddedApi.sam3x8e
 SAMD51P19AUNIT=EmbeddedApi.samd51p19a
 SC32442BUNIT=EmbeddedApi .sc32442b
-SFPU128UNIT=System.SoftFpu128
-SFPUX80UNIT=System.SoftFpuX80
 SHAREMEMUNIT=WinApi.ShareMem
 SIGNALSUNIT=WinApi.Signals
 SO32DLLUNIT=OS2Api.so32dll
-SOFTFPUUNIT=System.SoftFPU
 SORTBASEUNIT=System.SortBase
 STM32F0XXUNIT=EmbeddedApi.stm32f0xx
 STM32F103XEUNIT=EmbeddedApi.stm32f103xe
@@ -230,8 +227,6 @@ SYSUTILSUNIT=System.SysUtils
 TERMIOUNIT=UnixApi.TermIO
 TYPESUNIT=System.Types
 TYPINFOUNIT=System.TypInfo
-UFLOAT128UNIT=System.UFloat128
-UFLOATX80UNIT=System.UFloatX80
 UIUNIT=PalmApi.Ui
 UIQUNIT=SymbianApi.Uiq
 UIQCLASSESUNIT=SymbianApi.Uiqclasses
@@ -436,12 +431,9 @@ RTLCONSTSUNIT=rtlconsts
 SAM3X8EUNIT=sam3x8e
 SAMD51P19AUNIT=samd51p19a
 SC32442BUNIT=sc32442b
-SFPU128UNIT=sfpu128
-SFPUX80UNIT=sfpux80
 SHAREMEMUNIT=sharemem
 SIGNALSUNIT=signals
 SO32DLLUNIT=so32dll
-SOFTFPUUNIT=softfpu
 SORTBASEUNIT=sortbase
 STM32F0XXUNIT=stm32f0xx
 STM32F103XEUNIT=stm32f103xe
@@ -476,8 +468,6 @@ SYSUTILSUNIT=sysutils
 TERMIOUNIT=termio
 TYPESUNIT=types
 TYPINFOUNIT=typinfo
-UFLOAT128UNIT=ufloat128
-UFLOATX80UNIT=ufloatx80
 UIUNIT=ui
 UIQUNIT=uiq
 UIQCLASSESUNIT=uiqclasses
@@ -747,65 +737,6 @@ HEAPTRC_DEPS=$(INC)/heaptrc.pp \
 
 heaptrc$(PPUEXT) : $(HEAPTRC_DEPS)
         $(COMPILER) $(HEAPTRC_OPT) $<
-
-# softfpu
-
-SOFTFPU_DEPS=$(INC)/softfpu.pp \
-             $(SYSTEMUNIT)$(PPUEXT) $(OBJPASUNIT)$(PPUEXT) \
-             $(SOFTFPU_DEPS_OS) $(SOFTFPU_DEPS_CPU)
-
-softfpu$(PPUEXT) : $(SOFTFPU_DEPS) 
-	$(COMPILER) -Sg $(SOFTFPU_OPT) $<
-
-System.SoftFPU$(PPUEXT) : $(NSINC)/System.SoftFPU.pp $(SOFTFPU_DEPS) 
-        $(COMPILER) -Sg $(SOFTFPU_OPT) $<
-
-# sfpux80
-SFPUX80_DEPS=$(INC)/sfpux80.pp $(INC)/softfpu.pp \
-             $(SYSTEMUNIT)$(PPUEXT) $(OBJPASUNIT)$(PPUEXT) \
-             $(SFPUX80_DEPS_OS) $(SFPUX80_DEPS_CPU) 
- 
-sfpux80$(PPUEXT) : $(SFPUX80_DEPS)
-	$(COMPILER) -Sg $(SFPUX80_OPT) $<
-
-System.SoftFpuX80$(PPUEXT) : $(NSINC)/System.SoftFpuX80.pp  $(SFPUX80_DEPS)
-	$(COMPILER) -Sg $(SFPUX80_OPT) $<
-
-# sfpu128
-SFPU128_DEPS=$(INC)/sfpu128.pp $(INC)/softfpu.pp \
-             $(SYSTEMUNIT)$(PPUEXT) $(OBJPASUNIT)$(PPUEXT) \
-             $(SFPU128_DEPS_OS) $(SFPU128_DEPS_CPU)
- 
-
-sfpu128$(PPUEXT) : $(SFPU128_DEPS)
-	$(COMPILER) -Sg $(SFPUX128_OPT) $<
-
-System.SoftFpu128$(PPUEXT) : $(NSINC)/System.SoftFpu128.pp $(SFPU128_DEPS)
-        $(COMPILER) -Sg $(SFPUX128_OPT) $<
-
-# ufloat80x
-UFLOATX80_DEPS=$(INC)/ufloatx80.pp \
-               $(SFPUX80UNIT)$(PPUEXT) $(SYSTEMUNIT)$(PPUEXT) \
-               $(UFLOATX80_DEPS_OS) $(UFLOATX80_DEPS_CPU)
-               
-ufloatx80$(PPUEXT) : $(UFLOATX80_DEPS)
-	$(COMPILER) $(UFLOATX80_OPT) $<
-
-System.UFloatX80$(PPUEXT) : $(NSINC)/System.UFloatX80.pp $(UFLOATX80_DEPS)
-        $(COMPILER) $(UFLOATX80_OPT) $<
-
-# ufloat128
-
-UFLOAT128_DEPS=$(INC)/ufloat128.pp \
-               $(SFPU128UNIT)$(PPUEXT) $(SYSTEMUNIT)$(PPUEXT) \
-               $(UFLOAT128_DEPS_OS) $(UFLOAT128_DEPS_CPU)
-
-ufloat128$(PPUEXT) : $(UFLOAT128_DEPS)
-	$(COMPILER) $(UFLOAT128_OPT) $<
-
-System.UFloat128$(PPUEXT) : $(NSINC)/System.UFloat128.pp $(UFLOAT128_DEPS)
-	$(COMPILER) $(UFLOAT128_OPT) $<
-
 
 #
 # $(STRINGSUNIT)

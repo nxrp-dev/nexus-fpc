@@ -112,7 +112,6 @@ type
 
     function InterlockedCompareExchange128(var Target: Int128Rec; NewValue: Int128Rec; Comperand: Int128Rec): Int128Rec;
       begin
-{$if FPC_FULLVERSION >= 30101}
 {$ifndef FPC_PIC}
         if RTMSupport then
           begin
@@ -139,7 +138,6 @@ type
           end
         else
 {$endif FPC_PIC}
-{$endif FPC_FULLVERSION >= 30101}
           RunError(217);
       end;
 

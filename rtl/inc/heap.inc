@@ -1596,12 +1596,8 @@ type
   {$if not defined(FPC_HAS_FEATURE_THREADING)}
     result := SizeUint(SizeInt(gs.hugeUsed) + delta);
     gs.hugeUsed := result;
-  {$elseif not defined(VER3_2)}
-    result := AtomicIncrement(SizeInt(gs.hugeUsed), delta);
-  {$elseif defined(CPU64)}
-    result := SizeUint(delta + InterlockedExchangeAdd64(SizeInt(gs.hugeUsed), delta));
   {$else}
-    result := SizeUint(delta + InterlockedExchangeAdd(SizeInt(gs.hugeUsed), delta));
+    result := AtomicIncrement(SizeInt(gs.hugeUsed), delta);
   {$endif}
   end;
 {$endif HAS_SYSOSFREE}
@@ -1699,12 +1695,12 @@ type
       nx := incomingToFree;
       last^.next := nx;
     {$ifndef HEAP_INC_ATOMICS_GENERATE_BARRIERS} WriteBarrier; {$endif} { Write first after last^.next. }
-    until {$ifdef VER3_2} InterlockedCompareExchange {$else} AtomicCmpExchange {$endif} (incomingToFree, first, nx) = nx;
+    until AtomicCmpExchange(incomingToFree, first, nx) = nx;
   end;
 
   procedure HeapInc.ThreadState.FlushIncomingToFree;
   begin
-    FreeToFreeList({$ifdef VER3_2} InterlockedExchange {$else} AtomicExchange {$endif} (incomingToFree, nil));
+    FreeToFreeList(AtomicExchange(incomingToFree, nil));
   end;
 
   procedure HeapInc.ThreadState.FreeToFreeList(tf: pFreeChunk);
@@ -2544,7 +2540,7 @@ begin
   {$endif not HAS_SYSOSFREE}
   end else
 {$endif SUPPORT_INIT_HEAP_PROCESS_WIDE}
-  if (HeapInc.gs.lockUse >= 0) and ({$ifdef VER3_2} InterlockedIncrement {$else} AtomicIncrement {$endif} (HeapInc.gs.lockUse) = 1) then
+  if (HeapInc.gs.lockUse >= 0) and (AtomicIncrement(HeapInc.gs.lockUse) = 1) then
   begin
     InitCriticalSection(HeapInc.gs.lock);
   {$ifndef HAS_SYSOSFREE}
@@ -2602,7 +2598,7 @@ begin
     exit;
 {$ifdef FPC_HAS_FEATURE_THREADING}
   HeapInc.thisTs.Orphan;
-  if (HeapInc.gs.lockUse > 0) and ({$ifdef VER3_2} InterlockedDecrement {$else} AtomicDecrement {$endif} (HeapInc.gs.lockUse) = 0) then
+  if (HeapInc.gs.lockUse > 0) and (AtomicDecrement(HeapInc.gs.lockUse) = 0) then
   begin
   {$ifndef HAS_SYSOSFREE}
     DoneCriticalSection(HeapInc.gs.huge.lock);

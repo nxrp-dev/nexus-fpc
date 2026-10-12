@@ -40,7 +40,7 @@
 
  This implementation is purely based on [1], extrapolating the original
  algorithm on to floating point types other than the "double": namely
- "single", "extended" and "float128".
+ "single" and "extended".
 
  For self-sufficiency, inverse conversion is also implemented.
  It uses straightforward approach, with the help of high-precision integer
@@ -68,42 +68,10 @@
  Implementation was intentionally split into 3 include files to simplify
  maintenance and to avoid complex multiple self-includings.
 
- This file is the root one. It, depending on the selected mode, defines
- proper conditionals, and then includes FLT_CORE.INC, which implements actual
- conversions. Basically, there are 2 possible compilation modes:
-  1. If condition "fpc_softfpu_implementation" is defined before including
-     this file, it is assumed to be a part of SoftFPU. In this case, file
-     FLT_CORE.INC is included once per every supported floating point type.
-     Naming conflicts resolved with macros.
-     Supported types are selected with the following pre-defined conditionals:
-         SOFTFLOAT_ASCII_FLOAT32
-         SOFTFLOAT_ASCII_FLOAT64
-         SOFTFLOAT_ASCII_FLOATX80
-         SOFTFLOAT_ASCII_FLOAT128
-     This mode is basically intended to allow testing and debugging various
-     conversion scenarios without having appropriate floating point hardware,
-     using only sandbox provided by the SoftFPU. An implementation example of
-     this mode is shown in the accompanying file SFPU_FORMAT.PP.
-  2. If condition "fpc_softfpu_implementation" is not defined, it is assumed
-     to be a part of the system unit, or something else. In this case, file
-     FLT_CORE.INC is included only once, and the actual floating point type
-     must be defined as "ValReal" before including this file. Also, kind of
-     the "ValReal" must be further specified with the following defines (in
-     order of priority):
-         SUPPORT_EXTENDED
-         SUPPORT_DOUBLE
-         SUPPORT_SINGLE
-     Overall behavior and definitions mimic the REAL2STR.INC file from the
-     FPC source tree.
-
- BEWARE: there are two minor differences between the code generated for mode 1
- and mode 2, which can potentially lead to different results:
-   <i> floating-point value packing and unpacking routines are implemented
-       differently among these modes (see FLT_PACK.INC).
-  <ii> also one internal subroutine involved into conversion to ASCII, namely
-       "k_comp", has separate implementations for mode 1 and mode 2.
- Certainly, they should behave the same, and they have never been caught yet
- during testing, but who knows..
+ This file defines the native conversion profile and includes FLT_CORE.INC
+ once for System's ValReal type. ValReal must be declared before inclusion,
+ with its kind selected by SUPPORT_EXTENDED, SUPPORT_DOUBLE or SUPPORT_SINGLE
+ (in that order of priority). FLT_PACK.INC supplies the native bit packing.
 
  ---
 
@@ -197,9 +165,6 @@
 {$ifdef VALREAL_80}
     {$fatal VALREAL_80 should not be defined here!}
 {$endif}
-{$ifdef VALREAL_128}
-    {$fatal VALREAL_128 should not be defined here!}
-{$endif}
 {$ifdef VALREAL_PACK}
     {$fatal VALREAL_PACK should not be defined here!}
 {$endif}
@@ -215,8 +180,7 @@ type
         RT_S80REAL,  // extended [80-bit]
         RT_SC80REAL, // extended ["C-extended"; functionally the same as RT_S80REAL, but may be different in alignment and padding]
         RT_C64BIT,   // comp [legacy; just an int64 passed via float]
-        RT_CURRENCY, // currency [seems never passed to str_real since it has its own dedicated converters after r5866]
-        RT_S128REAL  // float128
+        RT_CURRENCY // currency [seems never passed to str_real since it has its own dedicated converters after r5866]
     );
 
     // JVM target: explicitly define this record type to avoid "ie2011032601"
@@ -229,7 +193,7 @@ const
 {
     Number of mantissa digits is dictated by [2] "IEEE 754-2008", page 32.
     N = 1 + ceiling( p * log10(2) ), where p is the number of significant
-    bits, i.e. 24/53/64/113 accordingly (including the implicit one if any)
+    bits, i.e. 24/53/64 accordingly (including the implicit one if any)
 }
         // RT_S32REAL
         ( nDig_mantissa: {$ifdef GRISU1_F2A_SINGLE_10DIGITS} 10 {$else} 9 {$endif};
@@ -254,10 +218,6 @@ const
         // RT_CURRENCY [seems not used after r5866]
         ( nDig_mantissa: 19;
           nDig_exp10: 2;
-        ),
-        // RT_S128REAL
-        ( nDig_mantissa: 36;
-          nDig_exp10: 4;
         )
     );
 
@@ -267,105 +227,6 @@ const
     C_STR_SNAN : string[4] = 'SNan';
 {$endif GRISU1_*_NO_SNAN}
 
-{$ifdef fpc_softfpu_implementation}
-(****************************************************************************
- *
- * SoftPFU unit: Multiple instances for all supported floating point types
- *
- ****************************************************************************)
-{$inline on}
-{$macro on}
-{$define grisu1_inline}
-
-    {$define ValSInt:=integer}
-
-{$ifdef SOFTFLOAT_ASCII_FLOAT32}
-    {$define VALREAL_32}
-    {$undef  VALREAL_64}
-    {$undef  VALREAL_80}
-    {$undef  VALREAL_128}
-
- // Name remapping
-    {$define val_real:=ascii_to_float32}
-    {$define ValReal:=float32rec}
-    {$define TDIY_FP:=TDIY_FP32}
-    {$define TDIY_FP_Power_of_10:=TDIY_FP32_Power_of_10}
-
- // Implementation
-    {$info === float32<->ASCII ===}
-    {$i flt_core.inc}
-
-{$endif SOFTFLOAT_ASCII_FLOAT32}
-
-{$ifdef SOFTFLOAT_ASCII_FLOAT64}
-    {$undef  VALREAL_32}
-    {$define VALREAL_64}
-    {$undef  VALREAL_80}
-    {$undef  VALREAL_128}
-
- // Name remapping
-    {$define val_real:=ascii_to_float64}
-    {$define ValReal:=float64}
-    {$define TDIY_FP:=TDIY_FP64}
-    {$define TDIY_FP_Power_of_10:=TDIY_FP64_Power_of_10}
-
- // Implementation
-    {$info === float64<->ASCII ===}
-    {$i flt_core.inc}
-
-{$endif SOFTFLOAT_ASCII_FLOAT64}
-
-{$ifdef SOFTFLOAT_ASCII_FLOATX80}
-    {$undef  VALREAL_32}
-    {$undef  VALREAL_64}
-    {$define VALREAL_80}
-    {$undef  VALREAL_128}
-
- // Name remapping
-    {$define val_real:=ascii_to_floatx80}
-    {$define ValReal:=floatx80}
-    {$define TDIY_FP:=TDIY_FP96}
-    {$define TDIY_FP_Power_of_10:=TDIY_FP96_Power_of_10}
-
- // Implementation
-    {$info === floatx80<->ASCII ===}
-    {$i flt_core.inc}
-
-{$endif SOFTFLOAT_ASCII_FLOATX80}
-
-{$ifdef SOFTFLOAT_ASCII_FLOAT128}
-    {$undef  VALREAL_32}
-    {$undef  VALREAL_64}
-    {$undef  VALREAL_80}
-    {$define VALREAL_128}
-
- // Name remapping
-    {$define val_real:=ascii_to_float128}
-    {$define ValReal:=float128}
-    {$define TDIY_FP:=TDIY_FP128}
-    {$define TDIY_FP_Power_of_10:=TDIY_FP128_Power_of_10}
-
- // Implementation
-    {$info === float128<->ASCII ===}
-    {$i flt_core.inc}
-
-{$endif SOFTFLOAT_ASCII_FLOAT128}
-
- // Clean-up
-    {$undef VALREAL_32}
-    {$undef VALREAL_64}
-    {$undef VALREAL_80}
-    {$undef VALREAL_128}
-    {$undef VALREAL_PACK}
-    {$undef val_real}
-    {$undef ValReal}
-    {$undef ValSInt}
-    {$undef TDIY_FP}
-    {$undef TDIY_FP_Power_of_10}
-    {$undef grisu1_inline}
-    {$info ========================}
-
-{$else not fpc_softfpu_implementation}
 (****************************************************************************
  *
  * System unit: only one native floating point type
@@ -381,19 +242,16 @@ const
     {$undef  VALREAL_32}
     {$undef  VALREAL_64}
     {$define VALREAL_80}
-    {$undef  VALREAL_128}
 
 {$elseif defined(SUPPORT_DOUBLE)}
     {$undef  VALREAL_32}
     {$define VALREAL_64}
     {$undef  VALREAL_80}
-    {$undef  VALREAL_128}
 
 {$elseif defined(SUPPORT_SINGLE)}
     {$define VALREAL_32}
     {$undef  VALREAL_64}
     {$undef  VALREAL_80}
-    {$undef  VALREAL_128}
 
 {$else}
     {$error Unrecognized ValReal type}
@@ -406,10 +264,8 @@ const
     { undef VALREAL_32}
     { undef VALREAL_64}
     { undef VALREAL_80}
-    { undef VALREAL_128}
     {$undef VALREAL_PACK}
     {$undef grisu1_inline}
 
-{$endif fpc_softfpu_implementation}
 
 {$pop}

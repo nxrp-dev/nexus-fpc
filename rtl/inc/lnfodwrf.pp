@@ -35,10 +35,6 @@ interface
 
 {$S-}
 
-{$IF FPC_VERSION<3}
-type
-  CodePointer = Pointer;
-{$ENDIF}
 
 function GetLineInfo(addr:codeptruint;var func,source:shortstring;var line:longint) : boolean;
 function DwarfBackTraceStr(addr: CodePointer): shortstring;

@@ -56,7 +56,6 @@ interface
        PFixedUInt= ^FixedUInt;
 
 
-{$if FPC_FULLVERSION >= 20701}
 
 
 
@@ -82,7 +81,6 @@ interface
        generic IEquatable<T>  = interface
                                   function Equals(Value:T):boolean;
                                  end;
-{$endif}
 
 {$SCOPEDENUMS ON}
   TEndian = (Little,Big);

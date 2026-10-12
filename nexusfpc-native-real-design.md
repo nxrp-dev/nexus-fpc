@@ -1,7 +1,7 @@
 # Native floating-point policy
 
-Status: implemented and validated on 2026-10-11. Approved by the owner;
-changes remain uncommitted for review.
+Status: native arithmetic and the first cleanup were committed in `4236440c`.
+The additional seed-compatibility cleanup below remains uncommitted for review.
 
 ## Decisions
 
@@ -74,10 +74,10 @@ This also avoids a verified stock 3.2.2 Currency `Val` defect: some out-of-range
 endpoint strings return success. The shared parser is compiled into the seed
 from current source, independent of its installed bootstrap RTL.
 
-Keep the independently useful Currency literal/range corrections and the RTL
-integer-rounding mask correction. Remove software arithmetic integration and
-bootstrap staging that no longer serves a supported use. Preserve the useful
-regression tests and measurements from the preceding correction pass.
+Keep the independently useful Currency literal/range corrections and native
+regression tests. The initial implementation also retained the optional RTL
+software integer-rounding correction; its library and dedicated test are now
+retired as recorded below. Historical measurements remain available.
 
 Win64 C varargs coverage also exposed an existing internal error with floating
 arguments beyond the register argument slots. The ABI describes these as 64-bit
@@ -112,9 +112,9 @@ stock compiler, followed by checks against the resulting compiler and RTL.
 The compiler/RTL source and make rules shrink by 578 lines net relative to the
 preceding software evaluator, excluding PowerShell helpers, tests and documentation. The
 dedicated real wrapper shrinks from 261 lines to 25; the 329-line transcendental
-unit and 74-line reduction table are removed. Standalone RTL software floating
-units remain available as explicit libraries; the compiler no longer uses them
-for its general real-constant evaluator.
+unit and 74-line reduction table are removed. At that stage, standalone RTL
+software floating units remained as explicit libraries. Those APIs have since
+been retired in the final cleanup recorded below.
 
 Completed regression checks:
 
@@ -216,8 +216,11 @@ under `output/numeric-repair/checkpoints` for comparison.
 
 ## Surrounding cleanup, items 1-5
 
-The follow-up approval retains the stock FPC 3.2.2 i386-win32 seed. Pinning a
-new Nexus seed is deferred. Both ordinary bootstrap and SDK builds continue to
+The implementation uses stock FPC 3.2.2 i386-win32 as its seed. This changed the
+prerequisite from the previously installed stock Win64 compiler; retaining the
+same FPC version did not retain the same seed. The owner subsequently accepted
+installing stock Win32 FPC. Pinning a new Nexus seed remains deferred. Both
+ordinary bootstrap and SDK builds continue to
 use the shared stock32-to-native64 helper; the tests no longer carry independent
 stock-Win64 compiler build paths.
 
@@ -247,8 +250,8 @@ Retained deliberately:
 
 - `OS_F128` is still a live backend transfer size for SIMD/vector data, including
   four-Single aggregates. It is not a surviving native Pascal Float128 type.
-- The explicit software-float units and their shared conversion implementation
-  remain available. This pass removes native scalar scaffolding, not those APIs.
+- The explicit software-float units remained available in this earlier pass.
+  The later retirement below removes those APIs and their conversion branches.
 - `softfloat_rounding_mode` is used by integer-backed Currency rounding;
   software exception state remains in the ARM math path. Currency/Comp behavior,
   CExtended's foreign ABI distinction and x87/SSE controls remain as approved.
@@ -322,3 +325,222 @@ The work is uncommitted. The current source/patch checkpoint is
 `output/native-real-cleanup/checkpoints/native-real-cleanup-source.zip`; its
 manifest includes the removed tracked harnesses and the prior pass's retired
 software-evaluator files. The earlier checkpoints remain intact.
+
+## Stock Win32 seed compatibility cleanup
+
+The owner accepted stock FPC 3.2.2 Win32 as the initial bootstrap compiler and
+approved removing obsolete compiler-version branches. This does not pin a new
+Nexus seed or restore the retired software80 compiler evaluator.
+
+The supported bootstrap boundary is explicit: stock `ppc386.exe` compiles the
+current compiler against its installed Win32 RTL. The resulting compiler builds
+our current Win64 RTL, then the native Win64 compiler and its self-hosting cycle.
+The current RTL therefore does not need to compile directly with stock 3.2.x.
+`systemh.inc` now reports this prerequisite explicitly if given an older compiler.
+
+Removed the pre-2.7 compiler search-record alias and pre-3.x file-mask fallback.
+Removed old RTL branches for string layouts, RTTI, dynamic-array copying, unsigned
+`Val` helpers, enum input, atomic helper names, platform record alignment,
+function references, and older compiler syntax/features. The cleanup also removes
+now-unconditional local feature guards for RTTI attributes/invocation helpers,
+Classes function references, managed moves, and VMT initialization.
+
+Preserved the compiler's `VER3_2` `RTLString` declaration, the shared exact Currency
+parser, the host-precision restrictions, and the stock32-to-native64 seed helper.
+ARM keeps Double-based compiler arithmetic. Currency/Comp representations and
+native x87/SSE controls are unchanged. NXU revision remains 39: the code selected
+by current compilers and its artifact layout are unchanged.
+
+### Pre-removal audit of the roughly 9,000-line SoftFloat library
+
+This audit preceded the approved removal recorded below.
+
+The large remaining file is `rtl/inc/softfpu.pp`, at 9,363 lines. It implements
+software binary32, binary64, binary80, and binary128 arithmetic; it is not solely
+the retired compiler software80 evaluator. Together with `sfpux80.pp`,
+`sfpu128.pp`, `ufloatx80.pp`, and `ufloat128.pp`, the five units total 9,613 lines.
+Their namespaced wrappers, build registration, and software-only conversion
+branches add further removable material if these explicit APIs are retired.
+
+A source search found no imports in `compiler`, `packages`, `utils`, or the Nexus
+`packages` and `projects` trees. Remaining direct users are the RTL's build-unit
+registration and tests (`tests/test/units/softfpu/sfttst.pp` and the focused
+`tsoftinteger.pp` regression). The compiler and bootstrap no longer need them.
+
+Retiring these units would remove the explicit software-arithmetic APIs,
+including portable binary80/binary128 operations. That is a separate capability
+removal, so this version-branch cleanup leaves them present. Ordinary native
+Single/Double/Extended arithmetic would remain. The `softfloat_*` state in
+`mathh.inc` must also remain: integer-backed Currency rounding and ARM exception
+handling use that state independently of the arithmetic units. The shared
+`flt_conv.inc`, `flt_core.inc`, and `flt_pack.inc` cannot be deleted wholesale;
+System uses their native floating-point text conversion paths.
+
+Audit evidence: `output/seed-compat-cleanup/softfloat-consumers.json`,
+`softfloat-consumers-full.json` (also searching files excluded by VCS ignore
+rules), and the source references above. The compiler's `SOFTFPU` feature-name
+string is not a unit import. No external application dependency audit is implied.
+
+### Validation of the seed compatibility cleanup
+
+The cleanup removes 425 net lines across 48 compiler/RTL source files. No tests
+were weakened or removed. Validation used `output/seed-compat-cleanup/source`,
+starting from the extracted official stock Win32 3.2.2 distribution documented
+above. All 48 modified sources exactly match the isolated build inputs.
+
+- Clean native self-hosting, retained packages/utilities, and all 13 target RTL
+  builds passed. Linux FmtBCD and isolated `-CfNONE` heaptrc checks passed. The
+  native build retains the same 14 previously recorded warnings.
+- All 680 grouped configurations passed: 170 fixtures, Win64/Win32, normal/O2.
+- All 42 Win64 and 34 Win32 focused numeric/ABI/RTTI/PPU steps passed, as did the
+  16 compile/run pairs for the original Win32 fixtures and diagnostic probe.
+- All 51 Win64 contract steps and 32 executable/DLL export steps passed.
+- The normal/smart SDK workflow passed all 34 steps, including source-only
+  builds, static consumers, and source-free relocated console/GUI applications.
+- Package metadata (71), linking (28), runtime (97), loader (49 per link mode),
+  sequential threadvars (29 per link mode), and hard80/shared-RTL Math checks
+  passed with fresh SDKs built from the stock Win32 seed.
+
+The execution suites used separate copies of the Windows compiler/RTL artifacts.
+All 404 artifacts were checked against the final matrix output. Five import
+archives differ only in archive-member timestamps; their full contents match
+after normalizing that timestamp field alone. All other artifacts match exactly.
+Cross-target results are compilation checks; runtime execution was on Windows.
+
+Evidence is under `output/seed-compat-cleanup`: the full build is
+`bootstrap/20261011-135349-01d50347`, grouped and focused results are in
+`groups-*` and `checks-*`, and package results are in `packages`. The summary is
+`verification-summary.json`. The verified source/patch checkpoint is
+`checkpoints/seed-compat-cleanup-source.zip`. Changes remain uncommitted.
+
+## Retirement of the optional SoftFloat library
+
+The owner approved removing the optional software arithmetic APIs after confirming
+that stock FPC 3.2.2 Win32 provides hardware80 for the compiler bootstrap. The five
+units (`softfpu`, `sfpux80`, `sfpu128`, `ufloatx80`, `ufloat128`), their namespaced
+wrappers, RTL build registrations, and their two dedicated tests are removed.
+The shared Grisu conversion includes now retain only native Single, Double and
+Extended paths; the software conversion adapter and binary128 branches are gone.
+
+System still owns native decimal conversion. Integer-backed Currency rounding
+and ARM floating-point exception/rounding state remain, including the live
+`softfloat_rounding_mode` variable. The compiler's `f_softfpu` feature marker also
+remains: it describes System capabilities used by Variant debug metadata and is
+not an import of the retired library. Native arithmetic, Currency/Comp storage,
+the exact Currency parser, the bootstrap transition and NXU revision 39 are
+unchanged. Standalone portable software arithmetic, including explicit binary128,
+is no longer supplied.
+
+This removal accounts for 11,497 net source/build/test lines, including the
+9,613 lines in the five units and 717 net lines in the shared conversion includes.
+The preceding 425-line seed compatibility cleanup is separate from this count.
+
+### Validation after removal
+
+Validation used `output/softfloat-retirement/source`, copied from existing
+tracked sources with all twelve retired source/test files absent. The build
+started from the extracted stock FPC 3.2.2 Win32 distribution, regenerated 39
+Makefiles, and completed the stock32-to-native64 transition and self-hosting.
+The six changed generated Makefiles were copied back into the working tree.
+
+- Full native compiler, RTL, packages/utilities, all 13 target RTL builds,
+  Linux FmtBCD and isolated `-CfNONE` heaptrc passed. The same 14 warnings
+  match the preceding validated build exactly. Neither compiler stage nor any
+  fresh target RTL output contains a retired SoftFloat unit.
+- All 680 grouped configurations passed: 170 fixtures, Win64/Win32, normal/O2.
+- All 38 Win64 and 30 Win32 focused numeric/ABI/RTTI/PPU steps passed, plus
+  16 original Win32 compile/run pairs, 51 Win64 contract steps and 32 EXE/DLL
+  export steps. Only the dedicated software-library tests were retired.
+- Direct before/after comparison of the conversion includes passed for native
+  Single, Double and Extended, normal/O2: 2,021 inputs and 22 formats per input,
+  or 266,772 format/parse comparisons. Formatted text, parsed bits and error
+  positions are identical. This includes boundary literals and generated bit
+  patterns. Both sides used the same previously validated native compiler/RTL,
+  isolating the source cleanup from other compiler changes.
+- Both package SDK modes passed all 34 workflow steps, including fresh builds
+  from stock Win32, static consumers, source-free relocation, console/GUI
+  lifecycle checks and shared-RTL Extended/Math checks. Metadata (71), linking
+  (28), runtime (97), loader (49 per mode) and sequential threadvars (29 per
+  mode) also passed.
+
+All 384 copied Windows compiler/RTL artifacts used for execution were checked
+against the final build. Five import archives differ only in their member
+timestamps; their contents match. All other artifacts match exactly. Runtime
+execution was on Windows; the other platforms were cross-compilation checks.
+
+Evidence is under `output/softfloat-retirement`: the build is
+`bootstrap/20261011-161658-e936a136`, execution results are in `checks-*`,
+`groups-*`, `packages`, `win64-contracts`, and `unit-exports`, and the direct
+comparison is in `conversion-results.json`. `verification-summary.json` records
+the totals. The source/patch checkpoint is
+`checkpoints/softfloat-retirement-source.zip`. No new seed is pinned or installed;
+the existing stock Win32 seed remains sufficient. Changes are uncommitted.
+
+## Follow-up removal of obsolete helpers and precision branches
+
+The owner approved the remaining cleanup after the optional library retirement.
+This pass removes another 2,066 net source lines across seven files.
+The unregistered `compiler/utils/ppuutils` layer (`ppuout`, `ppujson`, `ppuxml`)
+is removed. No compiler, package, utility, script, test, or Nexus project source
+consumer was found. This removes 1,993 lines, including the unused exporter's
+inconsistent Float128 name table. The built PPU tools remain in place.
+
+The generic trigonometric argument reducer now implements only its existing
+mode 2. Its sole caller always selected that mode. The precision parameter,
+initialization table, other compression branches, and their obsolete precision
+documentation are removed. The arithmetic order, constants, and two output
+components are preserved. Its three input slots remain necessary for splitting
+a Double into 24-bit chunks.
+
+The narrow `nf_internal` exemption for constant-to-structured-type casts in
+`ncnv.pas` is removed with its retired SoftFloat producer. Internal conversion
+call sites were traced through call lowering, Variant handling, array iteration,
+inlining, and constant propagation. Live record/array casts of variables,
+temporaries, and calls remain valid; dedicated string and set conversions retain
+their own checks. The general internal-conversion flag and its other uses remain.
+The stale FPU-control-word comment and the float-enum comment's obsolete include
+filename are also corrected.
+
+The remaining `softfloat_*` rounding/exception state has active Currency and
+ARM64 consumers. The `f_softfpu` System feature flag, SoftFloat calling-convention
+metadata, and external-format Float128 constants are separate from the retired
+arithmetic library and are retained. This pass changes no native floating-point
+representation, Currency/Comp storage, NXU revision, or seed requirement.
+
+### Validation of the follow-up cleanup
+
+The fresh isolated build under `output/softfloat-followup/source` starts from
+stock FPC 3.2.2 Win32. The complete native bootstrap, self-hosting/WPO,
+packages/utilities, all 13 target RTL builds, Linux FmtBCD, and `-CfNONE` heaptrc
+passed. Its 14 native warnings exactly match the preceding validated build.
+
+- All 680 grouped configurations passed: 170 fixtures, Win64/Win32, normal/O2.
+- The 38 Win64 and 30 Win32 focused numeric/ABI/RTTI/PPU steps passed, along
+  with all 16 original Win32 compile/run pairs, 51 Win64 contracts, and 32
+  EXE/DLL export steps.
+- Direct before/after execution of the extracted generic reducer produced
+  identical octants and remainder bits for 240,986 inputs in each of normal
+  and O2 builds: 481,972 comparisons. Cases include both signs, zero,
+  subnormals, maximum finite values, infinities, NaNs, values around the
+  reduction threshold and multiples of pi/2, and generated bit patterns.
+- The normal/smart package SDK workflow passed all 34 steps. Metadata (71),
+  linking (28), runtime (97), loader (49 per mode), sequential threadvars
+  (29 per mode), and shared-RTL Extended/Math checks passed.
+
+The 384 Windows compiler/RTL artifacts used for execution were compared with
+the final matrix output. Five import archives differ only in member timestamps.
+Three PPUs (`exeinfo`, `signals`, `strings`) differ only in the diagnostic source
+column of the implicit `SYSTEM` unit symbol (1 versus 10): one byte per file.
+The entry layout was checked against `tstoredsym.ppuwrite` and
+`tcompilerppufile.putposinfo`; all other bytes, including checksums, match.
+Their object files match exactly. Every other artifact is byte-identical.
+Runtime execution was on Windows; other targets were cross-compilation checks.
+
+Evidence is under `output/softfloat-followup`: the build is
+`bootstrap/20261011-165049-db937c18`, the reducer comparison is in
+`reducer-results.json`, and complete totals are in `verification-summary.json`.
+The source/patch checkpoint is `checkpoints/softfloat-followup-source.zip`.
+All 91 changed/deleted paths in the combined cleanup match the build inputs
+(documentation excepted). Concurrent Forge files and its `.gitignore` edit
+are excluded from this checkpoint and remain untouched. No new seed was pinned
+or installed. Changes remain uncommitted.

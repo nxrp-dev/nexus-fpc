@@ -23,10 +23,6 @@ interface
 {$S-}
 {$Q-}
 
-{$IF FPC_VERSION<3}
-type
-  CodePointer = Pointer;
-{$ENDIF}
 
 function GetLineInfo(addr:ptruint;var func,source:ShortString;var line:longint) : boolean;
 function StabBackTraceStr(addr:CodePointer):shortstring;

@@ -99,10 +99,8 @@ var
     initialise the FPU when starting a new thread (in SysResetFPU).
 
     Some platforms already have a legacy/existing global variable holding this
-    information (FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD). In case of FPU_NONE,
-    we don't support floating point at all. And in case of
-    FPC_SYSTEM_FPUCW_IMMUTABLE, either the control word cannot be changed
-    (e.g. wasm), or FPU operations are supported by only as softfloat }
+    information (FPC_SYSTEM_FPU_CUSTOM_CONTROL_WORD). In case of FPUNONE,
+    we don't support floating point at all. }
   DefaultFPUControlWord: TNativeFPUControlWord;
 {$endif}
 
@@ -376,7 +374,6 @@ function AlignTypeData(p : pointer) : pointer; inline;
   end;
 
 
-{$if not defined(VER3_2)}
 type
   TRttiDataCommon =
 {$ifdef FPC_REQUIRES_PROPER_ALIGNMENT}
@@ -385,7 +382,6 @@ type
   record
     Attrs: Pointer;
   end;
-{$endif not VER3_2}
 
 
 {****************************************************************************

@@ -23,9 +23,9 @@
 {$mode objfpc}
 {$modeswitch advancedrecords}
 
-{ At least 3.0.0 is required }
-{$if FPC_FULLVERSION<30000}
-  {$fatal You need at least FPC 3.0.0 to build this version of FPC}
+{ The stock seed builds the compiler against its installed RTL first. }
+{$if FPC_FULLVERSION<30301}
+  {$fatal Build this RTL with the Nexus compiler produced by the bootstrap stage}
 {$endif}
 
 { Using inlining for small system functions/wrappers }
@@ -87,9 +87,6 @@
 {$endif defined(FPC_HAS_FEATURE_UNICODESTRINGS)}
 
 { allow for lightweight move of managed records }
-{$if FPC_FULLVERSION>=30301}
-{$define FPC_MANAGED_MOVE}
-{$endif }
 
 {****************************************************************************
                          Global Types and Constants
@@ -260,15 +257,11 @@ Type
 
 { Zero - terminated strings }
 
-{$IF FPC_FULLVERSION < 30301}
-  AnsiChar = Char;
-{$ELSE}
 // Compiler defines AnsiChar and WideChar, not Char
 {$IFDEF FPC_UNICODESTRINGS}
   Char = WideChar;
 {$ElSE}
   Char = AnsiChar;
-{$ENDIF}
 {$ENDIF}
 
   PChar               = ^Char;
@@ -998,9 +991,6 @@ Function  HexStr(Val:Pointer):shortstring;
 
 
 { AnsiChar functions }
-{$if defined(VER3_2)}
-Function Chr(b : byte) : AnsiChar;      [INTERNPROC: fpc_in_chr_byte];
-{$endif defined(VER3_2)}
 Function  UpCase(c:AnsiChar):AnsiChar;
 Function  LowerCase(c:AnsiChar):AnsiChar; overload;
 function  Pos(const substr : shortstring;c:Ansichar; Offset: Sizeint = 1): SizeInt;

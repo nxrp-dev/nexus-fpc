@@ -98,13 +98,8 @@ macpas.pp       Macpas (Classic MacOS) mode runtime parts
 nothreads.pp    Empty thread manager
 objc.pp         Objective C related 
 objcbase.pp     Objective C related - NSObject root class
-sfpu128.pp      128-bit floating point emulation   
-sfpux80.pp      80-bit floating point emulation
-softfpu.pp      Generic softfpu
 sortbase.pp     Pluggable sorting algorithm support
 strings.pp      Pchar support
 uachar.pp       Aliases  (p)char  to (p)ansichar etc. Normal delphi mode
-ufloat128.pp    128-bit float operator overload support
-ufloatx80.pp    80-bit float operator overload support
 uuchar.pp       Aliases  (p)char  to (p)unicodechar etc. Delphiunicode mode
 

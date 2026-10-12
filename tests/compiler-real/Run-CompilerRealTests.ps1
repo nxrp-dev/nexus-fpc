@@ -44,8 +44,6 @@ foreach ($lVariant in @('normal','O2')) {
     if ($lVariant -eq 'O2') { $lOptions += '-O2' }
     Invoke-Check "$lVariant-core-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/tcompilerreal.pp"))
     Invoke-Check "$lVariant-core-run" "$lDirectory/tcompilerreal.exe" @()
-    Invoke-Check "$lVariant-soft-integer-build" $Compiler ($lOptions + @("$PSScriptRoot/tsoftinteger.pp"))
-    Invoke-Check "$lVariant-soft-integer-run" "$lDirectory/tsoftinteger.exe" @()
     Invoke-Check "$lVariant-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/textendedabi.pp"))
     Invoke-Check "$lVariant-abi-run" "$lDirectory/textendedabi.exe" @()
     Invoke-Check "$lVariant-math-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/tmathabi.pp"))

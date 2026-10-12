@@ -839,9 +839,7 @@ function CompareValue ( const A, B : Extended; delta : Extended = 0.0 ) : TValue
 function RandomFrom(const AValues: array of Double): Double; overload;
 function RandomFrom(const AValues: array of Integer): Integer; overload;
 function RandomFrom(const AValues: array of Int64): Int64; overload;
-{$if FPC_FULLVERSION >=30101}
 generic function RandomFrom<T>(const AValues:array of T):T;
-{$endif}
 
 { cpu specific stuff }
 
@@ -3932,12 +3930,10 @@ begin
   result:=AValues[random(High(AValues)+1)];
 end;
 
-{$if FPC_FULLVERSION >=30101}
 generic function RandomFrom<T>(const AValues:array of T):T;
 begin
   result:=AValues[random(High(AValues)+1)];
 end;
-{$endif}
 
 function FutureValue(ARate: Float; NPeriods: Integer;
   APayment, APresentValue: Float; APaymentTime: TPaymentTime): Float;

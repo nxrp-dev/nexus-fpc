@@ -580,17 +580,7 @@ end;
         begin
            { insert VMT pointer into the new created memory area }
            { (in class methods self contains the VMT!)           }
-           {$IFNDEF FPC_HAS_FEATURE_MONITOR}
-             ppointer(instance)^:=pointer(self);
-           {$ELSE}
-             {$IFDEF VER3_2}
-             // In 3.2.x Compiler (used during bootstrap) still inserts VMT at offset...
-             ppointer(PByte(instance)+SizeOf(Pointer))^:=pointer(self);
-             {$ELSE}
-             // As of 3.3.x compiler forces insert of VMT at first pos.
-             ppointer(instance)^:=pointer(self);
-             {$ENDIF}
-          {$ENDIF}
+           ppointer(instance)^:=pointer(self);
 
            if assigned(PVmt(self)^.vIntfTable) then
              InitInterfacePointers(self,instance);

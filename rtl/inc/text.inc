@@ -1983,11 +1983,7 @@ begin
 end;
 {$endif}
 
-{$ifdef VER3_2}
-procedure fpc_read_text_enum(str2ordindex:pointer;var t:text;out ordinal:longint); iocheck;compilerproc;
-{$else VER3_2}
 procedure fpc_read_text_enum_longint(str2ordindex:pointer;var t:text;out ordinal:longint); iocheck;compilerproc;
-{$endif VER3_2}
 
 var s:shortstring;
     code:valsint;
@@ -2008,7 +2004,6 @@ begin
    InOutRes:=106;
 end;
 
-{$ifndef VER3_2}
 procedure fpc_read_text_enum_smallint(str2ordindex:pointer;var t:text;out ordinal:smallint); iocheck;compilerproc;
 
 var s:shortstring;
@@ -2050,7 +2045,6 @@ begin
   if code<>0 then
    InOutRes:=106;
 end;
-{$endif VER3_2}
 
 procedure fpc_Read_Text_Currency(var f : Text; out v : Currency); iocheck; compilerproc;
 var

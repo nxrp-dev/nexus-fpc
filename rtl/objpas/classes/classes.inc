@@ -116,28 +116,22 @@ type
   TAnonymousThread = class(TThread)
   private
     fProc: TProcedure;
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     fAnonProc : TThreadProcedure;
-    {$ENDIF}
     FMethod : TThreadMethod;
   protected
     procedure Execute; override;
   public
     constructor Create(aProc: TProcedure);
-    {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
     constructor Create(aProc: TThreadProcedure);
-    {$ENDIF}
     constructor Create(aProc: TThreadMethod);
   end;
 
 
 procedure TAnonymousThread.Execute;
 begin
-  {$ifdef FPC_HAS_REFERENCE_PROCEDURE}
   if assigned(fAnonProc) then
     fAnonProc()
   else
-  {$ENDIF}
   if assigned(FMethod) then
     FMethod()
   else
@@ -153,14 +147,12 @@ begin
   fProc := aProc;
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 constructor TAnonymousThread.Create(aProc: TThreadProcedure);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
   fAnonProc := aProc;
 end;
-{$ENDIF}
 
 constructor TAnonymousThread.Create(aProc: TThreadMethod);
 begin
@@ -341,11 +333,9 @@ procedure ExecuteThreadQueueEntry(aEntry: TThread.PThreadQueueEntry);
 begin
   if Assigned(aEntry^.Method) then
     aEntry^.Method()
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
   else
     if Assigned(aEntry^.ThreadProc) then
       aEntry^.ThreadProc
-{$endif}
 end;
 
 
@@ -490,7 +480,6 @@ class procedure TThread.Synchronize(AThread: TThread; AMethod: TThreadMethod);
   end;
 
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 class procedure TThread.Synchronize(AThread: TThread; AProcedure: TThreadProcedure);
   var
     syncentry: PThreadQueueEntry;
@@ -540,7 +529,6 @@ class procedure TThread.Synchronize(AThread: TThread; AProcedure: TThreadProcedu
       end;
     end;
   end;
-{$endif}
 
 
 procedure TThread.Synchronize(AMethod: TThreadMethod);
@@ -549,12 +537,10 @@ procedure TThread.Synchronize(AMethod: TThreadMethod);
   end;
 
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 procedure TThread.Synchronize(AProcedure: TThreadProcedure);
   begin
     TThread.Synchronize(self,AProcedure);
   end;
-{$endif}
 
 Function PopThreadQueueHead : TThread.PThreadQueueEntry;
 var
@@ -671,24 +657,20 @@ begin
   Queue(Self, aMethod);
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 procedure TThread.Queue(aProcedure: TThreadProcedure);
 begin
   Queue(Self, aProcedure);
 end;
-{$endif}
 
 class procedure TThread.Queue(aThread: TThread; aMethod: TThreadMethod); static;
 begin
   InternalQueue(aThread, aMethod, False, 0);
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 class procedure TThread.Queue(aThread: TThread; AProcedure: TThreadProcedure);
 begin
   InternalQueue(aThread, aProcedure, False, 0);
 end;
-{$endif}
 
 class procedure TThread.InternalQueue(aThread: TThread; aMethod: TThreadMethod; aQueueIfMain: Boolean; aExecuteAfter: TDateTime); static;
 var
@@ -704,7 +686,6 @@ begin
   ThreadQueueAppend(queueentry, aQueueIfMain);
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 class procedure TThread.InternalQueue(aThread: TThread; aProcedure: TThreadProcedure; aQueueIfMain: Boolean; aExecuteAfter: TDateTime); static;
 var
   queueentry: PThreadQueueEntry;
@@ -718,7 +699,6 @@ begin
   { the queueentry is freed by CheckSynchronize (or by RemoveQueuedEvents) }
   ThreadQueueAppend(queueentry, aQueueIfMain);
 end;
-{$endif}
 
 procedure TThread.ForceQueue(aMethod: TThreadMethod);
 begin
@@ -737,7 +717,6 @@ begin
   InternalQueue(aThread, aMethod, True, lEnd);
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 class procedure TThread.ForceQueue(aThread: TThread; aMethod: TThreadProcedure; aDelay : Integer = 0); static;
 
 var
@@ -749,7 +728,6 @@ begin
     lEnd:=0;
   InternalQueue(aThread, aMethod, True, lEnd);
 end;
-{$endif}
 
 class procedure TThread.RemoveQueuedEvents(aThread: TThread; aMethod: TThreadMethod);
 var
@@ -843,7 +821,6 @@ begin
   Result := TAnonymousThread.Create(aProc);
 end;
 
-{$ifdef FPC_HAS_REFERENCE_PROCEDURE}
 class function TThread.CreateAnonymousThread(aProc: TThreadProcedure): TThread;
 
 begin
@@ -851,7 +828,6 @@ begin
     raise Exception.Create(SNoProcGiven);
   Result := TAnonymousThread.Create(aProc);
 end;
-{$ENDIF}
 
 class function TThread.CreateAnonymousThread(aProc: TThreadMethod): TThread;
 begin

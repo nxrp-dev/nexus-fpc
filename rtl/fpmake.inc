@@ -238,7 +238,6 @@ begin
     T:=AddUnit('inc/getopts.pp');
     T:=AddUnit('inc/cmem.pp');
     T:=AddUnit('inc/ctypes.pp');
-    T:=AddUnit('inc/softfpu.pp');
     T:=AddUnit('inc/ucomplex.pp');
     T:=AddUnit('inc/heaptrc.pp');
     T:=AddUnit('inc/lineinfo.pp');

@@ -1558,7 +1558,7 @@ asm
         {$ifndef OLD_ASSEMBLER} vpcmpeqb (%edx), %ymm0, %ymm0 {$else} .byte 0xC5,0xFD,0x74,0x02 {$endif}
         {$ifndef OLD_ASSEMBLER} vpmovmskb %ymm0, %ebx {$else} .byte 0xC5,0xFD,0xD7,0xD8 {$endif}
         inc       %ebx
-        {$if not defined(OLD_ASSEMBLER) and not defined(VER3_2)} bzhi %ecx, %ebx, %ecx {$else} .byte 0xc4,0xe2,0x70,0xf5,0xcb { bootstrap compiler doesn't know bzhi } {$endif}
+        {$ifndef OLD_ASSEMBLER} bzhi %ecx, %ebx, %ecx {$else} .byte 0xc4,0xe2,0x70,0xf5,0xcb { bootstrap compiler doesn't know bzhi } {$endif}
         jnz       .LVec0Differs
 .LNothing:
         {$ifndef OLD_ASSEMBLER} vzeroupper {$else} .byte 0xC5,0xF8,0x77 {$endif}
@@ -2529,7 +2529,6 @@ begin
 end;
 
 
-{$ifndef VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_8}
 function fpc_atomic_cmp_xchg_8(var Target: shortint; NewValue: shortint; Comparand: shortint): shortint; assembler; nostackframe;
 asm
@@ -2656,14 +2655,9 @@ asm
         pop         %edi
         pop         %ebx
 end;
-{$endif VER3_2}
 
-{$ifdef VER3_2}
-function InterLockedDecrement (var Target: longint) : longint; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_DEC_32}
 function fpc_atomic_dec_32 (var Target: longint) : longint; assembler; nostackframe;
-{$endif VER3_2}
 asm
         movl    $-1,%edx
         lock
@@ -2672,12 +2666,8 @@ asm
 end;
 
 
-{$ifdef VER3_2}
-function InterLockedIncrement (var Target: longint) : longint; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_INC_32}
 function fpc_atomic_inc_32 (var Target: longint) : longint; assembler; nostackframe;
-{$endif VER3_2}
 asm
         movl    $1,%edx
         lock
@@ -2686,24 +2676,16 @@ asm
 end;
 
 
-{$ifdef VER3_2}
-function InterLockedExchange (var Target: longint;Source : longint) : longint; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_XCHG_32}
 function fpc_atomic_xchg_32 (var Target: longint;Source : longint) : longint; assembler; nostackframe;
-{$endif VER3_2}
 asm
         xchgl   (%eax),%edx
         movl    %edx,%eax
 end;
 
 
-{$ifdef VER3_2}
-function InterLockedExchangeAdd (var Target: longint;Source : longint) : longint; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_ADD_32}
 function fpc_atomic_add_32 (var Target: longint;Value : longint) : longint; assembler; nostackframe;
-{$endif VER3_2}
 asm
         lock
         xaddl   %edx, (%eax)
@@ -2711,12 +2693,8 @@ asm
 end;
 
 
-{$ifdef VER3_2}
-function InterlockedCompareExchange(var Target: longint; NewValue: longint; Comperand: longint): longint; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_32}
 function fpc_atomic_cmp_xchg_32(var Target: longint; NewValue, Comparand : longint): longint; [public, alias:'FPC_ATOMIC_CMP_XCHG_32']; assembler; nostackframe;
-{$endif VER3_2}
 asm
         xchgl   %eax,%ecx
         lock
@@ -2724,12 +2702,8 @@ asm
 end;
 
 
-{$ifdef VER3_2}
-function InterlockedCompareExchange64(var Target: int64; NewValue: int64; Comperand: int64): int64; assembler; nostackframe;
-{$else VER3_2}
 {$define FPC_SYSTEM_HAS_ATOMIC_CMP_XCHG_64}
 function fpc_atomic_cmp_xchg_64 (var Target: int64; NewValue: int64; Comparand: int64) : int64; assembler; nostackframe;
-{$endif VER3_2}
 { eax = Target, [esp + 12] = NewValue, [esp + 4] = Comparand. }
 asm
         pushl       %ebx

@@ -3315,9 +3315,7 @@ implementation
                                    { however, there are some exceptions }
                                    (not(resultdef.typ in [arraydef,recorddef,setdef,stringdef,
                                                           filedef,variantdef,objectdef]) or
-                                   is_class_or_interface_or_objc(resultdef) or
-                                   { the softfloat code generates casts <const. float> to record }
-                                   (nf_internal in flags)
+                                   is_class_or_interface_or_objc(resultdef)
                                  ))
                                 )
                                ) then

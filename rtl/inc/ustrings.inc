@@ -39,19 +39,11 @@ Type
   TUnicodeRec = Record
     CodePage    : TSystemCodePage;
     ElementSize : Word;
-{$if not defined(VER3_2)}
   {$ifdef CPU64}
     Ref         : Longint;
   {$else}
     Ref         : SizeInt;
   {$endif}
-{$else}
-  {$ifdef CPU64}
-    { align fields  }
-	Dummy       : DWord;
-  {$endif CPU64}
-    Ref         : SizeInt;
-{$endif}
     Len         : SizeInt;
   end;
 
@@ -1417,7 +1409,7 @@ begin
 end;
 
 
-Function fpc_Val_UInt_UnicodeStr ({$ifndef VER3_2}DestSize: SizeInt;{$endif VER3_2} Const S : UnicodeString; out Code : ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_UNICODESTR']; compilerproc;
+Function fpc_Val_UInt_UnicodeStr (DestSize: SizeInt; Const S : UnicodeString; out Code : ValSInt): ValUInt; [public, alias:'FPC_VAL_UINT_UNICODESTR']; compilerproc;
 Var
   SS: ShortString;
 begin
@@ -1427,7 +1419,7 @@ begin
   else
     begin
       SS:=ShortString(S);
-      fpc_Val_UInt_UnicodeStr := int_Val_UInt_ShortStr({$ifndef VER3_2}DestSize,{$endif VER3_2}SS,Code);
+      fpc_Val_UInt_UnicodeStr := int_Val_UInt_ShortStr(DestSize,SS,Code);
     end;
 end;
 

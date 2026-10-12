@@ -357,7 +357,6 @@ begin
 end;
 
 
-{$ifdef FPC_MANAGED_MOVE}
 function fpc_Copy_with_move_semantics (Src, Dest, TypeInfo : Pointer) : SizeInt;[Public,alias : 'FPC_COPY_WITH_MOVE_SEMANTICS']; compilerproc;
 var
   tki : pointer;
@@ -376,7 +375,6 @@ procedure fpc_Copy_with_move_semantics_proc (Src, Dest, TypeInfo : Pointer);comp
 begin
   int_Copy_with_move_semantics(src,dest,typeinfo);
 end;
-{$endif FPC_MANAGED_MOVE}
 
 
 procedure fpc_initialize_array(data,typeinfo : pointer;count : SizeInt); [public,alias:'FPC_INITIALIZE_ARRAY']; compilerproc;

@@ -28,8 +28,6 @@ const
 
 {$i cpuprocs.inc}
 
-{$if not defined(VER3_2)}
 { include automatically generated procs }
 { do not active yet, they are not usable yet neither is the naming fixed }
 { $i cpummprocs.inc}
-{$endif not VER3_2}

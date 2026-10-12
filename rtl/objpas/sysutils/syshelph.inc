@@ -778,10 +778,8 @@ Type
     property Frac: QWord read GetF write SetF;
   end;
 
-{$IFNDEF VER3_2}
   TRealHelper = Type Helper(TDoubleHelper) for Real
   end;
-{$ENDIF}
 {$ENDIF FPC_HAS_TYPE_DOUBLE}
 
 {$ifdef FPC_HAS_TYPE_EXTENDED}
