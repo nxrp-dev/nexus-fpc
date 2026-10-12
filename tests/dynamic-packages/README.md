@@ -1,5 +1,11 @@
 ﻿# Compiler package regressions
 
+The source-only bootstrap orchestration below is historical: the make bootstrap
+and Linux SDK builder have been retired. The fixtures, assertions and existing-SDK
+runners remain for the later nxtest work. Use the [Forge build guide](../../NexusFPC.Forge.md)
+for current Win64 SDK construction; no replacement ad hoc test orchestration is
+being maintained as part of make retirement.
+
 Windows package validation uses PowerShell and the standard package-enabled
 compiler. Build from the stock **FPC 3.2.2 i386-win32** bootstrap; a new Nexus
 seed is not required. LLVM Clang/LLD, RC and readobj must be on `PATH`.

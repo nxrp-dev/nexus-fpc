@@ -7,7 +7,8 @@ startup units and publication tools. See the
 [standard compiler integration](../../nexusfpc-standard-package-support.md).
 
 The [Linux SDK guide](../../nexusfpc-dynamic-packages-linux.md) covers the x86-64
-glibc implementation, WSL wrapper, native Python tools and Linux regression suite.
+glibc implementation and existing SDK consumers. Its old make builder and WSL
+wrapper are retired; native Linux SDK construction through Forge remains deferred.
 The console and late-loading examples are shared between the two platforms.
 
 Build the compiler with Forge, then build the shared RTL package and per-image

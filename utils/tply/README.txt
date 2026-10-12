@@ -153,10 +153,9 @@ For other operating systems (dos/windows-like) :
 2. Directory given by FPCDIR
 3. Directory where the executable is located.
 
-For the Free Pascal/Linux version, a Makefile is provided. To install, issue
-the command `make' (maybe you have to edit the Makefile before this to reflect
-your setup) and then `make install'. Note that in the Linux version the
-executables will be named `plex' and `pyacc' to avoid name clashes with the
+For NexusFPC, use Forge's Tools and Release projects; see
+../../NexusFPC.Forge.md. The make build/installation recipe is retired.
+The executables are named `plex' and `pyacc' to avoid name clashes with the
 corresponding UNIX utilities.
 
 For the Turbo/Borland/Free Pascal versions under DOS and Windows, several DOS

@@ -4,7 +4,7 @@ Checks implementation-only unit exports in EXEs and DLLs, normally and with smar
 
 The old compiler fails the fresh private-export case. Interface-visible unit exports also disappeared on cached builds. Windows and Linux unit export metadata uses optional PPU entry `ibunitexports` (88); existing PPUs without it remain readable. Units with exports must be rebuilt once to acquire the metadata. Earlier compilers cannot read PPUs containing this new entry.
 
-For a Windows-hosted Linux regression RTL, run `./Build-NXLinuxExportRTL.ps1` with LLVM on PATH. This invokes the repository Makefile targets for the Pascal RTL units and the `abitag` loader. It accepts `-Compiler`, `-SourceRoot` and a fresh `-OutputRoot`.
+For Windows-hosted Linux compilers and matching RTLs, use the [Forge cross matrix](../../NexusFPC.Forge.md). The historical `Build-NXLinuxExportRTL.ps1` invokes removed make targets; its replacement belongs in the later nxtest work.
 
 Linux: run `python3 Run-NXLinuxUnitExports.py --compiler <compiler> --rtl <matching-Linux-RTL>`. The RTL must include `system`, `objpas`, `si_prc`, `si_dll`, `fpintres` and the `abitag` loader object. The runner needs GNU ld/nm and Python 3. It also accepts a Windows cross compiler under WSL, with `--assembler-dir 'C:/Program Files/LLVM/bin'` and all source, RTL and output paths beneath `/mnt/<drive>`.
 

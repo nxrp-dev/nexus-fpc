@@ -57,6 +57,25 @@ It preserves the native bootstrap and other cross targets.
 No make or fpmake process is used. Other packages are deferred while the owner
 selects them individually; migrating them does not block this compiler release.
 
+For a complete Windows-hosted release, run the projects sequentially from this
+directory. The target list below is the retained matrix shown above:
+
+```powershell
+$forge = '..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe'
+& $forge /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+if ($LASTEXITCODE -ne 0) { throw 'Bootstrap failed' }
+foreach ($target in @('i386-linux','x86_64-linux','aarch64-linux',
+    'i386-win32','x86_64-win64','aarch64-win64',
+    'x86_64-android','aarch64-android','x86_64-darwin','aarch64-darwin',
+    'x86_64-iphonesim','aarch64-iphonesim','aarch64-ios')) {
+    $cpu,$os = $target -split '-'
+    & $forge /input=NexusFPC.Forge.nxscript "/targets=Build:Cross,TargetCPU:$cpu,TargetOS:$os"
+    if ($LASTEXITCODE -ne 0) { throw "Cross build failed: $target" }
+}
+& $forge /input=NexusFPC.Forge.nxscript /targets=Build:Release
+if ($LASTEXITCODE -ne 0) { throw 'Release failed' }
+```
+
 ## Generated compiler inputs
 
 `NexusFPC.Forge.Tables.nxscript` is composed as an ordinary Group inside the
@@ -284,6 +303,27 @@ checks `-iW` and `-iD` against the captured record and fails on a mismatch.
 
 ## Verification
 
+The Make retirement pass passed in an isolated checkout with all retired source
+files physically absent:
+
+- Fresh native bootstrap: 376.14 seconds. Compiler generations two and three
+  were byte-identical; all 20 tools built and all 32 existing tool checks passed.
+  All 64 generated table includes matched.
+- Fresh builds of all 13 cross compiler/RTL targets: 771.53 seconds total, with
+  no failures or reused cross outputs.
+- Release assembly, including Win64 SDK construction: 52.93 seconds. All 23
+  existing distribution checks passed, including the relocated 13-target unit
+  builds, six linked programs and successful Win32/Win64 execution.
+- All 12 public SDK files matched their build outputs and relocated copies.
+  Build intermediates were excluded. A consumer built using the relocated SDK's
+  shipped helper ran successfully and printed `forge-package-sdk-ok`.
+
+Evidence is under `C:/gitdev/nexus/output/ForgeRelease/make-retirement/`:
+`bootstrap-result.json`, `cross-results.json`, `release-result.json`,
+`sdk-result.json` and the corresponding build logs. Compiler and RTL runtime
+source, Forge recipes and test implementations were unchanged by this retirement.
+Apple/Android application linking and non-Windows execution were not tested.
+
 The runtime-package SDK migration passed in the isolated checkout:
 
 - Fresh native bootstrap and all 32 existing release-tool checks: 243.68 seconds;
@@ -355,17 +395,37 @@ isolated build's `tools/checks/` cover the release tools pass. The `standard-*`
 logs record the preceding compiler/cross matrix; `benchmark/` preserves the measurements
 behind the release policy. Timings are observations, not performance guarantees.
 
-## Remaining make migration
+## Make retirement
 
 The Windows-hosted compiler bootstrap, standard release settings, generated inputs,
 release tools, retained cross-target compiler/base RTL matrix, configuration
 generation, Win64 runtime-package SDK construction and compiler distribution
-assembly no longer invoke make. Existing
-make-based automation entry points must be replaced or retired before deleting
-their make infrastructure. Other package recipes and their runtime-package
-artifacts are deferred to the owner's individual package decisions and do not
-block the basic compiler release. Linux-hosted builds remain deferred by owner
-choice.
+assembly use Forge.
+
+The last committed tree before this retirement is `455d14b8`; the old recipes
+and scripts remain available in Git history for reference.
+
+The following obsolete infrastructure has been removed:
+
+- Root, compiler, RTL and utility makefiles, fpmake aggregates and regeneration
+  scripts, including the Android make overlay.
+- The `fpcmake` and `fpgmake` generators and their templates. `fpmkunit` remains
+  because the shipped `fpcmkcfg` imports it; its library code is a live dependency.
+- Both copies of `Invoke-NexusFPCBootstrap.ps1`, `NexusFPCBootstrapSeed.ps1`, and
+  the old Linux/Android cross-build wrappers. Use the Forge commands above.
+- The upstream make-based GitLab CI configuration. A future CI configuration
+  must invoke Forge on an appropriately provisioned host.
+- The native Linux SDK make builder and its WSL wrapper. Native Linux-hosted
+  compiler/SDK construction through Forge remains deferred. Linux runtime,
+  package declarations, startup sources and existing SDK consumption/publication
+  helpers remain available; the Windows-hosted Linux cross builds are unchanged.
+
+The `packages/` and `tests/` recipes are retained under the owner's separate
+package-selection and nxtest work. They are not build entry points for the
+compiler release. Legacy test runners which rebuild through the removed make
+infrastructure will need replacement during that work; this pass does not add
+ad hoc test compatibility paths. Historical documents and logs may describe the
+old commands as evidence of earlier results.
 
 Dynamic-library and runtime-package support is standard compiler functionality
 on supported targets. Developers choose static linking or runtime packages;

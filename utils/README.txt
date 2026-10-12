@@ -1,14 +1,14 @@
 This directory contains some utilities that come with the Free Pascal
-Compiler. They can be compiled by typing 'make all' in this directory.
+Compiler. NexusFPC builds release utilities through Forge's Bootstrap/Tools
+projects and installs their distribution through the Release project.
+See ../NexusFPC.Forge.md for commands and the complete tool inventory.
 
 Currently, the following things are provided:
 
 ppdep   : Creates a makefile which includes all interdependant units.
 
 tply/   : Pascal Lex and Yacc
-fpcm/   : fpcmake - utility to generate makefiles to regenerate compiler
-
-Typing a 'make install' will put everything into place.
+The fpcmake/fpgmake generators and utility make recipes are retired.
 
 Happy Coding !
 The Free Pascal Development Team.

@@ -92,14 +92,16 @@ The Windows repository bootstrap starts with stock FPC 3.2.2 i386-win32 and its
 matching RTL. It builds an x64 seed, then the new Win64 RTL and native compiler
 before the normal cycle, retaining native hardware80 arithmetic at every step.
 The bootstrap compiler therefore never has to read `NXU` files. Use an isolated
-source checkout for the script's clean/full build:
+source checkout for the [Forge bootstrap and full matrix](NexusFPC.Forge.md):
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts\Invoke-NexusFPCBootstrap.ps1 -FullMatrix
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
 ```
 
-Both SDK builders stage compiler source, regenerate messages, and build their
-own matching RTL. Do not mix an existing SDK's compiler or RTL with new files.
+The Win64 SDK reuses the completed Forge bootstrap's compiler, staged sources
+and matching RTL. Native Linux SDK construction through Forge is deferred; its
+old make builder has been retired. Do not mix an existing SDK's compiler or RTL
+with new files.
 
 ## Verification
 

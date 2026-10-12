@@ -12,20 +12,11 @@ It links against the built x86-64 cross compiler units and runs on Windows.
 
 ## Build compilers and RTLs
 
-Run from the repository root in PowerShell:
-
-```powershell
-./scripts/Invoke-NexusFPCBootstrap.ps1 -SourceRoot $PWD.Path -LogRoot "$env:TEMP/NexusFPCBootstrap"
-./scripts/Invoke-NexusFPCLinuxCrossBuild.ps1 -SourceRoot $PWD.Path -BuildRTL -BinutilsDir 'C:/Program Files/LLVM/bin'
-./scripts/Invoke-NexusFPCAndroidCrossBuild.ps1 -SourceRoot $PWD.Path -NdkRoot 'C:/android/ndk/25.2.9519653'
-```
-
-The Android helper builds both CPU cross compilers and both Android RTLs. It
-uses NDK Clang, with no assembler-selection override in the Pascal compilation:
-the compiler's new Android default is therefore tested. Startup files use
-`scripts/android-clang.mk`, an overlay on the existing Android Makefile, which
-passes `-Wa,-defsym,CPU64=1` through Clang. Neither `Makefile.fpc` nor the
-generated `Makefile` is edited.
+Use the [Forge bootstrap and cross matrix](../../NexusFPC.Forge.md). The former
+bootstrap/Linux/Android PowerShell build scripts and Android make overlay are
+retired. Forge's Android recipe compiles the startup assembly with NDK Clang.
+The sample commands below are historical and use the old build output layout;
+their test-infrastructure migration belongs in the later nxtest work.
 
 ## Build Android samples
 

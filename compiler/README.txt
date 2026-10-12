@@ -3,25 +3,13 @@ This directory contains the sources of the Free Pascal Compiler
 If you want to compile/modify the compiler, please read first the
 programmers manual.
 
-To recompile the compiler, you can use the make utility as following:
+NexusFPC compiler builds use the Forge projects in ../NexusFPC.Forge.nxscript.
+See ../NexusFPC.Forge.md for bootstrap prerequisites, the retained target matrix,
+generated compiler inputs, release tools and distribution assembly. The compiler
+makefiles and their build/installation targets are retired.
 
-      make OS_TARGET="compiler OS target" \
-      CPU_TARGET="compiler CPU target" \
-      FPCCPUOPT="Optimization level" \
-      PP="compiler used to compile FPC" \
-      COMPILER_OPTIONS="Options passed to compiler" \
-
-If an option is omitted, then target CPU/OS will be same as current CPU/OS
-
-Possibles targets are : linux go32v2 win32 os2 freebsd beos netbsd amiga haiku
-atari sunos qnx openbsd wdosx palmos macos macosx emx
-
-The list might change anytime, including possible target CPUs.
-Almost - if not all - possible target CPUs + OSes are put in Makefile.fpc and Makefile.
-
-To generate HTML documents:
-
-      make htmldocs
+The compiler-switch notes below are historical upstream reference. They are not
+the supported Nexus target matrix or a replacement for the current Forge recipe.
 
 Possible compiler switches (* marks a currently required switch):
   -----------------------------------------------------------------

@@ -69,9 +69,9 @@ are no longer needed.
 
 ## Building
 
-Run `scripts/Invoke-NexusFPCBootstrap.ps1 -FullMatrix` on an isolated checkout.
-Windows bootstrap input is stock FPC 3.2.2 **i386-win32**, supplied through
-`-BootstrapBin`. Its native hardware80 arithmetic builds the first x64 seed,
-then the new Win64 RTL/native compiler and normal self-hosting cycle.
-`scripts/NexusFPCBootstrapSeed.ps1` owns that transition for both the bootstrap
-and package SDK scripts. No software floating-point units are staged for it.
+Use the [Forge bootstrap and cross matrix](../../NexusFPC.Forge.md) in an isolated
+checkout. The stock FPC 3.2.2 **i386-win32** seed's hardware80 arithmetic builds
+the first x64 compiler, then the Win64 RTL/native compiler and self-hosting cycle.
+Forge owns that transition; the make bootstrap and seed scripts are retired.
+No software floating-point units are staged for it. Test orchestration remains
+separate from the build and is deferred to nxtest.

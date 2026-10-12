@@ -32,39 +32,25 @@ and other references into a package before unloading it.
 | Lifecycle and cleanup | Existing synchronous dependency accounting, activation, reverse finalization, rollback and failure retention are reused. Classes, aliases, enum aliases, component handlers, conversion callbacks, resources and explicit application cleanup hooks follow Linux image ownership. |
 | Native resources | Each package exports its own resource location. The shared internal-resource implementation looks up resources with the image's native handle. |
 | Dependency preservation | Declared requirements remain in PCP metadata and native linkage even when no symbols use them. Imported units retain native `$LINKLIB` requirements without copying provider unit objects into consumers. |
-| SDK and publication | Native Python tools build an isolated compiler/RTL/SDK and validate PCP/ELF identity pairs without loading code. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
+| SDK and publication | Existing SDK consumption/publication helpers validate PCP/ELF identity pairs without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
 
 The core changes are in `compiler/pkgutil.pas`, `compiler/pmodules.pas`, the Linux
 linker and ELF/assembler writers, `rtl/linux/sysinitpkg.pp`, the System package
 hooks, and `rtl/inc/fpcpackageloader.inc`. Existing Windows adapters still use the
 Windows loader. Common lifecycle logic has not been duplicated.
 
-## Build and use
+## Build status and existing SDK use
 
-On Debian/Ubuntu, install the native prerequisites:
+Core make infrastructure, `build_linux_package_sdk.py`, and its WSL wrapper have
+been retired. Native Linux-hosted compiler and SDK construction must be ported
+to Forge before fresh Linux SDKs can be built again. That work remains deferred
+by owner choice; this retirement does not remove Linux package compiler/RTL code,
+the `nxrtl.ppk` declaration, startup units, examples or publication helpers.
 
-```sh
-sudo apt install fp-compiler fp-units-rtl fp-utils make gcc libc6-dev binutils python3 git
-python3 scripts/build_linux_package_sdk.py --output-root /var/tmp/nexus-linux-sdk
-```
-
-The validated bootstrap is FPC 3.2.2. Source and SDK **build** paths must not
-contain whitespace because of the existing RTL makefiles. The completed SDK and
-application distributions support relocation to paths with spaces. WSL builds
-isolate the native tool PATH from Windows tools.
-
-From Windows PowerShell:
-
-```powershell
-.\scripts\Build-NexusFPCLinuxPackageSDK.ps1 -OutputRoot /var/tmp/nexus-linux-sdk -Distribution Ubuntu -RunTests
-```
-
-Use a new/empty SDK output directory. `--smart` or `-SmartLink` builds a smart-link
-foundation. `--resume` is restricted to unfinished native SDK builds; a completed
-SDK is immutable. Logs and intermediate files live under its `logs` and `work`
-directories. Only `bin`, `packages`, `units`, and `sdk.json` are distributed.
-Use disk-backed storage such as `/var/tmp` for repeated/full validation runs;
-some Linux installations mount `/tmp` as a small RAM filesystem.
+The [Forge cross matrix](NexusFPC.Forge.md) still builds Windows-hosted Linux
+compilers and base RTLs. It does not yet produce a native Linux runtime-package
+SDK. The commands below apply to an existing matching SDK; keep its compiler,
+shared RTL, startup units and metadata together when relocating it.
 
 Create packages using the same declaration as on Windows:
 
@@ -99,20 +85,12 @@ relative to the executable, as on Windows. Native `dlopen` alone maps the packag
 but does not activate Pascal units. The examples' `PackageNative` helper supplies
 platform filenames and probes; applications need only the SysUtils package API.
 
-## Verification
+## Historical verification and retained tests
 
-Run the complete native source-only workflow from the repository:
-
-```sh
-python3 tests/dynamic-packages/run_linux_package_sdk_tests.py --output /var/tmp/nexus-linux-validation
-```
-
-It builds fresh normal and smart SDKs, runs the lifecycle/late-loading/failure and
-publication tests with fresh and source-hidden cached units, and checks SDK/source
-immutability. It also rebuilds the ordinary compiler entry point, checks that it
-rejects packages, runs ordinary EXE/SO export regressions, and rebuilds/runs hosts
-from relocated distributions while original source, SDK and package build trees
-are unavailable. Commands and per-step logs are recorded under the output path.
+The historical `run_linux_package_sdk_tests.py` workflow depends on the retired
+SDK builder. Its fixtures and assertions are retained for later nxtest work;
+it is no longer a source-build entry point. The results below record the earlier
+normal/smart SDK, lifecycle, publication, export and source-free relocation runs.
 
 For an existing SDK:
 

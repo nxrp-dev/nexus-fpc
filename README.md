@@ -16,6 +16,23 @@ NexusFPC uses its own [compiled artifact identities](nexusfpc-artifact-identity.
 independent of upstream FPC. Rebuild the compiler, RTL, units and packages together
 when moving from an earlier build; upstream compiled units cannot be reused.
 
+## Building NexusFPC
+
+Forge is the build system for the compiler, base RTL, release tools and Win64
+runtime-package SDK. From this directory:
+
+```powershell
+& ..\..\nexus\output\NexusForge-next\x86_64-win64\nxforge.exe /input=NexusFPC.Forge.nxscript /targets=Build:Bootstrap
+```
+
+See [NexusFPC with Forge](NexusFPC.Forge.md) for the complete cross matrix,
+release assembly and prerequisites. The core makefiles, make generators,
+make-based bootstrap/cross scripts and upstream make CI have been retired.
+Remaining package recipes await package selection; old test build machinery
+awaits nxtest. Native Linux-hosted builds and Linux SDK construction through
+Forge remain deferred. The compiler and RTL still support the retained Linux
+cross targets and the Linux package runtime.
+
 ## Experimental Win64 dynamic packages
 
 Complete the [Forge bootstrap](NexusFPC.Forge.md), then build the package SDK

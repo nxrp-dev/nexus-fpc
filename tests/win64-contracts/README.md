@@ -12,8 +12,9 @@ Run directly against an existing matched build:
 powershell -NoProfile -ExecutionPolicy Bypass -File tests\win64-contracts\Run-NXWin64Contracts.ps1
 ```
 
-The canonical Nexus `repo-automation/Invoke-NexusFPCBootstrap.ps1` runs this suite
-after its clean/all build. A failed assertion fails the bootstrap. LLVM's Clang,
+The former make bootstrap helper that automatically ran this suite is retired.
+The suite remains available independently; future integration belongs in nxtest.
+See the [Forge build guide](../../NexusFPC.Forge.md) for compiler construction. LLVM's Clang,
 LLD, llvm-rc, llvm-dlltool and llvm-readobj must be on PATH. No Windows SDK, C CRT,
 Python, test framework or downloaded dependency is required.
 

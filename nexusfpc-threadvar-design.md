@@ -117,13 +117,10 @@ does it enable package runtimes on those targets. The package stress suite is
 sequential; ordinary thread and foreign-thread tests exercise the existing
 adapters, not concurrent package lifecycle.
 
-Use this repository's `scripts/Invoke-NexusFPCBootstrap.ps1` for the required
-seed-first rebuild. The separate legacy helper at
-`C:\gitdev\nexus\repo-automation\Invoke-NexusFPCBootstrap.ps1` still uses the older
-direct bootstrap flow and was not changed in this repository task; callers of
-that helper need to switch to the updated entry point. Rebuild SDKs and product
-binaries together. Validation did not replace the working checkout's previously
-installed compiler binaries.
+Use the [Forge bootstrap](NexusFPC.Forge.md) for the required seed-first rebuild.
+Both make bootstrap helpers have been retired. Rebuild SDKs and product binaries
+together. The historical validation above did not replace the working checkout's
+previously installed compiler binaries.
 
 The final Win64 microbenchmark uses the ordinary baseline compiler/RTL and the
 new ordinary bootstrapped compiler/RTL, both with `-O2`. It alternates five samples
