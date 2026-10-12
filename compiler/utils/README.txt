@@ -8,7 +8,6 @@ msg2inc  : Convert a compiler message file (errorX.msg) to .inc files to
 nasmconv : Convert a Nasm insns.dat to i386tab.inc so it can be used with
            the compiler
 
-makecfg  : This script will make the samplecfg for linux installations
 
 msgdif   : analyzes the differences between two msg files
            msgdif errore.msg errord.msg

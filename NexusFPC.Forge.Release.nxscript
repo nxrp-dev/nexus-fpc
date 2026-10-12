@@ -125,10 +125,9 @@ Group ReleaseAssembly {
         Recursive: True;
         ExcludeNames: "work";
     }
-    Run GenerateReleaseConfig {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "build/forge-bootstrap/distribution/bin/x86_64-win64/fpcmkcfg.exe";
-        Arguments: ["-t", "scripts/NexusFPC.Release.cft", "-d", "basepath=$FPCBINDIR/../..", "-o", "build/forge-bootstrap/distribution/bin/x86_64-win64/fpc.cfg"];
+    CopyFile ReleaseConfig {
+        Source: "scripts/NexusFPC.Release.cfg";
+        Destination: "build/forge-bootstrap/distribution/bin/x86_64-win64/fpc.cfg";
     }
     Run VerifyReleaseDistribution {
         Template: "../../nexus/projects/forge/examples/Run.mustache";

@@ -35,7 +35,7 @@ function Assert-Same([string]$Left, [string]$Right) {
     if ((Get-FileHash -LiteralPath $Left).Hash -ne (Get-FileHash -LiteralPath $Right).Hash) { throw "Generated file mismatch: $Left; $Right" }
 }
 $names = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','fpcmkcfg','rmwait','plex','pyacc')
+    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','plex','pyacc')
 foreach ($name in $names) {
     if (-not (Test-Path -LiteralPath (Join-Path $bin ($name+'.exe')))) { throw "Missing release tool: $name" }
 }
@@ -78,10 +78,6 @@ end.
     Run-Step 'dependencies' (Join-Path $bin 'ppdep.exe') @('dependency.pas')
     Assert-Contains 'dependencies.log' 'depunit'
 
-    Run-Step 'config-version' (Join-Path $bin 'fpcmkcfg.exe') @('-V')
-    Assert-Contains 'config-version.log' '3.3.1-0'
-    Run-Step 'config-render' (Join-Path $bin 'fpcmkcfg.exe') @('-d','basepath=C:/release-fixture','-o','generated.cfg')
-    Assert-Contains 'generated.cfg' '-FuC:/release-fixture/units/$fpctarget'
     Write-Fixture 'fixture.rc' '101 RCDATA { 42 }'
     Run-Step 'resource-parse' (Join-Path $bin 'fpcres.exe') @('-of','res','-o','fixture.res','fixture.rc')
     Run-Step 'resource-coff' (Join-Path $bin 'fpcres.exe') @('-of','coff','-a','x86_64','-o','fixture.o','fixture.res')
@@ -166,6 +162,5 @@ end.
     }
     Run-Step 'messages' (Join-Path $bin 'msg2inc.exe') @((Join-Path $SourceRoot 'compiler/msg/errore.msg'),'msg','msg')
     foreach ($name in @('msgidx.inc','msgtxt.inc')) { Assert-Same (Join-Path $OutputRoot $name) (Join-Path $bootstrap ('seed/source/'+$name)) }
-    Run-Step 'rmwait-help' (Join-Path $bin 'rmwait.exe') @('--help')
     Write-Host "Release tools passed: $($names.Count) tools, $($steps.Count) execution steps, $($generatedIncludes.Count) matching table includes."
 } finally { Pop-Location }

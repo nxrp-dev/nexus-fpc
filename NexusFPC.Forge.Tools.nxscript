@@ -10,8 +10,8 @@ Group ReleaseTools {
         Source: "utils";
         Destination: "build/forge-bootstrap/tools/source";
         Recursive: True;
-        IncludeMasks: ["*.pp", "*.pas", "*.inc", "*.cft", "*.cfg", "*.ini", "*.cod"];
-        ExcludeNames: "units;bin;fpccfg.inc;fpcfg.inc;fpini.inc";
+        IncludeMasks: ["*.pp", "*.pas", "*.inc", "*.cod"];
+        ExcludeNames: "units;bin";
     }
     CopyFile Stage_rtl_objpas {
         Source: "packages/rtl-objpas/src";
@@ -43,12 +43,6 @@ Group ReleaseTools {
         Recursive: True;
         IncludeMasks: ["*.pp", "*.pas", "*.inc"];
     }
-    CopyFile Stage_fcl_process {
-        Source: "packages/fcl-process/src";
-        Destination: "build/forge-bootstrap/tools/packages/fcl-process/src";
-        Recursive: True;
-        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
-    }
     CopyFile Stage_paszlib {
         Source: "packages/paszlib/src";
         Destination: "build/forge-bootstrap/tools/packages/paszlib/src";
@@ -58,12 +52,6 @@ Group ReleaseTools {
     CopyFile Stage_hash {
         Source: "packages/hash/src";
         Destination: "build/forge-bootstrap/tools/packages/hash/src";
-        Recursive: True;
-        IncludeMasks: ["*.pp", "*.pas", "*.inc"];
-    }
-    CopyFile Stage_fpmkunit {
-        Source: "packages/fpmkunit/src";
-        Destination: "build/forge-bootstrap/tools/packages/fpmkunit/src";
         Recursive: True;
         IncludeMasks: ["*.pp", "*.pas", "*.inc"];
     }
@@ -186,13 +174,6 @@ Group ReleaseTools {
         Output: "build/forge-bootstrap/tools/bin/fpcreslipo.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/fpcreslipo";
     }
-    CreateDirectory Units_rmwait { Path: "build/forge-bootstrap/tools/units/rmwait"; }
-    FPC Build_rmwait (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/rmwait/rmwait.pas"];
-        EntryPoint: "build/forge-bootstrap/tools/source/rmwait/rmwait.pas";
-        Output: "build/forge-bootstrap/tools/bin/rmwait.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/rmwait";
-    }
     CreateDirectory Units_plex { Path: "build/forge-bootstrap/tools/units/plex"; }
     FPC Build_plex (HostTool) {
         Source: ["build/forge-bootstrap/tools/source/tply/plex.pas"];
@@ -208,35 +189,6 @@ Group ReleaseTools {
         Output: "build/forge-bootstrap/tools/bin/pyacc.exe";
         UnitOutput: "build/forge-bootstrap/tools/units/pyacc";
         LabelAndGoto: True;
-    }
-    Run Generate_DefaultConfig {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
-        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpc.cft", "build/forge-bootstrap/tools/source/fpcmkcfg/fpccfg.inc", "DefaultConfig"];
-    }
-    Run Generate_fpcfg {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
-        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpinc.cfg", "build/forge-bootstrap/tools/source/fpcmkcfg/fpcfg.inc", "fpcfg"];
-    }
-    Run Generate_fpini {
-        Template: "../../nexus/projects/forge/examples/Run.mustache";
-        Executable: "build/forge-bootstrap/tools/bin/data2inc.exe";
-        Arguments: ["-b", "-s", "build/forge-bootstrap/tools/source/fpcmkcfg/fpinc.ini", "build/forge-bootstrap/tools/source/fpcmkcfg/fpini.inc", "fpini"];
-    }
-    CreateDirectory Units_fpcmkcfg { Path: "build/forge-bootstrap/tools/units/fpcmkcfg"; }
-    // Enable macros before the compiler parses the command-line version definitions.
-    WriteTextFile ConfigGeneratorOptions {
-        Path: "build/forge-bootstrap/tools/fpcmkcfg.cfg";
-        Text: "-Sm";
-    }
-    FPC Build_fpcmkcfg (HostTool) {
-        Source: ["build/forge-bootstrap/tools/source/fpcmkcfg/fpcmkcfg.pp"];
-        EntryPoint: "build/forge-bootstrap/tools/source/fpcmkcfg/fpcmkcfg.pp";
-        Output: "build/forge-bootstrap/tools/bin/fpcmkcfg.exe";
-        UnitOutput: "build/forge-bootstrap/tools/units/fpcmkcfg";
-        ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/tools/fpcmkcfg.cfg"];
-        Defines: ["package_version_major:=3", "package_version_minor:=3", "package_version_micro:=1", "package_version_build:=0"];
     }
     CopyFile LexerSkeleton {
         Source: "build/forge-bootstrap/tools/source/tply/yylex.cod";

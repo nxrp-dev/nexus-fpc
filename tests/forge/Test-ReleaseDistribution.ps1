@@ -16,7 +16,7 @@ $targets = @(
 )
 $compilers = @{i386='ppcross386.exe'; x86_64='ppcrossx64.exe'; aarch64='ppcrossa64.exe'}
 $tools = @('fpc','ppufiles','ppumove','mkx86ins','mkx86reg','mkx86inl','mka64ins','mka64reg','msg2inc',
-    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','fpcmkcfg','rmwait','plex','pyacc')
+    'data2inc','ppdep','rstconv','bin2obj','postw32','fpcres','fpcreslipo','plex','pyacc')
 
 function Require-File([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing release input: $Path" }

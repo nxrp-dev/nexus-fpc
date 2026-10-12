@@ -107,7 +107,7 @@ To rebuild just the tools after a completed bootstrap:
 ```
 
 The Tools Project exports its binary directory, driver and resource compiler.
-It builds these 20 Win64 tools using the verified native compiler:
+It builds these 18 Win64 tools using the verified native compiler:
 
 | Purpose | Executables |
 | --- | --- |
@@ -115,7 +115,6 @@ It builds these 20 Win64 tools using the verified native compiler:
 | Compiler input generators | `mkx86ins`, `mkx86reg`, `mkx86inl`, `mka64ins`, `mka64reg`, `msg2inc` |
 | Data, dependencies and translations | `data2inc`, `bin2obj`, `ppdep`, `rstconv` |
 | Resources and executable metadata | `fpcres`, `fpcreslipo`, `postw32` |
-| Configuration and file utility | `fpcmkcfg`, `rmwait` |
 | Lexer/parser generators | `plex`, `pyacc` |
 
 The output directory includes `ppcx64.exe` beside `fpc.exe`, and `yylex.cod` and
@@ -125,21 +124,21 @@ target RTLs and compiler-relative configuration for application unit searches.
 
 Each tools build clears its own output tree, stages tool and required package
 source, and uses separate unit directories for each executable. It consumes no
-installed package PPUs. `data2inc` regenerates all three embedded `fpcmkcfg`
-templates before that program compiles; checked-in generated copies are excluded.
-Tools use the captured bootstrap date/time. A tools-only build reads the current
+installed package PPUs. Tools use the captured bootstrap date/time.
+A tools-only build reads the current
 utility/package sources and the previously staged compiler sources.
 
-Makefile generators (`fpcmake`/`fpgmake`) and the JVM resource utility (`fpcjres`)
-are intentionally excluded. `fpcmkcfg` still links the existing `fpmkunit` library
-for its configuration helpers; it does not run make or fpmake. Removing that
-library dependency is separate from migrating the build recipes.
+Makefile generators (`fpcmake`/`fpgmake`), the retrying file-deletion utility
+`rmwait`, and the configuration generator `fpcmkcfg` are retired. Forge copies
+the fixed release configuration directly. The `fpmkunit` and `fcl-process`
+sources are no longer staged for release tools; package selection remains
+separate. The JVM resource utility (`fpcjres`) is also excluded.
 
 The final `Test-ReleaseTools.ps1` child checks driver dispatch, binary includes,
-PPU reading, dependency and translation output, configuration rendering,
+PPU reading, dependency and translation output,
 resource conversion/sharing, generated lexer/parser compilation and execution,
-and regeneration of the compiler tables/messages. `ppumove`, `postw32` and
-`rmwait` receive help/startup checks, not exhaustive behavioral tests.
+and regeneration of the compiler tables/messages. `ppumove` and `postw32`
+receive help/startup checks, not exhaustive behavioral tests.
 
 Runtime checks required small source corrections: `ppdep` now sizes string
 results before writing them; the lexer/parser helpers allocate strings normally;
@@ -159,14 +158,14 @@ After Bootstrap and all 13 Cross builds have completed, assemble the distributio
 The Release Project exposes Directory, Bin, Config, Identity and PackageSDK outputs.
 It first builds the runtime-package SDK described below. Its ordered children
 in `NexusFPC.Forge.Release.nxscript` validate the remaining build inputs,
-copy the artifacts, generate configuration with the newly built `fpcmkcfg`, and
+copy the artifacts and release configuration, and
 verify the relocated distribution. It consumes completed Bootstrap/Cross builds
 and does not silently omit missing targets. SDK construction and input checks
 run before clearing the previous distribution.
 
 The output is `build/forge-bootstrap/distribution/`:
 
-- `bin/x86_64-win64/`: the 20 release tools, lexer/parser skeletons, `ppcx64`,
+- `bin/x86_64-win64/`: the 18 release tools, lexer/parser skeletons, `ppcx64`,
   `ppcross386`, `ppcrossa64`, and `fpc.cfg`.
 - `units/<cpu>-<os>/rtl/`: compiled RTL units, objects and associated resources
   for the 13 targets. The internal `buildrtl` build helper is excluded.
@@ -187,7 +186,7 @@ and matching RTL. For example, from the distribution's binary directory:
 & .\fpc.exe -Paarch64 -Tlinux app.pas
 ```
 
-`scripts/NexusFPC.Release.cft` generates a small configuration using the compiler's
+`scripts/NexusFPC.Release.cfg` is copied unchanged. It uses the compiler's
 existing `$FPCBINDIR` and `$FPCTARGET` macros. These are FPC configuration macros,
 not NexusScript reference syntax. No checkout, seed installation, or machine-specific
 path is embedded. The compiler retains its normal configuration overrides.
@@ -303,6 +302,17 @@ checks `-iW` and `-iD` against the captured record and fails on a mismatch.
 
 ## Verification
 
+Retiring `rmwait` and `fpcmkcfg` passed against the existing verified bootstrap
+and cross matrix in the isolated checkout. A fresh Tools build produced all 18
+remaining tools; all 29 execution checks and 64 generated-table comparisons
+passed. Release assembly passed all 23 existing distribution checks, including
+all 13 relocated target compilations, six links and Win32/Win64 execution.
+The directly copied configuration has the same content as the previous generated
+configuration. Retired executables are absent from the rebuilt tools, release
+and relocated release. The compiler and RTL were unchanged and were not rebuilt
+for this utility-only removal. Earlier verification counts below include the
+utilities that were subsequently retired.
+
 The Make retirement pass passed in an isolated checkout with all retired source
 files physically absent:
 
@@ -409,8 +419,10 @@ The following obsolete infrastructure has been removed:
 
 - Root, compiler, RTL and utility makefiles, fpmake aggregates and regeneration
   scripts, including the Android make overlay.
-- The `fpcmake` and `fpgmake` generators and their templates. `fpmkunit` remains
-  because the shipped `fpcmkcfg` imports it; its library code is a live dependency.
+- The `fpcmake` and `fpgmake` generators and their templates, `rmwait`, and
+  `fpcmkcfg` with its templates and old `samplecfg` wrapper. The `fpmkunit`
+  package remains under the separate package-selection work; it is no longer
+  a release-tool dependency.
 - Both copies of `Invoke-NexusFPCBootstrap.ps1`, `NexusFPCBootstrapSeed.ps1`, and
   the old Linux/Android cross-build wrappers. Use the Forge commands above.
 - The upstream make-based GitLab CI configuration. A future CI configuration
