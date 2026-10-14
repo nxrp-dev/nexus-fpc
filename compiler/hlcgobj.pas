@@ -773,6 +773,10 @@ implementation
         global:=current_procinfo.procdef.needsglobalasmsym;
         while assigned(item) do
           begin
+            { Record emitted entry points, rather than declarations: generic
+              templates can have assembler names without executable bodies. }
+            if global and (tf_supports_packages in target_info.flags) then
+              current_module.add_public_asmsym(item.str,AB_GLOBAL,AT_FUNCTION);
             { alias procedure entry symbols via ".set" on Darwin, otherwise
               they can be interpreted as all different starting symbols of
               subsections and be reordered }

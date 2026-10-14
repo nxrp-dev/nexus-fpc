@@ -152,3 +152,50 @@ temporary staging directory removed. The two affected `.nxproject` descriptions
 were included explicitly because the existing filter omits that extension.
 This checkpoint contains Nexus sources, not the sibling NexusFPC repository or
 generated test artifacts. The archive script was not changed.
+
+## Abbrevia runtime package validation (2026-10-14)
+
+Abbrevia now has a maintained `Abbrevia.nxpk` declaration alongside its package
+README. It contains all 51 runtime units and requires `nxrtl`. The existing
+nxbuild recipe builds the LLVM codecs and bzip2 shared library first, then uses
+one FPC invocation to produce `Abbrevia.nxpl` with embedded metadata. Its nxtest
+project declares `RequiredPackages: [nxrtl, Abbrevia]` and consumes that image;
+the Abbrevia source directory is no longer a test UnitPath.
+
+This complete package link exposed callable-symbol gaps that individual unit
+compilation did not exercise. The compiler corrections:
+
+- Record emitted procedure entry names and generated external calls/addresses
+  in unit metadata; declarations of generic templates are not emitted entries.
+- Identify a private implementation overload by its selected definition's owner,
+  even when it shares a procsym with public overloads. Preserve names of private
+  helpers referenced by public inline code independently of cached local symbols.
+- Export those retained callable names and inspect live assembler references in
+  a program, which has no unit file in which to retain generated references.
+- Register compiler helpers by their native mangled name, rather than an internal
+  Pascal lookup name such as `$fpc_reraise`.
+
+These corrections use the existing unit/package metadata records and descriptor
+ABI. Matching RTL units and the shared RTL package were rebuilt. The changes are
+in `compiler/fppu.pas`, `hlcgobj.pas`, `pkgutil.pas`, `pparautl.pas`,
+`procinfo.pas`, and `symtable.pas`.
+
+Verified on Win64: the package builds and its executable imports both
+`Abbrevia.nxpl` and `nxrtl.nxpl`; all 232 Abbrevia nxtest cases pass with no
+failures, errors, or skips. This includes a new shared-RTL inline/checked-Int64
+regression. All 21 nxbuild cases pass with zero unfreed memory blocks, including
+package option loading and search-path/target ordering before requirements.
+Two successive self-hosted compiler generations are byte-identical
+(SHA-256 `0A84E94A61BD5EDACBBE34416D5F2815175FFF79337B3A10E364CC03D7C6007E`).
+The cross-target matrix was not rerun in this pass.
+
+The normal nxbuild executable and Win64 package SDK were updated for this run.
+The shared environment selects the installed SDK, its identity from `sdk.json`,
+and matching static RTL search directory. Replacing the SDK requires updating
+these installation values together. The Linux runtime-package configuration
+still requires its native SDK installation; the earlier Linux executable-suite
+results do not validate this new package-consuming build.
+
+Disposable build logs and self-hosted generations are under
+`output/abbrevia-nxpk/`. The maintained declaration, recipes, tests, and results
+are in the Nexus and `nexus-packages-ext` repositories.

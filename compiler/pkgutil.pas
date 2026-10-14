@@ -383,13 +383,17 @@ implementation
       { check localsymtable for exports too to get public symbols }
       u.localsymtable.symlist.ForEachCall(@insert_export,u.localsymtable);
 
-      { Public records can contain anonymous managed types with no typesym.
+      { Callable names retained for inline implementation helpers must remain
+        exported even when a cached unit no longer has their local procsym.
+        Public records can contain anonymous managed types with no typesym.
         Their emitted metadata is nevertheless referenced by consumer cleanup
         code, so include the unit's globally visible RTTI/init symbols. }
       for i:=0 to u.publicasmsyms.count-1 do
         begin
           sym:=tasmsymbol(u.publicasmsyms[i]);
-          if (sym.bind=AB_GLOBAL) and (sym.typ=AT_DATA) and
+          if (sym.bind=AB_GLOBAL) and (sym.typ=AT_FUNCTION) then
+            procexport(sym.name)
+          else if (sym.bind=AB_GLOBAL) and (sym.typ=AT_DATA) and
              ((copy(sym.name,1,5)='RTTI_') or (copy(sym.name,1,5)='INIT_')) then
             varexport(sym.name);
         end;
@@ -1063,7 +1067,14 @@ implementation
       while assigned(module) do
         begin
           if not assigned(module.package) then
-            processasmsyms(module.externasmsyms);
+            begin
+              processasmsyms(module.externasmsyms);
+              { A program has no unit file in which to preserve references
+                introduced during code generation. Inspect its live symbols
+                as well as those retained for compiled/cached units. }
+              if assigned(module.asmdata) then
+                processasmsyms(TAsmData(module.asmdata).AsmSymbolDict);
+            end;
           module:=tmodule(module.next);
         end;
 
