@@ -26,11 +26,13 @@ runtime-package SDK. From this directory:
 ```
 
 See [NexusFPC with Forge](NexusFPC.Forge.md) for the complete cross matrix,
-release assembly and prerequisites. The core makefiles, make generators,
+release assembly and prerequisites. Makefiles, make generators, fpmake,
 make-based bootstrap/cross scripts and upstream make CI have been retired.
-Remaining package recipes await package selection; old test build machinery
-awaits nxtest. Native Linux-hosted builds and Linux SDK construction through
-Forge remain deferred. The compiler and RTL still support the retained Linux
+[Recovered package build requirements](nexusfpc-package-build-requirements.md)
+record the useful details from the removed package and test recipes. Package
+sources await selection; test migration awaits nxtest. Native Linux-hosted
+builds and Linux SDK construction through Forge remain deferred. The compiler
+and RTL still support the retained Linux
 cross targets and the Linux package runtime.
 
 ## Experimental Win64 dynamic packages

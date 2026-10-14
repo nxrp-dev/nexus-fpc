@@ -1,5 +1,15 @@
-Usage
------
+Nexus status
+------------
+The Make-based test build recipes have been retired. Test sources and data
+remain for migration to nxtest. Required helper objects and package preparation
+are recorded in ../nexusfpc-package-build-requirements.md.
+
+The runner commands, target lists and options below are historical reference,
+not supported Nexus test entry points. Test-source conventions remain useful
+when interpreting the retained cases.
+
+Historical usage
+----------------
 To start the test suite execute:
 
   make full TEST_FPC=path_to_your_compiler
@@ -10,13 +20,6 @@ statistics.
   make digest TEST_FPC=path_to_your_compiler
 
 scans the created log file and outputs some statistics
-
-The focused generic-set/CORBA regression checks, including source-hidden PPU
-loading, can also be run with:
-
-  python compiler-regressions/run_compiler_regressions.py
-
-See compiler-regressions/README.md for compiler/RTL selection and coverage.
 
   make digest USESQL=YES TEST_FPC=path_to_your_compiler
 

@@ -504,12 +504,11 @@ and scripts remain available in Git history for reference.
 
 The following obsolete infrastructure has been removed:
 
-- Root, compiler, RTL and utility makefiles, fpmake aggregates and regeneration
-  scripts, including the Android make overlay.
+- Root, compiler, RTL, utility, package and test makefiles, fpmake drivers,
+  aggregates and regeneration scripts, including the Android make overlay.
 - The `fpcmake` and `fpgmake` generators and their templates, `rmwait`, and
-  `fpcmkcfg` with its templates and old `samplecfg` wrapper. The `fpmkunit`
-  package remains under the separate package-selection work; it is no longer
-  a release-tool dependency.
+  `fpcmkcfg` with its templates and old `samplecfg` wrapper. The unused
+  `fpmkunit` engine, its manifest generator and generated caches are also removed.
 - Both copies of `Invoke-NexusFPCBootstrap.ps1`, `NexusFPCBootstrapSeed.ps1`, and
   the old Linux/Android cross-build wrappers. Use the Forge commands above.
 - The upstream make-based GitLab CI configuration. A future CI configuration
@@ -520,12 +519,19 @@ The following obsolete infrastructure has been removed:
   and publication now use native Forge; the Python helpers are removed.
   The Windows-hosted Linux cross builds are unchanged.
 
-The `packages/` and `tests/` recipes are retained under the owner's separate
-package-selection and nxtest work. They are not build entry points for the
-compiler release. Legacy test runners which rebuild through the removed make
-infrastructure will need replacement during that work; this pass does not add
-ad hoc test compatibility paths. Historical documents and logs may describe the
-old commands as evidence of earlier results.
+The deprecated .fpm package-configuration format has been removed. Forge,
+nxbuild, compiler bootstrap and release assembly have no dependency on it.
+The former fpmkunit reader/writer and package-manager manifest generator are
+removed with the remaining package build machinery.
+
+The remaining `packages/` and `tests/` Make recipes have now been removed.
+Their useful package dependencies, paths, resource requirements, namespace
+relationships and test preparation are recorded in
+[Package build requirements](nexusfpc-package-build-requirements.md), with an
+exact Git reference for the full old declarations. Package source and tests
+remain for package selection and nxtest migration. Legacy test runners that
+rebuild through Make require migration; this cleanup adds no ad hoc test
+compatibility paths. Historical documents and logs retain earlier results.
 
 Dynamic-library and runtime-package support is standard compiler functionality
 on supported targets. Developers choose static linking or runtime packages;
