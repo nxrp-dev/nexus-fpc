@@ -36,7 +36,7 @@ Group RuntimePackageSDK {
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
         Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk"];
         EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
-        Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
+        Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpl";
         UnitOutput: "build/forge-bootstrap/package-sdk/work/nxrtl";
         UnitPaths: ["build/forge-bootstrap/package-sdk/work/rtl-units", "build/forge-bootstrap/seed/rtl/inc"];
         ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/package-sdk/work/foundation.cfg"];
@@ -46,13 +46,9 @@ Group RuntimePackageSDK {
         GenerateReleaseUnitFiles: True;
         StripSymbols: True;
     }
-    CopyFile FoundationMetadata {
-        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxp";
-        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.nxp";
-    }
     CopyFile FoundationImage {
-        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
-        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.dll";
+        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpl";
+        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.nxpl";
     }
     CopyFile PerImageResourceAdapter {
         Source: "build/forge-bootstrap/package-sdk/work/rtl-units";

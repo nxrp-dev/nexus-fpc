@@ -35,7 +35,7 @@ begin
   Check(Caught,'typed exception');
   Check(MessageText='package resource','resource string');
   Check(WideText='package wide','wide-string initialization');
-  FailHandle:=Windows.LoadLibraryA('pkgfail.dll');
+  FailHandle:=Windows.LoadLibraryA('pkgfail.nxpl');
   Check(FailHandle<>0,'map failure fixture');
   FailedPackage:=PPackageDescriptor(Windows.GetProcAddress(FailHandle,'FPC_PACKAGE_PKGFAIL'));
   Check(FailedPackage<>nil,'failure fixture descriptor');

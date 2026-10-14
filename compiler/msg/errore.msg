@@ -4161,6 +4161,7 @@ A*2CV<x>_Set section threadvar model to <x>
 **2Ff<x>_Add <x> to framework path (Darwin only), or set IDF path to <x> (Xtensa-FreeRTOS)
 **2FF_Use fpcres as RC to RES compiler instead of windres or gorc
 **2Fi<x>_Add <x> to include path
+**2FJ[+|-]_Embed compressed package metadata (default +); - writes an NXP sidecar
 **2Fl<x>_Add <x> to library path
 **2FL<x>_Use <x> as dynamic linker
 **2Fm<x>_Load unicode conversion table from <x>.txt in the compiler dir

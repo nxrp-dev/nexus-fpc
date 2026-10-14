@@ -744,11 +744,8 @@ implementation
             begin
               //writeln('package used: ',pkgentry^.realpkgname);
               pkgname:=pkgentry^.package.pplfilename;
-              if copy(pkgname,1,length(target_info.sharedlibprefix))=target_info.sharedlibprefix then
-                delete(pkgname,1,length(target_info.sharedlibprefix));
-              if copy(pkgname,length(pkgname)-length(target_info.sharedlibext)+1,length(target_info.sharedlibext))=target_info.sharedlibext then
-                delete(pkgname,length(pkgname)-length(target_info.sharedlibext)+1,length(target_info.sharedlibext));
-              //writeln('adding library: ', pkgname);
+              { GNU/LLD exact-name lookup preserves the .nxpl dependency name. }
+              pkgname:=':'+pkgname;
               l.sharedlibfiles.concat(pkgname);
             end
           else

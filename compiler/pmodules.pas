@@ -52,7 +52,7 @@ implementation
        link,assemble,import,export,gendef,ppu,comprsrc,dbgbase,
        cresstr,procinfo,
        objcgutl,
-       pkgutil,
+       pkgutil,nxpackagefile,
        wpobase,
        scanner,pbase,pexpr,psystem,psub,pgenutil,pparautl,ncgvmt,ncgrtti,
        cpuinfo;
@@ -1842,6 +1842,9 @@ type
 
          curr.setmodulename(module_name);
          curr.ispackage:=true;
+         if OutputFileName='' then
+           curr.sharedlibfilename:=ExtractFilePath(curr.sharedlibfilename)+
+             module_name+NexusPackageLibraryExtension;
          exportlib.preparelib(module_name);
 
          if tf_library_needs_pic in target_info.flags then
@@ -2147,6 +2150,43 @@ type
          if (cs_debuginfo in current_settings.moduleswitches) then
            current_debuginfo.referencesections(current_asmdata.asmlists[al_procedures]);
 
+         { we add all loaded units that are not part of a package to the
+           package; this includes units in the "contains" section as well
+           as implicitly imported ones }
+         hp:=tmodule(loaded_units.first);
+         while assigned(hp) do
+          begin
+            if (hp<>curr) then
+              begin
+                if not assigned(hp.package) then
+                  begin
+                    pkg.addunit(hp);
+                    check_for_indirect_package_usages(hp.used_units);
+                  end
+                else
+                  begin
+                    pentry:=ppackageentry(packagelist.find(hp.package.packagename^));
+                    if not assigned(pentry) then
+                      internalerror(2015112301);
+                    pkg.add_required_package(hp.package);
+                  end;
+              end;
+            hp:=tmodule(hp.next);
+          end;
+
+         { A declared dependency also owns initialization/lifetime work
+           when none of its units contributed a referenced symbol. }
+         for i:=0 to packagelist.count-1 do
+           begin
+             pentry:=ppackageentry(packagelist[i]);
+             if pentry^.direct then
+               pkg.add_required_package(pentry^.package);
+           end;
+         pkg.initmoduleinfo(curr);
+
+         { Metadata is part of the package object before native linking. }
+         pkg.savepcp;
+
          { insert own objectfile }
          insertobjectfile(curr);
 
@@ -2174,40 +2214,6 @@ type
 
          if (not curr.is_unit) then
            begin
-             { we add all loaded units that are not part of a package to the
-               package; this includes units in the "contains" section as well
-               as implicitly imported ones }
-             hp:=tmodule(loaded_units.first);
-             while assigned(hp) do
-              begin
-                if (hp<>curr) then
-                  begin
-                    if not assigned(hp.package) then
-                      begin
-                        pkg.addunit(hp);
-                        check_for_indirect_package_usages(hp.used_units);
-                      end
-                    else
-                      begin
-                        pentry:=ppackageentry(packagelist.find(hp.package.packagename^));
-                        if not assigned(pentry) then
-                          internalerror(2015112301);
-                        pkg.add_required_package(hp.package);
-                      end;
-                  end;
-                hp:=tmodule(hp.next);
-              end;
-
-             { A declared dependency also owns initialization/lifetime work
-               when none of its units contributed a referenced symbol. }
-             for i:=0 to packagelist.count-1 do
-               begin
-                 pentry:=ppackageentry(packagelist[i]);
-                 if pentry^.direct then
-                   pkg.add_required_package(pentry^.package);
-               end;
-             pkg.initmoduleinfo(curr);
-
              { create the executable when we are at level 1 }
              if (curr.is_initial) then
                begin
@@ -2216,9 +2222,6 @@ type
                  { write .def file }
                  if (cs_link_deffile in current_settings.globalswitches) then
                    deffile.writefile;
-
-                 { generate the pcp file }
-                 pkg.savepcp;
 
                  if DrainClangAssemblerQueue then
                    begin

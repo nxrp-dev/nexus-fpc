@@ -116,7 +116,7 @@ function Get-NexusPackageBundle([string]$Directory) {
         if ($manifest.Format -ne 1 -or -not $manifest.Files) { throw "Invalid package bundle manifest: $manifestPath" }
         $listed = @{}
         foreach ($file in $manifest.Files) {
-            if ($file.Name -notmatch '^[A-Za-z0-9_.-]+\.(pcp|dll|exe)$' -or
+            if ($file.Name -notmatch '^[A-Za-z0-9_.-]+\.(nxp|nxpl|exe)$' -or
                 $listed.ContainsKey($file.Name) -or
                 (Get-FileHash -LiteralPath (Join-Path $directory $file.Name)).Hash -ne $file.SHA256) {
                 throw "Package bundle artifact differs from its manifest: $manifestPath"
@@ -124,7 +124,7 @@ function Get-NexusPackageBundle([string]$Directory) {
             $listed[$file.Name] = $true
         }
         foreach ($file in Get-ChildItem -LiteralPath $directory -File) {
-            if ($file.Extension -in @('.nxp','.dll','.exe') -and -not $listed.ContainsKey($file.Name)) {
+            if ($file.Extension -in @('.nxp','.nxpl','.exe') -and -not $listed.ContainsKey($file.Name)) {
                 throw "Unlisted package bundle artifact: $($file.FullName)"
             }
         }

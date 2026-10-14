@@ -40,7 +40,7 @@ foreach($lSmart in @($false,$true)) {
             Write-TestFile "$lDirectory/$Name.ppk" $lDeclaration
             $null=Invoke-TestProcess "$lName-$Name" $lCompiler ($lOptions+@("$lDirectory/$Name.ppk"))
             foreach($lUnit in $lHashes.Keys){Assert-PackageTest ($lHashes[$lUnit] -eq (Get-TestUnitHash $lDirectory $lUnit)) "$lUnit cached artifacts changed"}
-            foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
+            foreach($lSuffix in @('.nxpl')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
             foreach($lUnit in $Units.Keys){Hide-TestUnit $lDirectory $lUnit}
         }
         Package nxrtl @() ([ordered]@{fpcpackage=(Get-Content "$SourceRoot/rtl/inc/fpcpackage.pp" -Raw)})
@@ -72,7 +72,7 @@ end.
             ufailsecond="unit ufailsecond; interface implementation uses ufailfirst, upackageruntime; initialization Trace:=Trace+'!'; raise EPackageProbe.Create('initialization failure'); end."
         })
         $lExports=@{}
-        foreach($lDLL in Get-ChildItem "$lDist/*.dll"){
+        foreach($lDLL in Get-ChildItem "$lDist/*.nxpl"){
             $lText=Invoke-TestProcess "$lName-$($lDLL.BaseName)-exports" llvm-readobj.exe @('--coff-exports',$lDLL.FullName)
             $lExports[$lDLL.Name]=@([regex]::Matches($lText,'(?m)^\s*Name: (.+)$') | ForEach-Object {$_.Groups[1].Value.Trim()})
         }
@@ -87,7 +87,7 @@ end.
                 }
             }
         }
-        foreach($lDLL in Get-ChildItem "$lDist/*.dll"){Check-Imports $lDLL.FullName}
+        foreach($lDLL in Get-ChildItem "$lDist/*.nxpl"){Check-Imports $lDLL.FullName}
         $null=Invoke-TestProcess "$lName-inspect" "$script:TestOutput/package_native_probe.exe" @('descriptor',$lDist,[string]$lIdentity) 0 'PASS descriptors'
         $lHost="$lCase/host"
         New-Item -ItemType Directory -Force $lHost | Out-Null
@@ -96,7 +96,7 @@ end.
         Write-TestFile "$lHost/uhost.pas" "unit uhost; interface implementation uses upackageruntime; initialization Trace:=Trace+'H'; finalization WriteLn('FINAL H'); Flush(Output); end."
         $null=Invoke-TestProcess "$lName-host-build" $lCompiler ($lOptions+@("$PSScriptRoot/package_runtime_host.pas"))
         Check-Imports "$lHost/package_runtime_host.exe"
-        Copy-Item "$lDist/*.dll" $lHost
+        Copy-Item "$lDist/*.nxpl" $lHost
         $lActual=Invoke-TestProcess "$lName-host-run" "$lHost/package_runtime_host.exe" @() 0 '' $lHost
         $lExpected=@('PASS shared RTL: identity, allocation, managed values, exception, resources','FINAL H','FINAL R','FINAL L','FINAL U','FINAL A') -join "`n"
         Assert-PackageTest ($lActual.Replace("`r",'').Trim() -ceq $lExpected) 'Unexpected package lifecycle order'

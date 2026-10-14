@@ -54,23 +54,25 @@ The required log is initialization `BLRH`, success, then finalization `h,r,l,b`.
 | `bin\ppcx64.exe` | Standard compiler, supporting both static and runtime package builds. |
 | `forge\PackageBuild.nxscript` | Reusable ordered package/application build group. |
 | `forge\FPC.mustache` | Compiler command template used by the group. |
-| `packages\nxrtl.nxp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
+| `packages\nxrtl.nxpl` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
 | `units\` | Matching per-image `SysInitPkg` and native resource adapter. |
 | `sdk.json` | Format 2 SDK identity and enforced compiler/foundation/startup artifact hashes. |
 | `work\` | Forge build intermediates; excluded from exported/distributed SDKs. |
-| `examples\packages\current.json` | Selects a complete immutable generation of provider PCP/DLL pairs. |
+| `examples\packages\current.json` | Selects a complete immutable generation of provider package libraries. |
 
 Copy `bin`, `packages`, `units`, `forge`, and `sdk.json` together to relocate the SDK. Keep
-dependent packages from the same SDK build together. Only DLLs alongside the EXE
-are required to run an application; the compiler, PCPs and startup units are build
-inputs. Native Forge operations verify SDK and bundle hashes and paired PCP/DLL identities.
+dependent packages from the same SDK build together. Only `.nxpl` libraries alongside
+the EXE are required at runtime. Metadata is compressed inside each library by default;
+`EmbedPackageMetadata: Disabled` uses a development-only `.nxp` sidecar instead.
+See [package storage](../../nexusfpc-package-storage.md). Native Forge operations
+verify SDK/bundle hashes and metadata/native descriptor identities.
 Forge with its matching language definitions, LLVM Clang/LLD, and the release
 tools (including `fpcres.exe` for resources) must be available to build consumers.
 The wrapper saves Forge's build log at `build/forge-bootstrap/package-sdk-forge.log`.
 The runtime checks descriptor ABI, compiler/target/RTL identity, SDK identity and
 each required package's exact build ID before user initialization. Rebuild all
 the compiler, RTL, units and packages together for `NXP004` package metadata,
-descriptor v4 and `NXU208` units with long revision 35. These
+descriptor v4 and `NXU208` units with long revision 39. These
 [artifact identities](../../nexusfpc-artifact-identity.md) belong to NexusFPC;
 upstream and previous Nexus binary artifacts must be rebuilt.
 
@@ -136,8 +138,8 @@ use a dedicated build directory, separate from sources and published outputs.
 Explicit child composition retains the group's inherited settings. Supply
 absolute SDK/work paths in this reusable group, as shown above. Preparation
 writes `package.cfg` and `package-build.json` into the work directory, then FPC
-runs there. The supplied package directories must contain all required PCP/DLL
-pairs. Publication copies those DLLs next to the EXE, rejecting different DLLs
+runs there. The supplied package directories must contain all required `.nxpl` files
+and any matching sidecars. Publication copies those libraries next to the EXE, rejecting different images
 with the same name. It does not acquire or select package versions.
 After compilation, linking and identity checks succeed, it writes `generation-<id>` with a hash
 manifest and atomically selects it through `current.json`. Failed builds leave
@@ -184,10 +186,10 @@ shared contract package and obtain an object factory from a late-loaded plugin.
 The host does not startup-import either implementation branch or their common
 dependency. Both examples exercise repeated loads, a diamond, managed results,
 typed exceptions, native and translated string resources, registration removal,
-native unmapping and reload. Distribute the selected generation's EXE/DLL files.
+native unmapping and reload. Distribute the selected generation's EXE and `.nxpl` files.
 
 ```pascal
-Handle := SysUtils.LoadPackage('pluginleft.dll');
+Handle := SysUtils.LoadPackage('pluginleft.nxpl');
 try
   { GetProcAddress, call the exported factory, use and release its objects. }
 finally
@@ -195,7 +197,7 @@ finally
 end;
 ```
 
-Use an explicit DLL filename. Bare names resolve beside the EXE; explicit paths
+Use an explicit `.nxpl` filename. Bare names resolve beside the EXE; explicit paths
 are expanded and dependency search uses the package directory, application
 directory and System32. No implicit current-directory/PATH search is added.
 Successful loads require matching unload calls. Startup owners remain pinned.

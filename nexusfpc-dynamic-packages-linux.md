@@ -23,8 +23,8 @@ and other references into a package before unloading it.
 
 | Area | Linux implementation |
 | --- | --- |
-| Shared unit ownership | One `libnxrtl.so` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through `nxrtl.nxp`. |
-| Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 35), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
+| Shared unit ownership | One `nxrtl.nxpl` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through compressed metadata embedded in that image by default; a build may select an adjacent `.nxp` sidecar. See [package storage](nexusfpc-package-storage.md). |
+| Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 39), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
 | Linking and identity | All provider units use PIC. Relocatable constant tables go into `.data.rel.ro`; the package linker requires defined imports, prohibits text relocations, enables RELRO/eager binding, and binds owned definitions locally with `-Bsymbolic`. Hosts use PIE and prohibit COPY relocations. |
 | Explicit startup | `rtl/linux/sysinitpkg.pp` reuses the existing glibc `si_c.inc` entry path. Activation runs from generated host startup after the native loader. Shared System initialization preserves the already active exception stack needed for rollback. |
 | Native loading | `dlopen(RTLD_NOW | RTLD_LOCAL)`, explicit `DT_NEEDED` dependencies, and `dlclose`. Each managed late image has an independent native reference. No `dlmopen` namespace or global plugin-symbol publication is used. |
@@ -32,7 +32,7 @@ and other references into a package before unloading it.
 | Lifecycle and cleanup | Existing synchronous dependency accounting, activation, reverse finalization, rollback and failure retention are reused. Classes, aliases, enum aliases, component handlers, conversion callbacks, resources and explicit application cleanup hooks follow Linux image ownership. |
 | Native resources | Each package exports its own resource location. The shared internal-resource implementation looks up resources with the image's native handle. |
 | Dependency preservation | Declared requirements remain in PCP metadata and native linkage even when no symbols use them. Imported units retain native `$LINKLIB` requirements without copying provider unit objects into consumers. |
-| SDK and publication | Native Forge operations validate PCP/ELF identity pairs without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
+| SDK and publication | Native Forge operations validate compiler metadata and ELF descriptor identities without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
 
 The core changes are in `compiler/pkgutil.pas`, `compiler/pmodules.pas`, the Linux
 linker and ELF/assembler writers, `rtl/linux/sysinitpkg.pp`, the System package
@@ -109,22 +109,22 @@ and `SmartLink` to True on a child to enable smart linking.
 The existing Linux Format 2 SDK manifest identifies `x86_64-linux-gnu`, uses
 lowercase keys and must cover `bin/ppcx64`, the shared foundation and startup
 artifacts. Keep these matched. New bundles use the same Format/Files/Generation
-manifest structure as Win64; raw matching PCP/SO directories are also accepted.
+manifest structure as Win64; plain directories of matching `.nxpl` libraries and any `.nxp` sidecars are also accepted.
 Rebuild distributions from older helper-generated manifests before consuming them.
 Use lowercase, matching package declaration/file basenames. To replace a provider
 with existing consumers, rebuild the dependent distribution in a new directory.
 
 The groups preserve PIC, PIE, `$ORIGIN`, rpath-link, no-COPY/no-text-relocation
 linking, RELRO and eager binding. Native publication checks the executable's
-identity and dependencies as well as package PCP/ELF pairs, preserves Unix file
+identity and dependencies as well as package metadata and ELF descriptors, preserves Unix file
 permissions, and atomically selects only complete generations. Neither Python
 nor PowerShell is invoked by these builds.
 
 `current.json` identifies the runnable generation. Deployment needs only the
-executable and its `.so` files together; PCPs are build inputs. `$ORIGIN` RUNPATH
+executable and its `.nxpl` files together; sidecars are development-only inputs. `$ORIGIN` RUNPATH
 allows running from another working directory without `LD_LIBRARY_PATH`.
 
-Use `LoadPackage('libmypackage.so')` for genuine late loading. A bare filename is
+Use `LoadPackage('mypackage.nxpl')` for genuine late loading. A bare filename is
 relative to the executable, as on Windows. Native `dlopen` alone maps the package
 but does not activate Pascal units. The examples' `PackageNative` helper supplies
 platform filenames and probes; applications need only the SysUtils package API.

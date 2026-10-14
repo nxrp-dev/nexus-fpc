@@ -35,6 +35,7 @@ interface
     private
       loaded : boolean;
       pcpfile : tpcpfile;
+      metadatastream : TCMemoryStream;
     private
       function openpcp:boolean;
       function search_package(ashortname:boolean):boolean;
@@ -71,7 +72,8 @@ implementation
     cfileutl,cutils,
     systems,globals,version,
     verbose,
-    entfile,ppu,pkgutil;
+    entfile,ppu,pkgutil,nxpackagefile,
+    aasmbase,aasmtai,aasmdata;
 
 { tpcppackage }
 
@@ -95,6 +97,7 @@ implementation
   function tpcppackage.openpcp: boolean;
     var
       pcpfiletime : longint;
+      lData: TBytes;
     begin
       result:=false;
       Message1(package_t_pcp_loading,pcpfilename);
@@ -104,8 +107,18 @@ implementation
        exit;
     { Open the pcpfile }
       Message1(package_u_pcp_name,pcpfilename);
+      metadatastream.Free;
+      metadatastream:=nil;
       pcpfile:=tpcpfile.create(pcpfilename);
-      if not pcpfile.openfile then
+      try
+        lData:=ReadPackageMetadata(pcpfilename);
+      except
+        on E: Exception do invalidpcp(E.Message);
+      end;
+      metadatastream:=TCMemoryStream.Create;
+      metadatastream.WriteBuffer(lData[0],Length(lData));
+      metadatastream.Position:=0;
+      if not pcpfile.openstream(metadatastream) then
        begin
          pcpfile.free;
          pcpfile:=nil;
@@ -176,9 +189,8 @@ implementation
       begin
         found:=false;
         singlepathstring:=FixPath(s,false);
-        { Check for package file }
-        { TODO }
-        found:=package_exists(NexusPackageExtension,hs);
+        { The native image identifies its embedded payload or matching sidecar. }
+        found:=package_exists(NexusPackageLibraryExtension,hs);
         if found then
           begin
             setfilename(hs,false);
@@ -237,6 +249,8 @@ implementation
           if (OutputExeDir<>'') then
             p:=OutputExeDir;
       pcpfilename:=p+n+NexusPackageExtension;
+      if not allowoutput then
+        pcpfilename:=fn;
     end;
 
   procedure tpcppackage.writecontainernames;
@@ -515,6 +529,7 @@ implementation
     begin
       pcpfile.free;
       pcpfile := nil;
+      metadatastream.Free;
       inherited destroy;
     end;
 
@@ -561,12 +576,17 @@ implementation
       tablepos,
       oldpos,i : longint;
       module : pcontainedunit;
+      lRaw, lEncoded: TBytes;
+      lSection: tai_section;
     begin
       { create new ppufile }
       sdkidentity:=package_sdk_identity;
       buildidentity:=current_package_build_identity;
+      metadatastream.Free;
+      metadatastream:=nil;
       pcpfile:=tpcpfile.create(pcpfilename);
-      if not pcpfile.createfile then
+      metadatastream:=TCMemoryStream.Create;
+      if not pcpfile.createstream(metadatastream) then
         Message2(package_f_cant_create_pcp,realpackagename^,pcpfilename);
       try
         pcpfile.putstring(realpackagename^);
@@ -623,6 +643,23 @@ implementation
 
         pcpfile.position:=oldpos;
 
+        SetLength(lRaw,metadatastream.Size);
+        Move(metadatastream.Memory^,lRaw[0],Length(lRaw));
+        lEncoded:=EncodePackageMetadata(lRaw);
+        if not embed_package_metadata then
+          begin
+            WritePackageBytes(pcpfilename,lEncoded);
+            lEncoded:=PackageMetadataReference(lEncoded);
+          end
+        else if SysUtils.FileExists(pcpfilename) and not SysUtils.DeleteFile(pcpfilename) then
+          Comment(V_Fatal,'Cannot remove stale package sidecar '+pcpfilename);
+        lSection:=new_section(current_asmdata.asmlists[al_rotypedconsts],
+          sec_user,NexusPackageMetadataSection,1);
+        lSection.secprogbits:=SPB_PROGBITS;
+        lSection.secflags:=[];
+        current_asmdata.asmlists[al_rotypedconsts].concat(
+          tai_string.Create_Data(PChar(@lEncoded[0]),Length(lEncoded),false));
+
         { save crc in current module also }
         //crc:=pcpfile.crc;
 
@@ -665,6 +702,7 @@ implementation
   procedure tpcppackage.initmoduleinfo(module: tmodulebase);
     begin
       pplfilename:=extractfilename(module.sharedlibfilename);
+      pcpfilename:=ChangeFileExt(module.sharedlibfilename,NexusPackageExtension);
     end;
 
   procedure tpcppackage.addunit(module: tmodulebase);

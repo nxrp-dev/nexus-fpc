@@ -1,4 +1,12 @@
-﻿# Compiler package regressions
+# Compiler package regressions
+
+The package-storage change uses `.nxpl` images with compressed embedded metadata
+or optional compressed `.nxp` sidecars. New container and option checks live in
+NexusForgeTests and nxbuildTests (nxtest). The existing runtime runner below has
+been updated for `.nxpl`; older metadata/link/SDK/loader runners still assume raw
+sidecars or DLL pairs and require migration before reuse. Their historical pass
+counts are not validation of the new storage format. See
+[package storage verification](../../nexusfpc-package-storage.md).
 
 The source-only bootstrap orchestration below is historical: the make bootstrap
 and Linux SDK builder have been retired. The fixtures, assertions and existing-SDK

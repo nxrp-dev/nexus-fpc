@@ -76,7 +76,7 @@ function Move-TestArtifact([string]$Source,[string]$Destination) {
 }
 function Copy-TestImages([string]$Source,[string]$Destination) {
     New-Item -ItemType Directory -Force $Destination | Out-Null
-    Get-ChildItem -LiteralPath $Source -File | Where-Object Extension -In '.dll','.exe' |
+    Get-ChildItem -LiteralPath $Source -File | Where-Object Extension -In '.nxpl','.dll','.exe' |
         Copy-Item -Destination $Destination
 }
 function Get-TestUnitHash([string]$Directory,[string]$Unit) {

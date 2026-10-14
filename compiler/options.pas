@@ -2616,6 +2616,12 @@ begin
         else
           includesearchpath.AddPath(More,true);
       end;
+    'J' :
+      begin
+        if (more='') or (more='+') or (upper(more)='ENABLED') then embed_package_metadata:=true
+        else if (more='-') or (upper(more)='DISABLED') then embed_package_metadata:=false
+        else IllegalPara(opt);
+      end;
     'j','k' :
       begin
         { Explicit experimental package identities, supplied by the SDK tools. }
