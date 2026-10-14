@@ -1,4 +1,4 @@
-﻿# NexusFPC procedure tracing
+# NexusFPC procedure tracing
 
 NexusFPC can instrument physical Win64 x86-64 procedures and write a binary execution trace.
 
@@ -46,7 +46,7 @@ NexusFPCProfiler.Stop
 that have not yet reached disk, resets the worker's call stacks, writes
 `TRACE_END`, and closes the current trace. `Start` opens a fresh trace, writes
 its metadata, and then enables capture. Each active interval therefore produces
-one independent `.nxp` file. While capture is paused, generated hook calls
+one independent `.nxtrace` file. While capture is paused, generated hook calls
 return before timestamp, thread-state, and event-memory work.
 
 ## Trace output
@@ -54,7 +54,7 @@ return before timestamp, thread-state, and event-memory work.
 A profiled executable writes this file in its current directory:
 
 ```text
-nexus-profile-<process-id>-<startup-counter>.nxp
+nexus-profile-<process-id>-<startup-counter>.nxtrace
 ```
 
 The runtime records module, procedure, and thread metadata. Hooks capture entry,

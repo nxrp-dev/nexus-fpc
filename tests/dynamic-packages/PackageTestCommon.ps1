@@ -80,10 +80,10 @@ function Copy-TestImages([string]$Source,[string]$Destination) {
         Copy-Item -Destination $Destination
 }
 function Get-TestUnitHash([string]$Directory,[string]$Unit) {
-    return ((@('.ppu','.o') | ForEach-Object { (Get-FileHash -LiteralPath "$Directory/$Unit$_").Hash }) -join ':')
+    return ((@('.nxu','.o') | ForEach-Object { (Get-FileHash -LiteralPath "$Directory/$Unit$_").Hash }) -join ':')
 }
 function Hide-TestUnit([string]$Directory,[string]$Unit) {
-    foreach ($lSuffix in @('.pas','.ppu','.o')) {
+    foreach ($lSuffix in @('.pas','.nxu','.o')) {
         $lPath = "$Directory/$Unit$lSuffix"
         if (Test-Path -LiteralPath $lPath) { Move-TestArtifact $lPath "$lPath.hidden" }
     }

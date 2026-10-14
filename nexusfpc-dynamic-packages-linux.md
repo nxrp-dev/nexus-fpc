@@ -23,7 +23,7 @@ and other references into a package before unloading it.
 
 | Area | Linux implementation |
 | --- | --- |
-| Shared unit ownership | One `libnxrtl.so` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through `nxrtl.pcp`. |
+| Shared unit ownership | One `libnxrtl.so` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through `nxrtl.nxp`. |
 | Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 35), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
 | Linking and identity | All provider units use PIC. Relocatable constant tables go into `.data.rel.ro`; the package linker requires defined imports, prohibits text relocations, enables RELRO/eager binding, and binds owned definitions locally with `-Bsymbolic`. Hosts use PIE and prohibit COPY relocations. |
 | Explicit startup | `rtl/linux/sysinitpkg.pp` reuses the existing glibc `si_c.inc` entry path. Activation runs from generated host startup after the native loader. Shared System initialization preserves the already active exception stack needed for rollback. |

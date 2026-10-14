@@ -531,9 +531,9 @@ begin
   AddCall:=0;
   Verbose:=False;
 {$IFDEF Unix}
-  UnitExt:='ppu';
+  UnitExt:='nxu';
 {$ELSE}
-  UnitExt:='PPU';
+  UnitExt:='NXU';
 {$endif}
   for i:=1 to paramcount do
    begin

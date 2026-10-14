@@ -2,7 +2,7 @@
 
 { perform the following steps:
 
-rm tw13840d.ppu
+rm tw13840d.nxu
 fpc tw13840d
 touch tw13840a.pp
 fpc tw13840b -dchanged

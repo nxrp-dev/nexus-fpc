@@ -54,7 +54,7 @@ The required log is initialization `BLRH`, success, then finalization `h,r,l,b`.
 | `bin\ppcx64.exe` | Standard compiler, supporting both static and runtime package builds. |
 | `forge\PackageBuild.nxscript` | Reusable ordered package/application build group. |
 | `forge\FPC.mustache` | Compiler command template used by the group. |
-| `packages\nxrtl.pcp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
+| `packages\nxrtl.nxp`, `nxrtl.dll` | Shared System/ObjPas/SysUtils/Classes/TypInfo/FPCPackage owner and dependency closure. |
 | `units\` | Matching per-image `SysInitPkg` and native resource adapter. |
 | `sdk.json` | Format 2 SDK identity and enforced compiler/foundation/startup artifact hashes. |
 | `work\` | Forge build intermediates; excluded from exported/distributed SDKs. |

@@ -70,11 +70,11 @@ foreach ($lVariant in @('normal','O2')) {
     Copy-Item -LiteralPath "$PSScriptRoot/tcachedreal.pp" -Destination $lDirectory
     Invoke-Check "$lVariant-fresh-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pp"))
     Invoke-Check "$lVariant-fresh-run" "$lDirectory/tcachedreal.exe" @()
-    $lHash = (Get-FileHash -LiteralPath "$lDirectory/urealconstants.ppu").Hash
+    $lHash = (Get-FileHash -LiteralPath "$lDirectory/urealconstants.nxu").Hash
     Remove-Item -LiteralPath "$lDirectory/urealconstants.pp"
     Invoke-Check "$lVariant-cached-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pp"))
     Invoke-Check "$lVariant-cached-run" "$lDirectory/tcachedreal.exe" @()
-    if ((Get-FileHash -LiteralPath "$lDirectory/urealconstants.ppu").Hash -ne $lHash) {
+    if ((Get-FileHash -LiteralPath "$lDirectory/urealconstants.nxu").Hash -ne $lHash) {
         throw 'The cached unit changed during the reuse test.'
     }
     $lIndex = 0

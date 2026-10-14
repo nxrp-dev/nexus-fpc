@@ -103,7 +103,7 @@ Compile stale-consumers "$lLate/source/base/pluginbase.ppk" Package @() 1 'Depen
 Check-Publication stale-consumers-preserve-publication
 $lPair="$script:TestOutput/mismatched-pair"; $lPairOutput="$script:TestOutput/pair-output"
 New-Item -ItemType Directory -Force $lPair,$lPairOutput | Out-Null
-Get-ChildItem (Get-NexusPackageBundle $lDistribution) -File | Where-Object Extension -In '.pcp','.dll' | Copy-Item -Destination $lPair
+Get-ChildItem (Get-NexusPackageBundle $lDistribution) -File | Where-Object Extension -In '.nxp','.dll' | Copy-Item -Destination $lPair
 Set-TestIdentityMismatch "$lPair/failinit.dll" dependency
 $lSDKIdentity=(Get-Content "$SdkRoot/sdk.json" -Raw | ConvertFrom-Json).SDKIdentity
 $lCode='. '+(ConvertTo-TestLiteral "$lRoot/scripts/NexusFPCPackageArtifacts.ps1")+"`nPublish-NexusPackageBundle -OutputDirectory "+(ConvertTo-TestLiteral $lPairOutput)+' -Work '+(ConvertTo-TestLiteral $lPair)+' -Name failinit -Kind Package -SDKIdentity '+(ConvertTo-TestLiteral $lSDKIdentity)+' -PackageDirectories '+(ConvertTo-TestLiteral $lPair)

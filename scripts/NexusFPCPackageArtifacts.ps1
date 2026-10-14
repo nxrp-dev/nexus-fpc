@@ -124,7 +124,7 @@ function Get-NexusPackageBundle([string]$Directory) {
             $listed[$file.Name] = $true
         }
         foreach ($file in Get-ChildItem -LiteralPath $directory -File) {
-            if ($file.Extension -in @('.pcp','.dll','.exe') -and -not $listed.ContainsKey($file.Name)) {
+            if ($file.Extension -in @('.nxp','.dll','.exe') -and -not $listed.ContainsKey($file.Name)) {
                 throw "Unlisted package bundle artifact: $($file.FullName)"
             }
         }
@@ -142,7 +142,7 @@ function Publish-NexusPackageBundle([string]$OutputDirectory,[string]$Work,[stri
     }
     foreach ($directory in $directories) {
         foreach ($file in Get-ChildItem -LiteralPath $directory -File) {
-            if ($file.Extension -notin @('.pcp','.dll')) { continue }
+            if ($file.Extension -notin @('.nxp','.dll')) { continue }
             if ($Kind -eq 'Package' -and $file.BaseName -eq $Name) { continue }
             if ($inputs.ContainsKey($file.Name) -and
                 (Get-FileHash -LiteralPath $file.FullName).Hash -ne (Get-FileHash -LiteralPath $inputs[$file.Name]).Hash) {
@@ -151,7 +151,7 @@ function Publish-NexusPackageBundle([string]$OutputDirectory,[string]$Work,[stri
             $inputs[$file.Name] = $file.FullName
         }
     }
-    $extensions = if ($Kind -eq 'Package') { @('.pcp','.dll') } else { @('.exe') }
+    $extensions = if ($Kind -eq 'Package') { @('.nxp','.dll') } else { @('.exe') }
     foreach ($extension in $extensions) {
         $path = Join-Path $Work ($Name+$extension)
         if (-not (Test-Path -LiteralPath $path)) { throw "Expected output missing: $path. Package name must match its filename." }
@@ -159,7 +159,7 @@ function Publish-NexusPackageBundle([string]$OutputDirectory,[string]$Work,[stri
     }
     $packages = @{}
     foreach ($entry in $inputs.GetEnumerator()) {
-        if ([IO.Path]::GetExtension($entry.Key) -ne '.pcp') { continue }
+        if ([IO.Path]::GetExtension($entry.Key) -ne '.nxp') { continue }
         $metadata = Read-NexusPackageMetadata $entry.Value
         if ($metadata.SDK -ne $SDKIdentity -or -not $inputs.ContainsKey($metadata.Name+'.dll')) {
             throw "Incomplete or incompatible package bundle: $($metadata.Name)"
@@ -183,7 +183,7 @@ function Publish-NexusPackageBundle([string]$OutputDirectory,[string]$Work,[stri
     $files = @()
     foreach ($entry in $inputs.GetEnumerator()) {
         # Application distributions contain runtime images only.
-        if ($Kind -ne 'Package' -and [IO.Path]::GetExtension($entry.Key) -eq '.pcp') { continue }
+        if ($Kind -ne 'Package' -and [IO.Path]::GetExtension($entry.Key) -eq '.nxp') { continue }
         Copy-Item -LiteralPath $entry.Value -Destination $directory
         $files += [pscustomobject]@{Name=$entry.Key;SHA256=(Get-FileHash -LiteralPath (Join-Path $directory $entry.Key)).Hash}
     }

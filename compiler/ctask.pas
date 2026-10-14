@@ -227,7 +227,7 @@ begin
 end;
 
 procedure ttask_handler.finishmodule(m: tmodule);
-{ finish loading special units added by the compiler itself, e.g. variants.ppu
+{ finish loading special units added by the compiler itself, e.g. variants.nxu
   No reloads, no recompiles }
 
   function find_cancontinue(root: tmodule): tmodule;
@@ -241,7 +241,7 @@ procedure ttask_handler.finishmodule(m: tmodule);
 
     if root.do_recompile then
       begin
-        // e.g. system.ppu not found
+        // e.g. system.nxu not found
         tppumodule(root).check_sources_for_recompile;
         writeln('ttask_handler.finishmodule ',root.modulename^,' ',root.statestr);
         Internalerror(2026032615);

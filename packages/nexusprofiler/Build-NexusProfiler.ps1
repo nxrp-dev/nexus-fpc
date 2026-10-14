@@ -50,4 +50,4 @@ if ($LASTEXITCODE -ne 0) {
     throw "Profiler runtime build failed with exit code $LASTEXITCODE"
 }
 
-Write-Output (Join-Path $OutputDirectory 'nxprofilerruntime.ppu')
+Write-Output (Join-Path $OutputDirectory 'nxprofilerruntime.nxu')

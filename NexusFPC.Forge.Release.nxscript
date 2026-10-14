@@ -28,92 +28,92 @@ Group ReleaseAssembly {
         Source: "build/forge-bootstrap/cross/i386-linux/rtl";
         Destination: "build/forge-bootstrap/distribution/units/i386-linux/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_x86_64_linux {
         Source: "build/forge-bootstrap/cross/x86_64-linux/rtl";
         Destination: "build/forge-bootstrap/distribution/units/x86_64-linux/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_linux {
         Source: "build/forge-bootstrap/cross/aarch64-linux/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-linux/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_i386_win32 {
         Source: "build/forge-bootstrap/cross/i386-win32/rtl";
         Destination: "build/forge-bootstrap/distribution/units/i386-win32/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_x86_64_win64 {
         Source: "build/forge-bootstrap/cross/x86_64-win64/rtl";
         Destination: "build/forge-bootstrap/distribution/units/x86_64-win64/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_win64 {
         Source: "build/forge-bootstrap/cross/aarch64-win64/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-win64/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_x86_64_android {
         Source: "build/forge-bootstrap/cross/x86_64-android/rtl";
         Destination: "build/forge-bootstrap/distribution/units/x86_64-android/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_android {
         Source: "build/forge-bootstrap/cross/aarch64-android/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-android/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_x86_64_darwin {
         Source: "build/forge-bootstrap/cross/x86_64-darwin/rtl";
         Destination: "build/forge-bootstrap/distribution/units/x86_64-darwin/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_darwin {
         Source: "build/forge-bootstrap/cross/aarch64-darwin/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-darwin/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_x86_64_iphonesim {
         Source: "build/forge-bootstrap/cross/x86_64-iphonesim/rtl";
         Destination: "build/forge-bootstrap/distribution/units/x86_64-iphonesim/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_iphonesim {
         Source: "build/forge-bootstrap/cross/aarch64-iphonesim/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-iphonesim/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile RTL_aarch64_ios {
         Source: "build/forge-bootstrap/cross/aarch64-ios/rtl";
         Destination: "build/forge-bootstrap/distribution/units/aarch64-ios/rtl";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile BuildIdentity {
         Source: "build/forge-bootstrap/seed/build-identity.json";

@@ -3,7 +3,7 @@ if [ $# != 1 ]; then
   exit 1
 fi
 
-rm *.ppu
+rm *.nxu
 $1 tw13840d
 touch tw13840a.pp
 $1 tw13840b -dchanged

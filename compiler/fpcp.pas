@@ -28,7 +28,7 @@ interface
   uses
     cclasses,cstreams,
     globtype,
-    pcp,finput,fpkg;
+    pcp,finput,fpkg,nxartifactid;
 
   type
     tpcppackage=class(tpackage)
@@ -178,7 +178,7 @@ implementation
         singlepathstring:=FixPath(s,false);
         { Check for package file }
         { TODO }
-        found:=package_exists({target_info.pkginfoext}'.pcp',hs);
+        found:=package_exists(NexusPackageExtension,hs);
         if found then
           begin
             setfilename(hs,false);
@@ -236,7 +236,7 @@ implementation
         else
           if (OutputExeDir<>'') then
             p:=OutputExeDir;
-      pcpfilename:=p+n+{target_info.pkginfoext}'.pcp';
+      pcpfilename:=p+n+NexusPackageExtension;
     end;
 
   procedure tpcppackage.writecontainernames;

@@ -27,7 +27,7 @@ foreach ($lSmart in @($false,$true)) {
         }
         Compile 'base-package' $lProvider 'pkgbase.ppk'
         if($lCached){Assert-PackageTest ($lBefore -eq (Get-TestUnitHash $lProvider upackagebase)) 'Cached provider changed'}
-        foreach($lSuffix in @('.pcp','.dll')){Copy-Item "$lProvider/pkgbase$lSuffix" $lDist}
+        foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lProvider/pkgbase$lSuffix" $lDist}
         Hide-TestUnit $lProvider upackagebase
         Copy-Item "$PSScriptRoot/upackageconsumer.pas" $lConsumer
         Write-TestFile "$lConsumer/pkgconsumer.ppk" 'package pkgconsumer; requires pkgbase; contains upackageconsumer; end.'
@@ -38,8 +38,8 @@ foreach ($lSmart in @($false,$true)) {
         }
         Compile 'consumer-package' $lConsumer 'pkgconsumer.ppk' $true
         if($lCached){Assert-PackageTest ($lBefore -eq (Get-TestUnitHash $lConsumer upackageconsumer)) 'Cached consumer changed'}
-        Assert-PackageTest (-not(Test-Path "$lConsumer/upackagebase.ppu")) 'Provider unit leaked into consumer'
-        foreach($lSuffix in @('.pcp','.dll')){Copy-Item "$lConsumer/pkgconsumer$lSuffix" $lDist}
+        Assert-PackageTest (-not(Test-Path "$lConsumer/upackagebase.nxu")) 'Provider unit leaked into consumer'
+        foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lConsumer/pkgconsumer$lSuffix" $lDist}
         $lExports=Invoke-TestProcess "$lName-exports" llvm-readobj.exe @('--coff-exports',"$lDist/pkgbase.dll")
         $lImports=Invoke-TestProcess "$lName-imports" llvm-readobj.exe @('--coff-imports',"$lDist/pkgconsumer.dll")
         $lExported=@([regex]::Matches($lExports,'(?m)^\s*Name: (.+)$') | ForEach-Object {$_.Groups[1].Value.Trim()})

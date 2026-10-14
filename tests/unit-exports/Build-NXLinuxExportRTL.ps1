@@ -28,7 +28,7 @@ $oldPath = $env:PATH
 try {
     $env:PATH = $llvmBin+';'+$oldPath
     $makeArgs = @('-C', (Join-Path $SourceRoot 'rtl\linux'),
-        'system.ppu', 'objpas.ppu', 'fpintres.ppu', 'si_prc.ppu', 'si_dll.ppu', 'abitag.o',
+        'system.nxu', 'objpas.nxu', 'fpintres.nxu', 'si_prc.nxu', 'si_dll.nxu', 'abitag.o',
         ('FPC='+$Compiler.Replace('\','/')), 'OS_TARGET=linux', 'CPU_TARGET=x86_64',
         'OPT=-n -Aas-clang -XP -Cg',
         ('COMPILER_UNITTARGETDIR='+$OutputRoot.Replace('\','/')),
@@ -39,7 +39,7 @@ try {
     $code = $LASTEXITCODE
     $ErrorActionPreference = 'Stop'
     if ($code -ne 0) { throw "Linux regression RTL build failed ($code): $OutputRoot\build.log" }
-    foreach ($artifact in @('system.ppu','objpas.ppu','fpintres.ppu','si_prc.ppu','si_dll.ppu','abitag.o')) {
+    foreach ($artifact in @('system.nxu','objpas.nxu','fpintres.nxu','si_prc.nxu','si_dll.nxu','abitag.o')) {
         if (-not (Test-Path -LiteralPath (Join-Path $OutputRoot $artifact))) { throw "Missing $artifact" }
     }
     Write-Host "PASS Linux regression RTL: $OutputRoot"

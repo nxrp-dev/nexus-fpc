@@ -22,14 +22,14 @@ Program ppufiles;
 
 uses
   dos,
-  ppu,entfile;
+  ppu,entfile,nxartifactid;
 
 const
   Version   = 'Version 1.00';
-  Title     = 'PPU-Files';
+  Title     = 'NXU-Files';
   Copyright = 'Copyright (c) 1999-2002 by the Free Pascal Development Team';
 
-  PPUExt = 'ppu';
+  PPUExt = NexusUnitFileType;
 
 type
   poutfile = ^toutfile;

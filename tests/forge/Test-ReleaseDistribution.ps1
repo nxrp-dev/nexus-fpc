@@ -43,7 +43,7 @@ function Run-Step([string]$Name, [string]$Executable, [string[]]$Arguments, [swi
 }
 function Assert-RelocatedUnits([string]$LogName, [string]$Target) {
     $text = Get-Content -LiteralPath (Join-Path $OutputRoot ($LogName+'.log')) -Raw
-    $paths = [regex]::Matches($text, '(?im)PPU Name:\s*(.+\.ppu)\s*$')
+    $paths = [regex]::Matches($text, '(?im)PPU Name:\s*(.+\.nxu)\s*$')
     if ($paths.Count -eq 0) { throw "No loaded-unit evidence in $LogName" }
     $expected = [IO.Path]::GetFullPath((Join-Path $relocated "units/$Target/rtl")) + '\'
     foreach ($match in $paths) {
@@ -74,7 +74,7 @@ try {
             $compiler = Join-Path $directory $compilers[$cpu]
             Require-File $compiler
             foreach ($unit in @('system','sysutils','classes')) {
-                Require-File (Join-Path $directory ('rtl/'+$unit+'.ppu'))
+                Require-File (Join-Path $directory ('rtl/'+$unit+'.nxu'))
                 Require-File (Join-Path $directory ('rtl/'+$unit+'.o'))
             }
             if ($canonical.ContainsKey($cpu)) { Assert-Same $canonical[$cpu] $compiler }
@@ -107,7 +107,7 @@ try {
         $source = Join-Path $bootstrap ('cross/'+$target+'/rtl')
         $destination = Join-Path $ReleaseRoot ('units/'+$target+'/rtl')
         $files = @(Get-ChildItem -LiteralPath $source -File | Where-Object {
-            $_.Extension -in @('.ppu','.o','.a','.res','.rsj') -and $_.BaseName -ne 'buildrtl'
+            $_.Extension -in @('.nxu','.o','.a','.res','.rsj') -and $_.BaseName -ne 'buildrtl'
         })
         if (@(Get-ChildItem -LiteralPath $destination -File).Count -ne $files.Count) {
             throw "Unexpected release unit contents: $target"
@@ -197,7 +197,7 @@ end.
             }
         }
         # Missing shipped units must fail instead of finding an installed FPC/checkout RTL.
-        $systemUnit = Join-Path $relocated 'units/i386-win32/rtl/system.ppu'
+        $systemUnit = Join-Path $relocated 'units/i386-win32/rtl/system.nxu'
         Move-Item -LiteralPath $systemUnit -Destination ($systemUnit+'.held')
         try {
             Run-Step 'missing-rtl-rejected' $driver @('-Pi386','-Twin32',('-FU'+(Join-Path $OutputRoot 'i386-win32')),'releaseprobe.pas') -ExpectFailure

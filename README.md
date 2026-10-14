@@ -12,7 +12,7 @@ It contains
 * The compiler testsuite in the directory *tests*.
 
 NexusFPC uses its own [compiled artifact identities](nexusfpc-artifact-identity.md):
-`NXU` in `.ppu` files and `NXP` in `.pcp` files. Numeric format revisions are
+`NXU` in `.nxu` files and `NXP` in `.nxp` files. Numeric format revisions are
 independent of upstream FPC. Rebuild the compiler, RTL, units and packages together
 when moving from an earlier build; upstream compiled units cannot be reused.
 

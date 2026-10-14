@@ -18,11 +18,11 @@ $null=Invoke-TestProcess 'disabled-path' $lDriver @('disabled',$lFixtures,'DoesN
 $lCommon=Get-TestCompilerOptions $SdkRoot $lFixtures
 Write-TestFile "$lFixtures/ux.pas" 'unit ux; interface function Marker: LongInt; implementation function Marker: LongInt; begin Result:=37; end; end.'
 $null=Invoke-TestProcess 'compile-unit' $lCompiler ($lCommon+@("$lFixtures/ux.pas"))
-$lOriginalHash=(Get-FileHash "$lFixtures/ux.ppu").Hash
-$null=Invoke-TestProcess 'write-roundtrip' $lDriver @('write',$lFixtures,"$lFixtures/ux.ppu")
-Assert-PackageTest ($lOriginalHash -eq (Get-FileHash "$lFixtures/ux.ppu").Hash) 'Writer changed original PPU'
+$lOriginalHash=(Get-FileHash "$lFixtures/ux.nxu").Hash
+$null=Invoke-TestProcess 'write-roundtrip' $lDriver @('write',$lFixtures,"$lFixtures/ux.nxu")
+Assert-PackageTest ($lOriginalHash -eq (Get-FileHash "$lFixtures/ux.nxu").Hash) 'Writer changed original PPU'
 $null=Invoke-TestProcess 'read-roundtrip' $lDriver @('read',$lFixtures,'Fixture') 0 'PASS read 1'
-$lSeed=[IO.File]::ReadAllBytes("$lFixtures/Fixture.pcp")
+$lSeed=[IO.File]::ReadAllBytes("$lFixtures/Fixture.nxp")
 function Entries([byte[]]$Data) {
     $p=32; $end=32+[BitConverter]::ToUInt32($Data,16); $result=@{}
     while($p -lt $end){
@@ -49,7 +49,7 @@ function IntBytes([int]$Value,[bool]$Big=$false){
 function Fixture([string]$Name,[string[]]$Requires=@(),[string[]]$Units=@(),[bool]$Big=$false){
     $lRequired=[Collections.Generic.List[byte]]::new(); $lContained=[Collections.Generic.List[byte]]::new()
     foreach($n in $Requires){$lRequired.AddRange((ShortBytes $n)); $lRequired.AddRange((ShortBytes ('A'*32)))}
-    foreach($n in $Units){$lContained.AddRange((ShortBytes $n)); $lContained.AddRange((ShortBytes "$n.ppu"))}
+    foreach($n in $Units){$lContained.AddRange((ShortBytes $n)); $lContained.AddRange((ShortBytes "$n.nxu"))}
     $lPayloads=[ordered]@{
         93=(ShortBytes $Name); 92=[byte[]]((ShortBytes "$Name.dll")+(ShortBytes '')+(ShortBytes ('A'*32)))
         244=(IntBytes $Requires.Count $Big); 245=$lRequired.ToArray()
@@ -83,10 +83,10 @@ function Fixture([string]$Name,[string[]]$Requires=@(),[string[]]$Units=@(),[boo
     $lData.AddRange([byte[]]::new(16-$lData.Count%16)); return ,$lData.ToArray()
 }
 function Save([string]$Name,[string[]]$Requires=@(),[string[]]$Units=@()){
-    [IO.File]::WriteAllBytes("$lFixtures/$Name.pcp",(Fixture $Name $Requires $Units))
+    [IO.File]::WriteAllBytes("$lFixtures/$Name.nxp",(Fixture $Name $Requires $Units))
 }
 function Read-Case([string]$Label,[byte[]]$Data,[int]$Expected=0,[string]$Contains='PASS read'){
-    [IO.File]::WriteAllBytes("$lFixtures/Case.pcp",$Data)
+    [IO.File]::WriteAllBytes("$lFixtures/Case.nxp",$Data)
     $null=Invoke-TestProcess $Label $lDriver @('read',$lFixtures,'Case') $Expected $Contains
 }
 function Reject([string]$Label,[byte[]]$Data,[string]$Contains='Invalid PCP file'){Read-Case $Label $Data 1 $Contains}
@@ -152,11 +152,11 @@ Hide-TestUnit $lFixtures ux
 Write-TestFile "$lFixtures/consumer.pas" 'program consumer; uses ux; begin if Marker<>37 then Halt(1); end.'
 Write-TestFile "$lFixtures/consumer.rsp" (($lCommon+@('-Cn','-FPFixture',"-Fp$lFixtures")) -join "`n")
 $null=Invoke-TestProcess source-free-pcp-consumption $lDriver @('consume','-n @consumer.rsp consumer.pas') 0 '' $lFixtures
-Assert-PackageTest (-not(Test-Path "$lFixtures/ux.ppu") -and -not(Test-Path "$lFixtures/ux.o")) 'Standalone artifacts leaked'
+Assert-PackageTest (-not(Test-Path "$lFixtures/ux.nxu") -and -not(Test-Path "$lFixtures/ux.o")) 'Standalone artifacts leaked'
 Write-TestFile "$lFixtures/conflict.ppk" 'package conflict; requires Fixture; contains ux; end.'
 $null=Invoke-TestProcess contains-required-unit $lDriver @('consume','-n @consumer.rsp conflict.ppk') 1 'is already contained in package Fixture' $lFixtures
 Write-TestFile "$lFixtures/standardunit.pas" 'unit standardunit; interface const Value=37; implementation end.'
 Write-TestFile "$lFixtures/supported.ppk" 'package supported; {$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif} contains standardunit; end.'
 $null=Invoke-TestProcess standard-compiler-package $lCompiler ($lCommon+@('-Cn',"$lFixtures/supported.ppk"))
-Assert-PackageTest ([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("$lFixtures/supported.pcp"),0,6) -ceq 'NXP004') 'Standard compiler PCP signature'
+Assert-PackageTest ([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("$lFixtures/supported.nxp"),0,6) -ceq 'NXP004') 'Standard compiler PCP signature'
 Write-Host "PASS package metadata suite ($($script:TestSteps.Count) steps)"

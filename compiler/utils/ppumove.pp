@@ -35,17 +35,17 @@ uses
 {$else unix}
   dos,
 {$endif unix}
-  cutils,ppu,entfile,systems,
+  cutils,ppu,entfile,systems,nxartifactid,
   getopts;
 
 const
   Version   = 'Version 2.1.1';
-  Title     = 'PPU-Mover';
+  Title     = 'NXU-Mover';
   Copyright = 'Copyright (c) 1998-2007 by the Free Pascal Development Team';
 
   ShortOpts = 'o:e:d:i:P:qhsvb';
   BufSize = 4096;
-  PPUExt = 'ppu';
+  PPUExt = NexusUnitFileType;
   ObjExt = 'o';
   StaticLibExt ='a';
 {$ifdef unix}
@@ -567,7 +567,7 @@ begin
   Batch:=False;
   DoStrip:=False;
   OutputFile:='';
-  PPLExt:='ppu';
+  PPLExt:=PPUExt;
   ArBin:='ar';
   LdBin:='ld';
   StripBin:='strip';

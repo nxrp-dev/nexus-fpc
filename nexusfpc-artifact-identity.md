@@ -8,14 +8,21 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.ppu` | `NXU` | Header 208; long compatibility revision 39 |
-| Compiler package metadata | `.pcp` | `NXP` | 4 |
+| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 39 |
+| Compiler package metadata | `.nxp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
 The first six bytes of current unit and package metadata files are `NXU208` and
 `NXP004`. The runtime descriptor retains its numeric magic constant and native
 endianness; the four-character name does not specify on-disk byte order.
-File extensions, source syntax, and target identifiers stay the same.
+Compiled unit and package extensions now follow their Nexus identities:
+`.nxu` and `.nxp`. Source syntax and target identifiers stay the same.
+The extension change does not alter the binary layout or numeric revisions.
+
+`.nxp` is reserved for compiled package metadata. Profiling traces use
+`.nxtrace`; the runtime producer and importer use that extension together.
+Existing profiling traces can be renamed because their binary format is unchanged.
+Nexus project/package build descriptions remain `.nxproject`/`.nxpackage`.
 
 The [standard package support integration](nexusfpc-standard-package-support.md)
 advanced the unit compatibility revision to 35 because the normal Win64 compiler
@@ -35,7 +42,7 @@ eight bytes for ARM targets. The runtime compiler identity includes this revisio
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`
-require this family. PowerShell and Python bundle validators require `NXP004`.
+require this family. Current bundle validators require `NXP004`.
 There is one accepted family and no legacy reader. Ordinary source fallback can
 recompile a foreign cached unit into the current format when source is available.
 Otherwise the diagnostic identifies the required Nexus signature and rebuild.
@@ -85,8 +92,10 @@ identity before activation. The runtime family is already identified by `NXPK`.
 Rebuild the compiler, RTL, packages, applications and distributed package SDKs as
 a matching set. Upstream `PPU`/`PCP` artifacts and older Nexus builds with those
 signatures are rejected. This intentionally breaks binary artifact compatibility.
-Third-party PPU parsers must learn `NXU` before they can inspect these files; use
-the rebuilt Nexus utilities. Source-based tools do not need a new file extension.
+Third-party PPU parsers must learn `NXU` and the `.nxu` extension before they
+can inspect these files; use the rebuilt Nexus utilities. Rebuild units and
+package SDKs to populate the new filenames. The compiler searches `.nxu`/`.nxp`
+only; it does not fall back to the old extensions.
 
 The Windows repository bootstrap starts with stock FPC 3.2.2 i386-win32 and its
 matching RTL. It builds an x64 seed, then the new Win64 RTL and native compiler
@@ -104,6 +113,48 @@ old make builder has been retired. Do not mix an existing SDK's compiler or RTL
 with new files.
 
 ## Verification
+
+### Extension migration (2026-10-14)
+
+The compiler's thirteen retained target definitions use the shared unit extension
+constant in `nxartifactid.pas`. Package lookup and writing use its package
+extension constant. Release tools, Forge SDK preparation/publication, release
+copy masks, archive exclusions and existing test consumers use the new names.
+The stock bootstrap compiler still uses its own upstream `.ppu` files; Nexus
+compilers search `.nxu`/`.nxp` without an old-extension fallback.
+
+The `.nxp` audit found one active competing use: profiler trace files. The
+runtime producer, trace tests and Nexus profiler importer now use `.nxtrace`.
+A historical NexusCode review also mentioned `.nxp` project discovery, but no
+current project handler or project file using that extension was found.
+Keeping `.nxp` for traces and choosing another compiled-package extension would
+avoid renaming old traces; the chosen names follow the requested package identity
+and give traces an explicit name. Existing trace contents are unchanged.
+
+Validated in the isolated workspace `output/artifact-names-check/`:
+
+| Check | Result |
+| --- | --- |
+| Stock Win32 seed to native Win64 bootstrap | Compiler generations two and three match byte for byte |
+| Release utilities and generated tables | 18 tools; 29 execution steps; 64 matching generated includes |
+| Retained cross compiler/RTL matrix | All 13 targets pass, including Win32 and Linux i386 |
+| Assembled release | Relocated unit searches pass on all targets; six programs link; Win32 and Win64 programs execute |
+| Unit extension behavior | Emits `.nxu`; source-hidden cached consumer runs; cache remains unchanged; `.ppu` filename rejected |
+| Compiler package metadata | 71 checks pass, including source-free metadata consumption |
+| Shared package runtime | 97 checks pass, including fresh/cached and ordinary/smart linking |
+| Package SDK examples | Console and GUI pass identity, ownership, initialization and finalization checks |
+| Forge nxtest suite | 51 pass, zero failures/skips and zero unfreed heap blocks |
+| Profiler runtime and importer | Both pass with `.nxtrace` files |
+
+The renamed unit filename is part of the SDK fingerprint. The test's expected
+SHA-256 vector was recalculated independently with .NET, after first verifying
+that the old input reproduces the old vector.
+
+An independent `-O2` procedure-variable failure was found during validation.
+The pre-rename Win64 compiler rebuilt from `8f0cd324` reproduces it. Forge's
+declared project options pass; no compiler correction was mixed into this change.
+The minimized source and evidence are recorded in the
+[compiler regression notes](tests/compiler-regressions/README.md#additional-optimization-failure-2026-10-14).
 
 The retired focused regression runner compiled real upstream and Nexus units. It checked
 same-number family rejection in both directions, foreign-family rejection before

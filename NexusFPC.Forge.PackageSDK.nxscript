@@ -16,8 +16,8 @@ Group RuntimePackageSDK {
         Source: "build/forge-bootstrap/cycle3/rtl64";
         Destination: "build/forge-bootstrap/package-sdk/work/rtl-units";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile FoundationDeclaration {
         Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.ppk";
@@ -47,8 +47,8 @@ Group RuntimePackageSDK {
         StripSymbols: True;
     }
     CopyFile FoundationMetadata {
-        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.pcp";
-        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.pcp";
+        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxp";
+        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.nxp";
     }
     CopyFile FoundationImage {
         Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
@@ -58,7 +58,7 @@ Group RuntimePackageSDK {
         Source: "build/forge-bootstrap/package-sdk/work/rtl-units";
         Destination: "build/forge-bootstrap/package-sdk/units";
         Recursive: True;
-        IncludeMasks: ["fpintres.ppu", "fpintres.o", "libimpfpintres.a"];
+        IncludeMasks: ["fpintres.nxu", "fpintres.o", "libimpfpintres.a"];
     }
     FPC HostStartup {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";

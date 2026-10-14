@@ -2,6 +2,7 @@
 *.bak
 *.exe
 *.ppu
+*.nxu
 *.pcp
 *.o
 *.s
@@ -42,6 +43,7 @@ backup
 lazbuild
 *.wpo
 *.nxp
+*.nxtrace
 fp.dsk
 fp.ini
 fp.cfg

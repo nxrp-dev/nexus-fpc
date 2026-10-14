@@ -67,7 +67,7 @@ end.
     Run-Step 'driver-compile' $driver ($compile + @('native.pas'))
     Run-Step 'driver-program' (Join-Path $OutputRoot 'native.exe') @()
     Assert-Contains 'driver-program.log' 'forge-tools-ok'
-    Run-Step 'ppu-read' (Join-Path $bin 'ppufiles.exe') @('-O',(Join-Path $rtl 'sysutils.ppu'))
+    Run-Step 'ppu-read' (Join-Path $bin 'ppufiles.exe') @('-O',(Join-Path $rtl 'sysutils.nxu'))
     Assert-Contains 'ppu-read.log' 'sysutils.o'
     Run-Step 'ppumove-help' (Join-Path $bin 'ppumove.exe') @('-h')
     Run-Step 'postw32-help' (Join-Path $bin 'postw32.exe') @('--help')

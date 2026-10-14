@@ -16,7 +16,7 @@ foreach($lName in $lRoots.Keys){
     New-Item -ItemType Directory -Force $lCase | Out-Null
     $lOptions[$lName]=@('-n','-O2','-B',"-Fu$lRTL","-FU$lCase","-FE$lCase")
     $lExecutables[$lName]="$lCase/package_bench.exe"
-    $lReport.Configurations[$lName]=@{Root=$lRoot; CompilerSHA256=(Get-FileHash $lCompiler).Hash; SystemPPUSHA256=(Get-FileHash "$lRTL/system.ppu").Hash}
+    $lReport.Configurations[$lName]=@{Root=$lRoot; CompilerSHA256=(Get-FileHash $lCompiler).Hash; SystemPPUSHA256=(Get-FileHash "$lRTL/system.nxu").Hash}
 }
 function Invoke-BenchmarkProcess([string]$Name,[string]$Program,[string[]]$Arguments,[bool]$Record=$true){
     $lClock=[Diagnostics.Stopwatch]::StartNew()

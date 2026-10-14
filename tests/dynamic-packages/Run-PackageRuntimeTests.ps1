@@ -40,7 +40,7 @@ foreach($lSmart in @($false,$true)) {
             Write-TestFile "$lDirectory/$Name.ppk" $lDeclaration
             $null=Invoke-TestProcess "$lName-$Name" $lCompiler ($lOptions+@("$lDirectory/$Name.ppk"))
             foreach($lUnit in $lHashes.Keys){Assert-PackageTest ($lHashes[$lUnit] -eq (Get-TestUnitHash $lDirectory $lUnit)) "$lUnit cached artifacts changed"}
-            foreach($lSuffix in @('.pcp','.dll')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
+            foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
             foreach($lUnit in $Units.Keys){Hide-TestUnit $lDirectory $lUnit}
         }
         Package nxrtl @() ([ordered]@{fpcpackage=(Get-Content "$SourceRoot/rtl/inc/fpcpackage.pp" -Raw)})
@@ -101,7 +101,7 @@ end.
         $lExpected=@('PASS shared RTL: identity, allocation, managed values, exception, resources','FINAL H','FINAL R','FINAL L','FINAL U','FINAL A') -join "`n"
         Assert-PackageTest ($lActual.Replace("`r",'').Trim() -ceq $lExpected) 'Unexpected package lifecycle order'
         foreach($lUnit in @('fpcpackage','upackageruntime','uunused','uleft','uright')){
-            Assert-PackageTest (-not(Test-Path "$lHost/$lUnit.ppu")) "Standalone PPU leaked: $lUnit"
+            Assert-PackageTest (-not(Test-Path "$lHost/$lUnit.nxu")) "Standalone PPU leaked: $lUnit"
         }
     }
 }

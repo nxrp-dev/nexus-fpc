@@ -19,8 +19,8 @@ echo "=== Compiler: $CC ==="
 
 echo
 echo "=== Step 1: clean ==="
-rm -f *.ppu *.o treload41774 treload41774.wasm
-ls *.ppu *.o 2>/dev/null && { echo "FAIL: leftover artifacts"; exit 2; }
+rm -f *.nxu *.o treload41774 treload41774.wasm
+ls *.nxu *.o 2>/dev/null && { echo "FAIL: leftover artifacts"; exit 2; }
 echo "OK"
 
 echo

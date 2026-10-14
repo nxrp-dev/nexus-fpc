@@ -48,7 +48,7 @@ type
     procedure TestSystemPPUNotFound;
     procedure TestTwoUnits; // 2 units, recompile first
     procedure TestChangeLeaf1; // prog->ant->bird, change bird, recompile ant as well
-    procedure TestChangeInner1; // prog->ant->bird, change ant, keep bird.ppu
+    procedure TestChangeInner1; // prog->ant->bird, change ant, keep bird.nxu
     procedure TestPrgVariant; // loading implicit variant ppu after parsing program
     procedure TestUnitVariant; // loading implicit variant ppu after parsing unit
 
@@ -327,7 +327,7 @@ begin
     Params.Add('-FE'+OutDir);
     Params.Add(MainSrc);
     if RunTool(PP,Params,'',false,false,Lines) then
-      Fail('compile succeeded without system.ppu');
+      Fail('compile succeeded without system.nxu');
   finally
     Lines.Free;
     Params.Free;
@@ -493,7 +493,7 @@ begin
   MainSrc:=Dir+PathDelim+'ur_newmainsrc1_ant.pas';
   OptionUr:=true;
 
-  // compile with src1/bird.pas and create ppus1/bird.ppu
+  // compile with src1/bird.pas and create ppus1/bird.nxu
   Step:='First compile';
   OutDir:=Dir+PathDelim+'ppus1';
   UnitPath:=Dir+PathDelim+'src1';
@@ -501,7 +501,7 @@ begin
   Compile;
   CheckCompiled(['ur_newmainsrc1_ant.pas','ur_newmainsrc1_bird.pas']);
 
-  // compile with src2/bird.pp and ppus1 in unitpath and create ppus2/bird.ppu
+  // compile with src2/bird.pp and ppus1 in unitpath and create ppus2/bird.nxu
   Step:='Second compile';
   OutDir:=Dir+PathDelim+'ppus2';
   UnitPath:=Dir+PathDelim+'src2'+';'+Dir+PathDelim+'ppus1';
@@ -578,7 +578,7 @@ begin
   OutDir:=Pkg2Dir+'ppus';
   Compile;
   // the main src bird is always compiled,
-  // cat must be recompiled because cat.pas is available and used ant.ppu changed
+  // cat must be recompiled because cat.pas is available and used ant.nxu changed
   CheckCompiled(['ur_pkg1_bird.pas','ur_pkg1_cat.pas']);
 end;
 
@@ -770,7 +770,7 @@ var
 begin
   // unit elk uses an inline function of unit bird
   // elk belongs to the program, bird to the package, so they are compiled separately
-  // when the inline body of bird changes, the elk.ppu must be rebuilt too
+  // when the inline body of bird changes, the elk.nxu must be rebuilt too
 
   ProgDir:='changeinlinebody'+PathDelim;
   PkgDir:=ProgDir+'pkg';

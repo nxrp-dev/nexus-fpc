@@ -53,7 +53,7 @@ foreach ($mode in @('normal','smart')) {
                 $step = "$mode-$kind-$state"
                 $arguments = $common + @(('-o'+$image),$source)
                 if ($state -eq 'cold') { $arguments += '-B' }
-                $unitFiles = @("$caseDir\utNXPrivateExports.ppu", "$caseDir\utNXPrivateExports.o")
+                $unitFiles = @("$caseDir\utNXPrivateExports.nxu", "$caseDir\utNXPrivateExports.o")
                 if ($isCached) {
                     $before = Get-FileHash -LiteralPath $unitFiles
                     Move-Item -LiteralPath 'utNXPrivateExports.pas' -Destination 'utNXPrivateExports.pas.hidden'

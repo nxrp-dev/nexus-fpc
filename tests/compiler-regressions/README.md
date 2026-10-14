@@ -23,3 +23,17 @@ The future nxtest integration must retain the source-hidden PPU check and optimi
 
 See [the recovery report](../../nexusfpc-compiler-regression-recovery.md) for the
 original failure, compiler correction, and recorded validation.
+
+## Additional optimization failure (2026-10-14)
+
+`assigned_procvar_try_finally.pas` retains a minimized failure found while
+validating the `.nxu`/`.nxp` extension change. With `-O2`, the native Win64
+compiler reports wrong parameter counts for `Assigned` on the two function
+parameters inside the `try/finally` block. The pre-rename compiler rebuilt
+from `8f0cd324` reproduces it; default project options pass, as does the stock
+FPC 3.2.2 i386-win32 compiler with `-O2`.
+
+The same pattern occurs at `SynCommons.pas:60653` when adding `-O2` to a
+fresh Forge build. Forge's declared project options compile successfully.
+No compiler correction or test weakening was applied for this independent
+failure. Its optimization variant needs evaluation before nxtest integration.

@@ -49,7 +49,7 @@ end.
     New-Item -ItemType Directory -Force $lRelocated,$lProviders | Out-Null
     foreach($lDirectory in @('bin','packages','units')){Copy-Item "$lSdk/$lDirectory" $lRelocated -Recurse}
     Copy-Item "$lSdk/sdk.json" $lRelocated
-    Get-ChildItem (Get-NexusPackageBundle "$lSdk/examples/packages") -File | Where-Object Extension -In '.pcp','.dll' | Copy-Item -Destination $lProviders
+    Get-ChildItem (Get-NexusPackageBundle "$lSdk/examples/packages") -File | Where-Object Extension -In '.nxp','.dll' | Copy-Item -Destination $lProviders
     Assert-PackageTest (@(Get-ChildItem $lProviders).Count -eq 8) 'Expected four binary package pairs'
     Copy-Item "$lSource/examples/dynamic-packages/host" $lHostSource -Recurse
     Assert-PackageTest (@(Get-ChildItem $lHostSource | Where-Object Extension -NE '.pas').Count -eq 0) 'Host inputs must be source only'

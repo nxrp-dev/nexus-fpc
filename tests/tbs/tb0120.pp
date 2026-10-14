@@ -5,7 +5,7 @@ unit tb0120;
 
 {
  The first compilation runs fine.
- A second compilation (i.e; .ppu files exist already) crashes the compiler !!
+ A second compilation (i.e; .nxu files exist already) crashes the compiler !!
 }
 
 interface

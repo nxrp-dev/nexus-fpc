@@ -226,7 +226,7 @@ Its group in `NexusFPC.Forge.PackageSDK.nxscript` copies the verified native
 compiler and matching RTL into an isolated SDK work directory, compiles `nxrtl`
 with an FPC child, then compiles `SysInitPkg` against that package with a second
 FPC child. Only the per-image resource adapter and startup units enter the public
-SDK unit directory; the provider metadata comes from `nxrtl.pcp`.
+SDK unit directory; the provider metadata comes from `nxrtl.nxp`.
 
 All RTL/package source comes from the bootstrap staging tree, including the
 `.ppk` declaration now staged by Bootstrap. Rebuild older bootstraps that lack it.
