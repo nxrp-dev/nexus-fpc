@@ -18,7 +18,7 @@
 
 {*************************SYSENTER CODE********************************}
 
-{ included by system.pp in linux rtl }
+{ included by system.pas in linux rtl }
 const
   AT_NULL         = 0;
 {* Pointer to the global system page used for system calls and other

@@ -25,7 +25,7 @@ echo "OK"
 
 echo
 echo "=== Step 2: clean build (expect success) ==="
-if "$CC" treload41774.pp; then
+if "$CC" treload41774.pas; then
   echo "OK: clean build succeeded"
 else
   echo "FAIL: clean build failed (exit $?)"
@@ -33,15 +33,15 @@ else
 fi
 
 echo
-echo "=== Step 3: touch unitc.pp to force recompile ==="
+echo "=== Step 3: touch unitc.pas to force recompile ==="
 sleep 1
-touch unitc.pp
+touch unitc.pas
 echo "OK"
 
 echo
 echo "=== Step 4: recompile (expect AV — this is the bug) ==="
 set +e
-"$CC" treload41774.pp
+"$CC" treload41774.pas
 rc=$?
 set -e
 

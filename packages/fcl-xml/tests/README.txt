@@ -4,7 +4,7 @@ Test runner for w3.org XML compliance suite
 The xmlts is intended to run the XML compliance suite from W3.org.
 The suite includes 2500+ tests. It may be downloaded from
 http://www.w3.org/XML/Test/xmlts20080827.zip  (approx. 1.5 mBytes)
-After compiling xmlts.pp, run it with the following command line:
+After compiling xmlts.pas, run it with the following command line:
 
 xmlts <path-to-xmlconf.xml> <report-filename> [-t template.xml] [-v]
 

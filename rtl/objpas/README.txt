@@ -3,13 +3,13 @@ of the Free Pascal Compiler.
 
 You can find here the following files:
 
-objpas.pp : makes Free Pascal more Borland Delphi compatible, data types
+objpas.pas : makes Free Pascal more Borland Delphi compatible, data types
             are redefined
 
-math.pp : Contains basic mathematical functions, as well as some financial
+math.pas : Contains basic mathematical functions, as well as some financial
           functions.
 
-sysutils.pp : Contains the exception support of the Free Pascal Compiler.
+sysutils.pas : Contains the exception support of the Free Pascal Compiler.
 
 sysutils/*h.inc : Contain parts of the sysutils unit, with function declarations.
 sysutils/*.inc  : Contain parts of the sysutils unit, with implementations of:

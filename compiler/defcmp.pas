@@ -866,7 +866,7 @@ implementation
                                can overflow shortstrings; don't use l1/l2/l3
                                because then pchar -> ansistring has the same
                                preference as conststring -> pchar, and this
-                               breaks tbs/tw3328.pp }
+                               breaks tbs/tw3328.pas }
                              if is_ansistring(def_to) then
                                eq:=te_convert_l2
                              else if is_wide_or_unicode_string(def_to) then
@@ -1574,7 +1574,7 @@ implementation
                        end
                      else
                        begin
-                         { avoid crash/stack overflow on recursive pointer definitions, see tests/webtbf/tw39634.pp }
+                         { avoid crash/stack overflow on recursive pointer definitions, see tests/webtbf/tw39634.pas }
                          hd1:=tabstractpointerdef(def_from).pointeddef;
                          hd2:=tabstractpointerdef(def_to).pointeddef;
                          while assigned(hd1) and (hd1.typ=pointerdef) and
@@ -1625,7 +1625,7 @@ implementation
                           { all pointers can be assigned from void-pointer }
                           if is_void(tpointerdef(def_from).pointeddef) or
                           { all pointers can be assigned from void-pointer or formaldef pointer, check
-                            tw3777 (case in tb_records_delphi_run_01.pp).pp if you change this }
+                            tw3777 (case in tb_records_delphi_run_01.pas).pas if you change this }
                             (tpointerdef(def_from).pointeddef.typ=formaldef) then
                            begin
                              doconv:=tc_equal;
@@ -2032,11 +2032,11 @@ implementation
            filedef :
              begin
                { typed files are all equal to the abstract file type
-               name TYPEDFILE in system.pp in is_equal in types.pas
+               name TYPEDFILE in system.pas in is_equal in types.pas
                the problem is that it should be also compatible to FILE
                but this would lead to a problem for ASSIGN RESET and REWRITE
                when trying to find the good overloaded function !!
-               so all file function are doubled in system.pp
+               so all file function are doubled in system.pas
                this is not very beautiful !!}
                if (def_from.typ=filedef) then
                 begin

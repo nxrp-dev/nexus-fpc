@@ -5,8 +5,8 @@ Group CompilerTables {
     FPC Build_mkx86ins {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
-        Source: ["build/forge-bootstrap/seed/source/utils/mkx86ins.pp"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86ins.pp";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86ins.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86ins.pas";
         Output: "build/forge-bootstrap/seed/bin/mkx86ins.exe";
         UnitOutput: "build/forge-bootstrap/seed/units32";
         UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
@@ -15,8 +15,8 @@ Group CompilerTables {
     FPC Build_mkx86reg {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
-        Source: ["build/forge-bootstrap/seed/source/utils/mkx86reg.pp"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86reg.pp";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86reg.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86reg.pas";
         Output: "build/forge-bootstrap/seed/bin/mkx86reg.exe";
         UnitOutput: "build/forge-bootstrap/seed/units32";
         UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
@@ -25,8 +25,8 @@ Group CompilerTables {
     FPC Build_mkx86inl {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
-        Source: ["build/forge-bootstrap/seed/source/utils/mkx86inl.pp"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86inl.pp";
+        Source: ["build/forge-bootstrap/seed/source/utils/mkx86inl.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mkx86inl.pas";
         Output: "build/forge-bootstrap/seed/bin/mkx86inl.exe";
         UnitOutput: "build/forge-bootstrap/seed/units32";
         UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
@@ -35,8 +35,8 @@ Group CompilerTables {
     FPC Build_mka64ins {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
-        Source: ["build/forge-bootstrap/seed/source/utils/mka64ins.pp"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64ins.pp";
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64ins.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64ins.pas";
         Output: "build/forge-bootstrap/seed/bin/mka64ins.exe";
         UnitOutput: "build/forge-bootstrap/seed/units32";
         UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];
@@ -45,8 +45,8 @@ Group CompilerTables {
     FPC Build_mka64reg {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "C:/fpc/3.2.2/bin/i386-win32/ppc386.exe";
-        Source: ["build/forge-bootstrap/seed/source/utils/mka64reg.pp"];
-        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64reg.pp";
+        Source: ["build/forge-bootstrap/seed/source/utils/mka64reg.pas"];
+        EntryPoint: "build/forge-bootstrap/seed/source/utils/mka64reg.pas";
         Output: "build/forge-bootstrap/seed/bin/mka64reg.exe";
         UnitOutput: "build/forge-bootstrap/seed/units32";
         UnitPaths: ["C:/fpc/3.2.2/units/i386-win32/rtl"];

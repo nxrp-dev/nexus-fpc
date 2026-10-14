@@ -523,7 +523,7 @@ implementation
            begin
              { ignore is_publishable for interfaces (related to $M+ directive).
                $M has effect on visibility of default section for classes.
-               Interface has always only public section (fix for problem in tb0631.pp) }
+               Interface has always only public section (fix for problem in tb0631.pas) }
              if (sp_static in p.symoptions) or ((p.propdef.is_publishable=pp_error) and not is_interface(astruct)) then
                begin
                  Message(parser_e_cant_publish_that_property);

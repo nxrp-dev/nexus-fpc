@@ -4,7 +4,7 @@
    BSD parts (c) 2000 by Marco van de Voort
    members of the Free Pascal development team.
 
-   New linux unit. Linux only calls only. Will be renamed to linux.pp
+   New linux unit. Linux only calls only. Will be renamed to linux.pas
    when 1.0.x support is killed off.
 
    See the file COPYING.FPC, included in this distribution,

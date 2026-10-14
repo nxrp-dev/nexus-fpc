@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 {
     *********************************************************************
     Copyright (C) 2002 Peter Vreman,

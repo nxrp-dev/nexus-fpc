@@ -41,7 +41,7 @@ cd .testtmp
 # Free Pascal source including
 # errnostr.inc file
 # to test if strings are correct
-cat > testerrnostr.pp <<EOF
+cat > testerrnostr.pas <<EOF
 
 uses
   Dos;
@@ -120,11 +120,11 @@ begin
 end.
 EOF
 
-fpc $fpcopt  -Fi.. -o../testerrnostr ./testerrnostr.pp
+fpc $fpcopt  -Fi.. -o../testerrnostr ./testerrnostr.pas
 res=$?
 cd ..
 if [ $res -ne 0 ] ; then
-  echo "Compilation of testerrnostr.pp failed"
+  echo "Compilation of testerrnostr.pas failed"
   exit
 else
   rm -Rf .testtmp

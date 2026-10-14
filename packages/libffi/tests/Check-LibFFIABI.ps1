@@ -22,10 +22,10 @@ if ($PascalRTLDir) {
 & $CCompiler "-I$includeDir" (Join-Path $testDir 'ffi_abi_probe.c') '-o' (Join-Path $runDir 'ffi_abi_probe_c.exe')
 if ($LASTEXITCODE -ne 0) { throw 'C ABI probe compilation failed.' }
 
-& $PascalCompiler @pascalOptions "-FU$runDir" (Join-Path $sourceDir 'ffi.pp')
+& $PascalCompiler @pascalOptions "-FU$runDir" (Join-Path $sourceDir 'ffi.pas')
 if ($LASTEXITCODE -ne 0) { throw 'Pascal ffi unit compilation failed.' }
 
-& $PascalCompiler @pascalOptions "-Fu$runDir" "-FU$runDir" "-FE$runDir" (Join-Path $testDir 'ffi_abi_probe.pp')
+& $PascalCompiler @pascalOptions "-Fu$runDir" "-FU$runDir" "-FE$runDir" (Join-Path $testDir 'ffi_abi_probe.pas')
 if ($LASTEXITCODE -ne 0) { throw 'Pascal ABI probe compilation failed.' }
 
 $cResult = & (Join-Path $runDir 'ffi_abi_probe_c.exe')

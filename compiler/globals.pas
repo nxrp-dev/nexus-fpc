@@ -81,8 +81,7 @@ tpcompilerreal,
        maxnesting = 32;
 
        { Filenames and extensions }
-       sourceext  = '.pp';
-       pasext     = '.pas';
+       sourceext  = '.pas';
        pext       = '.p';
 
        treelogfilename = 'tree.log';

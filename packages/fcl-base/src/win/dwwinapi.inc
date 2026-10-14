@@ -1,4 +1,4 @@
-{%MainUnit dirwatch.pp}
+{%MainUnit dirwatch.pas}
 { **********************************************************************
     This file is part of the Free Pascal run time library.
     Copyright (c) 2024 by the Free Pascal development team

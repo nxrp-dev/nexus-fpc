@@ -1,0 +1,18 @@
+{ %target=win64,darwin,linux,android}
+uses
+  SysUtils;
+
+var
+  t: text;
+begin
+  { see tw9089b.pas }
+  assign(t,'tw9089b.txt');
+{$i-}
+  reset(t);
+{$i+}
+  if ioresult<>0 then
+    halt(1);
+  close(t);
+  erase(t);
+  writeln('ok');
+end.

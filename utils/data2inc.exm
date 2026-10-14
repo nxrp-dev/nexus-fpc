@@ -10,7 +10,7 @@
 # type ARRAY OF BYTE in an include file.
 #
 # Some of my utils have a small screen of text to show when wrong or no
-# commandline parameters are passed. The below example is for ../demo/crtolf.pp
+# commandline parameters are passed. The below example is for ../demo/crtolf.pas
 # I use an extremely small procedure in EFIO (EFIO.WrArrChar) to display such
 # constants.
 

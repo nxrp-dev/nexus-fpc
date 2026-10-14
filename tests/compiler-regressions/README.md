@@ -17,7 +17,7 @@ The Pascal fixtures remain and cover:
   bounded short-string truncation, `-O2`, and `{$H-}`.
 - Invalid interface conversions, requiring diagnostics without internal errors.
 
-The normal test suite discovers the `t*.pp` fixtures in `tbs`, `tbf`, and
+The normal test suite discovers the `t*.pas` fixtures in `tbs`, `tbf`, and
 `webtbf`. The saved-unit consumer also uses its standard `RECOMPILE` directive.
 The future nxtest integration must retain the source-hidden PPU check and optimization variant.
 

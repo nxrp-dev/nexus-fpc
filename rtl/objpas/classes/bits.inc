@@ -1,4 +1,4 @@
-{%MainUnit classes.pp}
+{%MainUnit classes.pas}
 {
     This file is part of the Free Component Library (FCL)
     Copyright (c) 1999-2008 by the Free Pascal development team

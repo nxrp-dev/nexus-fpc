@@ -355,17 +355,17 @@ by current compilers and its artifact layout are unchanged.
 
 This audit preceded the approved removal recorded below.
 
-The large remaining file is `rtl/inc/softfpu.pp`, at 9,363 lines. It implements
+The large remaining file is `rtl/inc/softfpu.pas`, at 9,363 lines. It implements
 software binary32, binary64, binary80, and binary128 arithmetic; it is not solely
-the retired compiler software80 evaluator. Together with `sfpux80.pp`,
-`sfpu128.pp`, `ufloatx80.pp`, and `ufloat128.pp`, the five units total 9,613 lines.
+the retired compiler software80 evaluator. Together with `sfpux80.pas`,
+`sfpu128.pas`, `ufloatx80.pas`, and `ufloat128.pas`, the five units total 9,613 lines.
 Their namespaced wrappers, build registration, and software-only conversion
 branches add further removable material if these explicit APIs are retired.
 
 A source search found no imports in `compiler`, `packages`, `utils`, or the Nexus
 `packages` and `projects` trees. Remaining direct users are the RTL's build-unit
-registration and tests (`tests/test/units/softfpu/sfttst.pp` and the focused
-`tsoftinteger.pp` regression). The compiler and bootstrap no longer need them.
+registration and tests (`tests/test/units/softfpu/sfttst.pas` and the focused
+`tsoftinteger.pas` regression). The compiler and bootstrap no longer need them.
 
 Retiring these units would remove the explicit software-arithmetic APIs,
 including portable binary80/binary128 operations. That is a separate capability

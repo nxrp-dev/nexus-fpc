@@ -2,7 +2,7 @@
     This file is part of the Free Pascal run time library.
     Copyright (c) 1999-2000 by the Free Pascal development team
 
-    Processor dependent part of strings.pp, that can be shared with
+    Processor dependent part of strings.pas, that can be shared with
     sysutils unit.
 
     See the file COPYING.FPC, included in this distribution,

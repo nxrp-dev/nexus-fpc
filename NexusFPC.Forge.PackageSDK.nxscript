@@ -24,8 +24,8 @@ Group RuntimePackageSDK {
         Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
     }
     CopyFile StartupSource {
-        Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pp";
-        Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+        Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pas";
+        Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pas";
     }
     PackageSDKOptions PackageIdentity {
         BootstrapDirectory: "build/forge-bootstrap";
@@ -59,8 +59,8 @@ Group RuntimePackageSDK {
     FPC HostStartup {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
-        Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pp"];
-        EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+        Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pas"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pas";
         UnitOutput: "build/forge-bootstrap/package-sdk/units";
         UnitPaths: ["build/forge-bootstrap/package-sdk/units"];
         LibraryPaths: ["build/forge-bootstrap/package-sdk/packages"];

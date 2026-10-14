@@ -22,7 +22,7 @@ expanded checks had remained under ignored `output/compiler-fix-322d4d7c/`.
 
 ## Permanent regression coverage
 
-The original `tw40453.pp` and `tw6036a.pp` now assert runtime behavior. Shared
+The original `tw40453.pas` and `tw6036a.pas` now assert runtime behavior. Shared
 include files let the Delphi/ObjFPC and default/short-string variants exercise
 the same assertions. Additional fixtures cover invalid specializations and
 generic set fields loaded from a saved unit.

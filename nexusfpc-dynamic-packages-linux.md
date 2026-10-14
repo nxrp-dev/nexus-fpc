@@ -26,7 +26,7 @@ and other references into a package before unloading it.
 | Shared unit ownership | One `nxrtl.nxpl` owns System, ObjPas, SysUtils, Classes, TypInfo, FPCPackage and their closure, including native dynamic-library/resource adapters. Consumers import its units through compressed metadata embedded in that image by default; a build may select an adjacent `.nxp` sidecar. See [package storage](nexusfpc-package-storage.md). |
 | Image metadata | Nexus `NXP004` metadata, `NXU208` units (long revision 39), and the 168-byte descriptor v4 are used; all artifacts require rebuilding. See [artifact identities](nexusfpc-artifact-identity.md). ELF dependency relocations populate local pointer slots, preserving the descriptor's pointer-to-pointer ABI. Each image has a private six-word mutable context. |
 | Linking and identity | All provider units use PIC. Relocatable constant tables go into `.data.rel.ro`; the package linker requires defined imports, prohibits text relocations, enables RELRO/eager binding, and binds owned definitions locally with `-Bsymbolic`. Hosts use PIE and prohibit COPY relocations. |
-| Explicit startup | `rtl/linux/sysinitpkg.pp` reuses the existing glibc `si_c.inc` entry path. Activation runs from generated host startup after the native loader. Shared System initialization preserves the already active exception stack needed for rollback. |
+| Explicit startup | `rtl/linux/sysinitpkg.pas` reuses the existing glibc `si_c.inc` entry path. Activation runs from generated host startup after the native loader. Shared System initialization preserves the already active exception stack needed for rollback. |
 | Native loading | `dlopen(RTLD_NOW | RTLD_LOCAL)`, explicit `DT_NEEDED` dependencies, and `dlclose`. Each managed late image has an independent native reference. No `dlmopen` namespace or global plugin-symbol publication is used. |
 | Image ownership | `dladdr` maps code/data addresses to image bases. Opaque, pointer-sized native handles are stored separately from those bases. `dlinfo` prevents a plain SO from inheriting a dependency's package descriptor through `dlsym`. |
 | Lifecycle and cleanup | Existing synchronous dependency accounting, activation, reverse finalization, rollback and failure retention are reused. Classes, aliases, enum aliases, component handlers, conversion callbacks, resources and explicit application cleanup hooks follow Linux image ownership. |
@@ -35,7 +35,7 @@ and other references into a package before unloading it.
 | SDK and publication | Native Forge operations validate compiler metadata and ELF descriptor identities without loading code. The make-based SDK builder is retired; native Linux SDK construction through Forge is deferred. SDK and bundle hashes are enforced; complete immutable generations are selected atomically through `current.json`. |
 
 The core changes are in `compiler/pkgutil.pas`, `compiler/pmodules.pas`, the Linux
-linker and ELF/assembler writers, `rtl/linux/sysinitpkg.pp`, the System package
+linker and ELF/assembler writers, `rtl/linux/sysinitpkg.pas`, the System package
 hooks, and `rtl/inc/fpcpackageloader.inc`. Existing Windows adapters still use the
 Windows loader. Common lifecycle logic has not been duplicated.
 

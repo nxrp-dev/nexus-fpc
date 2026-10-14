@@ -336,7 +336,7 @@ const
             SYMBOL TABLE:
             08048080 l    d  .text  00000000 .text
             00000000 l    d  .stabstr       00000000 .stabstr
-            00000000 l    df *ABS*  00000000 nest.pp
+            00000000 l    df *ABS*  00000000 nest.pas
             08048160 l     F .text  00000068 SYSTEM_INITSYSCALLINTF
             ...
         }

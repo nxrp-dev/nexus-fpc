@@ -7727,9 +7727,9 @@ implementation
             result:='procvar'
           else
             { we need the manglednames here, because nestedprocvars can be anonymous, e.g.
-              having not a type name or not an unique one, see tbs/tw27515.pp
+              having not a type name or not an unique one, see tbs/tw27515.pas
 
-              Further, use $_ ... _$ delimiters to avoid ambiguous names, see tbs/tw27515.pp }
+              Further, use $_ ... _$ delimiters to avoid ambiguous names, see tbs/tw27515.pas }
             result:='$_nestedprovar'+mangledprocparanames(0)+'_$'
         else
           result:='procvarofobj'
@@ -8092,7 +8092,7 @@ implementation
       begin
         { in this case we will go in endless recursion, because then  }
         { there is no tsym associated yet with the def. It can occur  }
-        { (tests/webtbf/tw4757.pp), so for now give a generic name    }
+        { (tests/webtbf/tw4757.pas), so for now give a generic name    }
         { instead of the actual type name                             }
         if not assigned(typesym) then
           result:='<Currently Parsed Class>'

@@ -5218,7 +5218,7 @@ begin
                   writeln(format('outputformat: fpc  platform: %s  path: %s',
                                  [cPlatform[aX64], aDestPath]));
 
-                  FileExt := '.pp';
+                  FileExt := '.pas';
 
                   slHeader.Add('Program $$$OPCODE$$$;');
                   slHeader.Add('{$asmmode intel}');
@@ -5239,7 +5239,7 @@ begin
                   writeln(format('outputformat: fpc  platform: %s  path: %s',
                                  [cPlatform[aX64], aDestPath]));
 
-                  FileExt := '.pp';
+                  FileExt := '.pas';
 
                   slHeader.Add('Program $$$OPCODE$$$;');
                   slHeader.Add('{$asmmode intel}');
@@ -5349,7 +5349,7 @@ begin
                   writeln(format('outputformat: fpc  platform: %s  path: %s',
                                  [cPlatform[aX64], aDestPath]));
 
-                  FileExt := '.pp';
+                  FileExt := '.pas';
 
                   slHeader.Add('Program $$$OPCODE$$$;');
                   slHeader.Add('{$asmmode intel}');
@@ -5468,7 +5468,7 @@ begin
                   writeln(format('outputformat: fpc  platform: %s  path: %s',
                                  [cPlatform[aX64], aDestPath]));
 
-                  FileExt := '.pp';
+                  FileExt := '.pas';
 
                   slHeader.Add('Program Test$$$OPCODE$$$;');
                   slHeader.Add('{$asmmode intel}');

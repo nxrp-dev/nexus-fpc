@@ -501,14 +501,14 @@ begin
   Compile;
   CheckCompiled(['ur_newmainsrc1_ant.pas','ur_newmainsrc1_bird.pas']);
 
-  // compile with src2/bird.pp and ppus1 in unitpath and create ppus2/bird.nxu
+  // compile with src2/bird.pas and ppus1 in unitpath and create ppus2/bird.nxu
   Step:='Second compile';
   OutDir:=Dir+PathDelim+'ppus2';
   UnitPath:=Dir+PathDelim+'src2'+';'+Dir+PathDelim+'ppus1';
   CleanOutputDir;
   Compile;
-  // the main src is always compiled, main source of bird changed from bird.pas to bird.pp
-  CheckCompiled(['ur_newmainsrc1_ant.pas','ur_newmainsrc1_bird.pp']);
+  // the main src is always compiled, main source of bird changed from bird.pas to bird.pas
+  CheckCompiled(['ur_newmainsrc1_ant.pas','ur_newmainsrc1_bird.pas']);
 end;
 
 procedure TTestRecompile.TestUr_cycle2;

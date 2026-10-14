@@ -81,7 +81,7 @@ not establish on-device runtime correctness or validate every Android API level.
 - Sample binaries, build logs, ELF inspections, and forced
   cross-unit rebuild log: `output/clangassembler-validation/` (ignored).
 - Reproduction instructions and sample sources: this directory's `README.md`.
-- The modified `tests/utils/dotest.pp` test harness also rebuilt successfully.
+- The modified `tests/utils/dotest.pas` test harness also rebuilt successfully.
 - Removed-target generated artifacts were moved out of the repository to
   `%TEMP%/NexusFPC-removed-target-350b125efd1e4cafadcc3f4e9550feb3/` for recovery.
 

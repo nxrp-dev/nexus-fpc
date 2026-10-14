@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 
 {
     *********************************************************************
@@ -32,7 +32,7 @@ begin
 end;
 
 {$ifdef dummy}
-{ declaring this breaks delphi compatibility and e.g. tw3721.pp }
+{ declaring this breaks delphi compatibility and e.g. tw3721.pas }
 FUNCTION NewStr (Const S: ShortString): PShortString;
 VAR P: PShortString;
 BEGIN

@@ -123,7 +123,7 @@ type
 
 
 {*******************************************************
-        TFPObjectList (From fcl/inc/contnrs.pp)
+        TFPObjectList (From fcl/inc/contnrs.pas)
 ********************************************************}
 
   TObjectListCallback = procedure(data:TObject;arg:pointer) of object;
@@ -283,7 +283,7 @@ const
 
 
 {*******************************************************
-        TFPHashObjectList (From fcl/inc/contnrs.pp)
+        TFPHashObjectList (From fcl/inc/contnrs.pas)
 ********************************************************}
 
 type

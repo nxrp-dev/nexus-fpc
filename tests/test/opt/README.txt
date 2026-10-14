@@ -1,12 +1,12 @@
 This directory contains some tests which test the optimizer
 Register variables:
-  Enumerations .......................... treg1.pp
-  Readln ................................ treg2.pp
-  Range checking ........................ treg3.pp
+  Enumerations .......................... treg1.pas
+  Readln ................................ treg2.pas
+  Range checking ........................ treg3.pas
 Common subexpression elimination (assembler)
-  Multidimensional array index operation. tcse1.pp
-  CSE and range checking ................ tcse2.pp
-  web bug 972............................ tcse3.pp
+  Multidimensional array index operation. tcse1.pas
+  CSE and range checking ................ tcse2.pas
+  web bug 972............................ tcse3.pas
 Peephole
-  CMOV optimize ......................... tcmov.pp
+  CMOV optimize ......................... tcmov.pas
 

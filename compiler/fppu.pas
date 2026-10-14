@@ -478,13 +478,8 @@ var
          { Check for Sources }
            ppufile:=nil;
            recompile_reason:=rr_noppu;
-         {Check for .pp file}
+         { Check for Pascal source }
            Found:=UnitExists(sourceext,hs,prefix);
-           if not Found then
-            begin
-              { Check for .pas }
-              Found:=UnitExists(pasext,hs,prefix);
-            end;
            if not Found and
               ((m_mac in current_settings.modeswitches) or
                (tf_p_ext_support in target_info.flags)) then
@@ -626,13 +621,6 @@ var
               Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,sourceext));
             if FindFile(ChangeFileExt(sourcefn,sourceext),'',true,hs) then
               include(fnd,auSrc);
-            if (fnd=[]) then
-             begin
-               if CheckVerbosity(V_Tried) then
-                 Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,pasext));
-               if FindFile(ChangeFileExt(sourcefn,pasext),'',true,hs) then
-                 include(fnd,auSrc);
-             end;
             if (fnd=[]) and
                ((m_mac in current_settings.modeswitches) or
                 (tf_p_ext_support in target_info.flags)) then

@@ -2,7 +2,7 @@
     This file is part of the Free Pascal run time library.
     Copyright (c) 1999-2000 by the Free Pascal development team.
 
-    Includefile for objects.pp implementing OS-dependent file routines
+    Includefile for objects.pas implementing OS-dependent file routines
     for WIN32
 
     See the file COPYING.FPC, included in this distribution,

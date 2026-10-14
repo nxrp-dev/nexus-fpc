@@ -1,4 +1,4 @@
-{%MainUnit classes.pp}
+{%MainUnit classes.pas}
 {
     This file is part of the Free Pascal Run Time Library (rtl)
     Copyright (c) 1999-2008 by Michael Van Canneyt, Florian Klaempfl,

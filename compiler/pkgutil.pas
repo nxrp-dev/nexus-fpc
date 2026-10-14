@@ -86,7 +86,7 @@ implementation
       end;
 
     begin
-      { Layout matches rtl/inc/fpcpackage.pp. The experimental targets are
+      { Layout matches rtl/inc/fpcpackage.pas. The experimental targets are
         currently 64 bit; every field occupies one native word. }
       if not (target_info.system in [system_x86_64_win64,system_x86_64_linux]) then exit;
       start;

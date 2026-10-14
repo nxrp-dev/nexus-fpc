@@ -16,7 +16,7 @@ when it is closed (and modified).
 procedure CreateTable;
 
 Creates the needed in-memory structures after fielddefs were added.
-See testpop.pp for an example.
+See testpop.pas for an example.
 
 function DataSize : Integer;
 

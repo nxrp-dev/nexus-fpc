@@ -116,9 +116,9 @@ Relevant source boundaries:
 - `compiler/ngenutil.pas`: owner-only lifecycle, resource, and main-thread storage tables.
 - `compiler/symcreat.pas`: package entry records the native handle and returns.
 - `rtl/inc/system.inc`: optional Win64 lifecycle hooks; ordinary startup keeps its existing path.
-- `rtl/inc/fpcpackage.pp`: registration, activation, rollback, and finalization.
-- `rtl/win64/sysinitpkg.pp`: package-aware EXE startup and the EXE resource-handle adapter.
-- `rtl/win64/system.pp`: explicit heap/bootstrap preparation before activation.
+- `rtl/inc/fpcpackage.pas`: registration, activation, rollback, and finalization.
+- `rtl/win64/sysinitpkg.pas`: package-aware EXE startup and the EXE resource-handle adapter.
+- `rtl/win64/system.pas`: explicit heap/bootstrap preparation before activation.
 - `tests/dynamic-packages`: isolated compiler/RTL/package build and end-to-end tests.
 
 Production package capability remains disabled after this experimental milestone.

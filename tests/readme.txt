@@ -27,7 +27,7 @@ sends the results to an SQL database
 
 When the tests are performed, first the units (e.g. rtl) needed by the
 tests are compiled in a clean determined way and put in the units
-directory. Then tbs/tbf/webtbf/test are searched for t*.pp to be
+directory. Then tbs/tbf/webtbf/test are searched for t*.pas to be
 compiled and executed as tests.
 
 
@@ -65,7 +65,7 @@ utils............Utilities for processing tests
 
 Writing a test
 --------------
-A test should have a name on the form t*.pp, to be recognized as a test.
+A test should have a name on the form t*.pas, to be recognized as a test.
 It should return 0 on success, any other value indicates failure.
 
 

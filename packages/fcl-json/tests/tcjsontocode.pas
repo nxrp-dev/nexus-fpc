@@ -414,7 +414,7 @@ begin
   Gen.Execute;
   if (TestUnitDir<>'') then
     begin
-    Assign(F,IncludeTrailingPathDelimiter(TestUnitDir)+Gen.DestUnitName+'.pp');
+    Assign(F,IncludeTrailingPathDelimiter(TestUnitDir)+Gen.DestUnitName+'.pas');
     Rewrite(F);
     Writeln(F,'// ',Self.TestName);
     Writeln(F,Gen.Code.Text);

@@ -3,7 +3,7 @@
     Copyright (c) 2003 by Florian Klaempfl, member of the
     Free Pascal development team
 
-    Processor dependent part of strings.pp, that can be shared with
+    Processor dependent part of strings.pas, that can be shared with
     sysutils unit.
 
     See the file COPYING.FPC, included in this distribution,

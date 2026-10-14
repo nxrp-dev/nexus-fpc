@@ -1,4 +1,4 @@
-{%mainunit syshelpers.pp}
+{%mainunit syshelpers.pas}
 
 { ---------------------------------------------------------------------
   TGUIDHelper

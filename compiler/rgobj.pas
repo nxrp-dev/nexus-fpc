@@ -2905,7 +2905,7 @@ unit rgobj;
                     set weigth of the newly allocated register higher than the old one,
                     so it will selected for spilling with a lower priority than
                     the original one, this prevents an endless spilling loop if orgreg
-                    is short living, see e.g. tw25164.pp
+                    is short living, see e.g. tw25164.pas
 
                     the min trick is needed to avoid an overflow in case weight=high(weight which might happen }
                   add_reg_instruction(instr,loadreg,min(high(reginfo[orgreg].weight)-1,reginfo[orgreg].weight)+1);
@@ -2940,7 +2940,7 @@ unit rgobj;
                     set weigth of the newly allocated register higher than the old one,
                     so it will selected for spilling with a lower priority than
                     the original one, this prevents an endless spilling loop if orgreg
-                    is short living, see e.g. tw25164.pp
+                    is short living, see e.g. tw25164.pas
 
                     the min trick is needed to avoid an overflow in case weight=high(weight which might happen }
                   add_reg_instruction(instr,storereg,min(high(reginfo[orgreg].weight)-1,reginfo[orgreg].weight)+1);

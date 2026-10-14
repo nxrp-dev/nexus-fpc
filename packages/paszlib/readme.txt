@@ -1,5 +1,5 @@
 Contents:
-zipper.pp/TZipper
+zipper.pas/TZipper
 - Introduction
 - Zip standards compliance
 - Zip file format
@@ -12,12 +12,12 @@ paszlib
 - Archive Locations
 
 =================
-zipper.pp/TZipper
+zipper.pas/TZipper
 =================
 
 Introduction
 ============
-Zipper.pp contains TZipper, an object-oriented wrapper for the paszlib units
+Zipper.pas contains TZipper, an object-oriented wrapper for the paszlib units
 that allows
 - compressing/adding files/streams
 - decompressing files/streams
@@ -34,7 +34,7 @@ as much as possible.
 
 Not all (de)compression methods specified in the zip standard [1] are supported.
 Encryption (either zip 2.0 or AES) is not supported, nor are multiple disk sets (spanning/splitting).
-Please see zipper.pp for details on using the class.
+Please see zipper.pas for details on using the class.
 
 Zip file format
 ===============

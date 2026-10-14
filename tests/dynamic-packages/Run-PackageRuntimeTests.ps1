@@ -43,7 +43,7 @@ foreach($lSmart in @($false,$true)) {
             foreach($lSuffix in @('.nxpl')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
             foreach($lUnit in $Units.Keys){Hide-TestUnit $lDirectory $lUnit}
         }
-        Package nxrtl @() ([ordered]@{fpcpackage=(Get-Content "$SourceRoot/rtl/inc/fpcpackage.pp" -Raw)})
+        Package nxrtl @() ([ordered]@{fpcpackage=(Get-Content "$SourceRoot/rtl/inc/fpcpackage.pas" -Raw)})
         $lUnused=@'
 unit uunused;
 {$mode objfpc}{$H+}
@@ -92,7 +92,7 @@ end.
         $lHost="$lCase/host"
         New-Item -ItemType Directory -Force $lHost | Out-Null
         $lOptions=(Get-TestCompilerOptions $SdkRoot $lHost $lSmart)+@("-Fp$lDist","-Fl$lDist",'-FPnxrtl','-FPpkgshared','-FPpkgleft','-FPpkgright',"-Fu$lHost")
-        $null=Invoke-TestProcess "$lName-startup" $lCompiler ($lOptions+@("$SourceRoot/rtl/win64/sysinitpkg.pp"))
+        $null=Invoke-TestProcess "$lName-startup" $lCompiler ($lOptions+@("$SourceRoot/rtl/win64/sysinitpkg.pas"))
         Write-TestFile "$lHost/uhost.pas" "unit uhost; interface implementation uses upackageruntime; initialization Trace:=Trace+'H'; finalization WriteLn('FINAL H'); Flush(Output); end."
         $null=Invoke-TestProcess "$lName-host-build" $lCompiler ($lOptions+@("$PSScriptRoot/package_runtime_host.pas"))
         Check-Imports "$lHost/package_runtime_host.exe"

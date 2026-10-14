@@ -1,8 +1,8 @@
 REMARK:
 
-fptemplate.pp has been moved to fcl-base.
+fptemplate.pas has been moved to fcl-base.
 
-fptemplate.pp
+fptemplate.pas
 
 implements template support
 

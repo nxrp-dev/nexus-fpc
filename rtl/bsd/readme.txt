@@ -37,7 +37,7 @@ bsdfuncs.inc		POSIX syscalls and functions that are not needed
 osposix.inc		The implementation of unit posix, redirects to libc
 			 or bsdtypes.inc (via aliases)
 osposixh.inc		The headers of unit posix.
-sysctl.pp		Some basic sysctl headers, needed for implementation
+sysctl.pas		Some basic sysctl headers, needed for implementation
 			of POSIX functions.
 sysposix.inc		BSD specific part of the implementation
 i386/syscall.inc	The primitives for performing syscalls

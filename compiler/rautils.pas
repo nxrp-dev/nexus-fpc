@@ -1688,7 +1688,7 @@ Begin
           begin
 
 	    { LLVM compiler requires that the static label RawThunkEnd
-             in packages/rtl-objpas/src/rtti.pp unit is set to nonlocal }
+             in packages/rtl-objpas/src/rtti.pas unit is set to nonlocal }
             if (srsymtable.symtabletype=globalsymtable) or create_smartlink_library then
 
               Tlabelsym(sym).nonlocal:=true;

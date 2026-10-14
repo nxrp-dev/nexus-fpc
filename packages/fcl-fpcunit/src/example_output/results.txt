@@ -15,7 +15,7 @@ FPCUnitTests Time:00.007 N:85 E:1 F:5 I:1
     00.000  Test21
     00.000  Test22  Error: EAccessViolation
       Exception:   MyError
-      Source unit: exampletestsuites.pp
+      Source unit: exampletestsuites.pas
       Method name: TSUITETWO__TEST22
       Line number: 110
   TSuiteThree Time:00.000 N:1 E:0 F:0 I:0
@@ -112,7 +112,7 @@ List of errors:
     Message:           TSuiteTwo.Test22: MyError
     Exception class:   EAccessViolation
     Exception message: MyError
-    Source unitname:   exampletestsuites.pp
+    Source unitname:   exampletestsuites.pas
     Line number:       110
     Failed methodname: TSUITETWO__TEST22
 
