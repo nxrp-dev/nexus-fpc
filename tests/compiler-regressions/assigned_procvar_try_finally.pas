@@ -1,7 +1,7 @@
-{ Reproduced in pre-extension-rename NexusFPC 8f0cd324 with -O2.
-  The Win64 compiler reports wrong parameter counts at Assigned below.
-  Default project options and stock FPC 3.2.2 i386-win32 compile it.
-  Retained for evaluation and future nxtest coverage. }
+{ Regression: -O2 must compare callback addresses without calling them.
+  The original failure reported wrong parameter counts at Assigned below.
+  A try/finally block is not required; this preserves the original shape.
+  See assigned_procvar_callbacks.pas for runtime behavior checks. }
 program assigned_procvar_try_finally;
 
 {$mode delphi}

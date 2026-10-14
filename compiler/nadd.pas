@@ -711,7 +711,7 @@ const
 
       var
         hp: taddnode;
-        t,vl,lefttarget,righttarget: tnode;
+        t,vl,lefttarget,righttarget,value1conv,value2conv: tnode;
         lt,rt,nt : tnodetype;
         hdef,
         rd,ld   , inttype: tdef;
@@ -1862,11 +1862,17 @@ const
                              Internalerror(2020060101);
                          end;
 
+                         { Assigned compares procvar values. Preserve that
+                           meaning in the casts introduced by this rewrite. }
+                         value1conv:=ctypeconvnode.create_internal(v1p^.getcopy,inttype);
+                         value1conv.flags:=value1conv.flags+(left.flags*[nf_load_procvar]);
+                         value2conv:=ctypeconvnode.create_internal(v2p^.getcopy,inttype);
+                         value2conv.flags:=value2conv.flags+(right.flags*[nf_load_procvar]);
                          result:=caddnode.create_internal(equaln,
                            caddnode.create_internal(orn,
-                             caddnode.create_internal(xorn,ctypeconvnode.create_internal(v1p^.getcopy,inttype),
+                             caddnode.create_internal(xorn,value1conv,
                                ctypeconvnode.create_internal(c1p^.getcopy,inttype)),
-                             caddnode.create_internal(xorn,ctypeconvnode.create_internal(v2p^.getcopy,inttype),
+                             caddnode.create_internal(xorn,value2conv,
                                ctypeconvnode.create_internal(c2p^.getcopy,inttype))
                            ),
                            cordconstnode.create(0,inttype,false));

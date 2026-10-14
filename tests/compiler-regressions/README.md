@@ -24,16 +24,53 @@ The future nxtest integration must retain the source-hidden PPU check and optimi
 See [the recovery report](../../nexusfpc-compiler-regression-recovery.md) for the
 original failure, compiler correction, and recorded validation.
 
-## Additional optimization failure (2026-10-14)
+## Assigned callback optimization correction (2026-10-14)
 
-`assigned_procvar_try_finally.pas` retains a minimized failure found while
-validating the `.nxu`/`.nxp` extension change. With `-O2`, the native Win64
-compiler reports wrong parameter counts for `Assigned` on the two function
-parameters inside the `try/finally` block. The pre-rename compiler rebuilt
-from `8f0cd324` reproduces it; default project options pass, as does the stock
-FPC 3.2.2 i386-win32 compiler with `-O2`.
+At `-O2`, the compiler combines two comparisons such as
+`not Assigned(A) and not Assigned(B)` into integer operations. The generated
+casts must retain `nf_load_procvar` from the original comparisons. Otherwise,
+Delphi-mode conversion rules can call the callbacks instead of inspecting
+their addresses. The correction in `compiler/nadd.pas` preserves this flag on
+both generated value casts.
 
-The same pattern occurs at `SynCommons.pas:60653` when adding `-O2` to a
-fresh Forge build. Forge's declared project options compile successfully.
-No compiler correction or test weakening was applied for this independent
-failure. Its optimization variant needs evaluation before nxtest integration.
+Before the correction, callbacks requiring arguments caused wrong-parameter-count
+errors. Parameterless callbacks could compile and then be invoked incorrectly:
+the reproducer made two calls and returned True where zero calls and False were
+required. `try/finally` is not necessary to trigger the defect.
+
+- `assigned_procvar_try_finally.pas` retains the original compilation failure,
+  also seen in `SynCommons.pas` when building Forge with additional `-O2` options.
+- `assigned_procvar_callbacks.pas` checks all four nil/non-nil combinations for
+  plain callbacks, callbacks requiring an argument, and method callbacks. It must
+  print `PASS: 12 callback checks; zero callback calls` and exit successfully.
+  Keep the optimized runtime checks when integrating these fixtures into nxtest.
+
+Focused Windows verification passed with a freshly recompiled optimizer matching
+the working source: the original fixture at `-O2`, and the 12-case runtime fixture
+at both `-O1` and `-O2`. The same three checks passed with stock FPC 3.2.2 Win32.
+This correction has not undergone a full bootstrap or native Linux verification.
+
+### Verification still needed on Linux / upstream
+
+The uncorrected Nexus compiler reproduced the compilation failure for Win64,
+Win32, Linux x64 and Linux ARM64 targets. These Linux results were cross-compilation
+checks on Windows, not execution on Linux. Stock FPC 3.2.2 i386-win32 passed the
+compile and runtime reproducers. The corresponding upstream development source
+contains the same rewrite, but an unmodified upstream development compiler has
+**not** been tested. Attribution of the defect to upstream remains unverified.
+The attempted upstream checkout was stopped and removed at the user's request.
+
+The user will verify on an actual Linux machine. From the repository root, using
+the selected compiler and its matching RTL configuration:
+
+```sh
+mkdir -p output/assigned-o2-check
+fpc -O2 -FUoutput/assigned-o2-check -FEoutput/assigned-o2-check tests/compiler-regressions/assigned_procvar_try_finally.pas
+fpc -O2 -FUoutput/assigned-o2-check -FEoutput/assigned-o2-check tests/compiler-regressions/assigned_procvar_callbacks.pas
+./output/assigned-o2-check/assigned_procvar_callbacks
+```
+
+Run with stock FPC 3.2.2 and with the corrected Nexus compiler, recording the
+compiler version, target and results. Repeat the runtime fixture with `-O1` as
+a control. If testing a newer upstream compiler, record its exact revision too;
+do not infer its behavior from the 3.2.2 result or matching source alone.
