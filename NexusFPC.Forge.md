@@ -40,7 +40,8 @@ bootstrap. The retained combinations are:
 | iphonesim | x86_64, aarch64 |
 | ios | aarch64 |
 
-LLVM tools must be on PATH. The Android configuration uses the installed NDK
+LLVM is the only officially supported assembler/linker toolchain for NexusFPC;
+its tools must be on PATH. The Android configuration uses the installed NDK
 at `C:\android\ndk\25.2.9519653`; its Clang executable and FPC
 `CompilerUtilitiesPath` are set in `NexusFPC.Forge.Config.nxscript`.
 
@@ -75,6 +76,57 @@ foreach ($target in @('i386-linux','x86_64-linux','aarch64-linux',
 & $forge /input=NexusFPC.Forge.nxscript /targets=Build:Release
 if ($LASTEXITCODE -ne 0) { throw 'Release failed' }
 ```
+
+## LLVM prerequisites on Linux Mint / Ubuntu
+
+On Linux Mint 22.3, which uses the Ubuntu 24.04 (`noble`) package base,
+install Clang, LLD and the LLVM utilities from the distribution repositories:
+
+```bash
+sudo apt update
+sudo apt install clang lld llvm
+```
+
+`clang` supplies the assembler used by `-Aas-clang`; `lld` supplies `ld.lld`,
+selected by `-XLL`; `llvm` supplies utilities such as `llvm-ar`. These package
+names also provide the unversioned commands that NexusFPC expects on PATH.
+See the Ubuntu package records for [Clang](https://packages.ubuntu.com/noble/clang),
+[LLD](https://packages.ubuntu.com/noble/lld) and
+[LLVM](https://packages.ubuntu.com/noble/llvm).
+
+Check the installation:
+
+```bash
+clang --version
+ld.lld --version
+llvm-ar --version
+```
+
+The package candidates on this host selected LLVM 18 when checked on
+2026-10-13. Clang and LLD 18.1.3 passed a native Linux x86-64 bootstrap on
+that date. Stock FPC 3.2.2 built the generators and initial Nexus compiler
+using its own default GNU tools; all three Nexus compiler/RTL generations
+then used `-Aas-clang -XLL`. Generations two and three produced byte-identical
+compiler binaries and 95 byte-identical RTL objects. The 22 regression runs
+with normal and `-O2` builds, the Clang assembly/debug-information sample,
+and the relocated distribution smoke check passed. Execution logs confirm
+Clang and LLD were invoked; the compiler ELF records LLD 18.1.3.
+
+The unchanged `tests/systemids/nxsystemids.pas` fixture still expects a
+three-byte CPU-ID set; stock FPC 3.2.2 and both Nexus builds produce four.
+A diagnostic copy with that expectation corrected passes in normal and
+`-O2` builds. No compiler or RTL source changes were needed.
+
+The local LLVM compiler and matching base RTL are under
+`output/nexus-fpc-linux-x86_64/`; its configuration selects `-Aas-clang -XLL`.
+The previous experimental GNU build is preserved under
+`output/nexus-fpc-linux-x86_64-gnu/`. Evidence and reproduction helpers are
+under the ignored `build/forge-bootstrap/linux-llvm/` directory:
+`bootstrap.py`, `verify.py`, `result.json` and `logs/`.
+
+This native validation executes the Forge recipe's compiler/RTL steps
+directly. Native Linux-hosted compiler/SDK construction through Forge remains
+deferred. GNU tools are not an officially supported NexusFPC toolchain.
 
 ## Generated compiler inputs
 
