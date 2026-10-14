@@ -147,7 +147,7 @@ the retired drivers in NexusFPC, and none in current Nexus build-tool sources.
 No checked-in package-manager `manifest.xml` remained. Its generator was part
 of `fpmkunit`; it only serialized package version, target restrictions,
 dependencies and distribution metadata from the declarations. Removing it
-does not affect compiler `.ppk`/`.nxp` package support or application resources.
+does not affect compiler `.nxpk`/`.nxp` package support or application resources.
 
 Package source, compiler/RTL source, namespace maps, resources, tests and
 license notices remain. Package selection and nxtest migration are separate

@@ -77,7 +77,7 @@ var
   P: tpcppackage;
   U: tmodulebase;
 begin
-  set_current_module(tmodule.Create(nil,'Fixture','Fixture.ppk',false));
+  set_current_module(tmodule.Create(nil,'Fixture','Fixture.nxpk',false));
   current_module.setmodulename('Fixture');
   P:=tpcppackage.Create('Fixture');
   U:=tmodulebase.Create('UX');
@@ -102,7 +102,7 @@ begin
   First:=3;
   if ParamStr(1)='building' then
     begin
-      set_current_module(tmodule.Create(nil,ParamStr(3),ParamStr(3)+'.ppk',false));
+      set_current_module(tmodule.Create(nil,ParamStr(3),ParamStr(3)+'.nxpk',false));
       current_module.setmodulename(ParamStr(3));
       current_module.ispackage:=true;
       First:=4;

@@ -45,7 +45,7 @@ Core make infrastructure, `build_linux_package_sdk.py`, and its WSL wrapper have
 been retired. Native Linux-hosted compiler and SDK construction must be ported
 to Forge before fresh Linux SDKs can be built again. That work remains deferred
 by owner choice; this retirement does not remove Linux package compiler/RTL code,
-the `nxrtl.ppk` declaration, startup units or examples. Existing SDK consumption
+the `nxrtl.nxpk` declaration, startup units or examples. Existing SDK consumption
 and publication now use native Forge; the Python helpers have been retired.
 
 The [Forge cross matrix](NexusFPC.Forge.md) still builds Windows-hosted Linux
@@ -77,7 +77,7 @@ Project Build {
             WorkDirectory: "/project/build/provider";
         }
         FPC Compile (LinuxPackageBuild.Compile) {
-            EntryPoint: "/project/mypackage.ppk";
+            EntryPoint: "/project/mypackage.nxpk";
         }
         PackageBundlePublish Publish (LinuxPackageBuild.Publish) {
             Name: "mypackage"; Kind: Package; OutputDirectory: "/project/providers";

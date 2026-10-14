@@ -522,7 +522,7 @@ implementation
     begin
       inherited create(pn);
 
-      setfilename(pn+'.ppk',true);
+      setfilename(pn+'.nxpk',true);
     end;
 
   destructor tpcppackage.destroy;

@@ -58,7 +58,7 @@ Project Bootstrap Build[Bootstrap] {
         Destination: "build/forge-bootstrap/seed/rtl";
         Recursive: True;
         CleanDestination: True;
-        IncludeMasks: ["*.pas", "*.ppk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
+        IncludeMasks: ["*.pas", "*.nxpk", "*.inc", "*.as", "*.s", "*.asm", "*.h", "*.rc", "*.res", "*.def", "*.dat"];
         ExcludeNames: "units;cpummprocs.inc;cpumminnr.inc";
     }
     BuildIdentity CaptureBuildIdentity {

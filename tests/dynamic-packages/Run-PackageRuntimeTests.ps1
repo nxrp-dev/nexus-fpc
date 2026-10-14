@@ -37,8 +37,8 @@ foreach($lSmart in @($false,$true)) {
             $lDeclaration="package $Name; "
             if($Requires.Count){$lDeclaration+='requires '+($Requires -join ',')+'; '}
             $lDeclaration+='contains '+($Units.Keys -join ',')+'; end.'
-            Write-TestFile "$lDirectory/$Name.ppk" $lDeclaration
-            $null=Invoke-TestProcess "$lName-$Name" $lCompiler ($lOptions+@("$lDirectory/$Name.ppk"))
+            Write-TestFile "$lDirectory/$Name.nxpk" $lDeclaration
+            $null=Invoke-TestProcess "$lName-$Name" $lCompiler ($lOptions+@("$lDirectory/$Name.nxpk"))
             foreach($lUnit in $lHashes.Keys){Assert-PackageTest ($lHashes[$lUnit] -eq (Get-TestUnitHash $lDirectory $lUnit)) "$lUnit cached artifacts changed"}
             foreach($lSuffix in @('.nxpl')){Copy-Item "$lDirectory/$Name$lSuffix" $lDist}
             foreach($lUnit in $Units.Keys){Hide-TestUnit $lDirectory $lUnit}

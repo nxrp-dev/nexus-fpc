@@ -41,8 +41,8 @@ function Compile([string]$Name,[string]$Source,[string]$Kind='Package',[string[]
 function Package([string]$Name,[Collections.IDictionary]$Units,[string]$Requires='nxrtl, democontracts'){
     $lDirectory="$lFixtures/$Name"
     foreach($lUnit in $Units.Keys){Write-TestFile "$lDirectory/$lUnit.pas" $Units[$lUnit]}
-    Write-TestFile "$lDirectory/$Name.ppk" ("package $Name; requires $Requires; contains "+($Units.Keys -join ',')+'; end.')
-    Compile $Name "$lDirectory/$Name.ppk"
+    Write-TestFile "$lDirectory/$Name.nxpk" ("package $Name; requires $Requires; contains "+($Units.Keys -join ',')+'; end.')
+    Compile $Name "$lDirectory/$Name.nxpk"
 }
 function Unit([string]$Name,[string]$Declarations='',[string]$Initialization='',[string]$Finalization='',[string]$Interface=''){
     return "unit $Name; {`$mode objfpc}{`$H+}`ninterface`nuses SysUtils, Classes, PkgContracts;`n$Interface`nimplementation`n$Declarations`ninitialization`n$Initialization`nfinalization`n$Finalization`nend."
@@ -91,15 +91,15 @@ function Check-Publication([string]$Name){
     Assert-PackageTest ((Get-TestHashes (Get-NexusPackageBundle $lDistribution)) -ceq $lOriginal) 'Failed build changed published artifacts'
     Add-TestResult $Name @{}
 }
-Write-TestFile "$lFixtures/broken.ppk" 'package broken; requires nxrtl; contains MissingUnit; end.'
-Compile broken "$lFixtures/broken.ppk" Package @() 1 'Compilation failed'
+Write-TestFile "$lFixtures/broken.nxpk" 'package broken; requires nxrtl; contains MissingUnit; end.'
+Compile broken "$lFixtures/broken.nxpk" Package @() 1 'Compilation failed'
 Check-Publication failed-build-preserves-publication
 Write-TestFile "$lFixtures/BrokenLinkUnit.pas" (Unit BrokenLinkUnit "procedure MissingExternal; external name 'MissingPackageLinkSymbol';" 'MissingExternal;')
-Write-TestFile "$lFixtures/broken.ppk" 'package broken; requires nxrtl, democontracts; contains BrokenLinkUnit; end.'
-Compile broken-link "$lFixtures/broken.ppk" Package @() 1 'Compilation failed'
+Write-TestFile "$lFixtures/broken.nxpk" 'package broken; requires nxrtl, democontracts; contains BrokenLinkUnit; end.'
+Compile broken-link "$lFixtures/broken.nxpk" Package @() 1 'Compilation failed'
 Assert-PackageTest (@(Get-ChildItem "$lDistribution/work-*/compile.log" | Where-Object {[IO.File]::ReadAllText($_.FullName).Contains('MissingPackageLinkSymbol')}).Count -gt 0) 'Expected missing external linker failure'
 Check-Publication failed-link-preserves-publication
-Compile stale-consumers "$lLate/source/base/pluginbase.ppk" Package @() 1 'Dependency build mismatch'
+Compile stale-consumers "$lLate/source/base/pluginbase.nxpk" Package @() 1 'Dependency build mismatch'
 Check-Publication stale-consumers-preserve-publication
 $lPair="$script:TestOutput/mismatched-pair"; $lPairOutput="$script:TestOutput/pair-output"
 New-Item -ItemType Directory -Force $lPair,$lPairOutput | Out-Null

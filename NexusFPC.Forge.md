@@ -231,7 +231,7 @@ Packages can select a sidecar with `EmbedPackageMetadata: Disabled` on their FPC
 build. See [package storage](nexusfpc-package-storage.md) for the format and switch.
 
 All RTL/package source comes from the bootstrap staging tree, including the
-`.ppk` declaration now staged by Bootstrap. Rebuild older bootstraps that lack it.
+`.nxpk` declaration now staged by Bootstrap. Rebuild older bootstraps that lack it.
 The SDK build does not regenerate the compiler, rebuild the base RTL with make,
 or modify the bootstrap RTL cache. Release assembly invokes this same group and
 ships its public files; no alternative SDK build path is maintained.

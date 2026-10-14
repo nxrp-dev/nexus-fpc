@@ -20,8 +20,8 @@ Group RuntimePackageSDK {
         ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile FoundationDeclaration {
-        Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.ppk";
-        Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
+        Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.nxpk";
+        Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk";
     }
     CopyFile StartupSource {
         Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pas";
@@ -34,8 +34,8 @@ Group RuntimePackageSDK {
     FPC SharedRTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
-        Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk"];
-        EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
+        Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk";
         Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpl";
         UnitOutput: "build/forge-bootstrap/package-sdk/work/nxrtl";
         UnitPaths: ["build/forge-bootstrap/package-sdk/work/rtl-units", "build/forge-bootstrap/seed/rtl/inc"];

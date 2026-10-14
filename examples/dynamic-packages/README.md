@@ -78,7 +78,7 @@ upstream and previous Nexus binary artifacts must be rebuilt.
 
 ## Build your own package or application
 
-Use a `.ppk` whose basename matches the package name. List `nxrtl` and other
+Use a `.nxpk` whose basename matches the package name. List `nxrtl` and other
 required packages in its `requires` clause; place contained unit sources beside
 the declaration or supply FPC `UnitPaths`. For example:
 
@@ -102,7 +102,7 @@ Project Build {
             WorkDirectory: "C:/project/build/package";
         }
         FPC Compile (PackageBuild.Compile) {
-            EntryPoint: "C:/project/mypackage.ppk";
+            EntryPoint: "C:/project/mypackage.nxpk";
         }
         PackageBundlePublish Publish (PackageBuild.Publish) {
             Name: "mypackage"; Kind: Package;
@@ -151,7 +151,7 @@ Existing source-tree example/test callers retain a thin PowerShell adapter:
 
 ```powershell
 ./scripts/Invoke-NexusFPCPackageCompile.ps1 -SdkRoot C:\project\sdk -Kind Package `
-    -Source C:\project\mypackage.ppk -OutputDirectory C:\project\distribution
+    -Source C:\project\mypackage.nxpk -OutputDirectory C:\project\distribution
 ```
 
 That adapter writes a composed `build-<name>.nxscript` and captures Forge output

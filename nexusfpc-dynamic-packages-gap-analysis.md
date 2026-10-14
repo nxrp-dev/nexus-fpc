@@ -231,7 +231,7 @@ SDK bootstrap described below have been superseded.
 
 The [SDK build script](scripts/Build-NexusFPCPackageSDK.ps1) builds a dedicated
 experimental `ppcpkg` compiler from FPC 3.2.2, a matching RTL, the checked-in
-`nxrtl.ppk` foundation, and per-image startup/resource adapters into an isolated
+`nxrtl.nxpk` foundation, and per-image startup/resource adapters into an isolated
 SDK. It generates compiler message includes itself and requires no prior ordinary
 bootstrap. The normal compiler and installation outputs remain separate.
 

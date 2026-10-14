@@ -15,9 +15,9 @@ New-Item -ItemType Directory -Force -Path "$lInputs/provider","$lInputs/consumer
 Copy-Item -LiteralPath "$PSScriptRoot/uextendedabi.pas" -Destination "$lInputs/provider"
 Copy-Item -LiteralPath "$PSScriptRoot/textendedabi.pas" -Destination "$lInputs/consumer"
 'package nativeabi; requires nxrtl; contains uextendedabi; end.' |
-    Set-Content -LiteralPath "$lInputs/provider/nativeabi.ppk" -Encoding ASCII
+    Set-Content -LiteralPath "$lInputs/provider/nativeabi.nxpk" -Encoding ASCII
 $lBuild = "$lSource/scripts/Invoke-NexusFPCPackageCompile.ps1"
-& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/provider/nativeabi.ppk" `
+& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/provider/nativeabi.nxpk" `
     -OutputDirectory "$OutputRoot/provider" -Kind Package -SmartLink:$SmartLink
 & $lBuild -SdkRoot $SdkRoot -Source "$lInputs/consumer/textendedabi.pas" `
     -OutputDirectory "$OutputRoot/host" -Kind Console -RequiredPackages nativeabi `

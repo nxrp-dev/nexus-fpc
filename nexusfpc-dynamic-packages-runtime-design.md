@@ -129,13 +129,13 @@ change the test contract or the implementation.
 ## Implemented scope and remaining boundaries
 
 The isolated runtime runner builds its own package-enabled compiler and matching
-RTL. It constructs `nxrtl.ppk` containing FPCPackage and its implicit System,
+RTL. It constructs `nxrtl.nxpk` containing FPCPackage and its implicit System,
 ObjPas, SysUtils dependency closure. It compiles SysInitPkg against that provider
 before linking the EXE. This is the reproducible experimental build recipe;
 ordinary installation/build rules do not publish package-enabled RTL artifacts.
 
 Item 11 adds a reusable [PowerShell SDK workflow](examples/dynamic-packages/README.md).
-It builds the dedicated `ppcpkg` entry point, matching RTL, checked-in `nxrtl.ppk`,
+It builds the dedicated `ppcpkg` entry point, matching RTL, checked-in `nxrtl.nxpk`,
 and per-image startup adapters into a separate directory. Both console and GUI
 hosts use the existing approved startup sequence. Consumers need the distributed
 compiler, startup units and PCP/DLL pairs; the original source/build tree is not

@@ -58,7 +58,7 @@ if ($BuildExamples -or $RunExamples) {
     New-Item -ItemType Directory -Force -Path $examplePackages | Out-Null
     $helper = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
     foreach ($name in @('demotypes','demoleft','demoright')) {
-        & $helper -Forge $Forge -SdkRoot $OutputRoot -Source "$exampleSource\$name\$name.ppk" -Kind Package `
+        & $helper -Forge $Forge -SdkRoot $OutputRoot -Source "$exampleSource\$name\$name.nxpk" -Kind Package `
             -PackagePath $examplePackages -OutputDirectory $examplePackages -SmartLink:$SmartLink
     }
     foreach ($kind in @('Console','GUI')) {

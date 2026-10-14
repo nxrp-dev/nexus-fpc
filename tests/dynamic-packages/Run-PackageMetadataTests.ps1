@@ -153,10 +153,10 @@ Write-TestFile "$lFixtures/consumer.pas" 'program consumer; uses ux; begin if Ma
 Write-TestFile "$lFixtures/consumer.rsp" (($lCommon+@('-Cn','-FPFixture',"-Fp$lFixtures")) -join "`n")
 $null=Invoke-TestProcess source-free-pcp-consumption $lDriver @('consume','-n @consumer.rsp consumer.pas') 0 '' $lFixtures
 Assert-PackageTest (-not(Test-Path "$lFixtures/ux.nxu") -and -not(Test-Path "$lFixtures/ux.o")) 'Standalone artifacts leaked'
-Write-TestFile "$lFixtures/conflict.ppk" 'package conflict; requires Fixture; contains ux; end.'
-$null=Invoke-TestProcess contains-required-unit $lDriver @('consume','-n @consumer.rsp conflict.ppk') 1 'is already contained in package Fixture' $lFixtures
+Write-TestFile "$lFixtures/conflict.nxpk" 'package conflict; requires Fixture; contains ux; end.'
+$null=Invoke-TestProcess contains-required-unit $lDriver @('consume','-n @consumer.rsp conflict.nxpk') 1 'is already contained in package Fixture' $lFixtures
 Write-TestFile "$lFixtures/standardunit.pas" 'unit standardunit; interface const Value=37; implementation end.'
-Write-TestFile "$lFixtures/supported.ppk" 'package supported; {$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif} contains standardunit; end.'
-$null=Invoke-TestProcess standard-compiler-package $lCompiler ($lCommon+@('-Cn',"$lFixtures/supported.ppk"))
+Write-TestFile "$lFixtures/supported.nxpk" 'package supported; {$ifndef FPC_HAS_DYNAMIC_PACKAGES}{$fatal Missing package support}{$endif} contains standardunit; end.'
+$null=Invoke-TestProcess standard-compiler-package $lCompiler ($lCommon+@('-Cn',"$lFixtures/supported.nxpk"))
 Assert-PackageTest ([Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("$lFixtures/supported.nxp"),0,6) -ceq 'NXP004') 'Standard compiler PCP signature'
 Write-Host "PASS package metadata suite ($($script:TestSteps.Count) steps)"
