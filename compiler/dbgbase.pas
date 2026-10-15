@@ -40,45 +40,45 @@ interface
         { collect all defs in one list so we can reset them easily }
         defnumberlist      : TFPObjectList;
         deftowritelist     : TFPObjectList;
-        procedure appenddef(list:TAsmList;def:tdef);
-        procedure beforeappenddef(list:TAsmList;def:tdef);virtual;
-        procedure afterappenddef(list:TAsmList;def:tdef);virtual;
-        procedure appenddef_ord(list:TAsmList;def:torddef);virtual;
-        procedure appenddef_float(list:TAsmList;def:tfloatdef);virtual;
-        procedure appenddef_file(list:TAsmList;def:tfiledef);virtual;
-        procedure appenddef_enum(list:TAsmList;def:tenumdef);virtual;
-        procedure appenddef_array(list:TAsmList;def:tarraydef);virtual;
-        procedure appenddef_record(list:TAsmList;def:trecorddef);virtual;
-        procedure appenddef_object(list:TAsmList;def:tobjectdef);virtual;
-        procedure appenddef_classref(list:TAsmList;def: tclassrefdef);virtual;
-        procedure appenddef_pointer(list:TAsmList;def:tpointerdef);virtual;
-        procedure appenddef_string(list:TAsmList;def:tstringdef);virtual;
-        procedure appenddef_procvar(list:TAsmList;def:tprocvardef);virtual;
-        procedure appenddef_variant(list:TAsmList;def:tvariantdef);virtual;
-        procedure appenddef_set(list:TAsmList;def:tsetdef);virtual;
-        procedure appenddef_formal(list:TAsmList;def:tformaldef);virtual;
-        procedure appenddef_undefined(list:TAsmList;def: tundefineddef);virtual;
-        procedure appendprocdef(list:TAsmList;def:tprocdef);virtual;
+        procedure appenddef(list:TAsmList;def:TDef);
+        procedure beforeappenddef(list:TAsmList;def:TDef);virtual;
+        procedure afterappenddef(list:TAsmList;def:TDef);virtual;
+        procedure appenddef_ord(list:TAsmList;def:TOrdDef);virtual;
+        procedure appenddef_float(list:TAsmList;def:TFloatDef);virtual;
+        procedure appenddef_file(list:TAsmList;def:TFileDef);virtual;
+        procedure appenddef_enum(list:TAsmList;def:TEnumDef);virtual;
+        procedure appenddef_array(list:TAsmList;def:TArrayDef);virtual;
+        procedure appenddef_record(list:TAsmList;def:TRecordDef);virtual;
+        procedure appenddef_object(list:TAsmList;def:TObjectDef);virtual;
+        procedure appenddef_classref(list:TAsmList;def: TClassRefDef);virtual;
+        procedure appenddef_pointer(list:TAsmList;def:TPointerDef);virtual;
+        procedure appenddef_string(list:TAsmList;def:TStringDef);virtual;
+        procedure appenddef_procvar(list:TAsmList;def:TProcVarDef);virtual;
+        procedure appenddef_variant(list:TAsmList;def:TVariantDef);virtual;
+        procedure appenddef_set(list:TAsmList;def:TSetDef);virtual;
+        procedure appenddef_formal(list:TAsmList;def:TFormalDef);virtual;
+        procedure appenddef_undefined(list:TAsmList;def: TUndefinedDef);virtual;
+        procedure appendprocdef(list:TAsmList;def:TProcDef);virtual;
         procedure write_remaining_defs_to_write(list:TAsmList);
         { symbols }
-        procedure appendsym(list:TAsmList;sym:tsym);
-        procedure beforeappendsym(list:TAsmList;sym:tsym);virtual;
-        procedure afterappendsym(list:TAsmList;sym:tsym);virtual;
-        procedure appendsym_staticvar(list:TAsmList;sym:tstaticvarsym);virtual;
-        procedure appendsym_paravar(list:TAsmList;sym:tparavarsym);virtual;
-        procedure appendsym_localvar(list:TAsmList;sym:tlocalvarsym);virtual;
-        procedure appendsym_fieldvar(list:TAsmList;sym:tfieldvarsym);virtual;
-        procedure appendsym_unit(list:TAsmList;sym:tunitsym);virtual;
-        procedure appendsym_const(list:TAsmList;sym:tconstsym);virtual;
-        procedure appendsym_type(list:TAsmList;sym:ttypesym);virtual;
-        procedure appendsym_label(list:TAsmList;sym:tlabelsym);virtual;
-        procedure appendsym_absolute(list:TAsmList;sym:tabsolutevarsym);virtual;
-        procedure appendsym_property(list:TAsmList;sym:tpropertysym);virtual;
+        procedure appendsym(list:TAsmList;sym:TSym);
+        procedure beforeappendsym(list:TAsmList;sym:TSym);virtual;
+        procedure afterappendsym(list:TAsmList;sym:TSym);virtual;
+        procedure appendsym_staticvar(list:TAsmList;sym:TStaticVarSym);virtual;
+        procedure appendsym_paravar(list:TAsmList;sym:TParaVarSym);virtual;
+        procedure appendsym_localvar(list:TAsmList;sym:TLocalVarSym);virtual;
+        procedure appendsym_fieldvar(list:TAsmList;sym:TFieldVarSym);virtual;
+        procedure appendsym_unit(list:TAsmList;sym:TUnitSym);virtual;
+        procedure appendsym_const(list:TAsmList;sym:TConstSym);virtual;
+        procedure appendsym_type(list:TAsmList;sym:TTypeSym);virtual;
+        procedure appendsym_label(list:TAsmList;sym:TLabelSym);virtual;
+        procedure appendsym_absolute(list:TAsmList;sym:TAbsoluteVarSym);virtual;
+        procedure appendsym_property(list:TAsmList;sym:TPropertySym);virtual;
         { symtable }
         procedure write_symtable_parasyms(list:TAsmList;paras: tparalist);
-        procedure write_symtable_syms(list:TAsmList;st:TSymtable);
-        procedure write_symtable_defs(list:TAsmList;st:TSymtable);
-        procedure write_symtable_procdefs(list:TAsmList;st:TSymtable);
+        procedure write_symtable_syms(list:TAsmList;st:TSymTable);
+        procedure write_symtable_defs(list:TAsmList;st:TSymTable);
+        procedure write_symtable_procdefs(list:TAsmList;st:TSymTable);
         procedure reset_unit_type_info;
         procedure write_used_unit_type_info(list:TAsmList;hp:tmodule);
       public
@@ -137,98 +137,98 @@ implementation
           Definition
 **************************************}
 
-    procedure TDebugInfo.appendprocdef(list:TAsmList;def:tprocdef);
+    procedure TDebugInfo.appendprocdef(list:TAsmList;def:TProcDef);
       begin
       end;
 
 
-    procedure TDebugInfo.beforeappenddef(list:TAsmList;def:tdef);
+    procedure TDebugInfo.beforeappenddef(list:TAsmList;def:TDef);
       begin
       end;
 
 
-    procedure TDebugInfo.afterappenddef(list:TAsmList;def:tdef);
+    procedure TDebugInfo.afterappenddef(list:TAsmList;def:TDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_ord(list:TAsmList;def:torddef);
+    procedure TDebugInfo.appenddef_ord(list:TAsmList;def:TOrdDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_float(list:TAsmList;def:tfloatdef);
+    procedure TDebugInfo.appenddef_float(list:TAsmList;def:TFloatDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_formal(list:TAsmList;def: tformaldef);
+    procedure TDebugInfo.appenddef_formal(list:TAsmList;def: TFormalDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_undefined(list:TAsmList;def: tundefineddef);
+    procedure TDebugInfo.appenddef_undefined(list:TAsmList;def: TUndefinedDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_set(list:TAsmList;def: tsetdef);
+    procedure TDebugInfo.appenddef_set(list:TAsmList;def: TSetDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_object(list:TAsmList;def: tobjectdef);
+    procedure TDebugInfo.appenddef_object(list:TAsmList;def: TObjectDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_classref(list:TAsmList;def: tclassrefdef);
+    procedure TDebugInfo.appenddef_classref(list:TAsmList;def: TClassRefDef);
       begin
-        appenddef_pointer(list,tpointerdef(pvmttype));
+        appenddef_pointer(list,TPointerDef(pvmttype));
       end;
 
 
-    procedure TDebugInfo.appenddef_variant(list:TAsmList;def: tvariantdef);
-      begin
-      end;
-
-
-    procedure TDebugInfo.appenddef_enum(list:TAsmList;def:tenumdef);
+    procedure TDebugInfo.appenddef_variant(list:TAsmList;def: TVariantDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_file(list:TAsmList;def: tfiledef);
+    procedure TDebugInfo.appenddef_enum(list:TAsmList;def:TEnumDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_array(list:TAsmList;def:tarraydef);
+    procedure TDebugInfo.appenddef_file(list:TAsmList;def: TFileDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_record(list:TAsmList;def:trecorddef);
+    procedure TDebugInfo.appenddef_array(list:TAsmList;def:TArrayDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_pointer(list:TAsmList;def:tpointerdef);
+    procedure TDebugInfo.appenddef_record(list:TAsmList;def:TRecordDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_string(list:TAsmList;def:tstringdef);
+    procedure TDebugInfo.appenddef_pointer(list:TAsmList;def:TPointerDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef_procvar(list:TAsmList;def:tprocvardef);
+    procedure TDebugInfo.appenddef_string(list:TAsmList;def:TStringDef);
       begin
       end;
 
 
-    procedure TDebugInfo.appenddef(list:TAsmList;def:tdef);
+    procedure TDebugInfo.appenddef_procvar(list:TAsmList;def:TProcVarDef);
+      begin
+      end;
+
+
+    procedure TDebugInfo.appenddef(list:TAsmList;def:TDef);
       begin
         if (def.dbg_state in [dbg_state_writing,dbg_state_written]) then
           exit;
@@ -246,35 +246,35 @@ implementation
           exit;
         case def.typ of
           stringdef :
-            appenddef_string(list,tstringdef(def));
+            appenddef_string(list,TStringDef(def));
           enumdef :
-            appenddef_enum(list,tenumdef(def));
+            appenddef_enum(list,TEnumDef(def));
           orddef :
-            appenddef_ord(list,torddef(def));
+            appenddef_ord(list,TOrdDef(def));
           pointerdef :
-            appenddef_pointer(list,tpointerdef(def));
+            appenddef_pointer(list,TPointerDef(def));
           floatdef :
-            appenddef_float(list,tfloatdef(def));
+            appenddef_float(list,TFloatDef(def));
           filedef :
-            appenddef_file(list,tfiledef(def));
+            appenddef_file(list,TFileDef(def));
           recorddef :
-            appenddef_record(list,trecorddef(def));
+            appenddef_record(list,TRecordDef(def));
           variantdef :
-            appenddef_variant(list,tvariantdef(def));
+            appenddef_variant(list,TVariantDef(def));
           classrefdef :
-            appenddef_classref(list,tclassrefdef(def));
+            appenddef_classref(list,TClassRefDef(def));
           setdef :
-            appenddef_set(list,tsetdef(def));
+            appenddef_set(list,TSetDef(def));
           formaldef :
-            appenddef_formal(list,tformaldef(def));
+            appenddef_formal(list,TFormalDef(def));
           arraydef :
-            appenddef_array(list,tarraydef(def));
+            appenddef_array(list,TArrayDef(def));
           procvardef :
-            appenddef_procvar(list,tprocvardef(def));
+            appenddef_procvar(list,TProcVarDef(def));
           objectdef :
-            appenddef_object(list,tobjectdef(def));
+            appenddef_object(list,TObjectDef(def));
           undefineddef :
-            appenddef_undefined(list,tundefineddef(def));
+            appenddef_undefined(list,TUndefinedDef(def));
           procdef :
             begin
               { procdefs are already written in a separate step. procdef
@@ -294,7 +294,7 @@ implementation
         n       : integer;
         looplist,
         templist: TFPObjectList;
-        def     : tdef;
+        def     : TDef;
       begin
         templist := TFPObjectList.Create(False);
         looplist := deftowritelist;
@@ -303,7 +303,7 @@ implementation
             deftowritelist := templist;
             for n := 0 to looplist.count - 1 do
               begin
-                def := tdef(looplist[n]);
+                def := TDef(looplist[n]);
                 case def.dbg_state of
                   dbg_state_written:
                     continue;
@@ -324,16 +324,16 @@ implementation
                         not be encountered }
                       if def.typ<>objectdef then
                         internalerror(2012072401);
-                      if not assigned(tobjectdef(def).childof) or
-                         (tobjectdef(def).childof.dbg_state=dbg_state_written) then
+                      if not assigned(TObjectDef(def).childof) or
+                         (TObjectDef(def).childof.dbg_state=dbg_state_written) then
                         appenddef(list,def)
-                      else if tobjectdef(def).childof.dbg_state=dbg_state_queued then
+                      else if TObjectDef(def).childof.dbg_state=dbg_state_queued then
                         begin
                           { ensure that the parent is indeed queued }
-                          deftowritelist.add(tobjectdef(def).childof);
+                          deftowritelist.add(TObjectDef(def).childof);
                           deftowritelist.add(def);
                         end
-                      else if tobjectdef(def).childof.dbg_state=dbg_state_used then
+                      else if TObjectDef(def).childof.dbg_state=dbg_state_used then
                         { comes somewhere after the current def in the looplist
                           and will be written at that point, so we will have to
                           wait until the next iteration }
@@ -356,89 +356,89 @@ implementation
           Symbols
 **************************************}
 
-    procedure TDebugInfo.beforeappendsym(list:TAsmList;sym:tsym);
+    procedure TDebugInfo.beforeappendsym(list:TAsmList;sym:TSym);
       begin
       end;
 
 
-    procedure TDebugInfo.afterappendsym(list:TAsmList;sym:tsym);
+    procedure TDebugInfo.afterappendsym(list:TAsmList;sym:TSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_staticvar(list:TAsmList;sym:tstaticvarsym);
+    procedure TDebugInfo.appendsym_staticvar(list:TAsmList;sym:TStaticVarSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_paravar(list:TAsmList;sym: tparavarsym);
+    procedure TDebugInfo.appendsym_paravar(list:TAsmList;sym: TParaVarSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_localvar(list:TAsmList;sym: tlocalvarsym);
+    procedure TDebugInfo.appendsym_localvar(list:TAsmList;sym: TLocalVarSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_fieldvar(list:TAsmList;sym: tfieldvarsym);
+    procedure TDebugInfo.appendsym_fieldvar(list:TAsmList;sym: TFieldVarSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_const(list:TAsmList;sym:tconstsym);
+    procedure TDebugInfo.appendsym_const(list:TAsmList;sym:TConstSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_label(list:TAsmList;sym: tlabelsym);
+    procedure TDebugInfo.appendsym_label(list:TAsmList;sym: TLabelSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_property(list:TAsmList;sym: tpropertysym);
+    procedure TDebugInfo.appendsym_property(list:TAsmList;sym: TPropertySym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_type(list:TAsmList;sym: ttypesym);
+    procedure TDebugInfo.appendsym_type(list:TAsmList;sym: TTypeSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_unit(list:TAsmList;sym: tunitsym);
+    procedure TDebugInfo.appendsym_unit(list:TAsmList;sym: TUnitSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym_absolute(list:TAsmList;sym:tabsolutevarsym);
+    procedure TDebugInfo.appendsym_absolute(list:TAsmList;sym:TAbsoluteVarSym);
       begin
       end;
 
 
-    procedure TDebugInfo.appendsym(list:TAsmList;sym:tsym);
+    procedure TDebugInfo.appendsym(list:TAsmList;sym:TSym);
       begin
         if sym.isdbgwritten then
           exit;
         beforeappendsym(list,sym);
         case sym.typ of
           staticvarsym :
-            if not assigned(tstaticvarsym(sym).fieldvarsym) or
-               not(df_generic in tdef(tstaticvarsym(sym).fieldvarsym.owner.defowner).defoptions) then
-              appendsym_staticvar(list,tstaticvarsym(sym));
+            if not assigned(TStaticVarSym(sym).fieldvarsym) or
+               not(df_generic in TDef(TStaticVarSym(sym).fieldvarsym.owner.defowner).defoptions) then
+              appendsym_staticvar(list,TStaticVarSym(sym));
           unitsym:
-            appendsym_unit(list,tunitsym(sym));
+            appendsym_unit(list,TUnitSym(sym));
           labelsym :
-            appendsym_label(list,tlabelsym(sym));
+            appendsym_label(list,TLabelSym(sym));
           localvarsym :
-            appendsym_localvar(list,tlocalvarsym(sym));
+            appendsym_localvar(list,TLocalVarSym(sym));
           paravarsym :
-            if tparavarsym(sym).localloc.loc<>LOC_VOID then
-              appendsym_paravar(list,tparavarsym(sym));
+            if TParaVarSym(sym).localloc.loc<>LOC_VOID then
+              appendsym_paravar(list,TParaVarSym(sym));
           constsym :
-            appendsym_const(list,tconstsym(sym));
+            appendsym_const(list,TConstSym(sym));
           typesym :
-            appendsym_type(list,ttypesym(sym));
+            appendsym_type(list,TTypeSym(sym));
           enumsym :
             { ignore enum syms, they are written by the owner }
             ;
@@ -449,9 +449,9 @@ implementation
             { ignore proc syms, they are written by procdefs }
             ;
           absolutevarsym :
-            appendsym_absolute(list,tabsolutevarsym(sym));
+            appendsym_absolute(list,TAbsoluteVarSym(sym));
           propertysym :
-            appendsym_property(list,tpropertysym(sym));
+            appendsym_property(list,TPropertySym(sym));
           namespacesym :
             { ignore namespace syms, they are only of internal use }
             ;
@@ -467,9 +467,9 @@ implementation
           Symtables
 **************************************}
 
-    procedure TDebugInfo.write_symtable_defs(list:TAsmList;st:TSymtable);
+    procedure TDebugInfo.write_symtable_defs(list:TAsmList;st:TSymTable);
       var
-        def : tdef;
+        def : TDef;
         i   : longint;
         nonewadded : boolean;
       begin
@@ -485,7 +485,7 @@ implementation
           nonewadded:=true;
           for i:=0 to st.DefList.Count-1 do
             begin
-              def:=tdef(st.DefList[i]);
+              def:=TDef(st.DefList[i]);
               if (def.dbg_state in [dbg_state_used,dbg_state_queued]) then
                 begin
                   appenddef(list,def);
@@ -507,11 +507,11 @@ implementation
     procedure TDebugInfo.write_symtable_parasyms(list:TAsmList;paras: tparalist);
       var
         i   : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         for i:=0 to paras.Count-1 do
           begin
-            sym:=tsym(paras[i]);
+            sym:=TSym(paras[i]);
             if (sym.visibility<>vis_hidden) then
               begin
                 appendsym(list,sym);
@@ -524,10 +524,10 @@ implementation
       end;
 
 
-    procedure TDebugInfo.write_symtable_syms(list:TAsmList;st:TSymtable);
+    procedure TDebugInfo.write_symtable_syms(list:TAsmList;st:TSymTable);
       var
         i   : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         case st.symtabletype of
           staticsymtable :
@@ -539,13 +539,13 @@ implementation
         end;
         for i:=0 to st.SymList.Count-1 do
           begin
-            sym:=tsym(st.SymList[i]);
+            sym:=TSym(st.SymList[i]);
             if (sym.visibility<>vis_hidden) and
                (not sym.isdbgwritten) and
                { avoid all generic symbols }
                not (sp_generic_dummy in sym.symoptions) and
-               not ((sym.typ=typesym) and assigned(ttypesym(sym).typedef) and
-                    (df_generic in ttypesym(sym).typedef.defoptions)) then
+               not ((sym.typ=typesym) and assigned(TTypeSym(sym).typedef) and
+                    (df_generic in TTypeSym(sym).typedef.defoptions)) then
               appendsym(list,sym);
           end;
         case st.symtabletype of
@@ -559,24 +559,24 @@ implementation
       end;
 
 
-    procedure TDebugInfo.write_symtable_procdefs(list:TAsmList;st:TSymtable);
+    procedure TDebugInfo.write_symtable_procdefs(list:TAsmList;st:TSymTable);
       var
         i   : longint;
-        def : tdef;
+        def : TDef;
       begin
         for i:=0 to st.DefList.Count-1 do
           begin
-            def:=tdef(st.DefList[i]);
+            def:=TDef(st.DefList[i]);
             case def.typ of
               procdef :
                 begin
-                  appendprocdef(list,tprocdef(def));
-                  if assigned(tprocdef(def).localst) then
-                    write_symtable_procdefs(list,tprocdef(def).localst);
+                  appendprocdef(list,TProcDef(def));
+                  if assigned(TProcDef(def).localst) then
+                    write_symtable_procdefs(list,TProcDef(def).localst);
                 end;
               objectdef,recorddef :
                 begin
-                  write_symtable_procdefs(list,tabstractrecorddef(def).symtable);
+                  write_symtable_procdefs(list,TAbstractRecordDef(def).symtable);
                 end;
               else
                 ;

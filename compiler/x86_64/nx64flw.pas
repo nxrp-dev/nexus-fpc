@@ -89,7 +89,7 @@ end;
 
 procedure tx64onnode.pass_generate_code;
   var
-    exceptvarsym : tlocalvarsym;
+    exceptvarsym : TLocalVarSym;
   begin
     if (TargetInfo.system<>system_x86_64_win64) then
       begin
@@ -104,7 +104,7 @@ procedure tx64onnode.pass_generate_code;
 
     { Retrieve exception variable }
     if assigned(excepTSymtable) then
-      exceptvarsym:=tlocalvarsym(excepTSymtable.SymList[0])
+      exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
     else
       exceptvarsym:=nil;
 
@@ -212,7 +212,7 @@ function tx64tryfinallynode.dogetcopy: TNode;
         if assigned(finalizepi.code) then
           begin
             n.finalizepi.code:=finalizepi.code.getcopy;
-            n.right:=ccallnode.create(nil,tprocsym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
+            n.right:=ccallnode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
             FirstPass(n.right);
           end;
       end;
@@ -232,7 +232,7 @@ function tx64tryfinallynode.simplify(forinline: boolean): TNode;
           begin
             finalizepi.code:=right;
             foreachnodestatic(right,@copy_parasize,finalizepi);
-            right:=ccallnode.create(nil,tprocsym(finalizepi.procdef.procsym),nil,nil,[],nil);
+            right:=ccallnode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
             FirstPass(right);
             { For implicit frames, no actual code is available at this time,
               it is added later in assembler form. So store the nested procinfo

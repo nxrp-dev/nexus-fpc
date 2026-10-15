@@ -1356,12 +1356,12 @@ unit scandir;
 
       function read_rtti_options: TRTTIVisibilities;
         var
-          sym: ttypesym;
+          sym: TTypeSym;
           value: TNormalSet;
         begin
           result:=[];
           sym:=search_system_type('TVISIBILITYCLASSES');
-          if CurrentScanner.readpreprocset(tsetdef(sym.typedef),value,'RTTI') then
+          if CurrentScanner.readpreprocset(TSetDef(sym.typedef),value,'RTTI') then
             begin
               result:=PRTTIVisibilities(@value)^;
               // if the set was empty we need to read the next id
@@ -1456,19 +1456,19 @@ unit scandir;
 
     function get_peflag_const(const ident:string;error:longint):longint;
       var
-        srsym : tsym;
-        srsymtable : tsymtable;
+        srsym : TSym;
+        srsymtable : TSymTable;
       begin
         result:=0;
         if searchsym(ident,srsym,srsymtable) then
           if (srsym.typ=constsym) and
-              (tconstsym(srsym).consttyp=constord) and
-              is_integer(tconstsym(srsym).constdef) then
-            with tconstsym(srsym).value.valueord do
+              (TConstSym(srsym).consttyp=constord) and
+              is_integer(TConstSym(srsym).constdef) then
+            with TConstSym(srsym).value.valueord do
               if signed then
-                result:=tconstsym(srsym).value.valueord.svalue
+                result:=TConstSym(srsym).value.valueord.svalue
               else
-                result:=tconstsym(srsym).value.valueord.uvalue
+                result:=TConstSym(srsym).value.valueord.uvalue
           else
             message(error)
         else

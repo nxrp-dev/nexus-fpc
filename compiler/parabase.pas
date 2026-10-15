@@ -39,7 +39,7 @@ unit parabase;
        PCGParaLocation = ^TCGParaLocation;
        TCGParaLocation = record
          Next : PCGParaLocation;
-         Def  : tdef;
+         Def  : TDef;
          Size : TCGSize; { size of this location }
          Loc  : TCGLoc;
 
@@ -78,10 +78,10 @@ unit parabase;
        { TCGPara }
 
        TCGPara = object
-          Def       : tdef; { Type of the parameter }
+          Def       : TDef; { Type of the parameter }
           Location  : PCGParalocation;
           IntSize   : tcgint; { size of the total location in bytes }
-          DefDeref  : tderef;
+          DefDeref  : TDeref;
           Alignment : ShortInt; { in case of LLVM, a negative alignment mean: force write the alignment }
           Size      : TCGSize;  { Size of the parameter included in all locations }
           Temporary : boolean;  { created on the fly, no permanent references exist to this somewhere that will cause it to be disposed }
@@ -98,8 +98,8 @@ unit parabase;
 
           procedure   buildderef;
           procedure   deref;
-          procedure   ppuwrite(ppufile:tcompilerppufile);
-          procedure   ppuload(ppufile:tcompilerppufile);
+          procedure   ppuwrite(ppufile:TCompilerPPUFile);
+          procedure   ppuload(ppufile:TCompilerPPUFile);
        end;
        PCGPara = ^TCGPara;
 
@@ -326,11 +326,11 @@ implementation
 
     procedure TCGPara.deref;
       begin
-        def:=tdef(defderef.resolve);
+        def:=TDef(defderef.resolve);
       end;
 
 
-    procedure TCGPara.ppuwrite(ppufile: tcompilerppufile);
+    procedure TCGPara.ppuwrite(ppufile: TCompilerPPUFile);
       var
         hparaloc: PCGParaLocation;
         nparaloc: byte;
@@ -382,7 +382,7 @@ implementation
       end;
 
 
-    procedure TCGPara.ppuload(ppufile: tcompilerppufile);
+    procedure TCGPara.ppuload(ppufile: TCompilerPPUFile);
       var
         hparaloc: PCGParaLocation;
         nparaloc: byte;
@@ -434,8 +434,8 @@ implementation
 
     function ParaNrCompare(Item1, Item2: Pointer): Integer;
       var
-        I1 : tparavarsym absolute Item1;
-        I2 : tparavarsym absolute Item2;
+        I1 : TParaVarSym absolute Item1;
+        I2 : TParaVarSym absolute Item2;
       begin
         Result:=longint(I1.paranr)-longint(I2.paranr);
       end;

@@ -392,7 +392,7 @@ unit cgobj;
           procedure g_concatcopy_unaligned(list : TAsmList;const source,dest : treference;len : tcgint);virtual;
 
           {# Generates overflow checking code for a node }
-          procedure g_overflowcheck(list: TAsmList; const Loc:tlocation; def:tdef); virtual;abstract;
+          procedure g_overflowcheck(list: TAsmList; const Loc:tlocation; def:TDef); virtual;abstract;
           procedure g_overflowCheck_loc(List:TAsmList;const Loc:TLocation;def:TDef;ovloc : tlocation);virtual;
 
           {# Emits instruction for allocating @var(size) bytes at the stackpointer
@@ -433,7 +433,7 @@ unit cgobj;
           }
           procedure g_restore_registers(list:TAsmList);virtual;
 
-          procedure g_adjust_self_value(list:TAsmList;procdef: tprocdef;ioffset: tcgint);virtual;
+          procedure g_adjust_self_value(list:TAsmList;procdef: TProcDef;ioffset: tcgint);virtual;
 
           { initialize the pic/got register }
           procedure g_maybe_got_init(list: TAsmList); virtual;
@@ -561,7 +561,7 @@ unit cgobj;
 
 
         { override to catch 64bit rangechecks }
-        procedure g_rangecheck64(list: TAsmList; const l:tlocation; fromdef,todef: tdef);virtual;abstract;
+        procedure g_rangecheck64(list: TAsmList; const l:tlocation; fromdef,todef: TDef);virtual;abstract;
     end;
 
     { Creates a tregister64 record from 2 32 Bit registers. }
@@ -2510,7 +2510,7 @@ implementation
     procedure tcg.g_concatcopy_move(list : TAsmList;const source,dest : treference;len : tcgint);
       var
         paraloc1,paraloc2,paraloc3 : TCGPara;
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         pd:=search_system_proc('MOVE');
         paraloc1.init;
@@ -2718,19 +2718,19 @@ implementation
       end;
 
 
-    procedure tcg.g_adjust_self_value(list:TAsmList;procdef: tprocdef;ioffset: tcgint);
+    procedure tcg.g_adjust_self_value(list:TAsmList;procdef: TProcDef;ioffset: tcgint);
       var
-        hsym : tsym;
+        hsym : TSym;
         href : treference;
         paraloc : Pcgparalocation;
       begin
         { calculate the parameter info for the procdef }
         procdef.init_paraloc_info(callerside);
-        hsym:=tsym(procdef.parast.Find('self'));
+        hsym:=TSym(procdef.parast.Find('self'));
         if not(assigned(hsym) and
                (hsym.typ=paravarsym)) then
           internalerror(200305251);
-        paraloc:=tparavarsym(hsym).paraloc[callerside].location;
+        paraloc:=TParaVarSym(hsym).paraloc[callerside].location;
         while paraloc<>nil do
           with paraloc^ do
             begin

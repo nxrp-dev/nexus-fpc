@@ -57,7 +57,7 @@ type
 
       OPR_SYMBOL    : (symbol:tasmsymbol;symofs:aint;symseg:boolean;sym_farproc_entry:boolean);
       OPR_REFERENCE : (varsize:asizeint; constoffset: asizeint;ref_farproc_entry:boolean;ref:treference);
-      OPR_LOCAL     : (localvarsize, localconstoffset: asizeint;localsym:tabstractnormalvarsym;localsymofs:aint;localsegment,localindexreg:tregister;localscale:byte;localgetoffset,localforceref:boolean);
+      OPR_LOCAL     : (localvarsize, localconstoffset: asizeint;localsym:TAbstractNormalVarSym;localsymofs:aint;localsegment,localindexreg:tregister;localscale:byte;localgetoffset,localforceref:boolean);
       OPR_REGISTER  : (reg:tregister);
 {$ifdef aarch64}
       OPR_REGSET    : (basereg: tregister; nregs, regsetindex: byte);
@@ -171,12 +171,12 @@ Function EscapeToPascal(const s:ShortString): ShortString;
                      Symbol helper routines
 ---------------------------------------------------------------------}
 
-procedure AsmSearchSym(const s:string;out srsym:tsym;out srsymtable:TSymtable);
+procedure AsmSearchSym(const s:string;out srsym:TSym;out srsymtable:TSymTable);
 Function GetRecordOffsetSize(s:string;out Offset: tcgint;out Size:tcgint; out mangledname: string; needvmtofs: boolean; out hastypecast: boolean):boolean;
 Function SearchType(const hs:string;out size:tcgint): Boolean;
 Function SearchRecordType(const s:string): boolean;
 Function SearchIConstant(const s:string; var l:tcgint): boolean;
-Function AsmRegisterPara(sym: tabstractnormalvarsym): boolean;
+Function AsmRegisterPara(sym: TAbstractNormalVarSym): boolean;
 
 {---------------------------------------------------------------------
                   Instruction generation routines
@@ -707,15 +707,15 @@ end;
 
 Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
 
-  function symtable_has_localvarsyms(st:TSymtable):boolean;
+  function symtable_has_localvarsyms(st:TSymTable):boolean;
   var
-    sym : tsym;
+    sym : TSym;
     i   : longint;
   begin
     result:=false;
     for i:=0 to st.SymList.Count-1 do
       begin
-        sym:=tsym(st.SymList[i]);
+        sym:=TSym(st.SymList[i]);
         if sym.typ=localvarsym then
           begin
             result:=true;
@@ -745,9 +745,9 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
   end;
 
 
-  procedure setvarsize(sym: tabstractvarsym);
+  procedure setvarsize(sym: TAbstractVarSym);
   var
-    harrdef: tarraydef;
+    harrdef: TArrayDef;
     l: asizeint;
   begin
     case sym.vardef.typ of
@@ -761,7 +761,7 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
         begin
           { for arrays try to get the element size, take care of
             multiple indexes }
-          harrdef:=tarraydef(sym.vardef);
+          harrdef:=TArrayDef(sym.vardef);
 
           { calc array size }
           if is_special_array(harrdef) then
@@ -779,7 +779,7 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
 
           while assigned(harrdef.elementdef) and
                 (harrdef.elementdef.typ=arraydef) do
-           harrdef:=tarraydef(harrdef.elementdef);
+           harrdef:=TArrayDef(harrdef.elementdef);
           if not is_packed_array(harrdef) then
             SetSize(harrdef.elesize,false)
            else
@@ -802,18 +802,18 @@ Function TOperand.SetupVar(const s:string;GetOffset : boolean): Boolean;
 { for the NON-constant identifier passed to the routine.    }
 { if not found returns FALSE.                               }
 var
-  sym : tsym;
-  srsymtable : TSymtable;
+  sym : TSym;
+  srsymtable : TSymTable;
 {$ifdef x86}
   segreg,
 {$endif x86}
   indexreg : tregister;
-  plist : ppropaccesslistitem;
+  plist : PPropAccessListItem;
   size_set_from_absolute : boolean = false;
   { offset fixup (in bytes), coming from an absolute declaration with an index
     (e.g. var tralala: word absolute moo[5]; ) }
   absoffset: asizeint=0;
-  harrdef: tarraydef;
+  harrdef: TArrayDef;
   tmpprocinfo: tprocinfo;
 Begin
   SetupVar:=false;
@@ -822,23 +822,23 @@ Begin
    exit;
   if sym.typ=absolutevarsym then
     begin
-      case tabsolutevarsym(sym).abstyp of
+      case TAbsoluteVarSym(sym).abstyp of
         tovar:
           begin
             { Only support simple loads }
-            plist:=tabsolutevarsym(sym).ref.firstsym;
+            plist:=TAbsoluteVarSym(sym).ref.firstsym;
             if assigned(plist) and
                (plist^.sltype=sl_load) then
               begin
-                setvarsize(tabstractvarsym(sym));
+                setvarsize(TAbstractVarSym(sym));
                 size_set_from_absolute:=true;
                 sym:=plist^.sym;
                 { Check if address can be resolved, but only if not an array }
-                if (sym.typ=absolutevarsym) and (tabsolutevarsym(sym).abstyp=toaddr) and not
+                if (sym.typ=absolutevarsym) and (TAbsoluteVarSym(sym).abstyp=toaddr) and not
                   (assigned(plist^.next) and (plist^.next^.sltype=sl_vec)) then
                   begin
                     initref;
-                    opr.ref.offset:=tabsolutevarsym(sym).addroffset;
+                    opr.ref.offset:=TAbsoluteVarSym(sym).addroffset;
                     hasvar:=true;
                     Result:=true;
                     exit;
@@ -848,12 +848,12 @@ Begin
                 while assigned(plist^.next) do
                   begin
                     plist:=plist^.next;
-                    if (plist^.sltype=sl_vec) and (tabstractvarsym(sym).vardef.typ=arraydef) then
+                    if (plist^.sltype=sl_vec) and (TAbstractVarSym(sym).vardef.typ=arraydef) then
                       begin
                         if harrdef=nil then
-                          harrdef:=tarraydef(tabstractvarsym(sym).vardef)
+                          harrdef:=TArrayDef(TAbstractVarSym(sym).vardef)
                         else if harrdef.elementdef.typ=arraydef then
-                          harrdef:=tarraydef(harrdef.elementdef)
+                          harrdef:=TArrayDef(harrdef.elementdef)
                         else
                           begin
                             Message(asmr_e_unsupported_symbol_type);
@@ -887,8 +887,8 @@ Begin
         toaddr:
           begin
             initref;
-            opr.ref.offset:=tabsolutevarsym(sym).addroffset;
-            setvarsize(tabstractvarsym(sym));
+            opr.ref.offset:=TAbsoluteVarSym(sym).addroffset;
+            setvarsize(TAbstractVarSym(sym));
             size_set_from_absolute:=true;
             hasvar:=true;
             Result:=true;
@@ -904,14 +904,14 @@ Begin
   case sym.typ of
     fieldvarsym :
       begin
-        if not tabstractrecordsymtable(sym.owner).is_packed then
-          setconst(absoffset+tfieldvarsym(sym).fieldoffset)
-        else if tfieldvarsym(sym).fieldoffset mod 8 = 0 then
-          setconst(absoffset+tfieldvarsym(sym).fieldoffset div 8)
+        if not TAbstractRecordSymTable(sym.owner).is_packed then
+          setconst(absoffset+TFieldVarSym(sym).fieldoffset)
+        else if TFieldVarSym(sym).fieldoffset mod 8 = 0 then
+          setconst(absoffset+TFieldVarSym(sym).fieldoffset div 8)
         else
           Message(asmr_e_packed_element);
         if not size_set_from_absolute then
-          setvarsize(tabstractvarsym(sym));
+          setvarsize(TAbstractVarSym(sym));
         hasvar:=true;
         SetupVar:=true;
       end;
@@ -921,17 +921,17 @@ Begin
       begin
         { we always assume in asm statements that     }
         { that the variable is valid.                 }
-        tabstractvarsym(sym).varstate:=vs_readwritten;
-        inc(tabstractvarsym(sym).refs);
+        TAbstractVarSym(sym).varstate:=vs_readwritten;
+        inc(TAbstractVarSym(sym).refs);
         { variable can't be placed in a register }
-        tabstractvarsym(sym).varregable:=vr_none;
+        TAbstractVarSym(sym).varregable:=vr_none;
         { and anything may happen with its address }
-        tabstractvarsym(sym).addr_taken:=true;
+        TAbstractVarSym(sym).addr_taken:=true;
         case sym.typ of
           staticvarsym :
             begin
               initref;
-              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tstaticvarsym(sym).mangledname,AT_DATA);
+              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(sym).mangledname,AT_DATA);
               Inc(opr.ref.offset,absoffset);
             end;
           paravarsym,
@@ -977,7 +977,7 @@ Begin
                  (CurrentProcInfo.procdef.localst.symtablelevel>normal_function_level) and
                  symtable_has_localvarsyms(CurrentProcInfo.procdef.localst) then
                 message1(asmr_e_local_para_unreachable,s);
-              opr.localsym:=tabstractnormalvarsym(sym);
+              opr.localsym:=TAbstractNormalVarSym(sym);
               opr.localsymofs:=absoffset;
 {$ifdef x86}
               opr.localsegment:=segreg;
@@ -985,30 +985,30 @@ Begin
               opr.localindexreg:=indexreg;
               opr.localscale:=0;
               opr.localgetoffset:=GetOffset;
-              if paramanager.push_addr_param(tabstractvarsym(sym).varspez,tabstractvarsym(sym).vardef,CurrentProcInfo.procdef.proccalloption) then
+              if paramanager.push_addr_param(TAbstractVarSym(sym).varspez,TAbstractVarSym(sym).vardef,CurrentProcInfo.procdef.proccalloption) then
                 SetSize(sizeof(pint),false);
             end;
           else
             ;
         end;
         if not size_set_from_absolute then
-          setvarsize(tabstractvarsym(sym));
+          setvarsize(TAbstractVarSym(sym));
         hasvar:=true;
         SetupVar:=true;
         Exit;
       end;
     constsym :
       begin
-        if tconstsym(sym).consttyp=constord then
+        if TConstSym(sym).consttyp=constord then
          begin
-           setconst(tconstsym(sym).value.valueord.svalue);
+           setconst(TConstSym(sym).value.valueord.svalue);
            SetupVar:=true;
            Exit;
          end;
       end;
     typesym :
       begin
-        if ttypesym(sym).typedef.typ in [recorddef,objectdef] then
+        if TTypeSym(sym).typedef.typ in [recorddef,objectdef] then
          begin
            setconst(0);
            SetupVar:=TRUE;
@@ -1017,19 +1017,19 @@ Begin
       end;
     procsym :
       begin
-        if Tprocsym(sym).ProcdefList.Count>1 then
+        if TProcSym(sym).ProcdefList.Count>1 then
           Message(asmr_w_calling_overload_func);
         case opr.typ of
           OPR_REFERENCE:
             begin
-              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
+              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
               Inc(opr.ref.offset,absoffset);
 
             end;
           OPR_NONE:
             begin
               opr.typ:=OPR_SYMBOL;
-              opr.symbol:=CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
+              opr.symbol:=CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
 
               opr.symofs:=absoffset;
             end;
@@ -1118,7 +1118,7 @@ end;
 procedure TOperand.InitRefConvertLocal;
 var
   localvarsize,localconstoffset: asizeint;
-  localsym:tabstractnormalvarsym;
+  localsym:TAbstractNormalVarSym;
   localsymofs:aint;
 {$ifdef x86}
   localsegment,
@@ -1146,7 +1146,7 @@ begin
           opr.varsize:=localvarsize;
           opr.constoffset:=localconstoffset;
           opr.ref_farproc_entry:=false;
-          opr.ref.base:=tparavarsym(localsym).paraloc[calleeside].Location^.register;
+          opr.ref.base:=TParaVarSym(localsym).paraloc[calleeside].Location^.register;
           opr.ref.offset:=localsymofs;
 {$ifdef x86}
           opr.ref.segment:=localsegment;
@@ -1276,33 +1276,33 @@ end;
                       Symbol table helper routines
 ****************************************************************************}
 
-procedure AddAbsoluteSymRefs(sym: tabsolutevarsym); forward;
+procedure AddAbsoluteSymRefs(sym: TAbsoluteVarSym); forward;
 
-procedure MaybeAddSymRef(sym: tsym);
+procedure MaybeAddSymRef(sym: TSym);
 begin
   case sym.typ of
      absolutevarsym:
-       AddAbsoluteSymRefs(tabsolutevarsym(sym));
+       AddAbsoluteSymRefs(TAbsoluteVarSym(sym));
      staticvarsym:
-       if not(vo_is_external in tstaticvarsym(sym).varoptions) then
-         cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(sym.mangledname,AT_DATA),tstaticvarsym(sym).vardef,true);
+       if not(vo_is_external in TStaticVarSym(sym).varoptions) then
+         cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(sym.mangledname,AT_DATA),TStaticVarSym(sym).vardef,true);
      procsym:
        begin
          { if it's a pure assembler routine, the definition of the symbol will also
            be in assembler and it can't be removed by the compiler (and if we mark
            it as used anyway, clang will get into trouble) }
-         if not(po_assembler in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions) and
-            not(po_external in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions) then
-           cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION),tprocdef(tprocsym(sym).ProcdefList[0]),true);
+         if not(po_assembler in TProcDef(TProcSym(sym).ProcdefList[0]).procoptions) and
+            not(po_external in TProcDef(TProcSym(sym).ProcdefList[0]).procoptions) then
+           cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(TProcDef(TProcSym(sym).ProcdefList[0]).mangledname,AT_FUNCTION),TProcDef(TProcSym(sym).ProcdefList[0]),true);
        end;
      else
        ;
    end;
 end;
 
-procedure AddAbsoluteSymRefs(sym: tabsolutevarsym);
+procedure AddAbsoluteSymRefs(sym: TAbsoluteVarSym);
 var
-  symlist: ppropaccesslistitem;
+  symlist: PPropAccessListItem;
 begin
   case sym.abstyp of
     toaddr:
@@ -1313,7 +1313,7 @@ begin
       end;
     tovar:
       begin
-        symlist:=tabsolutevarsym(sym).ref.firstsym;
+        symlist:=TAbsoluteVarSym(sym).ref.firstsym;
         repeat
           case symlist^.sltype of
             sl_load:
@@ -1332,7 +1332,7 @@ begin
   end;
 end;
 
-procedure AsmSearchSym(const s:string;out srsym:tsym;out srsymtable:TSymtable);
+procedure AsmSearchSym(const s:string;out srsym:TSym;out srsymtable:TSymTable);
 var
   i : integer;
 begin
@@ -1346,7 +1346,7 @@ begin
          if (srsym.typ=unitsym) and
             (srsym.owner.symtabletype in [staticsymtable,globalsymtable]) and
             srsym.owner.iscurrentunit then
-           searchsym_in_module(tunitsym(srsym).module,Copy(s,i+1,255),srsym,srsymtable)
+           searchsym_in_module(TUnitSym(srsym).module,Copy(s,i+1,255),srsym,srsymtable)
          else
            begin
              srsym:=nil;
@@ -1383,13 +1383,13 @@ begin
   if assigned(srsym) and
      assigned(srsymtable) and
      (srsym.typ=absolutevarsym) and
-     (vo_is_funcret in tabsolutevarsym(srsym).varoptions) and
+     (vo_is_funcret in TAbsoluteVarSym(srsym).varoptions) and
      (srsymtable.symtabletype=localsymtable) and
      assigned(srsymtable.defowner) and
      (srsymtable.defowner.typ=procdef) and
-     (tprocdef(srsymtable.defowner).procsym.name=tabsolutevarsym(srsym).Name) then
+     (TProcDef(srsymtable.defowner).procsym.name=TAbsoluteVarSym(srsym).Name) then
     begin
-      srsym:=tprocdef(srsymtable.defowner).procsym;
+      srsym:=TProcDef(srsymtable.defowner).procsym;
       srsymtable:=srsym.Owner;
     end;
   { llvm can't catch symbol references from inline assembler blocks }
@@ -1400,8 +1400,8 @@ end;
 
 Function SearchType(const hs:string;out size:tcgint): Boolean;
 var
-  srsym : tsym;
-  srsymtable : TSymtable;
+  srsym : TSym;
+  srsymtable : TSymTable;
 begin
   result:=false;
   size:=0;
@@ -1409,7 +1409,7 @@ begin
   if assigned(srsym) and
      (srsym.typ=typesym) then
     begin
-      size:=ttypesym(srsym).typedef.size;
+      size:=TTypeSym(srsym).typedef.size;
       result:=true;
     end;
 end;
@@ -1418,8 +1418,8 @@ end;
 
 Function SearchRecordType(const s:string): boolean;
 var
-  srsym : tsym;
-  srsymtable : TSymtable;
+  srsym : TSym;
+  srsymtable : TSymTable;
 Begin
   SearchRecordType:=false;
 { Check the constants in symtable }
@@ -1429,7 +1429,7 @@ Begin
      case srsym.typ of
        typesym :
          begin
-           if ttypesym(srsym).typedef.typ in [recorddef,objectdef] then
+           if TTypeSym(srsym).typedef.typ in [recorddef,objectdef] then
             begin
               SearchRecordType:=true;
               exit;
@@ -1437,7 +1437,7 @@ Begin
          end;
        fieldvarsym :
          begin
-           if (tfieldvarsym(srsym).vardef.typ in [recorddef,objectdef]) then
+           if (TFieldVarSym(srsym).vardef.typ in [recorddef,objectdef]) then
              begin
                SearchRecordType:=true;
                exit;
@@ -1460,8 +1460,8 @@ Function SearchIConstant(const s:string; var l:tcgint): boolean;
 {  respectively.                                                       }
 {**********************************************************************}
 var
-  srsym : tsym;
-  srsymtable : TSymtable;
+  srsym : TSym;
+  srsymtable : TSymTable;
 Begin
   SearchIConstant:=false;
 { check for TRUE or FALSE reserved words first }
@@ -1484,16 +1484,16 @@ Begin
      case srsym.typ of
        constsym :
          begin
-           if tconstsym(srsym).consttyp=constord then
+           if TConstSym(srsym).consttyp=constord then
             Begin
-              l:=tconstsym(srsym).value.valueord.svalue;
+              l:=TConstSym(srsym).value.valueord.svalue;
               SearchIConstant:=TRUE;
               exit;
             end;
          end;
        enumsym:
          Begin
-           l:=tenumsym(srsym).value;
+           l:=TEnumSym(srsym).value;
            SearchIConstant:=TRUE;
            exit;
          end;
@@ -1504,12 +1504,12 @@ Begin
 end;
 
 
-function AsmRegisterPara(sym: tabstractnormalvarsym): boolean;
+function AsmRegisterPara(sym: TAbstractNormalVarSym): boolean;
 begin
   result:=
     (po_assembler in CurrentProcInfo.procdef.procoptions) and
     (sym.typ=paravarsym) and
-    (tparavarsym(sym).paraloc[calleeside].Location^.Loc=LOC_REGISTER);
+    (TParaVarSym(sym).paraloc[calleeside].Location^.Loc=LOC_REGISTER);
 end;
 
 
@@ -1519,13 +1519,13 @@ Function GetRecordOffsetSize(s:string;out Offset: tcgint;out Size:tcgint; out ma
 { returns FALSE if not found.                                  }
 { used when base is a variable or a typed constant name.       }
 var
-  st   : TSymtable;
-  harrdef : tarraydef;
-  sym  : tsym;
-  srsymtable : TSymtable;
+  st   : TSymTable;
+  harrdef : TArrayDef;
+  sym  : TSym;
+  srsymtable : TSymTable;
   i    : longint;
   base : string;
-  procdef: tprocdef;
+  procdef: TProcDef;
 Begin
   GetRecordOffsetSize:=FALSE;
   Offset:=0;
@@ -1559,9 +1559,9 @@ Begin
          staticvarsym,
          localvarsym,
          paravarsym :
-           st:=Tabstractvarsym(sym).vardef.GetSymtable(gs_record);
+           st:=TAbstractVarSym(sym).vardef.GetSymtable(gs_record);
          typesym :
-           st:=Ttypesym(sym).typedef.GetSymtable(gs_record);
+           st:=TTypeSym(sym).typedef.GetSymtable(gs_record);
          else
            ;
        end
@@ -1577,7 +1577,7 @@ Begin
       i:=255;
      base:=Copy(s,1,i-1);
      delete(s,1,i);
-     sym:=search_struct_member(tabstractrecorddef(st.defowner),base);
+     sym:=search_struct_member(TAbstractRecordDef(st.defowner),base);
      if not assigned(sym) then
       begin
         Message(asmr_e_unknown_field);
@@ -1587,11 +1587,11 @@ Begin
      st:=nil;
      case sym.typ of
        fieldvarsym :
-         with Tfieldvarsym(sym) do
+         with TFieldVarSym(sym) do
            begin
-             if not tabstractrecordsymtable(sym.owner).is_packed then
+             if not TAbstractRecordSymTable(sym.owner).is_packed then
                inc(Offset,fieldoffset)
-             else if tfieldvarsym(sym).fieldoffset mod 8 = 0 then
+             else if TFieldVarSym(sym).fieldoffset mod 8 = 0 then
                inc(Offset,fieldoffset div 8)
              else
                Message(asmr_e_packed_element);
@@ -1601,10 +1601,10 @@ Begin
                  begin
                    { for arrays try to get the element size, take care of
                      multiple indexes }
-                   harrdef:=tarraydef(vardef);
+                   harrdef:=TArrayDef(vardef);
                    while assigned(harrdef.elementdef) and
                          (harrdef.elementdef.typ=arraydef) do
-                    harrdef:=tarraydef(harrdef.elementdef);
+                    harrdef:=TArrayDef(harrdef.elementdef);
                    if not is_packed_array(harrdef) then
                      size:=harrdef.elesize
                    else
@@ -1615,9 +1615,9 @@ Begin
                      end;
                  end;
                recorddef :
-                 st:=trecorddef(vardef).symtable;
+                 st:=TRecordDef(vardef).symtable;
                objectdef :
-                 st:=tobjectdef(vardef).symtable;
+                 st:=TObjectDef(vardef).symtable;
                else
                  ;
              end;
@@ -1625,9 +1625,9 @@ Begin
        procsym:
          begin
            st:=nil;
-           if Tprocsym(sym).ProcdefList.Count>1 then
+           if TProcSym(sym).ProcdefList.Count>1 then
              Message(asmr_w_calling_overload_func);
-           procdef:=tprocdef(tprocsym(sym).ProcdefList[0]);
+           procdef:=TProcDef(TProcSym(sym).ProcdefList[0]);
            if (not needvmtofs) then
              begin
                mangledname:=procdef.mangledname;
@@ -1642,7 +1642,7 @@ Begin
                  begin
                    { size = sizeof(target_system_pointer) }
                    size:=sizeof(pint);
-                   offset:=tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber)
+                   offset:=TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber)
                  end;
              end;
            { if something comes after the procsym, it's invalid assembler syntax }
@@ -1659,7 +1659,7 @@ Begin
        asmsearchsym(s,sym,srsymtable);
        if assigned(sym) and (sym.typ=typesym) then
          begin
-           size:=ttypesym(sym).typedef.size;
+           size:=TTypeSym(sym).typedef.size;
            s:='';
            hastypecast:=true;
          end;
@@ -1670,8 +1670,8 @@ end;
 
 Function SearchLabel(const s: string; var hl: tasmlabel;emit:boolean): boolean;
 var
-  sym : tsym;
-  srsymtable : TSymtable;
+  sym : TSym;
+  srsymtable : TSymTable;
   hs  : string;
 Begin
   hl:=nil;
@@ -1691,25 +1691,25 @@ Begin
              in packages/rtl-objpas/src/rtti.pas unit is set to nonlocal }
             if (srsymtable.symtabletype=globalsymtable) or create_smartlink_library then
 
-              Tlabelsym(sym).nonlocal:=true;
+              TLabelSym(sym).nonlocal:=true;
             if emit then
               include(CurrentProcInfo.flags,pi_has_interproclabel);
           end;
-        if not(assigned(tlabelsym(sym).asmblocklabel)) then
-          if Tlabelsym(sym).nonlocal then
-            CurrentAsmData.getglobaljumplabel(tlabelsym(sym).asmblocklabel)
+        if not(assigned(TLabelSym(sym).asmblocklabel)) then
+          if TLabelSym(sym).nonlocal then
+            CurrentAsmData.getglobaljumplabel(TLabelSym(sym).asmblocklabel)
           else
-            CurrentAsmData.getjumplabel(tlabelsym(sym).asmblocklabel);
-        hl:=tlabelsym(sym).asmblocklabel;
+            CurrentAsmData.getjumplabel(TLabelSym(sym).asmblocklabel);
+        hl:=TLabelSym(sym).asmblocklabel;
         if emit then
           begin
-            if tlabelsym(sym).defined then
+            if TLabelSym(sym).defined then
               Message(sym_e_label_already_defined);
-            tlabelsym(sym).defined:=true;
+            TLabelSym(sym).defined:=true;
             hl.defined_in_asmstatement:=true
           end
         else
-          tlabelsym(sym).used:=true;
+          TLabelSym(sym).used:=true;
         SearchLabel:=true;
       end;
     else

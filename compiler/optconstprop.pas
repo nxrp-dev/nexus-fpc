@@ -144,7 +144,7 @@ unit optconstprop;
                     { the constant can propagate if is is not the counter variable ... }
                     if not(tassignmentnode(arg).left.isequal(actualtargetnode(@tfornode(n).left)^)) and
                     { if it is a temprefn or its address is not taken in case of loadn }
-                      ((tassignmentnode(arg).left.nodetype=temprefn) or not(tabstractvarsym(tloadnode(tassignmentnode(arg).left).symtableentry).addr_taken)) and
+                      ((tassignmentnode(arg).left.nodetype=temprefn) or not(TAbstractVarSym(tloadnode(tassignmentnode(arg).left).symtableentry).addr_taken)) and
                       { and no definition in the loop? }
                       not(DynSetIn(tfornode(n).t2.optinfo^.defsum,tassignmentnode(arg).left.optinfo^.index)) then
                       begin
@@ -261,7 +261,7 @@ unit optconstprop;
             { only propagate simply variables which are regable, this means that their address is not
               taken }
             if (tassignmentnode(arg).left.nodetype=loadn) and
-              (tabstractvarsym(tloadnode(tassignmentnode(arg).left).symtableentry).varregable in [vr_fpureg,vr_mmreg,vr_intreg]) then
+              (TAbstractVarSym(tloadnode(tassignmentnode(arg).left).symtableentry).varregable in [vr_fpureg,vr_mmreg,vr_intreg]) then
               begin
                 result:=replaceBasicAssign(TNode(tcallnode(n).callinitblock), arg, tree_modified);
                 result:=result and replaceBasicAssign(tcallnode(n).left, arg, tree_modified2);
@@ -336,7 +336,7 @@ unit optconstprop;
 
                     if ((((l.nodetype=loadn) and
                          { its address cannot have escaped the current routine }
-                         not(tabstractvarsym(tloadnode(l).symtableentry).addr_taken)) and
+                         not(TAbstractVarSym(tloadnode(l).symtableentry).addr_taken)) and
                          ((
                            (tloadnode(l).symtableentry.typ=localvarsym) and
                            (tloadnode(l).symtable=CurrentProcInfo.procdef.localst)

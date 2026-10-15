@@ -37,8 +37,8 @@ interface
     tinitfinalentry = record
       initfunc : TSymStr;
       finifunc : TSymStr;
-      initpd : tprocdef;
-      finipd : tprocdef;
+      initpd : TProcDef;
+      finipd : TProcDef;
       module : tmodule;
     end;
     pinitfinalentry = ^tinitfinalentry;
@@ -56,11 +56,11 @@ interface
       { generates the code for finalization of static symtable and
         all local (static) typed consts }
       class procedure static_syms_finalize(p: TObject; arg: pointer);
-      class procedure sym_maybe_finalize(var stat: tstatementnode; sym: tsym);
+      class procedure sym_maybe_finalize(var stat: tstatementnode; sym: TSym);
       class procedure append_struct_initfinis(u: tmodule; initfini: tstructinifinipotype; var stat: tstatementnode); virtual;
      public
-      class procedure procdef_block_add_implicit_initialize_nodes(pd: tprocdef; var stat: tstatementnode);
-      class procedure procdef_block_add_implicit_finalize_nodes(pd: tprocdef; var stat: tstatementnode);
+      class procedure procdef_block_add_implicit_initialize_nodes(pd: TProcDef; var stat: tstatementnode);
+      class procedure procdef_block_add_implicit_finalize_nodes(pd: TProcDef; var stat: tstatementnode);
       { returns true if the unit requires an initialisation section (e.g.,
         to force class constructors for the JVM target to initialise global
         records/arrays) }
@@ -74,28 +74,28 @@ interface
         the value to be returned; replacing it with an absolutevarsym that
         redirects to the field in the parentfpstruct doesn't work, as the code
         generator cannot deal with such symbols }
-       class procedure load_parentfpstruct_nested_funcret(ressym: tsym; resdef: tdef; var stat: tstatementnode);
+       class procedure load_parentfpstruct_nested_funcret(ressym: TSym; resdef: TDef; var stat: tstatementnode);
       { called after parsing a routine with the code of the entire routine
         as argument; can be used to modify the node tree. By default handles
         insertion of code for systems that perform the typed constant
         initialisation via the node tree }
-      class function wrap_proc_body(pd: tprocdef; n: TNode): TNode; virtual;
+      class function wrap_proc_body(pd: TProcDef; n: TNode): TNode; virtual;
 
       { trashes a paravarsym or localvarsym if possible (not a managed type,
         "out" in case of parameter, ...) }
-      class procedure maybe_trash_variable(var stat: tstatementnode; p: tabstractnormalvarsym; trashn: TNode); virtual;
+      class procedure maybe_trash_variable(var stat: tstatementnode; p: TAbstractNormalVarSym; trashn: TNode); virtual;
 
-      class function  check_insert_trashing(pd: tprocdef): boolean; virtual;
+      class function  check_insert_trashing(pd: TProcDef): boolean; virtual;
      strict protected
       { called from wrap_proc_body to insert the trashing for the wrapped
         routine's local variables and parameters }
-      class function  maybe_insert_trashing(pd: tprocdef; n: TNode): TNode;
+      class function  maybe_insert_trashing(pd: TProcDef; n: TNode): TNode;
       { callback called for every local variable and parameter by
         maybe_insert_trashing(), calls through to maybe_trash_variable() }
       class procedure maybe_trash_variable_callback(p: TObject; statn: pointer);
       { returns whether a particular sym can be trashed. If not,
         maybe_trash_variable won't do anything }
-      class function  trashable_sym(p: tsym): boolean; virtual;
+      class function  trashable_sym(p: TSym): boolean; virtual;
       { trashing for 1/2/3/4/8-byte sized variables }
       class procedure trash_small(var stat: tstatementnode; trashn: TNode; trashvaln: TNode); virtual;
       { trashing for differently sized variables that those handled by
@@ -103,16 +103,16 @@ interface
       class procedure trash_large(var stat: tstatementnode; trashn, sizen: TNode; trashintval: int64); virtual;
       { insert a single bss sym, called by insert bssdata (factored out
         non-common part for llvm) }
-      class procedure insertbsssym(list: tasmlist; sym: tstaticvarsym; size: asizeint; varalign: shortint; _typ: Tasmsymtype); virtual;
+      class procedure insertbsssym(list: tasmlist; sym: TStaticVarSym; size: asizeint; varalign: shortint; _typ: Tasmsymtype); virtual;
 
       { initialization of iso styled program parameters }
       class procedure initialize_filerecs(p : TObject; statn : pointer);
       { finalization of iso styled program parameters }
       class procedure finalize_filerecs(p : TObject; statn : pointer);
      public
-      class procedure insertbssdata(sym : tstaticvarsym); virtual;
+      class procedure insertbssdata(sym : TStaticVarSym); virtual;
 
-      class function create_main_procdef(const name: string; potype:tproctypeoption; ps: tprocsym):tdef; virtual;
+      class function create_main_procdef(const name: string; potype:TProcTypeOption; ps: TProcSym):TDef; virtual;
       class procedure InsertInitFinalTable(main : tmodule);
      protected
       class procedure InsertRuntimeInits(const prefix:string;list:TLinkedList;unitflag:TModuleFlag); virtual;
@@ -145,13 +145,13 @@ interface
       { register that asm symbol sym with type def has to be considered as "used" even if not
         references to it can be found. If compileronly, this is only for the compiler, otherwise
         also for the linker }
-      class procedure RegisterUsedAsmSym(sym: TAsmSymbol; def: tdef; compileronly: boolean); virtual;
+      class procedure RegisterUsedAsmSym(sym: TAsmSymbol; def: TDef; compileronly: boolean); virtual;
 
-      class procedure RegisterModuleInitFunction(pd: tprocdef); virtual;
-      class procedure RegisterModuleFiniFunction(pd: tprocdef); virtual;
+      class procedure RegisterModuleInitFunction(pd: TProcDef); virtual;
+      class procedure RegisterModuleFiniFunction(pd: TProcDef); virtual;
 
      strict protected
-      class procedure add_main_procdef_paras(pd: tdef); virtual;
+      class procedure add_main_procdef_paras(pd: TDef); virtual;
     end;
     tnodeutilsclass = class of tnodeutils;
 
@@ -175,7 +175,7 @@ implementation
     var
       para : tcallparanode;
       newstatement : tstatementnode;
-      srsym : tsym;
+      srsym : TSym;
     begin
       result:=internalstatements(newstatement);
 
@@ -195,7 +195,7 @@ implementation
                       caddnode.create(unequaln,
                           load_vmt_pointer_node,
                           cnilnode.create)),
-                  ccallnode.create(nil,tprocsym(srsym),srsym.owner,load_self_node,[],nil),
+                  ccallnode.create(nil,TProcSym(srsym),srsym.owner,load_self_node,[],nil),
                   nil));
             end
           else
@@ -208,7 +208,7 @@ implementation
             { parameter 2 : pointer to vmt }
             { parameter 1 : self pointer }
             para:=ccallparanode.create(
-                      cordconstnode.create(tobjectdef(CurrentStructDef).vmt_offset,s32inttype,false),
+                      cordconstnode.create(TObjectDef(CurrentStructDef).vmt_offset,s32inttype,false),
                   ccallparanode.create(
                       ctypeconvnode.create_internal(
                           load_vmt_pointer_node,
@@ -266,7 +266,7 @@ implementation
                     ccallparanode.create(
                         caddrnode.create_internal(
                             crttinode.create(
-                                tstoreddef(p.resultdef),initrtti,rdt_normal)),
+                                TStoredDef(p.resultdef),initrtti,rdt_normal)),
                     ccallparanode.create(
                         caddrnode.create_internal(p),
                     nil)));
@@ -313,7 +313,7 @@ implementation
                   ccallparanode.create(
                       caddrnode.create_internal(
                           crttinode.create(
-                              tstoreddef(p.resultdef),initrtti,rdt_normal)),
+                              TStoredDef(p.resultdef),initrtti,rdt_normal)),
                   ccallparanode.create(
                       caddrnode.create_internal(p),
                   nil)));
@@ -325,40 +325,40 @@ implementation
     var
       hp : TNode;
     begin
-      if ((tsym(p).typ = localvarsym) or
+      if ((TSym(p).typ = localvarsym) or
           { check staticvarsym for record management operators and for objects
             which might contain record with management operators }
-          ((tsym(p).typ = staticvarsym) and
+          ((TSym(p).typ = staticvarsym) and
            (
-             is_record(tabstractvarsym(p).vardef) or
-             is_object(tabstractvarsym(p).vardef)
+             is_record(TAbstractVarSym(p).vardef) or
+             is_object(TAbstractVarSym(p).vardef)
            )
           )
          ) and
          { local (procedure or unit) variables only need initialization if
            they are used }
-         ((tabstractvarsym(p).refs>0) or
+         ((TAbstractVarSym(p).refs>0) or
           { managed return symbols must be inited }
-          ((tsym(p).typ=localvarsym) and (vo_is_funcret in tlocalvarsym(p).varoptions)) or
+          ((TSym(p).typ=localvarsym) and (vo_is_funcret in TLocalVarSym(p).varoptions)) or
           { public managed records with Initialize operator need to be initialized
             even if they aren't referenced in *this* unit }
           (
-            (tsym(p).owner.symtabletype=globalsymtable) and
-            is_record(tabstractvarsym(p).vardef) and
-            (mop_initialize in trecordsymtable(trecorddef(tabstractvarsym(p).vardef).symtable).managementoperators)
+            (TSym(p).owner.symtabletype=globalsymtable) and
+            is_record(TAbstractVarSym(p).vardef) and
+            (mop_initialize in TRecordSymTable(TRecordDef(TAbstractVarSym(p).vardef).symtable).managementoperators)
           )
          ) and
-         not(vo_is_typed_const in tabstractvarsym(p).varoptions) and
-         not(vo_is_external in tabstractvarsym(p).varoptions) and
+         not(vo_is_typed_const in TAbstractVarSym(p).varoptions) and
+         not(vo_is_external in TAbstractVarSym(p).varoptions) and
          (
-           not (vo_is_default_var in tabstractvarsym(p).varoptions) or
-           (tabstractvarsym(p).varspez<>vs_const)
+           not (vo_is_default_var in TAbstractVarSym(p).varoptions) or
+           (TAbstractVarSym(p).varspez<>vs_const)
          ) and
-         (is_managed_type(tabstractvarsym(p).vardef) or
-          ((m_iso in CurrentSettings.modeswitches) and (tabstractvarsym(p).vardef.typ=filedef))
+         (is_managed_type(TAbstractVarSym(p).vardef) or
+          ((m_iso in CurrentSettings.modeswitches) and (TAbstractVarSym(p).vardef.typ=filedef))
          ) then
         begin
-          hp:=cloadnode.create(tsym(p),tsym(p).owner);
+          hp:=cloadnode.create(TSym(p),TSym(p).owner);
           { ensure that a function reference is not converted to a call }
           include(hp.flags,nf_load_procvar);
           addstatement(tstatementnode(arg^),initialize_data_node(hp,false));
@@ -368,58 +368,58 @@ implementation
 
   class procedure tnodeutils.local_varsyms_finalize(p: TObject; arg: pointer);
     begin
-      if (tsym(p).typ=localvarsym) and
-         (tlocalvarsym(p).refs>0) and
-         not(vo_is_typed_const in tlocalvarsym(p).varoptions) and
-         not(vo_is_external in tlocalvarsym(p).varoptions) and
-         not(vo_is_funcret in tlocalvarsym(p).varoptions) and
+      if (TSym(p).typ=localvarsym) and
+         (TLocalVarSym(p).refs>0) and
+         not(vo_is_typed_const in TLocalVarSym(p).varoptions) and
+         not(vo_is_external in TLocalVarSym(p).varoptions) and
+         not(vo_is_funcret in TLocalVarSym(p).varoptions) and
          (
-           not(vo_is_default_var in tabstractvarsym(p).varoptions) or
-           (tabstractvarsym(p).varspez<>vs_const)
+           not(vo_is_default_var in TAbstractVarSym(p).varoptions) or
+           (TAbstractVarSym(p).varspez<>vs_const)
          ) and
-         is_managed_type(tlocalvarsym(p).vardef) then
-        sym_maybe_finalize(tstatementnode(arg^),tsym(p));
+         is_managed_type(TLocalVarSym(p).vardef) then
+        sym_maybe_finalize(tstatementnode(arg^),TSym(p));
     end;
 
 
   class procedure tnodeutils.static_syms_finalize(p: TObject; arg: pointer);
     var
       i : longint;
-      pd : tprocdef;
+      pd : TProcDef;
     begin
-      case tsym(p).typ of
+      case TSym(p).typ of
         staticvarsym :
           begin
             { local (procedure or unit) variables only need finalization
               if they are used
             }
-            if ((tstaticvarsym(p).refs>0) or
+            if ((TStaticVarSym(p).refs>0) or
                 { global (unit) variables always need finalization, since
                   they may also be used in another unit
                 }
-                (tstaticvarsym(p).owner.symtabletype=globalsymtable)) and
+                (TStaticVarSym(p).owner.symtabletype=globalsymtable)) and
                 (
-                  (tstaticvarsym(p).varspez<>vs_const) or
-                  (vo_force_finalize in tstaticvarsym(p).varoptions)
+                  (TStaticVarSym(p).varspez<>vs_const) or
+                  (vo_force_finalize in TStaticVarSym(p).varoptions)
                 ) and
-               not(vo_is_funcret in tstaticvarsym(p).varoptions) and
-               not(vo_is_external in tstaticvarsym(p).varoptions) and
-               is_managed_type(tstaticvarsym(p).vardef) and
+               not(vo_is_funcret in TStaticVarSym(p).varoptions) and
+               not(vo_is_external in TStaticVarSym(p).varoptions) and
+               is_managed_type(TStaticVarSym(p).vardef) and
                not (
-                   assigned(tstaticvarsym(p).fieldvarsym) and
-                   assigned(tstaticvarsym(p).fieldvarsym.owner.defowner) and
-                   (df_generic in tdef(tstaticvarsym(p).fieldvarsym.owner.defowner).defoptions)
+                   assigned(TStaticVarSym(p).fieldvarsym) and
+                   assigned(TStaticVarSym(p).fieldvarsym.owner.defowner) and
+                   (df_generic in TDef(TStaticVarSym(p).fieldvarsym.owner.defowner).defoptions)
                  )
                then
-              sym_maybe_finalize(tstatementnode(arg^),tsym(p));
+              sym_maybe_finalize(tstatementnode(arg^),TSym(p));
           end;
         procsym :
           begin
-            for i:=0 to tprocsym(p).ProcdefList.Count-1 do
+            for i:=0 to TProcSym(p).ProcdefList.Count-1 do
               begin
-                pd:=tprocdef(tprocsym(p).ProcdefList[i]);
+                pd:=TProcDef(TProcSym(p).ProcdefList[i]);
                 if assigned(pd.localst) and
-                   (pd.procsym=tprocsym(p)) and
+                   (pd.procsym=TProcSym(p)) and
                    (pd.localst.symtabletype<>staticsymtable) then
                   pd.localst.SymList.ForEachCall(@static_syms_finalize,arg);
               end;
@@ -430,13 +430,13 @@ implementation
     end;
 
 
-  class procedure tnodeutils.sym_maybe_finalize(var stat: tstatementnode; sym: tsym);
+  class procedure tnodeutils.sym_maybe_finalize(var stat: tstatementnode; sym: TSym);
     var
       hp: TNode;
     begin
       include(CurrentProcInfo.flags,pi_needs_implicit_finally);
       hp:=cloadnode.create(sym,sym.owner);
-      if (sym.typ=staticvarsym) and (vo_force_finalize in tstaticvarsym(sym).varoptions) then
+      if (sym.typ=staticvarsym) and (vo_force_finalize in TStaticVarSym(sym).varoptions) then
         include(tloadnode(hp).loadnodeflags,loadnf_isinternal_ignoreconst);
       { ensure that a function reference interface is not converted to a call }
       include(hp.flags,nf_load_procvar);
@@ -448,14 +448,14 @@ implementation
     var
       StructList: TFPList absolute arg;
     begin
-      if (tdef(p).typ in [objectdef,recorddef]) and
-         not (df_generic in tdef(p).defoptions) then
+      if (TDef(p).typ in [objectdef,recorddef]) and
+         not (df_generic in TDef(p).defoptions) then
         begin
           { first add the class... }
-          if ([oo_has_class_constructor,oo_has_class_destructor] * tabstractrecorddef(p).objectoptions <> []) then
+          if ([oo_has_class_constructor,oo_has_class_destructor] * TAbstractRecordDef(p).objectoptions <> []) then
             StructList.Add(p);
           { ... and then also add all subclasses }
-          tabstractrecorddef(p).symtable.deflist.foreachcall(@AddToStructInits,arg);
+          TAbstractRecordDef(p).symtable.deflist.foreachcall(@AddToStructInits,arg);
         end;
     end;
 
@@ -464,7 +464,7 @@ implementation
     var
       structlist: tfplist;
       i: integer;
-      pd: tprocdef;
+      pd: TProcDef;
     begin
       structlist:=tfplist.Create;
       if assigned(u.globalsymtable) then
@@ -473,12 +473,12 @@ implementation
       { write structures }
       for i:=0 to structlist.Count-1 do
         begin
-          pd:=tabstractrecorddef(structlist[i]).find_procdef_bytype(initfini);
+          pd:=TAbstractRecordDef(structlist[i]).find_procdef_bytype(initfini);
           if assigned(pd) then
             begin
               { class constructors are private -> ignore visibility checks }
               addstatement(stat,
-                ccallnode.create(nil,tprocsym(pd.procsym),pd.owner,nil,[cnf_ignore_visibility],nil))
+                ccallnode.create(nil,TProcSym(pd.procsym),pd.owner,nil,[cnf_ignore_visibility],nil))
             end;
         end;
       structlist.free;
@@ -486,7 +486,7 @@ implementation
     end;
 
 
-  class procedure tnodeutils.procdef_block_add_implicit_initialize_nodes(pd: tprocdef; var stat: tstatementnode);
+  class procedure tnodeutils.procdef_block_add_implicit_initialize_nodes(pd: TProcDef; var stat: tstatementnode);
     begin
       { initialize local data like ansistrings }
       case pd.proctypeoption of
@@ -495,8 +495,8 @@ implementation
              { this is also used for initialization of variables in a
                program which does not have a globalsymtable }
              if assigned(CurrentModule.globalsymtable) then
-               TSymtable(CurrentModule.globalsymtable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
-             TSymtable(CurrentModule.localsymtable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
+               TSymTable(CurrentModule.globalsymtable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
+             TSymTable(CurrentModule.localsymtable).SymList.ForEachCall(@sym_maybe_initialize,@stat);
              { insert class constructors  }
              if mf_classinits in CurrentModule.moduleflags then
                append_struct_initfinis(CurrentModule, potype_class_constructor, stat);
@@ -511,7 +511,7 @@ implementation
     end;
 
 
-  class procedure tnodeutils.procdef_block_add_implicit_finalize_nodes(pd: tprocdef; var stat: tstatementnode);
+  class procedure tnodeutils.procdef_block_add_implicit_finalize_nodes(pd: TProcDef; var stat: tstatementnode);
     begin
       { no finalization in exceptfilters, they /are/ the finalization code }
       if CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter then
@@ -527,8 +527,8 @@ implementation
              { this is also used for initialization of variables in a
                program which does not have a globalsymtable }
              if assigned(CurrentModule.globalsymtable) then
-               TSymtable(CurrentModule.globalsymtable).SymList.ForEachCall(@static_syms_finalize,@stat);
-             TSymtable(CurrentModule.localsymtable).SymList.ForEachCall(@static_syms_finalize,@stat);
+               TSymTable(CurrentModule.globalsymtable).SymList.ForEachCall(@static_syms_finalize,@stat);
+             TSymTable(CurrentModule.localsymtable).SymList.ForEachCall(@static_syms_finalize,@stat);
            end;
          { units/progs have separate code for initialization and finalization }
          potype_unitinit: ;
@@ -556,27 +556,27 @@ implementation
     var
       stat: ^tstatementnode absolute statn;
     begin
-      if (tsym(p).typ=staticvarsym) and
-        (tstaticvarsym(p).vardef.typ=filedef) and
-        (tstaticvarsym(p).isoindex<>0) then
-        case tfiledef(tstaticvarsym(p).vardef).filetyp of
+      if (TSym(p).typ=staticvarsym) and
+        (TStaticVarSym(p).vardef.typ=filedef) and
+        (TStaticVarSym(p).isoindex<>0) then
+        case TFileDef(TStaticVarSym(p).vardef).filetyp of
           ft_text:
             begin
               if cs_transparent_file_names in CurrentSettings.globalswitches then
                 addstatement(stat^,ccallnode.createintern('fpc_textinit_filename_iso',
                   ccallparanode.create(
-                    cstringconstnode.createstr(tstaticvarsym(p).Name),
+                    cstringconstnode.createstr(TStaticVarSym(p).Name),
                   ccallparanode.create(
-                    cordconstnode.create(tstaticvarsym(p).isoindex,uinttype,false),
+                    cordconstnode.create(TStaticVarSym(p).isoindex,uinttype,false),
                   ccallparanode.create(
-                    cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                    cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                   nil)))))
               else
                 addstatement(stat^,ccallnode.createintern('fpc_textinit_iso',
                   ccallparanode.create(
-                    cordconstnode.create(tstaticvarsym(p).isoindex,uinttype,false),
+                    cordconstnode.create(TStaticVarSym(p).isoindex,uinttype,false),
                   ccallparanode.create(
-                    cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                    cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                   nil))));
             end;
           ft_typed:
@@ -584,18 +584,18 @@ implementation
               if cs_transparent_file_names in CurrentSettings.globalswitches then
                 addstatement(stat^,ccallnode.createintern('fpc_typedfile_init_filename_iso',
                   ccallparanode.create(
-                    cstringconstnode.createstr(tstaticvarsym(p).Name),
+                    cstringconstnode.createstr(TStaticVarSym(p).Name),
                   ccallparanode.create(
-                    cordconstnode.create(tstaticvarsym(p).isoindex,uinttype,false),
+                    cordconstnode.create(TStaticVarSym(p).isoindex,uinttype,false),
                   ccallparanode.create(
-                    cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                    cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                   nil)))))
               else
                 addstatement(stat^,ccallnode.createintern('fpc_typedfile_init_iso',
                   ccallparanode.create(
-                    cordconstnode.create(tstaticvarsym(p).isoindex,uinttype,false),
+                    cordconstnode.create(TStaticVarSym(p).isoindex,uinttype,false),
                   ccallparanode.create(
-                    cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                    cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                   nil))));
             end;
           else
@@ -608,22 +608,22 @@ implementation
     var
       stat: ^tstatementnode absolute statn;
     begin
-      if (tsym(p).typ=staticvarsym) and
-        (tstaticvarsym(p).vardef.typ=filedef) and
-        (tstaticvarsym(p).isoindex<>0) then
-        case tfiledef(tstaticvarsym(p).vardef).filetyp of
+      if (TSym(p).typ=staticvarsym) and
+        (TStaticVarSym(p).vardef.typ=filedef) and
+        (TStaticVarSym(p).isoindex<>0) then
+        case TFileDef(TStaticVarSym(p).vardef).filetyp of
           ft_text:
             begin
               addstatement(stat^,ccallnode.createintern('fpc_textclose_iso',
                 ccallparanode.create(
-                  cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                  cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                 nil)));
             end;
           ft_typed:
             begin
               addstatement(stat^,ccallnode.createintern('fpc_typedfile_close_iso',
                 ccallparanode.create(
-                  cloadnode.create(tstaticvarsym(p),tstaticvarsym(p).Owner),
+                  cloadnode.create(TStaticVarSym(p),TStaticVarSym(p).Owner),
                 nil)));
             end;
           else
@@ -632,7 +632,7 @@ implementation
     end;
 
 
-  class procedure tnodeutils.load_parentfpstruct_nested_funcret(ressym: tsym; resdef: tdef; var stat: tstatementnode);
+  class procedure tnodeutils.load_parentfpstruct_nested_funcret(ressym: TSym; resdef: TDef; var stat: tstatementnode);
     var
       src, target: tloadnode;
     begin
@@ -641,13 +641,13 @@ implementation
         funcretsym also to its alias in the parentfpstruct }
       include(target.flags, nf_internal);
       src:=cloadnode.create(ressym, ressym.owner);
-      if tabstractnormalvarsym(ressym).vardef<>resdef then
+      if TAbstractNormalVarSym(ressym).vardef<>resdef then
         begin
           { the resultdef of TP-style object constructors is the object itself,
             but in practice they return a pointer to the object (the self
             pointer) }
           if (resdef.typ<>pointerdef) or
-             (tpointerdef(resdef).pointeddef<>tabstractnormalvarsym(ressym).vardef) then
+             (TPointerDef(resdef).pointeddef<>TAbstractNormalVarSym(ressym).vardef) then
             internalerror(2026072310);
           include(src.loadnodeflags, loadnf_load_addr);
           include(target.loadnodeflags, loadnf_load_addr);
@@ -659,19 +659,19 @@ implementation
     end;
 
 
-  class function tnodeutils.wrap_proc_body(pd: tprocdef; n: TNode): TNode;
+  class function tnodeutils.wrap_proc_body(pd: TProcDef; n: TNode): TNode;
     var
       stat: tstatementnode;
       block: TNode;
-      ressym: tsym;
-      resdef: tdef;
+      ressym: TSym;
+      resdef: TDef;
     begin
       result:=maybe_insert_trashing(pd,n);
 
       { initialise safecall result variable }
       if pd.generate_safecall_wrapper then
         begin
-          ressym:=tsym(pd.localst.Find('safecallresult'));
+          ressym:=TSym(pd.localst.Find('safecallresult'));
           block:=internalstatements(stat);
           addstatement(stat,
             cassignmentnode.create(
@@ -697,7 +697,7 @@ implementation
     end;
 
 
-  class function tnodeutils.maybe_insert_trashing(pd: tprocdef; n: TNode): TNode;
+  class function tnodeutils.maybe_insert_trashing(pd: TProcDef; n: TNode): TNode;
     var
       stat: tstatementnode;
     begin
@@ -711,7 +711,7 @@ implementation
         end;
     end;
 
-  class function tnodeutils.check_insert_trashing(pd: tprocdef): boolean;
+  class function tnodeutils.check_insert_trashing(pd: TProcDef): boolean;
     begin
       result:=
         (localvartrashing<>-1) and
@@ -719,25 +719,25 @@ implementation
     end;
 
 
-  class function tnodeutils.trashable_sym(p: tsym): boolean;
+  class function tnodeutils.trashable_sym(p: TSym): boolean;
     begin
       result:=
         ((p.typ=localvarsym) or
          ((p.typ=paravarsym) and
-          ((vo_is_funcret in tabstractnormalvarsym(p).varoptions) or
-           (tabstractnormalvarsym(p).varspez=vs_out)))) and
-         not (vo_is_default_var in tabstractnormalvarsym(p).varoptions) and
-         (not is_managed_type(tabstractnormalvarsym(p).vardef) or
-          (is_string(tabstractnormalvarsym(p).vardef) and
-           (vo_is_funcret in tabstractnormalvarsym(p).varoptions)
+          ((vo_is_funcret in TAbstractNormalVarSym(p).varoptions) or
+           (TAbstractNormalVarSym(p).varspez=vs_out)))) and
+         not (vo_is_default_var in TAbstractNormalVarSym(p).varoptions) and
+         (not is_managed_type(TAbstractNormalVarSym(p).vardef) or
+          (is_string(TAbstractNormalVarSym(p).vardef) and
+           (vo_is_funcret in TAbstractNormalVarSym(p).varoptions)
           )
          ) and
-         (tabstractnormalvarsym(p).varoptions*[vo_is_parentfp,vo_is_internal]=[]) and
-         not assigned(tabstractnormalvarsym(p).defaultconstsym);
+         (TAbstractNormalVarSym(p).varoptions*[vo_is_parentfp,vo_is_internal]=[]) and
+         not assigned(TAbstractNormalVarSym(p).defaultconstsym);
     end;
 
 
-  class procedure tnodeutils.maybe_trash_variable(var stat: tstatementnode; p: tabstractnormalvarsym; trashn: TNode);
+  class procedure tnodeutils.maybe_trash_variable(var stat: tstatementnode; p: TAbstractNormalVarSym; trashn: TNode);
     var
       size: asizeint;
       trashintval: int64;
@@ -749,7 +749,7 @@ implementation
           if (p.vardef.typ=procvardef) and
              ([m_tp_procvar,m_mac_procvar]*CurrentSettings.modeswitches<>[]) then
             begin
-              if tprocvardef(p.vardef).is_addressonly then
+              if TProcVarDef(p.vardef).is_addressonly then
                 { in tp/delphi mode, you need @procvar to get at the contents of
                   a procvar ... }
                 trashn:=caddrnode.create(trashn)
@@ -765,7 +765,7 @@ implementation
                   stringres:=
                     cstringconstnode.createstr(
                       'uninitialized function result in '+
-                      tprocdef(p.owner.defowner).customprocname([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker])
+                      TProcDef(p.owner.defowner).customprocname([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker])
                     );
                   { prevent attempts to convert the string to the specified
                     code page at compile time, as it may not be available (and
@@ -834,11 +834,11 @@ implementation
     var
       stat: ^tstatementnode absolute statn;
     begin
-      if not(tsym(p).typ in [localvarsym,paravarsym]) then
+      if not(TSym(p).typ in [localvarsym,paravarsym]) then
         exit;
-      if sp_internal in tsym(p).symoptions then
+      if sp_internal in TSym(p).symoptions then
         exit;
-      maybe_trash_variable(stat^,tabstractnormalvarsym(p),cloadnode.create(tsym(p),tsym(p).owner));
+      maybe_trash_variable(stat^,TAbstractNormalVarSym(p),cloadnode.create(TSym(p),TSym(p).owner));
     end;
 
 
@@ -858,7 +858,7 @@ implementation
     end;
 
 
-  class procedure tnodeutils.insertbsssym(list: tasmlist; sym: tstaticvarsym; size: asizeint; varalign: shortint; _typ:Tasmsymtype);
+  class procedure tnodeutils.insertbsssym(list: tasmlist; sym: TStaticVarSym; size: asizeint; varalign: shortint; _typ:Tasmsymtype);
     begin
       if sym.globalasmsym then
         begin
@@ -881,7 +881,7 @@ implementation
     end;
 
 
-  class procedure tnodeutils.insertbssdata(sym: tstaticvarsym);
+  class procedure tnodeutils.insertbssdata(sym: TStaticVarSym);
     var
       l : asizeint;
       varalign,wantedalign,explicitalign : shortint;
@@ -890,16 +890,16 @@ implementation
       sectype : TAsmSectiontype;
       asmtype: TAsmsymtype;
       builder: ttai_typedconstbuilder;
-      descriptor: tdef;
+      descriptor: TDef;
       descriptorbind: TAsmsymbind;
     begin
       storefilepos:=CurrentFilePos;
       CurrentFilePos:=sym.fileinfo;
       l:=sym.getsize;
       wantedalign:=sym.vardef.alignment;
-      if sym.vardef.inheritsfrom(tabstractrecorddef) and
+      if sym.vardef.inheritsfrom(TAbstractRecordDef) and
          (sym.vardef.typ in [recorddef]) then
-        explicitalign:=tabstractrecordsymtable(tabstractrecorddef(sym.vardef).symtable).explicitrecordalignment
+        explicitalign:=TAbstractRecordSymTable(TAbstractRecordDef(sym.vardef).symtable).explicitrecordalignment
       else
         explicitalign:=0;
       if (wantedalign=0) then
@@ -971,16 +971,16 @@ implementation
     end;
 
 
-  class function tnodeutils.create_main_procdef(const name: string; potype: tproctypeoption; ps: tprocsym): tdef;
+  class function tnodeutils.create_main_procdef(const name: string; potype: TProcTypeOption; ps: TProcSym): TDef;
     var
-      pd: tprocdef;
+      pd: TProcDef;
     begin
       if potype<>potype_mainstub then
         pd:=cprocdef.create(main_program_level,true)
       else
         pd:=cprocdef.create(normal_function_level,true);
       { always register the def }
-      pd.register_def;
+      pd.RegisterDef;
       pd.procsym:=ps;
       ps.ProcdefList.Add(pd);
       include(pd.procoptions,po_global);
@@ -1092,18 +1092,18 @@ implementation
       i : longint;
       unitinits : ttai_typedconstbuilder;
       nameinit,namefini : TSymStr;
-      tabledef: tdef;
+      tabledef: TDef;
       entry : pinitfinalentry;
       unitnametcb : ttai_typedconstbuilder;
-      unitnamedef : tdef;
+      unitnamedef : TDef;
       unitnamelbl : tasmlabel;
 
-      procedure add_initfinal_import(symtable:tsymtable);
+      procedure add_initfinal_import(symtable:TSymTable);
         var
           i,j : longint;
           foundinit,foundfini : boolean;
           sym : TSymEntry;
-          pd : tprocdef;
+          pd : TProcDef;
         begin
           if (nameinit='') and (namefini='') then
             exit;
@@ -1114,9 +1114,9 @@ implementation
               sym:=tsymentry(symtable.SymList[i]);
               if sym.typ<>procsym then
                 continue;
-              for j:=0 to tprocsym(sym).procdeflist.count-1 do
+              for j:=0 to TProcSym(sym).procdeflist.count-1 do
                 begin
-                  pd:=tprocdef(tprocsym(sym).procdeflist[j]);
+                  pd:=TProcDef(TProcSym(sym).procdeflist[j]);
                   if (nameinit<>'') and not foundinit and pd.has_alias_name(nameinit) then
                     begin
                       CurrentModule.addimportedsym(sym);
@@ -1254,7 +1254,7 @@ implementation
       count: longint;
       sym: tasmsymbol;
       placeholder: ttypedconstplaceholder;
-      tabledef: tdef;
+      tabledef: TDef;
       ownerbind: TAsmsymbind;
     begin
       if (tf_section_threadvars in TargetInfo.flags) then
@@ -1325,20 +1325,20 @@ implementation
   procedure AddToThreadvarList(p:TObject;arg:pointer);
     var
       tcb: ttai_typedconstbuilder;
-      def: tdef;
+      def: TDef;
       alignment: shortint;
     begin
-      if (tsym(p).typ=staticvarsym) and
-         (vo_is_thread_var in tstaticvarsym(p).varoptions) then
+      if (TSym(p).typ=staticvarsym) and
+         (vo_is_thread_var in TStaticVarSym(p).varoptions) then
        begin
          tcb:=ttai_typedconstbuilder(arg);
-         def:=tstaticvarsym(p).vardef;
+         def:=TStaticVarSym(p).vardef;
          alignment:=def.alignment;
          if (def.typ=recorddef) and
-            (tabstractrecordsymtable(trecorddef(def).symtable).explicitrecordalignment>alignment) then
-           alignment:=tabstractrecordsymtable(trecorddef(def).symtable).explicitrecordalignment;
-         tcb.emit_tai(tai_const.Createname(tstaticvarsym(p).mangledname,0),voidpointertype);
-         tcb.emit_ord_const(tstaticvarsym(p).getsize,sizeuinttype);
+            (TAbstractRecordSymTable(TRecordDef(def).symtable).explicitrecordalignment>alignment) then
+           alignment:=TAbstractRecordSymTable(TRecordDef(def).symtable).explicitrecordalignment;
+         tcb.emit_tai(tai_const.Createname(TStaticVarSym(p).mangledname,0),voidpointertype);
+         tcb.emit_ord_const(TStaticVarSym(p).getsize,sizeuinttype);
          tcb.emit_ord_const(alignment,sizeuinttype);
        end;
     end;
@@ -1349,7 +1349,7 @@ implementation
       s : TSymStr;
       tcb: ttai_typedconstbuilder;
       sym: tasmsymbol;
-      tabledef: trecorddef;
+      tabledef: TRecordDef;
       add : boolean;
     begin
        if (tf_section_threadvars in TargetInfo.flags) then
@@ -1359,11 +1359,11 @@ implementation
        if assigned(CurrentModule.globalsymtable) then
          CurrentModule.globalsymtable.SymList.ForEachCall(@AddToThreadvarList,tcb);
        CurrentModule.localsymtable.SymList.ForEachCall(@AddToThreadvarList,tcb);
-       if trecordsymtable(tabledef.symtable).datasize<>0 then
+       if TRecordSymTable(tabledef.symtable).datasize<>0 then
          { terminator }
          tcb.emit_tai(tai_const.Create_nil_dataptr,voidpointertype);
        tcb.end_anonymous_record;
-       add:=trecordsymtable(tabledef.symtable).datasize<>0;
+       add:=TRecordSymTable(tabledef.symtable).datasize<>0;
        if add then
          begin
            s:=make_mangledname('THREADVARLIST',CurrentModule.localsymtable,'');
@@ -1383,7 +1383,7 @@ implementation
       hp: tused_unit;
       tcb: ttai_typedconstbuilder;
       countplaceholder: ttypedconstplaceholder;
-      tabledef: tdef;
+      tabledef: TDef;
       count: longint;
     begin
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
@@ -1436,7 +1436,7 @@ implementation
       s: string;
       item: TTCInitItem;
       tcb: ttai_typedconstbuilder;
-      rawdatadef: tdef;
+      rawdatadef: TDef;
     begin
       item:=TTCInitItem(list.First);
       if item=nil then
@@ -1451,10 +1451,10 @@ implementation
           begin
             { address to initialize }
             tcb.queue_init(voidpointertype);
-            rawdatadef:=carraydef.getreusable(cansichartype,tstaticvarsym(item.sym).vardef.size);
+            rawdatadef:=carraydef.getreusable(cansichartype,TStaticVarSym(item.sym).vardef.size);
             tcb.queue_vecn(rawdatadef,item.offset);
-            tcb.queue_typeconvn(cpointerdef.getreusable(tstaticvarsym(item.sym).vardef),cpointerdef.getreusable(rawdatadef));
-            tcb.queue_emit_staticvar(tstaticvarsym(item.sym));
+            tcb.queue_typeconvn(cpointerdef.getreusable(TStaticVarSym(item.sym).vardef),cpointerdef.getreusable(rawdatadef));
+            tcb.queue_emit_staticvar(TStaticVarSym(item.sym));
             { value with which to initialize }
             tcb.emit_tai(Tai_const.Create_sym(item.datalabel),item.datadef)
           end;
@@ -1503,7 +1503,7 @@ implementation
       count : longint;
       tcb : ttai_typedconstbuilder;
       countplaceholder : ttypedconstplaceholder;
-      tabledef: tdef;
+      tabledef: TDef;
     begin
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
       count:=0;
@@ -1581,7 +1581,7 @@ implementation
       tcb: ttai_typedconstbuilder;
       s: shortstring;
       sym: tasmsymbol;
-      def: tdef;
+      def: TDef;
     begin
       { Insert Ident of the compiler in the .fpc.version section }
       tcb:=ctai_typedconstbuilder.create([tcalo_no_dead_strip]);
@@ -1657,13 +1657,13 @@ implementation
     end;
 
 
-  class procedure tnodeutils.RegisterUsedAsmSym(sym: TAsmSymbol; def: tdef; compileronly: boolean);
+  class procedure tnodeutils.RegisterUsedAsmSym(sym: TAsmSymbol; def: TDef; compileronly: boolean);
     begin
       { don't do anything by default }
     end;
 
 
-  class procedure tnodeutils.RegisterModuleInitFunction(pd: tprocdef);
+  class procedure tnodeutils.RegisterModuleInitFunction(pd: TProcDef);
     begin
       { setinitname may generate a new section -> don't add to the
         current list, because we assume this remains a text section }
@@ -1671,41 +1671,41 @@ implementation
     end;
 
 
-  class procedure tnodeutils.RegisterModuleFiniFunction(pd: tprocdef);
+  class procedure tnodeutils.RegisterModuleFiniFunction(pd: TProcDef);
     begin
       exportlib.setfininame(CurrentAsmData.AsmLists[al_pure_assembler],pd.mangledname);
     end;
 
 
-   class procedure tnodeutils.add_main_procdef_paras(pd: tdef);
+   class procedure tnodeutils.add_main_procdef_paras(pd: TDef);
      var
-       pvs: tparavarsym;
+       pvs: TParaVarSym;
      begin
        { stub for calling FPC_SYSTEMMAIN from the C main -> add argc/argv/argp }
-       if (tprocdef(pd).proctypeoption=potype_mainstub) and
+       if (TProcDef(pd).proctypeoption=potype_mainstub) and
           (TargetInfo.system in systems_darwin) then
          begin
            pvs:=cparavarsym.create('ARGC',1,vs_const,s32inttype,[]);
-           tprocdef(pd).parast.insertsym(pvs);
+           TProcDef(pd).parast.insertsym(pvs);
            pvs:=cparavarsym.create('ARGV',2,vs_const,cpointerdef.getreusable(charpointertype),[]);
-           tprocdef(pd).parast.insertsym(pvs);
+           TProcDef(pd).parast.insertsym(pvs);
            pvs:=cparavarsym.create('ARGP',3,vs_const,cpointerdef.getreusable(charpointertype),[]);
-           tprocdef(pd).parast.insertsym(pvs);
-           tprocdef(pd).calcparas;
+           TProcDef(pd).parast.insertsym(pvs);
+           TProcDef(pd).calcparas;
          end
        { package stub for Windows is a DLLMain }
-       else if (tprocdef(pd).proctypeoption=potype_pkgstub) and
+       else if (TProcDef(pd).proctypeoption=potype_pkgstub) and
            (TargetInfo.system in systems_all_windows) then
          begin
            pvs:=cparavarsym.create('HINSTANCE',1,vs_const,uinttype,[]);
-           tprocdef(pd).parast.insertsym(pvs);
+           TProcDef(pd).parast.insertsym(pvs);
            pvs:=cparavarsym.create('DLLREASON',2,vs_const,u32inttype,[]);
-           tprocdef(pd).parast.insertsym(pvs);
+           TProcDef(pd).parast.insertsym(pvs);
            pvs:=cparavarsym.create('DLLPARAM',3,vs_const,voidpointertype,[]);
-           tprocdef(pd).parast.insertsym(pvs);
-           tprocdef(pd).returndef:=bool32type;
-           insert_funcret_para(tprocdef(pd));
-           tprocdef(pd).calcparas;
+           TProcDef(pd).parast.insertsym(pvs);
+           TProcDef(pd).returndef:=bool32type;
+           insert_funcret_para(TProcDef(pd));
+           TProcDef(pd).calcparas;
          end;
      end;
 

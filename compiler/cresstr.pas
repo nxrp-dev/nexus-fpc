@@ -49,7 +49,7 @@ uses
         Len   : Longint; // in bytes, not characters
         hash  : Cardinal;
         isUnicode : Boolean;
-        constructor Create(asym:TConstsym);
+        constructor Create(asym:TConstSym);
         destructor  Destroy;override;
         procedure CalcHash;
       end;
@@ -72,7 +72,7 @@ uses
                           TRESOURCESTRING_ITEM
   ---------------------------------------------------------------------}
 
-    constructor TResourceStringItem.Create(asym:TConstsym);
+    constructor TResourceStringItem.Create(asym:TConstSym);
 
     var
       pw : tcompilerwidestring;
@@ -170,12 +170,12 @@ uses
         namelab,
         valuelab : tasmlabofs;
         R : TResourceStringItem;
-        resstrdef: tdef;
+        resstrdef: TDef;
         tcb : ttai_typedconstbuilder;
         enc : TStringEncoding;
         charlen : longint;
-        st : tstringtype;
-        strcharpointertype: tdef;
+        st : TStringType;
+        strcharpointertype: TDef;
 
       begin
         resstrdef:=search_system_type('TRESOURCESTRINGRECORD').typedef;
@@ -210,7 +210,7 @@ uses
               begin
               if R.isUnicode and assigned(R.WValue) then
                 begin
-                  enc:=tstringdef(cunicodestringtype).encoding;
+                  enc:=TStringDef(cunicodestringtype).encoding;
                   valuelab:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_const],R.WValue,enc,False);
                   charlen:=getlengthwidestring(R.WValue);
                   st:=st_unicodestring;
@@ -349,9 +349,9 @@ uses
 
     procedure Tresourcestrings.ConstSym_Register(p:TObject;arg:pointer);
       begin
-        if (tsym(p).typ=constsym) and
-           (tconstsym(p).consttyp in [constresourcestring,constwresourcestring]) then
-          List.Concat(TResourceStringItem.Create(TConstsym(p)));
+        if (TSym(p).typ=constsym) and
+           (TConstSym(p).consttyp in [constresourcestring,constwresourcestring]) then
+          List.Concat(TResourceStringItem.Create(TConstSym(p)));
       end;
 
 

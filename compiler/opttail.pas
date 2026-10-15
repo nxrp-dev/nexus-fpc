@@ -28,7 +28,7 @@ unit opttail;
     uses
       symdef,node;
 
-    procedure do_opttail(var n : TNode;p : tprocdef);
+    procedure do_opttail(var n : TNode;p : TProcDef);
 
   implementation
 
@@ -40,7 +40,7 @@ unit opttail;
       pass_1,
       paramgr;
 
-    procedure do_opttail(var n : TNode;p : tprocdef);
+    procedure do_opttail(var n : TNode;p : TProcDef);
 
       var
         labelnode : tlabelnode;
@@ -234,11 +234,11 @@ unit opttail;
         s : tstatementnode;
         oldnodes : TNode;
         i : longint;
-        labelsym : tlabelsym;
+        labelsym : TLabelSym;
       begin
         { check if the parameters actually would support tail recursion elimination }
         for i:=0 to p.paras.count-1 do
-          with tparavarsym(p.paras[i]) do
+          with TParaVarSym(p.paras[i]) do
             if (varspez=vs_out) or
                { parameters requiring tables are too complicated to handle
                  and slow down things anyways so a tail recursion call
@@ -262,7 +262,7 @@ unit opttail;
 {$ifdef fix_opttail}
         { check if the local parameters should prevent tail recursion elimination }
         for i:=0 to p.localst.count-1 do
-          with tabstractvarsym(p.localst[i]) do
+          with TAbstractVarSym(p.localst[i]) do
             if is_managed_type(vardef) then
               begin
 {$ifdef debug_opttail}

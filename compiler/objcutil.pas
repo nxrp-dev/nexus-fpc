@@ -36,14 +36,14 @@ interface
 
     { Generate a node loading the superclass structure necessary to call
       an inherited Objective-C method.  }
-    function objcsuperclassnode(def: tdef): TNode;
+    function objcsuperclassnode(def: TDef): TNode;
 
     { Encode a method's parameters and result type into the format used by the
       run time (for generating protocol and class rtti).  }
-    function objcencodemethod(pd: tabstractprocdef): ansistring;
+    function objcencodemethod(pd: TAbstractProcDef): ansistring;
 
     { Exports all assembler symbols related to the obj-c class }
-    procedure exportobjcclass(def: tobjectdef);
+    procedure exportobjcclass(def: TObjectDef);
 
     { loads a field of an Objective-C root class (such as ISA) }
     function objcloadbasefield(n: TNode; const fieldname: string): TNode;
@@ -114,9 +114,9 @@ end;
 
     function objcloadbasefield(n: TNode; const fieldname: string): TNode;
       var
-        vs         : tsym;
+        vs         : TSym;
       begin
-        vs:=tsym(tabstractrecorddef(objc_objecttype).symtable.Find(fieldname));
+        vs:=TSym(TAbstractRecordDef(objc_objecttype).symtable.Find(fieldname));
         if not assigned(vs) or
            (vs.typ<>fieldvarsym) then
           internalerror(200911301);
@@ -126,7 +126,7 @@ end;
               ctypeconvnode.create_internal(n,
                 cpointerdef.getreusable(cpointerdef.getreusable(voidpointertype))
               )
-            ),tfieldvarsym(vs).vardef
+            ),TFieldVarSym(vs).vardef
           )
         else
           begin
@@ -136,7 +136,7 @@ end;
       end;
 
 
-    function objcsuperclassnode(def: tdef): TNode;
+    function objcsuperclassnode(def: TDef): TNode;
       var
         para       : tcallparanode;
       begin
@@ -148,7 +148,7 @@ end;
           requires extra node types. Maybe later. }
         if is_objcclassref(def) then
           begin
-            if (oo_is_classhelper in tobjectdef(tclassrefdef(def).pointeddef).objectoptions) then
+            if (oo_is_classhelper in TObjectDef(TClassRefDef(def).pointeddef).objectoptions) then
               begin
                 { in case we are in a category method, we need the metaclass of the
                   superclass class extended by this category (= metaclass of superclass of superclass)
@@ -158,9 +158,9 @@ end;
                 if (TargetInfo.system in systems_objc_nfabi) and
                    (not MacOSXVersionMin.isvalid or
                     (MacOSXVersionMin.relationto(10,6,0)>=0)) then
-                  result:=cloadvmtaddrnode.create(ctypenode.create(tobjectdef(tclassrefdef(def).pointeddef).childof))
+                  result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(TClassRefDef(def).pointeddef).childof))
                 else
-                  result:=cloadvmtaddrnode.create(ctypenode.create(tobjectdef(tclassrefdef(def).pointeddef).childof.childof));
+                  result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(TClassRefDef(def).pointeddef).childof.childof));
                 tloadvmtaddrnode(result).forcall:=true;
                 result:=cloadvmtaddrnode.create(result);
                 TypeCheckPass(result);
@@ -170,16 +170,16 @@ end;
             else
               begin
                 { otherwise we need the superclass of the metaclass }
-                para:=ccallparanode.create(cstringconstnode.createstr(tobjectdef(tclassrefdef(def).pointeddef).objextname^),nil);
+                para:=ccallparanode.create(cstringconstnode.createstr(TObjectDef(TClassRefDef(def).pointeddef).objextname^),nil);
                 result:=ccallnode.createinternfromunit('OBJC','OBJC_GETMETACLASS',para);
               end
           end
         else
           begin
-            if not(oo_is_classhelper in tobjectdef(def).objectoptions) then
+            if not(oo_is_classhelper in TObjectDef(def).objectoptions) then
               result:=cloadvmtaddrnode.create(ctypenode.create(def))
             else
-              result:=cloadvmtaddrnode.create(ctypenode.create(tobjectdef(def).childof));
+              result:=cloadvmtaddrnode.create(ctypenode.create(TObjectDef(def).childof));
             tloadvmtaddrnode(result).forcall:=true;
           end;
 
@@ -200,7 +200,7 @@ end;
                           Type encoding
 *******************************************************************}
 
-    function objcparasize(vs: tparavarsym): ptrint;
+    function objcparasize(vs: TParaVarSym): ptrint;
       begin
         result:=vs.paraloc[callerside].intsize;
         { In Objective-C, all ordinal types are widened to at least the
@@ -211,21 +211,21 @@ end;
       end;
 
 
-    function objcencodemethod(pd: tabstractprocdef): ansistring;
+    function objcencodemethod(pd: TAbstractProcDef): ansistring;
       var
         parasize,
         totalsize: aint;
-        vs: tparavarsym;
+        vs: TParaVarSym;
         i: longint;
         temp: ansistring;
-        founderror: tdef;
+        founderror: TDef;
       begin
         result:='';
         totalsize:=0;
         pd.init_paraloc_info(callerside);
         for i:=0 to pd.paras.count-1 do
           begin
-            vs:=tparavarsym(pd.paras[i]);
+            vs:=TParaVarSym(pd.paras[i]);
             if (vo_is_funcret in vs.varoptions) then
               continue;
             { objcaddencodedtype always assumes a value parameter, so add
@@ -262,17 +262,17 @@ end;
                     ObjC class exporting
 *******************************************************************}
 
-    procedure exportobjcclassfields(objccls: tobjectdef);
+    procedure exportobjcclassfields(objccls: TObjectDef);
     var
       i: longint;
-      vf: tfieldvarsym;
+      vf: TFieldVarSym;
       prefix: string;
     begin
       prefix:=TargetInfo.cprefix+'OBJC_IVAR_$_'+objccls.objextname^+'.';
       for i:=0 to objccls.symtable.SymList.Count-1 do
-        if tsym(objccls.symtable.SymList[i]).typ=fieldvarsym then
+        if TSym(objccls.symtable.SymList[i]).typ=fieldvarsym then
           begin
-            vf:=tfieldvarsym(objccls.symtable.SymList[i]);
+            vf:=TFieldVarSym(objccls.symtable.SymList[i]);
             { TODO: package visibility (private_extern) -- must not be exported
                either}
             if not(vf.visibility in [vis_private,vis_strictprivate]) then
@@ -281,13 +281,13 @@ end;
     end;
 
 
-    procedure exportobjcclass(def: tobjectdef);
+    procedure exportobjcclass(def: TObjectDef);
       begin
         if (TargetInfo.system in systems_objc_nfabi) then
           begin
             { export class and metaclass symbols }
-            exportname(def.rtti_mangledname(objcclassrtti),[]);
-            exportname(def.rtti_mangledname(objcmetartti),[]);
+            exportname(def.RTTIMangledName(objcclassrtti),[]);
+            exportname(def.RTTIMangledName(objcmetartti),[]);
             { export public/protected instance variable offset symbols }
             exportobjcclassfields(def);
           end

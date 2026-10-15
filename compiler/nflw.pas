@@ -65,8 +65,8 @@ interface
           constructor create(tt : TNodeType;l,r,_t1,_t2 : TNode);virtual;
           destructor destroy;override;
           function dogetcopy : TNode;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           procedure insertintolist(l : TNodeList);override;
@@ -124,8 +124,8 @@ interface
 
        texitnode = class(TUnaryNode)
           constructor create(l:TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function pass_typecheck:TNode;override;
           function pass_1 : TNode;override;
           property resultexpr : TNode read left write left;
@@ -186,12 +186,12 @@ interface
                 when performing a dogetcopy of such a load node and assign this
                 labelsym to the copied labelnode (and vice versa)
           }
-          labelsym : tlabelsym;
+          labelsym : TLabelSym;
           labelnode : tlabelnode;
           exceptionblock : integer;
-          constructor create(p : tlabelsym);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor create(p : TLabelSym);virtual;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           procedure resolveppuidx;override;
@@ -206,11 +206,11 @@ interface
           exceptionblock : integer;
           { when copying trees, this points to the newly created copy of a label }
           copiedto : tlabelnode;
-          labsym : tlabelsym;
-          constructor create(l:TNode;alabsym:tlabelsym);virtual;
+          labsym : TLabelSym;
+          constructor create(l:TNode;alabsym:TLabelSym);virtual;
           destructor destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -255,11 +255,11 @@ interface
        ttryfinallynodeclass = class of ttryfinallynode;
 
        tonnode = class(TBinaryNode)
-          excepTSymtable : TSymtable;
-          excepttype : tobjectdef;
+          excepTSymtable : TSymTable;
+          excepttype : TObjectDef;
           constructor create(l,r:TNode);virtual;
           destructor destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
           function pass_typecheck:TNode;override;
           function pass_1 : TNode;override;
           function dogetcopy : TNode;override;
@@ -287,7 +287,7 @@ interface
     function create_array_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
     function create_set_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
     function create_enumerator_for_in_loop(hloopvar, hloopbody, expr: TNode;
-       enumerator_get, enumerator_move: tprocdef; enumerator_current: tpropertysym): TNode;
+       enumerator_get, enumerator_move: TProcDef; enumerator_current: TPropertySym): TNode;
     function create_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
 
     { converts all for nodes in the tree into while nodes,
@@ -329,8 +329,8 @@ implementation
         mainstatement, outerloopbodystatement, innerloopbodystatement, tempstatement: tstatementnode;
         state, mutationcheck, currentamount, innerloopcounter, items, expressiontemp: ttempcreatenode;
         outerloop, innerloop, hp: TNode;
-        itemsarraydef: tarraydef;
-        sym: tsym;
+        itemsarraydef: TArrayDef;
+        sym: TSym;
       begin
         { Objective-C enumerators require Objective-C 2.0 }
         if not(m_objectivec2 in CurrentSettings.modeswitches) then
@@ -458,7 +458,7 @@ implementation
          if not assigned(sym) or
             (sym.typ<>procsym) then
            internalerror(2010061901);
-         hp:=ccallnode.create(hp,tprocsym(sym),sym.owner,ctemprefnode.create(expressiontemp),[],nil);
+         hp:=ccallnode.create(hp,TProcSym(sym),sym.owner,ctemprefnode.create(expressiontemp),[],nil);
          addstatement(outerloopbodystatement,cassignmentnode.create(
            ctemprefnode.create(currentamount),hp));
          { if currentamount = 0, bail out (use copy of hloopvar, because we
@@ -517,7 +517,7 @@ implementation
         if hp.resultdef.typ<>pointerdef then
           internalerror(2010061904);
         inserttypeconv(hp,
-          carraydef.create_from_pointer(tpointerdef(hp.resultdef)));
+          carraydef.create_from_pointer(TPointerDef(hp.resultdef)));
         hp:=cvecnode.create(hp,ctemprefnode.create(innerloopcounter));
         addstatement(innerloopbodystatement,
           cassignmentnode.create(hloopvar,hp));
@@ -586,7 +586,7 @@ implementation
         { add the actual statement to the loop }
         addstatement(loopbodystatement,hloopbody);
 
-        if tstringdef(expr.resultdef).stringtype=st_shortstring then
+        if TStringDef(expr.resultdef).stringtype=st_shortstring then
           begin
             fromn:=genintconstnode(1);
             ton:=cinlinenode.create(in_length_x,false,ctemprefnode.create(stringvar));
@@ -617,7 +617,7 @@ implementation
         loopvar, arrayvar: ttempcreatenode;
         arrayindex, lowbound, highbound, loopbody, forloopnode, expression: TNode;
         is_string: boolean;
-        tmpdef, convertdef: tdef;
+        tmpdef, convertdef: TDef;
         elementcount: aword;
       begin
         expression := expr;
@@ -625,25 +625,25 @@ implementation
         { result is a block of statements }
         result:=internalstatements(loopstatement);
 
-        is_string:=ado_IsConstString in tarraydef(expr.resultdef).arrayoptions;
+        is_string:=ado_IsConstString in TArrayDef(expr.resultdef).arrayoptions;
 
         // if array element type <> loovar type then create a conversion if possible
-        if compare_defs(tarraydef(expression.resultdef).elementdef,hloopvar.resultdef,nothingn)=te_incompatible then
+        if compare_defs(TArrayDef(expression.resultdef).elementdef,hloopvar.resultdef,nothingn)=te_incompatible then
           begin
             tmpdef:=expression.resultdef;
             elementcount:=1;
             while assigned(tmpdef) and (tmpdef.typ=arraydef) and
-                  (tarraydef(tmpdef).arrayoptions = []) and
-                  (compare_defs(tarraydef(tmpdef).elementdef,hloopvar.resultdef,nothingn)=te_incompatible) do
+                  (TArrayDef(tmpdef).arrayoptions = []) and
+                  (compare_defs(TArrayDef(tmpdef).elementdef,hloopvar.resultdef,nothingn)=te_incompatible) do
               begin
-                elementcount:=elementcount*tarraydef(tmpdef).elecount;
-                tmpdef:=tarraydef(tmpdef).elementdef;
+                elementcount:=elementcount*TArrayDef(tmpdef).elecount;
+                tmpdef:=TArrayDef(tmpdef).elementdef;
               end;
-            if assigned(tmpdef) and (tmpdef.typ=arraydef) and (tarraydef(tmpdef).arrayoptions = []) then
+            if assigned(tmpdef) and (tmpdef.typ=arraydef) and (TArrayDef(tmpdef).arrayoptions = []) then
               begin
-                elementcount:=elementcount*tarraydef(tmpdef).elecount;
+                elementcount:=elementcount*TArrayDef(tmpdef).elecount;
                 convertdef:=carraydef.create(0,elementcount-1,s32inttype);
-                tarraydef(convertdef).elementdef:=tarraydef(tmpdef).elementdef;
+                TArrayDef(convertdef).elementdef:=TArrayDef(tmpdef).elementdef;
                 expression:=expr.getcopy;
                 expression:=ctypeconvnode.create_internal(expression,convertdef);
                 TypeCheckPass(expression);
@@ -711,8 +711,8 @@ implementation
 
         { create a loop counter }
         loopvar := ctempcreatenode.create(
-          tarraydef(expression.resultdef).rangedef,
-          tarraydef(expression.resultdef).rangedef.size,
+          TArrayDef(expression.resultdef).rangedef,
+          TArrayDef(expression.resultdef).rangedef.size,
           tt_persistent,true);
 
         addstatement(loopstatement,loopvar);
@@ -753,7 +753,7 @@ implementation
         loopbody, forloopnode: TNode;
       begin
         // first check is set is empty and if it so then skip other processing
-        if not Assigned(tsetdef(expr.resultdef).elementdef) then
+        if not Assigned(TSetDef(expr.resultdef).elementdef) then
           begin
             result:=cnothingnode.create;
             // free unused nodes
@@ -777,8 +777,8 @@ implementation
 
         { create a loop counter }
         loopvar := ctempcreatenode.create(
-          tsetdef(expr.resultdef).elementdef,
-          tsetdef(expr.resultdef).elementdef.size,
+          TSetDef(expr.resultdef).elementdef,
+          TSetDef(expr.resultdef).elementdef.size,
           tt_persistent,true);
 
         addstatement(loopstatement,loopvar);
@@ -813,15 +813,15 @@ implementation
 
 
     function create_enumerator_for_in_loop(hloopvar, hloopbody, expr: TNode;
-       enumerator_get, enumerator_move: tprocdef; enumerator_current: tpropertysym): TNode;
+       enumerator_get, enumerator_move: TProcDef; enumerator_current: TPropertySym): TNode;
       var
         loopstatement, loopbodystatement: tstatementnode;
         enumvar: ttempcreatenode;
         loopbody, whileloopnode,
         enum_get, enum_move, enum_current, enum_get_params: TNode;
-        propaccesslist: tpropaccesslist;
+        propaccesslist: TPropAccessList;
         enumerator_is_class: boolean;
-        enumerator_destructor: tprocdef;
+        enumerator_destructor: TProcDef;
       begin
         { result is a block of statements }
         result:=internalstatements(loopstatement);
@@ -839,12 +839,12 @@ implementation
         if enumerator_get.proctypeoption=potype_operator then
           begin
             enum_get_params:=ccallparanode.create(expr.getcopy,nil);
-            enum_get:=ccallnode.create(enum_get_params, tprocsym(enumerator_get.procsym), nil, nil, [],nil);
+            enum_get:=ccallnode.create(enum_get_params, TProcSym(enumerator_get.procsym), nil, nil, [],nil);
             tcallnode(enum_get).procdefinition:=enumerator_get;
             addsymref(enumerator_get.procsym,enumerator_get);
           end
         else
-          enum_get:=ccallnode.create(nil, tprocsym(enumerator_get.procsym), enumerator_get.owner, expr.getcopy, [],nil);
+          enum_get:=ccallnode.create(nil, TProcSym(enumerator_get.procsym), enumerator_get.owner, expr.getcopy, [],nil);
 
         addstatement(loopstatement,
           cassignmentnode.create(
@@ -867,7 +867,7 @@ implementation
                procsym :
                  begin
                    { generate the method call }
-                   enum_current:=ccallnode.create(nil,tprocsym(propaccesslist.firstsym^.sym),enumerator_current.owner,ctemprefnode.create(enumvar),[],nil);
+                   enum_current:=ccallnode.create(nil,TProcSym(propaccesslist.firstsym^.sym),enumerator_current.owner,ctemprefnode.create(enumvar),[],nil);
                    include(enum_current.flags,nf_isproperty);
                  end
                else
@@ -886,18 +886,18 @@ implementation
         { add the actual statement to the loop }
         addstatement(loopbodystatement,hloopbody);
 
-        enum_move:=ccallnode.create(nil, tprocsym(enumerator_move.procsym), enumerator_move.owner, ctemprefnode.create(enumvar), [],nil);
+        enum_move:=ccallnode.create(nil, TProcSym(enumerator_move.procsym), enumerator_move.owner, ctemprefnode.create(enumvar), [],nil);
         whileloopnode:=cwhilerepeatnode.create(enum_move,loopbody,true,false);
 
         if enumerator_is_class then
           begin
             { insert a try-finally and call the destructor for the enumerator in the finally section }
-            enumerator_destructor:=tobjectdef(enumerator_get.returndef).find_destructor;
+            enumerator_destructor:=TObjectDef(enumerator_get.returndef).find_destructor;
             if assigned(enumerator_destructor) then
               begin
                 whileloopnode:=ctryfinallynode.create(
                   whileloopnode, // try node
-                  ccallnode.create(nil,tprocsym(enumerator_destructor.procsym), // finally node
+                  ccallnode.create(nil,TProcSym(enumerator_destructor.procsym), // finally node
                     enumerator_destructor.procsym.owner,ctemprefnode.create(enumvar),[],nil));
               end;
             { if getenumerator <> nil then do the loop }
@@ -912,11 +912,11 @@ implementation
         if is_object(enumerator_get.returndef) then
           begin
             // call the object destructor too
-            enumerator_destructor:=tobjectdef(enumerator_get.returndef).find_destructor;
+            enumerator_destructor:=TObjectDef(enumerator_get.returndef).find_destructor;
             if assigned(enumerator_destructor) then
               begin
                 addstatement(loopstatement,
-                  ccallnode.create(nil,tprocsym(enumerator_destructor.procsym),
+                  ccallnode.create(nil,TProcSym(enumerator_destructor.procsym),
                     enumerator_destructor.procsym.owner,ctemprefnode.create(enumvar),[],nil));
               end;
           end;
@@ -928,16 +928,16 @@ implementation
 
     function create_for_in_loop(hloopvar, hloopbody, expr: TNode): TNode;
       var
-        pd, movenext: tprocdef;
-        helperdef: tobjectdef;
-        current: tpropertysym;
+        pd, movenext: TProcDef;
+        helperdef: TObjectDef;
+        current: TPropertySym;
         storefilepos: TFilePosInfo;
       begin
         storefilepos:=CurrentFilePos;
         CurrentFilePos:=hloopvar.fileinfo;
         if expr.nodetype=typen then
           begin
-            if (expr.resultdef.typ=enumdef) and tenumdef(expr.resultdef).has_jumps then
+            if (expr.resultdef.typ=enumdef) and TEnumDef(expr.resultdef).has_jumps then
               begin
                 result:=cerrornode.create;
                 hloopvar.free;
@@ -967,7 +967,7 @@ implementation
               end
             { "for x in [] do ..." always results in a never executed loop body }
             else if (is_array_constructor(expr.resultdef) and
-                (tarraydef(expr.resultdef).elementdef=voidtype)) then
+                (TArrayDef(expr.resultdef).elementdef=voidtype)) then
               begin
                 if assigned(hloopbody) then
                   MessagePos(hloopbody.fileinfo,cg_w_unreachable_code);
@@ -983,7 +983,7 @@ implementation
                 if (pd=nil) and (expr.resultdef.typ in [objectdef,recorddef]) then
                   begin
                     { first search using the helper hierarchy }
-                    if search_last_objectpascal_helper(tabstractrecorddef(expr.resultdef),nil,helperdef) then
+                    if search_last_objectpascal_helper(TAbstractRecordDef(expr.resultdef),nil,helperdef) then
                       repeat
                         pd:=helperdef.search_enumerator_get;
                         helperdef:=helperdef.childof;
@@ -991,12 +991,12 @@ implementation
                     { we didn't find an enumerator in a helper, so search in the
                       class/record/object itself }
                     if pd=nil then
-                      pd:=tabstractrecorddef(expr.resultdef).search_enumerator_get;
+                      pd:=TAbstractRecordDef(expr.resultdef).search_enumerator_get;
                   end;
                 if pd<>nil then
                   begin
                     // seach movenext and current symbols
-                    movenext:=tabstractrecorddef(pd.returndef).search_enumerator_move;
+                    movenext:=TAbstractRecordDef(pd.returndef).search_enumerator_move;
                     if movenext = nil then
                       begin
                         result:=cerrornode.create;
@@ -1008,7 +1008,7 @@ implementation
                       end
                     else
                       begin
-                        current:=tpropertysym(tabstractrecorddef(pd.returndef).search_enumerator_current);
+                        current:=TPropertySym(TAbstractRecordDef(pd.returndef).search_enumerator_current);
                         if current = nil then
                           begin
                             result:=cerrornode.create;
@@ -1105,7 +1105,7 @@ implementation
       end;
 
 
-    constructor tloopnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tloopnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         t1:=ppuloadnode(ppufile);
@@ -1114,7 +1114,7 @@ implementation
       end;
 
 
-    procedure tloopnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tloopnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,t1);
@@ -1663,7 +1663,7 @@ implementation
       var
         thenstmnt, elsestmnt: TNode;
         in_nr: tinlinenumber;
-        paratype: tdef;
+        paratype: TDef;
 {$endif defined(HAS_MINMAX_INTRINSICS)}
       begin
         result:=nil;
@@ -1932,7 +1932,7 @@ implementation
     function tfornode.pass_typecheck:TNode;
       var
         res : TNode;
-        rangedef: tdef;
+        rangedef: TDef;
       begin
          result:=nil;
          resultdef:=voidtype;
@@ -2050,13 +2050,13 @@ implementation
         case left.resultdef.typ of
           enumdef:
             begin
-              countermin:=tenumdef(left.resultdef).min;
-              countermax:=tenumdef(left.resultdef).max;
+              countermin:=TEnumDef(left.resultdef).min;
+              countermax:=TEnumDef(left.resultdef).max;
             end;
           orddef:
             begin
-              countermin:=torddef(left.resultdef).low;
-              countermax:=torddef(left.resultdef).high;
+              countermin:=TOrdDef(left.resultdef).low;
+              countermax:=TOrdDef(left.resultdef).high;
             end;
           else
             Internalerror(2020012601);
@@ -2250,13 +2250,13 @@ implementation
       end;
 
 
-    constructor texitnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor texitnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
       end;
 
 
-    procedure texitnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure texitnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
       end;
@@ -2265,8 +2265,8 @@ implementation
     function texitnode.pass_typecheck:TNode;
       var
         newstatement : tstatementnode;
-        ressym: tsym;
-        resdef: tdef;
+        ressym: TSym;
+        resdef: TDef;
       begin
         result:=nil;
         newstatement:=nil;
@@ -2355,7 +2355,7 @@ implementation
                              TGOTONODE
 *****************************************************************************}
 
-    constructor tgotonode.create(p : tlabelsym);
+    constructor tgotonode.create(p : TLabelSym);
       begin
         inherited create(goton);
         exceptionblock:=current_exceptblock;
@@ -2364,7 +2364,7 @@ implementation
       end;
 
 
-    constructor tgotonode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tgotonode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         labelnodeidx:=ppufile.getlongint;
@@ -2372,7 +2372,7 @@ implementation
       end;
 
 
-    procedure tgotonode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tgotonode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         labelnodeidx:=labelnode.ppuidx;
@@ -2520,7 +2520,7 @@ implementation
                              TLABELNODE
 *****************************************************************************}
 
-    constructor tlabelnode.create(l:TNode;alabsym:tlabelsym);
+    constructor tlabelnode.create(l:TNode;alabsym:TLabelSym);
       begin
         inherited create(labeln);
         exceptionblock:=current_exceptblock;
@@ -2530,7 +2530,7 @@ implementation
       end;
 
 
-    constructor tlabelnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tlabelnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         exceptionblock:=ppufile.getbyte;
@@ -2555,7 +2555,7 @@ implementation
       end;
 
 
-    procedure tlabelnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tlabelnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(exceptionblock);
@@ -2890,7 +2890,7 @@ implementation
       end;
 
 
-    constructor tonnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tonnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         excepTSymtable:=nil;

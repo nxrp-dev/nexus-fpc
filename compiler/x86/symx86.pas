@@ -30,31 +30,31 @@ uses
   symconst, symtype,symdef,symsym;
 
 type
-  tx86pointerdef = class(tpointerdef)
+  tx86pointerdef = class(TPointerDef)
    protected
-    procedure ppuload_platform(ppufile: tcompilerppufile); override;
-    procedure ppuwrite_platform(ppufile: tcompilerppufile); override;
+    procedure PPULoadPlatform(ppufile: TCompilerPPUFile); override;
+    procedure PPUWritePlatform(ppufile: TCompilerPPUFile); override;
    public
-    x86pointertyp : tx86pointertyp;
-    constructor create(def: tdef); override;
-    class function getreusable(def: tdef): tpointerdef; override;
-    class function getreusablex86(def: tdef; x86typ: tx86pointertyp): tpointerdef;
-    constructor createx86(def:tdef;x86typ:tx86pointertyp);virtual;
+    x86pointertyp : TX86PointerTyp;
+    constructor create(def: TDef); override;
+    class function getreusable(def: TDef): TPointerDef; override;
+    class function getreusablex86(def: TDef; x86typ: TX86PointerTyp): TPointerDef;
+    constructor createx86(def:TDef;x86typ:TX86PointerTyp);virtual;
     function size: asizeint; override;
-    function getcopy: tstoreddef; override;
+    function getcopy: TStoredDef; override;
     function GetTypeName: string; override;
-    class function default_x86_data_pointer_type: tx86pointertyp; virtual;
-    function compatible_with_pointerdef_size(ptr: tpointerdef): boolean; override;
+    class function default_x86_data_pointer_type: TX86PointerTyp; virtual;
+    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
   end;
   tx86pointerdefclass = class of tx86pointerdef;
 
-  tx86procvardef = class(tprocvardef)
-    function compatible_with_pointerdef_size(ptr: tpointerdef): boolean; override;
+  tx86procvardef = class(TProcVarDef)
+    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
   end;
   tx86procvardefclass = class of tx86procvardef;
 
-  tx86procdef = class(tprocdef)
-    function compatible_with_pointerdef_size(ptr: tpointerdef): boolean; override;
+  tx86procdef = class(TProcDef)
+    function compatible_with_pointerdef_size(ptr: TPointerDef): boolean; override;
   end;
   tx86procdefclass = class of tx86procdef;
 
@@ -70,42 +70,42 @@ implementation
                              tx86pointerdef
 ****************************************************************************}
 
-  procedure tx86pointerdef.ppuload_platform(ppufile: tcompilerppufile);
+  procedure tx86pointerdef.PPULoadPlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
-      x86pointertyp:=tx86pointertyp(ppufile.getbyte);
+      x86pointertyp:=TX86PointerTyp(ppufile.getbyte);
     end;
 
 
-  procedure tx86pointerdef.ppuwrite_platform(ppufile: tcompilerppufile);
+  procedure tx86pointerdef.PPUWritePlatform(ppufile: TCompilerPPUFile);
     begin
       inherited;
       ppufile.putbyte(byte(x86pointertyp));
     end;
 
 
-  constructor tx86pointerdef.create(def: tdef);
+  constructor tx86pointerdef.create(def: TDef);
     begin
       inherited create(def);
       x86pointertyp := default_x86_data_pointer_type;
     end;
 
 
-  class function tx86pointerdef.getreusable(def: tdef): tpointerdef;
+  class function tx86pointerdef.getreusable(def: TDef): TPointerDef;
     begin
       result:=getreusablex86(def,default_x86_data_pointer_type);
     end;
 
 
-  class function tx86pointerdef.getreusablex86(def: tdef; x86typ: tx86pointertyp): tpointerdef;
+  class function tx86pointerdef.getreusablex86(def: TDef; x86typ: TX86PointerTyp): TPointerDef;
     type
       tx86PtrDefKey = packed record
-        def: tdef;
-        x86typ:tx86pointertyp;
+        def: TDef;
+        x86typ:TX86PointerTyp;
       end;
     var
       res: PHashSetItem;
-      oldsymtablestack: tsymtablestack;
+      oldsymtablestack: TSymTableStack;
       key: tx86PtrDefKey;
     begin
       if not assigned(CurrentModule) then
@@ -125,15 +125,15 @@ implementation
             that can have side-effects (e.g., it removes helpers) }
           symtablestack:=nil;
           result:=tx86pointerdefclass(cpointerdef).createx86(def,x86typ);
-          setup_reusable_def(def,result,res,oldsymtablestack);
+          SetupReusableDef(def,result,res,oldsymtablestack);
           { res^.Data may still be nil -> don't overwrite result }
           exit;
         end;
-      result:=tpointerdef(res^.Data);
+      result:=TPointerDef(res^.Data);
     end;
 
 
-  constructor tx86pointerdef.createx86(def: tdef; x86typ: tx86pointertyp);
+  constructor tx86pointerdef.createx86(def: TDef; x86typ: TX86PointerTyp);
     begin
       inherited create(def);
       x86pointertyp:=x86typ;
@@ -149,7 +149,7 @@ implementation
     end;
 
 
-  function tx86pointerdef.getcopy: tstoreddef;
+  function tx86pointerdef.getcopy: TStoredDef;
     begin
       result:=inherited;
       tx86pointerdef(result).x86pointertyp:=x86pointertyp;
@@ -185,13 +185,13 @@ implementation
     end;
 
 
-  class function tx86pointerdef.default_x86_data_pointer_type: tx86pointertyp;
+  class function tx86pointerdef.default_x86_data_pointer_type: TX86PointerTyp;
     begin
       result:=x86pt_near;
     end;
 
 
-  function tx86pointerdef.compatible_with_pointerdef_size(ptr: tpointerdef): boolean;
+  function tx86pointerdef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
     begin
       result:=
         inherited and
@@ -204,7 +204,7 @@ implementation
 ****************************************************************************}
 
 
-  function tx86procvardef.compatible_with_pointerdef_size(ptr: tpointerdef): boolean;
+  function tx86procvardef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
     begin
       result:=
         inherited and
@@ -217,7 +217,7 @@ implementation
   ****************************************************************************}
 
 
-    function tx86procdef.compatible_with_pointerdef_size(ptr: tpointerdef): boolean;
+    function tx86procdef.compatible_with_pointerdef_size(ptr: TPointerDef): boolean;
       begin
         result:=
           inherited and

@@ -61,7 +61,7 @@ unit procinfo;
           { pointer to parent in nested procedures }
           parent : tprocinfo;
           { the definition of the routine itself }
-          procdef : tprocdef;
+          procdef : TProcDef;
           { nested implicit finalization procedure, used for platform-specific
             exception handling }
           finalize_procinfo : tprocinfo;
@@ -114,7 +114,7 @@ unit procinfo;
           CurrExitLabel : tasmlabel;
 
           { label for nested exits }
-          nestedexitlabel : tlabelsym;
+          nestedexitlabel : TLabelSym;
 
           { The code for the routine itself, excluding entry and
             exit code. This is a linked list of tai classes.
@@ -186,16 +186,16 @@ unit procinfo;
           function has_nestedprocs: boolean;
           function get_normal_proc: tprocinfo;
           procedure addnestedproc(child: tprocinfo);
-          function find_nestedproc_by_pd(pd:tprocdef):tprocinfo;
+          function find_nestedproc_by_pd(pd:TProcDef):tprocinfo;
 
-          procedure add_local_ref_sym(sym:tsym);
+          procedure add_local_ref_sym(sym:TSym);
           procedure export_local_ref_syms;
-          procedure add_local_ref_def(def:tdef);
+          procedure add_local_ref_def(def:TDef);
           procedure export_local_ref_defs;
 
-          procedure add_captured_sym(sym:tsym;def:tdef;const fileinfo:TFilePosInfo);
+          procedure add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
 
-          function create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: TNode): tprocinfo;
+          function create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): tprocinfo;
 
           { Add to parent's list of nested procedures even if parent is a 'main' procedure }
           procedure force_nested;
@@ -321,7 +321,7 @@ implementation
         nestedprocs.insert(child);
       end;
 
-    function tprocinfo.find_nestedproc_by_pd(pd:tprocdef):tprocinfo;
+    function tprocinfo.find_nestedproc_by_pd(pd:TProcDef):tprocinfo;
       var
         pi : tprocinfo;
       begin
@@ -362,7 +362,7 @@ implementation
           result:=result.parent;
       end;
 
-    procedure tprocinfo.add_local_ref_sym(sym:tsym);
+    procedure tprocinfo.add_local_ref_sym(sym:TSym);
       begin
         if not assigned(localrefsyms) then
           localrefsyms:=tfpobjectlist.create(false);
@@ -373,20 +373,20 @@ implementation
     procedure tprocinfo.export_local_ref_syms;
       var
         i : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         if not assigned(localrefsyms) then
           exit;
         for i:=0 to localrefsyms.count-1 do
           begin
-            sym:=tsym(localrefsyms[i]);
+            sym:=TSym(localrefsyms[i]);
             if sym.typ<>staticvarsym then
               internalerror(2019110901);
-            include(tstaticvarsym(sym).varoptions,vo_has_global_ref);
+            include(TStaticVarSym(sym).varoptions,vo_has_global_ref);
           end;
       end;
 
-    procedure tprocinfo.add_local_ref_def(def:tdef);
+    procedure tprocinfo.add_local_ref_def(def:TDef);
       begin
         if not assigned(localrefdefs) then
           localrefdefs:=tfpobjectlist.create(false);
@@ -397,26 +397,26 @@ implementation
     procedure tprocinfo.export_local_ref_defs;
       var
         i : longint;
-        def : tdef;
+        def : TDef;
         lAlias: TCmdStrListItem;
       begin
         if not assigned(localrefdefs) then
           exit;
         for i:=0 to localrefdefs.count-1 do
           begin
-            def:=tdef(localrefdefs[i]);
+            def:=TDef(localrefdefs[i]);
             if def.typ<>symconst.procdef then
               internalerror(2019111801);
-            include(tprocdef(def).defoptions,df_has_global_ref);
+            include(TProcDef(def).defoptions,df_has_global_ref);
             { An inline body retains the referenced definition even when its
               implementation-only procsym is not loaded from a cached unit.
               Preserve its callable names independently for package exports. }
             if not (df_generic in def.defoptions) and
-               not (po_external in tprocdef(def).procoptions) and
-               (tprocdef(def).proccalloption<>pocall_internproc) then
+               not (po_external in TProcDef(def).procoptions) and
+               (TProcDef(def).proccalloption<>pocall_internproc) then
               begin
-                CurrentModule.add_public_asmsym(tprocdef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
-                lAlias:=TCmdStrListItem(tprocdef(def).aliasnames.first);
+                CurrentModule.add_public_asmsym(TProcDef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
+                lAlias:=TCmdStrListItem(TProcDef(def).aliasnames.first);
                 while assigned(lAlias) do
                   begin
                     CurrentModule.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
@@ -426,12 +426,12 @@ implementation
           end;
       end;
 
-    procedure tprocinfo.add_captured_sym(sym:tsym;def:tdef;const fileinfo:TFilePosInfo);
+    procedure tprocinfo.add_captured_sym(sym:TSym;def:TDef;const fileinfo:TFilePosInfo);
       begin
         procdef.add_captured_sym(sym,def,fileinfo);
       end;
 
-    function tprocinfo.create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: TNode): tprocinfo;
+    function tprocinfo.create_for_outlining(const basesymname: string; astruct: TAbstractRecordDef; potype: TProcTypeOption; resultdef: TDef; entrynodeinfo: TNode): tprocinfo;
       begin
         result:=cprocinfo.create(self);
         result.force_nested;
@@ -516,7 +516,7 @@ implementation
     procedure tprocinfo.set_needs_parentfp(parent_level: byte);
       var
         pi : tprocinfo;
-        p : tparavarsym;
+        p : TParaVarSym;
       begin
         if procdef.parast.symtablelevel<=normal_function_level then
           Internalerror(2020050302);
@@ -526,14 +526,14 @@ implementation
           parent_level:=normal_function_level;
         { Mark parentfp as used for the current proc }
         pi:=Self;
-        tparavarsym(pi.procdef.parentfpsym).varstate:=vs_read;
+        TParaVarSym(pi.procdef.parentfpsym).varstate:=vs_read;
         { Set both parentfp is used and pio_nested_access for all parent procs until parent_level }
         while pi.procdef.parast.symtablelevel>parent_level do
           begin
             pi:=pi.parent;
             if pi.procdef.parast.symtablelevel>normal_function_level then
               begin
-                p:=tparavarsym(pi.procdef.parentfpsym);
+                p:=TParaVarSym(pi.procdef.parentfpsym);
                 p.varstate:=vs_read;
                 { parentfp is accessed from a nested routine.
                   Must be in the memory. }

@@ -90,7 +90,7 @@ unit cg64f32;
         }
         function optimize64_op_const_reg(list: TAsmList; var op: topcg; var a : int64; var reg: tregister64): boolean;override;
 
-        procedure g_rangecheck64(list: TAsmList; const l:tlocation;fromdef,todef: tdef); override;
+        procedure g_rangecheck64(list: TAsmList; const l:tlocation;fromdef,todef: TDef); override;
       end;
 
 
@@ -912,14 +912,14 @@ unit cg64f32;
       end;
 
 
-    procedure tcg64f32.g_rangecheck64(list : TAsmList;const l:tlocation;fromdef,todef:tdef);
+    procedure tcg64f32.g_rangecheck64(list : TAsmList;const l:tlocation;fromdef,todef:TDef);
 
       var
         neglabel,
         poslabel,
         endlabel: tasmlabel;
         hreg   : tregister;
-        hdef   :  torddef;
+        hdef   :  TOrdDef;
         opsize   : tcgsize;
         from_signed,to_signed: boolean;
         temploc : tlocation;
@@ -1027,7 +1027,7 @@ unit cg64f32;
               { also not if the fromdef is unsigned and < 64bit, since that will }
               { always fit in a 64bit int (todef is 64bit)                       }
               (from_signed or
-               (torddef(fromdef).ordtype = u64bit)) then
+               (TOrdDef(fromdef).ordtype = u64bit)) then
              begin
                { in all cases, there is only a problem if the highest bit is set }
                if l.loc in [LOC_REGISTER,LOC_CREGISTER] then

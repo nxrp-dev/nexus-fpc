@@ -93,7 +93,7 @@ function tobjcselectornode.pass_typecheck: TNode;
       loadn:
         begin
           if (left.resultdef.typ=procdef) and
-             (po_objc in tprocdef(left.resultdef).procoptions) then
+             (po_objc in TProcDef(left.resultdef).procoptions) then
             begin
               { ok }
             end
@@ -156,7 +156,7 @@ function tobjcprotocolnode.pass_typecheck: TNode;
 function tobjcprotocolnode.pass_1: TNode;
   begin
     result:=ccallnode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
-      ccallparanode.create(cstringconstnode.createstr(tobjectdef(left.resultdef).objextname^),nil),
+      ccallparanode.create(cstringconstnode.createstr(TObjectDef(left.resultdef).objextname^),nil),
       resultdef
     );
     TypeCheckPass(result);

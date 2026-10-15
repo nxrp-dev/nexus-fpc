@@ -67,22 +67,22 @@ implementation
         p,p2     : TNode;
         again    : boolean; { dummy for do_proc_call }
         destructorname : TIDString;
-        sym      : tsym;
-        classh   : tobjectdef;
+        sym      : TSym;
+        classh   : TObjectDef;
         callflag : tcallnodeflag;
         destructorpos,
         storepos : TFilePosInfo;
-        variantdesc : pvariantrecdesc;
+        variantdesc : PVariantRecDesc;
         found : boolean;
-        variantselectsymbol : tfieldvarsym;
+        variantselectsymbol : TFieldVarSym;
 
       procedure ReadVariantRecordConstants;
         var
           i,j : longint;
         begin
-          if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) and (is_record(tpointerdef(p.resultdef).pointeddef)) then
+          if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) and (is_record(TPointerDef(p.resultdef).pointeddef)) then
             begin
-              variantdesc:=trecorddef(tpointerdef(p.resultdef).pointeddef).variantrecdesc;
+              variantdesc:=TRecordDef(TPointerDef(p.resultdef).pointeddef).variantrecdesc;
               while (CurrentScanner.token=_COMMA) and assigned(variantdesc) do
                 begin
                   consume(_COMMA);
@@ -99,7 +99,7 @@ implementation
                             if variantdesc^.branches[i].values[j]=tordconstnode(p2).value then
                               begin
                                 found:=true;
-                                variantselectsymbol:=tfieldvarsym(variantdesc^.variantselector);
+                                variantselectsymbol:=TFieldVarSym(variantdesc^.variantselector);
                                 variantdesc:=variantdesc^.branches[i].nestedvariant;
                                 break;
                               end;
@@ -142,7 +142,7 @@ implementation
         if (m_mac in CurrentSettings.modeswitches) and
            is_class(p.resultdef) then
           begin
-            classh:=tobjectdef(p.resultdef);
+            classh:=TObjectDef(p.resultdef);
 
             { make sure we call ObjPas.TObject.Create/Free and not a random }
             { create/free method in a macpas descendent object (since those }
@@ -236,7 +236,7 @@ implementation
                  exit;
               end;
             { first parameter must be an object or class }
-            if tpointerdef(p.resultdef).pointeddef.typ<>objectdef then
+            if TPointerDef(p.resultdef).pointeddef.typ<>objectdef then
               begin
                  Message(parser_e_pointer_to_class_expected);
                  p.free;
@@ -247,7 +247,7 @@ implementation
                  exit;
               end;
             { check, if the first parameter is a pointer to a _class_ }
-            classh:=tobjectdef(tpointerdef(p.resultdef).pointeddef);
+            classh:=TObjectDef(TPointerDef(p.resultdef).pointeddef);
             if is_class(classh) then
               begin
                  Message(parser_e_no_new_or_dispose_for_classes);
@@ -298,7 +298,7 @@ implementation
                       do_member_read(classh,false,sym,p2,again,[callflag],nil)
                     else
                       begin
-                        p2:=ccallnode.create(nil,tprocsym(sym),sym.owner,p2,[callflag],nil);
+                        p2:=ccallnode.create(nil,TProcSym(sym),sym.owner,p2,[callflag],nil);
                         { support dispose(p,done()); }
                         if try_to_consume(_LKLAMMER) then
                           begin
@@ -362,11 +362,11 @@ implementation
                end
              else
                begin
-                  if (tpointerdef(p.resultdef).pointeddef.typ=objectdef) and
-                     (oo_has_vmt in tobjectdef(tpointerdef(p.resultdef).pointeddef).objectoptions) then
+                  if (TPointerDef(p.resultdef).pointeddef.typ=objectdef) and
+                     (oo_has_vmt in TObjectDef(TPointerDef(p.resultdef).pointeddef).objectoptions) then
                     Message(parser_w_use_extended_syntax_for_objects);
-                  if (tpointerdef(p.resultdef).pointeddef.typ=orddef) and
-                     (torddef(tpointerdef(p.resultdef).pointeddef).ordtype=uvoid) then
+                  if (TPointerDef(p.resultdef).pointeddef.typ=orddef) and
+                     (TOrdDef(TPointerDef(p.resultdef).pointeddef).ordtype=uvoid) then
                     begin
                       if m_delphi in CurrentSettings.modeswitches then
                        Message(parser_w_no_new_dispose_on_void_pointers)
@@ -386,14 +386,14 @@ implementation
 
                      { create call to fpc_getmem }
                      para := ccallparanode.create(cordconstnode.create
-                         (tpointerdef(p.resultdef).pointeddef.size,ptruinttype,true),nil);
+                         (TPointerDef(p.resultdef).pointeddef.size,ptruinttype,true),nil);
                      addstatement(newstatement,cassignmentnode.create(
                          ctemprefnode.create(temp),
                          ccallnode.createintern('fpc_getmem',para)));
 
                      { create call to fpc_initialize }
-                     if is_managed_type(tpointerdef(p.resultdef).pointeddef) or
-                       ((m_isolike_io in CurrentSettings.modeswitches) and (tpointerdef(p.resultdef).pointeddef.typ=filedef)) then
+                     if is_managed_type(TPointerDef(p.resultdef).pointeddef) or
+                       ((m_isolike_io in CurrentSettings.modeswitches) and (TPointerDef(p.resultdef).pointeddef.typ=filedef)) then
                        addstatement(newstatement,cnodeutils.initialize_data_node(cderefnode.create(ctemprefnode.create(temp)),false));
 
                      { copy the temp to the destination }
@@ -410,7 +410,7 @@ implementation
                    begin
                      temp:=nil;
                      { create call to fpc_finalize }
-                     if is_managed_type(tpointerdef(p.resultdef).pointeddef) then
+                     if is_managed_type(TPointerDef(p.resultdef).pointeddef) then
                        if might_have_sideeffects(p) then
                          begin
                            { ensure that p gets evaluated only once, in case it is e.g. a call }
@@ -441,9 +441,9 @@ implementation
     function new_function : TNode;
       var
         p1,p2  : TNode;
-        classh : tobjectdef;
-        srsym    : tsym;
-        srsymtable : TSymtable;
+        classh : TObjectDef;
+        srsym    : TSym;
+        srsymtable : TSymTable;
         again  : boolean; { dummy for do_proc_call }
       begin
         consume(_LKLAMMER);
@@ -472,8 +472,8 @@ implementation
 
         if try_to_consume(_RKLAMMER) then
           begin
-            if (tpointerdef(p1.resultdef).pointeddef.typ=objectdef) and
-               (oo_has_vmt in tobjectdef(tpointerdef(p1.resultdef).pointeddef).objectoptions)  then
+            if (TPointerDef(p1.resultdef).pointeddef.typ=objectdef) and
+               (oo_has_vmt in TObjectDef(TPointerDef(p1.resultdef).pointeddef).objectoptions)  then
               Message(parser_w_use_extended_syntax_for_objects);
 
             if p1.nodetype=typen then
@@ -484,7 +484,7 @@ implementation
         else
           begin
             consume(_COMMA);
-            if tpointerdef(p1.resultdef).pointeddef.typ<>objectdef then
+            if TPointerDef(p1.resultdef).pointeddef.typ<>objectdef then
              begin
                Message(parser_e_pointer_to_class_expected);
                consume_all_until(_RKLAMMER);
@@ -494,10 +494,10 @@ implementation
                new_function:=cerrornode.create;
                exit;
              end;
-            classh:=tobjectdef(tpointerdef(p1.resultdef).pointeddef);
+            classh:=TObjectDef(TPointerDef(p1.resultdef).pointeddef);
             { use the objectdef for loading the VMT }
             p2:=p1;
-            p1:=ctypenode.create(tpointerdef(p1.resultdef).pointeddef);
+            p1:=ctypenode.create(TPointerDef(p1.resultdef).pointeddef);
             DoTypeCheckPass(p1);
             { search the constructor also in the symbol tables of
               the parents }
@@ -566,18 +566,18 @@ implementation
                   parameter }
                 if is_ansistring(strpara.resultdef) then
                   begin
-                    cp:=tstringdef(strpara.resultdef).encoding;
+                    cp:=TStringDef(strpara.resultdef).encoding;
                     if (cp=globals.CP_NONE) then
                       cp:=0;
                     paras:=ccallparanode.create(genintconstnode(cp),paras);
                   end;
-                procname:='fpc_setstring_'+tstringdef(strpara.resultdef).stringtypname;
+                procname:='fpc_setstring_'+TStringDef(strpara.resultdef).stringtypname;
                 { decide which version to call based on the second parameter }
                 if not is_shortstring(strpara.resultdef) then
                   if is_pwidechar(pcharpara.resultdef) or
                      is_widechar(pcharpara.resultdef) or
                      ((pcharpara.resultdef.typ=arraydef) and
-                      is_widechar(tarraydef(pcharpara.resultdef).elementdef)) then
+                      is_widechar(TArrayDef(pcharpara.resultdef).elementdef)) then
                     procname:=procname+'_pwidechar'
                   else
                     procname:=procname+'_pansichar';
@@ -631,7 +631,7 @@ implementation
            npara:=ccallparanode.create(ctypeconvnode.create
                      (ppn.left,s32inttype),
                   ccallparanode.create(caddrnode.create_internal
-                     (crttinode.create(tstoreddef(destppn.left.resultdef),initrtti,rdt_normal)),
+                     (crttinode.create(TStoredDef(destppn.left.resultdef),initrtti,rdt_normal)),
                   ccallparanode.create(caddrnode.create_internal
                      (destppn.left),nil)));
            if isinit then

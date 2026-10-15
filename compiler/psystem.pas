@@ -207,13 +207,13 @@ implementation
         all the types inserted into the system unit
       }
 
-        function addtype(const s:string;def:tdef):ttypesym;
+        function addtype(const s:string;def:TDef):TTypeSym;
         begin
           result:=ctypesym.create(s,def);
           systemunit.insertsym(result);
         end;
 
-        procedure addfield(recst:tabstractrecordsymtable;sym:tfieldvarsym);
+        procedure addfield(recst:TAbstractRecordSymTable;sym:TFieldVarSym);
         begin
           recst.insertsym(sym);
           recst.addfield(sym,vis_hidden);
@@ -238,7 +238,7 @@ implementation
         end;
 
       var
-        hrecst : trecordsymtable;
+        hrecst : TRecordSymTable;
 	pvmt_name : shortstring;
       begin
         symtablestack.push(systemunit);
@@ -329,17 +329,17 @@ implementation
         x86_m256dtype:=carraydef.create_vector(0,3,s32inttype);
         x86_m256itype:=carraydef.create_vector(0,7,s32inttype);
 
-        tarraydef(x86_m64type).elementdef:=s32floattype;
-        tarraydef(x86_m128type).elementdef:=s32floattype;
-        tarraydef(x86_m128dtype).elementdef:=s64floattype;
-        tarraydef(x86_m128itype).elementdef:=s32floattype;
-        tarraydef(x86_m256type).elementdef:=s32floattype;
-        tarraydef(x86_m256dtype).elementdef:=s64floattype;
-        tarraydef(x86_m256itype).elementdef:=s32floattype;
+        TArrayDef(x86_m64type).elementdef:=s32floattype;
+        TArrayDef(x86_m128type).elementdef:=s32floattype;
+        TArrayDef(x86_m128dtype).elementdef:=s64floattype;
+        TArrayDef(x86_m128itype).elementdef:=s32floattype;
+        TArrayDef(x86_m256type).elementdef:=s32floattype;
+        TArrayDef(x86_m256dtype).elementdef:=s64floattype;
+        TArrayDef(x86_m256itype).elementdef:=s32floattype;
 {$endif x86}
         set_default_ptr_types;
         openchararraytype:=carraydef.create_openarray;
-        tarraydef(openchararraytype).elementdef:=cansichartype;
+        TArrayDef(openchararraytype).elementdef:=cansichartype;
         cfiletype:=cfiledef.createuntyped;
         if f_variants in features then
           begin
@@ -359,7 +359,7 @@ implementation
               { Microsoft C and Android x86 use Double at this boundary. }
               addtype('CExtended',s64floattype)
             else
-              if tfloatdef(pbestrealtype^).floattype=s80real then
+              if TFloatDef(pbestrealtype^).floattype=s80real then
                 addtype('CExtended',sc80floattype)
               else
                 addtype('CExtended',pbestrealtype^);
@@ -502,7 +502,7 @@ implementation
         addtype('$s64currency',s64currencytype);
           begin
             { Add a type for virtual method tables }
-            hrecst:=trecordsymtable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
+            hrecst:=TRecordSymTable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
             vmttype:=crecorddef.create('',hrecst);
             pvmttype:=cpointerdef.create(vmttype);
             { can't use addtype for pvmt because the rtti of the pointed
@@ -519,21 +519,21 @@ implementation
               __vtbl_ptr_type in all cases (JM) }
             addfield(hrecst,cfieldvarsym.create('$vm1_or_classname',vs_value,cpointerdef.create(cshortstringtype),[]));
             vmtarraytype:=carraydef.create(0,0,s32inttype);
-            tarraydef(vmtarraytype).elementdef:=voidpointertype;
+            TArrayDef(vmtarraytype).elementdef:=voidpointertype;
             addfield(hrecst,cfieldvarsym.create('$__pfn',vs_value,vmtarraytype,[]));
             addtype('$__vtbl_ptr_type',vmttype);
             vmtarraytype:=carraydef.create(0,1,s32inttype);
-            tarraydef(vmtarraytype).elementdef:=pvmttype;
+            TArrayDef(vmtarraytype).elementdef:=pvmttype;
             addtype('$vtblarray',vmtarraytype);
           end;
         { Add a type for methodpointers }
-        hrecst:=trecordsymtable.create('',1,CurrentSettings.alignment.recordalignmin);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.recordalignmin);
         addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
         addfield(hrecst,cfieldvarsym.create('$self',vs_value,voidpointertype,[]));
         methodpointertype:=crecorddef.create('',hrecst);
         addtype('$methodpointer',methodpointertype);
         { Add a type for nested proc pointers }
-        hrecst:=trecordsymtable.create('',1,CurrentSettings.alignment.recordalignmin);
+        hrecst:=TRecordSymTable.create('',1,CurrentSettings.alignment.recordalignmin);
         addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
         addfield(hrecst,cfieldvarsym.create('$parentfp',vs_value,parentfpvoidpointertype,[]));
         nestedprocpointertype:=crecorddef.create('',hrecst);
@@ -547,9 +547,9 @@ implementation
         Load all default definitions for consts from the system unit
       }
 
-        procedure loadtype(const s:string;var def:tdef);
+        procedure loadtype(const s:string;var def:TDef);
         var
-          srsym : ttypesym;
+          srsym : TTypeSym;
         begin
           srsym:=search_system_type(s);
           def:=srsym.typedef;

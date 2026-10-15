@@ -114,8 +114,8 @@ interface
 
           constructor create(l:TNode);virtual;
           destructor destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -220,7 +220,7 @@ implementation
       var
         t : TNode;
 
-        function createsetconst(psd : tsetdef) : PConstSet;
+        function createsetconst(psd : TSetDef) : PConstSet;
         var
           pcs : PConstSet;
           i : longint;
@@ -229,14 +229,14 @@ implementation
           case psd.elementdef.typ of
             enumdef :
               begin
-                for i := 0 to tenumdef(psd.elementdef).symtable.SymList.Count - 1 do
+                for i := 0 to TEnumDef(psd.elementdef).symtable.SymList.Count - 1 do
                   begin
-                    include(pcs^,tenumsym(tenumdef(psd.elementdef).symtable.SymList[i]).value);
+                    include(pcs^,TEnumSym(TEnumDef(psd.elementdef).symtable.SymList[i]).value);
                   end;
               end;
             orddef :
               begin
-                for i:=int64(torddef(psd.elementdef).low) to int64(torddef(psd.elementdef).high) do
+                for i:=int64(TOrdDef(psd.elementdef).low) to int64(TOrdDef(psd.elementdef).high) do
                   include(pcs^,i);
               end;
             else
@@ -298,8 +298,8 @@ implementation
              else
                inserttypeconv(left,u32inttype);
            end
-         else if assigned(tsetdef(right.resultdef).elementdef) and
-                 not(is_integer(tsetdef(right.resultdef).elementdef) and
+         else if assigned(TSetDef(right.resultdef).elementdef) and
+                 not(is_integer(TSetDef(right.resultdef).elementdef) and
                      is_integer(left.resultdef)) then
             { Type conversion to check things like 'char in set_of_byte'. }
             { Can't use is_subequal because that will fail for            }
@@ -307,10 +307,10 @@ implementation
             { Can't use the type conversion for integers because then     }
             { "longint in set_of_byte" will give a range check error      }
             { instead of false                                            }
-            inserttypeconv(left,tsetdef(right.resultdef).elementdef);
+            inserttypeconv(left,TSetDef(right.resultdef).elementdef);
 
          { empty set then return false }
-         if not assigned(tsetdef(right.resultdef).elementdef) or
+         if not assigned(TSetDef(right.resultdef).elementdef) or
             ((right.nodetype = setconstn) and
              (TNormalSet(tsetconstnode(right).value_set^) = [])) then
           begin
@@ -352,8 +352,8 @@ implementation
                end
              else
                begin
-                 if (Tordconstnode(left).value<int64(tsetdef(right.resultdef).setbase)) or
-                    (Tordconstnode(left).value>int64(Tsetdef(right.resultdef).setmax)) then
+                 if (Tordconstnode(left).value<int64(TSetDef(right.resultdef).setbase)) or
+                    (Tordconstnode(left).value>int64(TSetDef(right.resultdef).setmax)) then
                    begin
                      t:=cordconstnode.create(0, pasbool1type, true);
                      TypeCheckPass(t);
@@ -545,7 +545,7 @@ implementation
       end;
 
 
-    procedure ppuwritecaselabel(ppufile:tcompilerppufile;p : pcaselabel);
+    procedure ppuwritecaselabel(ppufile:TCompilerPPUFile;p : pcaselabel);
       var
         b : byte;
       begin
@@ -571,7 +571,7 @@ implementation
       end;
 
 
-    function ppuloadcaselabel(ppufile:tcompilerppufile):pcaselabel;
+    function ppuloadcaselabel(ppufile:TCompilerPPUFile):pcaselabel;
       var
         b : byte;
         p : pcaselabel;
@@ -638,7 +638,7 @@ implementation
       end;
 
 
-    constructor tcasenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tcasenode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       var
         cnt,i : longint;
       begin
@@ -654,7 +654,7 @@ implementation
       end;
 
 
-    procedure tcasenode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tcasenode.ppuwrite(ppufile:TCompilerPPUFile);
       var
         i : longint;
       begin
@@ -1249,7 +1249,7 @@ implementation
 
     procedure tcasenode.checkordinalcoverage;
 
-      function orddefspansfullrange(def: torddef): boolean;
+      function orddefspansfullrange(def: TOrdDef): boolean;
         var
           packedbitsize: cardinal;
           dummy: longint;
@@ -1299,7 +1299,7 @@ implementation
             if (cs_check_all_case_coverage in CurrentSettings.localswitches) or
                (is_enum(left.resultdef) or
                 is_boolean(left.resultdef) or
-                not orddefspansfullrange(torddef(left.resultdef))) and
+                not orddefspansfullrange(TOrdDef(left.resultdef))) and
                (labelcoverage<typcount) then
               begin
                 { labels for some values of the operand are missing, and no else block is present }

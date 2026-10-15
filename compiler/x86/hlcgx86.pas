@@ -39,11 +39,11 @@ interface
   type
     thlcgx86 = class(thlcg2ll)
      protected
-      procedure gen_load_uninitialized_function_result(list: TAsmList; pd: tprocdef; resdef: tdef; const resloc: tcgpara); override;
+      procedure gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: tcgpara); override;
       procedure a_jmp_external_name(list: TAsmList; const externalname: TSymStr); override;
      public
-      procedure a_load_undefined_cgpara(list: TAsmList; size: tdef; const cgpara: TCGPara); override;
-      procedure a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: tdef; bitnumber, dest: tregister); override;
+      procedure a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara); override;
+      procedure a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: tregister); override;
     end;
 
 implementation
@@ -57,7 +57,7 @@ implementation
 
 { thlcgx86 }
 
-  procedure thlcgx86.gen_load_uninitialized_function_result(list: TAsmList; pd: tprocdef; resdef: tdef; const resloc: tcgpara);
+  procedure thlcgx86.gen_load_uninitialized_function_result(list: TAsmList; pd: TProcDef; resdef: TDef; const resloc: tcgpara);
     begin
       { the caller will pop a value from the fpu stack }
       if assigned(resloc.location) and
@@ -92,7 +92,7 @@ implementation
     end;
 
 
-  procedure thlcgx86.a_load_undefined_cgpara(list: TAsmList; size: tdef; const cgpara: TCGPara);
+  procedure thlcgx86.a_load_undefined_cgpara(list: TAsmList; size: TDef; const cgpara: TCGPara);
     begin
       if not (cgpara.Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]) and
         (cgpara.size=OS_ADDR) then
@@ -101,7 +101,7 @@ implementation
         inherited;
     end;
 
-  procedure thlcgx86.a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: tdef; bitnumber, dest: tregister);
+  procedure thlcgx86.a_bit_set_reg_reg(list: TAsmList; doset: boolean; bitnumbersize, destsize: TDef; bitnumber, dest: tregister);
     const
       bit_set_clr_instr: array[boolean] of tasmop = (A_BTR,A_BTS);
     begin

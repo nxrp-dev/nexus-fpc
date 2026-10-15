@@ -69,7 +69,7 @@ interface
           procedure second_high; virtual;
           procedure second_minmax; virtual;
        protected
-          function  second_incdec_tempregdef: tdef;virtual;
+          function  second_incdec_tempregdef: TDef;virtual;
        end;
 
 implementation
@@ -278,7 +278,7 @@ implementation
       var
         lengthlab : tasmlabel;
         hregister : tregister;
-        lendef : tdef;
+        lendef : TDef;
         href : treference;
       begin
         SecondPass(left);
@@ -398,7 +398,7 @@ implementation
 {*****************************************************************************
                          INC/DEC GENERIC HANDLING
 *****************************************************************************}
-      function tcginlinenode.second_incdec_tempregdef: tdef;
+      function tcginlinenode.second_incdec_tempregdef: TDef;
         begin
           second_incdec_tempregdef:=left.resultdef;
         end;
@@ -435,10 +435,10 @@ implementation
                 addvalue:=1;
             pointerdef :
                begin
-                 if is_void(tpointerdef(tcallparanode(left).left.resultdef).pointeddef) then
+                 if is_void(TPointerDef(tcallparanode(left).left.resultdef).pointeddef) then
                    addvalue:=1
                  else
-                   addvalue:=tpointerdef(tcallparanode(left).left.resultdef).pointeddef.size;
+                   addvalue:=TPointerDef(tcallparanode(left).left.resultdef).pointeddef.size;
                end;
            else
                internalerror(2020100814);
@@ -672,12 +672,12 @@ implementation
           if elepara.location.loc=LOC_CONSTANT then
             begin
               hlcg.a_bit_set_const_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
-                setpara.resultdef,elepara.location.value-tsetdef(setpara.resultdef).setbase,setpara.location);
+                setpara.resultdef,elepara.location.value-TSetDef(setpara.resultdef).setbase,setpara.location);
             end
           else
             begin
               hlcg.location_force_reg(CurrentAsmData.CurrAsmList,elepara.location,elepara.resultdef,u32inttype,true);
-              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,u32inttype,elepara.location,tsetdef(setpara.resultdef).setbase);
+              register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,u32inttype,elepara.location,TSetDef(setpara.resultdef).setbase);
               hlcg.a_bit_set_reg_loc(CurrentAsmData.CurrAsmList,(inlinenumber=in_include_x_y),
                 u32inttype,setpara.resultdef,elepara.location.register,setpara.location);
             end;

@@ -48,7 +48,7 @@ unit tgobj;
          alignment  : shortint;
          pos        : asizeint;
          size       : asizeint;
-         def        : tdef;
+         def        : TDef;
          next       : ptemprecord;
          nextfree   : ptemprecord; { for faster freeblock checking }
 {$ifdef EXTDEBUG}
@@ -63,9 +63,9 @@ unit tgobj;
        protected
           { contains all free temps using nextfree links }
           tempfreelist  : ptemprecord;
-          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref: treference); virtual;
+          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref: treference); virtual;
           procedure freetemp(list: TAsmList; pos: treftemppos; temptypes: TTempTypeSet);virtual;
-          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref : treference);
+          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : treference);
           procedure freetemphook(list: TAsmList; temp: ptemprecord); virtual;
        public
           { contains all temps }
@@ -97,10 +97,10 @@ unit tgobj;
 
             the forcesize parameter is so that it can be used for defs that
             don't have an inherent size (e.g., array of const) }
-          procedure gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: TTempType; out ref: treference); virtual;
-          procedure gethltempmanaged(list: TAsmList; def: tdef; temptype: TTempType; out ref: treference); virtual;
+          procedure gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: treference); virtual;
+          procedure gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: treference); virtual;
           procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : treference);
-          procedure gettempmanaged(list: TAsmList; def:tdef;temptype:TTempType;out ref : treference);
+          procedure gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : treference);
           procedure ungettemp(list: TAsmList; const ref : treference); virtual;
 
           function sizeoftemp(list: TAsmList; const ref: treference): asizeint;
@@ -124,8 +124,8 @@ unit tgobj;
           procedure ungetiftemp(list: TAsmList; const ref : treference); virtual;
 
           { Allocate space for a local }
-          procedure getlocal(list: TAsmList; size: asizeint; def: tdef; var ref : treference);
-          procedure getlocal(list: TAsmList; size: asizeint; alignment,explicitalignment: shortint; def: tdef; sym : tsym; var ref : treference); virtual;
+          procedure getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : treference);
+          procedure getlocal(list: TAsmList; size: asizeint; alignment,explicitalignment: shortint; def: TDef; sym : TSym; var ref : treference); virtual;
           procedure UnGetLocal(list: TAsmList; const ref : treference);
           { Discard the free list so that previously freed temp slots cannot be
             reused by subsequent allocations. Used on AArch64-Win64 before
@@ -254,7 +254,7 @@ implementation
       end;
 
 
-    procedure ttgobj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def :tdef; fini: boolean; out ref: treference);
+    procedure ttgobj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def :TDef; fini: boolean; out ref: treference);
       var
          tl,htl,
          bestslot,bestprev,
@@ -569,13 +569,13 @@ implementation
       end;
 
 
-    procedure ttgobj.gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: TTempType; out ref: treference);
+    procedure ttgobj.gethltemp(list: TAsmList; def: TDef; forcesize: asizeint; temptype: TTempType; out ref: treference);
       begin
         gettemp(list,forcesize,def.alignment,temptype,ref);
       end;
 
 
-    procedure ttgobj.gethltempmanaged(list: TAsmList; def: tdef; temptype: TTempType; out ref: treference);
+    procedure ttgobj.gethltempmanaged(list: TAsmList; def: TDef; temptype: TTempType; out ref: treference);
       begin
         gettempmanaged(list,def,temptype,ref);
       end;
@@ -587,7 +587,7 @@ implementation
       end;
 
 
-    procedure ttgobj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref : treference);
+    procedure ttgobj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: TDef; fini: boolean; out ref : treference);
       var
         varalign : shortint;
       begin
@@ -602,7 +602,7 @@ implementation
       end;
 
 
-    procedure ttgobj.gettempmanaged(list: TAsmList; def:tdef;temptype:TTempType;out ref : treference);
+    procedure ttgobj.gettempmanaged(list: TAsmList; def:TDef;temptype:TTempType;out ref : treference);
       begin
         gettempinternal(list,def.size,def.alignment,temptype,def,true,ref);
       end;
@@ -750,16 +750,16 @@ implementation
       end;
 
 
-    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; def: tdef; var ref : treference);
+    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; def: TDef; var ref : treference);
       begin
-        if def.inheritsfrom(tabstractrecorddef) and (def.typ in [recorddef])  then
-          getlocal(list, size, def.alignment, tabstractrecordsymtable(tabstractrecorddef(def).symtable).explicitrecordalignment, def, nil, ref)
+        if def.inheritsfrom(TAbstractRecordDef) and (def.typ in [recorddef])  then
+          getlocal(list, size, def.alignment, TAbstractRecordSymTable(TAbstractRecordDef(def).symtable).explicitrecordalignment, def, nil, ref)
         else
           getlocal(list, size, def.alignment, 0, def, nil, ref);
       end;
 
 
-    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; alignment, explicitalignment: shortint; def: tdef; sym : tsym; var ref : treference);
+    procedure ttgobj.getlocal(list: TAsmList; size: asizeint; alignment, explicitalignment: shortint; def: TDef; sym : TSym; var ref : treference);
       var
         lalign : shortint;
       begin

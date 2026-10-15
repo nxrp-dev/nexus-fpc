@@ -42,13 +42,13 @@ interface
 
       Ttok2opRec=record
         tok : ttoken;
-        managementoperator : tmanagementoperator;
+        managementoperator : TManagementOperator;
       end;
 
       pcandidate = ^tcandidate;
       tcandidate = object
          next         : pcandidate;
-         data         : tprocdef;
+         data         : TProcDef;
          wrongparaidx,
          firstparaidx : integer;
          te_count : array[te_convert_operator .. te_exact] of integer; { should be signed }
@@ -70,8 +70,8 @@ interface
 
       tcallcandidates = object
       private
-        FProcsym     : tprocsym;
-        FProcsymtable : tsymtable;
+        FProcsym     : TProcSym;
+        FProcsymtable : TSymTable;
         FOperator    : ttoken;
         FCandidateProcs    : pcandidate;
         FIgnoredCandidateProcs : tfplist;
@@ -80,13 +80,13 @@ interface
         FParaLength : smallint;
         FAllowVariant : boolean;
         FParaAnonSyms : tfplist;
-        procedure collect_overloads_in_struct(structdef:tabstractrecorddef;ProcdefOverloadList:TFPObjectList;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+        procedure collect_overloads_in_struct(structdef:TAbstractRecordDef;ProcdefOverloadList:TFPObjectList;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
         procedure collect_overloads_in_units(ProcdefOverloadList:TFPObjectList; flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
         procedure create_candidate_list(flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
-        procedure calc_distance(st_root:tsymtable;flags:tcallcandidatesflags);
-        function  proc_add(st:tsymtable;pd:tprocdef):pcandidate;
+        procedure calc_distance(st_root:TSymTable;flags:tcallcandidatesflags);
+        function  proc_add(st:TSymTable;pd:TProcDef):pcandidate;
       public
-        constructor init(sym:tprocsym;st:TSymtable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+        constructor init(sym:TProcSym;st:TSymTable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
         constructor init_operator(op:ttoken;ppn:TNode);
         destructor done;
         procedure list(all:boolean);
@@ -94,7 +94,7 @@ interface
         procedure dump_info(lvl:longint);
 {$endif EXTDEBUG}
         procedure get_information;
-        function  choose_best(var bestpd:tabstractprocdef; singlevariant: boolean):integer;
+        function  choose_best(var bestpd:TAbstractProcDef; singlevariant: boolean):integer;
         procedure find_wrong_para;
         property  Count:integer read FProcCnt;
         { list of symbols for anonymous types required for implicit specializations;
@@ -157,7 +157,7 @@ interface
       );
 
     function node2opstr(nt:TNodeType):string;
-    function token2managementoperator(optoken:ttoken):tmanagementoperator;
+    function token2managementoperator(optoken:ttoken):TManagementOperator;
 
     { check operator args and result type }
 
@@ -172,8 +172,8 @@ interface
       );
       toverload_check_flags = set of toverload_check_flag;
 
-    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType) : boolean;
-    function isoperatoracceptable(pf : tprocdef; optoken : ttoken) : boolean;
+    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:TDef;lt:TNodeType;rd:TDef;rt:TNodeType) : boolean;
+    function isoperatoracceptable(pf : TProcDef; optoken : ttoken) : boolean;
     function isunaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
     function isbinaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
 
@@ -181,19 +181,19 @@ interface
     procedure make_not_regable(p : TNode; how: tregableinfoflags);
 
     { procvar handling }
-    function  is_proc2procvar_load(p:TNode;out realprocdef:tprocdef):boolean;
+    function  is_proc2procvar_load(p:TNode;out realprocdef:TProcDef):boolean;
     { returns whether a node represents a load of the function result node via
       the function name (so it could also be a recursive call to the function
       in case there or no parameters, or the function could be passed as
       procvar }
-    function  is_ambiguous_funcret_load(p: TNode; out owningprocdef: tprocdef): boolean;
-    procedure test_local_to_procvar(from_def:tprocvardef;to_def:tdef);
+    function  is_ambiguous_funcret_load(p: TNode; out owningprocdef: TProcDef): boolean;
+    procedure test_local_to_procvar(from_def:TProcVarDef;to_def:TDef);
 
     { sets varsym varstate field correctly }
     type
       tvarstateflag = (vsf_must_be_valid,vsf_use_hints,vsf_use_hint_for_string_result);
       tvarstateflags = set of tvarstateflag;
-    procedure set_varstate(p:TNode;newstate:tvarstate;varstateflags:tvarstateflags);
+    procedure set_varstate(p:TNode;newstate:TVarState;varstateflags:tvarstateflags);
 
     { sets the callunique flag, if the node is a vecn, }
     { takes care of type casts etc.                 }
@@ -209,11 +209,11 @@ interface
 
     function allowenumop(nt:TNodeType):boolean;
 
-    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: tdef);
+    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: TDef);
 
     { returns whether the def may be used in the Default() intrinsic; static
       arrays, records and objects are checked recursively }
-    function is_valid_for_default(def:tdef):boolean;
+    function is_valid_for_default(def:TDef):boolean;
 
     procedure UninitializedVariableMessage(pos : TFilePosInfo;warning,local,managed : boolean;name : TMsgStr);
 
@@ -253,7 +253,7 @@ implementation
        end;
 
 
-    function token2managementoperator(optoken:ttoken):tmanagementoperator;
+    function token2managementoperator(optoken:ttoken):TManagementOperator;
       var
         i : integer;
       begin
@@ -267,9 +267,9 @@ implementation
       end;
 
 
-    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType) : boolean;
+    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:TDef;lt:TNodeType;rd:TDef;rt:TNodeType) : boolean;
 
-        function internal_check(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType;var allowed:boolean):boolean;
+        function internal_check(treetyp:TNodeType;ld:TDef;lt:TNodeType;rd:TDef;rt:TNodeType;var allowed:boolean):boolean;
         const
           identity_operators=[equaln,unequaln];
           order_theoretic_operators=identity_operators+[ltn,lten,gtn,gten];
@@ -506,7 +506,7 @@ implementation
                           is_pchar(rd) or
                           is_pwidechar(rd)) and
                           (treetyp in pointer_arithmetic_operators) and
-                          (tpointerdef(rd).pointeddef=tarraydef(ld).elementdef
+                          (TPointerDef(rd).pointeddef=TArrayDef(ld).elementdef
                         )
                       )
                     ) then
@@ -578,7 +578,7 @@ implementation
       end;
 
 
-    function isunaryoperatoroverloadable(treetyp:TNodeType;inlinenumber:tinlinenumber;ld:tdef) : boolean;
+    function isunaryoperatoroverloadable(treetyp:TNodeType;inlinenumber:tinlinenumber;ld:TDef) : boolean;
       begin
         result:=false;
         case treetyp of
@@ -620,18 +620,18 @@ implementation
       end;
 
 
-    function isoperatoracceptable(pf : tprocdef; optoken : ttoken) : boolean;
+    function isoperatoracceptable(pf : TProcDef; optoken : ttoken) : boolean;
       var
-        ld,rd : tdef;
+        ld,rd : TDef;
         i : longint;
-        eq : tequaltype;
+        eq : TEqualType;
         conv : tconverttype;
         cdo : tcompare_defs_options;
-        pd : tprocdef;
+        pd : TProcDef;
         oldcount,
         count: longint;
-        sym : tsym;
-        parasym : tparavarsym absolute sym;
+        sym : TSym;
+        parasym : TParaVarSym absolute sym;
       begin
         result:=false;
         count := pf.parast.SymList.count;
@@ -639,7 +639,7 @@ implementation
         oldcount:=count;
         while count > 0 do
           begin
-            sym:=tsym(pf.parast.SymList[count-1]);
+            sym:=TSym(pf.parast.SymList[count-1]);
             if sym.typ<>paravarsym then
               begin
                 dec(count);
@@ -669,7 +669,7 @@ implementation
 
         case count of
           1 : begin
-                ld:=tparavarsym(pf.parast.SymList[0]).vardef;
+                ld:=TParaVarSym(pf.parast.SymList[0]).vardef;
                 { assignment is a special case }
                 if optoken in [_ASSIGNMENT,_OP_EXPLICIT] then
                   begin
@@ -690,12 +690,12 @@ implementation
                       is_record(pf.returndef);
                     if result then
                       begin
-                        if not assigned(tabstractrecorddef(pf.returndef).search_enumerator_move) then
+                        if not assigned(TAbstractRecordDef(pf.returndef).search_enumerator_move) then
                           begin
                             Message1(sym_e_no_enumerator_move, pf.returndef.typename);
                             result:=false;
                           end;
-                        if not assigned(tabstractrecorddef(pf.returndef).search_enumerator_current) then
+                        if not assigned(TAbstractRecordDef(pf.returndef).search_enumerator_current) then
                           begin
                             Message1(sym_e_no_enumerator_current,pf.returndef.typename);
                             result:=false;
@@ -718,8 +718,8 @@ implementation
                   end;
               end;
           2 : begin
-                ld:=tparavarsym(pf.parast.SymList[0]).vardef;
-                rd:=tparavarsym(pf.parast.SymList[1]).vardef;
+                ld:=TParaVarSym(pf.parast.SymList[0]).vardef;
+                rd:=TParaVarSym(pf.parast.SymList[1]).vardef;
                 for i:=1 to tok2nodes do
                   if tok2node[i].tok=optoken then
                     begin
@@ -735,9 +735,9 @@ implementation
 
     function isunaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
       var
-        ld      : tdef;
+        ld      : TDef;
         optoken : ttoken;
-        operpd  : tprocdef;
+        operpd  : TProcDef;
         ppn     : tcallparanode;
         candidates : tcallcandidates;
         cand_cnt : integer;
@@ -822,7 +822,7 @@ implementation
         { Display info when multiple candidates are found }
         candidates.dump_info(V_Debug);
 {$endif EXTDEBUG}
-        cand_cnt:=candidates.choose_best(tabstractprocdef(operpd),false);
+        cand_cnt:=candidates.choose_best(TAbstractProcDef(operpd),false);
 
         { exit when no overloads are found }
         if cand_cnt=0 then
@@ -864,7 +864,7 @@ implementation
 
         { the nil as symtable signs firstcalln that this is
           an overloaded operator }
-        t:=ccallnode.create(ppn,Tprocsym(operpd.procsym),nil,nil,[],nil);
+        t:=ccallnode.create(ppn,TProcSym(operpd.procsym),nil,nil,[],nil);
 
         { we already know the procdef to use, so it can
           skip the overload choosing in callnode.pass_typecheck }
@@ -874,9 +874,9 @@ implementation
 
     function isbinaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
       var
-        rd,ld   : tdef;
+        rd,ld   : TDef;
         optoken : ttoken;
-        operpd  : tprocdef;
+        operpd  : TProcDef;
         ht      : TNode;
         ppn     : tcallparanode;
         i,cand_cnt : sizeint;
@@ -931,7 +931,7 @@ implementation
                 { Display info when multiple candidates are found }
                 candidates.dump_info(V_Debug);
         {$endif EXTDEBUG}
-                result:=candidates.choose_best(tabstractprocdef(operpd),false);
+                result:=candidates.choose_best(TAbstractProcDef(operpd),false);
               end;
 
             { exit when no overloads are found }
@@ -1026,7 +1026,7 @@ implementation
 
         { the nil as symtable signs firstcalln that this is
           an overloaded operator }
-        ht:=ccallnode.create(ppn,Tprocsym(operpd.procsym),nil,nil,[],nil);
+        ht:=ccallnode.create(ppn,TProcSym(operpd.procsym),nil,nil,[],nil);
 
         { we already know the procdef to use, so it can
           skip the overload choosing in callnode.pass_typecheck }
@@ -1047,7 +1047,7 @@ implementation
     { marks an lvalue as "unregable" }
     procedure make_not_regable_intern(p : TNode; how: tregableinfoflags; records_only: boolean);
       var
-        lHighSym: tabstractvarsym;
+        lHighSym: TAbstractVarSym;
       begin
         if ra_addr_taken in how then
           include(p.flags,nf_address_taken);
@@ -1065,7 +1065,7 @@ implementation
                 if ((tvecnode(p).left.resultdef.typ=arraydef) and
                     not is_special_array(tvecnode(p).left.resultdef)) or
                    ((tvecnode(p).left.resultdef.typ=stringdef) and
-                    (tstringdef(tvecnode(p).left.resultdef).stringtype in [st_shortstring,st_longstring])) then
+                    (TStringDef(tvecnode(p).left.resultdef).stringtype in [st_shortstring,st_longstring])) then
                   p:=tvecnode(p).left
                 else
                   break;
@@ -1084,15 +1084,15 @@ implementation
                 if (tloadnode(p).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) then
                   begin
                     if (ra_addr_taken in how) then
-                      tabstractvarsym(tloadnode(p).symtableentry).addr_taken:=true;
+                      TAbstractVarSym(tloadnode(p).symtableentry).addr_taken:=true;
                     if (ra_different_scope in how) then
                       begin
-                        tabstractvarsym(tloadnode(p).symtableentry).different_scope:=true;
+                        TAbstractVarSym(tloadnode(p).symtableentry).different_scope:=true;
                         { Hidden bounds can be loaded only during code generation.
                           Reserve their frame location before allocating the parent. }
                         if tloadnode(p).symtableentry.typ=paravarsym then
                           begin
-                            lHighSym:=get_high_value_sym(tparavarsym(tloadnode(p).symtableentry));
+                            lHighSym:=get_high_value_sym(TParaVarSym(tloadnode(p).symtableentry));
                             if assigned(lHighSym) then
                               begin
                                 lHighSym.different_scope:=true;
@@ -1100,14 +1100,14 @@ implementation
                               end;
                           end;
                       end;
-                    if (tabstractvarsym(tloadnode(p).symtableentry).varregable <> vr_none) and
+                    if (TAbstractVarSym(tloadnode(p).symtableentry).varregable <> vr_none) and
                        ((not records_only) or
-                        (tabstractvarsym(tloadnode(p).symtableentry).vardef.typ = recorddef)) then
+                        (TAbstractVarSym(tloadnode(p).symtableentry).vardef.typ = recorddef)) then
                       if (tloadnode(p).symtableentry.typ = paravarsym) and
                          (ra_addr_regable in how) then
-                        tabstractvarsym(tloadnode(p).symtableentry).varregable:=vr_addr
+                        TAbstractVarSym(tloadnode(p).symtableentry).varregable:=vr_addr
                       else
-                        tabstractvarsym(tloadnode(p).symtableentry).varregable:=vr_none;
+                        TAbstractVarSym(tloadnode(p).symtableentry).varregable:=vr_none;
                   end;
                 break;
               end;
@@ -1137,7 +1137,7 @@ implementation
                           Subroutine Handling
 ****************************************************************************}
 
-    function is_proc2procvar_load(p:TNode;out realprocdef:tprocdef):boolean;
+    function is_proc2procvar_load(p:TNode;out realprocdef:TProcDef):boolean;
       begin
         result:=false;
         { remove voidpointer typecast for tp procvars }
@@ -1149,11 +1149,11 @@ implementation
         result:=(p.nodetype=typeconvn) and
                 (ttypeconvnode(p).convtype=tc_proc_2_procvar);
         if result then
-          realprocdef:=tprocdef(ttypeconvnode(p).left.resultdef);
+          realprocdef:=TProcDef(ttypeconvnode(p).left.resultdef);
       end;
 
 
-    function is_ambiguous_funcret_load(p: TNode; out owningprocdef: tprocdef): boolean;
+    function is_ambiguous_funcret_load(p: TNode; out owningprocdef: TProcDef): boolean;
       begin
         result:=false;
         { the funcret is an absolutevarsym, which gets converted into a type
@@ -1164,22 +1164,22 @@ implementation
           p:=ttypeconvnode(p).left;
         if (p.nodetype=loadn) and
            (tloadnode(p).symtableentry.typ in [absolutevarsym,localvarsym,paravarsym]) and
-           ([vo_is_funcret,vo_is_result] * tabstractvarsym(tloadnode(p).symtableentry).varoptions = [vo_is_funcret]) then
+           ([vo_is_funcret,vo_is_result] * TAbstractVarSym(tloadnode(p).symtableentry).varoptions = [vo_is_funcret]) then
          begin
-           owningprocdef:=tprocdef(tloadnode(p).symtableentry.owner.defowner);
+           owningprocdef:=TProcDef(tloadnode(p).symtableentry.owner.defowner);
            result:=true;
          end;
       end;
 
 
     { local routines can't be assigned to procvars }
-    procedure test_local_to_procvar(from_def:tprocvardef;to_def:tdef);
+    procedure test_local_to_procvar(from_def:TProcVarDef;to_def:TDef);
       begin
          if not(m_nested_procvars in CurrentSettings.modeswitches) and
             (from_def.parast.symtablelevel>normal_function_level) and
             not (po_anonymous in from_def.procoptions) and
             (to_def.typ=procvardef) and
-            (tprocvardef(to_def).parast.symtablelevel <= normal_function_level) then
+            (TProcVarDef(to_def).parast.symtablelevel <= normal_function_level) then
            CGMessage(type_e_cannot_local_proc_to_procvar);
       end;
 
@@ -1201,9 +1201,9 @@ implementation
       end;
 
 
-    procedure set_varstate(p:TNode;newstate:tvarstate;varstateflags:tvarstateflags);
+    procedure set_varstate(p:TNode;newstate:TVarState;varstateflags:tvarstateflags);
       const
-        vstrans: array[tvarstate,tvarstate] of tvarstate = (
+        vstrans: array[TVarState,TVarState] of TVarState = (
           { vs_none -> ... }
           (vs_none,vs_declared,vs_initialised,vs_read,vs_read_not_warned,vs_referred_not_inited,vs_written,vs_readwritten),
           { vs_declared -> ... }
@@ -1221,7 +1221,7 @@ implementation
           { vs_readwritten -> ... }
           (vs_none,vs_readwritten,vs_readwritten,vs_readwritten,vs_readwritten,vs_readwritten,vs_readwritten,vs_readwritten));
       var
-        hsym : tabstractvarsym;
+        hsym : TAbstractVarSym;
       begin
         { make sure we can still warn about uninitialised use after high(v), @v etc }
         if (newstate = vs_read) and
@@ -1288,7 +1288,7 @@ implementation
                    set_varstate(TUnaryNode(p).left,vs_read,[vsf_must_be_valid]);
                  if (tloadnode(p).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) then
                    begin
-                     hsym:=tabstractvarsym(tloadnode(p).symtableentry);
+                     hsym:=TAbstractVarSym(tloadnode(p).symtableentry);
                      { this check requires proper data flow analysis... }
 (*                     if (hsym.varspez=vs_final) and
                         (hsym.varstate in [vs_written,vs_readwritten]) and
@@ -1409,11 +1409,11 @@ implementation
         gotvec,
         gottypeconv : boolean;
         fromdef,
-        todef    : tdef;
+        todef    : TDef;
         errmsg,
         temp     : longint;
 
-        function constaccessok(vs: tabstractvarsym): boolean;
+        function constaccessok(vs: TAbstractVarSym): boolean;
           begin
             result:=false;
             { allow p^:= constructions with p is const parameter }
@@ -1631,10 +1631,10 @@ implementation
                     not gotvec and
                     not(valid_packed in opts) and
                     (tvecnode(hp).left.resultdef.typ = arraydef) and
-                    (ado_IsBitPacked in tarraydef(tvecnode(hp).left.resultdef).arrayoptions) and
-                    ((tarraydef(tvecnode(hp).left.resultdef).elepackedbitsize mod 8 <> 0) or
-                     (is_ordinal(tarraydef(tvecnode(hp).left.resultdef).elementdef) and
-                      not ispowerof2(tarraydef(tvecnode(hp).left.resultdef).elepackedbitsize div 8,temp))) then
+                    (ado_IsBitPacked in TArrayDef(tvecnode(hp).left.resultdef).arrayoptions) and
+                    ((TArrayDef(tvecnode(hp).left.resultdef).elepackedbitsize mod 8 <> 0) or
+                     (is_ordinal(TArrayDef(tvecnode(hp).left.resultdef).elementdef) and
+                      not ispowerof2(TArrayDef(tvecnode(hp).left.resultdef).elepackedbitsize div 8,temp))) then
                    begin
                      if report_errors then
                        if (valid_property in opts) then
@@ -1703,7 +1703,7 @@ implementation
                    will happen to the temp and be lost) }
                  if not gotsubscript and
                     not gotvec and
-                    not tstoreddef(hp.resultdef).is_intregable then
+                    not TStoredDef(hp.resultdef).is_intregable then
                    make_not_regable(hp,[ra_addr_regable]);
 
                  gotsubscript:=true;
@@ -1880,7 +1880,7 @@ implementation
                      begin
                        { loop counter? }
                        if not(Valid_Const in opts) and
-                          (vo_is_loop_counter in tabstractvarsym(tloadnode(hp).symtableentry).varoptions) then
+                          (vo_is_loop_counter in TAbstractVarSym(tloadnode(hp).symtableentry).varoptions) then
                          begin
                            if report_errors then
                              CGMessage1(parser_e_illegal_assignment_to_count_var,tloadnode(hp).symtableentry.realname);
@@ -1888,9 +1888,9 @@ implementation
                            exit;
                          end;
                        { read-only variable? }
-                       if (tabstractvarsym(tloadnode(hp).symtableentry).varspez in [vs_const,vs_constref,vs_final]) then
+                       if (TAbstractVarSym(tloadnode(hp).symtableentry).varspez in [vs_const,vs_constref,vs_final]) then
                         begin
-                          result:=constaccessok(tabstractvarsym(tloadnode(hp).symtableentry));
+                          result:=constaccessok(TAbstractVarSym(tloadnode(hp).symtableentry));
                           mayberesettypeconvs;
                           exit;
                         end;
@@ -1920,7 +1920,7 @@ implementation
                      end;
                    constsym:
                      begin
-                       if (tconstsym(tloadnode(hp).symtableentry).consttyp in [constresourcestring,constwresourcestring]) and
+                       if (TConstSym(tloadnode(hp).symtableentry).consttyp in [constresourcestring,constwresourcestring]) and
                          (valid_addr in opts) then
                          result:=true
                        else
@@ -1995,7 +1995,7 @@ implementation
       end;
 
 
-    procedure var_para_allowed(var eq:tequaltype;def_from,def_to:Tdef; fromnode: TNode);
+    procedure var_para_allowed(var eq:TEqualType;def_from,def_to:TDef; fromnode: TNode);
       begin
         { Note: eq must be already valid, it will only be updated! }
         case def_to.typ of
@@ -2013,10 +2013,10 @@ implementation
               if is_open_array(def_to) then
                 begin
                   if is_dynamic_array(def_from) and
-                     equal_defs(tarraydef(def_from).elementdef,tarraydef(def_to).elementdef) then
+                     equal_defs(TArrayDef(def_from).elementdef,TArrayDef(def_to).elementdef) then
                     eq:=te_convert_l2
                   else
-                    if equal_defs(def_from,tarraydef(def_to).elementdef) then
+                    if equal_defs(def_from,TArrayDef(def_to).elementdef) then
                       eq:=te_convert_l3;
                 end;
             end;
@@ -2041,10 +2041,10 @@ implementation
               { if they are objects              }
               if (def_from.typ=objectdef) and
                  (
-                  (tobjectdef(def_from).objecttype=odt_object) and
-                  (tobjectdef(def_to).objecttype=odt_object)
+                  (TObjectDef(def_from).objecttype=odt_object) and
+                  (TObjectDef(def_to).objecttype=odt_object)
                  ) and
-                 (def_is_related(tobjectdef(def_from),tobjectdef(def_to))) then
+                 (def_is_related(TObjectDef(def_from),TObjectDef(def_to))) then
                 eq:=te_convert_l1;
             end;
           filedef :
@@ -2052,8 +2052,8 @@ implementation
               { an implicit file conversion is also allowed }
               { from a typed file to an untyped one           }
               if (def_from.typ=filedef) and
-                 (tfiledef(def_from).filetyp = ft_typed) and
-                 (tfiledef(def_to).filetyp = ft_untyped) then
+                 (TFileDef(def_from).filetyp = ft_typed) and
+                 (TFileDef(def_to).filetyp = ft_untyped) then
                 eq:=te_convert_l1;
             end;
           else
@@ -2062,11 +2062,11 @@ implementation
       end;
 
 
-    procedure para_allowed(var eq:tequaltype;p:tcallparanode;def_to:tdef);
+    procedure para_allowed(var eq:TEqualType;p:tcallparanode;def_to:TDef);
       var
         acn: tarrayconstructornode;
-        realprocdef: tprocdef;
-        tmpeq: tequaltype;
+        realprocdef: TProcDef;
+        tmpeq: TEqualType;
       begin
         { Note: eq must be already valid, it will only be updated! }
         case def_to.typ of
@@ -2076,8 +2076,8 @@ implementation
               { string and string[10] are assumed as equal }
               { when searching the correct overloaded procedure   }
               if (p.resultdef.typ=stringdef) and
-                 (tstringdef(def_to).stringtype=tstringdef(p.resultdef).stringtype) and
-                 (tstringdef(def_to).encoding=tstringdef(p.resultdef).encoding) then
+                 (TStringDef(def_to).stringtype=TStringDef(p.resultdef).stringtype) and
+                 (TStringDef(def_to).encoding=TStringDef(p.resultdef).encoding) then
                 eq:=te_equal
             end;
           formaldef,
@@ -2096,15 +2096,15 @@ implementation
               if ((m_tp_procvar in CurrentSettings.modeswitches) or
                   (m_mac_procvar in CurrentSettings.modeswitches)) and
                  (p.left.nodetype=calln) then
-                tmpeq:=proc_to_procvar_equal(tprocdef(tcallnode(p.left).procdefinition),tprocvardef(def_to),false);
+                tmpeq:=proc_to_procvar_equal(TProcDef(tcallnode(p.left).procdefinition),TProcVarDef(def_to),false);
               if (tmpeq=te_incompatible) and
                  (m_nested_procvars in CurrentSettings.modeswitches) and
                  is_proc2procvar_load(p.left,realprocdef) then
-                tmpeq:=proc_to_procvar_equal(realprocdef,tprocvardef(def_to),false);
+                tmpeq:=proc_to_procvar_equal(realprocdef,TProcVarDef(def_to),false);
               if (tmpeq=te_incompatible) and
                  (m_mac in CurrentSettings.modeswitches) and
                  is_ambiguous_funcret_load(p.left,realprocdef) then
-                tmpeq:=proc_to_procvar_equal(realprocdef,tprocvardef(def_to),false);
+                tmpeq:=proc_to_procvar_equal(realprocdef,TProcVarDef(def_to),false);
               if tmpeq<>te_incompatible then
                 eq:=tmpeq;
             end;
@@ -2116,7 +2116,7 @@ implementation
                   (m_mac_procvar in CurrentSettings.modeswitches)) and
                  (p.left.nodetype=calln) and
                  is_invokable(def_to) then
-                tmpeq:=proc_to_funcref_conv(tprocdef(tcallnode(p.left).procdefinition),tobjectdef(def_to));
+                tmpeq:=proc_to_funcref_conv(TProcDef(tcallnode(p.left).procdefinition),TObjectDef(def_to));
               if tmpeq<>te_incompatible then
                 eq:=tmpeq;
             end;
@@ -2126,7 +2126,7 @@ implementation
                 an array of procvars }
               if ((m_tp_procvar in CurrentSettings.modeswitches) or
                   (m_mac_procvar in CurrentSettings.modeswitches)) and
-                 (tarraydef(def_to).elementdef.typ=procvardef) and
+                 (TArrayDef(def_to).elementdef.typ=procvardef) and
                  is_array_constructor(p.resultdef) and
                  not is_variant_array(p.resultdef) then
                 begin
@@ -2138,9 +2138,9 @@ implementation
                             (eq<>te_incompatible) do
                         begin
                           if (acn.left.nodetype=calln) then
-                            tmpeq:=proc_to_procvar_equal(tprocdef(tcallnode(acn.left).procdefinition),tprocvardef(tarraydef(def_to).elementdef),false)
+                            tmpeq:=proc_to_procvar_equal(TProcDef(tcallnode(acn.left).procdefinition),TProcVarDef(TArrayDef(def_to).elementdef),false)
                           else
-                            tmpeq:=compare_defs(acn.left.resultdef,tarraydef(def_to).elementdef,acn.left.nodetype);
+                            tmpeq:=compare_defs(acn.left.resultdef,TArrayDef(def_to).elementdef,acn.left.nodetype);
                           if tmpeq<eq then
                             eq:=tmpeq;
                           acn:=tarrayconstructornode(acn.right);
@@ -2174,7 +2174,7 @@ implementation
                            TCallCandidates
 ****************************************************************************}
 
-    constructor tcallcandidates.init(sym:tprocsym;st:TSymtable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+    constructor tcallcandidates.init(sym:TProcSym;st:TSymTable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
       begin
         if not assigned(sym) then
           internalerror(200411015);
@@ -2200,9 +2200,9 @@ implementation
       var
         hpnext,
         hp : pcandidate;
-        psym : tprocsym;
+        psym : TProcSym;
         i : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         FIgnoredCandidateProcs.free;
         FIgnoredCandidateProcs := nil;
@@ -2214,10 +2214,10 @@ implementation
          begin
            hpnext:=hp^.next;
            { free those procdef specializations that are not owned (thus were discarded) }
-           if hp^.data.is_specialization and not hp^.data.is_registered then
+           if hp^.data.is_specialization and not hp^.data.IsRegistered then
              begin
                { also remove the procdef from its symbol's procdeflist }
-               psym:=tprocsym(hp^.data.procsym);
+               psym:=TProcSym(hp^.data.procsym);
                for i:=0 to psym.procdeflist.count-1 do
                  begin
                    if psym.procdeflist[i]=hp^.data then
@@ -2234,26 +2234,26 @@ implementation
       end;
 
 
-    procedure tcallcandidates.collect_overloads_in_struct(structdef:tabstractrecorddef;ProcdefOverloadList:TFPObjectList;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+    procedure tcallcandidates.collect_overloads_in_struct(structdef:TAbstractRecordDef;ProcdefOverloadList:TFPObjectList;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
 
       var
         changedhierarchy : boolean;
 
-      function processprocsym(srsym:tprocsym; out foundanything: boolean):boolean;
+      function processprocsym(srsym:TProcSym; out foundanything: boolean):boolean;
         var
           j  : integer;
-          pd : tprocdef;
+          pd : TProcDef;
         begin
           { add all definitions }
           result:=false;
           foundanything:=false;
           { try to specialize the procsym }
           if srsym.could_be_implicitly_specialized and
-            try_implicit_specialization(srsym,FParaNode,ProcdefOverloadList,FParaAnonSyms,tsym(FProcsym),result) then
+            try_implicit_specialization(srsym,FParaNode,ProcdefOverloadList,FParaAnonSyms,TSym(FProcsym),result) then
             foundanything:=true;
           for j:=0 to srsym.ProcdefList.Count-1 do
             begin
-              pd:=tprocdef(srsym.ProcdefList[j]);
+              pd:=TProcDef(srsym.ProcdefList[j]);
               if not finalize_specialization(pd,spezcontext) then
                 continue;
               if (po_ignore_for_overload_resolution in pd.procoptions) then
@@ -2284,7 +2284,7 @@ implementation
               foundanything:=true;
               { Store first procsym found }
               if not assigned(FProcsym) then
-                FProcsym:=tprocsym(srsym);
+                FProcsym:=TProcSym(srsym);
               if po_overload in pd.procoptions then
                 result:=true;
               { if the hierarchy had been changed we need to check for duplicates }
@@ -2293,9 +2293,9 @@ implementation
             end;
         end;
 
-      function processhelper(hashedid:THashedIDString;helperdef:tobjectdef):boolean;
+      function processhelper(hashedid:THashedIDString;helperdef:TObjectDef):boolean;
         var
-          srsym : tsym;
+          srsym : TSym;
           hasoverload,foundanything : boolean;
         begin
           result:=false;
@@ -2303,13 +2303,13 @@ implementation
           hasoverload:=false;
           while assigned(helperdef) do
             begin
-              srsym:=tsym(helperdef.symtable.FindWithHash(hashedid));
+              srsym:=TSym(helperdef.symtable.FindWithHash(hashedid));
               if assigned(srsym) and
                   { Delphi allows hiding a property by a procedure with the same name }
                   (srsym.typ=procsym) and
-                  (tprocsym(srsym).procdeflist.count>0) then
+                  (TProcSym(srsym).procdeflist.count>0) then
                 begin
-                  hasoverload:=processprocsym(tprocsym(srsym),foundanything);
+                  hasoverload:=processprocsym(TProcSym(srsym),foundanything);
                   { when there is no explicit overload we stop searching }
                   if foundanything and
                      not hasoverload then
@@ -2322,12 +2322,12 @@ implementation
         end;
 
       var
-        srsym      : tsym;
+        srsym      : TSym;
         hashedid   : THashedIDString;
         hasoverload,
         foundanything : boolean;
-        extendeddef : tabstractrecorddef;
-        helperdef  : tobjectdef;
+        extendeddef : TAbstractRecordDef;
+        helperdef  : TObjectDef;
         helperlist : TFPObjectList;
         i : integer;
       begin
@@ -2344,7 +2344,7 @@ implementation
            if ((structdef.typ=recorddef) or
                  (
                    (structdef.typ=objectdef) and
-                   (tobjectdef(structdef).objecttype in objecttypes_with_helpers)
+                   (TObjectDef(structdef).objecttype in objecttypes_with_helpers)
                  )
                )
                and (cc_searchhelpers in flags) then
@@ -2356,7 +2356,7 @@ implementation
                      begin
                        i:=helperlist.count-1;
                        repeat
-                         helperdef:=tobjectdef(helperlist[i]);
+                         helperdef:=TObjectDef(helperlist[i]);
                          if (helperdef.owner.symtabletype in [staticsymtable,globalsymtable]) or
                             is_visible_for_object(helperdef.typesym,helperdef) then
                               if processhelper(hashedid,helperdef) then
@@ -2369,12 +2369,12 @@ implementation
                   exit;
              end;
            { now search in the type itself }
-           srsym:=tsym(structdef.symtable.FindWithHash(hashedid));
+           srsym:=TSym(structdef.symtable.FindWithHash(hashedid));
            if assigned(srsym) and
               { Delphi allows hiding a property by a procedure with the same name }
               (srsym.typ=procsym) then
              begin
-               hasoverload:=processprocsym(tprocsym(srsym),foundanything);
+               hasoverload:=processprocsym(TProcSym(srsym),foundanything);
                { when there is no explicit overload we stop searching }
                if foundanything and
                   not hasoverload then
@@ -2382,24 +2382,24 @@ implementation
              end;
            if is_objectpascal_helper(structdef) and
               (
-                (tobjectdef(structdef).extendeddef.typ=recorddef) or
+                (TObjectDef(structdef).extendeddef.typ=recorddef) or
                 (
-                  (tobjectdef(structdef).extendeddef.typ=objectdef) and
-                  (tobjectdef(tobjectdef(structdef).extendeddef).objecttype in objecttypes_with_helpers)
+                  (TObjectDef(structdef).extendeddef.typ=objectdef) and
+                  (TObjectDef(TObjectDef(structdef).extendeddef).objecttype in objecttypes_with_helpers)
                 )
               ) then
              begin
                { remember the first extendeddef of the hierarchy }
                if not assigned(extendeddef) then
-                 extendeddef:=tabstractrecorddef(tobjectdef(structdef).extendeddef);
+                 extendeddef:=TAbstractRecordDef(TObjectDef(structdef).extendeddef);
                { search methods in the extended type as well }
-               srsym:=tprocsym(tabstractrecorddef(tobjectdef(structdef).extendeddef).symtable.FindWithHash(hashedid));
+               srsym:=TProcSym(TAbstractRecordDef(TObjectDef(structdef).extendeddef).symtable.FindWithHash(hashedid));
                if assigned(srsym) and
                   { Delphi allows hiding a property by a procedure with the same name }
                   (srsym.typ=procsym) and
-                  (tprocsym(srsym).procdeflist.count>0) then
+                  (TProcSym(srsym).procdeflist.count>0) then
                  begin
-                   hasoverload:=processprocsym(tprocsym(srsym),foundanything);
+                   hasoverload:=processprocsym(TProcSym(srsym),foundanything);
                    { when there is no explicit overload we stop searching }
                    if foundanything and
                       not hasoverload then
@@ -2408,7 +2408,7 @@ implementation
              end;
            { next parent }
            if (structdef.typ=objectdef) then
-             structdef:=tobjectdef(structdef).childof
+             structdef:=TObjectDef(structdef).childof
            else
              structdef:=nil;
            { switch over to the extended def's hierarchy }
@@ -2425,10 +2425,10 @@ implementation
     procedure tcallcandidates.collect_overloads_in_units(ProcdefOverloadList:TFPObjectList; flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
       var
         j          : integer;
-        pd         : tprocdef;
-        srsymtable : TSymtable;
-        srsym      : tsym;
-        checkstack : psymtablestackitem;
+        pd         : TProcDef;
+        srsymtable : TSymTable;
+        srsym      : TSym;
+        checkstack : PSymTableStackItem;
         hashedid   : THashedIDString;
         foundanything,
         hasoverload : boolean;
@@ -2471,22 +2471,22 @@ implementation
                 )
                then
               begin
-                srsym:=tsym(srsymtable.FindWithHash(hashedid));
+                srsym:=TSym(srsymtable.FindWithHash(hashedid));
                 if assigned(srsym) and
                    (srsym.typ=procsym) and
                    (
-                     (tprocsym(srsym).procdeflist.count>0) or
+                     (TProcSym(srsym).procdeflist.count>0) or
                      (sp_generic_dummy in srsym.symoptions)
                    ) then
                   begin
                     { add all definitions }
                     hasoverload:=false;
                     foundanything:=false;
-                    if tprocsym(srsym).could_be_implicitly_specialized then
-                      foundanything:=try_implicit_specialization(srsym,FParaNode,ProcdefOverloadList,FParaAnonSyms,tsym(FProcsym),hasoverload);
-                    for j:=0 to tprocsym(srsym).ProcdefList.Count-1 do
+                    if TProcSym(srsym).could_be_implicitly_specialized then
+                      foundanything:=try_implicit_specialization(srsym,FParaNode,ProcdefOverloadList,FParaAnonSyms,TSym(FProcsym),hasoverload);
+                    for j:=0 to TProcSym(srsym).ProcdefList.Count-1 do
                       begin
-                        pd:=tprocdef(tprocsym(srsym).ProcdefList[j]);
+                        pd:=TProcDef(TProcSym(srsym).ProcdefList[j]);
                         if not finalize_specialization(pd,spezcontext) then
                           continue;
                         if (po_ignore_for_overload_resolution in pd.procoptions) then
@@ -2496,7 +2496,7 @@ implementation
                           end;
                         { Store first procsym found }
                         if not assigned(FProcsym) then
-                          FProcsym:=tprocsym(srsym);
+                          FProcsym:=TProcSym(srsym);
                         if po_overload in pd.procoptions then
                           hasoverload:=true;
                         ProcdefOverloadList.Add(pd);
@@ -2518,13 +2518,13 @@ implementation
     procedure tcallcandidates.create_candidate_list(flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
       var
         j     : integer;
-        pd    : tprocdef;
+        pd    : TProcDef;
         hp    : pcandidate;
         pt    : tcallparanode;
         found,
         added : boolean;
-        st    : TSymtable;
-        contextstructdef : tabstractrecorddef;
+        st    : TSymTable;
+        contextstructdef : TAbstractRecordDef;
         ProcdefOverloadList : TFPObjectList;
         cpoptions : tcompare_paras_options;
       begin
@@ -2535,7 +2535,7 @@ implementation
         if not (cc_objcidcall in flags) and
            (FOperator=NOTOKEN) and
            (FProcsym.owner.symtabletype in [objectsymtable,recordsymtable]) then
-          collect_overloads_in_struct(tabstractrecorddef(FProcsym.owner.defowner),ProcdefOverloadList,flags,spezcontext)
+          collect_overloads_in_struct(TAbstractRecordDef(FProcsym.owner.defowner),ProcdefOverloadList,flags,spezcontext)
         else
         if (FOperator<>NOTOKEN) then
           begin
@@ -2545,8 +2545,8 @@ implementation
             while assigned(pt) do
               begin
                 if (pt.resultdef.typ=recorddef) and
-                    (sto_has_operator in tabstractrecorddef(pt.resultdef).symtable.tableoptions) then
-                  collect_overloads_in_struct(tabstractrecorddef(pt.resultdef),ProcdefOverloadList,flags,spezcontext);
+                    (sto_has_operator in TAbstractRecordDef(pt.resultdef).symtable.tableoptions) then
+                  collect_overloads_in_struct(TAbstractRecordDef(pt.resultdef),ProcdefOverloadList,flags,spezcontext);
                 pt:=tcallparanode(pt.right);
               end;
             collect_overloads_in_units(ProcdefOverloadList,flags,spezcontext);
@@ -2580,7 +2580,7 @@ implementation
            ) and
            (FProcSymtable.defowner.owner.symtabletype in [globalsymtable,staticsymtable,objectsymtable,recordsymtable]) and
            FProcSymtable.defowner.owner.iscurrentunit then
-          contextstructdef:=tabstractrecorddef(FProcSymtable.defowner)
+          contextstructdef:=TAbstractRecordDef(FProcSymtable.defowner)
         else
           contextstructdef:=CurrentStructDef;
 
@@ -2592,7 +2592,7 @@ implementation
         { Process all found overloads }
         for j:=0 to ProcdefOverloadList.Count-1 do
           begin
-            pd:=tprocdef(ProcdefOverloadList[j]);
+            pd:=TProcDef(ProcdefOverloadList[j]);
             added:=false;
 
             { only when the # of parameter are supported by the procedure and
@@ -2621,7 +2621,7 @@ implementation
                   pd.is_specialization and not assigned(pd.owner) and
                   (
                     not (pd.genericdef.owner.symtabletype in [objectsymtable,recordsymtable]) or
-                    is_visible_for_object(tprocdef(pd.genericdef),contextstructdef)
+                    is_visible_for_object(TProcDef(pd.genericdef),contextstructdef)
                   )
                 ) or
                 (
@@ -2667,9 +2667,9 @@ implementation
             { we need to remove all specializations that were not used from their
               procsyms as no code must be generated for them (if they are used
               later on they'll be added like the ones that were used now) }
-            if not added and assigned(spezcontext) and not pd.is_registered then
+            if not added and assigned(spezcontext) and not pd.IsRegistered then
               begin
-                if tprocsym(pd.procsym).procdeflist.extract(pd)<>pd then
+                if TProcSym(pd.procsym).procdeflist.extract(pd)<>pd then
                   internalerror(20150828);
                 pd.free;
                 pd := nil;
@@ -2691,11 +2691,11 @@ implementation
       end;
 
 
-    procedure tcallcandidates.calc_distance(st_root: tsymtable; flags:tcallcandidatesflags);
+    procedure tcallcandidates.calc_distance(st_root: TSymTable; flags:tcallcandidatesflags);
       var
-        pd:tprocdef;
+        pd:TProcDef;
         candidate:pcandidate;
-        st: tsymtable;
+        st: TSymTable;
       begin
         { Give a small penalty for overloaded methods not defined in the
           current class/unit }
@@ -2741,13 +2741,13 @@ implementation
 
                 { no more parent class -> take current class as root anyway
                   (could maybe happen in case of a class helper?) }
-                if not assigned(tobjectdef(st_root.defowner).childof) then
+                if not assigned(TObjectDef(st_root.defowner).childof) then
                   begin
                     st:=st_root;
                     break;
                   end;
 
-                st_root:=tobjectdef(st_root.defowner).childof.symtable;
+                st_root:=TObjectDef(st_root.defowner).childof.symtable;
               end;
           until assigned(st);
 
@@ -2771,7 +2771,7 @@ implementation
       end;
 
 
-    function tcallcandidates.proc_add(st:tsymtable;pd:tprocdef):pcandidate;
+    function tcallcandidates.proc_add(st:TSymTable;pd:TProcDef):pcandidate;
       var
         defaultparacnt : integer;
       begin
@@ -2788,7 +2788,7 @@ implementation
         if not(po_varargs in pd.procoptions) then
          begin
            { ignore hidden parameters }
-           while (result^.firstparaidx>=0) and (vo_is_hidden_para in tparavarsym(pd.paras[result^.firstparaidx]).varoptions) do
+           while (result^.firstparaidx>=0) and (vo_is_hidden_para in TParaVarSym(pd.paras[result^.firstparaidx]).varoptions) do
              dec(result^.firstparaidx);
            defaultparacnt:=pd.maxparacount-FParalength;
            if defaultparacnt>0 then
@@ -2834,7 +2834,7 @@ implementation
       var
         hp : pcandidate;
         i  : integer;
-        currpara : tparavarsym;
+        currpara : TParaVarSym;
       begin
         if not CheckVerbosity(lvl) then
          exit;
@@ -2862,7 +2862,7 @@ implementation
               { Print parameters in left-right order }
               for i:=0 to hp^.data.paras.count-1 do
                begin
-                 currpara:=tparavarsym(hp^.data.paras[i]);
+                 currpara:=TParaVarSym(hp^.data.paras[i]);
                  if not(vo_is_hidden_para in currpara.varoptions) then
                    Comment(lvl,'    - '+currpara.vardef.typename+' : '+EqualTypeName[currpara.eqval]);
                end;
@@ -2876,25 +2876,25 @@ implementation
     procedure tcallcandidates.get_information;
       var
         hp       : pcandidate;
-        currpara : tparavarsym;
+        currpara : TParaVarSym;
         paraidx,fp_precision_distance : integer;
         currparanr : word;
         obj_from,
-        obj_to   : tobjectdef;
+        obj_to   : TObjectDef;
         def_from,
-        def_to   : tdef;
+        def_to   : TDef;
         currpt,
         pt       : tcallparanode;
         eq,
-        mineq    : tequaltype;
+        mineq    : TEqualType;
         convtype : tconverttype;
         pdtemp,
-        pdoper   : tprocdef;
+        pdoper   : TProcDef;
         releasecurrpt, check_valid_var : boolean;
         cdoptions : tcompare_defs_options;
         n : TNode;
 
-        function fp_precision_score(def: tdef): integer;
+        function fp_precision_score(def: TDef): integer;
           begin
             if is_extended(def) then
               result:=4
@@ -2917,7 +2917,7 @@ implementation
              were we need to start comparing }
            currparanr:=FParalength;
            paraidx:=hp^.firstparaidx;
-           while (paraidx>=0) and (vo_is_hidden_para in tparavarsym(hp^.data.paras[paraidx]).varoptions) do
+           while (paraidx>=0) and (vo_is_hidden_para in TParaVarSym(hp^.data.paras[paraidx]).varoptions) do
              dec(paraidx);
            pt:=tcallparanode(FParaNode);
            while assigned(pt) and ((paraidx>=0) or (po_varargs in hp^.data.procoptions)) do
@@ -2925,7 +2925,7 @@ implementation
               if paraidx<0 then
                 currpara:=nil
               else
-                currpara:=tparavarsym(hp^.data.paras[paraidx]);
+                currpara:=TParaVarSym(hp^.data.paras[paraidx]);
               { currpt can be changed from loadn to calln when a procvar
                 is passed. This is to prevent that the change is permanent }
               currpt:=pt;
@@ -2953,12 +2953,12 @@ implementation
                 (currpt.left.resultdef.typ=procvardef) and
                 not(def_to.typ in [procvardef,formaldef]) and
                 { if it doesn't require any parameters }
-                (tprocvardef(currpt.left.resultdef).minparacount=0) and
+                (TProcVarDef(currpt.left.resultdef).minparacount=0) and
                 { Only convert to call when there is no overload or the return type
                   is compatible with the expected type. }
                 (
                  (count=1) or
-                 (compare_defs_ext(tprocvardef(currpt.left.resultdef).returndef,def_to,nothingn,convtype,pdoper,[])>te_incompatible)
+                 (compare_defs_ext(TProcVarDef(currpt.left.resultdef).returndef,def_to,nothingn,convtype,pdoper,[])>te_incompatible)
                 ) then
                begin
                  releasecurrpt:=true;
@@ -2983,9 +2983,9 @@ implementation
                 (currpt.left.resultdef.typ=procdef) then
                begin
                  if def_to.typ=procvardef then
-                   pdtemp:=tprocsym(Tloadnode(currpt.left).symtableentry).Find_procdef_byprocvardef(Tprocvardef(def_to))
+                   pdtemp:=TProcSym(Tloadnode(currpt.left).symtableentry).Find_procdef_byprocvardef(TProcVarDef(def_to))
                  else
-                   pdtemp:=tprocsym(tloadnode(currpt.left).symtableentry).find_procdef_byfuncrefdef(tobjectdef(def_to));
+                   pdtemp:=TProcSym(tloadnode(currpt.left).symtableentry).find_procdef_byfuncrefdef(TObjectDef(def_to));
                  if assigned(pdtemp) then
                    begin
                      tloadnode(currpt.left).setprocdef(pdtemp,def_to.typ<>procvardef);
@@ -3009,9 +3009,9 @@ implementation
                 (ttypeconvnode(currpt.left).left.resultdef.typ=procdef) then
                begin
                  if def_to.typ=procvardef then
-                   pdtemp:=tprocsym(tloadnode(ttypeconvnode(currpt.left).left).symtableentry).Find_procdef_byprocvardef(Tprocvardef(def_to))
+                   pdtemp:=TProcSym(tloadnode(ttypeconvnode(currpt.left).left).symtableentry).Find_procdef_byprocvardef(TProcVarDef(def_to))
                  else
-                   pdtemp:=tprocsym(tloadnode(ttypeconvnode(currpt.left).left).symtableentry).find_procdef_byfuncrefdef(tobjectdef(def_to));
+                   pdtemp:=TProcSym(tloadnode(ttypeconvnode(currpt.left).left).symtableentry).find_procdef_byfuncrefdef(TObjectDef(def_to));
                  if assigned(pdtemp) then
                    begin
                      tloadnode(ttypeconvnode(currpt.left).left).setprocdef(pdtemp,def_to.typ<>procvardef);
@@ -3042,8 +3042,8 @@ implementation
                  begin
                    eq:=te_equal;
                    { is_in_limit(def_from, def_to) means that def_from.low >= def_to.low and def_from.high <= def_to.high. }
-                   hp^.increment_ordinal_distance(torddef(def_from).low-torddef(def_to).low);
-                   hp^.increment_ordinal_distance(torddef(def_to).high-torddef(def_from).high);
+                   hp^.increment_ordinal_distance(TOrdDef(def_from).low-TOrdDef(def_to).low);
+                   hp^.increment_ordinal_distance(TOrdDef(def_to).high-TOrdDef(def_from).high);
                    { Give wrong sign a small penalty, this is need to get a difference
                      from word->[longword,longint] }
                    if (is_signed(def_from)<>is_signed(def_to)) then
@@ -3072,14 +3072,14 @@ implementation
                   not(currpara.varspez in [vs_var,vs_out]) and
                   (def_from.typ=objectdef) and
                   (def_to.typ=objectdef) and
-                  (tobjectdef(def_from).objecttype=tobjectdef(def_to).objecttype) and
-                  def_is_related(tobjectdef(def_from),tobjectdef(def_to)) then
+                  (TObjectDef(def_from).objecttype=TObjectDef(def_to).objecttype) and
+                  def_is_related(TObjectDef(def_from),TObjectDef(def_to)) then
                  begin
                    eq:=te_convert_l1;
                    check_valid_var:=false;
                    { resolve anonymous external class definitions }
-                   obj_from:=find_real_class_definition(tobjectdef(def_from),false);
-                   obj_to:=find_real_class_definition(tobjectdef(def_to),false);
+                   obj_from:=find_real_class_definition(TObjectDef(def_from),false);
+                   obj_to:=find_real_class_definition(TObjectDef(def_to),false);
                    while assigned(obj_from) do
                      begin
                        if obj_from=obj_to then
@@ -3102,7 +3102,7 @@ implementation
                    n := nil;
                  end
               else if is_open_array(def_to) and
-                      is_class_or_interface_or_dispinterface_or_objc_or_java(tarraydef(def_to).elementdef) and
+                      is_class_or_interface_or_dispinterface_or_objc_or_java(TArrayDef(def_to).elementdef) and
                       is_array_constructor(currpt.left.resultdef) and
                       assigned(tarrayconstructornode(currpt.left).left) then
                 begin
@@ -3116,7 +3116,7 @@ implementation
                     if tarrayconstructornode(n).left.nodetype=arrayconstructorrangen then
                       eq:=te_incompatible
                     else
-                      eq:=compare_defs_ext(tarrayconstructornode(n).left.resultdef,tarraydef(def_to).elementdef,tarrayconstructornode(n).left.nodetype,convtype,pdoper,cdoptions);
+                      eq:=compare_defs_ext(tarrayconstructornode(n).left.resultdef,TArrayDef(def_to).elementdef,tarrayconstructornode(n).left.nodetype,convtype,pdoper,cdoptions);
                     if eq<mineq then
                       mineq:=eq;
                     if eq=te_incompatible then
@@ -3132,7 +3132,7 @@ implementation
                  if (hp^.data.procoptions*[po_rtlproc,po_compilerproc]=[]) and
                     is_ansistring(def_from) and
                     is_ansistring(def_to) and
-                    (tstringdef(def_from).encoding<>tstringdef(def_to).encoding) and
+                    (TStringDef(def_from).encoding<>TStringDef(def_to).encoding) and
                     (currpara.varspez in [vs_var,vs_out]) then
                     begin
                       eq:=te_convert_l1; // don't allow to pass different ansistring types to each-other
@@ -3217,7 +3217,7 @@ implementation
                  { Ignore vs_hidden parameters }
                  repeat
                    dec(paraidx);
-                 until (paraidx<0) or not(vo_is_hidden_para in tparavarsym(hp^.data.paras[paraidx]).varoptions);
+                 until (paraidx<0) or not(vo_is_hidden_para in TParaVarSym(hp^.data.paras[paraidx]).varoptions);
                end;
               dec(currparanr);
             end;
@@ -3230,32 +3230,32 @@ implementation
       end;
 
 
-    function get_variantequaltype(def: tdef): tvariantequaltype;
+    function get_variantequaltype(def: TDef): TVariantEqualType;
       const
-        variantorddef_cl: array[tordtype] of tvariantequaltype =
+        variantorddef_cl: array[TOrdType] of TVariantEqualType =
           (tve_incompatible,tve_byte,tve_word,tve_cardinal,tve_chari64,tve_incompatible,
            tve_shortint,tve_smallint,tve_longint,tve_chari64,tve_incompatible,
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_chari64,tve_chari64,tve_dblcurrency,tve_incompatible);
-        variantfloatdef_cl: array[TFloatType] of tvariantequaltype =
+        variantfloatdef_cl: array[TFloatType] of TVariantEqualType =
           (tve_single,tve_dblcurrency,tve_extended,tve_extended,
            tve_dblcurrency,tve_dblcurrency);
-        variantstringdef_cl: array[tstringtype] of tvariantequaltype =
+        variantstringdef_cl: array[TStringType] of TVariantEqualType =
           (tve_sstring,tve_astring,tve_astring,tve_wstring,tve_ustring);
       begin
         case def.typ of
           orddef:
             begin
-              result:=variantorddef_cl[torddef(def).ordtype];
+              result:=variantorddef_cl[TOrdDef(def).ordtype];
             end;
           floatdef:
             begin
-              result:=variantfloatdef_cl[tfloatdef(def).floattype];
+              result:=variantfloatdef_cl[TFloatDef(def).floattype];
             end;
           stringdef:
             begin
-              result:=variantstringdef_cl[tstringdef(def).stringtype];
+              result:=variantstringdef_cl[TStringDef(def).stringtype];
             end;
           formaldef:
             begin
@@ -3367,7 +3367,7 @@ implementation
     function is_better_candidate_single_variant(currpd,bestpd:pcandidate):integer;
 
       function calculate_relation(const currvcl, bestvcl, testvcl:
-          tvariantequaltype; const conflictvcls: tvariantequaltypes):integer;
+          TVariantEqualType; const conflictvcls: TVariantEqualTypes):integer;
         begin
           { if (bestvcl=conflictvcl) or
                (currvcl=conflictvcl) then
@@ -3386,15 +3386,15 @@ implementation
             { functions, e.g. lowercase():char and lowercase():shortstring }
             { (depending on the calling convention and parameter order)    }
             result:=pd^.firstparaidx;
-            while (result>=0) and (vo_is_hidden_para in tparavarsym(pd^.data.paras[result]).varoptions) do
+            while (result>=0) and (vo_is_hidden_para in TParaVarSym(pd^.data.paras[result]).varoptions) do
               dec(result);
-            if (vo_is_hidden_para in tparavarsym(pd^.data.paras[result]).varoptions) then
+            if (vo_is_hidden_para in TParaVarSym(pd^.data.paras[result]).varoptions) then
               internalerror(2006122803);
           end;
 
       var
-        currpara, bestpara: tparavarsym;
-        currvcl, bestvcl: tvariantequaltype;
+        currpara, bestpara: TParaVarSym;
+        currvcl, bestvcl: TVariantEqualType;
       begin
         {
           Return values:
@@ -3402,8 +3402,8 @@ implementation
             < 0 when bestpd is better than currpd
             = 0 when both are equal
         }
-        currpara:=tparavarsym(currpd^.data.paras[getfirstrealparaidx(currpd)]);
-        bestpara:=tparavarsym(bestpd^.data.paras[getfirstrealparaidx(bestpd)]);
+        currpara:=TParaVarSym(currpd^.data.paras[getfirstrealparaidx(currpd)]);
+        bestpara:=TParaVarSym(bestpd^.data.paras[getfirstrealparaidx(bestpd)]);
 
         { if one of the parameters is a regular variant, fall back to the }
         { default algorithm                                               }
@@ -3508,9 +3508,9 @@ implementation
 
 {$ifdef DISABLE_FAST_OVERLOAD_PATCH}
 
-    function tcallcandidates.choose_best(var bestpd:tabstractprocdef; singlevariant: boolean):integer;
+    function tcallcandidates.choose_best(var bestpd:TAbstractProcDef; singlevariant: boolean):integer;
       var
-        pd: tprocdef;
+        pd: TProcDef;
         besthpstart,
         hp            : pcandidate;
         cntpd,
@@ -3574,12 +3574,12 @@ implementation
           begin
             for res:=0 to FIgnoredCandidateProcs.count-1 do
               begin
-                pd:=tprocdef(FIgnoredCandidateProcs[res]);
+                pd:=TProcDef(FIgnoredCandidateProcs[res]);
                 { stop searching when we start comparing methods of parent of
                   the struct in which the current best method was found }
                 if assigned(pd.struct) and
-                   (pd.struct<>tprocdef(bestpd).struct) and
-                   def_is_related(tprocdef(bestpd).struct,pd.struct) then
+                   (pd.struct<>TProcDef(bestpd).struct) and
+                   def_is_related(TProcDef(bestpd).struct,pd.struct) then
                   break;
                 if (pd.proctypeoption=bestpd.proctypeoption) and
                    ((pd.procoptions*[po_classmethod,po_methodpointer])=(bestpd.procoptions*[po_classmethod,po_methodpointer])) and
@@ -3651,9 +3651,9 @@ implementation
       end;
 
 
-    function tcallcandidates.choose_best(var bestpd:tabstractprocdef; singlevariant: boolean):integer;
+    function tcallcandidates.choose_best(var bestpd:TAbstractProcDef; singlevariant: boolean):integer;
       var
-        pd: tprocdef;
+        pd: TProcDef;
         besthpstart,
         hp,hp2        : pcandidate;
         cntpd,
@@ -3802,12 +3802,12 @@ implementation
           begin
             for res:=0 to FIgnoredCandidateProcs.count-1 do
               begin
-                pd:=tprocdef(FIgnoredCandidateProcs[res]);
+                pd:=TProcDef(FIgnoredCandidateProcs[res]);
                 { stop searching when we start comparing methods of parent of
                   the struct in which the current best method was found }
                 if assigned(pd.struct) and
-                   (pd.struct<>tprocdef(bestpd).struct) and
-                   def_is_related(tprocdef(bestpd).struct,pd.struct) then
+                   (pd.struct<>TProcDef(bestpd).struct) and
+                   def_is_related(TProcDef(bestpd).struct,pd.struct) then
                   break;
                 if (pd.proctypeoption=bestpd.proctypeoption) and
                    ((pd.procoptions*[po_classmethod,po_methodpointer])=(bestpd.procoptions*[po_classmethod,po_methodpointer])) and
@@ -3833,7 +3833,7 @@ implementation
         currparanr : smallint;
         hp : pcandidate;
         pt : tcallparanode;
-        wrongpara : tparavarsym;
+        wrongpara : TParaVarSym;
       begin
         { Only process the first overloaded procdef }
         hp:=FCandidateProcs;
@@ -3851,7 +3851,7 @@ implementation
           internalerror(200212094);
         { Show error message, when it was a var or out parameter
           guess that it is a missing typeconv }
-        wrongpara:=tparavarsym(hp^.data.paras[hp^.wrongparaidx]);
+        wrongpara:=TParaVarSym(hp^.data.paras[hp^.wrongparaidx]);
         if wrongpara.varspez in [vs_var,vs_out] then
           begin
             { Maybe passing the correct type but passing a const to var parameter }
@@ -3872,7 +3872,7 @@ implementation
       end;
 
 
-    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: tdef);
+    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: TDef);
       begin
         if not(cs_check_ordinal_size in CurrentSettings.localswitches) then
           exit;
@@ -3893,8 +3893,8 @@ implementation
                { s80real and sc80real have a different size but the same precision }
                not((destdef.typ=floatdef) and
                    (source.resultdef.typ=floatdef) and
-                   (tfloatdef(source.resultdef).floattype in [s80real,sc80real]) and
-                   (tfloatdef(destdef).floattype in [s80real,sc80real]))) or
+                   (TFloatDef(source.resultdef).floattype in [s80real,sc80real]) and
+                   (TFloatDef(destdef).floattype in [s80real,sc80real]))) or
               ((destdef.typ<>floatdef) and
                (source.resultdef.typ<>floatdef) and
                not is_in_limit(source.resultdef,destdef)) then
@@ -3907,19 +3907,19 @@ implementation
          end;
       end;
 
-    function is_valid_for_default(def:tdef):boolean;
+    function is_valid_for_default(def:TDef):boolean;
 
-      function is_valid_record_or_object(def:tabstractrecorddef):boolean;
+      function is_valid_record_or_object(def:TAbstractRecordDef):boolean;
         var
-          sym : tsym;
+          sym : TSym;
           i : longint;
         begin
           for i:=0 to def.symtable.symlist.count-1 do
             begin
-              sym:=tsym(def.symtable.symlist[i]);
+              sym:=TSym(def.symtable.symlist[i]);
               if not is_normal_fieldvarsym(sym) then
                 continue;
-              if not is_valid_for_default(tfieldvarsym(sym).vardef) then
+              if not is_valid_for_default(TFieldVarSym(sym).vardef) then
                 begin
                   result:=false;
                   exit;
@@ -3931,18 +3931,18 @@ implementation
       begin
         case def.typ of
           recorddef:
-            result:=is_valid_record_or_object(tabstractrecorddef(def));
+            result:=is_valid_record_or_object(TAbstractRecordDef(def));
           objectdef:
             if is_implicit_pointer_object_type(def) then
               result:=true
             else
               if is_object(def) then
-                result:=is_valid_record_or_object(tabstractrecorddef(def))
+                result:=is_valid_record_or_object(TAbstractRecordDef(def))
               else
                 result:=false;
           arraydef:
-            if not (ado_isdynamicarray in tarraydef(def).arrayoptions) then
-              result:=is_valid_for_default(tarraydef(def).elementdef)
+            if not (ado_isdynamicarray in TArrayDef(def).arrayoptions) then
+              result:=is_valid_for_default(TArrayDef(def).elementdef)
             else
               result:=true;
           formaldef,

@@ -52,12 +52,12 @@ interface
        terrornodeclass = class of terrornode;
 
        tspecializenode = class(TUnaryNode)
-          sym:tsym;
+          sym:TSym;
           getaddr:boolean;
-          inheriteddef:tdef;
+          inheriteddef:TDef;
           unit_specific:boolean;
-          constructor create(l:TNode;g:boolean;s:tsym;u:boolean);virtual;
-          constructor create_inherited(l:TNode;g:boolean;s:tsym;i:tdef);virtual;
+          constructor create(l:TNode;g:boolean;s:TSym;u:boolean);virtual;
+          constructor create_inherited(l:TNode;g:boolean;s:TSym;i:TDef);virtual;
           function pass_1:TNode;override;
           function pass_typecheck:TNode;override;
        end;
@@ -86,8 +86,8 @@ interface
           constructor create(p : TAsmList);virtual;
           constructor create_get_position;
           destructor destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -127,8 +127,8 @@ interface
           blocknodeflags : TBlockNodeFlags;
           constructor create(l : TNode);virtual;
           destructor destroy; override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function dogetcopy : TNode;override;
           function simplify(forinline : boolean) : TNode; override;
           function pass_1 : TNode;override;
@@ -231,8 +231,8 @@ interface
          { set to the copy of a tempcreate pnode (if it gets copied) so that the }
          { refs and deletenode can hook to this copy once they get copied too    }
          hookoncopy                 : ptempinfo;
-         typedef                    : tdef;
-         typedefderef               : tderef;
+         typedef                    : TDef;
+         typedefderef               : TDeref;
          temptype                   : TTempType;
          owner                      : ttempcreatenode;
          withnode                   : TNode;
@@ -275,12 +275,12 @@ interface
           { where the node that receives the temp becomes responsible for       }
           { freeing it. In this last case, you must use only one reference      }
           { to it and *not* generate a ttempdeletenode                          }
-          constructor create(_typedef: tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean); virtual;
-          constructor create_withnode(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode); virtual;
-          constructor create_value(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
-          constructor create_reference(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode; readonly: boolean);
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor create(_typedef: TDef; _size: tcgint; _temptype: TTempType;allowreg:boolean); virtual;
+          constructor create_withnode(_typedef: TDef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode); virtual;
+          constructor create_value(_typedef:TDef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
+          constructor create_reference(_typedef:TDef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode; readonly: boolean);
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy: TNode; override;
@@ -297,8 +297,8 @@ interface
         { a node which is a reference to a certain temp }
         ttemprefnode = class(ttempbasenode)
           constructor create(const temp: ttempcreatenode); virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure resolveppuidx;override;
           function dogetcopy: TNode; override;
           function pass_1 : TNode; override;
@@ -317,8 +317,8 @@ interface
           { this will convert the persistent temp to a normal temp
             for returning to the other nodes }
           constructor create_normal_temp(const temp: ttempcreatenode);
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure resolveppuidx;override;
           function dogetcopy: TNode; override;
           function pass_1: TNode; override;
@@ -398,7 +398,7 @@ implementation
         if (p.nodetype<>blockn) or
             not assigned(p.resultdef) or
             (p.resultdef.typ<>procdef) or
-            not (po_anonymous in tprocdef(p.resultdef).procoptions) then
+            not (po_anonymous in TProcDef(p.resultdef).procoptions) then
           exit;
 
         { skip the nothing node created by internalstatements }
@@ -542,7 +542,7 @@ implementation
                              TSPECIALIZENODE
 *****************************************************************************}
 
-    constructor tspecializenode.create(l:TNode;g:boolean;s:tsym;u:boolean);
+    constructor tspecializenode.create(l:TNode;g:boolean;s:TSym;u:boolean);
       begin
          inherited create(specializen,l);
          sym:=s;
@@ -550,7 +550,7 @@ implementation
          unit_specific:=u;
       end;
 
-    constructor tspecializenode.create_inherited(l:TNode;g:boolean;s:tsym;i:tdef);
+    constructor tspecializenode.create_inherited(l:TNode;g:boolean;s:TSym;i:TDef);
       begin
         create(l,g,s,false);
         inheriteddef:=i;
@@ -740,14 +740,14 @@ implementation
       end;
 
 
-    constructor tblocknode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tblocknode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getset(tppuset1(blocknodeflags));
       end;
 
 
-    procedure tblocknode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tblocknode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putset(tppuset1(blocknodeflags));
@@ -1081,7 +1081,7 @@ implementation
       end;
 
 
-    constructor tasmnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tasmnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       var
         hp : tai;
       begin
@@ -1105,7 +1105,7 @@ implementation
       end;
 
 
-    procedure tasmnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tasmnode.ppuwrite(ppufile:TCompilerPPUFile);
       var
         hp : tai;
       begin
@@ -1397,7 +1397,7 @@ implementation
                           TEMPCREATENODE
 *****************************************************************************}
 
-    constructor ttempcreatenode.create(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean);
+    constructor ttempcreatenode.create(_typedef:TDef; _size: tcgint; _temptype: TTempType;allowreg:boolean);
       begin
         inherited create(tempcreaten);
         size := _size;
@@ -1409,8 +1409,8 @@ implementation
         tempinfo^.withnode := nil;
         if allowreg and
            { temp must fit a single register }
-           (tstoreddef(_typedef).is_fpuregable or
-            (tstoreddef(_typedef).is_intregable and
+           (TStoredDef(_typedef).is_fpuregable or
+            (TStoredDef(_typedef).is_intregable and
              (_size<=TCGSize2Size[OS_64]))) and
            { size of register operations must be known }
            (def_cgsize(_typedef)<>OS_NO) and
@@ -1420,14 +1420,14 @@ implementation
       end;
 
 
-    constructor ttempcreatenode.create_withnode(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode);
+    constructor ttempcreatenode.create_withnode(_typedef: TDef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode);
       begin
         self.create(_typedef,_size,_temptype,allowreg);
         tempinfo^.withnode:=withnode.getcopy;
       end;
 
 
-    constructor ttempcreatenode.create_value(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
+    constructor ttempcreatenode.create_value(_typedef:TDef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
       begin
         self.create(_typedef,_size,_temptype,allowreg);
         // store in ppuwrite
@@ -1437,7 +1437,7 @@ implementation
       end;
 
 
-     constructor ttempcreatenode.create_reference(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg: boolean; templvalue: TNode; readonly: boolean);
+     constructor ttempcreatenode.create_reference(_typedef: TDef; _size: tcgint; _temptype: TTempType; allowreg: boolean; templvalue: TNode; readonly: boolean);
       begin
         // store in ppuwrite
         self.create(_typedef,_size,_temptype,allowreg);
@@ -1488,7 +1488,7 @@ implementation
       end;
 
 
-    constructor ttempcreatenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor ttempcreatenode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
 
@@ -1504,7 +1504,7 @@ implementation
       end;
 
 
-    procedure ttempcreatenode.ppuwrite(ppufile:tcompilerppufile);
+    procedure ttempcreatenode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putlongint(size);
@@ -1530,7 +1530,7 @@ implementation
     procedure ttempcreatenode.derefimpl;
       begin
         inherited derefimpl;
-        tempinfo^.typedef:=tdef(tempinfo^.typedefderef.resolve);
+        tempinfo^.typedef:=TDef(tempinfo^.typedefderef.resolve);
         if assigned(tempinfo^.withnode) then
           tempinfo^.withnode.derefimpl;
         if assigned(ftemplvalue) then
@@ -1546,7 +1546,7 @@ implementation
         result := nil;
         expectloc:=LOC_VOID;
         { temps which are immutable do not need to be initialized/finalized }
-        if (tempinfo^.typedef.needs_inittable) and not(ti_const in tempflags) then
+        if (tempinfo^.typedef.NeedsInitTable) and not(ti_const in tempflags) then
           include(CurrentProcInfo.flags,pi_needs_implicit_finally);
         if assigned(tempinfo^.withnode) then
           FirstPass(tempinfo^.withnode);
@@ -1557,7 +1557,7 @@ implementation
           enabled a certain type to be stored in a register while the current settings do not support this, so correct this here
           if needed
         }
-        if not(tstoreddef(tempinfo^.typedef).is_fpuregable) and not(tstoreddef(tempinfo^.typedef).is_intregable) and (ti_may_be_in_reg in tempflags) then
+        if not(TStoredDef(tempinfo^.typedef).is_fpuregable) and not(TStoredDef(tempinfo^.typedef).is_intregable) and (ti_may_be_in_reg in tempflags) then
           excludetempflag(ti_may_be_in_reg);
       end;
 
@@ -1670,14 +1670,14 @@ implementation
       end;
 
 
-    constructor ttemprefnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor ttemprefnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         tempidx:=ppufile.getlongint;
       end;
 
 
-    procedure ttemprefnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure ttemprefnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putlongint(tempinfo^.owner.ppuidx);
@@ -1698,7 +1698,7 @@ implementation
     function ttemprefnode.pass_1 : TNode;
       begin
         expectloc := LOC_REFERENCE;
-        if not tempinfo^.typedef.needs_inittable and
+        if not tempinfo^.typedef.NeedsInitTable and
            (ti_may_be_in_reg in tempflags) then
           begin
             if tempinfo^.typedef.typ=floatdef then
@@ -1827,7 +1827,7 @@ implementation
       end;
 
 
-    constructor ttempdeletenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor ttempdeletenode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         tempidx:=ppufile.getlongint;
@@ -1835,7 +1835,7 @@ implementation
       end;
 
 
-    procedure ttempdeletenode.ppuwrite(ppufile:tcompilerppufile);
+    procedure ttempdeletenode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putlongint(tempinfo^.owner.ppuidx);

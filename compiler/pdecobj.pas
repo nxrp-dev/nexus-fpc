@@ -30,16 +30,16 @@ interface
       globtype,symconst,symtype,symdef;
 
     { parses a object declaration }
-    function object_dec(objecttype:tobjecttyp;const n:tidstring;objsym:tsym;genericdef:tstoreddef;genericlist:tfphashobjectlist;fd : tobjectdef;helpertype:thelpertype) : tobjectdef;
+    function object_dec(objecttype:TObjectTyp;const n:tidstring;objsym:TSym;genericdef:TStoredDef;genericlist:tfphashobjectlist;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
 
     { parses a (class) method declaration }
-    function method_dec(astruct: tabstractrecorddef; is_classdef: boolean;hadgeneric:boolean): tprocdef;
+    function method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
 
-    function class_constructor_head(astruct: tabstractrecorddef):tprocdef;
-    function class_destructor_head(astruct: tabstractrecorddef):tprocdef;
-    function constructor_head:tprocdef;
-    function destructor_head:tprocdef;
-    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: trtti_attribute_list);
+    function class_constructor_head(astruct: TAbstractRecordDef):TProcDef;
+    function class_destructor_head(astruct: TAbstractRecordDef):TProcDef;
+    function constructor_head:TProcDef;
+    function destructor_head:TProcDef;
+    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: TRTTIAttributeList);
 
 implementation
 
@@ -59,10 +59,10 @@ implementation
       CurrentProcInfo = 'error';
 
     var
-      current_objectdef : tobjectdef absolute CurrentStructDef;
+      current_objectdef : TObjectDef absolute CurrentStructDef;
 
 
-    procedure constr_destr_finish_head(pd: tprocdef; const astruct: tabstractrecorddef);
+    procedure constr_destr_finish_head(pd: TProcDef; const astruct: TAbstractRecordDef);
       begin
         case astruct.typ of
           recorddef:
@@ -94,9 +94,9 @@ implementation
       end;
 
 
-    function class_constructor_head(astruct: tabstractrecorddef):tprocdef;
+    function class_constructor_head(astruct: TAbstractRecordDef):TProcDef;
       var
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         result:=nil;
         consume(_CONSTRUCTOR);
@@ -119,9 +119,9 @@ implementation
         result:=pd;
       end;
 
-    function constructor_head:tprocdef;
+    function constructor_head:TProcDef;
       var
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         result:=nil;
         consume(_CONSTRUCTOR);
@@ -143,7 +143,7 @@ implementation
           pd.returndef:=pd.struct
         else
           if is_objectpascal_helper(pd.struct) then
-            pd.returndef:=tobjectdef(pd.struct).extendeddef
+            pd.returndef:=TObjectDef(pd.struct).extendeddef
           else
 {$ifdef CPU64bitaddr}
             pd.returndef:=bool64type;
@@ -155,11 +155,11 @@ implementation
       end;
 
 
-    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: trtti_attribute_list);
+    procedure struct_property_dec(is_classproperty:boolean;var rtti_attrs_def: TRTTIAttributeList);
       var
-        p : tpropertysym;
+        p : TPropertySym;
         _deprecatedmsg: pshortstring;
-        _symoptions: tsymoptions;
+        _symoptions: TSymOptions;
       begin
         { check for a class, record or helper }
         if not((is_class_or_interface_or_dispinterface(CurrentStructDef) or is_record(CurrentStructDef) or
@@ -212,7 +212,7 @@ implementation
         { in case of a previous error, p might not be assigned }
         if assigned(p) then
           begin
-            trtti_attribute_list.bind(rtti_attrs_def,p.rtti_attribute_list);
+            TRTTIAttributeList.bind(rtti_attrs_def,p.RTTIAttributeList);
 
             { hint directives, these can be separated by semicolons here,
               that needs to be handled here with a loop (PFV) }
@@ -231,9 +231,9 @@ implementation
       end;
 
 
-    function class_destructor_head(astruct: tabstractrecorddef):tprocdef;
+    function class_destructor_head(astruct: TAbstractRecordDef):TProcDef;
       var
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         result:=nil;
         consume(_DESTRUCTOR);
@@ -255,9 +255,9 @@ implementation
         result:=pd;
       end;
 
-    function destructor_head:tprocdef;
+    function destructor_head:TProcDef;
       var
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         result:=nil;
         consume(_DESTRUCTOR);
@@ -284,17 +284,17 @@ implementation
     procedure setinterfacemethodoptions;
       var
         i   : longint;
-        def : tdef;
+        def : TDef;
       begin
         include(CurrentStructDef.objectoptions,oo_has_virtual);
         for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
           begin
-            def:=tdef(CurrentStructDef.symtable.DefList[i]);
+            def:=TDef(CurrentStructDef.symtable.DefList[i]);
             if assigned(def) and
                (def.typ=procdef) then
               begin
-                include(tprocdef(def).procoptions,po_virtualmethod);
-                tprocdef(def).forwarddef:=false;
+                include(TProcDef(def).procoptions,po_virtualmethod);
+                TProcDef(def).forwarddef:=false;
               end;
           end;
       end;
@@ -303,21 +303,21 @@ implementation
     procedure setobjcclassmethodoptions;
       var
         i   : longint;
-        def : tdef;
+        def : TDef;
       begin
         for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
           begin
-            def:=tdef(CurrentStructDef.symtable.DefList[i]);
+            def:=TDef(CurrentStructDef.symtable.DefList[i]);
             if assigned(def) and
                (def.typ=procdef) then
               begin
-                include(tprocdef(def).procoptions,po_virtualmethod);
+                include(TProcDef(def).procoptions,po_virtualmethod);
               end;
           end;
       end;
 
 
-    procedure handleImplementedInterface(intfdef : tobjectdef);
+    procedure handleImplementedInterface(intfdef : TObjectDef);
       begin
         if not is_interface(intfdef) then
           begin
@@ -336,7 +336,7 @@ implementation
       end;
 
 
-    procedure handleImplementedProtocolOrJavaIntf(intfdef : tobjectdef);
+    procedure handleImplementedProtocolOrJavaIntf(intfdef : TObjectDef);
       begin
         intfdef:=find_real_class_definition(intfdef,false);
         case current_objectdef.objecttype of
@@ -372,7 +372,7 @@ implementation
 
     procedure readImplementedInterfacesAndProtocols(intf: boolean);
       var
-        hdef : tdef;
+        hdef : TDef;
       begin
         while try_to_consume(_COMMA) do
           begin
@@ -387,9 +387,9 @@ implementation
                   continue;
                end;
              if intf then
-               handleImplementedInterface(tobjectdef(hdef))
+               handleImplementedInterface(TObjectDef(hdef))
              else
-               handleImplementedProtocolOrJavaIntf(tobjectdef(hdef));
+               handleImplementedProtocolOrJavaIntf(TObjectDef(hdef));
           end;
       end;
 
@@ -416,7 +416,7 @@ implementation
         p := nil;
       end;
 
-    procedure get_cpp_or_java_class_external_status(od: tobjectdef);
+    procedure get_cpp_or_java_class_external_status(od: TObjectDef);
       var
         hs: string;
       begin
@@ -455,7 +455,7 @@ implementation
       end;
 
 
-    procedure get_objc_class_or_protocol_external_status(od: tobjectdef);
+    procedure get_objc_class_or_protocol_external_status(od: TObjectDef);
       begin
         { Objective-C classes can be external -> all messages inside are
           external (defined at the class level instead of per method, so
@@ -527,8 +527,8 @@ implementation
     procedure parse_parent_classes;
       var
         intfchildof,
-        childof : tobjectdef;
-        hdef : tdef;
+        childof : TObjectDef;
+        hdef : TDef;
         hasparentdefined : boolean;
       begin
         childof:=nil;
@@ -553,7 +553,7 @@ implementation
               end
             else
               begin
-                childof:=tobjectdef(hdef);
+                childof:=TObjectDef(hdef);
                 { a mix of class, interfaces, objects and cppclasses
                   isn't allowed }
                 case current_objectdef.objecttype of
@@ -698,15 +698,15 @@ implementation
           end;
       end;
 
-    procedure parse_extended_type(helpertype:thelpertype);
+    procedure parse_extended_type(helpertype:THelperType);
 
-      procedure validate_extendeddef_typehelper(var def:tdef);
+      procedure validate_extendeddef_typehelper(var def:TDef);
         begin
           if (def.typ in [undefineddef,procvardef,procdef,
               filedef,classrefdef,abstractdef,forwarddef,formaldef]) or
               (
                 (def.typ=objectdef) and
-                not (tobjectdef(def).objecttype in objecttypes_with_helpers)
+                not (TObjectDef(def).objecttype in objecttypes_with_helpers)
               ) then
             begin
               Message1(type_e_type_not_allowed_for_type_helper,def.typename);
@@ -714,9 +714,9 @@ implementation
             end;
         end;
 
-      procedure check_inheritance_record_type_helper(var def:tdef);
+      procedure check_inheritance_record_type_helper(var def:TDef);
         var
-          tmp : tstoreddef;
+          tmp : TStoredDef;
         begin
           if (def.typ<>errordef) and assigned(current_objectdef.childof) then
             begin
@@ -724,12 +724,12 @@ implementation
                 begin
                   { a type helper may extend a type alias of the type its
                     parent type helper extends }
-                  tmp:=tstoreddef(def);
-                  while (df_unique in tmp.defoptions) and assigned(tstoreddef(tmp).orgdef) do
+                  tmp:=TStoredDef(def);
+                  while (df_unique in tmp.defoptions) and assigned(TStoredDef(tmp).orgdef) do
                     begin
                       if tmp.orgdef=current_objectdef.childof.extendeddef then
                         exit;
-                      tmp:=tstoreddef(tmp.orgdef);
+                      tmp:=TStoredDef(tmp.orgdef);
                     end;
                   Message1(type_e_record_helper_must_extend_same_record,current_objectdef.childof.extendeddef.typename);
                   def:=generrordef;
@@ -737,12 +737,12 @@ implementation
             end;
         end;
 
-      procedure check_inheritance_class_helper(var def:tdef);
+      procedure check_inheritance_class_helper(var def:TDef);
         begin
           if (def.typ<>errordef) and assigned(current_objectdef.childof) then
             begin
               if (current_objectdef.childof.extendeddef.typ<>objectdef) or
-                 not (tobjectdef(current_objectdef.childof.extendeddef).objecttype in objecttypes_with_helpers) then
+                 not (TObjectDef(current_objectdef.childof.extendeddef).objecttype in objecttypes_with_helpers) then
                 Internalerror(2011021101);
               if not def_is_related(def,current_objectdef.childof.extendeddef) then
                 begin
@@ -753,7 +753,7 @@ implementation
         end;
 
       var
-        hdef: tdef;
+        hdef: TDef;
       begin
         if not is_objectpascal_helper(CurrentStructDef) then
           Internalerror(2011021103);
@@ -812,7 +812,7 @@ implementation
                 begin
                   validate_extendeddef_typehelper(hdef);
                   if (hdef.typ=objectdef) and
-                      (tobjectdef(hdef).objecttype in objecttypes_with_helpers) then
+                      (TObjectDef(hdef).objecttype in objecttypes_with_helpers) then
                     check_inheritance_class_helper(hdef)
                   else
                     { a type helper must extend the same type as the
@@ -842,9 +842,9 @@ implementation
       end;
 
 
-    function method_dec(astruct: tabstractrecorddef; is_classdef: boolean;hadgeneric:boolean): tprocdef;
+    function method_dec(astruct: TAbstractRecordDef; is_classdef: boolean;hadgeneric:boolean): TProcDef;
 
-      procedure chkobjc(pd: tprocdef);
+      procedure chkobjc(pd: TProcDef);
         begin
           if is_objc_class_or_protocol(pd.struct) then
             begin
@@ -853,12 +853,12 @@ implementation
         end;
 
 
-      procedure chkjava(pd: tprocdef);
+      procedure chkjava(pd: TProcDef);
         begin
         end;
 
 
-        procedure chkcpp(pd:tprocdef);
+        procedure chkcpp(pd:TProcDef);
           begin
             { nothing currently }
           end;
@@ -894,7 +894,7 @@ implementation
                   { check if dispid is set }
                   if is_dispinterface(result.struct) and not (po_dispid in result.procoptions) then
                     begin
-                      result.dispid:=tobjectdef(result.struct).get_next_dispid;
+                      result.dispid:=TObjectDef(result.struct).get_next_dispid;
                       include(result.procoptions, po_dispid);
                     end;
 
@@ -908,8 +908,8 @@ implementation
                     allowed }
                   if is_objectpascal_helper(astruct) and
                      (
-                       (tobjectdef(astruct).extendeddef.typ<>objectdef) or
-                       (tobjectdef(tobjectdef(astruct).extendeddef).objecttype<>odt_class)
+                       (TObjectDef(astruct).extendeddef.typ<>objectdef) or
+                       (TObjectDef(TObjectDef(astruct).extendeddef).objecttype<>odt_class)
                      ) and
                      is_classdef and not (po_staticmethod in result.procoptions) then
                     MessagePos(result.fileinfo,parser_e_class_methods_only_static_in_records);
@@ -972,7 +972,7 @@ implementation
                 begin
                   result:=constructor_head;
                   if is_objectpascal_helper(astruct) and
-                     (tobjectdef(astruct).extendeddef.typ<>objectdef) and
+                     (TObjectDef(astruct).extendeddef.typ<>objectdef) and
                      (result.minparacount=0) then
                       { as long as parameterless constructors aren't allowed in records they
                        aren't allowed in record/type helpers either }
@@ -1038,14 +1038,14 @@ implementation
         threadvar_fields : boolean;
         vdoptions: tvar_dec_options;
         fieldlist: tfpobjectlist;
-        rtti_attrs_def: trtti_attribute_list;
+        rtti_attrs_def: TRTTIAttributeList;
         attr_element_count,fldCount : Integer;
-        method_def : tprocdef;
+        method_def : TProcDef;
 
       procedure check_unbound_attributes;
         begin
-          if assigned(rtti_attrs_def) and (rtti_attrs_def.get_attribute_count>0) then
-            Message1(parser_e_unbound_attribute,trtti_attribute(rtti_attrs_def.rtti_attributes[0]).typesym.prettyname);
+          if assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
+            Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).typesym.prettyname);
           rtti_attrs_def.free;
           rtti_attrs_def:=nil;
         end;
@@ -1109,7 +1109,7 @@ implementation
         end;
 
 
-      procedure parse_visibility(vis: tvisibility; oo: tobjectoption);
+      procedure parse_visibility(vis: TVisibility; oo: TObjectOption);
         begin
           { Objective-C and Java classes do not support "published",
             as basically everything is published.  }
@@ -1276,7 +1276,7 @@ implementation
                         { currently only supported for external classes, because
                           requires fully working DFA otherwise }
                         if (CurrentStructDef.typ<>objectdef) or
-                           not(oo_is_external in tobjectdef(CurrentStructDef).objectoptions) then
+                           not(oo_is_external in TObjectDef(CurrentStructDef).objectoptions) then
                           Message(parser_e_final_only_external);
                         consume(_final);
                         is_final:=true;
@@ -1353,12 +1353,12 @@ implementation
                                     for the first fields, we simply copy. for the last one we bind.}
                                   While (attr_element_count>1) do
                                     begin
-                                    trtti_attribute_list.copyandbind(rtti_attrs_def,tfieldvarsym(fieldlist[FldCount]).rtti_attribute_list);
+                                    TRTTIAttributeList.copyandbind(rtti_attrs_def,TFieldVarSym(fieldlist[FldCount]).RTTIAttributeList);
                                     inc(fldcount);
                                     dec(attr_element_count);
                                     end;
                                   if fldCount<FieldList.Count then
-                                    trtti_attribute_list.bind(rtti_attrs_def,tfieldvarsym(fieldlist[FldCount]).rtti_attribute_list)
+                                    TRTTIAttributeList.bind(rtti_attrs_def,TFieldVarSym(fieldlist[FldCount]).RTTIAttributeList)
                                   else
                                     rtti_attrs_def.free;
                                     rtti_attrs_def := nil;
@@ -1408,7 +1408,7 @@ implementation
                 method_def:=method_dec(CurrentStructDef,is_classdef,hadgeneric);
                 if assigned(rtti_attrs_def) then
                   begin
-                  trtti_attribute_list.bind(rtti_attrs_def,method_def.rtti_attribute_list);
+                  TRTTIAttributeList.bind(rtti_attrs_def,method_def.RTTIAttributeList);
                   rtti_attrs_def:=nil;
                   end;
                 fields_allowed:=false;
@@ -1434,22 +1434,22 @@ implementation
         until false;
 
         if is_class(CurrentStructDef) then
-          tabstractrecordsymtable(CurrentStructDef.symtable).addfieldlist(fieldlist,true);
+          TAbstractRecordSymTable(CurrentStructDef.symtable).addfieldlist(fieldlist,true);
         fieldlist.free;
         fieldlist := nil;
       end;
 
 
-    function object_dec(objecttype:tobjecttyp;const n:tidstring;objsym:tsym;genericdef:tstoreddef;genericlist:tfphashobjectlist;fd : tobjectdef;helpertype:thelpertype) : tobjectdef;
+    function object_dec(objecttype:TObjectTyp;const n:tidstring;objsym:TSym;genericdef:TStoredDef;genericlist:tfphashobjectlist;fd : TObjectDef;helpertype:THelperType) : TObjectDef;
       var
-        old_current_structdef: tabstractrecorddef;
+        old_current_structdef: TAbstractRecordDef;
         old_current_genericdef,
-        old_current_specializedef: tstoreddef;
+        old_current_specializedef: TStoredDef;
         old_parse_generic: boolean;
         list: TFPObjectList;
         s: TSymStr;
-        st: TSymtable;
-        olddef: tdef;
+        st: TSymTable;
+        olddef: TDef;
       begin
         old_current_structdef:=CurrentStructDef;
         old_current_genericdef:=CurrentGenericDef;
@@ -1486,7 +1486,7 @@ implementation
 
             { create new class }
             CurrentStructDef:=cobjectdef.create(objecttype,n,nil,true);
-            tobjectdef(CurrentStructDef).helpertype:=helpertype;
+            TObjectDef(CurrentStructDef).helpertype:=helpertype;
 
             { include always the forward flag, it'll be removed once the whole
               class has been parsed so that it can be used as a parent class
@@ -1652,7 +1652,7 @@ implementation
 
             if is_interface(current_objectdef) and
                 is_interface(current_objectdef.childof) and
-                (oo_is_invokable in tobjectdef(current_objectdef.childof).objectoptions) then
+                (oo_is_invokable in TObjectDef(current_objectdef.childof).objectoptions) then
               include(current_objectdef.objectoptions,oo_is_invokable);
 
             { parse optional GUID for interfaces }
@@ -1666,8 +1666,8 @@ implementation
 
             if assigned(objsym) and not (objecttype in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
               begin
-                olddef:=ttypesym(objsym).typedef;
-                ttypesym(objsym).typedef:=CurrentStructDef;
+                olddef:=TTypeSym(objsym).typedef;
+                TTypeSym(objsym).typedef:=CurrentStructDef;
                 CurrentStructDef.typesym:=objsym;
               end
             else
@@ -1694,7 +1694,7 @@ implementation
 
             if assigned(olddef) then
               begin
-                ttypesym(objsym).typedef:=olddef;
+                TTypeSym(objsym).typedef:=olddef;
                 CurrentStructDef.typesym:=nil;
               end;
 
@@ -1706,7 +1706,7 @@ implementation
                 we obviously cannot add constructors to those) }
               if is_javaclass(CurrentStructDef) then
                 begin
-                  add_missing_parent_constructors_intf(tobjectdef(CurrentStructDef),true,vis_none);
+                  add_missing_parent_constructors_intf(TObjectDef(CurrentStructDef),true,vis_none);
                 end;
             end;
 
@@ -1758,7 +1758,7 @@ implementation
             if st.symtabletype in [staticsymtable,globalsymtable] then
               begin
                 if current_objectdef.extendeddef.typ in [recorddef,objectdef] then
-                  s:=make_mangledname('',tabstractrecorddef(current_objectdef.extendeddef).symtable,'')
+                  s:=make_mangledname('',TAbstractRecordDef(current_objectdef.extendeddef).symtable,'')
                 else
                   s:=make_mangledname('',current_objectdef.extendeddef.owner,current_objectdef.extendeddef.typesym.name);
                 Message1(sym_d_adding_helper_for,s);
@@ -1771,7 +1771,7 @@ implementation
                 list.add(CurrentStructDef);
               end;
           end;
-        tabstractrecordsymtable(current_objectdef.symtable).addalignmentpadding;
+        TAbstractRecordSymTable(current_objectdef.symtable).addalignmentpadding;
 
         { return defined objectdef }
         result:=current_objectdef;

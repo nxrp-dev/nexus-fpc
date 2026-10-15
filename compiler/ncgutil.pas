@@ -61,17 +61,17 @@ interface
 //    procedure remove_non_regvars_from_loc(const t: tlocation; var regs:Tsuperregisterset);
 
     procedure location_force_mmreg(list:TAsmList;var l: tlocation;maybeconst:boolean);
-    procedure location_allocate_register(list:TAsmList;out l: tlocation;def: tdef;constant: boolean);
+    procedure location_allocate_register(list:TAsmList;out l: tlocation;def: TDef;constant: boolean);
 
     { allocate registers for a tlocation; assumes that loc.loc is already
       set to LOC_CREGISTER/LOC_CFPUREGISTER/... }
-    procedure gen_alloc_regloc(list:TAsmList;var loc: tlocation;def: tdef);
+    procedure gen_alloc_regloc(list:TAsmList;var loc: tlocation;def: TDef);
 
-    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: tdef; var l: tlocation; setbase: aint);
+    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: TDef; var l: tlocation; setbase: aint);
 
 
-    procedure alloc_proc_symbol(pd: tprocdef);
-    procedure release_proc_symbol(pd:tprocdef);
+    procedure alloc_proc_symbol(pd: TProcDef);
+    procedure release_proc_symbol(pd:TProcDef);
     procedure gen_proc_entry_code(list:TAsmList);
     procedure gen_proc_exit_code(list:TAsmList);
     procedure gen_save_used_regs(list:TAsmList);
@@ -87,8 +87,8 @@ interface
 //    procedure get_used_regvars_common(n: tnode; var rv: tusedregvarscommon);
     procedure gen_sync_regvars(list:TAsmList; var rv: tusedregvars);
 
-    procedure gen_alloc_symtable(list:TAsmList;pd:tprocdef;st:TSymtable);
-    procedure gen_free_symtable(list:TAsmList;st:TSymtable);
+    procedure gen_alloc_symtable(list:TAsmList;pd:TProcDef;st:TSymTable);
+    procedure gen_free_symtable(list:TAsmList;st:TSymTable);
 
     procedure location_free(list: TAsmList; const location : TLocation);
 
@@ -96,7 +96,7 @@ interface
 
     procedure gen_load_frame_for_exceptfilter(list : TAsmList);
 
-   procedure gen_alloc_regvar(list:TAsmList;sym: tabstractnormalvarsym; allocreg: boolean);
+   procedure gen_alloc_regvar(list:TAsmList;sym: TAbstractNormalVarSym; allocreg: boolean);
 
 
 implementation
@@ -370,7 +370,7 @@ implementation
 *****************************************************************************}
 
 
-    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: tdef; var l: tlocation; setbase: aint);
+    procedure register_maybe_adjust_setbase(list: TAsmList; opdef: TDef; var l: tlocation; setbase: aint);
       var
         tmpreg: tregister;
       begin
@@ -412,7 +412,7 @@ implementation
       end;
 
 
-    procedure location_allocate_register(list: TAsmList;out l: tlocation;def: tdef;constant: boolean);
+    procedure location_allocate_register(list: TAsmList;out l: tlocation;def: TDef;constant: boolean);
       begin
         l.size:=def_cgsize(def);
         if def.typ=floatdef then
@@ -475,42 +475,42 @@ implementation
     procedure init_paras(p:TObject;arg:pointer);
       var
         href : treference;
-        hsym : tparavarsym;
-        eldef : tdef;
+        hsym : TParaVarSym;
+        eldef : TDef;
         list : TAsmList;
-        needs_inittable : boolean;
+        NeedsInitTable : boolean;
       begin
         list:=TAsmList(arg);
-        if (tsym(p).typ=paravarsym) then
+        if (TSym(p).typ=paravarsym) then
          begin
-           needs_inittable:=is_managed_type(tparavarsym(p).vardef);
-           if not needs_inittable then
+           NeedsInitTable:=is_managed_type(TParaVarSym(p).vardef);
+           if not NeedsInitTable then
              exit;
-           case tparavarsym(p).varspez of
+           case TParaVarSym(p).varspez of
              vs_value :
                begin
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
-                 if not((tparavarsym(p).vardef.typ=variantdef) and
-                    paramanager.push_addr_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)) then
+                 if not((TParaVarSym(p).vardef.typ=variantdef) and
+                    paramanager.push_addr_param(TParaVarSym(p).varspez,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption)) then
                    begin
-                     hlcg.location_get_data_ref(list,tparavarsym(p).vardef,tparavarsym(p).initialloc,href,
-                       is_open_array(tparavarsym(p).vardef) or
+                     hlcg.location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).initialloc,href,
+                       is_open_array(TParaVarSym(p).vardef) or
                        ((TargetInfo.system in systems_caller_copy_addr_value_para) and
-                        paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
+                        paramanager.push_addr_param(vs_value,TParaVarSym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
                         sizeof(pint));
-                     if is_open_array(tparavarsym(p).vardef) then
+                     if is_open_array(TParaVarSym(p).vardef) then
                        begin
                          { open arrays do not contain correct element count in their rtti,
                            the actual count must be passed separately. }
-                         hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
-                         eldef:=tarraydef(tparavarsym(p).vardef).elementdef;
+                         hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                         eldef:=TArrayDef(TParaVarSym(p).vardef).elementdef;
                          if not assigned(hsym) then
                            internalerror(201003031);
                          hlcg.g_array_rtti_helper(list,eldef,href,hsym.initialloc,'fpc_addref_array');
                        end
                      else
-                      hlcg.g_incrrefcount(list,tparavarsym(p).vardef,href);
+                      hlcg.g_incrrefcount(list,TParaVarSym(p).vardef,href);
                    end;
                end;
              vs_out :
@@ -518,17 +518,17 @@ implementation
                  { we have no idea about the alignment at the callee side,
                    and the user also cannot specify "unaligned" here, so
                    assume worst case }
-                 hlcg.location_get_data_ref(list,tparavarsym(p).vardef,tparavarsym(p).initialloc,href,true,1);
-                 if is_open_array(tparavarsym(p).vardef) then
+                 hlcg.location_get_data_ref(list,TParaVarSym(p).vardef,TParaVarSym(p).initialloc,href,true,1);
+                 if is_open_array(TParaVarSym(p).vardef) then
                    begin
-                     hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
-                     eldef:=tarraydef(tparavarsym(p).vardef).elementdef;
+                     hsym:=TParaVarSym(get_high_value_sym(TParaVarSym(p)));
+                     eldef:=TArrayDef(TParaVarSym(p).vardef).elementdef;
                      if not assigned(hsym) then
                        internalerror(201103033);
                      hlcg.g_array_rtti_helper(list,eldef,href,hsym.initialloc,'fpc_initialize_array');
                    end
                  else
-                   hlcg.g_initialize(list,tparavarsym(p).vardef,href);
+                   hlcg.g_initialize(list,TParaVarSym(p).vardef,href);
                end;
              else
                ;
@@ -537,7 +537,7 @@ implementation
       end;
 
 
-    procedure gen_alloc_regloc(list:TAsmList;var loc: tlocation;def: tdef);
+    procedure gen_alloc_regloc(list:TAsmList;var loc: tlocation;def: TDef);
       begin
         case loc.loc of
           LOC_CREGISTER:
@@ -576,7 +576,7 @@ implementation
       end;
 
 
-    procedure gen_alloc_regvar(list:TAsmList;sym: tabstractnormalvarsym; allocreg: boolean);
+    procedure gen_alloc_regvar(list:TAsmList;sym: TAbstractNormalVarSym; allocreg: boolean);
 
       procedure set_para_regvar_initial_location;
         var
@@ -586,9 +586,9 @@ implementation
           reg,reg2: tregister;
           size,regsize: tcgint;
         begin
-          tparavarsym(sym).paraloc[calleeside].get_location(loc);
-          size:=tparavarsym(sym).paraloc[calleeside].IntSize;
-          paraloc:=tparavarsym(sym).paraloc[calleeside].Location;
+          TParaVarSym(sym).paraloc[calleeside].get_location(loc);
+          size:=TParaVarSym(sym).paraloc[calleeside].IntSize;
+          paraloc:=TParaVarSym(sym).paraloc[calleeside].Location;
 {$if defined(cpu64bitalu)}
           if sym.initialloc.size in [OS_128,OS_S128] then
 {$else}
@@ -645,13 +645,13 @@ implementation
         end;
 
       var
-        usedef: tdef;
+        usedef: TDef;
         varloc: tai_varloc;
       begin
         if allocreg then
           begin
             if sym.typ=paravarsym then
-              usedef:=tparavarsym(sym).paraloc[calleeside].def
+              usedef:=TParaVarSym(sym).paraloc[calleeside].def
             else
               usedef:=sym.vardef;
             gen_alloc_regloc(list,sym.initialloc,usedef);
@@ -691,7 +691,7 @@ implementation
         { Notify the register allocator about memory location of
           the register which holds a value of a stack parameter }
         if (sym.typ=paravarsym) and
-           paramanager.param_use_paraloc(tparavarsym(sym).paraloc[calleeside]) then
+           paramanager.param_use_paraloc(TParaVarSym(sym).paraloc[calleeside]) then
           set_para_regvar_initial_location;
       end;
 
@@ -700,7 +700,7 @@ implementation
                                 Entry/Exit
 ****************************************************************************}
 
-    procedure alloc_proc_symbol(pd: tprocdef);
+    procedure alloc_proc_symbol(pd: TProcDef);
       var
         item: TCmdStrListItem;
       begin
@@ -713,7 +713,7 @@ implementation
       end;
 
 
-    procedure release_proc_symbol(pd:tprocdef);
+    procedure release_proc_symbol(pd:TProcDef);
       var
         idx : longint;
         item : TCmdStrListItem;
@@ -839,23 +839,23 @@ implementation
                                Const Data
 ****************************************************************************}
 
-    procedure gen_alloc_symtable(list:TAsmList;pd:tprocdef;st:TSymtable);
+    procedure gen_alloc_symtable(list:TAsmList;pd:TProcDef;st:TSymTable);
 
       var
         i       : longint;
         highsym,
-        sym     : tsym;
-        vs      : tabstractnormalvarsym;
-        ptrdef  : tdef;
+        sym     : TSym;
+        vs      : TAbstractNormalVarSym;
+        ptrdef  : TDef;
         isaddr  : boolean;
       begin
         for i:=0 to st.SymList.Count-1 do
           begin
-            sym:=tsym(st.SymList[i]);
+            sym:=TSym(st.SymList[i]);
             case sym.typ of
               staticvarsym :
                 begin
-                  vs:=tabstractnormalvarsym(sym);
+                  vs:=TAbstractNormalVarSym(sym);
                   { The code in loadnode.pass_generatecode will create the
                     LOC_REFERENCE instead for all none register variables. This is
                     required because we can't store an asmsymbol in the localloc because
@@ -871,11 +871,11 @@ implementation
                 end;
               paravarsym :
                 begin
-                  vs:=tabstractnormalvarsym(sym);
+                  vs:=TAbstractNormalVarSym(sym);
                   { Parameters passed to assembler procedures need to be kept
                     in the original location }
                   if (po_assembler in pd.procoptions) then
-                    tparavarsym(vs).paraloc[calleeside].get_location(vs.initialloc)
+                    TParaVarSym(vs).paraloc[calleeside].get_location(vs.initialloc)
                   { exception filters receive their frame pointer as a parameter }
                   else if (pd.proctypeoption=potype_exceptfilter) and
                     (vo_is_parentfp in vs.varoptions) then
@@ -885,10 +885,10 @@ implementation
                     end
                   { Unused parameters need to be kept in the original location
                     to prevent allocation of registers/resources for them. }
-                  else if not tparavarsym(vs).is_used and
+                  else if not TParaVarSym(vs).is_used and
                     (cs_opt_unused_para in CurrentSettings.optimizerswitches) then
                     begin
-                      tparavarsym(vs).paraloc[calleeside].get_location(vs.initialloc);
+                      TParaVarSym(vs).paraloc[calleeside].get_location(vs.initialloc);
                     end
                   else
                     begin
@@ -897,7 +897,7 @@ implementation
                         we can increase the ref. count here }
                       if is_open_array(vs.vardef) or is_array_of_const(vs.vardef) then
                         begin
-                          highsym:=get_high_value_sym(tparavarsym(vs));
+                          highsym:=get_high_value_sym(TParaVarSym(vs));
                           if assigned(highsym) then
                             inc(highsym.refs);
                         end;
@@ -914,9 +914,9 @@ implementation
                         begin
                           vs.initialloc.loc:=LOC_REFERENCE;
                           { Reuse the parameter location for values to are at a single location on the stack }
-                          if paramanager.param_use_paraloc(tparavarsym(vs).paraloc[calleeside]) then
+                          if paramanager.param_use_paraloc(TParaVarSym(vs).paraloc[calleeside]) then
                             begin
-                              hlcg.paravarsym_set_initialloc_to_paraloc(tparavarsym(vs));
+                              hlcg.paravarsym_set_initialloc_to_paraloc(TParaVarSym(vs));
                             end
                           else
                             begin
@@ -926,7 +926,7 @@ implementation
                                   hlcg.GetLocal(list,vs,ptrdef.size,ptrdef.alignment,ptrdef,vs.initialloc.reference)
                                 end
                               else
-                                hlcg.GetLocal(list,vs,vs.getsize,tparavarsym(vs).paraloc[calleeside].alignment,vs.vardef,vs.initialloc.reference);
+                                hlcg.GetLocal(list,vs,vs.getsize,TParaVarSym(vs).paraloc[calleeside].alignment,vs.vardef,vs.initialloc.reference);
                             end;
                         end;
                     end;
@@ -934,7 +934,7 @@ implementation
                 end;
               localvarsym :
                 begin
-                  vs:=tabstractnormalvarsym(sym);
+                  vs:=TAbstractNormalVarSym(sym);
                   if is_vector(vs.vardef) and
                      fits_in_mm_register(vs.vardef) then
                     vs.initialloc.size:=def_cgmmsize(vs.vardef)
@@ -1037,10 +1037,10 @@ implementation
               add_regvars(rv^,ttemprefnode(n).tempinfo^.location);
           loadn:
             if (tloadnode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) then
-              add_regvars(rv^,tabstractnormalvarsym(tloadnode(n).symtableentry).localloc);
+              add_regvars(rv^,TAbstractNormalVarSym(tloadnode(n).symtableentry).localloc);
           loadparentfpn:
             if CurrentProcInfo.procdef.parast.symtablelevel>tloadparentfpnode(n).parentpd.parast.symtablelevel then
-              add_regvars(rv^,tparavarsym(CurrentProcInfo.procdef.parentfpsym).localloc);
+              add_regvars(rv^,TParaVarSym(CurrentProcInfo.procdef.parentfpsym).localloc);
           vecn:
             begin
               { range checks sometimes need the high parameter }
@@ -1048,7 +1048,7 @@ implementation
                  (is_open_array(tvecnode(n).left.resultdef) or
                   is_array_of_const(tvecnode(n).left.resultdef)) and
                  not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
-                add_regvars(rv^,tabstractnormalvarsym(get_high_value_sym(tparavarsym(tloadnode(tvecnode(n).left).symtableentry))).localloc)
+                add_regvars(rv^,TAbstractNormalVarSym(get_high_value_sym(TParaVarSym(tloadnode(tvecnode(n).left).symtableentry))).localloc)
             end;
           else
             ;
@@ -1117,17 +1117,17 @@ implementation
       end;
 
 
-    procedure gen_free_symtable(list:TAsmList;st:TSymtable);
+    procedure gen_free_symtable(list:TAsmList;st:TSymTable);
       var
         i   : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         for i:=0 to st.SymList.Count-1 do
           begin
-            sym:=tsym(st.SymList[i]);
+            sym:=TSym(st.SymList[i]);
             if (sym.typ in [staticvarsym,localvarsym,paravarsym]) then
               begin
-                with tabstractnormalvarsym(sym) do
+                with TAbstractNormalVarSym(sym) do
                   begin
                     { Note: We need to keep the data available in memory
                       for the sub procedures that can access local data
@@ -1194,10 +1194,10 @@ implementation
 
     procedure gen_load_frame_for_exceptfilter(list : TAsmList);
       var
-        para: tparavarsym;
+        para: TParaVarSym;
         framesrc: tregister;
       begin
-        para:=tparavarsym(CurrentProcInfo.procdef.paras[0]);
+        para:=TParaVarSym(CurrentProcInfo.procdef.paras[0]);
         if not (vo_is_parentfp in para.varoptions) then
           InternalError(201201142);
         if (para.paraloc[calleeside].location^.loc<>LOC_REGISTER) or

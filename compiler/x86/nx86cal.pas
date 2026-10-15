@@ -39,7 +39,7 @@ interface
        tx86callnode = class(tcgcallnode)
         protected
          procedure do_release_unused_return_value;override;
-         procedure set_result_location(realresdef: tstoreddef);override;
+         procedure set_result_location(realresdef: TStoredDef);override;
          function can_call_ref(var ref: treference):boolean;override;
          function do_call_ref(ref: treference): tcgpara;override;
        end;
@@ -72,7 +72,7 @@ implementation
       end;
 
 
-  procedure tx86callnode.set_result_location(realresdef: tstoreddef);
+  procedure tx86callnode.set_result_location(realresdef: TStoredDef);
     begin
       if (retloc.location^.loc=LOC_FPUREGISTER) then
         begin

@@ -409,7 +409,7 @@ implementation
          i : integer;
          op: TAsmOp;
 
-       procedure inport(dreg:TRegister;dsize:topsize;dtype:tdef);
+       procedure inport(dreg:TRegister;dsize:topsize;dtype:TDef);
          var
            portnumber: TNode;
          begin
@@ -441,7 +441,7 @@ implementation
          end;
 
 
-       procedure outport(dreg:TRegister;dsize:topsize;dtype:tdef);
+       procedure outport(dreg:TRegister;dsize:topsize;dtype:TDef);
          var
            portnumber, portdata: TNode;
          begin
@@ -750,7 +750,7 @@ implementation
                end
              else
                location:=left.location;
-             case tfloatdef(resultdef).floattype of
+             case TFloatDef(resultdef).floattype of
                s32real:
                  begin
                    sym:=CurrentAsmData.RefAsmSymbol(TargetInfo.cprefix+'FPC_ABSMASK_SINGLE',AT_DATA,needs_indirect);
@@ -933,7 +933,7 @@ implementation
              location_reset(location,LOC_MMREGISTER,left.location.size);
              location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
              if UseAVX then
-               case tfloatdef(resultdef).floattype of
+               case TFloatDef(resultdef).floattype of
                  s32real:
                    { we use S_NO instead of S_XMM here, regardless of the register size, as the size of the memory location is 32/64 bit }
                    { using left.location.register here as 2nd parameter is crucial to break dependency chains }
@@ -946,7 +946,7 @@ implementation
                    internalerror(200510031);
                end
              else
-               case tfloatdef(resultdef).floattype of
+               case TFloatDef(resultdef).floattype of
                  s32real:
                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_SQRTSS,S_NO,left.location.register,location.register));
                  s64real:
@@ -1088,7 +1088,7 @@ implementation
          bitsperop,l : longint;
          cgop : topcg;
          asmop : tasmop;
-         opdef : tdef;
+         opdef : TDef;
          opsize,
          orgsize: tcgsize;
         begin
@@ -1115,7 +1115,7 @@ implementation
           bitsperop:=(8*tcgsize2size[opsize]);
           SecondPass(tcallparanode(left).left);
           SecondPass(tcallparanode(tcallparanode(left).right).left);
-          setbase:=tsetdef(tcallparanode(left).left.resultdef).setbase;
+          setbase:=TSetDef(tcallparanode(left).left.resultdef).setbase;
           if tcallparanode(tcallparanode(left).right).left.location.loc=LOC_CONSTANT then
             begin
               { calculate bit position }
@@ -1313,21 +1313,21 @@ implementation
                      begin
                        hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
                          paraarray[3].location.register,location.register,mms_movescalar);
-                       emit_ref_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,memop],S_NO,
+                       emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,memop],S_NO,
                          paraarray[1].location.reference,paraarray[2].location.register,location.register);
                      end;
                    2:
                      begin
                        hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
                          paraarray[3].location.register,location.register,mms_movescalar);
-                       emit_ref_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,memop],S_NO,
+                       emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,memop],S_NO,
                          paraarray[2].location.reference,paraarray[1].location.register,location.register);
                      end;
                    3:
                      begin
                        hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
                          paraarray[1].location.register,location.register,mms_movescalar);
-                       emit_ref_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,memop],S_NO,
+                       emit_ref_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,memop],S_NO,
                          paraarray[3].location.reference,paraarray[2].location.register,location.register);
                      end
                    else
@@ -1342,21 +1342,21 @@ implementation
                    begin
                      hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[1].resultdef,resultdef,
                        paraarray[1].location.register,location.register,mms_movescalar);
-                     emit_reg_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,3],S_NO,
+                     emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,3],S_NO,
                        paraarray[3].location.register,paraarray[2].location.register,location.register);
                    end
                  else if paraarray[2].location.loc=LOC_MMREGISTER then
                    begin
                      hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[2].resultdef,resultdef,
                        paraarray[2].location.register,location.register,mms_movescalar);
-                     emit_reg_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,3],S_NO,
+                     emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,3],S_NO,
                        paraarray[3].location.register,paraarray[1].location.register,location.register);
                    end
                  else
                    begin
                      hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,paraarray[3].resultdef,resultdef,
                        paraarray[3].location.register,location.register,mms_movescalar);
-                     emit_reg_reg_reg(op[negproduct,negop3,tfloatdef(resultdef).floattype,0],S_NO,
+                     emit_reg_reg_reg(op[negproduct,negop3,TFloatDef(resultdef).floattype,0],S_NO,
                        paraarray[1].location.register,paraarray[2].location.register,location.register);
                    end;
                end;
@@ -1378,7 +1378,7 @@ implementation
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             if UseAVX then
-              case tfloatdef(left.resultdef).floattype of
+              case TFloatDef(left.resultdef).floattype of
                 s32real:
                   begin
 
@@ -1412,7 +1412,7 @@ implementation
               begin
                 extrareg:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
                 cg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
-                case tfloatdef(left.resultdef).floattype of
+                case TFloatDef(left.resultdef).floattype of
                   s32real:
                     begin
                       CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,extrareg));
@@ -1427,7 +1427,7 @@ implementation
                     internalerror(2017052103);
                 end;
               end;
-            if tfloatdef(left.resultdef).floattype<>tfloatdef(resultdef).floattype then
+            if TFloatDef(left.resultdef).floattype<>TFloatDef(resultdef).floattype then
               hlcg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,location.register,location.register,mms_movescalar);
           end
         else
@@ -1444,7 +1444,7 @@ implementation
             location_reset(location,LOC_MMREGISTER,left.location.size);
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             if UseAVX then
-              case tfloatdef(resultdef).floattype of
+              case TFloatDef(resultdef).floattype of
                 s32real:
                   { using left.location.register here as 3rd parameter is crucial to break dependency chains }
                   CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg_reg(A_VROUNDSS,S_NO,3,left.location.register,left.location.register,location.register));
@@ -1456,7 +1456,7 @@ implementation
               end
             else
               begin
-                case tfloatdef(resultdef).floattype of
+                case TFloatDef(resultdef).floattype of
                   s32real:
                     CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_ROUNDSS,S_NO,3,left.location.register,location.register));
                   s64real:
@@ -1577,7 +1577,7 @@ implementation
                  gotmem:=false;
                end;
 
-             op:=oparray[inlinenumber in [in_max_single,in_max_double],UseAVX,tfloatdef(resultdef).floattype];
+             op:=oparray[inlinenumber in [in_max_single,in_max_double],UseAVX,TFloatDef(resultdef).floattype];
 
              location_reset(location,LOC_MMREGISTER,paraarray[1].location.size);
              location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);

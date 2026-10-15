@@ -57,10 +57,10 @@ implementation
         orgs,
         DefString,
         InternalProcName : string;
-        pd         : tprocdef;
+        pd         : TProcDef;
         pt         : TNode;
-        srsym      : tsym;
-        srsymtable : TSymtable;
+        srsym      : TSym;
+        srsymtable : TSymTable;
         hpname     : shortstring;
         index      : longint;
         options    : texportoptions;
@@ -97,11 +97,11 @@ implementation
                 InternalProcName:='';
                 case srsym.typ of
                   staticvarsym :
-                    InternalProcName:=tstaticvarsym(srsym).mangledname;
+                    InternalProcName:=TStaticVarSym(srsym).mangledname;
                   procsym :
                     begin
-                      pd:=tprocdef(tprocsym(srsym).ProcdefList[0]);
-                      if (Tprocsym(srsym).ProcdefList.Count>1) or
+                      pd:=TProcDef(TProcSym(srsym).ProcdefList[0]);
+                      if (TProcSym(srsym).ProcdefList.Count>1) or
                          (po_kylixlocal in pd.procoptions) or
                          ((tf_need_export in TargetInfo.flags) and
                           not(po_exports in pd.procoptions)) then
@@ -111,7 +111,7 @@ implementation
                     end;
                   typesym :
                     begin
-                      if not is_objcclass(ttypesym(srsym).typedef) then
+                      if not is_objcclass(TTypeSym(srsym).typedef) then
                         Message(parser_e_illegal_symbol_exported)
                     end;
                   else
@@ -203,8 +203,8 @@ implementation
                        { the generic mangled name, because the name of   }
                        { the parent unit is used in that)                }
                        if (options*[eo_name,eo_index]=[]) and
-                          (tprocdef(tprocsym(srsym).procdeflist[0]).aliasnames.count>1) then
-                         exportallprocsymnames(tprocsym(srsym),options)
+                          (TProcDef(TProcSym(srsym).procdeflist[0]).aliasnames.count>1) then
+                         exportallprocsymnames(TProcSym(srsym),options)
                        else
                          begin
                            { there's a name or an index -> export only one name   }
@@ -218,10 +218,10 @@ implementation
                                hpname:=orgs
                              { Use set mangled name in case of cdecl/cppdecl/mwpascal }
                              { and no name specified                                  }
-                             else if (tprocdef(tprocsym(srsym).procdeflist[0]).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
-                               hpname:=TargetInfo.cprefix+tprocsym(srsym).realname
-                             else if (tprocdef(tprocsym(srsym).procdeflist[0]).proccalloption in [pocall_cppdecl]) then
-                               hpname:=TargetInfo.cprefix+tprocdef(tprocsym(srsym).procdeflist[0]).cplusplusmangledname
+                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
+                               hpname:=TargetInfo.cprefix+TProcSym(srsym).realname
+                             else if (TProcDef(TProcSym(srsym).procdeflist[0]).proccalloption in [pocall_cppdecl]) then
+                               hpname:=TargetInfo.cprefix+TProcDef(TProcSym(srsym).procdeflist[0]).cplusplusmangledname
                              else
                                hpname:=orgs;
 
@@ -232,7 +232,7 @@ implementation
                       begin
                         if not (eo_name in options) then
                           { for "cvar" }
-                          if (vo_has_mangledname in tstaticvarsym(srsym).varoptions) then
+                          if (vo_has_mangledname in TStaticVarSym(srsym).varoptions) then
                             hpname:=srsym.mangledname
                           else
                             hpname:=orgs;
@@ -240,11 +240,11 @@ implementation
                       end;
                     typesym:
                       begin
-                        case ttypesym(srsym).typedef.typ of
+                        case TTypeSym(srsym).typedef.typ of
                           objectdef:
-                            case tobjectdef(ttypesym(srsym).typedef).objecttype of
+                            case TObjectDef(TTypeSym(srsym).typedef).objecttype of
                               odt_objcclass:
-                                exportobjcclass(tobjectdef(ttypesym(srsym).typedef));
+                                exportobjcclass(TObjectDef(TTypeSym(srsym).typedef));
                               else
                                 internalerror(2009092601);
                             end;

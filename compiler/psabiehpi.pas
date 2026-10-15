@@ -48,7 +48,7 @@ unit psabiehpi;
          first : boolean;
          constructor Create(pad : TAsmLabel);
          destructor Destroy; override;
-         function AddAction(p: tobjectdef): LongInt;
+         function AddAction(p: TObjectDef): LongInt;
        end;
 
        { This object gives information on the current routine being
@@ -100,7 +100,7 @@ unit psabiehpi;
          { adds a new type to the type filter list and returns its index
            be aware, that this method can also handle catch all filters so it
            is valid to pass nil }
-         function AddTypeFilter(p: tobjectdef): Longint;
+         function AddTypeFilter(p: TObjectDef): Longint;
          procedure set_eh_info; override;
          procedure setup_eh; override;
          procedure finish_eh; override;
@@ -141,7 +141,7 @@ implementation
          Never instantiated. }
        tpsabiehexceptionstatehandler = class(tcgexceptionstatehandler)
        protected
-         class procedure begin_catch_internal(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel; add_catch: boolean; out exceptlocdef: tdef; out
+         class procedure begin_catch_internal(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; add_catch: boolean; out exceptlocdef: TDef; out
            exceptlocreg: tregister);
          class procedure catch_all_start_internal(list: TAsmList; add_catch: boolean);
        public
@@ -156,7 +156,7 @@ implementation
          class procedure free_exception(list: TAsmList; const t: texceptiontemps; const s: texceptionstate; a: aint; endexceptlabel: tasmlabel; onlyfree:boolean); override;
          class procedure handle_reraise(list:TAsmList;const t:texceptiontemps;const entrystate: texceptionstate; const exceptframekind: texceptframekind); override;
          { start of an "on" (catch) block }
-         class procedure begin_catch(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel; out exceptlocdef: tdef; out exceptlocreg: tregister); override;
+         class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out exceptlocreg: tregister); override;
          { end of an "on" (catch) block }
          class procedure end_catch(list: TAsmList); override;
          { called for a catch all exception }
@@ -188,7 +188,7 @@ implementation
       end;
 
 
-    function TPSABIEHAction.AddAction(p: tobjectdef) : LongInt;
+    function TPSABIEHAction.AddAction(p: TObjectDef) : LongInt;
       var
         index: LongInt;
       begin
@@ -198,14 +198,14 @@ implementation
         first:=false;
 
         { catch all? }
-        if p=tobjectdef(-1) then
+        if p=TObjectDef(-1) then
           index:=(CurrentProcInfo as tpsabiehprocinfo).AddTypeFilter(nil)
         else if assigned(p) then
           index:=(CurrentProcInfo as tpsabiehprocinfo).AddTypeFilter(p)
         else
           index:=-1;
 {$ifdef debug_eh}
-        if p=tobjectdef(-1) then
+        if p=TObjectDef(-1) then
           actionlist.concat(tai_comment.Create(strpnew('Catch all')))
         else if assigned(p) then
           actionlist.concat(tai_comment.Create(strpnew('Action for '+p.GetTypeName)))
@@ -353,13 +353,13 @@ implementation
       end;
 
 
-    function tpsabiehprocinfo.AddTypeFilter(p: tobjectdef) : Longint;
+    function tpsabiehprocinfo.AddTypeFilter(p: TObjectDef) : Longint;
       var
         i: Integer;
       begin
         for i:=0 to typefilterlist.count-1 do
           begin
-            if tobjectdef(typefilterlist[i])=p then
+            if TObjectDef(typefilterlist[i])=p then
               begin
                 result:=i;
                 exit;
@@ -490,7 +490,7 @@ implementation
                         gcc_except_table_data.concat(tai_comment.Create(strpnew('Type filter '+tostr(i))));
 {$endif debug_eh}
                         if assigned(typefilterlist[i]) then
-                          gcc_except_table_data.concat(tai_const.Create_sym(CurrentAsmData.RefAsmSymbol(tobjectdef(typefilterlist[i]).vmt_mangledname, AT_DATA)))
+                          gcc_except_table_data.concat(tai_const.Create_sym(CurrentAsmData.RefAsmSymbol(TObjectDef(typefilterlist[i]).vmt_mangledname, AT_DATA)))
                         else
                           gcc_except_table_data.concat(tai_const.Create_sym(nil));
                       end;
@@ -567,7 +567,7 @@ implementation
             (CurrentProcInfo as tpsabiehprocinfo).CurrentAction.AddAction(nil)
           else
             { if safecall, catch all }
-            (CurrentProcInfo as tpsabiehprocinfo).CurrentAction.AddAction(tobjectdef(-1));
+            (CurrentProcInfo as tpsabiehprocinfo).CurrentAction.AddAction(TObjectDef(-1));
 
         flowcontrol:=[fc_inflowcontrol,fc_catching_exceptions];
         if exceptframekind<>tek_except then
@@ -628,7 +628,7 @@ implementation
       const exceptframekind: texceptframekind);
       var
         cgpara1: tcgpara;
-        pd: tprocdef;
+        pd: TProcDef;
         ReRaiseLandingPad: TPSABIEHAction;
         psabiehprocinfo: tpsabiehprocinfo;
       begin
@@ -688,13 +688,13 @@ implementation
       end;
 
 
-    class procedure tpsabiehexceptionstatehandler.begin_catch_internal(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel;
-      add_catch: boolean; out exceptlocdef: tdef; out exceptlocreg: tregister);
+    class procedure tpsabiehexceptionstatehandler.begin_catch_internal(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel;
+      add_catch: boolean; out exceptlocdef: TDef; out exceptlocreg: tregister);
       var
         catchstartlab : tasmlabel;
         begincatchres,
         paraloc1: tcgpara;
-        pd: tprocdef;
+        pd: TProcDef;
         {rttisym: TAsmSymbol;
         rttidef: tdef;
         indirect: boolean;
@@ -746,7 +746,7 @@ implementation
             hlcg.a_label(list,catchstartlab);
           end
         else
-          (CurrentProcInfo as tpsabiehprocinfo).CurrentAction.AddAction(tobjectdef(-1));
+          (CurrentProcInfo as tpsabiehprocinfo).CurrentAction.AddAction(TObjectDef(-1));
 
         pd:=search_system_proc('fpc_psabi_begin_catch');
         paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
@@ -766,14 +766,14 @@ implementation
 
     class procedure tpsabiehexceptionstatehandler.catch_all_start_internal(list: TAsmList; add_catch: boolean);
       var
-        exceptlocdef: tdef;
+        exceptlocdef: TDef;
         exceptlocreg: tregister;
       begin
         begin_catch_internal(list,nil,nil,add_catch,exceptlocdef,exceptlocreg);
       end;
 
 
-    class procedure tpsabiehexceptionstatehandler.begin_catch(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel; out exceptlocdef: tdef; out
+    class procedure tpsabiehexceptionstatehandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out
       exceptlocreg: tregister);
       begin
         begin_catch_internal(list,excepttype,nextonlabel,true,exceptlocdef,exceptlocreg);

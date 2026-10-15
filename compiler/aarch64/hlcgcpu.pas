@@ -37,12 +37,12 @@ interface
 
   type
     thlcgaarch64 = class(thlcg2ll)
-      procedure a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: tdef; const sreg: tsubsetregister; destreg: tregister); override;
-      procedure a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: tdef; const fromsreg, tosreg: tsubsetregister); override;
+      procedure a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: tsubsetregister; destreg: tregister); override;
+      procedure a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: tsubsetregister); override;
 
-      procedure g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);override;
+      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);override;
      protected
-      procedure a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: tdef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt); override;
+      procedure a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt); override;
     end;
 
 implementation
@@ -54,7 +54,7 @@ implementation
     cpubase,aasmcpu,parabase,
     cgobj,cgcpu;
 
-  procedure thlcgaarch64.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: tdef; const sreg: tsubsetregister; destreg: tregister);
+  procedure thlcgaarch64.a_load_subsetreg_reg(list: TAsmList; subsetsize, tosize: TDef; const sreg: tsubsetregister; destreg: tregister);
     var
       op: tasmop;
       tocgsize: tcgsize;
@@ -112,7 +112,7 @@ implementation
     end;
 
 
-  procedure thlcgaarch64.a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: tdef; const fromsreg, tosreg: tsubsetregister);
+  procedure thlcgaarch64.a_load_subsetreg_subsetreg(list: TAsmlist; fromsubsetsize, tosubsetsize: TDef; const fromsreg, tosreg: tsubsetregister);
     var
       fromreg, toreg: tregister;
 
@@ -136,11 +136,11 @@ implementation
     end;
 
 
-  procedure thlcgaarch64.g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);
+  procedure thlcgaarch64.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);
     var
       make_global: boolean;
       href: treference;
-      hsym: tsym;
+      hsym: TSym;
       paraloc: pcgparalocation;
       op: tasmop;
     begin
@@ -165,11 +165,11 @@ implementation
 
       { set param1 interface to self  }
       procdef.init_paraloc_info(callerside);
-      hsym:=tsym(procdef.parast.Find('self'));
+      hsym:=TSym(procdef.parast.Find('self'));
       if not(assigned(hsym) and
         (hsym.typ=paravarsym)) then
         internalerror(2010103101);
-      paraloc:=tparavarsym(hsym).paraloc[callerside].location;
+      paraloc:=TParaVarSym(hsym).paraloc[callerside].location;
       if assigned(paraloc^.next) then
         InternalError(2013020101);
 
@@ -190,7 +190,7 @@ implementation
           getcpuregister(list,NR_IP0);
           a_load_ref_reg(list,voidpointertype,voidpointertype,href,NR_IP0);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_IP0,tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
+          reference_reset_base(href,voidpointertype,NR_IP0,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
           op:=A_LDR;
           tcgaarch64(cg).make_simple_ref(list,op,OS_ADDR,PF_None,href,NR_IP0);
           list.concat(taicpu.op_reg_ref(op,NR_IP0,href));
@@ -203,7 +203,7 @@ implementation
     end;
 
 
-  procedure thlcgaarch64.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: tdef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt);
+  procedure thlcgaarch64.a_load_regconst_subsetreg_intern(list: TAsmList; fromsize, subsetsize: TDef; fromreg: tregister; const sreg: tsubsetregister; slopt: tsubsetloadopt);
     var
       toreg: tregister;
     begin

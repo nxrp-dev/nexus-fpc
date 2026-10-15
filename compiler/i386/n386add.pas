@@ -111,9 +111,9 @@ interface
         mboverflow:=false;
         opsize:=S_L;
         unsigned:=((left.resultdef.typ=orddef) and
-                   (torddef(left.resultdef).ordtype=u64bit)) or
+                   (TOrdDef(left.resultdef).ordtype=u64bit)) or
                   ((right.resultdef.typ=orddef) and
-                   (torddef(right.resultdef).ordtype=u64bit));
+                   (TOrdDef(right.resultdef).ordtype=u64bit));
         case nodetype of
           addn :
             begin
@@ -328,9 +328,9 @@ interface
         pass_left_right;
 
         unsigned:=((left.resultdef.typ=orddef) and
-                   (torddef(left.resultdef).ordtype=u64bit)) or
+                   (TOrdDef(left.resultdef).ordtype=u64bit)) or
                   ((right.resultdef.typ=orddef) and
-                   (torddef(right.resultdef).ordtype=u64bit));
+                   (TOrdDef(right.resultdef).ordtype=u64bit));
 
         { we have LOC_JUMP as result }
         CurrentAsmData.getjumplabel(truelabel);

@@ -31,7 +31,7 @@ uses
   wpobase;
 
 type
-  tderefarray = array of tderef;
+  tderefarray = array of TDeref;
 
   tunitwpoinfo = class(tunitwpoinfobase)
    { devirtualisation information -- begin }
@@ -47,8 +47,8 @@ type
 
     destructor destroy; override;
 
-    procedure ppuwrite(ppufile:tcompilerppufile);
-    constructor ppuload(ppufile:tcompilerppufile);
+    procedure ppuwrite(ppufile:TCompilerPPUFile);
+    constructor ppuload(ppufile:TCompilerPPUFile);
 
     procedure deref;
     procedure derefimpl;
@@ -60,8 +60,8 @@ type
   { twpoinfomanager }
 
   twpoinfomanager = class(twpoinfomanagerbase)
-    function can_be_devirtualized(objdef, procdef: tdef; out name: TSymStr): boolean; override;
-    function optimized_name_for_vmt(objdef, procdef: tdef; out name: TSymStr): boolean; override;
+    function can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean; override;
+    function optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean; override;
     function symbol_live(const name: shortstring): boolean; override;
   end;
 
@@ -91,7 +91,7 @@ implementation
     end;
 
 
-  procedure tunitwpoinfo.ppuwrite(ppufile:tcompilerppufile);
+  procedure tunitwpoinfo.ppuwrite(ppufile:TCompilerPPUFile);
     var
       i: longint;
     begin
@@ -120,7 +120,7 @@ implementation
     end;
 
 
-  constructor tunitwpoinfo.ppuload(ppufile:tcompilerppufile);
+  constructor tunitwpoinfo.ppuload(ppufile:TCompilerPPUFile);
     var
       i, len: longint;
     begin
@@ -244,7 +244,7 @@ implementation
           with tcalledvmtentries(fcalledvmtentriestemplist[i]) do
             begin
               deref;
-              fcalledvmtentries.add(tobjectdef(objdef).vmt_mangledname,
+              fcalledvmtentries.add(TObjectDef(objdef).vmt_mangledname,
                 fcalledvmtentriestemplist[i]);
             end;
         end;
@@ -270,7 +270,7 @@ implementation
 
   { devirtualisation }
 
-  function twpoinfomanager.can_be_devirtualized(objdef, procdef: tdef; out name: TSymStr): boolean;
+  function twpoinfomanager.can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean;
     begin
       if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
          not(cs_wpo_devirtualize_calls in CurrentSettings.dowpoptimizerswitches) then
@@ -282,7 +282,7 @@ implementation
     end;
 
 
-  function twpoinfomanager.optimized_name_for_vmt(objdef, procdef: tdef; out name: TSymStr): boolean;
+  function twpoinfomanager.optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean;
     begin
       if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
          not(cs_wpo_optimize_vmts in CurrentSettings.dowpoptimizerswitches) then

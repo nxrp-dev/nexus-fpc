@@ -48,7 +48,7 @@ interface
        tcgstringconstnode = class(tstringconstnode)
           procedure pass_generate_code;override;
        protected
-         procedure load_dynstring(const strpointerdef: tdef; const elementdef: tdef; const winlikewidestring: boolean); virtual;
+         procedure load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean); virtual;
        end;
 
        tcgsetconstnode = class(tsetconstnode)
@@ -110,14 +110,14 @@ implementation
       begin
         location_reset_ref(location,LOC_CREFERENCE,def_cgsize(resultdef),const_align(resultdef.alignment),[]);
         lastlabel:=nil;
-        realait:=floattype2ait[tfloatdef(resultdef).floattype];
+        realait:=floattype2ait[TFloatDef(resultdef).floattype];
         { const already used ? }
         if not assigned(lab_real) then
           begin
             { there may be gap between record fields, zero it out }
             fillchar(key,sizeof(key),0);
             key.value:=value_real;
-            key.typ:=tfloatdef(resultdef).floattype;
+            key.typ:=TFloatDef(resultdef).floattype;
             entry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
 
             lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
@@ -144,7 +144,7 @@ implementation
 
                     aitrealconst_s80bit :
                       begin
-                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,tfloatdef(resultdef).size));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,TFloatDef(resultdef).size));
                       end;
 
                     { the round is necessary for native compilers where comp isn't a float }
@@ -199,10 +199,10 @@ implementation
          pool: THashSet;
          entry: PHashSetItem;
          winlikewidestring: boolean;
-         elementdef: tdef;
-         strpointerdef: tdef;
+         elementdef: TDef;
+         strpointerdef: TDef;
          datatcb: ttai_typedconstbuilder;
-         datadef: tdef;
+         datadef: TDef;
          t : tai_string;
 
 
@@ -250,7 +250,7 @@ implementation
                 entry := pool.FindOrAdd(pointer(valuews.data),len*cwidechartype.size)
               else
               if cst_type = cst_ansistring then
-                entry := PHashSetItem(TTagHashSet(pool).FindOrAdd(pointer(valueas),len,tstringdef(resultdef).encoding))
+                entry := PHashSetItem(TTagHashSet(pool).FindOrAdd(pointer(valueas),len,TStringDef(resultdef).encoding))
               else
                 entry := pool.FindOrAdd(pointer(valueas),len);
 
@@ -267,7 +267,7 @@ implementation
                              InternalError(2008032301)   { empty string should be handled above }
                            else
                              begin
-                               lastlabel:=datatcb.emit_ansistring_const(CurrentAsmData.AsmLists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
+                               lastlabel:=datatcb.emit_ansistring_const(CurrentAsmData.AsmLists[al_typedconsts],asconstpchar,len,TStringDef(resultdef).encoding);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
                                if lastlabel.ofs<>datatcb.get_string_symofs(st_ansistring,false) then
@@ -286,11 +286,11 @@ implementation
                              begin
                                lastlabel:=datatcb.emit_unicodestring_const(CurrentAsmData.AsmLists[al_typedconsts],
                                                valuews,
-                                               tstringdef(resultdef).encoding,
+                                               TStringDef(resultdef).encoding,
                                                winlikewidestring);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
-                               if lastlabel.ofs<>datatcb.get_string_symofs(tstringdef(resultdef).stringtype,winlikewidestring) then
+                               if lastlabel.ofs<>datatcb.get_string_symofs(TStringDef(resultdef).stringtype,winlikewidestring) then
                                  internalerror(2012051702);
                              end;
                            { no contents of the datatcb itself to concatenate,
@@ -358,12 +358,12 @@ implementation
       end;
 
 
-    procedure tcgstringconstnode.load_dynstring(const strpointerdef: tdef; const elementdef: tdef; const winlikewidestring: boolean);
+    procedure tcgstringconstnode.load_dynstring(const strpointerdef: TDef; const elementdef: TDef; const winlikewidestring: boolean);
       var
         href: treference;
       begin
         reference_reset_symbol(href, lab_str,
-          ctai_typedconstbuilder.get_string_symofs(tstringdef(resultdef).stringtype, winlikewidestring),
+          ctai_typedconstbuilder.get_string_symofs(TStringDef(resultdef).stringtype, winlikewidestring),
           const_align(strpointerdef.size),[]);
         hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, elementdef, strpointerdef, href, location.register)
       end;

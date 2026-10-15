@@ -111,9 +111,9 @@ interface
         in_uses,
         in_interface    : boolean;
         u               : tmodule;
-        unitsym         : tunitsym;
+        unitsym         : TUnitSym;
         dependent_added : boolean;
-        constructor create(_u : tmodule;intface,inuses:boolean;usym:tunitsym);
+        constructor create(_u : tmodule;intface,inuses:boolean;usym:TUnitSym);
         procedure check_hints;
       end;
 
@@ -180,9 +180,9 @@ interface
         ansistrdef    : tobject; { an ansistring def redefined for the current module }
         wpoinfo       : tunitwpoinfobase; { whole program optimization-related information that is generated during the current run for this unit }
         globalsymtable,           { pointer to the global symtable of this unit }
-        localsymtable : TSymtable;{ pointer to the local symtable of this unit }
+        localsymtable : TSymTable;{ pointer to the local symtable of this unit }
         globalmacrosymtable,           { pointer to the global macro symtable of this unit }
-        localmacrosymtable : TSymtable;{ pointer to the local macro symtable of this unit }
+        localmacrosymtable : TSymTable;{ pointer to the local macro symtable of this unit }
         mainscanner   : TObject;  { scanner object used }
         scanner       : TObject;  { scanner object used }
         procinfo      : TObject;  { current procedure being compiled }
@@ -304,7 +304,7 @@ interface
         class var finish_module: tfinish_module_event;
         procedure addimportedsym(sym:TSymEntry; check_if_exists: boolean = true);
         procedure derefimportedsymbols;
-        function  addusedunit(hp:tmodule;inuses:boolean;usym:tunitsym):tused_unit;
+        function  addusedunit(hp:tmodule;inuses:boolean;usym:TUnitSym):tused_unit;
         function  usesmodule_in_interface(m : tmodule) : boolean;
         function findusedunit(m : tmodule) : tused_unit;
         function usedunitsloaded(interface_units: boolean; out firstwaiting : tmodule): boolean;
@@ -344,7 +344,7 @@ interface
     function get_module(moduleindex : longint) : tmodule;
     function get_source_file(moduleindex,fileindex : longint) : tinputfile;
     procedure addloadedunit(hp:tmodule);
-    function find_module_from_symtable(st:tsymtable):tmodule;
+    function find_module_from_symtable(st:TSymTable):tmodule;
 
 
 implementation
@@ -364,7 +364,7 @@ implementation
                              Global Functions
 *****************************************************************************}
 
-    function find_module_from_symtable(st:tsymtable):tmodule;
+    function find_module_from_symtable(st:TSymTable):tmodule;
       begin
         result:=get_module(st.moduleid);
       end;
@@ -518,7 +518,7 @@ implementation
                               TUSED_UNIT
  ****************************************************************************}
 
-    constructor tused_unit.create(_u : tmodule;intface,inuses:boolean;usym:tunitsym);
+    constructor tused_unit.create(_u : tmodule;intface,inuses:boolean;usym:TUnitSym);
       begin
         u:=_u;
         in_interface:=intface;
@@ -811,8 +811,8 @@ implementation
           begin
             for i:=0 to deflist.Count-1 do
               if assigned(deflist[i]) and
-                 (tdef(deflist[i]).registered_in_module=self) then
-                tdef(deflist[i]).registered_in_module:=nil;
+                 (TDef(deflist[i]).registered_in_module=self) then
+                TDef(deflist[i]).registered_in_module:=nil;
             deflist.free;
             deflist := nil;
           end;
@@ -1279,7 +1279,7 @@ implementation
       var
         importsym: tunitimportsym;
         module: tmodule;
-        asymtable: TSymtable;
+        asymtable: TSymTable;
         i: Integer;
       begin
         if check_if_exists then
@@ -1328,7 +1328,7 @@ implementation
           end;
       end;
 
-    function tmodule.addusedunit(hp:tmodule;inuses:boolean;usym:tunitsym):tused_unit;
+    function tmodule.addusedunit(hp:tmodule;inuses:boolean;usym:TUnitSym):tused_unit;
       var
         pu : tused_unit;
       begin

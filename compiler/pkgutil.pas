@@ -55,7 +55,7 @@ implementation
   procedure emit_package_descriptor;
     var
       b: ttai_typedconstbuilder;
-      d: tdef;
+      d: TDef;
       u: tmodule;
       entry: ppackageentry;
       i,unitcount,depcount: longint;
@@ -212,14 +212,14 @@ implementation
     end;
 
 
-  procedure exportprocsym(sym:tprocsym;symtable:tsymtable);
+  procedure exportprocsym(sym:TProcSym;symtable:TSymTable);
     var
       i : longint;
-      pd : tprocdef;
+      pd : TProcDef;
     begin
-      for i:=0 to tprocsym(sym).ProcdefList.Count-1 do
+      for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
         begin
-          pd:=tprocdef(tprocsym(sym).procdeflist[i]);
+          pd:=TProcDef(TProcSym(sym).procdeflist[i]);
           if not(pd.proccalloption in [pocall_internproc]) and
               not (df_generic in pd.defoptions) and
               ((pd.procoptions*[po_external])=[]) and
@@ -234,24 +234,24 @@ implementation
                 )
               ) then
             begin
-              exportallprocdefnames(tprocsym(sym),pd,[eo_name,eo_no_sym_name]);
+              exportallprocdefnames(TProcSym(sym),pd,[eo_name,eo_no_sym_name]);
             end;
         end;
     end;
 
 
-  procedure exportabstractrecorddef(def:tabstractrecorddef;symtable:tsymtable); forward;
+  procedure exportabstractrecorddef(def:TAbstractRecordDef;symtable:TSymTable); forward;
 
 
   procedure exportabstractrecordsymproc(sym:tobject;arg:pointer);
     begin
-      case tsym(sym).typ of
+      case TSym(sym).typ of
         typesym:
           begin
-            case ttypesym(sym).typedef.typ of
+            case TTypeSym(sym).typedef.typ of
               objectdef,
               recorddef:
-                exportabstractrecorddef(tabstractrecorddef(ttypesym(sym).typedef),tsymtable(arg));
+                exportabstractrecorddef(TAbstractRecordDef(TTypeSym(sym).typedef),TSymTable(arg));
               else
                 ;
             end;
@@ -259,13 +259,13 @@ implementation
         procsym:
           begin
             { don't export methods of interfaces }
-            if is_interface(tdef(tabstractrecordsymtable(arg).defowner)) then
+            if is_interface(TDef(TAbstractRecordSymTable(arg).defowner)) then
               exit;
-            exportprocsym(tprocsym(sym),tsymtable(arg));
+            exportprocsym(TProcSym(sym),TSymTable(arg));
           end;
         staticvarsym:
           begin
-            varexport(tsym(sym).mangledname);
+            varexport(TSym(sym).mangledname);
           end;
         else
           ;
@@ -284,7 +284,7 @@ implementation
     end;
 
 
-  procedure exportabstractrecorddef(def:tabstractrecorddef;symtable:tsymtable);
+  procedure exportabstractrecorddef(def:TAbstractRecordDef;symtable:TSymTable);
     begin
       { for cross unit type aliases this might happen }
       if def.owner<>symtable then
@@ -295,11 +295,11 @@ implementation
       def.symtable.SymList.ForEachCall(@exportabstractrecordsymproc,def.symtable);
       if def.typ=objectdef then
         begin
-          if (oo_has_vmt in tobjectdef(def).objectoptions) then
-            exportname(tobjectdef(def).vmt_mangledname);
+          if (oo_has_vmt in TObjectDef(def).objectoptions) then
+            exportname(TObjectDef(def).vmt_mangledname);
           if is_interface(def) then
             begin
-              if assigned(tobjectdef(def).iidguid) then
+              if assigned(TObjectDef(def).iidguid) then
                 exportname(make_mangledname('IID',def.owner,def.objname^));
               exportname(make_mangledname('IIDSTR',def.owner,def.objname^));
             end;
@@ -307,7 +307,7 @@ implementation
     end;
 
 
-  procedure export_typedef(def:tdef;symtable:tsymtable;global:boolean);
+  procedure export_typedef(def:TDef;symtable:TSymTable;global:boolean);
     begin
       if not (global or is_class(def)) or
           ([df_internal,df_generic]*def.defoptions<>[]) or
@@ -315,14 +315,14 @@ implementation
           (def.owner<>symtable) then
         exit;
       if ds_rtti_table_written in def.defstates then
-        exportname(def.rtti_mangledname(fullrtti));
+        exportname(def.RTTIMangledName(fullrtti));
       if (ds_init_table_written in def.defstates) and
-          def.needs_separate_initrtti then
-        exportname(def.rtti_mangledname(initrtti));
+          def.NeedsSeparateInitRTTI then
+        exportname(def.RTTIMangledName(initrtti));
       case def.typ of
         recorddef,
         objectdef:
-          exportabstractrecorddef(tabstractrecorddef(def),symtable);
+          exportabstractrecorddef(TAbstractRecordDef(def),symtable);
         else
           ;
       end;
@@ -334,8 +334,8 @@ implementation
       isglobal,
       publiconly : boolean;
     begin
-      publiconly:=tsymtable(arg).symtabletype=staticsymtable;
-      isglobal:=tsymtable(arg).symtabletype=globalsymtable;
+      publiconly:=TSymTable(arg).symtabletype=staticsymtable;
+      isglobal:=TSymTable(arg).symtabletype=globalsymtable;
       case TSym(sym).typ of
         { ignore: }
         unitsym,
@@ -346,22 +346,22 @@ implementation
           ;
         constsym:
           begin
-            if tconstsym(sym).consttyp=constresourcestring then
-              varexport(make_mangledname('RESSTR',tsym(sym).owner,tsym(sym).name));
+            if TConstSym(sym).consttyp=constresourcestring then
+              varexport(make_mangledname('RESSTR',TSym(sym).owner,TSym(sym).name));
           end;
         typesym:
           begin
-            export_typedef(ttypesym(sym).typedef,tsymtable(arg),isglobal);
+            export_typedef(TTypeSym(sym).typedef,TSymTable(arg),isglobal);
           end;
         procsym:
           begin
-            exportprocsym(tprocsym(sym),tsymtable(arg));
+            exportprocsym(TProcSym(sym),TSymTable(arg));
           end;
         staticvarsym:
           begin
-            if publiconly and ([vo_is_public,vo_has_global_ref]*tstaticvarsym(sym).varoptions=[]) then
+            if publiconly and ([vo_is_public,vo_has_global_ref]*TStaticVarSym(sym).varoptions=[]) then
               exit;
-            varexport(tsym(sym).mangledname);
+            varexport(TSym(sym).mangledname);
           end;
         absolutevarsym:
           ;
@@ -839,7 +839,7 @@ implementation
         sym : tasmsymbol;
         cacheentry : pcacheentry;
         psym : tsymentry;
-        pd : tprocdef;
+        pd : TProcDef;
         found : boolean;
         impname,symname : TSymStr;
         suffixidx : longint;
@@ -873,9 +873,9 @@ implementation
                 psym:=tsymentry(alreadyloaded[j]);
                 case psym.typ of
                   procsym:
-                    for k:=0 to tprocsym(psym).procdeflist.count-1 do
+                    for k:=0 to TProcSym(psym).procdeflist.count-1 do
                       begin
-                        pd:=tprocdef(tprocsym(psym).procdeflist[k]);
+                        pd:=TProcDef(TProcSym(psym).procdeflist[k]);
                         if pd.has_alias_name(symname) or
                             (
                               ([po_external,po_has_importdll]*pd.procoptions=[po_external,po_has_importdll]) and
@@ -887,11 +887,11 @@ implementation
                           end;
                       end;
                   staticvarsym:
-                    if tstaticvarsym(psym).mangledname=symname then
+                    if TStaticVarSym(psym).mangledname=symname then
                       found:=true;
                   constsym:
                     begin
-                      if tconstsym(psym).consttyp<>constresourcestring then
+                      if TConstSym(psym).consttyp<>constresourcestring then
                         internalerror(2016072202);
                       if make_mangledname('RESSTR',psym.owner,psym.name)=symname then
                         found:=true;
@@ -929,7 +929,7 @@ implementation
       end;
 
 
-    procedure import_proc_symbol(pd:tprocdef;pkg:tpackage);
+    procedure import_proc_symbol(pd:TProcDef;pkg:tpackage);
       var
         item : TCmdStrListItem;
       begin
@@ -951,11 +951,11 @@ implementation
         i,j,k,l : longint;
         pkgentry : ppackageentry;
         sym : TSymEntry;
-        srsymtable : tsymtable;
+        srsymtable : TSymTable;
         module : tmodule;
         unitentry : pcontainedunit;
         name : tsymstr;
-        pd : tprocdef;
+        pd : TProcDef;
       begin
         for i:=0 to syms.count-1 do
           begin
@@ -963,7 +963,7 @@ implementation
             if not (sym.typ in [staticvarsym,procsym,constsym]) or
                 (
                   (sym.typ=constsym) and
-                  (tconstsym(sym).consttyp<>constresourcestring)
+                  (TConstSym(sym).consttyp<>constresourcestring)
                 ) then
               continue;
             if alreadyloaded.indexof(sym)>=0 then
@@ -996,21 +996,21 @@ implementation
                         case sym.typ of
                           constsym:
                             begin
-                              if tconstsym(sym).consttyp<>constresourcestring then
+                              if TConstSym(sym).consttyp<>constresourcestring then
                                 internalerror(2016072201);
                               name:=make_mangledname('RESSTR',sym.owner,sym.name);
                               CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
                             end;
                           staticvarsym:
                             begin
-                              name:=tstaticvarsym(sym).mangledname;
+                              name:=TStaticVarSym(sym).mangledname;
                               CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
                             end;
                           procsym:
                             begin
-                              for l:=0 to tprocsym(sym).procdeflist.count-1 do
+                              for l:=0 to TProcSym(sym).procdeflist.count-1 do
                                 begin
-                                  pd:=tprocdef(tprocsym(sym).procdeflist[l]);
+                                  pd:=TProcDef(TProcSym(sym).procdeflist[l]);
                                   if [po_external,po_has_importdll]*pd.procoptions=[po_external,po_has_importdll] then
                                     { if we use an external procedure of another unit we
                                       need to import it ourselves from the correct library }

@@ -319,7 +319,7 @@ interface
        tfloat2tcgsize: array[TFloatType] of tcgsize =
          (OS_F32,OS_F64,OS_F80,OS_F80,OS_C64,OS_C64);
 
-       tvarregable2tcgloc : array[tvarregable] of tcgloc = (LOC_VOID,
+       tvarregable2tcgloc : array[TVarRegable] of tcgloc = (LOC_VOID,
           LOC_CREGISTER,LOC_CFPUREGISTER,LOC_CMMREGISTER,LOC_CREGISTER);
 
 {$if defined(cpu64bitalu)}

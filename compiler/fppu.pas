@@ -38,7 +38,7 @@ interface
        TAvailableUnitFiles = set of TAvailableUnitFile;
 
        tppumodule = class(tmodule)
-          ppufile    : tcompilerppufile; { the PPU file }
+          ppufile    : TCompilerPPUFile; { the PPU file }
           sourcefn   : TPathStr; { Source specified with "uses .. in '..'" }
           comments   : TCmdStrList;
           nsprefix   : TCmdStr; { Namespace prefix the unit was found with }
@@ -209,18 +209,18 @@ var
 
       begin
         Message1(unit_u_reresolving_unit,modulename^);
-        if tstoredsymtable(globalsymtable).is_deref_built then
-          tstoredsymtable(globalsymtable).deref(false);
-        if tstoredsymtable(globalsymtable).is_derefimpl_built then
-          tstoredsymtable(globalsymtable).derefimpl(false);
+        if TStoredSymTable(globalsymtable).is_deref_built then
+          TStoredSymTable(globalsymtable).deref(false);
+        if TStoredSymTable(globalsymtable).is_derefimpl_built then
+          TStoredSymTable(globalsymtable).derefimpl(false);
         if assigned(localsymtable) then
           begin
             { we have only builderef(impl)'d the registered symbols of
               the localsymtable -> also only deref those again }
-            if tstoredsymtable(localsymtable).is_deref_built then
-              tstoredsymtable(localsymtable).deref(true);
-            if tstoredsymtable(localsymtable).is_derefimpl_built then
-              tstoredsymtable(localsymtable).derefimpl(true);
+            if TStoredSymTable(localsymtable).is_deref_built then
+              TStoredSymTable(localsymtable).deref(true);
+            if TStoredSymTable(localsymtable).is_derefimpl_built then
+              TStoredSymTable(localsymtable).derefimpl(true);
           end;
         derefimportedsymbols;
         if assigned(wpoinfo) then
@@ -268,7 +268,7 @@ var
          exit;
       { Open the ppufile }
         Message1(unit_u_ppu_name,ppufilename);
-        ppufile:=tcompilerppufile.create(ppufilename);
+        ppufile:=TCompilerPPUFile.create(ppufilename);
         if not ppufile.openfile then
          begin
            discardppu;
@@ -284,7 +284,7 @@ var
         result:=false;
       { Open the ppufile }
         Message1(unit_u_ppu_name,ppufilename);
-        ppufile:=tcompilerppufile.create(ppufilename);
+        ppufile:=TCompilerPPUFile.create(ppufilename);
         if not ppufile.openstream(strm) then
          begin
            discardppu;
@@ -747,7 +747,7 @@ var
       { called by writeppu }
       var
         i : longint;
-        deref : pderef;
+        deref : PDeref;
         importsym: tunitimportsym;
       begin
         unitimportsymsderefs.capacity:=unitimportsymsderefs.count+unitimportsyms.count;
@@ -765,12 +765,12 @@ var
       { called at end of loading a ppu }
       var
         i : longint;
-        sym : tsym;
+        sym : TSym;
       begin
         unitimportsyms.capacity:=unitimportsyms.count+unitimportsymsderefs.count;
         for i:=0 to unitimportsymsderefs.count-1 do
           begin
-            sym:=tsym(pderef(unitimportsymsderefs[i])^.resolve);
+            sym:=TSym(PDeref(unitimportsymsderefs[i])^.resolve);
             addimportedsym(sym,false);
           end;
       end;
@@ -778,11 +778,11 @@ var
     procedure tppumodule.freederefunitimportsyms;
       var
         i : longint;
-        deref : pderef;
+        deref : PDeref;
       begin
         for i:=0 to unitimportsymsderefs.count-1 do
           begin
-            deref:=pderef(unitimportsymsderefs[i]);
+            deref:=PDeref(unitimportsymsderefs[i]);
             system.dispose(deref);
           end;
       end;
@@ -797,11 +797,11 @@ var
 
     procedure tppumodule.writeusedmacro(p:TNamedIndexItem;arg:pointer);
       begin
-        if tmacro(p).is_used or is_initial then
+        if TMacro(p).is_used or is_initial then
           begin
             ppufile.putstring(p.name);
             ppufile.putboolean(is_initial);
-            ppufile.putboolean(tmacro(p).is_used);
+            ppufile.putboolean(TMacro(p).is_used);
           end;
       end;
 
@@ -1050,7 +1050,7 @@ var
       begin
         ppufile.putlongint(unitimportsymsderefs.count);
         for i:=0 to unitimportsymsderefs.count-1 do
-          ppufile.putderef(pderef(unitimportsymsderefs[i])^);
+          ppufile.putderef(PDeref(unitimportsymsderefs[i])^);
         ppufile.writeentry(ibunitimportsyms);
       end;
 
@@ -1127,7 +1127,7 @@ var
     procedure tppumodule.readusedmacros;
       var
         hs : string;
-        mac : tmacro;
+        mac : TMacro;
         was_initial,
         was_used : boolean;
       {Reads macros which was defined or used when the module was compiled.
@@ -1138,7 +1138,7 @@ var
            hs:=ppufile.getstring;
            was_initial:=ppufile.getboolean;
            was_used:=ppufile.getboolean;
-           mac:=tmacro(initialmacrosymtable.Find(hs));
+           mac:=TMacro(initialmacrosymtable.Find(hs));
            if assigned(mac) then
              begin
 {$ifndef EXTDEBUG}
@@ -1455,7 +1455,7 @@ var
     procedure tppumodule.readunitimportsyms;
       var
         c,i : longint;
-        deref : pderef;
+        deref : PDeref;
       begin
         c:=ppufile.getlongint;
         for i:=0 to c-1 do
@@ -1635,7 +1635,7 @@ var
 
          { create unit flags }
          { create new ppufile }
-         ppufile:=tcompilerppufile.create(ppufilename);
+         ppufile:=TCompilerPPUFile.create(ppufilename);
          if not ppufile.createfile then
           Message(unit_f_ppu_cannot_write);
 
@@ -1712,25 +1712,25 @@ var
            already generated when calculating the interface crc }
          if (cs_compilesystem in CurrentSettings.moduleswitches) then
            begin
-             tstoredsymtable(globalsymtable).buildderef;
+             TStoredSymTable(globalsymtable).buildderef;
              derefdataintflen:=derefdata.size;
            end
          else
            { the unit may have been re-resolved, in which case the current
              position in derefdata is not necessarily at the end }
             derefdata.seek(derefdata.size);
-         tstoredsymtable(globalsymtable).buildderefimpl;
+         TStoredSymTable(globalsymtable).buildderefimpl;
          tunitwpoinfo(wpoinfo).buildderef;
          tunitwpoinfo(wpoinfo).buildderefimpl;
 
          if assigned(globalmacrosymtable) and (globalmacrosymtable.SymList.count > 0) then
             begin
-              tstoredsymtable(globalmacrosymtable).buildderef;
-              tstoredsymtable(globalmacrosymtable).buildderefimpl;
+              TStoredSymTable(globalmacrosymtable).buildderef;
+              TStoredSymTable(globalmacrosymtable).buildderefimpl;
             end;
 
          if mf_local_symtable in moduleflags then
-           tstoredsymtable(localsymtable).buildderef_registered;
+           TStoredSymTable(localsymtable).buildderef_registered;
          buildderefunitimportsyms;
          writederefmap;
          writederefdata;
@@ -1738,13 +1738,13 @@ var
          ppufile.writeentry(ibendinterface);
 
          { write the symtable entries }
-         tstoredsymtable(globalsymtable).ppuwrite(ppufile);
+         TStoredSymTable(globalsymtable).ppuwrite(ppufile);
 
          if assigned(globalmacrosymtable) and (globalmacrosymtable.SymList.count > 0) then
            begin
              ppufile.putbyte(byte(true));
              ppufile.writeentry(ibexportedmacros);
-             tstoredsymtable(globalmacrosymtable).ppuwrite(ppufile);
+             TStoredSymTable(globalmacrosymtable).ppuwrite(ppufile);
            end
          else
            begin
@@ -1792,7 +1792,7 @@ var
          { write static symtable
            needed for local debugging of unit functions }
          if mf_local_symtable in moduleflags then
-           tstoredsymtable(localsymtable).ppuwrite(ppufile);
+           TStoredSymTable(localsymtable).ppuwrite(ppufile);
 
          { write whole program optimisation-related information }
          tunitwpoinfo(wpoinfo).ppuwrite(ppufile);
@@ -1831,7 +1831,7 @@ var
     procedure tppumodule.getppucrc;
       begin
          { create new ppufile }
-         ppufile:=tcompilerppufile.create(ppufilename);
+         ppufile:=TCompilerPPUFile.create(ppufilename);
          ppufile.crc_only:=true;
          if not ppufile.createfile then
            Message(unit_f_ppu_cannot_write);
@@ -1864,7 +1864,7 @@ var
 
          { deref data of interface that affect the crc }
          derefdata.reset;
-         tstoredsymtable(globalsymtable).buildderef;
+         TStoredSymTable(globalsymtable).buildderef;
          derefdataintflen:=derefdata.size;
          writederefmap;
          writederefdata;
@@ -1872,13 +1872,13 @@ var
          ppufile.writeentry(ibendinterface);
 
          { write the symtable entries }
-         tstoredsymtable(globalsymtable).ppuwrite(ppufile);
+         TStoredSymTable(globalsymtable).ppuwrite(ppufile);
 
          if assigned(globalmacrosymtable) and (globalmacrosymtable.SymList.count > 0) then
            begin
              ppufile.putbyte(byte(true));
              ppufile.writeentry(ibexportedmacros);
-             tstoredsymtable(globalmacrosymtable).ppuwrite(ppufile);
+             TStoredSymTable(globalmacrosymtable).ppuwrite(ppufile);
            end
          else
            begin
@@ -2010,15 +2010,15 @@ var
             internalerror(200208187);
           deflist.count:=ppufile.header.deflistsize;
           symlist.count:=ppufile.header.symlistsize;
-          globalsymtable:=tglobalsymtable.create(realmodulename^,moduleid);
-          tstoredsymtable(globalsymtable).ppuload(ppufile);
+          globalsymtable:=TGlobalSymTable.create(realmodulename^,moduleid);
+          TStoredSymTable(globalsymtable).ppuload(ppufile);
 
           if ppufile.readentry<>ibexportedmacros then
             Message(unit_f_ppu_read_error);
           if boolean(ppufile.getbyte) then
             begin
-              globalmacrosymtable:=tmacrosymtable.Create(true);
-              tstoredsymtable(globalmacrosymtable).ppuload(ppufile)
+              globalmacrosymtable:=TMacroSymTable.Create(true);
+              TStoredSymTable(globalmacrosymtable).ppuload(ppufile)
             end;
 
           interface_compiled:=true;
@@ -2045,17 +2045,17 @@ var
             { load implementation symtable }
             if mf_local_symtable in moduleflags then
               begin
-                localsymtable:=tstaticsymtable.create(realmodulename^,moduleid);
-                tstaticsymtable(localsymtable).ppuload(ppufile);
+                localsymtable:=TStaticSymTable.create(realmodulename^,moduleid);
+                TStaticSymTable(localsymtable).ppuload(ppufile);
               end;
 
             { we can now dereference all pointers to the implementation parts }
-            tstoredsymtable(globalsymtable).derefimpl(false);
+            TStoredSymTable(globalsymtable).derefimpl(false);
             { we've just loaded the localsymtable from the ppu file, so everything
               in it was registered by definition (otherwise it wouldn't have been in
               there) }
             if assigned(localsymtable) then
-              tstoredsymtable(localsymtable).derefimpl(false);
+              TStoredSymTable(localsymtable).derefimpl(false);
 
             remove_waitforunit_cycles;
 

@@ -199,7 +199,7 @@ interface
         FConstPools    : array[TConstPoolType] of THashSet;
         function GetConstPools(APoolType: TConstPoolType): THashSet;
       protected
-        function  DefineAsmSymbolByClassBase(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: tdef; out wasdefined: boolean) : TAsmSymbol;
+        function  DefineAsmSymbolByClassBase(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: TDef; out wasdefined: boolean) : TAsmSymbol;
       public
         name          : pshortstring;       { owned by tmodule }
         NextVTEntryNr : longint;
@@ -211,9 +211,9 @@ interface
         constructor create(n: pshortstring);
         destructor  destroy;override;
         { asmsymbol }
-        function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: tdef) : TAsmSymbol; virtual;
-        function  DefineAsmSymbol(const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: tdef) : TAsmSymbol;
-        function  DefineProcAsmSymbol(pd: tdef; const s: TSymStr; global: boolean): TAsmSymbol;
+        function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: TDef) : TAsmSymbol; virtual;
+        function  DefineAsmSymbol(const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: TDef) : TAsmSymbol;
+        function  DefineProcAsmSymbol(pd: TDef; const s: TSymStr; global: boolean): TAsmSymbol;
         function  WeakRefAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_typ:Tasmsymtype) : TAsmSymbol;
         function  WeakRefAsmSymbol(const s : TSymStr;_typ:Tasmsymtype) : TAsmSymbol;
         function  RefAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_typ:Tasmsymtype;indirect:boolean=false) : TAsmSymbol;
@@ -248,11 +248,11 @@ interface
       TAsmDataClass = class of TAsmData;
 
       TTCInitItem = class(TLinkedListItem)
-        sym: tsym;
+        sym: TSym;
         offset: aint;
         datalabel: TAsmSymbol;
         datadef: TDef;
-        constructor Create(asym: tsym; aoffset: aint; alabel: TAsmSymbol; alabeldef: tdef);
+        constructor Create(asym: TSym; aoffset: aint; alabel: TAsmSymbol; alabeldef: TDef);
       end;
 
     var
@@ -355,7 +355,7 @@ implementation
 *****************************************************************************}
 
 
-    constructor TTCInitItem.Create(asym: tsym; aoffset: aint; alabel: TAsmSymbol; alabeldef: tdef);
+    constructor TTCInitItem.Create(asym: TSym; aoffset: aint; alabel: TAsmSymbol; alabeldef: TDef);
       begin
         inherited Create;
         sym:=asym;
@@ -469,7 +469,7 @@ implementation
       end;
 
 
-    function TAsmData.DefineAsmSymbolByClassBase(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: tdef; out wasdefined: boolean): TAsmSymbol;
+    function TAsmData.DefineAsmSymbolByClassBase(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: TDef; out wasdefined: boolean): TAsmSymbol;
       var
         hp : TAsmSymbol;
         namestr : TSymStr;
@@ -590,7 +590,7 @@ implementation
            FreeAndNil(FConstPools[hp]);
       end;
 
-    function TAsmData.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: tdef): TAsmSymbol;
+    function TAsmData.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: TDef): TAsmSymbol;
       var
         wasdefined: boolean;
       begin
@@ -598,13 +598,13 @@ implementation
       end;
 
 
-    function TAsmData.DefineAsmSymbol(const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: tdef): TAsmSymbol;
+    function TAsmData.DefineAsmSymbol(const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: TDef): TAsmSymbol;
       begin
         result:=DefineAsmSymbolByClass(TAsmSymbol,s,_bind,_typ,def);
       end;
 
 
-    function TAsmData.DefineProcAsmSymbol(pd: tdef; const s: TSymStr; global: boolean): TAsmSymbol;
+    function TAsmData.DefineProcAsmSymbol(pd: TDef; const s: TSymStr; global: boolean): TAsmSymbol;
       begin
         { The condition to use global or local symbol must match
           the code written in hlcg.gen_proc_symbol to

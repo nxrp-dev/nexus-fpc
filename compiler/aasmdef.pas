@@ -34,7 +34,7 @@ uses
 
 type
   TAsmDataDef = class(TAsmData)
-    function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: tdef) : TAsmSymbol; override;
+    function  DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s : TSymStr;_bind:TAsmSymBind;_typ:Tasmsymtype; def: TDef) : TAsmSymbol; override;
   end;
 
 implementation
@@ -46,10 +46,10 @@ uses
   fmodule;
 
 
-function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: tdef): TAsmSymbol;
+function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: TSymStr; _bind: TAsmSymBind; _typ: Tasmsymtype; def: TDef): TAsmSymbol;
   var
     symind: tasmsymbol;
-    ptrdef: tdef;
+    ptrdef: TDef;
     tcb: ttai_typedconstbuilder;
     wasdefined: boolean;
   begin

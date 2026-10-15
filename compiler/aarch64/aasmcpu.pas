@@ -218,8 +218,8 @@ uses
          function  Pass1(objdata:TObjData):longint;override;
          procedure Pass2(objdata:TObjData);override;
       protected
-         procedure ppuloadoper(ppufile:tcompilerppufile;var o:toper);override;
-         procedure ppuwriteoper(ppufile:tcompilerppufile;const o:toper);override;
+         procedure ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);override;
+         procedure ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);override;
          procedure ppubuildderefimploper(var o:toper);override;
          procedure ppuderefoper(var o:toper);override;
       end;
@@ -1712,12 +1712,12 @@ implementation
       end;
 
 
-    procedure taicpu.ppuloadoper(ppufile:tcompilerppufile;var o:toper);
+    procedure taicpu.ppuloadoper(ppufile:TCompilerPPUFile;var o:toper);
       begin
       end;
 
 
-    procedure taicpu.ppuwriteoper(ppufile:tcompilerppufile;const o:toper);
+    procedure taicpu.ppuwriteoper(ppufile:TCompilerPPUFile;const o:toper);
       begin
       end;
 

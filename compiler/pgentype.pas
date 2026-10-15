@@ -37,11 +37,11 @@ const
 type
   pspecializationstate = ^tspecializationstate;
   tspecializationstate = record
-    oldsymtablestack      : tsymtablestack;
+    oldsymtablestack      : TSymTableStack;
     oldextendeddefs       : tfphashobjectlist;
     oldgenericdummysyms   : tfphashobjectlist;
     oldspecializestate    : pspecializationstate;
-    oldcurrent_genericdef : tdef;
+    oldcurrent_genericdef : TDef;
     oldoptoken            : ttoken;
   end;
 
@@ -52,9 +52,9 @@ type
     prettyname : ansistring;
     specializename : ansistring;
     genname : ansistring;
-    sym : tsym;
-    symtable : tsymtable;
-    forwarddef : tdef;
+    sym : TSym;
+    symtable : TSymTable;
+    forwarddef : TDef;
     constructor create;
     destructor destroy;override;
     function getcopy:tspecializationcontext;

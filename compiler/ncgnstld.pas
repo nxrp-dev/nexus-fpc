@@ -37,17 +37,17 @@ interface
     type
        tcgnestloadnode = class(tcgloadnode)
         protected
-         nestsym: tsym;
-         nestsymderef: tderef;
-         procedure generate_nested_access(vs: tsym);override;
+         nestsym: TSym;
+         nestsymderef: TDeref;
+         procedure generate_nested_access(vs: TSym);override;
          function  keep_param_address_in_nested_struct: boolean; virtual;
         public
          function  pass_typecheck: TNode; override;
          function  pass_1:TNode;override;
          function  dogetcopy: TNode; override;
          function  docompare(p: TNode): boolean; override;
-         constructor ppuload(t: TNodeType; ppufile: tcompilerppufile); override;
-         procedure ppuwrite(ppufile: tcompilerppufile); override;
+         constructor ppuload(t: TNodeType; ppufile: TCompilerPPUFile); override;
+         procedure ppuwrite(ppufile: TCompilerPPUFile); override;
          procedure buildderefimpl; override;
          procedure derefimpl; override;
        end;
@@ -68,7 +68,7 @@ implementation
                           TCGNESTLOADNODE
 *****************************************************************************}
 
-    procedure tcgnestloadnode.generate_nested_access(vs: tsym);
+    procedure tcgnestloadnode.generate_nested_access(vs: TSym);
       begin
         { left has been transformed into a string of accesses that result in
           the location of the original variable's copy in the appropriate
@@ -88,7 +88,7 @@ implementation
 
     function tcgnestloadnode.pass_typecheck: TNode;
       var
-        nestedvars: tsym;
+        nestedvars: TSym;
       begin
         result:=inherited pass_typecheck;
         if assigned(result) or
@@ -108,29 +108,29 @@ implementation
                      the parentfpstruct inside the routine in which they were
                      originally declared, except in the initialisation code for
                      the parentfpstruct (nf_internal flag) }
-                  tabstractnormalvarsym(symtableentry).inparentfpstruct) and
+                  TAbstractNormalVarSym(symtableentry).inparentfpstruct) and
                    not(nf_internal in flags) then
                 begin
                   { get struct holding all locals accessed by nested routines }
-                  nestedvars:=tprocdef(symtable.defowner).parentfpstruct;
+                  nestedvars:=TProcDef(symtable.defowner).parentfpstruct;
                   { don't add the parentfpstruct to itself! }
                   if nestedvars=symtableentry then
                     exit;
                   if not assigned(nestedvars) then
                     begin
                       { create this struct }
-                      build_parentfpstruct(tprocdef(symtable.defowner));
-                      nestedvars:=tprocdef(symtable.defowner).parentfpstruct;
+                      build_parentfpstruct(TProcDef(symtable.defowner));
+                      nestedvars:=TProcDef(symtable.defowner).parentfpstruct;
                     end;
                   {  store result for use in pass_1 }
-                  nestsym:=maybe_add_sym_to_parentfpstruct(tprocdef(symtableentry.owner.defowner),symtableentry,resultdef,keep_param_address_in_nested_struct);
+                  nestsym:=maybe_add_sym_to_parentfpstruct(TProcDef(symtableentry.owner.defowner),symtableentry,resultdef,keep_param_address_in_nested_struct);
                   { left normally holds the parentfp node. If it's not assigned,
                     this is an access to a local variable/para from the routine
                     in which it was actually declared -> redirect to its
                     equivalent in the parentfp struct }
                   if not assigned(left) then
                     begin
-                      left:=caddrnode.create_internal(cloadnode.create(tprocdef(symtableentry.owner.defowner).parentfpstruct,tprocdef(symtableentry.owner.defowner).parentfpstruct.owner));
+                      left:=caddrnode.create_internal(cloadnode.create(TProcDef(symtableentry.owner.defowner).parentfpstruct,TProcDef(symtableentry.owner.defowner).parentfpstruct.owner));
                       include(taddrnode(left).addrnodeflags,anf_typedaddr);
                     end;
                   TypeCheckPass(left);
@@ -145,7 +145,7 @@ implementation
     function tcgnestloadnode.pass_1:TNode;
       var
         thissym,
-        nestedvars: tsym;
+        nestedvars: TSym;
       begin
         result:=inherited;
         if assigned(result) then
@@ -160,17 +160,17 @@ implementation
                  not(nf_internal in flags) then
                 begin
                   { get struct holding all locals accessed by nested routines }
-                  nestedvars:=tprocdef(symtable.defowner).parentfpstruct;
+                  nestedvars:=TProcDef(symtable.defowner).parentfpstruct;
                   if not assigned(nestedvars) then
                     begin
                       { create this struct }
-                      build_parentfpstruct(tprocdef(symtable.defowner));
-                      nestedvars:=tprocdef(symtable.defowner).parentfpstruct;
+                      build_parentfpstruct(TProcDef(symtable.defowner));
+                      nestedvars:=TProcDef(symtable.defowner).parentfpstruct;
                     end;
                   if nestedvars<>symtableentry then
                     thissym:=nestsym
                   else
-                    thissym:=find_sym_in_parentfpstruct(tprocdef(symtableentry.owner.defowner),symtableentry);
+                    thissym:=find_sym_in_parentfpstruct(TProcDef(symtableentry.owner.defowner),symtableentry);
                   if not assigned(thissym) then
                     internalerror(2011060406);
                   { firstpass the parentfpnode. This will transform it into
@@ -207,14 +207,14 @@ implementation
       end;
 
 
-    constructor tcgnestloadnode.ppuload(t: TNodeType; ppufile: tcompilerppufile);
+    constructor tcgnestloadnode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getderef(nestsymderef);
       end;
 
 
-    procedure tcgnestloadnode.ppuwrite(ppufile: tcompilerppufile);
+    procedure tcgnestloadnode.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(nestsymderef);
@@ -231,7 +231,7 @@ implementation
     procedure tcgnestloadnode.derefimpl;
       begin
         inherited derefimpl;
-        nestsym:=tsym(nestsymderef.resolve);
+        nestsym:=TSym(nestsymderef.resolve);
       end;
 
 

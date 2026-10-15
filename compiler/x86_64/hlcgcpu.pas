@@ -35,7 +35,7 @@ interface
 
   type
     thlcgcpu = class(thlcgx86)
-     procedure g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);override;
+     procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);override;
     end;
 
 implementation
@@ -48,7 +48,7 @@ implementation
     hlcgobj,
     cgbase,cgutils,cgobj,cpubase,cgcpu,cpupi;
 
-  procedure thlcgcpu.g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);
+  procedure thlcgcpu.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);
     var
       make_global : boolean;
       href : treference;
@@ -90,7 +90,7 @@ implementation
             reference_reset_base(href,voidpointertype,NR_RDI,0,ctempposinvalid,sizeof(pint),[]);
           cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_RAX);
           { jmp *vmtoffs(%eax) ; method offs }
-          reference_reset_base(href,voidpointertype,NR_RAX,tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
+          reference_reset_base(href,voidpointertype,NR_RAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,sizeof(pint),[]);
           list.concat(taicpu.op_ref(A_JMP,S_Q,href));
         end
       else

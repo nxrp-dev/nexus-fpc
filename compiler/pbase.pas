@@ -50,10 +50,10 @@ interface
        got_addrn  : boolean = false;
 
        { special for handling procedure vars }
-       getprocvardef : tprocvardef = nil;
+       getprocvardef : TProcVarDef = nil;
 
        { special for function reference vars }
-       getfuncrefdef : tobjectdef = nil;
+       getfuncrefdef : TObjectDef = nil;
 
        { for operators }
        optoken : ttoken;
@@ -93,8 +93,8 @@ interface
     { reads a list of identifiers into a string list }
     { consume a symbol, if not found give an error and
       and return an errorsym }
-    function consume_sym(var srsym:tsym;var srsymtable:TSymtable):boolean;
-    function consume_sym_orgid(var srsym:tsym;var srsymtable:TSymtable;var s : string):boolean;
+    function consume_sym(var srsym:TSym;var srsymtable:TSymTable):boolean;
+    function consume_sym_orgid(var srsym:TSym;var srsymtable:TSymTable;var s : string):boolean;
 
     type
       tconsume_unitsym_flag = (
@@ -105,10 +105,10 @@ interface
       );
       tconsume_unitsym_flags = set of tconsume_unitsym_flag;
 
-    function try_consume_unitsym(var srsym:tsym;var srsymtable:TSymtable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;out is_specialize:boolean;sympattern:TSymStr):boolean;
-    function try_consume_unitsym_no_specialize(var srsym:tsym;var srsymtable:TSymtable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;sympattern:TSymStr):boolean;
+    function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;out is_specialize:boolean;sympattern:TSymStr):boolean;
+    function try_consume_unitsym_no_specialize(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;sympattern:TSymStr):boolean;
 
-    function try_consume_hintdirective(var symopt:tsymoptions; var deprecatedmsg:pshortstring):boolean;
+    function try_consume_hintdirective(var symopt:TSymOptions; var deprecatedmsg:pshortstring):boolean;
 
     { just for an accurate position of the end of a procedure (PM) }
     var
@@ -232,7 +232,7 @@ implementation
       If this code is changed, it's likly that consume_sym_orgid and factor_read_id
       must be changed as well (FK)
     }
-    function consume_sym(var srsym:tsym;var srsymtable:TSymtable):boolean;
+    function consume_sym(var srsym:TSym;var srsymtable:TSymTable):boolean;
       var
         t : ttoken;
       begin
@@ -265,7 +265,7 @@ implementation
     { check if a symbol contains the hint directive, and if so gives out a hint
       if required and returns the id with it's original casing
     }
-    function consume_sym_orgid(var srsym:tsym;var srsymtable:TSymtable;var s : string):boolean;
+    function consume_sym_orgid(var srsym:TSym;var srsymtable:TSymTable;var s : string):boolean;
       var
         t : ttoken;
       begin
@@ -296,11 +296,11 @@ implementation
       end;
 
 
-    function try_consume_unitsym(var srsym:tsym;var srsymtable:TSymtable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;out is_specialize:boolean;sympattern:TSymStr):boolean;
+    function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;out is_specialize:boolean;sympattern:TSymStr):boolean;
       var
         hmodule: tmodule;
         ns:ansistring;
-        nssym:tsym;
+        nssym:TSym;
         nsitem : TCmdStrListItem;
 
         procedure consume_namespace;
@@ -319,8 +319,8 @@ implementation
               end;
             { check if there is a hidden unit with this current_scanner.pattern in the namespace }
             if not assigned(srsym) and
-               assigned(nssym) and (nssym.typ=namespacesym) and assigned(tnamespacesym(nssym).unitsym) then
-              srsym:=tnamespacesym(nssym).unitsym;
+               assigned(nssym) and (nssym.typ=namespacesym) and assigned(TNamespaceSym(nssym).unitsym) then
+              srsym:=TNamespaceSym(nssym).unitsym;
           end;
 
       begin
@@ -407,24 +407,24 @@ implementation
                     begin
                       if cuf_check_attr_suffix in flags then
                         begin
-                          if searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
+                          if searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
                             exit(true);
                         end;
                       { Resolve the default Char/PChar from the invocation's
                         text model, regardless of the System alias. }
                       if ((CurrentScanner.pattern='CHAR') or
                           (CurrentScanner.pattern='PCHAR')) and
-                         (tmodule(tunitsym(srsym).module).globalsymtable=systemunit) then
+                         (tmodule(TUnitSym(srsym).module).globalsymtable=systemunit) then
                         begin
                           if CurrentScanner.pattern='PCHAR' then
                             if m_default_unicodestring in CurrentSettings.modeswitches then
-                              searchsym_in_module(tunitsym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                              searchsym_in_module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                             else
-                              searchsym_in_module(tunitsym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                              searchsym_in_module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
                           else if m_default_unicodestring in CurrentSettings.modeswitches then
-                            searchsym_in_module(tunitsym(srsym).module,'WIDECHAR',srsym,srsymtable)
+                            searchsym_in_module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
                           else
-                            searchsym_in_module(tunitsym(srsym).module,'ANSICHAR',srsym,srsymtable)
+                            searchsym_in_module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
                         end
                       else
                         if (cuf_allow_specialize in flags) and (CurrentScanner.idtoken=_SPECIALIZE) then
@@ -434,30 +434,30 @@ implementation
                             if CurrentScanner.token=_ID then
                               begin
                                 if (cuf_check_attr_suffix in flags) and
-                                    searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
+                                    searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
                                   exit(true);
-                                searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
+                                searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                               end;
                           end
                         else
-                          searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
+                          searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                      end;
                   _STRING:
                     begin
                       if cs_compilesystem in CurrentSettings.moduleswitches then
                         Message(parser_e_nostringaliasinsystem);
                       { system.string? }
-                      if tmodule(tunitsym(srsym).module).globalsymtable=systemunit then
+                      if tmodule(TUnitSym(srsym).module).globalsymtable=systemunit then
                         begin
                           if cs_refcountedstrings in CurrentSettings.localswitches then
                             begin
                               if m_default_unicodestring in CurrentSettings.modeswitches then
-                                searchsym_in_module(tunitsym(srsym).module,'UNICODESTRING',srsym,srsymtable)
+                                searchsym_in_module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                               else
-                                searchsym_in_module(tunitsym(srsym).module,'ANSISTRING',srsym,srsymtable)
+                                searchsym_in_module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
                             end
                           else
-                            searchsym_in_module(tunitsym(srsym).module,'SHORTSTRING',srsym,srsymtable);
+                            searchsym_in_module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
                           tokentoconsume:=_STRING;
                         end;
                     end
@@ -475,7 +475,7 @@ implementation
       end;
 
 
-    function try_consume_unitsym_no_specialize(var srsym:tsym;var srsymtable:TSymtable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;sympattern:TSymStr):boolean;
+    function try_consume_unitsym_no_specialize(var srsym:TSym;var srsymtable:TSymTable;var tokentoconsume:ttoken;flags:tconsume_unitsym_flags;sympattern:TSymStr):boolean;
       var
         dummy: Boolean;
       begin
@@ -483,7 +483,7 @@ implementation
         result:=try_consume_unitsym(srsym,srsymtable,tokentoconsume,flags,dummy,sympattern);
       end;
 
-    function try_consume_hintdirective(var symopt:tsymoptions; var deprecatedmsg:pshortstring):boolean;
+    function try_consume_hintdirective(var symopt:TSymOptions; var deprecatedmsg:pshortstring):boolean;
       var
         last_is_deprecated:boolean;
       begin

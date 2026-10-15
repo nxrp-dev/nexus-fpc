@@ -590,7 +590,7 @@ unit cgcpu;
                 { Allocate registers used for parameters to make sure they
                   never allocated during this PIC init code }
                 for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with tparavarsym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
+                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
                     if Loc in [LOC_REGISTER, LOC_CREGISTER] then begin
                       a_reg_alloc(list, register);
                       { If ECX is used for a parameter, use EBX as temp }
@@ -615,7 +615,7 @@ unit cgcpu;
 
                 { Deallocate parameter registers }
                 for i:=0 to CurrentProcInfo.procdef.paras.Count - 1 do
-                  with tparavarsym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
+                  with TParaVarSym(CurrentProcInfo.procdef.paras[i]).paraloc[calleeside].Location^ do
                     if Loc in [LOC_REGISTER, LOC_CREGISTER] then
                       a_reg_dealloc(list, register);
               end

@@ -44,10 +44,10 @@ type
 
   { ti86absolutevarsym }
 
-  ti86absolutevarsym = class(tabsolutevarsym)
+  ti86absolutevarsym = class(TAbsoluteVarSym)
    protected
-    procedure ppuload_platform(ppufile: tcompilerppufile); override;
-    procedure ppuwrite_platform(ppufile: tcompilerppufile); override;
+    procedure PPULoadPlatform(ppufile: TCompilerPPUFile); override;
+    procedure PPUWritePlatform(ppufile: TCompilerPPUFile); override;
    public
     absseg  : boolean;
   end;
@@ -73,7 +73,7 @@ function ti86procdef.is_pushleftright: boolean;
 
 { ti86absolutevarsym }
 
-procedure ti86absolutevarsym.ppuload_platform(ppufile: tcompilerppufile);
+procedure ti86absolutevarsym.PPULoadPlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then
@@ -83,7 +83,7 @@ procedure ti86absolutevarsym.ppuload_platform(ppufile: tcompilerppufile);
   end;
 
 
-procedure ti86absolutevarsym.ppuwrite_platform(ppufile: tcompilerppufile);
+procedure ti86absolutevarsym.PPUWritePlatform(ppufile: TCompilerPPUFile);
   begin
     inherited;
     if abstyp=toaddr then

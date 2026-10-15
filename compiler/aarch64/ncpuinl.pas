@@ -235,7 +235,7 @@ implementation
         if cs_check_overflow in CurrentSettings.localswitches then
           begin
             CurrentAsmData.getjumplabel(hl);
-            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,torddef(resultdef).low.svalue,left.location.register,hl);
+            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,TOrdDef(resultdef).low.svalue,left.location.register,hl);
             hlcg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_overflow',[],nil).resetiftemp;
             hlcg.a_label(CurrentAsmData.CurrAsmList,hl);

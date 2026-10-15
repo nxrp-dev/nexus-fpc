@@ -91,7 +91,7 @@ implementation
       begin
         result:=nil;
         if use_vectorfpu(resultdef) and
-           (torddef(left.resultdef).ordtype=u32bit) and
+           (TOrdDef(left.resultdef).ordtype=u32bit) and
            not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) then
           begin
             inserttypeconv(left,s64inttype);
@@ -122,7 +122,7 @@ implementation
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
             location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
 
-            case torddef(left.resultdef).ordtype of
+            case TOrdDef(left.resultdef).ordtype of
               u64bit:
                 begin
                    { unsigned 64 bit ints are harder to handle:

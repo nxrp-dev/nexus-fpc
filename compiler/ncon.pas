@@ -43,19 +43,19 @@ interface
         private
           FCurrencyRange: (crValid, crPositiveLimit, crOverflow);
         public
-          typedef : tdef;
-          typedefderef : tderef;
+          typedef : TDef;
+          typedefderef : TDeref;
           value_real : bestreal;
           value_currency : currency;
           lab_real : tasmlabel;
-          constructor create(v : bestreal;def:tdef);virtual;
-          constructor create_currency_scalar(def:tdef);
+          constructor create(v : bestreal;def:TDef);virtual;
+          constructor create_currency_scalar(def:TDef);
           function CurrencyScaledValue: Int64;
           procedure SetCurrencyValue(const AValue: bestreal);
           procedure SetCurrencyLiteral(const AText: ShortString);
           procedure NegateValue;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -72,18 +72,18 @@ interface
        trealconstnodeclass = class of trealconstnode;
 
        tordconstnode = class(tconstnode)
-          typedef : tdef;
-          typedefderef : tderef;
+          typedef : TDef;
+          typedefderef : TDeref;
           value : TConstExprInt;
           rangecheck : boolean;
           { create an ordinal constant node of the specified type and value.
             _rangecheck determines if the value of the ordinal should be checked
             against the ranges of the type definition.
           }
-          constructor create(const v : tconstexprint;def:tdef; _rangecheck : boolean);virtual;
-          constructor create_currency_scalar(def:tdef);
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor create(const v : tconstexprint;def:TDef; _rangecheck : boolean);virtual;
+          constructor create_currency_scalar(def:TDef);
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -100,12 +100,12 @@ interface
        tordconstnodeclass = class of tordconstnode;
 
        tpointerconstnode = class(tconstnode)
-          typedef : tdef;
-          typedefderef : tderef;
+          typedef : TDef;
+          typedefderef : TDeref;
           value   : TConstPtrUInt;
-          constructor create(v : TConstPtrUInt;def:tdef);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor create(v : TConstPtrUInt;def:TDef);virtual;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -136,14 +136,14 @@ interface
           valuews : tcompilerwidestring;
           len     : longint;
           lab_str : tasmlabel;
-          astringdef : tdef;
-          astringdefderef : tderef;
+          astringdef : TDef;
+          astringdefderef : TDeref;
           cst_type : tconststringtype;
           constructor createstr(const s : string);virtual;
-          constructor createpchar(s: pchar; l: longint; def: tdef);virtual;
+          constructor createpchar(s: pchar; l: longint; def: TDef);virtual;
           constructor createunistr(w : tcompilerwidestring);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           destructor destroy;override;
@@ -152,7 +152,7 @@ interface
           function pass_typecheck:TNode;override;
           function getpcharcopy : pchar;
           function docompare(p: TNode) : boolean; override;
-          procedure changestringtype(def:tdef);
+          procedure changestringtype(def:TDef);
           function fullcompare(p: tstringconstnode): longint;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
           function asrawbytestring: rawbytestring;
@@ -168,14 +168,14 @@ interface
        tstringconstnodeclass = class of tstringconstnode;
 
        tsetconstnode = class(TUnaryNode)
-          typedef : tdef;
-          typedefderef : tderef;
+          typedef : TDef;
+          typedefderef : TDeref;
           value_set : PConstSet;
           lab_set : tasmsymbol;
-          constructor create(s : PConstSet;def:tdef);virtual;
+          constructor create(s : PConstSet;def:TDef);virtual;
           destructor destroy;override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           procedure adjustforsetbase;
@@ -202,8 +202,8 @@ interface
           value : tguid;
           lab_set : tasmsymbol;
           constructor create(const g:tguid);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function dogetcopy : TNode;override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
@@ -224,15 +224,15 @@ interface
     { Creates tordconstnode with the smallest possible int type which can hold v }
     function genintconstnode(const v : TConstExprInt) : tordconstnode; overload;
     { Creates tordconstnode with the preferredinttype type or a bigger type which can hold v }
-    function genintconstnode(const v : TConstExprInt; preferredinttype : tdef) : tordconstnode; overload;
-    function genenumnode(v : tenumsym) : tordconstnode;
+    function genintconstnode(const v : TConstExprInt; preferredinttype : TDef) : tordconstnode; overload;
+    function genenumnode(v : TEnumSym) : tordconstnode;
 
     { some helper routines }
     function get_ordinal_value(p : TNode) : TConstExprInt;
-    function get_string_value(p : TNode; def: tstringdef) : tstringconstnode;
+    function get_string_value(p : TNode; def: TStringDef) : tstringconstnode;
     function is_constresourcestringnode(p : TNode) : boolean;
     function is_emptyset(p : TNode):boolean;
-    function genconstsymtree(p : tconstsym) : TNode;
+    function genconstsymtree(p : TConstSym) : TNode;
 
     function getbooleanvalue(p : TNode) : boolean;
 
@@ -248,16 +248,16 @@ implementation
 
     function genintconstnode(const v : TConstExprInt) : tordconstnode;
       var
-        htype : tdef;
+        htype : TDef;
       begin
          int_to_type(v,htype);
          genintconstnode:=cordconstnode.create(v,htype,true);
       end;
 
 
-    function genintconstnode(const v : TConstExprInt; preferredinttype : tdef) : tordconstnode;
+    function genintconstnode(const v : TConstExprInt; preferredinttype : TDef) : tordconstnode;
       var
-        htype : tdef;
+        htype : TDef;
       begin
         int_to_type(v,htype);
         if htype.size<preferredinttype.size then
@@ -266,9 +266,9 @@ implementation
       end;
 
 
-    function genenumnode(v : tenumsym) : tordconstnode;
+    function genenumnode(v : TEnumSym) : tordconstnode;
       var
-        htype : tdef;
+        htype : TDef;
       begin
          htype:=v.definition;
          genenumnode:=cordconstnode.create(int64(v.value),htype,true);
@@ -289,7 +289,7 @@ implementation
           Message(type_e_constant_expr_expected);
       end;
 
-    function get_string_value(p: TNode; def: tstringdef): tstringconstnode;
+    function get_string_value(p: TNode; def: TStringDef): tstringconstnode;
       var
         stringVal: string;
         pWideStringVal: tcompilerwidestring;
@@ -323,7 +323,7 @@ implementation
       begin
         is_constresourcestringnode:=(p.nodetype=loadn) and
           (tloadnode(p).symtableentry.typ=constsym) and
-          (tconstsym(tloadnode(p).symtableentry).consttyp in [constresourcestring,constwresourcestring]);
+          (TConstSym(tloadnode(p).symtableentry).consttyp in [constresourcestring,constwresourcestring]);
       end;
 
 
@@ -334,7 +334,7 @@ implementation
       end;
 
 
-    function genconstsymtree(p : tconstsym) : TNode;
+    function genconstsymtree(p : TConstSym) : TNode;
       var
         p1  : TNode;
         len : longint;
@@ -437,7 +437,7 @@ implementation
     { generic code     }
     { overridden by:   }
     {   i386           }
-    constructor trealconstnode.create(v : bestreal;def:tdef);
+    constructor trealconstnode.create(v : bestreal;def:TDef);
       begin
          if CurrentSettings.fputype=fpu_none then
             internalerror(2008022401);
@@ -446,7 +446,7 @@ implementation
          inherited create(realconstn);
          typedef:=def;
          SetCurrencyValue(v);
-         case tfloatdef(def).floattype of
+         case TFloatDef(def).floattype of
            s32real:
              v:=Single(v);
            s64real:
@@ -461,7 +461,7 @@ implementation
          lab_real:=nil;
       end;
 
-    constructor trealconstnode.create_currency_scalar(def:tdef);
+    constructor trealconstnode.create_currency_scalar(def:TDef);
       begin
         Create(10000.0,def);
         Include(flags,nf_internal);
@@ -548,7 +548,7 @@ implementation
         Move(lRaw,value_currency,SizeOf(lRaw));
       end;
 
-    constructor trealconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor trealconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       var
         i : int64;
       begin
@@ -566,7 +566,7 @@ implementation
       end;
 
 
-    procedure trealconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure trealconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
@@ -587,7 +587,7 @@ implementation
     procedure trealconstnode.derefimpl;
       begin
         inherited derefimpl;
-        typedef:=tdef(typedefderef.resolve);
+        typedef:=TDef(typedefderef.resolve);
       end;
 
 
@@ -612,14 +612,14 @@ implementation
 
         { range checking? }
         if floating_point_range_check_error or
-           (tfloatdef(resultdef).floattype in [s64comp,s64currency]) then
+           (TFloatDef(resultdef).floattype in [s64comp,s64currency]) then
           begin
             { use CGMessage so that the resultdef will get set to errordef
               by pass1.typecheckpass_internal if a range error was triggered,
               which in turn will prevent any potential parent type conversion
               node from creating a new realconstnode with this exact same value
               and hence trigger the same error again }
-            case tfloatdef(resultdef).floattype of
+            case TFloatDef(resultdef).floattype of
               s32real :
                 begin
                   if Single(value_real)=MathInf.Value then
@@ -676,15 +676,15 @@ implementation
           inherited docompare(p) and
           { this should be always true }
           (trealconstnode(p).typedef.typ=floatdef) and (typedef.typ=floatdef) and
-          (tfloatdef(typedef).floattype = tfloatdef(trealconstnode(p).typedef).floattype) and
+          (TFloatDef(typedef).floattype = TFloatDef(trealconstnode(p).typedef).floattype) and
           (
            (
-            (tfloatdef(typedef).floattype=s64currency) and
+            (TFloatDef(typedef).floattype=s64currency) and
             (CurrencyScaledValue=trealconstnode(p).CurrencyScaledValue)
            )
            or
            (
-            (tfloatdef(typedef).floattype<>s64currency) and
+            (TFloatDef(typedef).floattype<>s64currency) and
             (value_real=trealconstnode(p).value_real) and
             (
               { Make sure 0.0 and -0.0 are not equated unless fastmath is enabled }
@@ -720,7 +720,7 @@ implementation
 
     function trealconstnode.emit_data(tcb:ttai_typedconstbuilder):sizeint;
       begin
-        case tfloatdef(typedef).floattype of
+        case TFloatDef(typedef).floattype of
           s32real:
             tcb.emit_tai(tai_realconst.create_s32real(Single(value_real)),typedef);
           s64real:
@@ -751,7 +751,7 @@ implementation
                               TORDCONSTNODE
 *****************************************************************************}
 
-    constructor tordconstnode.create(const v : tconstexprint;def:tdef;_rangecheck : boolean);
+    constructor tordconstnode.create(const v : tconstexprint;def:TDef;_rangecheck : boolean);
 
       begin
          inherited create(ordconstn);
@@ -761,7 +761,7 @@ implementation
       end;
 
 
-    constructor tordconstnode.create_currency_scalar(def:tdef);
+    constructor tordconstnode.create_currency_scalar(def:TDef);
       begin
         Create(10000,def,false);
         Include(flags,nf_internal);
@@ -769,7 +769,7 @@ implementation
       end;
 
 
-    constructor tordconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tordconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -781,7 +781,7 @@ implementation
       end;
 
 
-    procedure tordconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tordconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
@@ -799,7 +799,7 @@ implementation
     procedure tordconstnode.derefimpl;
       begin
         inherited derefimpl;
-        typedef:=tdef(typedefderef.resolve);
+        typedef:=TDef(typedefderef.resolve);
       end;
 
 
@@ -872,7 +872,7 @@ implementation
                             TPOINTERCONSTNODE
 *****************************************************************************}
 
-    constructor tpointerconstnode.create(v : TConstPtrUInt;def:tdef);
+    constructor tpointerconstnode.create(v : TConstPtrUInt;def:TDef);
       begin
         inherited create(pointerconstn);
         value:=v;
@@ -880,7 +880,7 @@ implementation
       end;
 
 
-    constructor tpointerconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tpointerconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -888,7 +888,7 @@ implementation
       end;
 
 
-    procedure tpointerconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tpointerconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
@@ -906,7 +906,7 @@ implementation
     procedure tpointerconstnode.derefimpl;
       begin
         inherited derefimpl;
-        typedef:=tdef(typedefderef.resolve);
+        typedef:=TDef(typedefderef.resolve);
       end;
 
 
@@ -953,7 +953,7 @@ implementation
 
     function tpointerconstnode.emit_data(tcb: ttai_typedconstbuilder): sizeint;
       begin
-        if tpointerdef(resultdef).compatible_with_pointerdef_size(tpointerdef(voidpointertype)) then
+        if TPointerDef(resultdef).compatible_with_pointerdef_size(TPointerDef(voidpointertype)) then
           tcb.emit_tai(tai_const.Create_int_dataptr(value),voidpointertype)
         else
           tcb.emit_tai(tai_const.Create_int_codeptr(value),voidcodepointertype);
@@ -1000,7 +1000,7 @@ implementation
       end;
 
 
-    constructor tstringconstnode.createpchar(s: pchar; l: longint; def: tdef);
+    constructor tstringconstnode.createpchar(s: pchar; l: longint; def: TDef);
       begin
          inherited create(stringconstn);
          len:=l;
@@ -1030,7 +1030,7 @@ implementation
       end;
 
 
-    constructor tstringconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tstringconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       var
         i : longint;
       begin
@@ -1060,7 +1060,7 @@ implementation
       end;
 
 
-    procedure tstringconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tstringconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putbyte(byte(cst_type));
@@ -1088,7 +1088,7 @@ implementation
       begin
         inherited derefimpl;
         if cst_type=cst_ansistring then
-          astringdef:=tdef(astringdefderef.resolve);
+          astringdef:=TDef(astringdefderef.resolve);
       end;
 
 
@@ -1127,8 +1127,8 @@ implementation
             begin
               { handle and store as array[0..len-1] of char }
               resultdef:=carraydef.create(0,len-1,s32inttype);
-              tarraydef(resultdef).elementdef:=cansichartype;
-              include(tarraydef(resultdef).arrayoptions,ado_IsConstString);
+              TArrayDef(resultdef).elementdef:=cansichartype;
+              include(TArrayDef(resultdef).arrayoptions,ado_IsConstString);
             end;
           cst_shortstring :
             resultdef:=cshortstringtype;
@@ -1191,9 +1191,9 @@ implementation
       end;
 
 
-    procedure tstringconstnode.changestringtype(def:tdef);
+    procedure tstringconstnode.changestringtype(def:TDef);
       const
-        st2cst : array[tstringtype] of tconststringtype = (
+        st2cst : array[TStringType] of tconststringtype = (
           cst_shortstring,cst_longstring,cst_ansistring,cst_widestring,cst_unicodestring);
       var
         pw : tcompilerwidestring;
@@ -1205,7 +1205,7 @@ implementation
         if def.typ<>stringdef then
           internalerror(200510011);
         { convert ascii 2 unicode }
-        if (tstringdef(def).stringtype in [st_widestring,st_unicodestring]) and
+        if (TStringDef(def).stringtype in [st_widestring,st_unicodestring]) and
            not(cst_type in [cst_widestring,cst_unicodestring]) then
           begin
             initwidestring(valuews);
@@ -1214,9 +1214,9 @@ implementation
         else
           { convert unicode 2 ascii }
           if (cst_type in [cst_widestring,cst_unicodestring]) and
-            not(tstringdef(def).stringtype in [st_widestring,st_unicodestring]) then
+            not(TStringDef(def).stringtype in [st_widestring,st_unicodestring]) then
             begin
-              cp1:=tstringdef(def).encoding;
+              cp1:=TStringDef(def).encoding;
               if (cp1=globals.CP_NONE) or (cp1=0) then
                 cp1:=CurrentSettings.sourcecodepage;
               if (cp1=CP_UTF8) then
@@ -1239,15 +1239,15 @@ implementation
                 end;
             end
         else
-          if (tstringdef(def).stringtype = st_ansistring) and
+          if (TStringDef(def).stringtype = st_ansistring) and
              not(cst_type in [cst_widestring,cst_unicodestring]) then
             begin
-              cp1:=tstringdef(def).encoding;
+              cp1:=TStringDef(def).encoding;
               if cp1=0 then
                 cp1:=CurrentSettings.sourcecodepage;
               if (cst_type = cst_ansistring) then
                 begin
-                  cp2:=tstringdef(resultdef).encoding;
+                  cp2:=TStringDef(resultdef).encoding;
                   if cp2=0 then
                     cp2:=CurrentSettings.sourcecodepage;
                 end
@@ -1321,7 +1321,7 @@ implementation
                     end;
                 end;
             end;
-        cst_type:=st2cst[tstringdef(def).stringtype];
+        cst_type:=st2cst[TStringDef(def).stringtype];
         resultdef:=def;
       end;
 
@@ -1341,7 +1341,7 @@ implementation
         labofs : tasmlabofs;
         winlikewidestring : boolean;
       begin
-        case tstringdef(resultdef).stringtype of
+        case TStringDef(resultdef).stringtype of
           st_shortstring:
             begin
               setlength(ss,len);
@@ -1354,16 +1354,16 @@ implementation
             internalerror(2019070801);
           st_ansistring:
             begin
-              labofs:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
-              tcb.emit_string_offset(labofs,len,tstringdef(resultdef).stringtype,false,charpointertype);
+              labofs:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_typedconsts],asconstpchar,len,TStringDef(resultdef).encoding);
+              tcb.emit_string_offset(labofs,len,TStringDef(resultdef).stringtype,false,charpointertype);
               result:=voidpointertype.size;
             end;
           st_widestring,
           st_unicodestring:
             begin
               winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
-              labofs:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_typedconsts],valuews,tstringdef(resultdef).encoding,winlikewidestring);
-              tcb.emit_string_offset(labofs,len,tstringdef(resultdef).stringtype,false,widecharpointertype);
+              labofs:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_typedconsts],valuews,TStringDef(resultdef).encoding,winlikewidestring);
+              tcb.emit_string_offset(labofs,len,TStringDef(resultdef).stringtype,false,widecharpointertype);
               result:=voidpointertype.size;
             end;
         end;
@@ -1460,7 +1460,7 @@ implementation
                              TSETCONSTNODE
 *****************************************************************************}
 
-    constructor tsetconstnode.create(s : PConstSet;def:tdef);
+    constructor tsetconstnode.create(s : PConstSet;def:TDef);
 
       begin
          inherited create(setconstn,nil);
@@ -1483,7 +1483,7 @@ implementation
       end;
 
 
-    constructor tsetconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tsetconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -1492,7 +1492,7 @@ implementation
       end;
 
 
-    procedure tsetconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tsetconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(typedefderef);
@@ -1510,7 +1510,7 @@ implementation
     procedure tsetconstnode.derefimpl;
       begin
         inherited derefimpl;
-        typedef:=tdef(typedefderef.resolve);
+        typedef:=TDef(typedefderef.resolve);
       end;
 
     type
@@ -1524,18 +1524,18 @@ implementation
         { Internally, the compiler stores all sets with setbase 0, so we have }
         { to convert the set to its actual format in case setbase<>0 when     }
         { writing it out                                                      }
-        if (tsetdef(resultdef).setbase<>0) then
+        if (TSetDef(resultdef).setbase<>0) then
           begin
-            if (tsetdef(resultdef).setbase and 7)<>0 then
+            if (TSetDef(resultdef).setbase and 7)<>0 then
               internalerror(2007091501);
-            diff:=tsetdef(resultdef).setbase div 8;
+            diff:=TSetDef(resultdef).setbase div 8;
             { This is endian-neutral in the new set format: in both cases, }
             { the first byte contains the first elements of the set.       }
             { Since the compiler/base rtl cannot contain packed sets before }
             { they work for big endian, it's no problem that the code below }
             { is wrong for the old big endian set format (setbase cannot be }
             { <>0 with non-packed sets).                                    }
-            for i:=0 to tsetdef(resultdef).size-1 do
+            for i:=0 to TSetDef(resultdef).size-1 do
               begin
                 Psetbytes(value_set)^[i]:=Psetbytes(value_set)^[i+diff];
                 Psetbytes(value_set)^[i+diff]:=0;
@@ -1593,7 +1593,7 @@ implementation
         result:=0;
         if not(assigned(value_set)) then
           exit;
-        for i:=0 to tsetdef(resultdef).size-1 do
+        for i:=0 to TSetDef(resultdef).size-1 do
           result:=result+ PopCnt(Psetbytes(value_set)^[i]);
       end;
 
@@ -1606,7 +1606,7 @@ implementation
         if not(assigned(value_set)) then
           exit;
         i:=0;
-        while i<=tsetdef(resultdef).setmax do
+        while i<=TSetDef(resultdef).setmax do
           begin
             if i in value_set^ then
               begin
@@ -1625,8 +1625,8 @@ implementation
         result:=0;
         if not(assigned(value_set)) then
           exit;
-        i:=tsetdef(resultdef).setmax;
-        while i>=tsetdef(resultdef).setbase do
+        i:=TSetDef(resultdef).setmax;
+        while i>=TSetDef(resultdef).setbase do
           begin
             if i in value_set^ then
               begin
@@ -1706,7 +1706,7 @@ implementation
 
     function tnilnode.emit_data(tcb: ttai_typedconstbuilder): sizeint;
       begin
-        if tpointerdef(resultdef).compatible_with_pointerdef_size(tpointerdef(voidpointertype)) then
+        if TPointerDef(resultdef).compatible_with_pointerdef_size(TPointerDef(voidpointertype)) then
           tcb.emit_tai(tai_const.Create_nil_dataptr,voidpointertype)
         else
           tcb.emit_tai(tai_const.Create_nil_codeptr,voidcodepointertype);
@@ -1730,14 +1730,14 @@ implementation
          value:=g;
       end;
 
-    constructor tguidconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tguidconstnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getguid(value);
       end;
 
 
-    procedure tguidconstnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tguidconstnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putguid(value);

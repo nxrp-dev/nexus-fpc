@@ -39,17 +39,17 @@ interface
   type
     thlcgcpu = class(thlcgx86)
      protected
-      procedure gen_loadfpu_loc_cgpara(list: TAsmList; size: tdef; const l: tlocation; const cgpara: tcgpara; locintsize: longint); override;
+      procedure gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: tlocation; const cgpara: tcgpara; locintsize: longint); override;
      public
-      function a_call_name(list: TAsmList; pd: tprocdef; const s: TSymStr; const paras: array of pcgpara; forceresdef: tdef; weak: boolean): tcgpara; override;
-      procedure g_copyvaluepara_openarray(list: TAsmList; const ref: treference; const lenloc: tlocation; arrdef: tarraydef; destreg: tregister); override;
-      procedure g_releasevaluepara_openarray(list: TAsmList; arrdef: tarraydef; const l: tlocation); override;
-      procedure g_exception_reason_save(list: TAsmList; fromsize, tosize: tdef; reg: tregister; const href: treference); override;
-      procedure g_exception_reason_save_const(list: TAsmList; size: tdef; a: tcgint; const href: treference); override;
-      procedure g_exception_reason_load(list: TAsmList; fromsize, tosize: tdef; const href: treference; reg: tregister); override;
-      procedure g_exception_reason_discard(list: TAsmList; size: tdef; href: treference); override;
+      function a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of pcgpara; forceresdef: TDef; weak: boolean): tcgpara; override;
+      procedure g_copyvaluepara_openarray(list: TAsmList; const ref: treference; const lenloc: tlocation; arrdef: TArrayDef; destreg: tregister); override;
+      procedure g_releasevaluepara_openarray(list: TAsmList; arrdef: TArrayDef; const l: tlocation); override;
+      procedure g_exception_reason_save(list: TAsmList; fromsize, tosize: TDef; reg: tregister; const href: treference); override;
+      procedure g_exception_reason_save_const(list: TAsmList; size: TDef; a: tcgint; const href: treference); override;
+      procedure g_exception_reason_load(list: TAsmList; fromsize, tosize: TDef; const href: treference; reg: tregister); override;
+      procedure g_exception_reason_discard(list: TAsmList; size: TDef; href: treference); override;
 
-      procedure g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);override;
+      procedure g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);override;
     end;
 
 implementation
@@ -65,7 +65,7 @@ implementation
 
   { thlcgcpu }
 
-  procedure thlcgcpu.gen_loadfpu_loc_cgpara(list: TAsmList; size: tdef; const l: tlocation; const cgpara: tcgpara; locintsize: longint);
+  procedure thlcgcpu.gen_loadfpu_loc_cgpara(list: TAsmList; size: TDef; const l: tlocation; const cgpara: tcgpara; locintsize: longint);
     var
       locsize : tcgsize;
       tmploc : tlocation;
@@ -180,7 +180,7 @@ implementation
     end;
 
 
-  function thlcgcpu.a_call_name(list: TAsmList; pd: tprocdef; const s: TSymStr; const paras: array of pcgpara; forceresdef: tdef; weak: boolean): tcgpara;
+  function thlcgcpu.a_call_name(list: TAsmList; pd: TProcDef; const s: TSymStr; const paras: array of pcgpara; forceresdef: TDef; weak: boolean): tcgpara;
   var
     need_got_load: boolean;
   begin
@@ -205,7 +205,7 @@ implementation
   end;
 
 
-  procedure thlcgcpu.g_copyvaluepara_openarray(list: TAsmList; const ref: treference; const lenloc: tlocation; arrdef: tarraydef; destreg: tregister);
+  procedure thlcgcpu.g_copyvaluepara_openarray(list: TAsmList; const ref: treference; const lenloc: tlocation; arrdef: TArrayDef; destreg: tregister);
     begin
       if paramanager.use_fixed_stack then
         begin
@@ -216,7 +216,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_releasevaluepara_openarray(list: TAsmList; arrdef: tarraydef; const l: tlocation);
+  procedure thlcgcpu.g_releasevaluepara_openarray(list: TAsmList; arrdef: TArrayDef; const l: tlocation);
     begin
       if paramanager.use_fixed_stack then
         begin
@@ -227,7 +227,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_exception_reason_save(list: TAsmList; fromsize, tosize: tdef; reg: tregister; const href: treference);
+  procedure thlcgcpu.g_exception_reason_save(list: TAsmList; fromsize, tosize: TDef; reg: tregister; const href: treference);
     begin
       if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
         list.concat(Taicpu.op_reg(A_PUSH,tcgsize2opsize[def_cgsize(tosize)],reg))
@@ -236,7 +236,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_exception_reason_save_const(list: TAsmList; size: tdef; a: tcgint; const href: treference);
+  procedure thlcgcpu.g_exception_reason_save_const(list: TAsmList; size: TDef; a: tcgint; const href: treference);
     begin
       if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
         list.concat(Taicpu.op_const(A_PUSH,tcgsize2opsize[def_cgsize(size)],a))
@@ -245,7 +245,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_exception_reason_load(list: TAsmList; fromsize, tosize: tdef; const href: treference; reg: tregister);
+  procedure thlcgcpu.g_exception_reason_load(list: TAsmList; fromsize, tosize: TDef; const href: treference; reg: tregister);
     begin
       if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
         list.concat(Taicpu.op_reg(A_POP,tcgsize2opsize[def_cgsize(tosize)],reg))
@@ -254,7 +254,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_exception_reason_discard(list: TAsmList; size: tdef; href: treference);
+  procedure thlcgcpu.g_exception_reason_discard(list: TAsmList; size: TDef; href: treference);
     begin
       if not(paramanager.use_fixed_stack) and not(tf_use_psabieh in TargetInfo.flags) then
         begin
@@ -265,7 +265,7 @@ implementation
     end;
 
 
-  procedure thlcgcpu.g_intf_wrapper(list: TAsmList; procdef: tprocdef; const labelname: string; ioffset: longint);
+  procedure thlcgcpu.g_intf_wrapper(list: TAsmList; procdef: TProcDef; const labelname: string; ioffset: longint);
     {
     possible calling conventions:
                   default stdcall cdecl pascal register
@@ -300,14 +300,14 @@ implementation
     function is_ecx_used: boolean;
       var
         i: Integer;
-        hp: tparavarsym;
+        hp: TParaVarSym;
         paraloc: PCGParaLocation;
       begin
         if not (RS_ECX in paramanager.get_volatile_registers_int(procdef.proccalloption)) then
           exit(true);
         for i:=0 to procdef.paras.count-1 do
          begin
-           hp:=tparavarsym(procdef.paras[i]);
+           hp:=TParaVarSym(procdef.paras[i]);
            procdef.init_paraloc_info(calleeside);
            paraloc:=hp.paraloc[calleeside].Location;
            while paraloc<>nil do
@@ -354,7 +354,7 @@ implementation
         if (procdef.extnumber=$ffff) then
           Internalerror(2000061312);
         { call/jmp  vmtoffs(%reg) ; method offs }
-        reference_reset_base(href,voidpointertype,reg,tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
+        reference_reset_base(href,voidpointertype,reg,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
         list.concat(taicpu.op_ref(op,S_L,href));
       end;
 
@@ -366,7 +366,7 @@ implementation
         if (procdef.extnumber=$ffff) then
           Internalerror(2000061313);
         { mov vmtoffs(%eax),%eax ; method offs }
-        reference_reset_base(href,voidpointertype,NR_EAX,tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
+        reference_reset_base(href,voidpointertype,NR_EAX,TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber),ctempposinvalid,4,[]);
         cg.a_load_ref_reg(list,OS_ADDR,OS_ADDR,href,NR_EAX);
       end;
 

@@ -34,7 +34,7 @@ interface
        protected
          procedure gen_syscall_para(para: tcallparanode); override;
          procedure extra_call_code;override;
-         procedure set_result_location(realresdef: tstoreddef);override;
+         procedure set_result_location(realresdef: TStoredDef);override;
        public
          procedure do_syscall;override;
        end;
@@ -79,7 +79,7 @@ implementation
       end;
 
 
-    procedure tx8664callnode.set_result_location(realresdef: tstoreddef);
+    procedure tx8664callnode.set_result_location(realresdef: TStoredDef);
       begin
         { avoid useless "movq %xmm0,%rax" and "movq %rax,%xmm0" instructions
           (which moreover for some reason are not supported by the Darwin

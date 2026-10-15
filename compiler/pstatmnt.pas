@@ -68,21 +68,21 @@ implementation
     function statement : TNode;forward;
 
 
-    function is_anonymous_procdef(def : tdef) : boolean;
+    function is_anonymous_procdef(def : TDef) : boolean;
       begin
         result:=assigned(def) and
                 (def.typ=procdef) and
-                (po_anonymous in tprocdef(def).procoptions);
+                (po_anonymous in TProcDef(def).procoptions);
       end;
 
 
     { returns the common type of olddef and the type of branchtree,
       oldtree is the node that determines the type }
-    function branch_type(olddef : tdef; branchtree : TNode; var oldtree : TNode) : tdef;
+    function branch_type(olddef : TDef; branchtree : TNode; var oldtree : TNode) : TDef;
 
-      function commonancestor(c1,c2 : tobjectdef; var a : tdef) : boolean;
+      function commonancestor(c1,c2 : TObjectDef; var a : TDef) : boolean;
         var
-          curr, check : tobjectdef;
+          curr, check : TObjectDef;
         begin
           result:=false;
           curr:=c1;
@@ -104,8 +104,8 @@ implementation
         end;
 
       var
-        branchdef : tdef;
-        cmp : tequaltype;
+        branchdef : TDef;
+        cmp : TEqualType;
       begin
         if not assigned(branchtree) or
             not assigned(branchtree.resultdef) or
@@ -143,21 +143,21 @@ implementation
         else if is_chararray(olddef) and is_chararray(branchdef) then
           begin
             result:=olddef;
-            if tarraydef(olddef).elecount<tarraydef(branchdef).elecount then
+            if TArrayDef(olddef).elecount<TArrayDef(branchdef).elecount then
               result:=branchdef;
           end
         { shortstrings: use longest }
         else if is_shortstring(olddef) and is_shortstring(branchdef) then
           begin
             result:=olddef;
-            if tstringdef(olddef).len<tstringdef(branchdef).len then
+            if TStringDef(olddef).len<TStringDef(branchdef).len then
               result:=branchdef;
           end
         { combine with variant results in a variant }
         else if (olddef.typ=variantdef) or (branchdef.typ=variantdef) then
           result:=cvarianttype
         else if (olddef.typ=objectdef) and (branchdef.typ=objectdef) and
-                commonancestor(tobjectdef(olddef),tobjectdef(branchdef),result) then
+                commonancestor(TObjectDef(olddef),TObjectDef(branchdef),result) then
           { result set by commonancestor }
         else
           begin
@@ -175,7 +175,7 @@ implementation
 
 
     { creates a temp for the result of a statement expression block }
-    function create_stmt_expr_block(resdef : tdef; out statements : tstatementnode;
+    function create_stmt_expr_block(resdef : TDef; out statements : tstatementnode;
         out resultvar : ttempcreatenode) : TNode;
       begin
         result:=internalstatements(statements);
@@ -199,7 +199,7 @@ implementation
         ex, if_a, else_a, typenode : TNode;
         statements : tstatementnode;
         resultvar : ttempcreatenode;
-        resdef : tdef;
+        resdef : TDef;
       begin
         consume(_IF);
         ex:=comp_expr([ef_accept_equal]);
@@ -284,7 +284,7 @@ implementation
 
 
     { parses "case <expr> of" }
-    function read_case_head(out casedef : tdef; out casedeferror, caseofstring : boolean) : tcasenode;
+    function read_case_head(out casedef : TDef; out casedeferror, caseofstring : boolean) : tcasenode;
       var
         caseexpr : TNode;
       begin
@@ -323,7 +323,7 @@ implementation
 
 
     { parses the labels of one case block, including the colon }
-    procedure read_case_labels(casenode : tcasenode; casedef : tdef; blockid : longint;
+    procedure read_case_labels(casenode : tcasenode; casedef : TDef; blockid : longint;
         casedeferror, caseofstring : boolean);
       var
         p : TNode;
@@ -379,8 +379,8 @@ implementation
                 is_conststring_or_constcharnode(trangenode(p).right) then
               begin
                 { we need stringconstnodes, even if expression contains single chars }
-                sl1 := get_string_value(trangenode(p).left, tstringdef(casedef));
-                sl2 := get_string_value(trangenode(p).right, tstringdef(casedef));
+                sl1 := get_string_value(trangenode(p).left, TStringDef(casedef));
+                sl2 := get_string_value(trangenode(p).right, TStringDef(casedef));
                 if sl1.fullcompare(sl2) > 0 then
                   CGMessage(parser_e_case_lower_less_than_upper_bound);
               end
@@ -419,7 +419,7 @@ implementation
 
               if caseofstring then
                 begin
-                  sl1:=get_string_value(p, tstringdef(casedef));
+                  sl1:=get_string_value(p, TStringDef(casedef));
                   casenode.addlabel(blockid,sl1,sl1);
                 end
               else
@@ -458,7 +458,7 @@ implementation
 
     function case_statement : TNode;
       var
-        casedef : tdef;
+        casedef : TDef;
         blockid : longint;
         casedeferror, caseofstring : boolean;
         casenode : tcasenode;
@@ -495,11 +495,11 @@ implementation
 
     function case_stmt_expr : TNode;
       var
-        casedef : tdef;
+        casedef : TDef;
         blockid : longint;
         casedeferror, caseofstring : boolean;
         casenode : tcasenode;
-        resdef : tdef;
+        resdef : TDef;
         typenode : TNode;
         i : longint;
         statements : tstatementnode;
@@ -647,7 +647,7 @@ implementation
 
     function for_statement : TNode;
 
-        procedure check_range(hp:TNode; fordef: tdef);
+        procedure check_range(hp:TNode; fordef: TDef);
           begin
             if (hp.nodetype=ordconstn) and
                (fordef.typ<>errordef) and
@@ -662,7 +662,7 @@ implementation
              hblock,
              hto,hfrom : TNode;
              backward : boolean;
-             loopvarsym : tabstractvarsym;
+             loopvarsym : TAbstractVarSym;
           begin
              { Check loop variable }
              loopvarsym:=nil;
@@ -707,14 +707,14 @@ implementation
                            (tloadnode(hp).symtable.symtablelevel=main_program_level) or
                            (tloadnode(hp).symtable.symtablelevel=CurrentProcInfo.procdef.parast.symtablelevel)
                           ) and
-                          (tabstractvarsym(tloadnode(hp).symtableentry).varspez=vs_value) and
-                          ([vo_is_thread_var,vo_is_typed_const] * tabstractvarsym(tloadnode(hp).symtableentry).varoptions=[]) then
+                          (TAbstractVarSym(tloadnode(hp).symtableentry).varspez=vs_value) and
+                          ([vo_is_thread_var,vo_is_typed_const] * TAbstractVarSym(tloadnode(hp).symtableentry).varoptions=[]) then
                          begin
                            { Assigning for-loop variable is allowed in MacPas }
                            if not(m_mac in CurrentSettings.modeswitches) then
                              begin
                                if not assigned(loopvarsym) then
-                                 loopvarsym:=tabstractvarsym(tloadnode(hp).symtableentry);
+                                 loopvarsym:=TAbstractVarSym(tloadnode(hp).symtableentry);
                                include(loopvarsym.varoptions,vo_is_loop_counter);
                              end;
                          end
@@ -783,12 +783,12 @@ implementation
           function for_in_loop_create(hloopvar: TNode): TNode;
             var
               expr,hloopbody,hp: TNode;
-              loopvarsym: tabstractvarsym;
+              loopvarsym: TAbstractVarSym;
             begin
               hp:=skip_nodes_before_load(hloopvar);
               if assigned(hp)and(hp.nodetype=loadn) then
                 begin
-                  loopvarsym:=tabstractvarsym(tloadnode(hp).symtableentry);
+                  loopvarsym:=TAbstractVarSym(tloadnode(hp).symtableentry);
                   include(loopvarsym.varoptions,vo_is_loop_counter);
                 end
               else
@@ -837,7 +837,7 @@ implementation
       var
          p   : TNode;
          i   : longint;
-         st  : TSymtable;
+         st  : TSymTable;
          newblock : tblocknode;
          newstatement : tstatementnode;
          calltempnode,
@@ -845,14 +845,14 @@ implementation
          valuenode,
          hp,
          refnode  : TNode;
-         hdef : tdef;
-         helperdef : tobjectdef;
+         hdef : TDef;
+         helperdef : TObjectDef;
          hasimplicitderef : boolean;
          withsymtablelist : TFPObjectList;
 
-         procedure pushobjchild(withdef,obj:tobjectdef);
+         procedure pushobjchild(withdef,obj:TObjectDef);
          var
-           parenthelperdef : tobjectdef;
+           parenthelperdef : TObjectDef;
          begin
            if not assigned(obj) then
              exit;
@@ -865,13 +865,13 @@ implementation
              pushobjchild(withdef,parenthelperdef.childof);
            { keep the original tobjectdef as owner, because that is used for
              visibility of the symtable }
-           st:=twithsymtable.create(withdef,obj.symtable.SymList,refnode.getcopy);
+           st:=TWithSymTable.create(withdef,obj.symtable.SymList,refnode.getcopy);
            symtablestack.push(st);
            withsymtablelist.add(st);
            { push the symtable of the helper }
            if assigned(parenthelperdef) then
              begin
-               st:=twithsymtable.create(withdef,parenthelperdef.symtable.SymList,refnode.getcopy);
+               st:=TWithSymTable.create(withdef,parenthelperdef.symtable.SymList,refnode.getcopy);
                symtablestack.push(st);
                withsymtablelist.add(st);
              end;
@@ -974,40 +974,40 @@ implementation
               objectdef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(tabstractrecorddef(p.resultdef),CurrentStructDef,helperdef);
+                   search_last_objectpascal_helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
                    { push symtables of all parents in reverse order }
-                   pushobjchild(tobjectdef(p.resultdef),tobjectdef(p.resultdef).childof);
+                   pushobjchild(TObjectDef(p.resultdef),TObjectDef(p.resultdef).childof);
                    { push symtables of all parents of the helper in reverse order }
                    if assigned(helperdef) then
                      pushobjchild(helperdef,helperdef.childof);
                    { push object symtable }
-                   st:=twithsymtable.Create(tobjectdef(p.resultdef),tobjectdef(p.resultdef).symtable.SymList,refnode);
+                   st:=TWithSymTable.Create(TObjectDef(p.resultdef),TObjectDef(p.resultdef).symtable.SymList,refnode);
                    symtablestack.push(st);
                    withsymtablelist.add(st);
                  end;
               classrefdef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(tobjectdef(tclassrefdef(p.resultdef).pointeddef),CurrentStructDef,helperdef);
+                   search_last_objectpascal_helper(TObjectDef(TClassRefDef(p.resultdef).pointeddef),CurrentStructDef,helperdef);
                    { push symtables of all parents in reverse order }
-                   pushobjchild(tobjectdef(tclassrefdef(p.resultdef).pointeddef),tobjectdef(tclassrefdef(p.resultdef).pointeddef).childof);
+                   pushobjchild(TObjectDef(TClassRefDef(p.resultdef).pointeddef),TObjectDef(TClassRefDef(p.resultdef).pointeddef).childof);
                    { push symtables of all parents of the helper in reverse order }
                    if assigned(helperdef) then
                      pushobjchild(helperdef,helperdef.childof);
                    { push object symtable }
-                   st:=twithsymtable.Create(tobjectdef(tclassrefdef(p.resultdef).pointeddef),tobjectdef(tclassrefdef(p.resultdef).pointeddef).symtable.SymList,refnode);
+                   st:=TWithSymTable.Create(TObjectDef(TClassRefDef(p.resultdef).pointeddef),TObjectDef(TClassRefDef(p.resultdef).pointeddef).symtable.SymList,refnode);
                    symtablestack.push(st);
                    withsymtablelist.add(st);
                 end;
               recorddef :
                 begin
                    { do we have a helper for this type? }
-                   search_last_objectpascal_helper(tabstractrecorddef(p.resultdef),CurrentStructDef,helperdef);
+                   search_last_objectpascal_helper(TAbstractRecordDef(p.resultdef),CurrentStructDef,helperdef);
                    { push symtables of all parents of the helper in reverse order }
                    if assigned(helperdef) then
                      pushobjchild(helperdef,helperdef.childof);
                    { push record symtable }
-                   st:=twithsymtable.create(trecorddef(p.resultdef),trecorddef(p.resultdef).symtable.SymList,refnode);
+                   st:=TWithSymTable.create(TRecordDef(p.resultdef),TRecordDef(p.resultdef).symtable.SymList,refnode);
                    symtablestack.push(st);
                    withsymtablelist.add(st);
                 end;
@@ -1017,7 +1017,7 @@ implementation
                      internalerror(2012122802);
                    helperdef:=nil;
                    { push record symtable }
-                   st:=twithsymtable.create(p.resultdef,nil,refnode);
+                   st:=TWithSymTable.create(p.resultdef,nil,refnode);
                    symtablestack.push(st);
                    withsymtablelist.add(st);
                 end;
@@ -1028,7 +1028,7 @@ implementation
             { push helper symtable }
             if assigned(helperdef) then
               begin
-                st:=twithsymtable.Create(helperdef,helperdef.symtable.SymList,refnode.getcopy);
+                st:=TWithSymTable.Create(helperdef,helperdef.symtable.SymList,refnode.getcopy);
                 symtablestack.push(st);
                 withsymtablelist.add(st);
               end;
@@ -1046,7 +1046,7 @@ implementation
 
             { remove symtables in reverse order from the stack }
             for i:=withsymtablelist.count-1 downto 0 do
-              symtablestack.pop(TSymtable(withsymtablelist[i]));
+              symtablestack.pop(TSymTable(withsymtablelist[i]));
             withsymtablelist.free;
             withsymtablelist := nil;
 
@@ -1123,7 +1123,7 @@ implementation
       end;
 
 
-    procedure check_except_type_valid(var def: tdef);
+    procedure check_except_type_valid(var def: TDef);
       begin
         if not (is_class(def) or is_javaclass(def) or
             { skip showing error message the second time }
@@ -1136,12 +1136,12 @@ implementation
 
 
     { parses "on [name:] type do" and pushes the exception symtable }
-    procedure read_on_head(out ot : tdef; out excepTSymtable : TSymtable);
+    procedure read_on_head(out ot : TDef; out excepTSymtable : TSymTable);
       var
-        sym : tlocalvarsym;
+        sym : TLocalVarSym;
         objname,objrealname : TIDString;
-        srsym : tsym;
-        srsymtable : TSymtable;
+        srsym : TSym;
+        srsymtable : TSymTable;
         t : ttoken;
         unit_found : boolean;
       begin
@@ -1182,7 +1182,7 @@ implementation
                   with "e: Exception" the e is not necessary }
                 if (srsym.typ=typesym) then
                   begin
-                    ot:=ttypesym(srsym).typedef;
+                    ot:=TTypeSym(srsym).typedef;
                     parse_nested_types(ot,false,false,nil);
                     check_except_type_valid(ot);
                   end
@@ -1197,7 +1197,7 @@ implementation
                   type }
                 sym:=clocalvarsym.create('$exceptsym',vs_value,ot,[]);
               end;
-            excepTSymtable:=tstt_excepTSymtable.create;
+            excepTSymtable:=TSTTExceptSymTable.create;
             excepTSymtable.defowner:=CurrentProcInfo.procdef;
             excepTSymtable.insertsym(sym);
             symtablestack.push(excepTSymtable);
@@ -1209,7 +1209,7 @@ implementation
 
 
     { appends the on node hp to the list p_specific and pops the exception symtable }
-    procedure add_on_node(hp : TNode; ot : tdef; excepTSymtable : TSymtable;
+    procedure add_on_node(hp : TNode; ot : TDef; excepTSymtable : TSymTable;
         var p_specific, last : TNode);
       begin
          if ot.typ=errordef then
@@ -1232,7 +1232,7 @@ implementation
          { that last and hp are errornodes (JM)                            }
          if last.nodetype = onn then
            begin
-             tonnode(last).excepttype:=tobjectdef(ot);
+             tonnode(last).excepttype:=TObjectDef(ot);
              tonnode(last).excepTSymtable:=excepTSymtable;
            end;
          { remove exception symtable }
@@ -1252,9 +1252,9 @@ implementation
       var
         p_try_block,p_finally_block,first,last,
         p_default,p_specific,hp : TNode;
-        ot : tDef;
+        ot : TDef;
         old_block_type : TBlockType;
-        excepTSymtable : TSymtable;
+        excepTSymtable : TSymTable;
         oldcurrent_exceptblock: integer;
         filepostry : TFilePosInfo;
       begin
@@ -1333,7 +1333,7 @@ implementation
 
     function try_stmt_expr : TNode;
       var
-        resdef : tdef;
+        resdef : TDef;
         typenode : TNode;
 
       function read_branch : TNode;
@@ -1355,9 +1355,9 @@ implementation
       var
         p_try_block,p_finally_block,
         p_default,p_specific,last,hp : TNode;
-        ot : tDef;
+        ot : TDef;
         old_block_type : TBlockType;
-        excepTSymtable : TSymtable;
+        excepTSymtable : TSymTable;
         oldcurrent_exceptblock: integer;
         trynode : ttryexceptnode;
         statements : tstatementnode;
@@ -1571,7 +1571,7 @@ implementation
       function eval_intconst: asizeint;
         var
           cv : Tconstexprint;
-          def: tdef;
+          def: TDef;
         begin
           cv:=get_intconst;
           case actype of
@@ -1593,8 +1593,8 @@ implementation
         w : asizeint;
         hl : TAsmList;
         asmstat : tasmnode;
-        sym : tsym;
-        symtable : TSymtable;
+        sym : TSym;
+        symtable : TSymTable;
         s : tsymstr;
         ac : tai_const;
         nesting : integer;
@@ -1736,8 +1736,8 @@ implementation
          astatement,
          code       : TNode;
          filepos    : TFilePosInfo;
-         srsym      : tsym;
-         srsymtable : TSymtable;
+         srsym      : TSym;
+         srsymtable : TSymTable;
          s          : TIDString;
       begin
          filepos:=CurrentTokenPos;
@@ -1798,10 +1798,10 @@ implementation
                              if is_nested_pd(CurrentProcInfo.procdef) then
                                CurrentProcInfo.set_needs_parentfp(srsym.owner.symtablelevel);
                            end;
-                         code:=cgotonode.create(tlabelsym(srsym));
-                         tgotonode(code).labelsym:=tlabelsym(srsym);
+                         code:=cgotonode.create(TLabelSym(srsym));
+                         tgotonode(code).labelsym:=TLabelSym(srsym);
                          { set flag that this label is used }
-                         tlabelsym(srsym).used:=true;
+                         TLabelSym(srsym).used:=true;
                        end;
                   end;
              end;
@@ -1890,7 +1890,7 @@ implementation
                 if assigned(srsym) and
                    (srsym.typ=labelsym) then
                  begin
-                   if tlabelsym(srsym).defined then
+                   if TLabelSym(srsym).defined then
                      Message(sym_e_label_already_defined);
                    if symtablestack.top.symtablelevel<>srsymtable.symtablelevel then
                      begin
@@ -1899,9 +1899,9 @@ implementation
                          Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                      end;
 
-                   tlabelsym(srsym).defined:=true;
-                   p:=clabelnode.create(nil,tlabelsym(srsym));
-                   tlabelsym(srsym).code:=p;
+                   TLabelSym(srsym).defined:=true;
+                   p:=clabelnode.create(nil,TLabelSym(srsym));
+                   TLabelSym(srsym).code:=p;
                  end
                 else
                  begin
@@ -1963,7 +1963,7 @@ implementation
                       called as instance methods instead of class methods }
                     not(
                       (tcallnode(p).procdefinition.proctypeoption=potype_constructor) and
-                      is_class_or_object(tprocdef(tcallnode(p).procdefinition).struct) and
+                      is_class_or_object(TProcDef(tcallnode(p).procdefinition).struct) and
                       assigned(tcallnode(p).methodpointer) and
                       (TNode(tcallnode(p).methodpointer).resultdef.typ=objectdef)
                     ) then
@@ -2037,7 +2037,7 @@ implementation
       var
         p : TNode;
         locals : longint;
-        srsym : tsym;
+        srsym : TSym;
       begin
          if parse_generic then
            message(parser_e_no_assembler_in_generic);
@@ -2072,13 +2072,13 @@ implementation
                - target processor has optional frame pointer save
                  (vm, i386, vm only currently)
              }
-             locals:=tabstractlocalsymtable(CurrentProcInfo.procdef.parast).count_locals;
+             locals:=TAbstractLocalSymTable(CurrentProcInfo.procdef.parast).count_locals;
              if (CurrentProcInfo.procdef.localst.symtabletype=localsymtable) then
-               inc(locals,tabstractlocalsymtable(CurrentProcInfo.procdef.localst).count_locals);
+               inc(locals,TAbstractLocalSymTable(CurrentProcInfo.procdef.localst).count_locals);
              if (locals=0) and
                 not (CurrentProcInfo.procdef.owner.symtabletype in [ObjectSymtable,recordsymtable]) and
                 (not assigned(CurrentProcInfo.procdef.funcretsym) or
-                 (tabstractvarsym(CurrentProcInfo.procdef.funcretsym).refs<=1)) and
+                 (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs<=1)) and
                 not (df_generic in CurrentProcInfo.procdef.defoptions) and
                 not(paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef)) then
                begin
@@ -2094,7 +2094,7 @@ implementation
         if assigned(CurrentProcInfo.procdef.funcretsym) and
             not (df_generic in CurrentProcInfo.procdef.defoptions) and
            (not paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef)) then
-          tabstractvarsym(CurrentProcInfo.procdef.funcretsym).varstate:=vs_initialised;
+          TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).varstate:=vs_initialised;
 
         { because the END is already read we need to get the
           last_endtoken_filepos here (PFV) }

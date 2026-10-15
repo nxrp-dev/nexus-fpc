@@ -44,7 +44,7 @@ type
    texportoptions=set of texportoption;
 
    texported_item = class(TLinkedListItem)
-      sym : tsym;
+      sym : TSym;
       index : longint;
       name : pshortstring;
       { Stable assembler name for exports that outlive the unit's symbols. }
@@ -82,14 +82,14 @@ type
    TExportLibClass=class of TExportLib;
 
 
-  procedure exportprocsym(sym: tsym; const s : string; index: longint; options: texportoptions);
-  procedure exportvarsym(sym: tsym; const s : string; index: longint; options: texportoptions);
+  procedure exportprocsym(sym: TSym; const s : string; index: longint; options: texportoptions);
+  procedure exportvarsym(sym: TSym; const s : string; index: longint; options: texportoptions);
   { to export symbols not directly related to a tsym (e.g., the Objective-C
     rtti) }
   procedure exportname(const s : string; options: texportoptions);
 
-  procedure exportallprocdefnames(sym: tprocsym; pd: tprocdef; options: texportoptions);
-  procedure exportallprocsymnames(ps: tprocsym; options: texportoptions);
+  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: texportoptions);
+  procedure exportallprocsymnames(ps: TProcSym; options: texportoptions);
 
 
 var
@@ -109,7 +109,7 @@ uses
                            TExported_procedure
 ****************************************************************************}
 
-procedure exportprocsym(sym: tsym; const s : string; index: longint; options: texportoptions);
+procedure exportprocsym(sym: TSym; const s : string; index: longint; options: texportoptions);
   var
     hp : texported_item;
   begin
@@ -122,7 +122,7 @@ procedure exportprocsym(sym: tsym; const s : string; index: longint; options: te
   end;
 
 
-procedure exportvarsym(sym: tsym; const s : string; index: longint; options: texportoptions);
+procedure exportvarsym(sym: TSym; const s : string; index: longint; options: texportoptions);
   var
     hp : texported_item;
   begin
@@ -142,7 +142,7 @@ procedure exportname(const s : string; options: texportoptions);
   end;
 
 
-  procedure exportallprocdefnames(sym: tprocsym; pd: tprocdef; options: texportoptions);
+  procedure exportallprocdefnames(sym: TProcSym; pd: TProcDef; options: texportoptions);
     var
       item: TCmdStrListItem;
     begin
@@ -159,12 +159,12 @@ procedure exportname(const s : string; options: texportoptions);
     end;
 
 
-  procedure exportallprocsymnames(ps: tprocsym; options: texportoptions);
+  procedure exportallprocsymnames(ps: TProcSym; options: texportoptions);
     var
       i: longint;
     begin
       for i:= 0 to ps.ProcdefList.Count-1 do
-        exportallprocdefnames(ps,tprocdef(ps.ProcdefList[i]),options);
+        exportallprocdefnames(ps,TProcDef(ps.ProcdefList[i]),options);
     end;
 
 

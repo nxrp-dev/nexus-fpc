@@ -91,7 +91,7 @@ var
   hp2 : texported_item;
 {$ifdef cpuhighleveltarget}
   pd,
-  wrapperpd: tprocdef;
+  wrapperpd: TProcDef;
   i: longint;
   anyhasalias: boolean;
 {$endif cpuhighleveltarget}
@@ -141,9 +141,9 @@ begin
       { if the procedure has the exported name as one of its aliases, we don't
         need a separate stub }
       pd:=nil;
-      for i:=0 to tprocsym(hp.sym).procdeflist.count-1 do
+      for i:=0 to TProcSym(hp.sym).procdeflist.count-1 do
         begin
-          pd:=tprocdef(tprocsym(hp.sym).procdeflist[i]);
+          pd:=TProcDef(TProcSym(hp.sym).procdeflist[i]);
           anyhasalias:=pd.has_alias_name(hp.name^);
           if anyhasalias then
             break;
@@ -170,7 +170,7 @@ end;
 procedure texportlibunix.generatelib;  // straight t_linux copy for now.
 var
   hp2 : texported_item;
-  pd  : tprocdef;
+  pd  : TProcDef;
   anyhasalias : boolean;
   i : longint;
 begin
@@ -190,9 +190,9 @@ begin
         { note: for "exports" sections we only allow non overloaded procsyms,
                 so checking all symbols only matters for packages }
         anyhasalias:=false;
-        for i:=0 to tprocsym(hp2.sym).procdeflist.count-1 do
+        for i:=0 to TProcSym(hp2.sym).procdeflist.count-1 do
           begin
-            pd:=tprocdef(tprocsym(hp2.sym).procdeflist[i]);
+            pd:=TProcDef(TProcSym(hp2.sym).procdeflist[i]);
             anyhasalias:=pd.has_alias_name(hp2.name^);
             if anyhasalias then
               break;

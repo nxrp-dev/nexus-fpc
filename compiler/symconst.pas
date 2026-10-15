@@ -169,14 +169,14 @@ type
   TCompilerIntfFlag = (ifHasGuid,ifDispInterface,ifDispatch,ifHasStrGUID);
 
   { Deref entry options }
-  tdereftype = (deref_nil,
+  TDerefType = (deref_nil,
     deref_unit,
     deref_symid,
     deref_defid
   );
 
   { symbol visibility }
-  tvisibility=(
+  TVisibility=(
     vis_hidden,
     vis_strictprivate,
     vis_private,
@@ -186,10 +186,10 @@ type
     vis_published,
     vis_none
   );
-  tvisibilities=set of tvisibility;
+  TVisibilities=set of TVisibility;
 
   { symbol options }
-  tsymoption=(sp_none,
+  TSymOption=(sp_none,
     sp_static,              { static symbol in class/object/record }
     sp_hint_deprecated,
     sp_hint_platform,
@@ -211,10 +211,10 @@ type
     sp_generic_unnamed_type { type symbol created for an anonymous type during
                               an implicit function specialization }
   );
-  tsymoptions=set of tsymoption;
+  TSymOptions=set of TSymOption;
 
   { flags for a definition }
-  tdefoption=(df_none,
+  TDefOption=(df_none,
     { type is unique, i.e. declared with type = type <tdef>; }
     df_unique,
     { type is a generic }
@@ -239,9 +239,9 @@ type
       of the def can not be determined }
     df_has_generic_fields
   );
-  tdefoptions=set of tdefoption;
+  TDefOptions=set of TDefOption;
 
-  tdefstate=(ds_none,
+  TDefState=(ds_none,
     ds_vmt_written,
     ds_rtti_table_used,
     ds_init_table_used,
@@ -250,18 +250,18 @@ type
     ds_dwarf_dbg_info_used,
     ds_dwarf_dbg_info_written
   );
-  tdefstates=set of tdefstate;
+  TDefStates=set of TDefState;
 
   { flags for generic type constraints }
-  tgenericconstraintflag=(gcf_none,
+  TGenericConstraintFlag=(gcf_none,
     gcf_constructor,       { specialization type needs to have a constructor }
     gcf_class,             { specialization type needs to be a class }
     gcf_record             { specialization type needs to be a record type }
   );
-  tgenericconstraintflags=set of tgenericconstraintflag;
+  TGenericConstraintFlags=set of TGenericConstraintFlag;
 
   { tsymlist entry types }
-  tsltype = (sl_none,
+  TSLType = (sl_none,
     sl_load,
     sl_call,
     sl_subscript,
@@ -271,7 +271,7 @@ type
   );
 
   { base types for orddef }
-  tordtype = (
+  TOrdType = (
     uvoid,
     u8bit,u16bit,u32bit,u64bit,u128bit,
     s8bit,s16bit,s32bit,s64bit,s128bit,
@@ -280,10 +280,10 @@ type
     uchar,uwidechar,scurrency,customint
   );
 
-  tordtypeset = set of tordtype;
+  TOrdTypeSet = set of TOrdType;
 
   { string types }
-  tstringtype = (
+  TStringType = (
     st_shortstring,
     st_longstring,
     st_ansistring,
@@ -291,14 +291,14 @@ type
     st_unicodestring
   );
 
-  tvarianttype = (
+  TVariantType = (
     vt_normalvariant,vt_olevariant
   );
 
-  tcallercallee = (callnoside,callerside,calleeside,callbothsides);
+  TCallerCallee = (callnoside,callerside,calleeside,callbothsides);
 
   { basic type for tprocdef and tprocvardef }
-  tproctypeoption=(potype_none,
+  TProcTypeOption=(potype_none,
     potype_proginit,     { Program initialization }
     potype_unitinit,     { unit initialization }
     potype_unitfinalize, { unit finalization }
@@ -316,10 +316,10 @@ type
     potype_pkgstub,           { stub for a package file, that tells OS that all is OK }
     potype_libmainstub        { "main" function for a library that calls through to FPC_LIBMAIN }
   );
-  tproctypeoptions=set of tproctypeoption;
+  TProcTypeOptions=set of TProcTypeOption;
 
   { other options for tprocdef and tprocvardef }
-  tprocoption=(po_none,
+  TProcOption=(po_none,
     po_classmethod,       { class method }
     po_virtualmethod,     { Procedure is a virtual method }
     po_abstractmethod,    { Procedure is an abstract method }
@@ -439,11 +439,11 @@ type
     { WebAssembly suspending external }
     po_wasm_suspending
   );
-  tprocoptions=set of tprocoption;
+  TProcOptions=set of TProcOption;
 
   { options that should not trigger the recompilation of a unit if they change
     between the interface and the implementation }
-  timplprocoption = (
+  TImplProcOption = (
     { the routine contains no code }
     pio_empty,
     { the inline body of this routine is available }
@@ -459,10 +459,10 @@ type
     { inline is forbidden (calls get_frame) }
     pio_inline_forbidden
   );
-  timplprocoptions = set of timplprocoption;
+  TImplProcOptions = set of TImplProcOption;
 
   { kinds of synthetic procdefs that can be generated }
-  tsynthetickind = (
+  TSyntheticKind = (
     tsk_none,
     tsk_anon_inherited,        // anonymous inherited call
     tsk_jvm_clone,             // Java-style clone method
@@ -496,14 +496,14 @@ type
   );
 
   { synthetic procdef supplementary information (tprocdef.skpara) }
-  tskpara_interface_wrapper = record
+  TSKParaInterfaceWrapper = record
     pd: pointer;
     offset: longint;
   end;
-  pskpara_interface_wrapper = ^tskpara_interface_wrapper;
+  PSKParaInterfaceWrapper = ^TSKParaInterfaceWrapper;
 
   { options for objects and classes }
-  tobjecttyp = (odt_none,
+  TObjectTyp = (odt_none,
     odt_class,
     odt_object,
     odt_interfacecom,
@@ -521,7 +521,7 @@ type
   );
 
   { defines the type of the extended "structure"; only used for parsing }
-  thelpertype=(ht_none,
+  THelperType=(ht_none,
     ht_class,
     ht_record,
     ht_type
@@ -530,7 +530,7 @@ type
   { Variations in interfaces implementation }
   { Beware, this data is duplicated in the compiler and rtl. }
   { Do not change the order of the fields. }
-  tinterfaceentrytype = (etStandard,
+  TInterfaceEntryType = (etStandard,
     etVirtualMethodResult,
     etStaticMethodResult,
     etFieldValue,
@@ -540,7 +540,7 @@ type
   );
 
   { options for objects and classes }
-  tobjectoption=(oo_none,
+  TObjectOption=(oo_none,
     oo_is_forward,         { the class is only a forward declared yet }
     oo_is_abstract,        { the class is abstract - only descendants can be used }
     oo_is_sealed,          { the class is sealed - can't have descendants }
@@ -571,9 +571,9 @@ type
     oo_is_capturer,        { the class is the capturer for anonymous functions (or converted proc(var)s) }
     oo_inherits_not_specialized { the class inherits from a not yet specialized type }
   );
-  tobjectoptions=set of tobjectoption;
+  TObjectOptions=set of TObjectOption;
 
-  tarraydefoption=(
+  TArrayDefOption=(
     ado_IsConvertedPointer, // array created from pointer (e.g. PInteger(Ptr)[1])
     ado_IsDynamicArray,     // dynamic array
     ado_IsVariant,          //
@@ -586,10 +586,10 @@ type
     ado_OpenArray           // open array, replaces the old hack with high being -1 for an open array:
                             // this is still true, but this flag is set as well
   );
-  tarraydefoptions=set of tarraydefoption;
+  TArrayDefOptions=set of TArrayDefOption;
 
   { options for properties }
-  tpropertyoption=(ppo_none,
+  TPropertyOption=(ppo_none,
     ppo_indexed,                  { delcared wwith "index" keyword }
     ppo_defaultproperty,
     ppo_stored,
@@ -600,10 +600,10 @@ type
     ppo_default_is_single,        { default is a single (required for correct PPU put/load) }
     ppo_default_is_set            { default is a set (required for correct PPU put/load) }
   );
-  tpropertyoptions=set of tpropertyoption;
+  TPropertyOptions=set of TPropertyOption;
 
   { options for variables }
-  tvaroption=(vo_none,
+  TVarOption=(vo_none,
     vo_is_external,
     vo_is_dll_var,
     vo_is_thread_var,
@@ -644,27 +644,27 @@ type
     vo_has_global_ref,
     vo_is_internal
   );
-  tvaroptions=set of tvaroption;
+  TVarOptions=set of TVarOption;
 
   { variable symbol access flags }
-  tvarsymaccessflag = (
+  TVarSymAccessFlag = (
     { this symbol's address has been taken }
     vsa_addr_taken,
     { this symbol is accessed from a different scope }
     vsa_different_scope
   );
-  tvarsymaccessflags = set of tvarsymaccessflag;
+  TVarSymAccessFlags = set of TVarSymAccessFlag;
 
-  tmanagementoperator=(mop_none,
+  TManagementOperator=(mop_none,
     mop_initialize,
     mop_finalize,
     mop_addref,
     mop_copy
   );
-  tmanagementoperators=set of tmanagementoperator;
+  TManagementOperators=set of TManagementOperator;
 
   { register variable }
-  tvarregable=(vr_none,
+  TVarRegable=(vr_none,
     vr_intreg,
     vr_fpureg,
     vr_mmreg,
@@ -674,7 +674,7 @@ type
   );
 
   { types of the symtables }
-  TSymtabletype = (
+  TSymTableType = (
     abstractsymtable,      { not a real symtable             }
     globalsymtable,        { unit interface symtable         }
     staticsymtable,        { unit implementation symtable    }
@@ -692,7 +692,7 @@ type
   );
 
   { options for symtables }
-  tsymtableoption = (
+  TSymTableOption = (
     sto_has_helper,       { contains at least one helper symbol }
     sto_has_generic,      { contains at least one generic symbol }
     sto_has_operator,     { contains at least one operator overload }
@@ -702,10 +702,10 @@ type
                                initialized to zero (e.g. a record with management
                                operators }
   );
-  tsymtableoptions = set of tsymtableoption;
+  TSymTableOptions = set of TSymTableOption;
 
   { definition contains the informations about a type }
-  tdeftyp = (abstractdef,
+  TDefTyp = (abstractdef,
     arraydef,recorddef,pointerdef,orddef,
     stringdef,enumdef,procdef,objectdef,errordef,
     filedef,formaldef,setdef,procvardef,floatdef,
@@ -713,7 +713,7 @@ type
   );
 
   { possible types for symtable entries }
-  tsymtyp = (abstractsym,
+  TSymTyp = (abstractsym,
     staticvarsym,localvarsym,paravarsym,fieldvarsym,
     typesym,procsym,unitsym,constsym,enumsym,
     errorsym,syssym,labelsym,absolutevarsym,propertysym,
@@ -738,16 +738,16 @@ type
      vs_written: variable has been assigned/written to, but not yet read
         (e.g. assigning something to a variable/parameter)
      vs_readwritten: variable has been written to and read from }
-  tvarstate=(vs_none,
+  TVarState=(vs_none,
     vs_declared,vs_initialised,vs_read,vs_read_not_warned,
     vs_referred_not_inited,vs_written,vs_readwritten
   );
 
-  tvarspez = (vs_value,vs_const,vs_var,vs_out,vs_constref,vs_final);
+  TVarSpez = (vs_value,vs_const,vs_var,vs_out,vs_constref,vs_final);
 
-  absolutetyp = (tovar,toasm,toaddr);
+  TAbsoluteTyp = (tovar,toasm,toaddr);
 
-  tconsttyp = (constnone,
+  TConstTyp = (constnone,
     constord,conststring,constreal,
     constset,constpointer,constnil,
     constresourcestring,constwstring,
@@ -755,7 +755,7 @@ type
   );
 
   { RTTI information to store }
-  trttitype = (
+  TRTTIType = (
     fullrtti,initrtti,
     { Objective-C }
     objcmetartti,objcmetarortti,
@@ -764,11 +764,11 @@ type
     objcinstancemethods,objcclassmethods,
     objcprotinstancemethodsopt,objcprotclassmethodsopt
   );
-  tobjcrttitype = objcmetartti..high(trttitype);
+  tobjcrttitype = objcmetartti..high(TRTTIType);
 
   { prefixes for internally generated type names (centralised to avoid
     accidental collisions) }
-  tinternaltypeprefix = (
+  TInternalTypePrefix = (
     itp_1byte,
     itp_emptyrec,
     itp_vmt_tstringmesssagetable,
@@ -832,7 +832,7 @@ type
 
   { The order is from low priority to high priority,
     Note: the operators > and < are used on this list }
-  tequaltype = (
+  TEqualType = (
     te_incompatible,
     te_convert_operator,
     te_convert_l6,
@@ -845,7 +845,7 @@ type
     te_exact
   );
 
-  tvariantequaltype = (
+  TVariantEqualType = (
     tve_incompatible,
     tve_chari64,
     tve_sstring,
@@ -863,9 +863,9 @@ type
     tve_shortint,
     tve_byte
   );
-  tvariantequaltypes = set of tvariantequaltype;
+  TVariantEqualTypes = set of TVariantEqualType;
 
-  tdefdbgstatus = (
+  TDefDbgStatus = (
     dbg_state_unused,
     dbg_state_used,
     dbg_state_writing,
@@ -873,7 +873,7 @@ type
     dbg_state_queued
   );
 
-  tx86pointertyp = (x86pt_near, x86pt_near_cs, x86pt_near_ds, x86pt_near_ss,
+  TX86PointerTyp = (x86pt_near, x86pt_near_cs, x86pt_near_ds, x86pt_near_ss,
     x86pt_near_es, x86pt_near_fs, x86pt_near_gs, x86pt_far, x86pt_huge);
 
 var
@@ -881,7 +881,7 @@ var
   cdecl_pocalls      : TProcCallOptions;
 
 const
-   inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has_protected,
+   inherited_objectoptions : TObjectOptions = [oo_has_virtual,oo_has_private,oo_has_protected,
                 oo_has_strictprotected,oo_has_strictprivate,oo_has_constructor,oo_has_destructor,
                 oo_can_have_published,oo_inherits_not_specialized];
 
@@ -892,31 +892,31 @@ const
    pushleftright_pocalls : TProcCallOptions = [pocall_register,pocall_pascal];
 {$endif}
 
-     SymTypeName : array[tsymtyp] of string[14] = (
+     SymTypeName : array[TSymTyp] of string[14] = (
        'abstractsym','globalvar','localvar','paravar','fieldvar',
        'type','proc','unit','const','enum',
        'errorsym','system sym','label','absolutevar','property',
        'macrosym','namespace','undefinedsym','programparasym'
      );
 
-     typName : array[tdeftyp] of string[12] = (
+     typName : array[TDefTyp] of string[12] = (
        'abstractdef','arraydef','recorddef','pointerdef','orddef',
        'stringdef','enumdef','procdef','objectdef','errordef',
        'filedef','formaldef','setdef','procvardef','floatdef',
        'classrefdef','forwarddef','variantdef','undefineddef'
      );
 
-     EqualTypeName : array[tequaltype] of string[16] = (
+     EqualTypeName : array[TEqualType] of string[16] = (
        'incompatible','convert_operator','convert_l6', 'convert_l5','convert_l4','convert_l3',
        'convert_l2','convert_l1','equal','exact'
      );
 
-     visibilityName : array[tvisibility] of string[16] = (
+     visibilityName : array[TVisibility] of string[16] = (
        'hidden','strict private','private','strict protected','protected',
        'public','published',''
      );
 
-     internaltypeprefixName : array[tinternaltypeprefix] of TSymStr = (
+     internaltypeprefixName : array[TInternalTypePrefix] of TSymStr = (
        '$1byte$',
        '$emptyrec',
        '$vmt_TStringMessageTable$',
@@ -1026,7 +1026,7 @@ const
       suffix_indirect = '$indirect';
 
     { TProcTypeOption string identifiers for error messages }
-    ProcTypeOptionKeywords: array[tproctypeoption] of ShortString = (
+    ProcTypeOptionKeywords: array[TProcTypeOption] of ShortString = (
       'potype_none',        {potype_none}
       'program initialization',{potype_proginit}
       '"INITIALIZATION"',   {potype_unitinit}
@@ -1047,7 +1047,7 @@ const
     );
 
     { TProcOption string identifiers for error messages }
-    ProcOptionKeywords: array[tprocoption] of ShortString = (
+    ProcOptionKeywords: array[TProcOption] of ShortString = (
       'po_none',            {po_none}
       '"CLASS"',            {po_classmethod}
       '"VIRTUAL"',          {po_virtualmethod}

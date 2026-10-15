@@ -27,7 +27,7 @@ interface
 
    uses symtype,symsym,aasmdata;
 
-    procedure read_typed_const(list:tasmlist;sym:tstaticvarsym;in_structure:boolean);
+    procedure read_typed_const(list:tasmlist;sym:TStaticVarSym;in_structure:boolean);
 
 
 implementation
@@ -41,7 +41,7 @@ implementation
        symconst,symbase,symdef
        ;
 
-    procedure read_typed_const(list:tasmlist;sym:tstaticvarsym;in_structure:boolean);
+    procedure read_typed_const(list:tasmlist;sym:TStaticVarSym;in_structure:boolean);
       var
         storefilepos : TFilePosInfo;
         tcbuilder    : ttypedconstbuilder;

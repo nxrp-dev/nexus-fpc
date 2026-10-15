@@ -36,19 +36,19 @@ interface
       { pass_1 }
       node;
 
-    function  readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):tconstsym;
+    function  readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):TConstSym;
 
     procedure const_dec(out had_generic:boolean);
     procedure consts_dec(in_structure, allow_typed_const: boolean;out had_generic:boolean);
     procedure label_dec;
     procedure type_dec(out had_generic:boolean);
-    procedure types_dec(in_structure: boolean;out had_generic:boolean;var rtti_attrs_def: trtti_attribute_list);
+    procedure types_dec(in_structure: boolean;out had_generic:boolean;var rtti_attrs_def: TRTTIAttributeList);
     procedure var_dec(out had_generic:boolean);
     procedure threadvar_dec(out had_generic:boolean);
     procedure property_dec;
     procedure resourcestring_dec(out had_generic:boolean);
-    procedure parse_rttiattributes(var rtti_attrs_def:trtti_attribute_list);
-    function parse_forward_declaration(sym:tsym;gentypename,genorgtypename:tidstring;genericdef:tdef;generictypelist:tfphashobjectlist;out newtype:ttypesym):tdef;
+    procedure parse_rttiattributes(var rtti_attrs_def:TRTTIAttributeList);
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:tidstring;genericdef:TDef;generictypelist:tfphashobjectlist;out newtype:TTypeSym):TDef;
 
 implementation
 
@@ -71,16 +71,16 @@ implementation
        cpuinfo
        ;
 
-    function is_system_custom_attribute_descendant(def:tdef):boolean;
+    function is_system_custom_attribute_descendant(def:TDef):boolean;
     begin
       if not assigned(class_tcustomattribute) then
-        class_tcustomattribute:=tobjectdef(search_system_type('TCUSTOMATTRIBUTE').typedef);
+        class_tcustomattribute:=TObjectDef(search_system_type('TCUSTOMATTRIBUTE').typedef);
       Result:=def_is_related(def,class_tcustomattribute);
     end;
 
-    function readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):tconstsym;
+    function readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):TConstSym;
       var
-        hp : tconstsym;
+        hp : TConstSym;
         p : TNode;
         ps : PConstSet;
         pd : pbestreal;
@@ -122,7 +122,7 @@ implementation
                    { if a non-default ansistring code page has been specified,
                      keep it }
                    if is_ansistring(p.resultdef) and
-                      (tstringdef(p.resultdef).encoding<>0) then
+                      (TStringDef(p.resultdef).encoding<>0) then
                      hp:=cconstsym.create_string(orgname,conststring,sp,tstringconstnode(p).len,p.resultdef)
                    else
                      hp:=cconstsym.create_string(orgname,conststring,sp,tstringconstnode(p).len,nil);
@@ -155,14 +155,14 @@ implementation
              begin
                if is_interface(p.resultdef) then
                 begin
-                  if assigned(tobjectdef(p.resultdef).iidguid) then
+                  if assigned(TObjectDef(p.resultdef).iidguid) then
                    begin
                      new(pg);
-                     pg^:=tobjectdef(p.resultdef).iidguid^;
+                     pg^:=TObjectDef(p.resultdef).iidguid^;
                      hp:=cconstsym.create_ptr(orgname,constguid,pg,p.resultdef);
                    end
                   else
-                   Message1(parser_e_interface_has_no_guid,tobjectdef(p.resultdef).objrealname^);
+                   Message1(parser_e_interface_has_no_guid,TObjectDef(p.resultdef).objrealname^);
                 end
                else
                 Message(parser_e_illegal_expression);
@@ -221,10 +221,10 @@ implementation
     procedure consts_dec(in_structure, allow_typed_const: boolean;out had_generic:boolean);
       var
          orgname : TIDString;
-         hdef : tdef;
-         sym : tsym;
+         hdef : TDef;
+         sym : TSym;
          flags : thccflags;
-         dummysymoptions : tsymoptions;
+         dummysymoptions : TSymOptions;
          deprecatedmsg : pshortstring;
          storetokenpos,filepos : TFilePosInfo;
          nodetype : TNodeType;
@@ -233,7 +233,7 @@ implementation
          isgeneric,
          expect_directive,
          skip_initialiser : boolean;
-         varspez : tvarspez;
+         varspez : TVarSpez;
          asmtype : tasmlisttype;
       begin
          old_block_type:=block_type;
@@ -261,7 +261,7 @@ implementation
                        sym.deprecatedmsg:=deprecatedmsg;
                        sym.visibility:=symtablestack.top.currentvisibility;
                        symtablestack.top.insertsym(sym);
-                       sym.register_sym;
+                       sym.RegisterSym;
                      end
                    else
                      stringdispose(deprecatedmsg);
@@ -304,7 +304,7 @@ implementation
                        check_allowed_for_var_or_const(hdef,false);
                        sym:=cfieldvarsym.create(orgname,varspez,hdef,[]);
                        symtablestack.top.insertsym(sym);
-                       sym:=make_field_static(symtablestack.top,tfieldvarsym(sym));
+                       sym:=make_field_static(symtablestack.top,TFieldVarSym(sym));
                      end
                    else
                      begin
@@ -312,7 +312,7 @@ implementation
                        sym.visibility:=symtablestack.top.currentvisibility;
                        symtablestack.top.insertsym(sym);
                      end;
-                   sym.register_sym;
+                   sym.RegisterSym;
                    CurrentTokenPos:=storetokenpos;
                    skip_initialiser:=false;
                    { Anonymous proctype definitions can have proc directives }
@@ -342,7 +342,7 @@ implementation
                    if not skip_initialiser then
                     begin
                       consume(_EQ);
-                      read_typed_const(CurrentAsmData.asmlists[asmtype],tstaticvarsym(sym),in_structure);
+                      read_typed_const(CurrentAsmData.asmlists[asmtype],TStaticVarSym(sym),in_structure);
                     end;
                 end;
 
@@ -369,7 +369,7 @@ implementation
 
     procedure label_dec;
       var
-        labelsym : tlabelsym;
+        labelsym : TLabelSym;
       begin
          consume(_LABEL);
          if not(cs_support_goto in CurrentSettings.moduleswitches) then
@@ -402,11 +402,11 @@ implementation
                       begin
                         labelsym.jumpbuf:=cstaticvarsym.create('LABEL$_'+labelsym.name,vs_value,rec_jmp_buf,[]);
                         symtablestack.top.insertsym(labelsym.jumpbuf);
-                        cnodeutils.insertbssdata(tstaticvarsym(labelsym.jumpbuf));
+                        cnodeutils.insertbssdata(TStaticVarSym(labelsym.jumpbuf));
                       end;
                     include(labelsym.jumpbuf.symoptions,sp_internal);
                     { the buffer will be setup later, but avoid a hint }
-                    tabstractvarsym(labelsym.jumpbuf).varstate:=vs_written;
+                    TAbstractVarSym(labelsym.jumpbuf).varstate:=vs_written;
                   end;
                 consume(CurrentScanner.token);
              end;
@@ -415,7 +415,7 @@ implementation
          consume(_SEMICOLON);
       end;
 
-    function find_create_constructor(objdef:tobjectdef):tsymentry;
+    function find_create_constructor(objdef:TObjectDef):tsymentry;
       begin
          while assigned(objdef) do
            begin
@@ -428,7 +428,7 @@ implementation
          internalerror(2012111101);
       end;
 
-    procedure parse_rttiattributes(var rtti_attrs_def:trtti_attribute_list);
+    procedure parse_rttiattributes(var rtti_attrs_def:TRTTIAttributeList);
 
       function read_attr_paras:TNode;
         var
@@ -452,9 +452,9 @@ implementation
         ecnt : longint;
         i,pcount : sizeint;
         paras : array of TNode;
-        od : tobjectdef;
+        od : TObjectDef;
         constrsym : tsymentry;
-        typesym : ttypesym;
+        typesym : TTypeSym;
         parasok : boolean;
       begin
         consume(_LECKKLAMMER);
@@ -464,8 +464,8 @@ implementation
           p:=factor(false,[ef_type_only,ef_check_attr_suffix]);
           if p.nodetype=typen then
             begin
-              typesym:=ttypesym(ttypenode(p).typesym);
-              od:=tobjectdef(ttypenode(p).typedef);
+              typesym:=TTypeSym(ttypenode(p).typesym);
+              od:=TObjectDef(ttypenode(p).typedef);
 
               { Check if the attribute class is related to TCustomAttribute }
               if not is_system_custom_attribute_descendant(od) then
@@ -482,7 +482,7 @@ implementation
               if constrsym.typ<>procsym then
                 internalerror(2018102301);
 
-              pcalln:=ccallnode.create(paran,tprocsym(constrsym),od.symtable,cloadvmtaddrnode.create(p),[cnf_no_convert_procvar],nil);
+              pcalln:=ccallnode.create(paran,TProcSym(constrsym),od.symtable,cloadvmtaddrnode.create(p),[cnf_no_convert_procvar],nil);
               p:=nil;
               ecnt:=errorcount;
               TypeCheckPass(pcalln);
@@ -535,7 +535,7 @@ implementation
                       { Add attribute to attribute list which will be added
                         to the property which is defined next. }
                       if not assigned(rtti_attrs_def) then
-                        rtti_attrs_def:=trtti_attribute_list.create;
+                        rtti_attrs_def:=TRTTIAttributeList.create;
                       rtti_attrs_def.addattribute(typesym,tcallnode(pcalln).procdefinition,pcalln,paras);
                     end
                   else
@@ -570,11 +570,11 @@ implementation
       end;
 
 
-    function parse_forward_declaration(sym:tsym;gentypename,genorgtypename:tidstring;genericdef:tdef;generictypelist:tfphashobjectlist;out newtype:ttypesym):tdef;
+    function parse_forward_declaration(sym:TSym;gentypename,genorgtypename:tidstring;genericdef:TDef;generictypelist:tfphashobjectlist;out newtype:TTypeSym):TDef;
       var
         wasforward : boolean;
-        objecttype : tobjecttyp;
-        gendef : tstoreddef;
+        objecttype : TObjectTyp;
+        gendef : TStoredDef;
       begin
         newtype:=nil;
         wasforward:=false;
@@ -584,9 +584,9 @@ implementation
             (CurrentScanner.token=_OBJCCLASS) or
             (CurrentScanner.token=_OBJCPROTOCOL) or
             (CurrentScanner.token=_OBJCCATEGORY)) and
-           (assigned(ttypesym(sym).typedef)) and
-           is_implicit_pointer_object_type(ttypesym(sym).typedef) and
-           (oo_is_forward in tobjectdef(ttypesym(sym).typedef).objectoptions) then
+           (assigned(TTypeSym(sym).typedef)) and
+           is_implicit_pointer_object_type(TTypeSym(sym).typedef) and
+           (oo_is_forward in TObjectDef(TTypeSym(sym).typedef).objectoptions) then
          begin
            wasforward:=true;
            objecttype:=odt_none;
@@ -614,17 +614,17 @@ implementation
            end;
            consume(CurrentScanner.token);
            if assigned(genericdef) then
-             gendef:=tstoreddef(genericdef)
+             gendef:=TStoredDef(genericdef)
            else
              { determine the generic def in case we are in a nested type
                of a specialization }
              gendef:=determine_generic_def(gentypename);
            { we can ignore the result, the definition is modified }
-           object_dec(objecttype,genorgtypename,newtype,gendef,generictypelist,tobjectdef(ttypesym(sym).typedef),ht_none);
+           object_dec(objecttype,genorgtypename,newtype,gendef,generictypelist,TObjectDef(TTypeSym(sym).typedef),ht_none);
            if wasforward and
-             (tobjectdef(ttypesym(sym).typedef).objecttype<>objecttype) then
-             Message1(type_e_forward_interface_type_does_not_match,tobjectdef(ttypesym(sym).typedef).GetTypeName);
-           newtype:=ttypesym(sym);
+             (TObjectDef(TTypeSym(sym).typedef).objecttype<>objecttype) then
+             Message1(type_e_forward_interface_type_does_not_match,TObjectDef(TTypeSym(sym).typedef).GetTypeName);
+           newtype:=TTypeSym(sym);
            result:=newtype.typedef;
          end
         else
@@ -646,13 +646,13 @@ implementation
     }
     procedure pd_set_objc_related_result(def: tobject; para: pointer);
       var
-        pd: tprocdef;
+        pd: TProcDef;
         i, firstcamelend: longint;
         inferresult: boolean;
       begin
-        if tdef(def).typ<>procdef then
+        if TDef(def).typ<>procdef then
           exit;
-        pd:=tprocdef(def);
+        pd:=TProcDef(def);
         if not(po_msgstr in pd.procoptions) then
           internalerror(2019082401);
         firstcamelend:=length(pd.messageinf.str^);
@@ -675,13 +675,13 @@ implementation
             inferresult:=false;
         end;
         if inferresult and
-           def_is_related(tdef(pd.procsym.owner.defowner),pd.returndef) then
+           def_is_related(TDef(pd.procsym.owner.defowner),pd.returndef) then
           include(pd.procoptions,po_objc_related_result_type);
       end;
 
-    procedure types_dec(in_structure: boolean;out had_generic:boolean;var rtti_attrs_def: trtti_attribute_list);
+    procedure types_dec(in_structure: boolean;out had_generic:boolean;var rtti_attrs_def: TRTTIAttributeList);
 
-      procedure finalize_class_external_status(od: tobjectdef);
+      procedure finalize_class_external_status(od: TObjectDef);
         begin
           if  [oo_is_external,oo_is_forward] <= od.objectoptions then
             begin
@@ -694,11 +694,11 @@ implementation
       var
          typename,orgtypename,
          gentypename,genorgtypename : TIDString;
-         newtype  : ttypesym;
+         newtype  : TTypeSym;
          dummysym,
-         sym      : tsym;
+         sym      : TSym;
          hdef,
-         hdef2    : tdef;
+         hdef2    : TDef;
          defpos,storetokenpos : TFilePosInfo;
          old_block_type : TBlockType;
          old_checkforwarddefs: TFPObjectList;
@@ -711,7 +711,7 @@ implementation
          generictypelist : tfphashobjectlist;
          localgenerictokenbuf : tdynamicarray;
          p:TNode;
-         gendef : tstoreddef;
+         gendef : TStoredDef;
          s : shortstring;
          i : longint;
 {$ifdef x86}
@@ -794,7 +794,7 @@ implementation
            { is the type already defined? -- must be in the current symtable,
              not in a nested symtable or one higher up the stack -> don't
              use searchsym & friends! }
-           sym:=tsym(symtablestack.top.find(gentypename));
+           sym:=TSym(symtablestack.top.find(gentypename));
            newtype:=nil;
            { found a symbol with this name? }
            if assigned(sym) then
@@ -803,7 +803,7 @@ implementation
                  { this should not be a symbol that was created by a generic
                    that was declared earlier }
                  not (
-                   (ttypesym(sym).typedef.typ=undefineddef) and
+                   (TTypeSym(sym).typedef.typ=undefineddef) and
                    (sp_generic_dummy in sym.symoptions)
                  ) then
                begin
@@ -818,9 +818,9 @@ implementation
                   { we are not freeing the type parameters, so register them }
                   for i:=0 to generictypelist.count-1 do
                     begin
-                       tstoredsym(generictypelist[i]).register_sym;
-                       if tstoredsym(generictypelist[i]).typ=typesym then
-                         tstoreddef(ttypesym(generictypelist[i]).typedef).register_def;
+                       TStoredSym(generictypelist[i]).RegisterSym;
+                       if TStoredSym(generictypelist[i]).typ=typesym then
+                         TStoredDef(TTypeSym(generictypelist[i]).typedef).RegisterDef;
                     end;
                 end;
 
@@ -836,17 +836,17 @@ implementation
                     already exists and if not we need to insert a symbol with
                     the non-generic name (available in (org)typename) that is a
                     undefineddef, so that inline specializations can be used }
-                  sym:=tsym(symtablestack.top.Find(typename));
+                  sym:=TSym(symtablestack.top.Find(typename));
                   if not assigned(sym) then
                     begin
                       sym:=ctypesym.create(orgtypename,cundefineddef.create(true));
                       Include(sym.symoptions,sp_generic_dummy);
-                      ttypesym(sym).typedef.typesym:=sym;
+                      TTypeSym(sym).typedef.typesym:=sym;
                       sym.visibility:=symtablestack.top.currentvisibility;
                       { add as dummy symbol before adding it to the symtable stack }
                       add_generic_dummysym(sym,typename);
                       symtablestack.top.insertsym(sym);
-                      ttypesym(sym).typedef.owner:=sym.owner;
+                      TTypeSym(sym).typedef.owner:=sym.owner;
                     end
                   else
                     { this is not allowed in non-Delphi modes }
@@ -863,12 +863,12 @@ implementation
               else
                 begin
                   if assigned(sym) and (sym.typ=typesym) and
-                      (ttypesym(sym).typedef.typ=undefineddef) and
+                      (TTypeSym(sym).typedef.typ=undefineddef) and
                       (sp_generic_dummy in sym.symoptions) then
                     begin
                       { this is a symbol that was added by an earlier generic
                         declaration, reuse it }
-                      newtype:=ttypesym(sym);
+                      newtype:=TTypeSym(sym);
                       newtype.typedef:=hdef;
                       { use the correct casing }
                       newtype.RealName:=genorgtypename;
@@ -909,15 +909,15 @@ implementation
                         begin
                           { just create a copy that is a child of the original class class type; this is
                             Delphi-compatible }
-                          hdef2:=tstoreddef(hdef).getcopy;
-                          tobjectdef(hdef2).childof:=tobjectdef(hdef);
-                          tstoreddef(hdef2).orgdef:=tstoreddef(hdef);
+                          hdef2:=TStoredDef(hdef).getcopy;
+                          TObjectDef(hdef2).childof:=TObjectDef(hdef);
+                          TStoredDef(hdef2).orgdef:=TStoredDef(hdef);
                           hdef:=hdef2;
                         end
                       else
                         begin
-                          hdef2:=tstoreddef(hdef).getcopy;
-                          tstoreddef(hdef2).orgdef:=tstoreddef(hdef);
+                          hdef2:=TStoredDef(hdef).getcopy;
+                          TStoredDef(hdef2).orgdef:=TStoredDef(hdef);
                           hdef:=hdef2;
                           { check if it is an ansistring(codepage) declaration }
                           if is_ansistring(hdef) and try_to_consume(_LKLAMMER) then
@@ -936,21 +936,21 @@ implementation
                                       Message(parser_e_invalid_codepage);
                                       tordconstnode(p).value:=0;
                                     end;
-                                  tstringdef(hdef).encoding:=int64(tordconstnode(p).value);
+                                  TStringDef(hdef).encoding:=int64(tordconstnode(p).value);
                                 end;
                               p.free;
                               p := nil;
                             end;
                           if (hdef.typ in [pointerdef,classrefdef]) and
-                             (tabstractpointerdef(hdef).pointeddef.typ=forwarddef) then
+                             (TAbstractPointerDef(hdef).pointeddef.typ=forwarddef) then
                             CurrentModule.checkforwarddefs.add(hdef);
                         end;
 
                       include(hdef.defoptions,df_unique);
 
                       { update object's real name for better error messages }
-                      if hdef is tabstractrecorddef then
-                        tabstractrecorddef(hdef).setobjrealname(newtype.RealName);
+                      if hdef is TAbstractRecordDef then
+                        TAbstractRecordDef(hdef).setobjrealname(newtype.RealName);
                     end;
                   if not assigned(hdef.typesym) then
                     begin
@@ -964,11 +964,11 @@ implementation
                 parsing method implementations }
               if isgeneric and assigned(sym) and
                   not (m_delphi in CurrentSettings.modeswitches) and
-                  (ttypesym(sym).typedef.typ=undefineddef) then
+                  (TTypeSym(sym).typedef.typ=undefineddef) then
                 begin
                   { don't free the undefineddef as the defids rely on the count
                     of the defs in the def list of the module}
-                  ttypesym(sym).typedef:=hdef;
+                  TTypeSym(sym).typedef:=hdef;
                   setdummysym:=true;
                 end;
               newtype.typedef:=hdef;
@@ -977,9 +977,9 @@ implementation
               if (CurrentScanner.replay_stack_depth=0) and
                   (
                     (hdef.typ<>procvardef) or
-                    not (po_is_function_ref in tabstractprocdef(hdef).procoptions)
+                    not (po_is_function_ref in TAbstractProcDef(hdef).procoptions)
                   ) then
-                hdef.register_def;
+                hdef.RegisterDef;
               { KAZ: handle TGUID declaration in system unit }
               if (cs_compilesystem in CurrentSettings.moduleswitches) and
                  assigned(hdef) and
@@ -988,13 +988,13 @@ implementation
                   if not assigned(rec_tguid) and
                      (gentypename='TGUID') and
                      (hdef.size=16) then
-                    rec_tguid:=trecorddef(hdef)
+                    rec_tguid:=TRecordDef(hdef)
                   else if not assigned(rec_jmp_buf) and
                      (gentypename='JMP_BUF') then
-                    rec_jmp_buf:=trecorddef(hdef)
+                    rec_jmp_buf:=TRecordDef(hdef)
                   else if not assigned(rec_exceptaddr) and
                      (gentypename='TEXCEPTADDR') then
-                    rec_exceptaddr:=trecorddef(hdef);
+                    rec_exceptaddr:=TRecordDef(hdef);
                 end;
             end;
            if assigned(hdef) then
@@ -1051,11 +1051,11 @@ implementation
                            try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg);
                            consume(_SEMICOLON);
                          end;
-                       parse_proctype_directives(tprocvardef(hdef));
-                       if po_is_function_ref in tprocvardef(hdef).procoptions then
+                       parse_proctype_directives(TProcVarDef(hdef));
+                       if po_is_function_ref in TProcVarDef(hdef).procoptions then
                          begin
                            if not (m_function_references in CurrentSettings.modeswitches) and
-                               not (po_is_block in tprocvardef(hdef).procoptions) then
+                               not (po_is_block in TProcVarDef(hdef).procoptions) then
                              messagepos(storetokenpos,sym_e_error_in_type_def)
                            else
                              begin
@@ -1066,17 +1066,17 @@ implementation
                                adjust_funcref(hdef,newtype,dummysym);
                              end;
                            if CurrentScanner.replay_stack_depth=0 then
-                             hdef.register_def;
+                             hdef.RegisterDef;
                          end;
                        if hdef.typ=procvardef then
                          flags:=hcc_default_actions_intf
                        else
                          flags:=hcc_default_actions_intf_struct;
                        handle_calling_convention(hdef,flags);
-                       if (hdef.typ=procvardef) and (po_is_function_ref in tprocvardef(hdef).procoptions) then
+                       if (hdef.typ=procvardef) and (po_is_function_ref in TProcVarDef(hdef).procoptions) then
                          begin
-                           if (po_is_block in tprocvardef(hdef).procoptions) and
-                              not (tprocvardef(hdef).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
+                           if (po_is_block in TProcVarDef(hdef).procoptions) and
+                              not (TProcVarDef(hdef).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
                              message(type_e_cblock_callconv);
                          end;
                        if try_consume_hintdirective(newtype.symoptions,newtype.deprecatedmsg) then
@@ -1107,16 +1107,16 @@ implementation
                       expect an real definition later }
                     if is_objc_class_or_protocol(hdef) or
                        is_java_class_or_interface(hdef) then
-                      finalize_class_external_status(tobjectdef(hdef));
+                      finalize_class_external_status(TObjectDef(hdef));
 
                     { Build VMT indexes, skip for type renaming and forward classes }
                     if not istyperenaming and
-                       not(oo_is_forward in tobjectdef(hdef).objectoptions) then
-                      if not (oo_inherits_not_specialized in tobjectdef(hdef).objectoptions) then
-                        build_vmt(tobjectdef(hdef))
+                       not(oo_is_forward in TObjectDef(hdef).objectoptions) then
+                      if not (oo_inherits_not_specialized in TObjectDef(hdef).objectoptions) then
+                        build_vmt(TObjectDef(hdef))
                       else
                       { update the procdevs to add hidden self param }
-                      insert_struct_hidden_paras(tobjectdef(hdef));
+                      insert_struct_hidden_paras(TObjectDef(hdef));
 
                     { In case of an objcclass, verify that all methods have a message
                       name set. We only check this now, because message names can be set
@@ -1128,14 +1128,14 @@ implementation
                     { watch out for crashes in case of errors }
                     if is_objc_class_or_protocol(hdef) and
                        (not is_objccategory(hdef) or
-                        assigned(tobjectdef(hdef).childof)) then
+                        assigned(TObjectDef(hdef).childof)) then
                       begin
-                        tobjectdef(hdef).finish_objc_data;
-                        tobjectdef(hdef).symtable.DefList.ForEachCall(@pd_set_objc_related_result,nil);
+                        TObjectDef(hdef).finish_objc_data;
+                        TObjectDef(hdef).symtable.DefList.ForEachCall(@pd_set_objc_related_result,nil);
                       end;
 
                     if is_cppclass(hdef) then
-                      tobjectdef(hdef).finish_cpp_data;
+                      TObjectDef(hdef).finish_cpp_data;
                   end;
                 recorddef :
                   begin
@@ -1152,7 +1152,7 @@ implementation
               { if we have a real type definition or a unique type we may bind
                 attributes to this def }
               if not istyperenaming or isunique then
-                trtti_attribute_list.bind(rtti_attrs_def,tstoreddef(hdef).rtti_attribute_list);
+                TRTTIAttributeList.bind(rtti_attrs_def,TStoredDef(hdef).RTTIAttributeList);
 
               if df_generic in hdef.defoptions then
                 { flag parent symtables that they now contain a generic }
@@ -1170,18 +1170,18 @@ implementation
            if assigned(generictypelist) then
              begin
                CurrentScanner.stoprecordtokens;
-               tstoreddef(hdef).generictokenbuf:=localgenerictokenbuf;
+               TStoredDef(hdef).generictokenbuf:=localgenerictokenbuf;
                { Generic is never a type renaming }
                hdef.typesym:=newtype;
                { reusing a forward declared type also reuses the type parameters,
                  so free them if they haven't been used }
                for i:=0 to generictypelist.count-1 do
                  begin
-                   if (tstoredsym(generictypelist[i]).typ=typesym) and
-                       not ttypesym(generictypelist[i]).typedef.is_registered then
-                     FreeAndNil(ttypesym(generictypelist[i]).typedef);
-                   if not tstoredsym(generictypelist[i]).is_registered then
-                     tstoredsym(generictypelist[i]).free; // no nil needed
+                   if (TStoredSym(generictypelist[i]).typ=typesym) and
+                       not TTypeSym(generictypelist[i]).typedef.IsRegistered then
+                     FreeAndNil(TTypeSym(generictypelist[i]).typedef);
+                   if not TStoredSym(generictypelist[i]).IsRegistered then
+                     TStoredSym(generictypelist[i]).free; // no nil needed
                  end;
                generictypelist.free;
                generictypelist := nil;
@@ -1198,8 +1198,8 @@ implementation
            else
              had_generic:=false;
            first:=false;
-           if assigned(rtti_attrs_def) and (rtti_attrs_def.get_attribute_count>0) then
-             Message1(parser_e_unbound_attribute,trtti_attribute(rtti_attrs_def.rtti_attributes[0]).typesym.prettyname);
+           if assigned(rtti_attrs_def) and (rtti_attrs_def.GetAttributeCount>0) then
+             Message1(parser_e_unbound_attribute,TRTTIAttribute(rtti_attrs_def.RTTIAttributes[0]).typesym.prettyname);
 
  {$ifdef DEBUG_NODE_XML}
           if Assigned(hdef) then
@@ -1223,7 +1223,7 @@ implementation
     { reads a type declaration to the symbol table }
     procedure type_dec(out had_generic:boolean);
       var
-        rtti_attrs_def: trtti_attribute_list;
+        rtti_attrs_def: TRTTIAttributeList;
       begin
         consume(_TYPE);
         rtti_attrs_def := nil;
@@ -1281,12 +1281,12 @@ implementation
       var
          orgname : TIDString;
          p : TNode;
-         dummysymoptions : tsymoptions;
+         dummysymoptions : TSymOptions;
          deprecatedmsg : pshortstring;
          storetokenpos,filepos : TFilePosInfo;
          old_block_type : TBlockType;
          sp : pchar;
-         sym : tsym;
+         sym : TSym;
          first,
          isgeneric : boolean;
          pw : tcompilerwidestring;

@@ -307,8 +307,8 @@ interface
          { there are some properties about the node stored }
          flags  : TNodeFlags;
          transientflags : TTransientNodeFlags;
-         resultdef     : tdef;
-         resultdefderef : tderef;
+         resultdef     : TDef;
+         resultdefderef : TDeref;
          fileinfo      : TFilePosInfo;
          localswitches : TLocalSwitches;
          verbosity     : longint;
@@ -317,9 +317,9 @@ interface
          { this constructor is only for creating copies of class }
          { the fields are copied by getcopy                      }
          constructor createforcopy;
-         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);virtual;
+         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);virtual;
          destructor destroy;override;
-         procedure ppuwrite(ppufile:tcompilerppufile);virtual;
+         procedure ppuwrite(ppufile:TCompilerPPUFile);virtual;
          procedure buildderefimpl;virtual;
          procedure derefimpl;virtual;
          procedure resolveppuidx;virtual;
@@ -394,9 +394,9 @@ interface
       TUnaryNode = class(TNode)
          left : TNode;
          constructor create(t:TNodeType;l : TNode);
-         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
+         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor destroy;override;
-         procedure ppuwrite(ppufile:tcompilerppufile);override;
+         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
@@ -416,9 +416,9 @@ interface
       TBinaryNode = class(TUnaryNode)
          right : TNode;
          constructor create(t:TNodeType;l,r : TNode);
-         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
+         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor destroy;override;
-         procedure ppuwrite(ppufile:tcompilerppufile);override;
+         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
@@ -441,9 +441,9 @@ interface
       TTertiaryNode = class(TBinaryNode)
          third : TNode;
          constructor create(_t:TNodeType;l,r,t : TNode);
-         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
+         constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
          destructor destroy;override;
-         procedure ppuwrite(ppufile:tcompilerppufile);override;
+         procedure ppuwrite(ppufile:TCompilerPPUFile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
          function ischild(p : TNode) : boolean;override;
@@ -472,10 +472,10 @@ interface
       nodeclass : tnodeclassarray;
 
     function nodeppuidxget(i:longint):TNode;
-    function ppuloadnode(ppufile:tcompilerppufile):TNode;
-    procedure ppuwritenode(ppufile:tcompilerppufile;n:TNode);
-    function ppuloadnodetree(ppufile:tcompilerppufile):TNode;
-    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:TNode);
+    function ppuloadnode(ppufile:TCompilerPPUFile):TNode;
+    procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
+    function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
+    procedure ppuwritenodetree(ppufile:TCompilerPPUFile;n:TNode);
 
     procedure printfileinfo(var t:text;pos:TFilePosInfo);
     procedure dprintfileinfo(pos:TFilePosInfo);
@@ -575,7 +575,7 @@ implementation
       end;
 
 
-    function ppuloadnode(ppufile:tcompilerppufile):TNode;
+    function ppuloadnode(ppufile:TCompilerPPUFile):TNode;
       var
         b : byte;
         t : TNodeType;
@@ -605,7 +605,7 @@ implementation
       end;
 
 
-    procedure ppuwritenode(ppufile:tcompilerppufile;n:TNode);
+    procedure ppuwritenode(ppufile:TCompilerPPUFile;n:TNode);
       begin
         { marker, read by ppuloadnode }
         ppufile.putbyte(ppunodemarker);
@@ -622,7 +622,7 @@ implementation
       end;
 
 
-    function ppuloadnodetree(ppufile:tcompilerppufile):TNode;
+    function ppuloadnodetree(ppufile:TCompilerPPUFile):TNode;
       begin
         if ppufile.readentry<>ibnodetree then
           Message(unit_f_ppu_read_error);
@@ -633,7 +633,7 @@ implementation
       end;
 
 
-    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:TNode);
+    procedure ppuwritenodetree(ppufile:TCompilerPPUFile;n:TNode);
       begin
         nodeppuidxcreate;
         ppuwritenode(ppufile,n);
@@ -785,7 +785,7 @@ implementation
       begin
       end;
 
-    constructor TNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor TNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
 
       begin
         nodetype:=t;
@@ -803,7 +803,7 @@ implementation
       end;
 
 
-    procedure TNode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         ppufile.putbyte(byte(blocktype));
         ppufile.putposinfo(fileinfo);
@@ -838,7 +838,7 @@ implementation
 
     procedure TNode.derefimpl;
       begin
-        resultdef:=tdef(resultdefderef.resolve);
+        resultdef:=TDef(resultdefderef.resolve);
       end;
 
 
@@ -1090,7 +1090,7 @@ implementation
       end;
 
 
-    constructor TUnaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor TUnaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         left:=ppuloadnode(ppufile);
@@ -1105,7 +1105,7 @@ implementation
       end;
 
 
-    procedure TUnaryNode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TUnaryNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,left);
@@ -1198,7 +1198,7 @@ implementation
       end;
 
 
-    constructor TBinaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor TBinaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         right:=ppuloadnode(ppufile);
@@ -1213,7 +1213,7 @@ implementation
       end;
 
 
-    procedure TBinaryNode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TBinaryNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,right);
@@ -1353,7 +1353,7 @@ implementation
       end;
 
 
-    constructor TTertiaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor TTertiaryNode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         third:=ppuloadnode(ppufile);
@@ -1368,7 +1368,7 @@ implementation
       end;
 
 
-    procedure TTertiaryNode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TTertiaryNode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,third);
@@ -1492,7 +1492,7 @@ var
 begin
 {$push}{$warnings off}
   { tvaroption must fit into a 4 byte set for speed reasons }
-  if ord(high(tvaroption))>31 then
+  if ord(high(TVarOption))>31 then
     internalerror(201110301);
 (*  { tnodeflags must fit into a 4 byte set for speed reasons }
   if ord(high(tnodeflags))>31 then

@@ -61,17 +61,17 @@ unit optdeadstore;
                    { node must be either a local or parameter load node }
                    (a.left.nodetype=loadn) and
                    { its address cannot have escaped the current routine }
-                   not(tabstractvarsym(tloadnode(a.left).symtableentry).addr_taken) and
+                   not(TAbstractVarSym(tloadnode(a.left).symtableentry).addr_taken) and
                    ((
                      (tloadnode(a.left).symtableentry.typ=localvarsym) and
                      (tloadnode(a.left).symtable=CurrentProcInfo.procdef.localst)) or
                     ((tloadnode(a.left).symtableentry.typ=paravarsym) and
                      (tloadnode(a.left).symtable=CurrentProcInfo.procdef.parast) and
-                     (tparavarsym(tloadnode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
+                     (TParaVarSym(tloadnode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
                     ((tloadnode(a.left).symtableentry.typ=staticvarsym) and
                      (tloadnode(a.left).symtable.symtabletype=staticsymtable) and
                      (CurrentProcInfo.procdef.proctypeoption<>potype_unitinit) and
-                     not(vsa_different_scope in tstaticvarsym(tloadnode(a.left).symtableentry).varsymaccess)
+                     not(vsa_different_scope in TStaticVarSym(tloadnode(a.left).symtableentry).varsymaccess)
                     )
                    ) and
                     ((a.right.nodetype in [niln,stringconstn,pointerconstn,setconstn,guidconstn]) or

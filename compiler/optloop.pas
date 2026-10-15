@@ -136,9 +136,9 @@ unit optloop;
           ((tfornode(node).left.nodetype<>loadn) or
            { the address of the counter variable might be taken if it is passed by constref to a
              subroutine, so really check if it is not taken }
-           ((tfornode(node).left.nodetype=loadn) and (tloadnode(tfornode(node).left).symtableentry is tabstractvarsym) and
-            not(tabstractvarsym(tloadnode(tfornode(node).left).symtableentry).addr_taken) and
-            not(tabstractvarsym(tloadnode(tfornode(node).left).symtableentry).different_scope))
+           ((tfornode(node).left.nodetype=loadn) and (tloadnode(tfornode(node).left).symtableentry is TAbstractVarSym) and
+            not(TAbstractVarSym(tloadnode(tfornode(node).left).symtableentry).addr_taken) and
+            not(TAbstractVarSym(tloadnode(tfornode(node).left).symtableentry).different_scope))
            ) then
           begin
             { number of executions known? }
@@ -282,7 +282,7 @@ unit optloop;
                 assigned(expr.optinfo) and
                 not(expr.isequal(tfornode(loop).left)) then
                 { no aliasing? }
-                result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(tabstractvarsym(tloadnode(expr).symtableentry).addr_taken) and
+                result:=(([nf_write,nf_modify]*expr.flags)=[]) and not(TAbstractVarSym(tloadnode(expr).symtableentry).addr_taken) and
                 { no definition in the loop? }
                   not(DynSetIn(tfornode(loop).t2.optinfo^.defsum,expr.optinfo^.index));
             end;
@@ -407,7 +407,7 @@ unit optloop;
                   if not(findpreviousstrengthreduction(n)) then
                     begin
                       tempnode:=ctempcreatenode.create(n.resultdef,n.resultdef.size,tt_persistent,
-                        tstoreddef(n.resultdef).is_intregable or tstoreddef(n.resultdef).is_fpuregable);
+                        TStoredDef(n.resultdef).is_intregable or TStoredDef(n.resultdef).is_fpuregable);
                       addinduction(tempnode,n);
 
                       if lnf_backward in currforloop.loopflags then
@@ -690,13 +690,13 @@ unit optloop;
               not is_managed_type(TSubscriptNode(n).vs.vardef) and
               (
                 (
-                  tstoreddef(TSubscriptNode(n).vs.vardef).is_intregable and
+                  TStoredDef(TSubscriptNode(n).vs.vardef).is_intregable and
                   (TSubscriptNode(n).vs.vardef.size<=sizeof(aint))
                 ) or
-                tstoreddef(TSubscriptNode(n).vs.vardef).is_fpuregable or
+                TStoredDef(TSubscriptNode(n).vs.vardef).is_fpuregable or
                 (
-                  is_vector(tstoreddef(TSubscriptNode(n).vs.vardef)) and
-                  fits_in_mm_register(tstoreddef(TSubscriptNode(n).vs.vardef))
+                  is_vector(TStoredDef(TSubscriptNode(n).vs.vardef)) and
+                  fits_in_mm_register(TStoredDef(TSubscriptNode(n).vs.vardef))
                 )
               ) then
               begin
@@ -916,13 +916,13 @@ unit optloop;
                           end
                         else if
                           (
-                            tstoreddef(TAbstractVarSym(CurrentSym).vardef).is_intregable and
+                            TStoredDef(TAbstractVarSym(CurrentSym).vardef).is_intregable and
                             (TAbstractVarSym(CurrentSym).vardef.size<=sizeof(aint))
                           ) or
-                          tstoreddef(TAbstractVarSym(CurrentSym).vardef).is_fpuregable or
+                          TStoredDef(TAbstractVarSym(CurrentSym).vardef).is_fpuregable or
                           (
-                            is_vector(tstoreddef(TAbstractVarSym(CurrentSym).vardef)) and
-                            fits_in_mm_register(tstoreddef(TAbstractVarSym(CurrentSym).vardef))
+                            is_vector(TStoredDef(TAbstractVarSym(CurrentSym).vardef)) and
+                            fits_in_mm_register(TStoredDef(TAbstractVarSym(CurrentSym).vardef))
                           ) then
                           begin
                             if foreachnodestatic(pm_postprocess, n, @recorddirectaccess, CurrentSym) then
@@ -1070,9 +1070,9 @@ unit optloop;
           is_constintnode(tfornode(n).right) and
           (([cs_check_overflow,cs_check_range]*n.localswitches)=[]) and
           (([cs_check_overflow,cs_check_range]*tfornode(n).left.localswitches)=[]) and
-          ((tfornode(n).left.nodetype=loadn) and (tloadnode(tfornode(n).left).symtableentry is tabstractvarsym) and
-            not(tabstractvarsym(tloadnode(tfornode(n).left).symtableentry).addr_taken) and
-            not(tabstractvarsym(tloadnode(tfornode(n).left).symtableentry).different_scope)) then
+          ((tfornode(n).left.nodetype=loadn) and (tloadnode(tfornode(n).left).symtableentry is TAbstractVarSym) and
+            not(TAbstractVarSym(tloadnode(tfornode(n).left).symtableentry).addr_taken) and
+            not(TAbstractVarSym(tloadnode(tfornode(n).left).symtableentry).different_scope)) then
           begin
             { do we have DFA available? }
             if pi_dfaavailable in CurrentProcInfo.flags then

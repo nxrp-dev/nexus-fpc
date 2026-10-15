@@ -50,19 +50,19 @@ interface
     { reads a single factor }
     function factor(getaddr:boolean;flags:texprflags) : TNode;
 
-    procedure string_dec(var def: tdef; allowtypedef: boolean);
+    procedure string_dec(var def: TDef; allowtypedef: boolean);
 
     function parse_paras(__colon,__namedpara : boolean;end_of_paras : ttoken) : TNode;
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_member_read(structh:TAbstractRecordDef;getaddr:boolean;sym:TSym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
 
     function get_intconst:TConstExprInt;
     function get_stringconst:string;
 
     { Does some postprocessing for a generic type (especially when nested types
       of the specialization are used) }
-    procedure post_comp_expr_gendef(var def: tdef);
+    procedure post_comp_expr_gendef(var def: TDef);
 
 implementation
 
@@ -90,15 +90,15 @@ implementation
        { true, if the inherited call is anonymous }
        anon_inherited : boolean = false;
        { last def found, only used by anon. inherited calls to insert proper type casts }
-       srdef : tdef = nil;
+       srdef : TDef = nil;
        { true while parsing the argument of NameOf }
        nameof_active : boolean = false;
        { last symbol found while parsing the argument of NameOf }
-       nameof_sym : tsym = nil;
+       nameof_sym : TSym = nil;
        { position of the token following nameof_sym }
        nameof_nextpos : TFilePosInfo;
 
-    procedure nameof_record_sym(sym:tsym);
+    procedure nameof_record_sym(sym:TSym);
       begin
         if not nameof_active or not assigned(sym) then
           exit;
@@ -107,25 +107,25 @@ implementation
       end;
 
     { returns the declared name of sym without generic parameters }
-    function nameof_symname(sym:tsym):string;
+    function nameof_symname(sym:TSym):string;
       var
         i : longint;
       begin
         if (sym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-           (vo_is_funcret in tabstractvarsym(sym).varoptions) then
+           (vo_is_funcret in TAbstractVarSym(sym).varoptions) then
           begin
             { the function result symbols are stored uppercase }
-            if vo_is_result in tabstractvarsym(sym).varoptions then
+            if vo_is_result in TAbstractVarSym(sym).varoptions then
               exit('Result');
             if assigned(sym.owner.defowner) and
-               (tdef(sym.owner.defowner).typ=procdef) then
-              exit(tprocdef(sym.owner.defowner).procsym.realname);
+               (TDef(sym.owner.defowner).typ=procdef) then
+              exit(TProcDef(sym.owner.defowner).procsym.realname);
           end;
         { use the declared unit name, e.g. the implicit system unit is stored uppercase }
         if (sym.typ=unitsym) and
-           assigned(tunitsym(sym).module) and
-           assigned(tmodule(tunitsym(sym).module).realmodulename) then
-          exit(tmodule(tunitsym(sym).module).realmodulename^);
+           assigned(TUnitSym(sym).module) and
+           assigned(tmodule(TUnitSym(sym).module).realmodulename) then
+          exit(tmodule(TUnitSym(sym).module).realmodulename^);
         result:=sym.realname;
         for i:=1 to length(result) do
           if result[i] in ['$','<'] then
@@ -136,7 +136,7 @@ implementation
             end;
       end;
 
-    procedure string_dec(var def:tdef; allowtypedef: boolean);
+    procedure string_dec(var def:TDef; allowtypedef: boolean);
     { reads a string type with optional length }
     { and returns a pointer to the string      }
     { definition                               }
@@ -274,7 +274,7 @@ implementation
 
      function gen_c_style_operator(ntyp:TNodeType;p1,p2:TNode) : TNode;
        var
-         hdef  : tdef;
+         hdef  : TDef;
          temp  : ttempcreatenode;
          newstatement : tstatementnode;
        begin
@@ -313,11 +313,11 @@ implementation
         p1,p2,paras  : TNode;
         err,
         prev_in_args : boolean;
-        def : tdef;
+        def : TDef;
         exit_procinfo: tprocinfo;
         old_nameof_active,
         nameof_ok : boolean;
-        old_nameof_sym : tsym;
+        old_nameof_sym : TSym;
         old_nameof_nextpos : TFilePosInfo;
       begin
         prev_in_args:=in_args;
@@ -489,7 +489,7 @@ implementation
               if ((p1.nodetype<>typen) and
                  (
                   (is_object(p1.resultdef) and
-                   (oo_has_constructor in tobjectdef(p1.resultdef).objectoptions)) or
+                   (oo_has_constructor in TObjectDef(p1.resultdef).objectoptions)) or
                   is_open_array(p1.resultdef) or
                   is_array_of_const(p1.resultdef) or
                   is_open_string(p1.resultdef)
@@ -511,7 +511,7 @@ implementation
                  if p1.nodetype=typen then
                    ttypenode(p1).helperallowed:=true;
                  if (p1.resultdef.typ=forwarddef) then
-                   Message1(type_e_type_is_not_completly_defined,tforwarddef(p1.resultdef).tosymname^);
+                   Message1(type_e_type_is_not_completly_defined,TForwardDef(p1.resultdef).tosymname^);
                  if (l = in_sizeof_x) or
                     (not((p1.nodetype = vecn) and
                          is_packed_array(tvecnode(p1).left.resultdef)) and
@@ -952,7 +952,7 @@ implementation
               if def<>generrordef then
                 { "type expected" error is already done by single_type }
                 if def.typ=forwarddef then
-                  Message1(type_e_type_is_not_completly_defined,tforwarddef(def).tosymname^)
+                  Message1(type_e_type_is_not_completly_defined,TForwardDef(def).tosymname^)
                 else
                   begin
                     statement_syssym.free;
@@ -1088,9 +1088,9 @@ implementation
       end;
 
 
-    function maybe_load_methodpointer(st:TSymtable;var p1:TNode):boolean;
+    function maybe_load_methodpointer(st:TSymTable;var p1:TNode):boolean;
       var
-        pd: tprocdef;
+        pd: TProcDef;
       begin
         maybe_load_methodpointer:=false;
         if not assigned(p1) then
@@ -1099,7 +1099,7 @@ implementation
              withsymtable :
                begin
                  if (st.defowner.typ=objectdef) then
-                   p1:=TNode(twithsymtable(st).withrefnode).getcopy;
+                   p1:=TNode(TWithSymTable(st).withrefnode).getcopy;
                end;
              ObjectSymtable,
              recordsymtable:
@@ -1120,7 +1120,7 @@ implementation
                  else
                    p1:=load_self_node;
                  { don't try to call the invokable again }
-                 if is_invokable(tdef(st.defowner)) then
+                 if is_invokable(TDef(st.defowner)) then
                    include(p1.flags,nf_load_procvar);
                  { We are calling a member }
                  maybe_load_methodpointer:=true;
@@ -1133,14 +1133,14 @@ implementation
 
 
     { reads the parameter for a subroutine call }
-    procedure do_proc_call(sym:tsym;st:TSymtable;obj:tabstractrecorddef;getaddr:boolean;var again : boolean;var p1:TNode;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_proc_call(sym:TSym;st:TSymTable;obj:TAbstractRecordDef;getaddr:boolean;var again : boolean;var p1:TNode;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
       var
          membercall,
          prevafterassn : boolean;
          i        : integer;
          para,p2  : TNode;
-         currpara : tparavarsym;
-         aprocdef : tprocdef;
+         currpara : TParaVarSym;
+         aprocdef : TProcDef;
       begin
          prevafterassn:=afterassignment;
          afterassignment:=false;
@@ -1160,9 +1160,9 @@ implementation
                getaddr then
              begin
                if assigned(getfuncrefdef) then
-                 aprocdef:=Tprocsym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
+                 aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
                else
-                 aprocdef:=Tprocsym(sym).Find_procdef_byprocvardef(getprocvardef);
+                 aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
                getaddr:=true;
              end
             else
@@ -1171,9 +1171,9 @@ implementation
                 not(CurrentScanner.token in [_CARET,_POINT,_LKLAMMER]) then
               begin
                 if assigned(getfuncrefdef) then
-                  aprocdef:=Tprocsym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
+                  aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
                 else
-                  aprocdef:=Tprocsym(sym).Find_procdef_byprocvardef(getprocvardef);
+                  aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
                 if assigned(aprocdef) then
                  getaddr:=true;
               end;
@@ -1206,10 +1206,10 @@ implementation
                aprocdef is already loaded above so we can reuse it }
              if not assigned(aprocdef) and
                 assigned(getprocvardef) then
-               aprocdef:=Tprocsym(sym).Find_procdef_byprocvardef(getprocvardef);
+               aprocdef:=TProcSym(sym).Find_procdef_byprocvardef(getprocvardef);
              if not assigned(aprocdef) and
                 assigned(getfuncrefdef) then
-               aprocdef:=Tprocsym(sym).Find_procdef_byfuncrefdef(getfuncrefdef);
+               aprocdef:=TProcSym(sym).Find_procdef_byfuncrefdef(getfuncrefdef);
 
              { ensure that the correct function is considered as captured }
              if assigned(CurrentProcInfo) and
@@ -1250,7 +1250,7 @@ implementation
                     else if (p1.resultdef.typ=objectdef) then
                       { so we can create the correct  method pointer again in case
                         this is a "objectprocvar:=@classname.method" expression }
-                      tloadnode(p2).symtable:=tobjectdef(p1.resultdef).symtable
+                      tloadnode(p2).symtable:=TObjectDef(p1.resultdef).symtable
                     else
                       p1.free; // no nil needed
                   end;
@@ -1269,7 +1269,7 @@ implementation
                   internalerror(200305054);
                 for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
                   begin
-                    currpara:=tparavarsym(CurrentProcInfo.procdef.paras[i]);
+                    currpara:=TParaVarSym(CurrentProcInfo.procdef.paras[i]);
                     if not(vo_is_hidden_para in currpara.varoptions) then
                       begin
                         { inheritance by msgint? }
@@ -1277,7 +1277,7 @@ implementation
                           { anonymous inherited via msgid calls only require a var parameter for
                             both methods, so we need some type casting here }
                           para:=ccallparanode.create(ctypeconvnode.create_internal(ctypeconvnode.create_internal(
-                            cloadnode.create(currpara,currpara.owner),cformaltype),tparavarsym(tprocdef(srdef).paras[i]).vardef),
+                            cloadnode.create(currpara,currpara.owner),cformaltype),TParaVarSym(TProcDef(srdef).paras[i]).vardef),
                           para)
                         else
                           para:=ccallparanode.create(cloadnode.create(currpara,currpara.owner),para);
@@ -1301,24 +1301,24 @@ implementation
                begin
                  if not (st.symtabletype in [ObjectSymtable,recordsymtable]) then
                    internalerror(200310031);
-                 p1:=ccallnode.create(para,tprocsym(sym),obj.symtable,p1,callflags,spezcontext);
+                 p1:=ccallnode.create(para,TProcSym(sym),obj.symtable,p1,callflags,spezcontext);
                end
              else
-               p1:=ccallnode.create(para,tprocsym(sym),st,p1,callflags,spezcontext);
+               p1:=ccallnode.create(para,TProcSym(sym),st,p1,callflags,spezcontext);
              { in case of calling an anonymous function we already know the concrete
                procdef that is going to be called }
-             if (tprocsym(sym).ProcdefList.count=1) and (po_anonymous in tprocdef(tprocsym(sym).procdeflist[0]).procoptions) then
-               tcallnode(p1).procdefinition:=tprocdef(tprocsym(sym).procdeflist[0]);
+             if (TProcSym(sym).ProcdefList.count=1) and (po_anonymous in TProcDef(TProcSym(sym).procdeflist[0]).procoptions) then
+               tcallnode(p1).procdefinition:=TProcDef(TProcSym(sym).procdeflist[0]);
            end;
          afterassignment:=prevafterassn;
       end;
 
 
-    procedure handle_procvar(pv : tprocvardef;var p2 : TNode);
+    procedure handle_procvar(pv : TProcVarDef;var p2 : TNode);
       var
         hp,hp2 : TNode;
         hpp    : ^TNode;
-        currprocdef : tprocdef;
+        currprocdef : TProcDef;
       begin
         if not assigned(pv) then
          internalerror(200301121);
@@ -1341,7 +1341,7 @@ implementation
               currprocdef:=tcallnode(hp).symtableprocentry.Find_procdef_byprocvardef(pv);
               if assigned(currprocdef) then
                begin
-                 hp2:=cloadnode.create_procvar(tprocsym(tcallnode(hp).symtableprocentry),currprocdef,tcallnode(hp).symtableproc);
+                 hp2:=cloadnode.create_procvar(TProcSym(tcallnode(hp).symtableprocentry),currprocdef,tcallnode(hp).symtableproc);
                  if (po_methodpointer in pv.procoptions) then
                    tloadnode(hp2).set_mp(tcallnode(hp).methodpointer.getcopy);
                  hp.free;
@@ -1354,11 +1354,11 @@ implementation
       end;
 
 
-    procedure handle_funcref(fr:tobjectdef;var p2:TNode);
+    procedure handle_funcref(fr:TObjectDef;var p2:TNode);
       var
         hp,hp2 : TNode;
         hpp    : ^TNode;
-        currprocdef : tprocdef;
+        currprocdef : TProcDef;
       begin
         if not assigned(fr) then
           internalerror(2022032401);
@@ -1383,7 +1383,7 @@ implementation
               currprocdef:=tcallnode(hp).symtableprocentry.Find_procdef_byfuncrefdef(fr);
               if assigned(currprocdef) then
                begin
-                 hp2:=cloadnode.create_procvar(tprocsym(tcallnode(hp).symtableprocentry),currprocdef,tcallnode(hp).symtableproc);
+                 hp2:=cloadnode.create_procvar(TProcSym(tcallnode(hp).symtableprocentry),currprocdef,tcallnode(hp).symtableproc);
                  hp.free;
                  hp := nil;
                  { replace the old callnode with the new loadnode }
@@ -1395,14 +1395,14 @@ implementation
 
 
     { the following procedure handles the access to a property symbol }
-    procedure handle_propertysym(propsym : tpropertysym;st : TSymtable;var p1 : TNode);
+    procedure handle_propertysym(propsym : TPropertySym;st : TSymTable;var p1 : TNode);
       var
          paras : TNode;
          p2    : TNode;
          membercall : boolean;
          callflags  : tcallnodeflags;
-         propaccesslist : tpropaccesslist;
-         sym: tsym;
+         propaccesslist : TPropAccessList;
+         sym: TSym;
       begin
          { NameOf(property) needs neither parameters nor read access }
          if nameof_active and (CurrentScanner.token=_RKLAMMER) then
@@ -1443,15 +1443,15 @@ implementation
                          membercall:=maybe_load_methodpointer(st,p1);
                          if membercall then
                            include(callflags,cnf_member_call);
-                         p1:=ccallnode.create(paras,tprocsym(sym),st,p1,callflags,nil);
+                         p1:=ccallnode.create(paras,TProcSym(sym),st,p1,callflags,nil);
                          addsymref(sym);
                          paras:=nil;
                          consume(_ASSIGNMENT);
                          { read the expression }
                          if propsym.propdef.typ=procvardef then
-                           getprocvardef:=tprocvardef(propsym.propdef)
+                           getprocvardef:=TProcVarDef(propsym.propdef)
                          else if is_invokable(propsym.propdef) then
-                           getfuncrefdef:=tobjectdef(propsym.propdef);
+                           getfuncrefdef:=TObjectDef(propsym.propdef);
                          p2:=comp_expr([ef_accept_equal]);
                          if assigned(getprocvardef) then
                            handle_procvar(getprocvardef,p2)
@@ -1472,9 +1472,9 @@ implementation
                          consume(_ASSIGNMENT);
                          { read the expression }
                          if propsym.propdef.typ=procvardef then
-                           getprocvardef:=tprocvardef(propsym.propdef)
+                           getprocvardef:=TProcVarDef(propsym.propdef)
                          else if is_invokable(propsym.propdef) then
-                           getfuncrefdef:=tobjectdef(propsym.propdef);
+                           getfuncrefdef:=TObjectDef(propsym.propdef);
                          p2:=comp_expr([ef_accept_equal]);
                          if assigned(getprocvardef) then
                            handle_procvar(getprocvardef,p2)
@@ -1519,7 +1519,7 @@ implementation
                           membercall:=maybe_load_methodpointer(st,p1);
                           if membercall then
                             include(callflags,cnf_member_call);
-                          p1:=ccallnode.create(paras,tprocsym(sym),st,p1,callflags,nil);
+                          p1:=ccallnode.create(paras,TProcSym(sym),st,p1,callflags,nil);
                           paras:=nil;
                           include(p1.flags,nf_isproperty);
                           include(p1.flags,nf_no_lvalue);
@@ -1545,7 +1545,7 @@ implementation
 
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_member_read(structh:TAbstractRecordDef;getaddr:boolean;sym:TSym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
       var
         isclassref:boolean;
         isrecordtype:boolean;
@@ -1574,7 +1574,7 @@ implementation
                  isclassref:=(p1.resultdef.typ=classrefdef);
                  isrecordtype:=(p1.nodetype=typen) and (p1.resultdef.typ=recorddef);
                  isobjecttype:=(p1.nodetype=typen) and is_object(p1.resultdef);
-                 ishelpertype:=is_objectpascal_helper(tdef(sym.owner.defowner)) and
+                 ishelpertype:=is_objectpascal_helper(TDef(sym.owner.defowner)) and
                                (p1.nodetype=typen) and
                                not is_objectpascal_helper(p1.resultdef)
                                 {and
@@ -1674,7 +1674,7 @@ implementation
                                an instance of that parent type! }
                           if is_javaclass(structh) and
                              (tcallnode(p1).procdefinition.proctypeoption=potype_constructor) and
-                             (tcallnode(p1).procdefinition.owner.defowner<>find_real_class_definition(tobjectdef(structh),false)) then
+                             (tcallnode(p1).procdefinition.owner.defowner<>find_real_class_definition(TObjectDef(structh),false)) then
                             Message(parser_e_java_no_inherited_constructor);
                           { Provide a warning if we try to create an instance of a
                             abstract class using the type name of that class. We
@@ -1710,7 +1710,7 @@ implementation
                    begin
                       if isclassref and not (sp_static in sym.symoptions) then
                         Message(parser_e_only_class_members_via_class_ref);
-                      handle_propertysym(tpropertysym(sym),sym.owner,p1);
+                      handle_propertysym(TPropertySym(sym),sym.owner,p1);
                    end;
                  typesym:
                    begin
@@ -1719,14 +1719,14 @@ implementation
                       begin
                         p1:=comp_expr([ef_accept_equal]);
                         consume(_RKLAMMER);
-                        p1:=ctypeconvnode.create_explicit(p1,ttypesym(sym).typedef);
+                        p1:=ctypeconvnode.create_explicit(p1,TTypeSym(sym).typedef);
                       end
                      else
                        begin
-                         p1:=ctypenode.create(ttypesym(sym).typedef);
-                         if (is_class(ttypesym(sym).typedef) or
-                             is_objcclass(ttypesym(sym).typedef) or
-                             is_javaclass(ttypesym(sym).typedef)) and
+                         p1:=ctypenode.create(TTypeSym(sym).typedef);
+                         if (is_class(TTypeSym(sym).typedef) or
+                             is_objcclass(TTypeSym(sym).typedef) or
+                             is_javaclass(TTypeSym(sym).typedef)) and
                             not(block_type in [bt_type,bt_const_type,bt_var_type]) then
                            p1:=cloadvmtaddrnode.create(p1);
                        end;
@@ -1734,7 +1734,7 @@ implementation
                  constsym:
                    begin
                      p1.free;
-                     p1:=genconstsymtree(tconstsym(sym));
+                     p1:=genconstsymtree(TConstSym(sym));
                    end;
                  staticvarsym:
                    begin
@@ -1748,7 +1748,7 @@ implementation
                      p1.free;
                      p1:=nil;
                      { typed constants are absolutebarsyms now to handle storage properly }
-                     propaccesslist_to_node(p1,nil,tabsolutevarsym(sym).ref);
+                     propaccesslist_to_node(p1,nil,TAbsoluteVarSym(sym).ref);
                    end
                  else
                    internalerror(16);
@@ -1757,9 +1757,9 @@ implementation
       end;
 
 
-    function handle_specialize_inline_specialization(var srsym:tsym;enforce_unit:boolean;out srsymtable:tsymtable;out spezcontext:tspecializationcontext):boolean;
+    function handle_specialize_inline_specialization(var srsym:TSym;enforce_unit:boolean;out srsymtable:TSymTable;out spezcontext:tspecializationcontext):boolean;
       var
-        spezdef : tdef;
+        spezdef : TDef;
       begin
         result:=false;
         spezcontext:=nil;
@@ -1772,9 +1772,9 @@ implementation
           else
             begin
               if srsym.typ=typesym then
-                spezdef:=ttypesym(srsym).typedef
-              else if tprocsym(srsym).procdeflist.count>0 then
-                spezdef:=tdef(tprocsym(srsym).procdeflist[0])
+                spezdef:=TTypeSym(srsym).typedef
+              else if TProcSym(srsym).procdeflist.count>0 then
+                spezdef:=TDef(TProcSym(srsym).procdeflist[0])
               else
                 spezdef:=nil;
               spezdef:=generate_specialization_phase1(spezcontext,spezdef,enforce_unit,srsym.realname,srsym.owner);
@@ -1796,7 +1796,7 @@ implementation
                       end
                     else
                       begin
-                        srsym:=tprocdef(spezdef).procsym;
+                        srsym:=TProcDef(spezdef).procsym;
                         srsymtable:=srsym.owner;
                         nameof_record_sym(srsym);
                         result:=true;
@@ -1807,7 +1807,7 @@ implementation
                 arraydef,
                 procvardef:
                   begin
-                    spezdef:=generate_specialization_phase2(spezcontext,tstoreddef(spezdef),false,'');
+                    spezdef:=generate_specialization_phase2(spezcontext,TStoredDef(spezdef),false,'');
                     spezcontext.free;
                     spezcontext:=nil;
                     if spezdef<>generrordef then
@@ -1826,10 +1826,10 @@ implementation
       end;
 
 
-    function handle_factor_typenode(hdef:tdef;getaddr:boolean;var again:boolean;sym:tsym;typeonly:boolean):TNode;
+    function handle_factor_typenode(hdef:TDef;getaddr:boolean;var again:boolean;sym:TSym;typeonly:boolean):TNode;
       var
-        srsym : tsym;
-        srsymtable : tsymtable;
+        srsym : TSym;
+        srsymtable : TSymTable;
         erroroutresult,
         isspecialize : boolean;
         spezcontext : tspecializationcontext;
@@ -1884,7 +1884,7 @@ implementation
                  else
                    isspecialize:=false;
                  { search also in inherited methods }
-                 searchsym_in_class(tobjectdef(hdef),tobjectdef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                 searchsym_in_class(TObjectDef(hdef),TObjectDef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                  if isspecialize then
                    begin
                      consume(_ID);
@@ -1901,7 +1901,7 @@ implementation
                      consume(_ID);
                    end;
                  if result.nodetype<>errorn then
-                   do_member_read(tabstractrecorddef(hdef),false,srsym,result,again,[],spezcontext)
+                   do_member_read(TAbstractRecordDef(hdef),false,srsym,result,again,[],spezcontext)
                  else begin
                    spezcontext.free;
                    spezcontext := nil;
@@ -1929,7 +1929,7 @@ implementation
                 erroroutresult:=true;
                 { TP allows also @TMenu.Load if Load is only }
                 { defined in an ancestor class               }
-                srsym:=search_struct_member(tabstractrecorddef(hdef),CurrentScanner.pattern);
+                srsym:=search_struct_member(TAbstractRecordDef(hdef),CurrentScanner.pattern);
                 if isspecialize and assigned(srsym) then
                   begin
                     consume(_ID);
@@ -1959,7 +1959,7 @@ implementation
                   end
                 else
                   if result.nodetype<>specializen then
-                    do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],spezcontext);
+                    do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],spezcontext);
               end;
            end
          else
@@ -1987,7 +1987,7 @@ implementation
                   ttypenode(result).typesym:=sym;
                   { TP allows also @TMenu.Load if Load is only }
                   { defined in an ancestor class               }
-                  srsym:=search_struct_member(tobjectdef(hdef),CurrentScanner.pattern);
+                  srsym:=search_struct_member(TObjectDef(hdef),CurrentScanner.pattern);
                   if assigned(srsym) then
                    begin
                      check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
@@ -2001,7 +2001,7 @@ implementation
                         (srsym.typ=procsym) and
                         (CurrentScanner.token in [_CARET,_POINT]) then
                        result:=cloadvmtaddrnode.create(result);
-                     do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],nil);
+                     do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil);
                    end
                   else
                    begin
@@ -2106,7 +2106,7 @@ implementation
          newblock : TNode;
          countindices : longint;
          elements: tfplist;
-         arraydef: tdef;
+         arraydef: TDef;
        begin
          { create statements with call initialize the arguments and
            call fpc_dynarr_setlength }
@@ -2187,7 +2187,7 @@ implementation
          p1:=newblock;
        end;
 
-      function parse_array_constructor(arrdef:tarraydef): TNode;
+      function parse_array_constructor(arrdef:TArrayDef): TNode;
         var
           newstatement,assstatement:tstatementnode;
           arrnode:ttempcreatenode;
@@ -2236,7 +2236,7 @@ implementation
                  ccallparanode.create(cordconstnode.create
                     (1,s32inttype,true),
                  ccallparanode.create(caddrnode.create_internal
-                    (crttinode.create(tstoreddef(arrdef),initrtti,rdt_normal)),
+                    (crttinode.create(TStoredDef(arrdef),initrtti,rdt_normal)),
                  ccallparanode.create(
                    ctypeconvnode.create_internal(
                      ctemprefnode.create(arrnode),voidpointertype),
@@ -2255,14 +2255,14 @@ implementation
           addstatement(newstatement,ctemprefnode.create(arrnode));
         end;
 
-      function try_type_helper(var node:TNode;def:tdef):boolean;
+      function try_type_helper(var node:TNode;def:TDef):boolean;
         var
-          srsym : tsym;
-          srsymtable : tsymtable;
+          srsym : TSym;
+          srsymtable : TSymTable;
           n : TNode;
           newstatement : tstatementnode;
           temp : ttempcreatenode;
-          extdef : tdef;
+          extdef : TDef;
         begin
           result:=false;
           if (CurrentScanner.token=_ID) and (block_type in [bt_body,bt_general,bt_except,bt_const]) then
@@ -2278,12 +2278,12 @@ implementation
               if result then
                 begin
                   if not (srsymtable.symtabletype=objectsymtable) or
-                      not is_objectpascal_helper(tdef(srsymtable.defowner)) then
+                      not is_objectpascal_helper(TDef(srsymtable.defowner)) then
                     internalerror(2013011401);
                   { convert const node to temp node of the extended type }
                   if node.nodetype in (nodetype_const+[addrn]) then
                     begin
-                      extdef:=tobjectdef(srsymtable.defowner).extendeddef;
+                      extdef:=TObjectDef(srsymtable.defowner).extendeddef;
                       newstatement:=nil;
                       n:=internalstatements(newstatement);
                       temp:=ctempcreatenode.create(extdef,extdef.size,tt_persistent,false);
@@ -2302,11 +2302,11 @@ implementation
         end;
 
     var
-     protsym  : tpropertysym;
+     protsym  : TPropertySym;
      p2,p3  : TNode;
-     srsym  : tsym;
-     srsymtable : TSymtable;
-     structh    : tabstractrecorddef;
+     srsym  : TSym;
+     srsymtable : TSymTable;
+     structh    : TAbstractRecordDef;
      { shouldn't be used that often, so the extra overhead is ok to save
        stack space }
      dispatchstring : ansistring;
@@ -2321,7 +2321,7 @@ implementation
      valstr,expstr : string;
      intval : qword;
      code : integer;
-     strdef : tdef;
+     strdef : TDef;
      spezcontext : tspecializationcontext;
      old_current_filepos : TFilePosInfo;
     label
@@ -2353,7 +2353,7 @@ implementation
                if ((m_tp_procvar in CurrentSettings.modeswitches) or
                    (m_mac_procvar in CurrentSettings.modeswitches)) and
                   (p1.resultdef.typ=procvardef) and
-                  (tprocvardef(p1.resultdef).returndef.typ=pointerdef) then
+                  (TProcVarDef(p1.resultdef).returndef.typ=pointerdef) then
                  begin
                    p1:=ccallnode.create_procvar(nil,p1);
                    TypeCheckPass(p1);
@@ -2363,7 +2363,7 @@ implementation
                if (m_isolike_io in CurrentSettings.modeswitches) and
                  (p1.resultdef.typ=filedef) then
                  begin
-                   case tfiledef(p1.resultdef).filetyp of
+                   case TFileDef(p1.resultdef).filetyp of
                      ft_text:
                        begin
                          p1:=cderefnode.create(ccallnode.createintern('fpc_getbuf_text',ccallparanode.create(p1,nil)));
@@ -2372,7 +2372,7 @@ implementation
                      ft_typed:
                        begin
                          p1:=cderefnode.create(ctypeconvnode.create_internal(ccallnode.createintern('fpc_getbuf_typedfile',ccallparanode.create(p1,nil)),
-                           cpointerdef.getreusable(tfiledef(p1.resultdef).typedfiledef)));
+                           cpointerdef.getreusable(TFileDef(p1.resultdef).typedfiledef)));
                          TypeCheckPass(p1);
                        end;
                      else
@@ -2399,7 +2399,7 @@ implementation
                if ((m_tp_procvar in CurrentSettings.modeswitches) or
                    (m_mac_procvar in CurrentSettings.modeswitches)) and
                   (p1.resultdef.typ=procvardef) and
-                  (tprocvardef(p1.resultdef).returndef.typ=arraydef) then
+                  (TProcVarDef(p1.resultdef).returndef.typ=arraydef) then
                  begin
                    p1:=ccallnode.create_procvar(nil,p1);
                    TypeCheckPass(p1);
@@ -2411,7 +2411,7 @@ implementation
                   is_javaclass(p1.resultdef) then
                  begin
                    { default property }
-                   protsym:=search_default_property(tabstractrecorddef(p1.resultdef));
+                   protsym:=search_default_property(TAbstractRecordDef(p1.resultdef));
                    if not(assigned(protsym)) then
                      begin
                         p1.free;
@@ -2435,7 +2435,7 @@ implementation
                        pointerdef:
                          begin
                             { support delphi autoderef }
-                            if (tpointerdef(p1.resultdef).pointeddef.typ=arraydef) and
+                            if (TPointerDef(p1.resultdef).pointeddef.typ=arraydef) and
                                (m_autoderef in CurrentSettings.modeswitches) then
                               p1:=cderefnode.create(p1);
                             p2:=comp_expr([ef_accept_equal]);
@@ -2635,7 +2635,7 @@ implementation
                        begin
                          erroroutp1:=true;
                          srsym:=nil;
-                         structh:=tabstractrecorddef(p1.resultdef);
+                         structh:=TAbstractRecordDef(p1.resultdef);
                          if isspecialize then
                            begin
                              { consume the specialize }
@@ -2687,12 +2687,12 @@ implementation
                    begin
                      if CurrentScanner.token=_ID then
                        begin
-                         srsym:=tsym(tenumdef(p1.resultdef).symtable.Find(CurrentScanner.pattern));
+                         srsym:=TSym(TEnumDef(p1.resultdef).symtable.Find(CurrentScanner.pattern));
                          if assigned(srsym) and (srsym.typ=enumsym) and (p1.nodetype=typen) then
                            begin
                              p1.free;
                              check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
-                             p1:=genenumnode(tenumsym(srsym));
+                             p1:=genenumnode(TEnumSym(srsym));
                              consume(_ID);
                              nameof_record_sym(srsym);
                            end
@@ -2725,7 +2725,7 @@ implementation
                                      if CurrentScanner.pattern='CREATE' then
                                        begin
                                          consume(_ID);
-                                         p2:=parse_array_constructor(tarraydef(p1.resultdef));
+                                         p2:=parse_array_constructor(TArrayDef(p1.resultdef));
                                          p1.free;
                                          p1:=p2;
                                        end
@@ -2818,7 +2818,7 @@ implementation
                       if CurrentScanner.token=_ID then
                         begin
                           srsym:=nil;
-                          structh:=tobjectdef(tclassrefdef(p1.resultdef).pointeddef);
+                          structh:=TObjectDef(TClassRefDef(p1.resultdef).pointeddef);
                           if isspecialize then
                             begin
                               { consume the specialize }
@@ -2827,7 +2827,7 @@ implementation
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2835,7 +2835,7 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if assigned(srsym) then
                                 begin
                                   old_current_filepos:=CurrentFilePos;
@@ -2872,7 +2872,7 @@ implementation
                         begin
                           erroroutp1:=true;
                           srsym:=nil;
-                          structh:=tobjectdef(p1.resultdef);
+                          structh:=TObjectDef(p1.resultdef);
                           if isspecialize then
                             begin
                               { consume the "specialize" }
@@ -2881,7 +2881,7 @@ implementation
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2889,7 +2889,7 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              searchsym_in_class(TObjectDef(structh),TObjectDef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if assigned(srsym) then
                                 begin
                                    old_current_filepos:=CurrentFilePos;
@@ -2947,7 +2947,7 @@ implementation
                           if not try_type_helper(p1,nil) then
                             begin
                               Message(parser_e_invalid_qualifier);
-                              if tpointerdef(p1.resultdef).pointeddef.typ in [recorddef,objectdef,classrefdef] then
+                              if TPointerDef(p1.resultdef).pointeddef.typ in [recorddef,objectdef,classrefdef] then
                                 Message(parser_h_maybe_deref_caret_missing);
                             end;
                         end
@@ -2989,10 +2989,10 @@ implementation
               if is_invokable(p1.resultdef) and
                   (CurrentScanner.token=_LKLAMMER) then
                 begin
-                  if not searchsym_in_class(tobjectdef(p1.resultdef),tobjectdef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
+                  if not searchsym_in_class(TObjectDef(p1.resultdef),TObjectDef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
                     internalerror(2021040202);
                   include(p1.flags,nf_load_procvar);
-                  do_proc_call(srsym,srsymtable,tabstractrecorddef(p1.resultdef),false,again,p1,[],nil);
+                  do_proc_call(srsym,srsymtable,TAbstractRecordDef(p1.resultdef),false,again,p1,[],nil);
                 end
               else if assigned(p1.resultdef) and
                  (p1.resultdef.typ=procvardef) then
@@ -3049,10 +3049,10 @@ implementation
       end; { while again }
     end;
 
-    function is_member_read(sym: tsym; st: tsymtable; var p1: TNode;
-                            out memberparentdef: tdef): boolean;
+    function is_member_read(sym: TSym; st: TSymTable; var p1: TNode;
+                            out memberparentdef: TDef): boolean;
       var
-        hdef : tdef;
+        hdef : TDef;
       begin
         result:=true;
         memberparentdef:=nil;
@@ -3061,7 +3061,7 @@ implementation
           ObjectSymtable,
           recordsymtable:
             begin
-              memberparentdef:=tdef(st.defowner);
+              memberparentdef:=TDef(st.defowner);
               exit;
             end;
           WithSymtable:
@@ -3069,14 +3069,14 @@ implementation
               if assigned(p1) then
                internalerror(2007012002);
 
-              hdef:=TNode(twithsymtable(st).withrefnode).resultdef;
-              p1:=TNode(twithsymtable(st).withrefnode).getcopy;
+              hdef:=TNode(TWithSymTable(st).withrefnode).resultdef;
+              p1:=TNode(TWithSymTable(st).withrefnode).getcopy;
 
               if not(hdef.typ in [objectdef,classrefdef]) then
                 exit;
 
               if (hdef.typ=classrefdef) then
-                hdef:=tclassrefdef(hdef).pointeddef;
+                hdef:=TClassRefDef(hdef).pointeddef;
               memberparentdef:=hdef;
             end;
           else
@@ -3087,10 +3087,10 @@ implementation
   {$maxfpuregisters 0}
 
 
-    function factor_handle_sym(srsym:tsym;srsymtable:tsymtable;var again:boolean;getaddr:boolean;unit_found:boolean;flags:texprflags;var spezcontext:tspecializationcontext):TNode;
+    function factor_handle_sym(srsym:TSym;srsymtable:TSymTable;var again:boolean;getaddr:boolean;unit_found:boolean;flags:texprflags;var spezcontext:tspecializationcontext):TNode;
       var
-        hdef : tdef;
-        pd : tprocdef;
+        hdef : TDef;
+        pd : TProcDef;
         callflags : tcallnodeflags;
         tmpgetaddr : boolean;
       begin
@@ -3099,13 +3099,13 @@ implementation
         case srsym.typ of
           absolutevarsym :
             begin
-              if (tabsolutevarsym(srsym).abstyp=tovar) then
+              if (TAbsoluteVarSym(srsym).abstyp=tovar) then
                 begin
                   result:=nil;
-                  propaccesslist_to_node(result,nil,tabsolutevarsym(srsym).ref);
-                  result:=ctypeconvnode.create(result,tabsolutevarsym(srsym).vardef);
+                  propaccesslist_to_node(result,nil,TAbsoluteVarSym(srsym).ref);
+                  result:=ctypeconvnode.create(result,TAbsoluteVarSym(srsym).vardef);
                   include(result.flags,nf_absolute);
-                  if tabsolutevarsym(srsym).vardef=s64currencytype then
+                  if TAbsoluteVarSym(srsym).vardef=s64currencytype then
                     { If a Currency type is connected to another type, we have
                       to make sure a scalar is never applied }
                     include(result.flags,nf_is_currency);
@@ -3157,7 +3157,7 @@ implementation
                   {  e.g., "with classinstance do field := 5"), then    }
                   { let do_member_read handle it                        }
                   if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-                    do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],nil)
+                    do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil)
                   else
                     { otherwise it's a regular record subscript }
                     result:=csubscriptnode.create(srsym,result);
@@ -3169,12 +3169,12 @@ implementation
 
           syssym :
             begin
-              result:=statement_syssym(tsyssym(srsym).number);
+              result:=statement_syssym(TSysSym(srsym).number);
             end;
 
           typesym :
             begin
-              hdef:=ttypesym(srsym).typedef;
+              hdef:=TTypeSym(srsym).typedef;
               if not assigned(hdef) then
                begin
                  again:=false;
@@ -3202,7 +3202,7 @@ implementation
                            begin
                              if srsym.typ<>typesym then
                                internalerror(2015071705);
-                             hdef:=ttypesym(srsym).typedef;
+                             hdef:=TTypeSym(srsym).typedef;
                              result:=handle_factor_typenode(hdef,getaddr,again,srsym,ef_type_only in flags);
                            end;
                        end
@@ -3222,12 +3222,12 @@ implementation
 
           enumsym :
             begin
-              result:=genenumnode(tenumsym(srsym));
+              result:=genenumnode(TEnumSym(srsym));
             end;
 
           constsym :
             begin
-              if tconstsym(srsym).consttyp in [constresourcestring,constwresourcestring]then
+              if TConstSym(srsym).consttyp in [constresourcestring,constwresourcestring]then
                 begin
                   result:=cloadnode.create(srsym,srsymtable);
                   DoTypeCheckPass(result);
@@ -3237,7 +3237,7 @@ implementation
                     result.resultdef:=getansistringdef;
                 end
               else
-                result:=genconstsymtree(tconstsym(srsym));
+                result:=genconstsymtree(TConstSym(srsym));
             end;
 
           procsym :
@@ -3261,7 +3261,7 @@ implementation
                   { withsymtable as well                          }
                   if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
                     begin
-                      do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],spezcontext);
+                      do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],spezcontext);
                       spezcontext:=nil;
                     end
                   else
@@ -3309,7 +3309,7 @@ implementation
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
                   if (srsym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
-                    do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],nil)
+                    do_member_read(TAbstractRecordDef(hdef),getaddr,srsym,result,again,[],nil)
                   else
                     { no propertysyms in records (yet) }
                     internalerror(2009111510);
@@ -3317,7 +3317,7 @@ implementation
               else
               { no method pointer }
                 begin
-                  handle_propertysym(tpropertysym(srsym),srsymtable,result);
+                  handle_propertysym(TPropertySym(srsym),srsymtable,result);
                 end;
             end;
 
@@ -3333,7 +3333,7 @@ implementation
               else
                 begin
                   consume(_COLON);
-                  if tlabelsym(srsym).defined then
+                  if TLabelSym(srsym).defined then
                     Message(sym_e_label_already_defined);
                   if symtablestack.top.symtablelevel<>srsymtable.symtablelevel then
                     begin
@@ -3341,9 +3341,9 @@ implementation
                       if (CurrentProcInfo.procdef.proctypeoption in [potype_unitinit,potype_unitfinalize]) then
                         Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                     end;
-                  tlabelsym(srsym).defined:=true;
-                  result:=clabelnode.create(nil,tlabelsym(srsym));
-                  tlabelsym(srsym).code:=result;
+                  TLabelSym(srsym).defined:=true;
+                  result:=clabelnode.create(nil,TLabelSym(srsym));
+                  TLabelSym(srsym).code:=result;
                 end;
             end;
 
@@ -3398,7 +3398,7 @@ implementation
 
          function findwithsymtable : boolean;
            var
-             hp : psymtablestackitem;
+             hp : PSymTableStackItem;
            begin
              result:=true;
              hp:=symtablestack.stack;
@@ -3412,9 +3412,9 @@ implementation
            end;
 
          var
-           srsym: tsym;
-           srsymtable: TSymtable;
-           hdef: tdef;
+           srsym: TSym;
+           srsymtable: TSymTable;
+           hdef: TDef;
            orgstoredpattern,
            storedpattern: string;
            t : ttoken;
@@ -3553,7 +3553,7 @@ implementation
                          begin
                            if hdef.typ in [objectdef,recorddef,procvardef,arraydef] then
                              begin
-                               hdef:=generate_specialization_phase2(spezcontext,tstoreddef(hdef),false,'');
+                               hdef:=generate_specialization_phase2(spezcontext,TStoredDef(hdef),false,'');
                                spezcontext.free;
                                spezcontext:=nil;
                                if hdef<>generrordef then
@@ -3572,7 +3572,7 @@ implementation
                                begin
                                  if not(block_type in inline_specialization_block_types) then
                                    message(parser_e_illegal_expression);
-                                 srsym:=tprocdef(hdef).procsym;
+                                 srsym:=TProcDef(hdef).procsym;
                                  if assigned(spezcontext.symtable) then
                                    srsymtable:=spezcontext.symtable
                                  else
@@ -3595,10 +3595,10 @@ implementation
                        (
                          (
                            (srsym.typ=typesym) and
-                           (ttypesym(srsym).typedef.typ=undefineddef)
+                           (TTypeSym(srsym).typedef.typ=undefineddef)
                          ) or (
                            (srsym.typ=procsym) and
-                           (tprocsym(srsym).procdeflist.count=0)
+                           (TProcSym(srsym).procdeflist.count=0)
                          )
                        )
                      )
@@ -3632,9 +3632,9 @@ implementation
                    not (
                      (srsym.typ=typesym) and
                      (
-                       (ttypesym(srsym).typedef.typ in [recorddef,objectdef,arraydef,procvardef,undefineddef]) or
+                       (TTypeSym(srsym).typedef.typ in [recorddef,objectdef,arraydef,procvardef,undefineddef]) or
                        (
-                         (ttypesym(srsym).typedef.typ=errordef) and
+                         (TTypeSym(srsym).typedef.typ=errordef) and
                          (sp_generic_dummy in srsym.symoptions)
                        )
                      ) and
@@ -3647,8 +3647,8 @@ implementation
                if not assigned(srsym) or
                    { is this a generic dummy symbol? }
                    ((srsym.typ=typesym) and
-                   assigned(ttypesym(srsym).typedef) and
-                   (ttypesym(srsym).typedef.typ=undefineddef) and
+                   assigned(TTypeSym(srsym).typedef) and
+                   (TTypeSym(srsym).typedef.typ=undefineddef) and
                    not (sp_generic_para in srsym.symoptions) and
                    not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                    not (
@@ -3673,7 +3673,7 @@ implementation
                       findwithsymtable then
                      begin
                        { create dummy symbol, it will be freed later on }
-                       srsym:=tstoredsym.create(undefinedsym,'$undefinedsym');
+                       srsym:=TStoredSym.create(undefinedsym,'$undefinedsym');
                        srsymtable:=nil;
                      end
                    else
@@ -3690,9 +3690,9 @@ implementation
 
            { Access to funcret or need to call the function? }
            if (srsym.typ in [absolutevarsym,localvarsym,paravarsym]) and
-              (vo_is_funcret in tabstractvarsym(srsym).varoptions) and
+              (vo_is_funcret in TAbstractVarSym(srsym).varoptions) and
               { result(x) is not allowed }
-              not(vo_is_result in tabstractvarsym(srsym).varoptions) and
+              not(vo_is_result in TAbstractVarSym(srsym).varoptions) and
               (
                (CurrentScanner.token=_LKLAMMER) or
                (
@@ -3701,10 +3701,10 @@ implementation
                )
               ) then
             begin
-              hdef:=tdef(srsym.owner.defowner);
+              hdef:=TDef(srsym.owner.defowner);
               if assigned(hdef) and
                  (hdef.typ=procdef) then
-                srsym:=tprocdef(hdef).procsym
+                srsym:=TProcDef(hdef).procsym
               else
                 begin
                   Message(parser_e_illegal_expression);
@@ -3789,13 +3789,13 @@ implementation
          qc         : qword;
          p1         : TNode;
          code       : integer;
-         srsym      : tsym;
-         srsymtable : TSymtable;
-         pd         : tprocdef;
-         hclassdef  : tobjectdef;
+         srsym      : TSym;
+         srsymtable : TSymTable;
+         pd         : TProcDef;
+         hclassdef  : TObjectDef;
          d          : bestreal;
          hs,hsorg   : string;
-         hdef       : tdef;
+         hdef       : TDef;
          filepos    : TFilePosInfo;
          callflags  : tcallnodeflags;
          idstr      : tidstring;
@@ -3807,8 +3807,8 @@ implementation
          again,
          updatefpos,
          nodechanged  : boolean;
-         oldprocvardef : tprocvardef;
-         oldfuncrefdef : tobjectdef;
+         oldprocvardef : TProcVarDef;
+         oldfuncrefdef : TObjectDef;
       begin
         { can't keep a copy of p1 and compare pointers afterwards, because
           p1 may be freed and reallocated in the same place!  }
@@ -3911,9 +3911,9 @@ implementation
                       allowed }
                     if is_objectpascal_helper(CurrentStructDef) and
                         (m_delphi in CurrentSettings.modeswitches) and
-                        (tobjectdef(CurrentStructDef).helpertype=ht_record) then
+                        (TObjectDef(CurrentStructDef).helpertype=ht_record) then
                       Message(parser_e_inherited_not_in_record);
-                    hclassdef:=tobjectdef(CurrentStructDef).childof;
+                    hclassdef:=TObjectDef(CurrentStructDef).childof;
                     { Objective-C categories *replace* methods in the class
                       they extend, or add methods to it. So calling an
                       inherited method always calls the method inherited from
@@ -3930,7 +3930,7 @@ implementation
                        anon_inherited:=true;
                        { For message methods we need to search using the message
                          number or string }
-                       pd:=tprocdef(tprocsym(CurrentProcInfo.procdef.procsym).ProcdefList[0]);
+                       pd:=TProcDef(TProcSym(CurrentProcInfo.procdef.procsym).ProcdefList[0]);
                        srdef:=nil;
                        if (po_msgint in pd.procoptions) then
                          searchsym_in_class_by_msgint(hclassdef,pd.messageinf.i,srdef,srsym,srsymtable)
@@ -3940,7 +3940,7 @@ implementation
                        else
                        { helpers have their own ways of dealing with inherited }
                        if is_objectpascal_helper(CurrentStructDef) then
-                         searchsym_in_helper(tobjectdef(CurrentStructDef),tobjectdef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                         searchsym_in_helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
                          searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                      end
@@ -3964,7 +3964,7 @@ implementation
                        anon_inherited:=false;
                        { helpers have their own ways of dealing with inherited }
                        if is_objectpascal_helper(CurrentStructDef) then
-                         searchsym_in_helper(tobjectdef(CurrentStructDef),tobjectdef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
+                         searchsym_in_helper(TObjectDef(CurrentStructDef),TObjectDef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
                          searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                        if isspecialize and assigned(srsym) then
@@ -4002,18 +4002,18 @@ implementation
                                        depending on the def the found symbol belongs
                                        to }
                                      if (srsym.Owner.defowner.typ=objectdef) and
-                                         is_objectpascal_helper(tobjectdef(srsym.Owner.defowner)) then
-                                       if def_is_related(CurrentStructDef,tdef(srsym.Owner.defowner)) and
-                                           assigned(tobjectdef(CurrentStructDef).childof) then
-                                         hdef:=tobjectdef(CurrentStructDef).childof
+                                         is_objectpascal_helper(TObjectDef(srsym.Owner.defowner)) then
+                                       if def_is_related(CurrentStructDef,TDef(srsym.Owner.defowner)) and
+                                           assigned(TObjectDef(CurrentStructDef).childof) then
+                                         hdef:=TObjectDef(CurrentStructDef).childof
                                        else
                                          begin
-                                           hdef:=tobjectdef(srsym.Owner.defowner).extendeddef;
+                                           hdef:=TObjectDef(srsym.Owner.defowner).extendeddef;
                                            useself:=true;
                                          end
                                      else
                                        begin
-                                         hdef:=tdef(srsym.Owner.defowner);
+                                         hdef:=TDef(srsym.Owner.defowner);
                                          useself:=true;
                                        end;
                                    end
@@ -4477,7 +4477,7 @@ implementation
       end;
   {$maxfpuregisters default}
 
-    procedure post_comp_expr_gendef(var def: tdef);
+    procedure post_comp_expr_gendef(var def: TDef);
       var
         p1 : TNode;
         again : boolean;
@@ -4518,7 +4518,7 @@ implementation
                     );
         end;
 
-      function gettypedef(n:TNode):tdef;inline;
+      function gettypedef(n:TNode):TDef;inline;
       { This returns the typedef that belongs to the given typenode or
         loadvmtaddrnode. n must not be Nil! }
         begin
@@ -4528,23 +4528,23 @@ implementation
             result:=ttypenode(tloadvmtaddrnode(n).left).typedef;
         end;
 
-      function gettypedef(sym:tsym):tdef;inline;
+      function gettypedef(sym:TSym):TDef;inline;
         begin
           result:=nil;
           case sym.typ of
             typesym:
-              result:=ttypesym(sym).typedef;
+              result:=TTypeSym(sym).typedef;
             procsym:
-              if not (sp_generic_dummy in sym.symoptions) or (tprocsym(sym).procdeflist.count>0) then
-                result:=tdef(tprocsym(sym).procdeflist[0]);
+              if not (sp_generic_dummy in sym.symoptions) or (TProcSym(sym).procdeflist.count>0) then
+                result:=TDef(TProcSym(sym).procdeflist[0]);
             else
               internalerror(2015092701);
           end;
         end;
 
-      function getgenericsym(n:TNode;out srsym:tsym):boolean;
+      function getgenericsym(n:TNode;out srsym:TSym):boolean;
         var
-          srsymtable : tsymtable;
+          srsymtable : TSymTable;
         begin
           srsym:=nil;
           case n.nodetype of
@@ -4566,16 +4566,16 @@ implementation
           result:=assigned(srsym);
         end;
 
-      function generate_inline_specialization(gendef:tdef;n:TNode;filepos:TFilePosInfo;parseddef:tdef;gensym:tsym;p2:TNode):TNode;
+      function generate_inline_specialization(gendef:TDef;n:TNode;filepos:TFilePosInfo;parseddef:TDef;gensym:TSym;p2:TNode):TNode;
         var
           again,
           getaddr,
           unitspecific : boolean;
           pload : TNode;
           spezcontext : tspecializationcontext;
-          orggensym : tsym;
+          orggensym : TSym;
           structdef,
-          inheriteddef : tabstractrecorddef;
+          inheriteddef : TAbstractRecordDef;
           callflags : tcallnodeflags;
         begin
           if not assigned(gensym) then
@@ -4585,7 +4585,7 @@ implementation
             begin
               getaddr:=tspecializenode(n).getaddr;
               pload:=tspecializenode(n).left;
-              inheriteddef:=tabstractrecorddef(tspecializenode(n).inheriteddef);
+              inheriteddef:=TAbstractRecordDef(tspecializenode(n).inheriteddef);
               unitspecific:=tspecializenode(n).unit_specific;
               tspecializenode(n).left:=nil;
             end
@@ -4614,7 +4614,7 @@ implementation
             procvardef,
             arraydef:
               begin
-                gendef:=generate_specialization_phase2(spezcontext,tstoreddef(gendef),false,'');
+                gendef:=generate_specialization_phase2(spezcontext,TStoredDef(gendef),false,'');
                 spezcontext.free;
                 spezcontext:=nil;
                 if gendef.typ=errordef then
@@ -4631,7 +4631,7 @@ implementation
                   end
                 else
                   begin
-                    gensym:=tprocdef(gendef).procsym;
+                    gensym:=TProcDef(gendef).procsym;
                   end;
               end;
             else
@@ -4655,11 +4655,11 @@ implementation
                   objectdef,
                   recorddef:
                     begin
-                      structdef:=tabstractrecorddef(result.resultdef);
+                      structdef:=TAbstractRecordDef(result.resultdef);
                     end;
                   classrefdef:
                     begin
-                      structdef:=tabstractrecorddef(tclassrefdef(result.resultdef).pointeddef);
+                      structdef:=TAbstractRecordDef(TClassRefDef(result.resultdef).pointeddef);
                     end;
                   else
                     internalerror(2015092703);
@@ -4693,7 +4693,7 @@ implementation
                       { withsymtable as well                          }
                       if (gensym.owner.symtabletype in [ObjectSymtable,recordsymtable]) then
                         begin
-                          do_member_read(tabstractrecorddef(parseddef),getaddr,gensym,result,again,[],spezcontext);
+                          do_member_read(TAbstractRecordDef(parseddef),getaddr,gensym,result,again,[],spezcontext);
                           spezcontext:=nil;
                         end
                       else
@@ -4727,9 +4727,9 @@ implementation
 
       function maybe_handle_specialization(var p1,p2:TNode;filepos:TFilePosInfo):boolean;
         var
-          gensym : tsym;
+          gensym : TSym;
           parseddef,
-          gendef : tdef;
+          gendef : TDef;
           ptmp : TNode;
         begin
           result:=false;
@@ -4779,8 +4779,8 @@ implementation
         p1,p2,ptmp : TNode;
         oldt    : Ttoken;
         filepos : TFilePosInfo;
-        gendef : tdef;
-        gensym : tsym;
+        gendef : TDef;
+        gensym : TSym;
         genlist : tfpobjectlist;
         dummyagain : boolean;
         dummyspezctxt : tspecializationcontext;
@@ -4845,7 +4845,7 @@ implementation
                            genlist:=tfpobjectlist(CurrentModule.genericdummysyms.find(tspecializenode(p1).sym.name));
                            if assigned(genlist) and (genlist.count>0) then
                              begin
-                               gensym:=tgenericdummyentry(genlist.last).resolvedsym;
+                               gensym:=TGenericDummyEntry(genlist.last).resolvedsym;
                                check_hints(gensym,gensym.symoptions,gensym.deprecatedmsg,p1.fileinfo);
 
                                dummyagain:=false;
@@ -4930,10 +4930,10 @@ implementation
                          there could be cases though (because of operator
                          overloading) where this is the wrong decision... }
                        if gensym.typ=typesym then
-                         gendef:=ttypesym(gensym).typedef
+                         gendef:=TTypeSym(gensym).typedef
                        else
                          if gensym.typ=procsym then
-                           gendef:=tdef(tprocsym(gensym).procdeflist[0])
+                           gendef:=TDef(TProcSym(gensym).procdeflist[0])
                          else
                            internalerror(2015072401);
 
@@ -5074,9 +5074,9 @@ implementation
                 consume(_ASSIGNMENT);
                 if assigned(p1.resultdef) then
                   if (p1.resultdef.typ=procvardef) then
-                    getprocvardef:=tprocvardef(p1.resultdef)
+                    getprocvardef:=TProcVarDef(p1.resultdef)
                   else if is_invokable(p1.resultdef) then
-                    getfuncrefdef:=tobjectdef(p1.resultdef);
+                    getfuncrefdef:=TObjectDef(p1.resultdef);
                 p2:=sub_expr(opcompare,[ef_accept_equal],nil);
                 if assigned(getprocvardef) then
                   handle_procvar(getprocvardef,p2)

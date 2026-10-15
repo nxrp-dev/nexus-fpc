@@ -34,12 +34,12 @@ interface
     type
       TVMTBuilder=class
       private
-        _Class : tobjectdef;
+        _Class : TObjectDef;
         handledprotocols: tfpobjectlist;
-        function  is_new_vmt_entry(pd:tprocdef; out overridesclasshelper: boolean):boolean;
-        procedure add_new_vmt_entry(pd:tprocdef; allowoverridingmethod: boolean);
-        function  check_msg_str(vmtpd, pd: tprocdef):boolean;
-        function  intf_search_procdef_by_name(proc: tprocdef;const name: string): tprocdef;
+        function  is_new_vmt_entry(pd:TProcDef; out overridesclasshelper: boolean):boolean;
+        procedure add_new_vmt_entry(pd:TProcDef; allowoverridingmethod: boolean);
+        function  check_msg_str(vmtpd, pd: TProcDef):boolean;
+        function  intf_search_procdef_by_name(proc: TProcDef;const name: string): TProcDef;
         procedure intf_get_procdefs(ImplIntf:TImplementedInterface;IntfDef:TObjectDef);
         procedure intf_get_procdefs_recursive(ImplIntf:TImplementedInterface;IntfDef:TObjectDef);
         procedure prot_get_procdefs_recursive(ImplProt:TImplementedInterface;ProtDef:TObjectDef);
@@ -48,7 +48,7 @@ interface
         procedure create_vmt_def;
         procedure build_interface_mappings;
       public
-        constructor create(c:tobjectdef);
+        constructor create(c:TObjectDef);
         procedure build;
       end;
 
@@ -56,7 +56,7 @@ interface
 { convenience routine to build the VMT for an objectdef
   Note: also ensures that the procdefs of the objectdef have their hidden
   parameters inserted }
-procedure build_vmt(def:tobjectdef);
+procedure build_vmt(def:TObjectDef);
 
 
 implementation
@@ -73,18 +73,18 @@ implementation
                               TVMTBuilder
 *****************************************************************************}
 
-    constructor TVMTBuilder.create(c:tobjectdef);
+    constructor TVMTBuilder.create(c:TObjectDef);
       begin
         inherited Create;
         _Class:=c;
       end;
 
 
-    procedure TVMTBuilder.add_new_vmt_entry(pd:tprocdef; allowoverridingmethod: boolean);
+    procedure TVMTBuilder.add_new_vmt_entry(pd:TProcDef; allowoverridingmethod: boolean);
       var
         i : longint;
-        vmtentry : pvmtentry;
-        vmtpd : tprocdef;
+        vmtentry : PVMTEntry;
+        vmtpd : TProcDef;
       begin
         { new entry is needed, override was not possible }
         { Allowed when overriding a category method for a parent class in a
@@ -95,8 +95,8 @@ implementation
             MessagePos1(pd.fileinfo,parser_e_nothing_to_be_overridden,pd.fullprocname(true));
             for i:=0 to _class.vmtentries.count-1 do
               begin
-                vmtentry:=pvmtentry(_class.vmtentries[i]);
-                vmtpd:=tprocdef(vmtentry^.procdef);
+                vmtentry:=PVMTEntry(_class.vmtentries[i]);
+                vmtpd:=TProcDef(vmtentry^.procdef);
                 if (upper(vmtpd.procsym.realname)=upper(pd.procsym.realname)) then
                   MessagePos1(vmtpd.fileinfo,sym_h_param_list,vmtpd.fullprocname(true));
 	      end;
@@ -107,8 +107,8 @@ implementation
           begin
             for i:=0 to _class.vmtentries.count-1 do
               begin
-                vmtentry:=pvmtentry(_class.vmtentries[i]);
-                vmtpd:=tprocdef(vmtentry^.procdef);
+                vmtentry:=PVMTEntry(_class.vmtentries[i]);
+                vmtpd:=TProcDef(vmtentry^.procdef);
                 if (vmtpd.procsym=pd.procsym) and
                    (not(po_overload in pd.procoptions) or
                     not(po_overload in vmtpd.procoptions)) then
@@ -138,7 +138,7 @@ implementation
       end;
 
 
-      function TVMTBuilder.check_msg_str(vmtpd, pd: tprocdef): boolean;
+      function TVMTBuilder.check_msg_str(vmtpd, pd: TProcDef): boolean;
         begin
           result:=true;
           if not(is_objc_class_or_protocol(_class)) then
@@ -148,7 +148,7 @@ implementation
               if ((pd.procoptions * [po_msgstr]) <> (vmtpd.procoptions * [po_msgstr])) then
                 begin
                   MessagePos1(pd.fileinfo,parser_e_header_dont_match_forward,pd.fullprocname(false));
-                  tprocsym(vmtpd.procsym).write_parameter_lists(pd);
+                  TProcSym(vmtpd.procsym).write_parameter_lists(pd);
                   result:=false;
                 end
             end
@@ -178,7 +178,7 @@ implementation
         end;
 
 
-    function TVMTBuilder.is_new_vmt_entry(pd:tprocdef; out overridesclasshelper: boolean):boolean;
+    function TVMTBuilder.is_new_vmt_entry(pd:TProcDef; out overridesclasshelper: boolean):boolean;
       const
         po_comp = [po_classmethod,po_virtualmethod,po_staticmethod,po_interrupt,po_iocheck,po_msgint,
                    po_exports,po_varargs,po_explicitparaloc,po_nostackframe];
@@ -187,11 +187,11 @@ implementation
         hasequalpara,
         hasoverloads,
         pdoverload : boolean;
-        srsym : tsym;
-        st : tsymtable;
+        srsym : TSym;
+        st : TSymTable;
 
       // returns true if we can stop checking, false if we have to continue
-      function found_entry(var vmtpd: tprocdef; var vmtentryvis: tvisibility; updatevalues: boolean): boolean;
+      function found_entry(var vmtpd: TProcDef; var vmtentryvis: TVisibility; updatevalues: boolean): boolean;
         begin
           result:=false;
 
@@ -277,17 +277,17 @@ implementation
                           begin
                             if not(oo_is_external in _class.objectoptions) then
                               if not is_objccategory(_class) then
-                                MessagePos1(pd.fileinfo,parser_e_must_use_override,FullTypeName(tdef(vmtpd.owner.defowner),nil))
+                                MessagePos1(pd.fileinfo,parser_e_must_use_override,FullTypeName(TDef(vmtpd.owner.defowner),nil))
                               else
-                                MessagePos1(pd.fileinfo,parser_e_must_use_reintroduce_objc,FullTypeName(tdef(vmtpd.owner.defowner),nil))
+                                MessagePos1(pd.fileinfo,parser_e_must_use_reintroduce_objc,FullTypeName(TDef(vmtpd.owner.defowner),nil))
                             { there may be a lot of these in auto-translated
                               headers, so only calculate the fulltypename if
                               the hint will be shown  }
                             else if CheckVerbosity(V_Hint) then
                               if not is_objccategory(_class) then
-                                MessagePos1(pd.fileinfo,parser_h_should_use_override,FullTypeName(tdef(vmtpd.owner.defowner),nil))
+                                MessagePos1(pd.fileinfo,parser_h_should_use_override,FullTypeName(TDef(vmtpd.owner.defowner),nil))
                               else
-                                MessagePos1(pd.fileinfo,parser_h_should_use_reintroduce_objc,FullTypeName(tdef(vmtpd.owner.defowner),nil));
+                                MessagePos1(pd.fileinfo,parser_h_should_use_reintroduce_objc,FullTypeName(TDef(vmtpd.owner.defowner),nil));
                           end;
                         { no new entry, but copy the message name if any from
                           the procdef in the parent class }
@@ -305,7 +305,7 @@ implementation
                             { in case we are overriding an abstract method,
                               decrease the number of abstract methods in this class }
                             if (po_abstractmethod in vmtpd.procoptions) then
-                              dec(tobjectdef(pd.owner.defowner).abstractcnt);
+                              dec(TObjectDef(pd.owner.defowner).abstractcnt);
                             if (vmtpd.extnumber<>i) then
                               internalerror(2011083101);
                             pd.extnumber:=vmtpd.extnumber;
@@ -344,7 +344,7 @@ implementation
                      ((vmtpd.procoptions*po_comp)<>(pd.procoptions*po_comp)) then
                      begin
                        MessagePos1(pd.fileinfo,parser_e_header_dont_match_forward,pd.fullprocname(false));
-                       tprocsym(vmtpd.procsym).write_parameter_lists(pd);
+                       TProcSym(vmtpd.procsym).write_parameter_lists(pd);
                      end;
 
                   check_msg_str(vmtpd,pd);
@@ -365,7 +365,7 @@ implementation
                       else
                         MessagePos4(pd.fileinfo,parser_n_ignore_lower_visibility,
                           pd.fullprocname(false),
-                          visibilityname[pd.visibility],tobjectdef(vmtpd.owner.defowner).objrealname^,visibilityname[vmtentryvis])
+                          visibilityname[pd.visibility],TObjectDef(vmtpd.owner.defowner).objrealname^,visibilityname[vmtentryvis])
                       end
                   else if pd.visibility>vmtentryvis then
                     begin
@@ -380,7 +380,7 @@ implementation
                         decrease the number of abstract methods in this class }
                       if (po_overridingmethod in pd.procoptions) and
                          (po_abstractmethod in vmtpd.procoptions) then
-                        dec(tobjectdef(pd.owner.defowner).abstractcnt);
+                        dec(TObjectDef(pd.owner.defowner).abstractcnt);
 
                       if (vmtpd.extnumber<>i) then
                         internalerror(200611084);
@@ -424,23 +424,23 @@ implementation
             end;
         end;
 
-        function found_category_method(st: tsymtable): boolean;
+        function found_category_method(st: TSymTable): boolean;
           var
             entrycount: longint;
-            cat: tobjectdef;
-            vmtpd: tprocdef;
-            vmtvis: tvisibility;
+            cat: TObjectDef;
+            vmtpd: TProcDef;
+            vmtvis: TVisibility;
           begin
             result:=false;
-            if is_objccategory(tdef(st.defowner)) then
+            if is_objccategory(TDef(st.defowner)) then
               begin
-                cat:=tobjectdef(st.defowner);
+                cat:=TObjectDef(st.defowner);
                 { go through all of the category's methods to find the
                   vmtentry corresponding to the procdef we are handling }
                 for entrycount:=0 to cat.vmtentries.Count-1 do
                   begin
-                    vmtpd:=pvmtentry(cat.vmtentries[entrycount])^.procdef;
-                    vmtvis:=pvmtentry(cat.vmtentries[entrycount])^.visibility;
+                    vmtpd:=PVMTEntry(cat.vmtentries[entrycount])^.procdef;
+                    vmtvis:=PVMTEntry(cat.vmtentries[entrycount])^.visibility;
                     { don't change the vmtentry of the category }
                     if found_entry(vmtpd,vmtvis,false) then
                       begin
@@ -455,13 +455,13 @@ implementation
         result:=false;
         overridesclasshelper:=false;
         { Load other values for easier readability }
-        hasoverloads:=(tprocsym(pd.procsym).ProcdefList.Count>1);
+        hasoverloads:=(TProcSym(pd.procsym).ProcdefList.Count>1);
         pdoverload:=(po_overload in pd.procoptions);
 
         { compare with all stored definitions }
         for i:=0 to _class.vmtentries.Count-1 do
           begin
-            if found_entry(pvmtentry(_class.vmtentries[i])^.procdef, pvmtentry(_class.vmtentries[i])^.visibility,true) then
+            if found_entry(PVMTEntry(_class.vmtentries[i])^.procdef, PVMTEntry(_class.vmtentries[i])^.visibility,true) then
               exit;
           end;
 
@@ -482,16 +482,16 @@ implementation
       end;
 
 
-    function TVMTBuilder.intf_search_procdef_by_name(proc: tprocdef;const name: string): tprocdef;
+    function TVMTBuilder.intf_search_procdef_by_name(proc: TProcDef;const name: string): TProcDef;
       const
         po_comp = [po_classmethod,po_staticmethod,po_interrupt,po_iocheck,po_msgint,
                    po_exports,po_varargs,po_explicitparaloc,po_nostackframe];
       var
-        implprocdef : Tprocdef;
+        implprocdef : TProcDef;
         i: cardinal;
-        hclass : tobjectdef;
+        hclass : TObjectDef;
         hashedid : THashedIDString;
-        srsym      : tsym;
+        srsym      : TSym;
         overload: boolean;
       begin
         result:=nil;
@@ -499,19 +499,19 @@ implementation
         hclass:=_class;
         while assigned(hclass) do
           begin
-            srsym:=tsym(hclass.symtable.FindWithHash(hashedid));
+            srsym:=TSym(hclass.symtable.FindWithHash(hashedid));
             if assigned(srsym) and
                (srsym.typ=procsym) and
                ((hclass=_class) or
                 is_visible_for_object(srsym,_class)) then
               begin
                 overload:=false;
-                for i:=0 to Tprocsym(srsym).ProcdefList.Count-1 do
+                for i:=0 to TProcSym(srsym).ProcdefList.Count-1 do
                   begin
-                    implprocdef:=tprocdef(tprocsym(srsym).ProcdefList[i]);
+                    implprocdef:=TProcDef(TProcSym(srsym).ProcdefList[i]);
                     if po_overload in implprocdef.procoptions then
                       overload:=true;
-                    if (implprocdef.procsym=tprocsym(srsym)) and
+                    if (implprocdef.procsym=TProcSym(srsym)) and
                        (compare_paras(proc.paras,implprocdef.paras,cp_all,[cpo_ignorehidden,cpo_ignoreuniv])>=te_equal) and
                        (compare_defs(proc.returndef,implprocdef.returndef,nothingn)>=te_equal) and
                        (proc.proccalloption=implprocdef.proccalloption) and
@@ -541,16 +541,16 @@ implementation
     procedure TVMTBuilder.intf_get_procdefs(ImplIntf:TImplementedInterface;IntfDef:TObjectDef);
       var
         i   : longint;
-        def : tdef;
+        def : TDef;
         hs,
         prefix,
         mappedname: string;
-        implprocdef: tprocdef;
+        implprocdef: TProcDef;
       begin
         prefix:=ImplIntf.IntfDef.symtable.name^+'.';
         for i:=0 to IntfDef.symtable.DefList.Count-1 do
           begin
-            def:=tdef(IntfDef.symtable.DefList[i]);
+            def:=TDef(IntfDef.symtable.DefList[i]);
             if assigned(def) and
                (def.typ=procdef) then
               begin
@@ -561,25 +561,25 @@ implementation
                   When modifying this code, ensure that tbs/tb_interfaces_delphi_run_01.pas (case tw11862.pas), tbs/tw4950
                   and webtbf/tw19591 stay correct. }
                 implprocdef:=nil;
-                hs:=prefix+tprocdef(def).procsym.name;
+                hs:=prefix+TProcDef(def).procsym.name;
                 mappedname:=ImplIntf.GetMapping(hs);
                 if mappedname<>'' then
-                  implprocdef:=intf_search_procdef_by_name(tprocdef(def),mappedname);
+                  implprocdef:=intf_search_procdef_by_name(TProcDef(def),mappedname);
                 if not assigned(implprocdef) then
                   if (mappedname='') or (ImplIntf.IntfDef<>IntfDef) then
-                    implprocdef:=intf_search_procdef_by_name(tprocdef(def),tprocdef(def).procsym.name);
+                    implprocdef:=intf_search_procdef_by_name(TProcDef(def),TProcDef(def).procsym.name);
 
                 { Add procdef to the implemented interface }
                 if assigned(implprocdef) then
                   begin
-                    if (tobjectdef(implprocdef.struct).objecttype<>odt_objcclass) then
+                    if (TObjectDef(implprocdef.struct).objecttype<>odt_objcclass) then
                       begin
                         { in case of Java, copy the real name from the parent,
                           since overriding "Destroy" with "destroy" is not
                           going to work very well }
                         if is_javaclass(implprocdef.struct) and
-                           (implprocdef.procsym.realname<>tprocdef(def).procsym.realname) then
-                          implprocdef.procsym.realname:=tprocdef(def).procsym.realname;
+                           (implprocdef.procsym.realname<>TProcDef(def).procsym.realname) then
+                          implprocdef.procsym.realname:=TProcDef(def).procsym.realname;
                         ImplIntf.AddImplProc(implprocdef);
                       end
                     else
@@ -587,25 +587,25 @@ implementation
                         { If no message name has been specified for the method
                           in the objcclass, copy it from the protocol
                           definition.  }
-                        if not(po_msgstr in tprocdef(def).procoptions) then
+                        if not(po_msgstr in TProcDef(def).procoptions) then
                           begin
-                            include(tprocdef(def).procoptions,po_msgstr);
-                            implprocdef.messageinf.str:=stringdup(tprocdef(def).messageinf.str^);
+                            include(TProcDef(def).procoptions,po_msgstr);
+                            implprocdef.messageinf.str:=stringdup(TProcDef(def).messageinf.str^);
                           end
                         else
                           begin
                             { If a message name has been specified in the
                               objcclass, it has to match the message name in the
                               protocol definition.  }
-                            if (implprocdef.messageinf.str^<>tprocdef(def).messageinf.str^) then
-                              MessagePos2(implprocdef.fileinfo,parser_e_objc_message_name_changed,tprocdef(def).messageinf.str^,implprocdef.messageinf.str^);
+                            if (implprocdef.messageinf.str^<>TProcDef(def).messageinf.str^) then
+                              MessagePos2(implprocdef.fileinfo,parser_e_objc_message_name_changed,TProcDef(def).messageinf.str^,implprocdef.messageinf.str^);
                           end;
                       end;
                   end
                 else
                   if (ImplIntf.IType=etStandard) and
-                     not(po_optional in tprocdef(def).procoptions) then
-                    MessagePos1(_Class.typesym.fileinfo,sym_e_no_matching_implementation_found,tprocdef(def).fullprocname(false));
+                     not(po_optional in TProcDef(def).procoptions) then
+                    MessagePos1(_Class.typesym.fileinfo,sym_e_no_matching_implementation_found,TProcDef(def).fullprocname(false));
               end;
           end;
       end;
@@ -742,7 +742,7 @@ implementation
             if (ImplIntf.VtblImplIntf=ImplIntf) and (ImplIntf.IType=etStandard) then
               begin
                 { allocate a pointer in the object memory }
-                with tObjectSymtable(_class.symtable) do
+                with TObjectSymTable(_class.symtable) do
                   begin
                     datasize:=align(datasize,voidpointertype.alignment);
                     ImplIntf.Ioffset:=datasize;
@@ -764,9 +764,9 @@ implementation
     procedure TVMTBuilder.create_vmt_def;
       var
         i: longint;
-        vmtdef: trecorddef;
-        systemvmt: tdef;
-        sym: tsym;
+        vmtdef: TRecordDef;
+        systemvmt: TDef;
+        sym: TSym;
       begin
         { these types don't have an actual VMT, we only use the other methods
           in TVMTBuilder to determine duplicates/overrides }
@@ -810,7 +810,7 @@ implementation
                 easily triggered in case the definition of the VMT would
                 change) }
               if (systemvmt.typ<>recorddef) or
-                 (trecorddef(systemvmt).symtable.SymList.count<>27) then
+                 (TRecordDef(systemvmt).symtable.SymList.count<>27) then
                 Message1(cg_f_internal_type_does_not_match,'TVMT');
               { system.tvmt is a record that represents the VMT of TObject,
                 including its virtual methods. We only want the non-method
@@ -818,12 +818,12 @@ implementation
                 the VMT we generated here only add the 12 first fields }
               for i:=0 to 11 do
                 begin
-                  sym:=tsym(trecorddef(systemvmt).symtable.SymList[i]);
+                  sym:=TSym(TRecordDef(systemvmt).symtable.SymList[i]);
                   if sym.typ in [procsym,propertysym] then
                     continue;
                   if sym.typ<>fieldvarsym then
                     internalerror(2015052602);
-                  vmtdef.add_field_by_def('',tfieldvarsym(sym).vardef);
+                  vmtdef.add_field_by_def('',TFieldVarSym(sym).vardef);
                 end;
             end;
            odt_interfacecom,odt_interfacecorba,odt_dispinterface:
@@ -846,7 +846,7 @@ implementation
         { now add the methods }
         for i:=0 to _class.vmtentries.count-1 do
           vmtdef.add_field_by_def('',
-            cprocvardef.getreusableprocaddr(pvmtentry(_class.vmtentries[i])^.procdef,pc_address_only)
+            cprocvardef.getreusableprocaddr(PVMTEntry(_class.vmtentries[i])^.procdef,pc_address_only)
           );
         { the VMT ends with a nil pointer }
         vmtdef.add_field_by_def('',voidcodepointertype);
@@ -856,8 +856,8 @@ implementation
     procedure TVMTBuilder.build;
       var
         i : longint;
-        def : tdef;
-        old_current_structdef : tabstractrecorddef;
+        def : TDef;
+        old_current_structdef : TAbstractRecordDef;
         overridesclasshelper : boolean;
       begin
         old_current_structdef:=CurrentStructDef;
@@ -872,12 +872,12 @@ implementation
           to be compatible with the indexes in the interface vtable (PFV) }
         for i:=0 to _class.symtable.DefList.Count-1 do
           begin
-            def:=tdef(_class.symtable.DefList[i]);
+            def:=TDef(_class.symtable.DefList[i]);
             if def.typ=procdef then
               begin
                 { VMT entry }
-                if is_new_vmt_entry(tprocdef(def),overridesclasshelper) then
-                  add_new_vmt_entry(tprocdef(def),overridesclasshelper);
+                if is_new_vmt_entry(TProcDef(def),overridesclasshelper) then
+                  add_new_vmt_entry(TProcDef(def),overridesclasshelper);
               end;
           end;
         insert_struct_hidden_paras(_class);
@@ -943,7 +943,7 @@ implementation
       end;
 
 
-    procedure build_vmt(def:tobjectdef);
+    procedure build_vmt(def:TObjectDef);
       var
         vmtbuilder : TVMTBuilder;
       begin

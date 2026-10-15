@@ -55,7 +55,7 @@ implementation
 
     function tcgnestloadparentfpnode.pass_typecheck: TNode;
       var
-        hsym        : tparavarsym;
+        hsym        : TParaVarSym;
         currpi,
         nextpi      : tprocinfo;
       begin
@@ -83,7 +83,7 @@ implementation
             while assigned(currpi) and
                   (currpi.procdef.parast.symtablelevel>parentpd.parast.symtablelevel) do
               begin
-                hsym:=tparavarsym(currpi.procdef.parentfpsym);
+                hsym:=TParaVarSym(currpi.procdef.parentfpsym);
                 maybe_add_sym_to_parentfpstruct(currpi.procdef,hsym,nextpi.procdef.parentfpstructptrtype,false);
                 currpi:=nextpi;
                 nextpi:=nextpi.parent;
@@ -94,8 +94,8 @@ implementation
 
     function tcgnestloadparentfpnode.pass_1: TNode;
       var
-        fsym        : tfieldvarsym;
-        hsym        : tparavarsym;
+        fsym        : TFieldVarSym;
+        hsym        : TParaVarSym;
         currpi      : tprocinfo;
         useparentfppara :  boolean;
       begin
@@ -105,7 +105,7 @@ implementation
           of the current routine (and hence it has not been moved into the
           nestedfp struct), get the original nestedfp parameter }
         useparentfppara:=not assigned(CurrentProcInfo.procdef.parentfpstruct);
-        hsym:=tparavarsym(CurrentProcInfo.procdef.parast.Find('parentfp'));
+        hsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('parentfp'));
         if CurrentProcInfo.procdef.parast.symtablelevel>parentpd.parast.symtablelevel then
           useparentfppara:=
             useparentfppara or
@@ -125,8 +125,8 @@ implementation
           need }
         while (currpi.procdef.parast.symtablelevel>parentpd.parast.symtablelevel) do
           begin
-            hsym:=tparavarsym(currpi.procdef.parentfpsym);
-            fsym:=tfieldvarsym(find_sym_in_parentfpstruct(currpi.procdef,hsym));
+            hsym:=TParaVarSym(currpi.procdef.parentfpsym);
+            fsym:=TFieldVarSym(find_sym_in_parentfpstruct(currpi.procdef,hsym));
             if not assigned(fsym) then
               internalerror(2011060405);
             result:=csubscriptnode.create(fsym,cderefnode.create(result));

@@ -246,7 +246,7 @@ implementation
          preprocfile:=tpreprocfile.create('pre_'+filename);
        { initialize a module }
          SetCurrentModule(tppumodule.create(nil,'',filename,false));
-         macrosymtablestack:=TSymtablestack.create;
+         macrosymtablestack:=TSymTableStack.create;
 
 
          set_current_scanner(tscannerfile.Create(filename));
@@ -254,7 +254,7 @@ implementation
          CurrentModule.scanner:=CurrentScanner;
 
          { init macros before anything in the file is parsed.}
-         CurrentModule.localmacrosymtable:= tmacrosymtable.create(false);
+         CurrentModule.localmacrosymtable:= TMacroSymTable.create(false);
          macrosymtablestack.push(initialmacrosymtable);
          macrosymtablestack.push(CurrentModule.localmacrosymtable);
 
@@ -353,8 +353,8 @@ implementation
          Message1(parser_i_compiling,module.mainsource);
 
        { reset symtable }
-         symtablestack:=tdefawaresymtablestack.create;
-         macrosymtablestack:=TSymtablestack.create;
+         symtablestack:=TDefAwareSymTableStack.create;
+         macrosymtablestack:=TSymTableStack.create;
          systemunit:=nil;
          CurrentSettings.defproccall:=InitSettings.defproccall;
          current_exceptblock:=0;
@@ -380,7 +380,7 @@ implementation
          set_current_scanner(sc);
 
          { init macros before anything in the file is parsed.}
-         module.localmacrosymtable:= tmacrosymtable.create(false);
+         module.localmacrosymtable:= TMacroSymTable.create(false);
          macrosymtablestack.push(initialmacrosymtable);
          macrosymtablestack.push(module.localmacrosymtable);
 

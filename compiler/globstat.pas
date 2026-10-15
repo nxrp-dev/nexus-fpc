@@ -53,8 +53,8 @@ type
     old_block_type : TBlockType;
   { symtable }
     oldsymtablestack,
-    oldmacrosymtablestack : TSymtablestack;
-    oldaktprocsym    : tprocsym;
+    oldmacrosymtablestack : TSymTableStack;
+    oldaktprocsym    : TProcSym;
   { cg }
     oldparse_only  : boolean;
   { akt.. things }
@@ -76,9 +76,9 @@ type
     procedure clearscanner;
     class procedure remove_scanner_from_states(scanner : tscannerfile); static;
     procedure save(for_module_switch: boolean = false);
-    procedure save_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
+    procedure save_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
     procedure restore;
-    procedure reload_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
+    procedure reload_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
     class procedure clear_state;
   end;
 
@@ -206,9 +206,9 @@ var
       old_scanner:=CurrentScanner;
     end;
 
-  procedure tglobalstate.save_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
+  procedure tglobalstate.save_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
     var
-      item: psymtablestackitem;
+      item: PSymTableStackItem;
       m: tmodule;
       id: LongInt;
     begin
@@ -280,9 +280,9 @@ var
       CurrentDebugInfo:=old_debuginfo;
     end;
 
-  procedure tglobalstate.reload_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
+  procedure tglobalstate.reload_symtable_stack(stack: TSymTableStack; kind: TSymTableStackKind);
     var
-      item: psymtablestackitem;
+      item: PSymTableStackItem;
       m: tmodule;
       id: LongInt;
     begin

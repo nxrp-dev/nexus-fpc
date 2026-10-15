@@ -286,7 +286,7 @@ interface
           procedure readtoken(allowrecordtoken:boolean);
           function  readpreproc:ttoken;
           function  readpreprocint(var value:int64;const place:string):boolean;
-          function  readpreprocset(conform_to:tsetdef;var value:TNormalSet;const place:string):boolean;
+          function  readpreprocset(conform_to:TSetDef;var value:TNormalSet;const place:string):boolean;
           function  asmgetchar:char;
 {$ifdef EXTDEBUG}
           function DumpPointer : string;
@@ -1009,14 +1009,14 @@ type
     { we can't use built-in defs since they
       may be not created at the moment }
     class var
-       sintdef,uintdef,booldef,strdef,setdef,realdef: tdef;
+       sintdef,uintdef,booldef,strdef,setdef,realdef: TDef;
     class constructor createdefs;
     class destructor destroydefs;
   public
-    consttyp: tconsttyp;
-    value: tconstvalue;
-    def: tdef;
-    constructor create_const(c:tconstsym);
+    consttyp: TConstTyp;
+    value: TConstValue;
+    def: TDef;
+    constructor create_const(c:TConstSym);
     constructor create_error;
     constructor create_ord(v: Tconstexprint);
     constructor create_int(v: int64);
@@ -1045,12 +1045,12 @@ type
         variables are initialised. Since these types are only used for
         compile-time evaluation of conditional expressions, it doesn't matter
         that we use the base types instead of the cpu-specific ones. }
-      sintdef:=torddef.create(s64bit,low(int64),high(int64),false);
-      uintdef:=torddef.create(u64bit,low(qword),high(qword),false);
-      booldef:=torddef.create(pasbool1,0,1,false);
-      strdef:=tstringdef.createansi(0,false);
-      setdef:=tsetdef.create(sintdef,0,255,false);
-      realdef:=tfloatdef.create(s80real,false);
+      sintdef:=TOrdDef.create(s64bit,low(int64),high(int64),false);
+      uintdef:=TOrdDef.create(u64bit,low(qword),high(qword),false);
+      booldef:=TOrdDef.create(pasbool1,0,1,false);
+      strdef:=TStringDef.createansi(0,false);
+      setdef:=TSetDef.create(sintdef,0,255,false);
+      realdef:=TFloatDef.create(s80real,false);
     end;
 
   class destructor texprvalue.destroydefs;
@@ -1069,7 +1069,7 @@ type
       realdef := nil;
     end;
 
-  constructor texprvalue.create_const(c: tconstsym);
+  constructor texprvalue.create_const(c: TConstSym);
     begin
       consttyp:=c.consttyp;
       def:=c.constdef;
@@ -1598,7 +1598,7 @@ type
       end;
 
 
-    function preproc_comp_expr(conform_to:tdef):texprvalue;
+    function preproc_comp_expr(conform_to:TDef):texprvalue;
 
         function preproc_sub_expr(pred_level:Toperator_precedence;eval:Boolean):texprvalue; forward;
 
@@ -1609,11 +1609,11 @@ type
           CurrentScanner.preproc_token:=CurrentScanner.readpreproc;
         end;
 
-        function try_consume_unitsym(var srsym:tsym;var srsymtable:TSymtable;out tokentoconsume:ttoken):boolean;
+        function try_consume_unitsym(var srsym:TSym;var srsymtable:TSymTable;out tokentoconsume:ttoken):boolean;
           var
             hmodule: tmodule;
             ns:ansistring;
-            nssym:tsym;
+            nssym:TSym;
           begin
             result:=false;
             tokentoconsume:=_ID;
@@ -1653,8 +1653,8 @@ type
                           end;
                         { check if there is a hidden unit with this pattern in the namespace }
                         if not assigned(srsym) and
-                           assigned(nssym) and (nssym.typ=namespacesym) and assigned(tnamespacesym(nssym).unitsym) then
-                          srsym:=tnamespacesym(nssym).unitsym;
+                           assigned(nssym) and (nssym.typ=namespacesym) and assigned(TNamespaceSym(nssym).unitsym) then
+                          srsym:=TNamespaceSym(nssym).unitsym;
                         if assigned(srsym) and (srsym.typ<>unitsym) then
                           internalerror(201108260);
                         if not assigned(srsym) then
@@ -1670,34 +1670,34 @@ type
                           text model, regardless of the System alias. }
                         if ((CurrentScanner.preproc_pattern='CHAR') or
                             (CurrentScanner.preproc_pattern='PCHAR')) and
-                           (tmodule(tunitsym(srsym).module).globalsymtable=systemunit) then
+                           (tmodule(TUnitSym(srsym).module).globalsymtable=systemunit) then
                           begin
                             if CurrentScanner.preproc_pattern='PCHAR' then
                               if m_default_unicodestring in CurrentSettings.modeswitches then
-                                searchsym_in_module(tunitsym(srsym).module,'PWIDECHAR',srsym,srsymtable)
+                                searchsym_in_module(TUnitSym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                               else
-                                searchsym_in_module(tunitsym(srsym).module,'PANSICHAR',srsym,srsymtable)
+                                searchsym_in_module(TUnitSym(srsym).module,'PANSICHAR',srsym,srsymtable)
                             else if m_default_unicodestring in CurrentSettings.modeswitches then
-                              searchsym_in_module(tunitsym(srsym).module,'WIDECHAR',srsym,srsymtable)
+                              searchsym_in_module(TUnitSym(srsym).module,'WIDECHAR',srsym,srsymtable)
                             else
-                              searchsym_in_module(tunitsym(srsym).module,'ANSICHAR',srsym,srsymtable)
+                              searchsym_in_module(TUnitSym(srsym).module,'ANSICHAR',srsym,srsymtable)
                           end
                         else
-                          searchsym_in_module(tunitsym(srsym).module,CurrentScanner.preproc_pattern,srsym,srsymtable);
+                          searchsym_in_module(TUnitSym(srsym).module,CurrentScanner.preproc_pattern,srsym,srsymtable);
                       _STRING:
                         begin
                           { system.string? }
-                          if tmodule(tunitsym(srsym).module).globalsymtable=systemunit then
+                          if tmodule(TUnitSym(srsym).module).globalsymtable=systemunit then
                             begin
                               if cs_refcountedstrings in CurrentSettings.localswitches then
                                 begin
                                   if m_default_unicodestring in CurrentSettings.modeswitches then
-                                    searchsym_in_module(tunitsym(srsym).module,'UNICODESTRING',srsym,srsymtable)
+                                    searchsym_in_module(TUnitSym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                                   else
-                                    searchsym_in_module(tunitsym(srsym).module,'ANSISTRING',srsym,srsymtable)
+                                    searchsym_in_module(TUnitSym(srsym).module,'ANSISTRING',srsym,srsymtable)
                                 end
                               else
-                                searchsym_in_module(tunitsym(srsym).module,'SHORTSTRING',srsym,srsymtable);
+                                searchsym_in_module(TUnitSym(srsym).module,'SHORTSTRING',srsym,srsymtable);
                               tokentoconsume:=_STRING;
                             end;
                         end
@@ -1714,9 +1714,9 @@ type
               end;
           end;
 
-        procedure try_consume_nestedsym(var srsym:tsym;var srsymtable:TSymtable);
+        procedure try_consume_nestedsym(var srsym:TSym;var srsymtable:TSymTable);
           var
-            def:tdef;
+            def:TDef;
             tokentoconsume:ttoken;
             found:boolean;
           begin
@@ -1730,15 +1730,15 @@ type
                begin
                  if assigned(srsym)and(srsym.typ=typesym) then
                    begin
-                     def:=ttypesym(srsym).typedef;
+                     def:=TTypeSym(srsym).typedef;
                      if is_class_or_object(def) or is_record(def) or is_java_class_or_interface(def) then
                        begin
                          preproc_consume(_POINT);
                          CurrentScanner.skipspace;
                          if def.typ=objectdef then
-                           found:=searchsym_in_class(tobjectdef(def),tobjectdef(def),CurrentScanner.preproc_pattern,srsym,srsymtable,[ssf_search_helper])
+                           found:=searchsym_in_class(TObjectDef(def),TObjectDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable,[ssf_search_helper])
                          else
-                           found:=searchsym_in_record(trecorddef(def),CurrentScanner.preproc_pattern,srsym,srsymtable);
+                           found:=searchsym_in_record(TRecordDef(def),CurrentScanner.preproc_pattern,srsym,srsymtable);
                          if not found then
                            begin
                              Message1(sym_e_id_not_found,CurrentScanner.preproc_pattern);
@@ -1770,7 +1770,7 @@ type
 
         var
           hs: ShortString;
-          mac: tmacro;
+          mac: TMacro;
           macrocount,
           len: integer;
           foundmacro: boolean;
@@ -1790,7 +1790,7 @@ type
             For real macros also do recursive substitution. }
           macrocount:=0;
           repeat
-            mac:=tmacro(search_macro(searchstr^));
+            mac:=TMacro(search_macro(searchstr^));
 
             inc(macrocount);
             if macrocount>max_macro_nesting then
@@ -1852,7 +1852,7 @@ type
             end;
         end;
 
-        procedure MarkSymbolAsUsed(sym: tsym);
+        procedure MarkSymbolAsUsed(sym: TSym);
           begin
            sym.IncRefCount;
            { do we know an owner? }
@@ -1863,9 +1863,9 @@ type
         function preproc_factor(eval: Boolean):texprvalue;
         var
            hs,countstr,storedpattern,fileext: string;
-           mac: tmacro;
-           srsym : tsym;
-           srsymtable : TSymtable;
+           mac: TMacro;
+           srsym : TSym;
+           srsymtable : TSymTable;
            hdef : TDef;
            l : longint;
            hasKlammer,
@@ -1933,7 +1933,7 @@ type
                     if CurrentScanner.preproc_token =_ID then
                       begin
                         hs := CurrentScanner.preproc_pattern;
-                        mac := tmacro(search_macro(hs));
+                        mac := TMacro(search_macro(hs));
                         if assigned(mac) and mac.defined then
                           begin
                             result:=texprvalue.create_bool(true);
@@ -1961,7 +1961,7 @@ type
                     if CurrentScanner.preproc_token =_ID then
                       begin
                         hs := CurrentScanner.preproc_pattern;
-                        mac := tmacro(search_macro(hs));
+                        mac := TMacro(search_macro(hs));
                         { FPC_UNICODESTRINGS is always present in the initial
                           macro table, but is undefined in ANSI mode. }
                         if assigned(mac) and
@@ -2041,14 +2041,14 @@ type
                               localvarsym,
                               paravarsym :
                                 begin
-                                  l:=tabstractvarsym(srsym).getsize;
+                                  l:=TAbstractVarSym(srsym).getsize;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               typesym:
                                 begin
-                                  if ttypesym(srsym).typedef.typ in [errordef,abstractdef,forwarddef] then
+                                  if TTypeSym(srsym).typedef.typ in [errordef,abstractdef,forwarddef] then
                                     Message(parser_e_illegal_expression);
-                                  l:=ttypesym(srsym).typedef.size;
+                                  l:=TTypeSym(srsym).typedef.size;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               else
@@ -2094,12 +2094,12 @@ type
                               localvarsym,
                               paravarsym :
                                 begin
-                                  hdef:=tabstractvarsym(srsym).vardef;
+                                  hdef:=TAbstractVarSym(srsym).vardef;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               typesym:
                                 begin
-                                  hdef:=ttypesym(srsym).typedef;
+                                  hdef:=TTypeSym(srsym).typedef;
                                   MarkSymbolAsUsed(srsym);
                                 end;
                               else
@@ -2108,26 +2108,26 @@ type
                           if assigned(hdef) then
                             begin
                               if hdef.typ=setdef then
-                                hdef:=tsetdef(hdef).elementdef;
+                                hdef:=TSetDef(hdef).elementdef;
                               case hdef.typ of
                                 orddef:
-                                  with torddef(hdef).high do
+                                  with TOrdDef(hdef).high do
                                     if signed then
                                       result:=texprvalue.create_int(svalue)
                                     else
                                       result:=texprvalue.create_uint(uvalue);
                                 enumdef:
-                                  result:=texprvalue.create_int(tenumdef(hdef).maxval);
+                                  result:=texprvalue.create_int(TEnumDef(hdef).maxval);
                                 arraydef:
                                   if is_open_array(hdef) or is_array_of_const(hdef) or is_dynamic_array(hdef) then
                                     Message(type_e_mismatch)
                                   else
-                                    result:=texprvalue.create_int(tarraydef(hdef).highrange);
+                                    result:=texprvalue.create_int(TArrayDef(hdef).highrange);
                                 stringdef:
                                   if is_open_string(hdef) or is_ansistring(hdef) or is_wide_or_unicode_string(hdef) then
                                     Message(type_e_mismatch)
                                   else
-                                    result:=texprvalue.create_int(tstringdef(hdef).len);
+                                    result:=texprvalue.create_int(TStringDef(hdef).len);
                                 else
                                   Message(type_e_mismatch);
                               end;
@@ -2191,9 +2191,9 @@ type
                                 (srsym.typ=typesym) and
                                 (
                                   { mode delphi}
-                                  (ttypesym(srsym).typedef.typ in [undefineddef,errordef]) or
+                                  (TTypeSym(srsym).typedef.typ in [undefineddef,errordef]) or
                                   { non-delphi modes }
-                                  (df_generic in ttypesym(srsym).typedef.defoptions)
+                                  (df_generic in TTypeSym(srsym).typedef.defoptions)
                                 ) then
                               result:=texprvalue.create_bool(false)
                             else
@@ -2288,8 +2288,8 @@ type
                                       { const def must conform to the set type }
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
-                                        (tconstsym(srsym).constdef.typ=setdef) and
-                                        (compare_defs(tsetdef(tconstsym(srsym).constdef).elementdef,tsetdef(conform_to).elementdef,nothingn)<>te_exact) then
+                                        (TConstSym(srsym).constdef.typ=setdef) and
+                                        (compare_defs(TSetDef(TConstSym(srsym).constdef).elementdef,TSetDef(conform_to).elementdef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2299,7 +2299,7 @@ type
                                       if result<>nil then
                                         begin
                                           result.free;
-                                          result:=texprvalue.create_const(tconstsym(srsym));
+                                          result:=texprvalue.create_const(TConstSym(srsym));
                                         end;
                                     end;
                                   enumsym:
@@ -2307,7 +2307,7 @@ type
                                       { enum definition must conform to the set type }
                                       if (conform_to<>nil) and
                                         (conform_to.typ=setdef) and
-                                        (compare_defs(tenumsym(srsym).definition,tsetdef(conform_to).elementdef,nothingn)<>te_exact) then
+                                        (compare_defs(TEnumSym(srsym).definition,TSetDef(conform_to).elementdef,nothingn)<>te_exact) then
                                           begin
                                             result.free;
                                             result:=nil;
@@ -2317,7 +2317,7 @@ type
                                       if result<>nil then
                                         begin
                                           result.free;
-                                          result:=texprvalue.create_int(tenumsym(srsym).value);
+                                          result:=texprvalue.create_int(TEnumSym(srsym).value);
                                         end;
                                     end;
                                   else
@@ -2533,7 +2533,7 @@ type
       var
         hs  : string;
         bracketcount : longint;
-        mac : tmacro;
+        mac : TMacro;
         macropos : SizeInt;
         macrobuffer : array[0..maxmacrolen-1] of char;
       begin
@@ -2549,10 +2549,10 @@ type
             Message1(scan_e_illegal_directive,'DEFINE '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=tmacro(search_macro(hs));
+        mac:=TMacro(search_macro(hs));
         if not assigned(mac) or (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
-            mac:=tmacro.create(hs);
+            mac:=TMacro.create(hs);
             mac.defined:=true;
             CurrentModule.localmacrosymtable.insertsym(mac);
           end
@@ -2648,7 +2648,7 @@ type
     procedure dir_setc;
       var
         hs  : string;
-        mac : tmacro;
+        mac : TMacro;
         exprvalue: texprvalue;
       begin
         CurrentScanner.skipspace;
@@ -2658,11 +2658,11 @@ type
             Message1(scan_e_illegal_directive,'SETC '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=tmacro(search_macro(hs));
+        mac:=TMacro(search_macro(hs));
         if not assigned(mac) or
            (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
-            mac:=tmacro.create(hs);
+            mac:=TMacro.create(hs);
             mac.defined:=true;
             mac.is_compiler_var:=true;
             CurrentModule.localmacrosymtable.insertsym(mac);
@@ -2722,7 +2722,7 @@ type
     procedure dir_undef;
       var
         hs  : string;
-        mac : tmacro;
+        mac : TMacro;
       begin
         CurrentScanner.skipspace;
         hs:=CurrentScanner.readid;
@@ -2731,11 +2731,11 @@ type
             Message1(scan_e_illegal_directive,'UNDEF '+hs+' (selected by compiler string mode)');
             exit;
           end;
-        mac:=tmacro(search_macro(hs));
+        mac:=TMacro(search_macro(hs));
         if not assigned(mac) or
            (mac.owner <> CurrentModule.localmacrosymtable) then
           begin
-             mac:=tmacro.create(hs);
+             mac:=TMacro.create(hs);
              mac.defined:=false;
              CurrentModule.localmacrosymtable.insertsym(mac);
           end
@@ -6108,7 +6108,7 @@ type
     procedure tscannerfile.readtoken(allowrecordtoken:boolean);
       var
         low,high,mid : longint;
-        mac     : tmacro;
+        mac     : TMacro;
         firstdigitread: boolean;
         had_newline,first_multiline : boolean;
         trimcount : word;
@@ -6208,7 +6208,7 @@ type
             { this takes some time ... }
               if (cs_support_macro in CurrentSettings.moduleswitches) then
                begin
-                 mac:=tmacro(search_macro(pattern));
+                 mac:=TMacro(search_macro(pattern));
                  if assigned(mac) and (not mac.is_compiler_var) and mac.is_c_macro then
                   begin
                     if (yylexcount<max_macro_nesting) and (macro_nesting_depth<max_macro_nesting) then
@@ -6889,7 +6889,7 @@ exit_label:
       end;
 
 
-    function tscannerfile.readpreprocset(conform_to:tsetdef;var value:TNormalSet;const place:string):boolean;
+    function tscannerfile.readpreprocset(conform_to:TSetDef;var value:TNormalSet;const place:string):boolean;
       var
         hs : texprvalue;
       begin

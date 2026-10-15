@@ -328,7 +328,7 @@ interface
           swapleftright;
         force_reg_left_right(false,false);
         set_result_location_reg;
-        setbase:=tsetdef(left.resultdef).setbase;
+        setbase:=TSetDef(left.resultdef).setbase;
         if (right.location.loc = LOC_CONSTANT) then
           begin
             if (TargetInfo.endian=endian_big) then
@@ -801,7 +801,7 @@ interface
             end;
           setdef :
             begin
-              if is_smallset(tsetdef(left.resultdef)) then
+              if is_smallset(TSetDef(left.resultdef)) then
                 second_opsmallset
               else
                 internalerror(200109041);

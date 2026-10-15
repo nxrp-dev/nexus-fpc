@@ -53,12 +53,12 @@ interface
          lpf_forload
        );
        tloadparentfpnode = class(TUnaryNode)
-          parentpd : tprocdef;
-          parentpdderef : tderef;
+          parentpd : TProcDef;
+          parentpdderef : TDeref;
           kind: tloadparentfpkind;
-          constructor create(pd: tprocdef; fpkind: tloadparentfpkind);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor create(pd: TProcDef; fpkind: tloadparentfpkind);virtual;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function pass_1 : TNode;override;
@@ -76,14 +76,14 @@ interface
        taddrnodeflags = set of taddrnodeflag;
 
        taddrnode = class(TUnaryNode)
-          getprocvardef : tprocvardef;
-          getprocvardefderef : tderef;
+          getprocvardef : TProcVarDef;
+          getprocvardefderef : TDeref;
           addrnodeflags : taddrnodeflags;
           constructor create(l : TNode);virtual;
           constructor create_internal(l : TNode); virtual;
           constructor create_internal_nomark(l : TNode); virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure mark_write;override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
@@ -112,8 +112,8 @@ interface
        tderefnode = class(TUnaryNode)
           derefnodeflags : TDerefNodeFlags;
           constructor create(l : TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function dogetcopy : TNode;override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
@@ -125,11 +125,11 @@ interface
        tderefnodeclass = class of tderefnode;
 
        tsubscriptnode = class(TUnaryNode)
-          vs : tfieldvarsym;
-          vsderef : tderef;
-          constructor create(varsym : tsym;l : TNode);virtual;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          vs : TFieldVarSym;
+          vsderef : TDeref;
+          constructor create(varsym : TSym;l : TNode);virtual;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function dogetcopy : TNode;override;
@@ -159,8 +159,8 @@ interface
        public
           vecnodeflags: TVecNodeFlags;
           constructor  create(l,r : TNode);virtual;
-          constructor ppuload(t : TNodeType;ppufile : tcompilerppufile);override;
-          procedure ppuwrite(ppufile : tcompilerppufile);override;
+          constructor ppuload(t : TNodeType;ppufile : TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile : TCompilerPPUFile);override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode; override;
@@ -223,7 +223,7 @@ implementation
               if left.resultdef.typ=objectdef then
                 begin
                   { access to the classtype while specializing? }
-                  if tstoreddef(left.resultdef).is_generic then
+                  if TStoredDef(left.resultdef).is_generic then
                     begin
                       defaultresultdef:=true;
                       if assigned(CurrentStructDef) then
@@ -271,7 +271,7 @@ implementation
 
     function tloadvmtaddrnode.pass_1 : TNode;
       var
-        vs: tsym;
+        vs: TSym;
       begin
          result:=nil;
          expectloc:=LOC_REGISTER;
@@ -304,9 +304,9 @@ implementation
              begin
                { keep track of which classes might be instantiated via a classrefdef }
                if (left.resultdef.typ=classrefdef) then
-                 tobjectdef(tclassrefdef(left.resultdef).pointeddef).register_maybe_created_object_type
+                 TObjectDef(TClassRefDef(left.resultdef).pointeddef).register_maybe_created_object_type
                else if (left.resultdef.typ=objectdef) then
-                 tobjectdef(left.resultdef).register_maybe_created_object_type
+                 TObjectDef(left.resultdef).register_maybe_created_object_type
              end
            end
          else if is_objcclass(left.resultdef) and
@@ -315,12 +315,12 @@ implementation
              { call "class" method (= "classclass" in FPC), because otherwise
                we may use the class information before it has been
                initialized }
-             vs:=search_struct_member(tobjectdef(left.resultdef),'CLASSCLASS');
+             vs:=search_struct_member(TObjectDef(left.resultdef),'CLASSCLASS');
              if not assigned(vs) or
                 (vs.typ<>procsym) then
                internalerror(2011080601);
              { can't reuse "self", because it will be freed when we return }
-             result:=ccallnode.create(nil,tprocsym(vs),vs.owner,self.getcopy,[],nil);
+             result:=ccallnode.create(nil,TProcSym(vs),vs.owner,self.getcopy,[],nil);
            end;
       end;
 
@@ -329,7 +329,7 @@ implementation
                         TLOADPARENTFPNODE
 *****************************************************************************}
 
-    constructor tloadparentfpnode.create(pd: tprocdef; fpkind: tloadparentfpkind);
+    constructor tloadparentfpnode.create(pd: TProcDef; fpkind: tloadparentfpkind);
       begin
         inherited create(loadparentfpn,nil);
         if not assigned(pd) then
@@ -341,7 +341,7 @@ implementation
       end;
 
 
-    constructor tloadparentfpnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tloadparentfpnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(parentpdderef);
@@ -349,7 +349,7 @@ implementation
       end;
 
 
-    procedure tloadparentfpnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tloadparentfpnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(parentpdderef);
@@ -367,7 +367,7 @@ implementation
     procedure tloadparentfpnode.derefimpl;
       begin
         inherited derefimpl;
-        parentpd:=tprocdef(parentpdderef.resolve);
+        parentpd:=TProcDef(parentpdderef.resolve);
       end;
 
 
@@ -432,7 +432,7 @@ implementation
       end;
 
 
-    constructor taddrnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor taddrnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(getprocvardefderef);
@@ -440,7 +440,7 @@ implementation
       end;
 
 
-    procedure taddrnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure taddrnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(getprocvardefderef);
@@ -464,7 +464,7 @@ implementation
     procedure taddrnode.derefimpl;
       begin
         inherited derefimpl;
-        getprocvardef:=tprocvardef(getprocvardefderef.resolve);
+        getprocvardef:=TProcVarDef(getprocvardefderef.resolve);
       end;
 
 
@@ -551,9 +551,9 @@ implementation
 
       var
          hp : TNode;
-         hsym : tfieldvarsym;
+         hsym : TFieldVarSym;
          isprocvar,need_conv_to_voidptr: boolean;
-         procpointertype: tdef;
+         procpointertype: TDef;
       begin
         result:=nil;
         TypeCheckPass(left);
@@ -607,10 +607,10 @@ implementation
               to load the proc field }
             if need_conv_to_voidptr then
               begin
-                if tabstractprocdef(left.resultdef).is_addressonly then
+                if TAbstractProcDef(left.resultdef).is_addressonly then
                   begin
                     if anf_ofs in addrnodeflags then
-                      result:=ctypeconvnode.create_internal(left,tabstractprocdef(left.resultdef).ofs_address_type)
+                      result:=ctypeconvnode.create_internal(left,TAbstractProcDef(left.resultdef).ofs_address_type)
                     else
                       result:=ctypeconvnode.create_internal(left,voidcodepointertype);
                     include(result.flags,nf_load_procvar);
@@ -621,14 +621,14 @@ implementation
                     { For procvars and for nested routines we need to return
                       the proc field of the methodpointer }
                     if isprocvar or
-                       is_nested_pd(tabstractprocdef(left.resultdef)) then
+                       is_nested_pd(TAbstractProcDef(left.resultdef)) then
                       begin
-                        if tabstractprocdef(left.resultdef).is_methodpointer then
+                        if TAbstractProcDef(left.resultdef).is_methodpointer then
                           procpointertype:=methodpointertype
                         else
                           procpointertype:=nestedprocpointertype;
                         { find proc field in methodpointer record }
-                        hsym:=tfieldvarsym(trecorddef(procpointertype).symtable.Find('proc'));
+                        hsym:=TFieldVarSym(TRecordDef(procpointertype).symtable.Find('proc'));
                         if not assigned(hsym) then
                           internalerror(200412041);
                         { Load tmehodpointer(left).proc }
@@ -675,17 +675,17 @@ implementation
 
     function taddrnode.simplify(forinline : boolean) : TNode;
 
-        function compatible_with_offsetof(res : tdef) : boolean;
+        function compatible_with_offsetof(res : TDef) : boolean;
           begin
             result:=(res.typ in [recorddef,objectdef]) and not (is_implicit_pointer_object_type(res))
-              or (res.typ=arraydef) and not (ado_IsDynamicArray in tarraydef(res).arrayoptions);
+              or (res.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(res).arrayoptions);
           end;
 
       var
-        hsym : tfieldvarsym;
+        hsym : TFieldVarSym;
         hp : TNode;
         fieldoffset : asizeint;
-        resdef : tdef;
+        resdef : TDef;
         index : int64;
 
       begin
@@ -709,7 +709,7 @@ implementation
                   exit;
 
                 hsym:=tsubscriptnode(hp).vs;
-                if tabstractrecordsymtable(hsym.owner).is_packed then
+                if TAbstractRecordSymTable(hsym.owner).is_packed then
                   begin
                     if hsym.fieldoffset mod 8<>0 then
                       exit;
@@ -728,22 +728,22 @@ implementation
                   exit;
 
                 resdef:=tvecnode(hp).left.resultdef;
-                if not ((resdef.typ=arraydef) and not (ado_IsDynamicArray in tarraydef(resdef).arrayoptions)) then
+                if not ((resdef.typ=arraydef) and not (ado_IsDynamicArray in TArrayDef(resdef).arrayoptions)) then
                   exit;
 
                 index:=tordconstnode(tvecnode(hp).right).value.svalue;
-                if not ((index>=tarraydef(resdef).lowrange) and (index<=tarraydef(resdef).highrange)) then
+                if not ((index>=TArrayDef(resdef).lowrange) and (index<=TArrayDef(resdef).highrange)) then
                   exit;
-                index:=index-tarraydef(resdef).lowrange;
+                index:=index-TArrayDef(resdef).lowrange;
 
-                if ado_IsBitPacked in tarraydef(resdef).arrayoptions then
+                if ado_IsBitPacked in TArrayDef(resdef).arrayoptions then
                   begin
-                    if index*tarraydef(resdef).elepackedbitsize mod 8<>0 then
+                    if index*TArrayDef(resdef).elepackedbitsize mod 8<>0 then
                       exit;
-                    inc(fieldoffset,index*tarraydef(resdef).elepackedbitsize div 8);
+                    inc(fieldoffset,index*TArrayDef(resdef).elepackedbitsize div 8);
                   end
                 else
-                  inc(fieldoffset,index*tarraydef(resdef).elesize);
+                  inc(fieldoffset,index*TArrayDef(resdef).elesize);
 
                 hp:=tvecnode(hp).left;
               end;
@@ -785,7 +785,7 @@ implementation
     function taddrnode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
       var
          hp  : TNode;
-         hsym : tfieldvarsym;
+         hsym : TFieldVarSym;
          offset: asizeint;
       begin
         result:=false;
@@ -798,14 +798,14 @@ implementation
           end
         else if (realsource.nodetype=loadn) and
                 (tloadnode(realsource).symtableentry.typ=absolutevarsym) and
-                (tabsolutevarsym(tloadnode(realsource).symtableentry).abstyp=toaddr) then
+                (TAbsoluteVarSym(tloadnode(realsource).symtableentry).abstyp=toaddr) then
           begin
-            offset:=tabsolutevarsym(tloadnode(realsource).symtableentry).addroffset;
+            offset:=TAbsoluteVarSym(tloadnode(realsource).symtableentry).addroffset;
             hp:=left;
             while assigned(hp)and(hp.nodetype=subscriptn) do
               begin
                 hsym:=tsubscriptnode(hp).vs;
-                if tabstractrecordsymtable(hsym.owner).is_packed then
+                if TAbstractRecordSymTable(hsym.owner).is_packed then
                   begin
                     { can't calculate the address of a non-byte aligned field }
                     if (hsym.fieldoffset mod 8)<>0 then
@@ -859,14 +859,14 @@ implementation
       end;
 
 
-    constructor tderefnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tderefnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(derefnodeflags));
       end;
 
 
-    procedure tderefnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tderefnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putset(tppuset1(derefnodeflags));
@@ -895,7 +895,7 @@ implementation
          maybe_call_procvar(left,true);
 
          if left.resultdef.typ=pointerdef then
-           resultdef:=tpointerdef(left.resultdef).pointeddef
+           resultdef:=TPointerDef(left.resultdef).pointeddef
          else if left.resultdef.typ=undefineddef then
            resultdef:=cundefineddef.create(true)
          else
@@ -948,22 +948,22 @@ implementation
                             TSUBSCRIPTNODE
 *****************************************************************************}
 
-    constructor tsubscriptnode.create(varsym : tsym;l : TNode);
+    constructor tsubscriptnode.create(varsym : TSym;l : TNode);
 
       begin
          inherited create(subscriptn,l);
          { vs should be changed to tsym! }
-         vs:=tfieldvarsym(varsym);
+         vs:=TFieldVarSym(varsym);
       end;
 
-    constructor tsubscriptnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tsubscriptnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(vsderef);
       end;
 
 
-    procedure tsubscriptnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tsubscriptnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putderef(vsderef);
@@ -980,7 +980,7 @@ implementation
     procedure tsubscriptnode.derefimpl;
       begin
         inherited derefimpl;
-        vs:=tfieldvarsym(vsderef.resolve);
+        vs:=TFieldVarSym(vsderef.resolve);
       end;
 
 
@@ -1092,14 +1092,14 @@ implementation
       end;
 
 
-    constructor tvecnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tvecnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(vecnodeflags));
       end;
 
 
-    procedure tvecnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tvecnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putset(tppuset1(vecnodeflags));
@@ -1108,8 +1108,8 @@ implementation
 
     function tvecnode.pass_typecheck:TNode;
       var
-         htype,elementdef,elementptrdef : tdef;
-         newordtyp: tordtype;
+         htype,elementdef,elementptrdef : TDef;
+         newordtyp: TOrdType;
          valid : boolean;
          minvalue, maxvalue: Tconstexprint;
       begin
@@ -1154,8 +1154,8 @@ implementation
            case left.resultdef.typ of
              arraydef:
                begin
-                 htype:=Tarraydef(left.resultdef).rangedef;
-                 if ado_isvariant in Tarraydef(left.resultdef).arrayoptions then
+                 htype:=TArrayDef(left.resultdef).rangedef;
+                 if ado_isvariant in TArrayDef(left.resultdef).arrayoptions then
                    {Variant arrays are a special array, can have negative indexes and would therefore
                     need s32bit. However, they should not appear in a vecn, as they are handled in
                     handle_variantarray in pexpr.pas. Therefore, encountering a variant array is an
@@ -1188,9 +1188,9 @@ implementation
                      value must be used) }
                  else if (htype.typ=enumdef) and
                          (right.resultdef.typ=enumdef) and
-                         (tenumdef(htype).basedef=tenumdef(right.resultdef).basedef) and
-                    ((tarraydef(left.resultdef).lowrange<>tenumdef(htype).min) or
-                     (tarraydef(left.resultdef).highrange<>tenumdef(htype).max) or
+                         (TEnumDef(htype).basedef=TEnumDef(right.resultdef).basedef) and
+                    ((TArrayDef(left.resultdef).lowrange<>TEnumDef(htype).min) or
+                     (TArrayDef(left.resultdef).highrange<>TEnumDef(htype).max) or
                    { while we could assume that the value might not be out of range,
                      memory corruption could have resulted in an illegal value,
                      so do not skip the type conversion in case of range checking
@@ -1198,9 +1198,9 @@ implementation
                      After all, range checking is a safety mean }
                      (cs_check_range in CurrentSettings.localswitches)) then
                    {Convert array indexes to low_bound..high_bound.}
-                   inserttypeconv(right,cenumdef.create_subrange(tenumdef(right.resultdef),
-                                                      asizeint(Tarraydef(left.resultdef).lowrange),
-                                                      asizeint(Tarraydef(left.resultdef).highrange)
+                   inserttypeconv(right,cenumdef.create_subrange(TEnumDef(right.resultdef),
+                                                      asizeint(TArrayDef(left.resultdef).lowrange),
+                                                      asizeint(TArrayDef(left.resultdef).highrange)
                                                      ))
                  else if (htype.typ=orddef) and
                     { right can also be a variant or another type with
@@ -1210,9 +1210,9 @@ implementation
                     not is_boolean(right.resultdef) and
                     { ordtype determines the size of the loaded value -> make
                       sure we don't truncate }
-                    ((Torddef(right.resultdef).ordtype<>torddef(htype).ordtype) or
-                     (tarraydef(left.resultdef).lowrange<>torddef(htype).low) or
-                     (tarraydef(left.resultdef).highrange<>torddef(htype).high)) then
+                    ((TOrdDef(right.resultdef).ordtype<>TOrdDef(htype).ordtype) or
+                     (TArrayDef(left.resultdef).lowrange<>TOrdDef(htype).low) or
+                     (TArrayDef(left.resultdef).highrange<>TOrdDef(htype).high)) then
                     {Convert array indexes to low_bound..high_bound.}
                    begin
                      if (right.resultdef.typ=orddef)
@@ -1232,23 +1232,23 @@ implementation
                             This matters only if we sign extend, if the type exceeds the sint range, we can fall back only
                             to the index type
                           }
-                          if is_integer(right.resultdef) and ((torddef(right.resultdef).low<0) or (TConstExprInt(Tarraydef(left.resultdef).lowrange)<0)) then
+                          if is_integer(right.resultdef) and ((TOrdDef(right.resultdef).low<0) or (TConstExprInt(TArrayDef(left.resultdef).lowrange)<0)) then
                             begin
-                              minvalue:=min(TConstExprInt(Tarraydef(left.resultdef).lowrange),torddef(right.resultdef).low);
-                              maxvalue:=max(TConstExprInt(Tarraydef(left.resultdef).highrange),torddef(right.resultdef).high);
-                              if maxvalue>torddef(sinttype).high then
-                                newordtyp:=Torddef(right.resultdef).ordtype
+                              minvalue:=min(TConstExprInt(TArrayDef(left.resultdef).lowrange),TOrdDef(right.resultdef).low);
+                              maxvalue:=max(TConstExprInt(TArrayDef(left.resultdef).highrange),TOrdDef(right.resultdef).high);
+                              if maxvalue>TOrdDef(sinttype).high then
+                                newordtyp:=TOrdDef(right.resultdef).ordtype
                               else
                                 newordtyp:=range_to_basetype(minvalue,maxvalue);
                             end
                           else
-                            newordtyp:=Torddef(right.resultdef).ordtype;
+                            newordtyp:=TOrdDef(right.resultdef).ordtype;
                         end
                      else
-                       newordtyp:=torddef(sizesinttype).ordtype;
+                       newordtyp:=TOrdDef(sizesinttype).ordtype;
                      inserttypeconv(right,corddef.create(newordtyp,
-                                                         int64(Tarraydef(left.resultdef).lowrange),
-                                                         int64(Tarraydef(left.resultdef).highrange),
+                                                         int64(TArrayDef(left.resultdef).lowrange),
+                                                         int64(TArrayDef(left.resultdef).highrange),
                                                          true
                                                         ));
                    end
@@ -1265,12 +1265,12 @@ implementation
                  inserttypeconv(right,u8inttype)
                else if is_shortstring(left.resultdef) then
                  {Convert shortstring indexes to 0..length.}
-                 inserttypeconv(right,corddef.create(u8bit,0,int64(Tstringdef(left.resultdef).len),true))
+                 inserttypeconv(right,corddef.create(u8bit,0,int64(TStringDef(left.resultdef).len),true))
                else
                  {Convert indexes into dynamically allocated strings to aword.}
                  inserttypeconv(right,uinttype);
              pointerdef:
-               inserttypeconv(right,tpointerdef(left.resultdef).pointer_arithmetic_int_type);
+               inserttypeconv(right,TPointerDef(left.resultdef).pointer_arithmetic_int_type);
              else
                {Others, (are there any?) indexes to aint.}
                inserttypeconv(right,sinttype);
@@ -1283,21 +1283,21 @@ implementation
          if ((left.resultdef.typ=arraydef) and
              not is_special_array(left.resultdef) and
              { arrays with elements equal to the alu size and with a constant index can be kept in register }
-             not(is_constnode(right) and (tarraydef(left.resultdef).elementdef.size=alusinttype.size))) or
+             not(is_constnode(right) and (TArrayDef(left.resultdef).elementdef.size=alusinttype.size))) or
             ((left.resultdef.typ=stringdef) and
-             (tstringdef(left.resultdef).stringtype in [st_shortstring,st_longstring])) then
+             (TStringDef(left.resultdef).stringtype in [st_shortstring,st_longstring])) then
            make_not_regable(left,[ra_addr_regable]);
 
          case left.resultdef.typ of
            arraydef :
              begin
                { check type of the index value }
-               if (compare_defs(right.resultdef,tarraydef(left.resultdef).rangedef,right.nodetype)=te_incompatible) then
-                 IncompatibleTypes(right.resultdef,tarraydef(left.resultdef).rangedef);
+               if (compare_defs(right.resultdef,TArrayDef(left.resultdef).rangedef,right.nodetype)=te_incompatible) then
+                 IncompatibleTypes(right.resultdef,TArrayDef(left.resultdef).rangedef);
                if right.nodetype=rangen then
                  resultdef:=left.resultdef
                else
-                 resultdef:=Tarraydef(left.resultdef).elementdef;
+                 resultdef:=TArrayDef(left.resultdef).elementdef;
 
                result:=gen_array_rangecheck;
                if assigned(result) then
@@ -1311,10 +1311,10 @@ implementation
                  enumdef }
                if is_enum(resultdef) and
                   is_packed_array(left.resultdef) and
-                  ((tarraydef(left.resultdef).elepackedbitsize div 8) <> resultdef.size) then
+                  ((TArrayDef(left.resultdef).elepackedbitsize div 8) <> resultdef.size) then
                  begin
-                   resultdef:=cenumdef.create_subrange(tenumdef(resultdef),tenumdef(resultdef).min,tenumdef(resultdef).max);
-                   tenumdef(resultdef).calcsavesize(1);
+                   resultdef:=cenumdef.create_subrange(TEnumDef(resultdef),TEnumDef(resultdef).min,TEnumDef(resultdef).max);
+                   TEnumDef(resultdef).calcsavesize(1);
                  end
              end;
            pointerdef :
@@ -1325,25 +1325,25 @@ implementation
                if not is_voidpointer(left.resultdef) and
                   (
                    (cs_pointermath in CurrentSettings.localswitches) or
-                   tpointerdef(left.resultdef).has_pointer_math or
+                   TPointerDef(left.resultdef).has_pointer_math or
                    is_pchar(left.resultdef) or
                    is_pwidechar(left.resultdef)
                   ) then
                 begin
                   { convert pointer to array }
-                  htype:=carraydef.create_from_pointer(tpointerdef(left.resultdef));
+                  htype:=carraydef.create_from_pointer(TPointerDef(left.resultdef));
                   inserttypeconv(left,htype);
                   if right.nodetype=rangen then
                     resultdef:=htype
                   else
-                    resultdef:=tarraydef(htype).elementdef;
+                    resultdef:=TArrayDef(htype).elementdef;
                 end
                else
                 CGMessage(type_e_array_required);
              end;
            stringdef :
              begin
-                case tstringdef(left.resultdef).stringtype of
+                case TStringDef(left.resultdef).stringtype of
                   st_unicodestring,
                   st_widestring :
                     begin
@@ -1360,7 +1360,7 @@ implementation
                 end;
                 if right.nodetype=rangen then
                   begin
-                    htype:=carraydef.create_from_pointer(tpointerdef(elementptrdef));
+                    htype:=carraydef.create_from_pointer(TPointerDef(elementptrdef));
                     resultdef:=htype;
                   end
                 else
@@ -1408,7 +1408,7 @@ implementation
              is_unicodestring(left.resultdef) or
             (is_widestring(left.resultdef) and not(tf_winlikewidestring in TargetInfo.flags))) then
            begin
-             left := ctypeconvnode.create_internal(ccallnode.createintern('fpc_'+tstringdef(left.resultdef).stringtypname+'_unique',
+             left := ctypeconvnode.create_internal(ccallnode.createintern('fpc_'+TStringDef(left.resultdef).stringtypname+'_unique',
                ccallparanode.create(
                  ctypeconvnode.create_internal(left,voidpointertype),nil)),
                left.resultdef);
@@ -1498,7 +1498,7 @@ implementation
       begin
         result:=nil;
         if (not is_packed_array(left.resultdef)) or
-           ((tarraydef(left.resultdef).elepackedbitsize mod 8) = 0) then
+           ((TArrayDef(left.resultdef).elepackedbitsize mod 8) = 0) then
           if left.expectloc=LOC_CREFERENCE then
             expectloc:=LOC_CREFERENCE
           else
@@ -1513,7 +1513,7 @@ implementation
 
     function tvecnode.gen_array_rangecheck: TNode;
     var
-      htype: tdef;
+      htype: TDef;
       temp: ttempcreatenode;
       stat: tstatementnode;
       indextree: TNode;
@@ -1538,7 +1538,7 @@ implementation
             internalerror(2014040601);
           { cdecl functions don't have high() so we can not check the range }
           { (can't use current_procdef, since it may be a nested procedure) }
-          if not(tprocdef(tparasymtable(tparavarsym(tloadnode(get_open_const_array(left)).symtableentry).owner).defowner).proccalloption in cdecl_pocalls) then
+          if not(TProcDef(TParaSymTable(TParaVarSym(tloadnode(get_open_const_array(left)).symtableentry).owner).defowner).proccalloption in cdecl_pocalls) then
             begin
               temp:=nil;
               result:=internalstatements(stat);
@@ -1559,7 +1559,7 @@ implementation
                 end;
               { range check will be made explicit here }
               exclude(localswitches,cs_check_range);
-              hightree:=load_high_value_node(tparavarsym(tloadnode(
+              hightree:=load_high_value_node(TParaVarSym(tloadnode(
                 get_open_const_array(left)).symtableentry));
               { make index unsigned so we only need one comparison;
                 lower bound is always zero for these arrays, but

@@ -128,7 +128,7 @@ unit cgx86;
         procedure g_save_registers(list: TAsmList); override;
         procedure g_restore_registers(list: TAsmList); override;
 
-        procedure g_overflowcheck(list: TAsmList; const l:tlocation;def:tdef);override;
+        procedure g_overflowcheck(list: TAsmList; const l:tlocation;def:TDef);override;
 
         procedure make_simple_ref(list:TAsmList;var ref: treference);inline;
         procedure make_direct_ref(list:TAsmList;var ref: treference);
@@ -3452,7 +3452,7 @@ unit cgx86;
 
 
     { produces if necessary overflowcode }
-    procedure tcgx86.g_overflowcheck(list: TAsmList; const l:tlocation;def:tdef);
+    procedure tcgx86.g_overflowcheck(list: TAsmList; const l:tlocation;def:TDef);
       var
          hl : tasmlabel;
          ai : taicpu;
@@ -3463,7 +3463,7 @@ unit cgx86;
          CurrentAsmData.getjumplabel(hl);
          if not ((def.typ=pointerdef) or
                 ((def.typ=orddef) and
-                 (torddef(def).ordtype in [u64bit,u16bit,u32bit,u8bit,uchar,
+                 (TOrdDef(def).ordtype in [u64bit,u16bit,u32bit,u8bit,uchar,
                                            pasbool1,pasbool8,pasbool16,pasbool32,pasbool64]))) then
            cond:=C_NO
          else

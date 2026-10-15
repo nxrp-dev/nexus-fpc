@@ -710,7 +710,7 @@ unit optdfa;
       { Checks if the symbol is a candidate for a warning.
         Emit warning/note for living locals, result and parameters, but only about the current
         symtables }
-      function SymbolCandidateForWarningOrHint(sym : tabstractnormalvarsym) : Boolean;
+      function SymbolCandidateForWarningOrHint(sym : TAbstractNormalVarSym) : Boolean;
         begin
           Result:=(((sym.owner=CurrentProcInfo.procdef.localst) and
                     (CurrentProcInfo.procdef.localst.symtablelevel=sym.owner.symtablelevel)
@@ -719,7 +719,7 @@ unit optdfa;
                     (sym.typ=paravarsym) and
                     (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel) and
                     { all parameters except out parameters are initialized by the caller }
-                    (tparavarsym(sym).varspez=vs_out)
+                    (TParaVarSym(sym).varspez=vs_out)
                    ) or
                    ((vo_is_funcret in sym.varoptions) and
                     (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel)
@@ -731,7 +731,7 @@ unit optdfa;
         end;
 
       var
-        varsym : tabstractnormalvarsym;
+        varsym : TAbstractNormalVarSym;
         methodpointer,
         hpt : TNode;
       begin
@@ -747,7 +747,7 @@ unit optdfa;
                   while assigned(hpt) and (hpt.nodetype in [subscriptn,vecn,typeconvn]) do
                     hpt:=TUnaryNode(hpt).left;
                   if assigned(hpt) and (hpt.nodetype=loadn) and not(WarnedForLocation(hpt.fileinfo)) and
-                    SymbolCandidateForWarningOrHint(tabstractnormalvarsym(tloadnode(hpt).symtableentry)) and
+                    SymbolCandidateForWarningOrHint(TAbstractNormalVarSym(tloadnode(hpt).symtableentry)) and
                     PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) then
                     begin
                       { issue only a hint for var, when encountering the node passed as out, we need only to stop searching }
@@ -792,7 +792,7 @@ unit optdfa;
                   if (tcallnode(n).procdefinition.proctypeoption=potype_constructor) or
                      (PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) and
                       (((methodpointer.resultdef.typ=objectdef) and
-                        not(oo_has_virtual in tobjectdef(methodpointer.resultdef).objectoptions)) or
+                        not(oo_has_virtual in TObjectDef(methodpointer.resultdef).objectoptions)) or
                        (methodpointer.resultdef.typ=recorddef)
                       )
                      ) then
@@ -811,7 +811,7 @@ unit optdfa;
               if (tloadnode(n).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) and
                 PSearchNodeInfo(arg)^.nodetosearch.isequal(n) and ((nf_modify in n.flags) or not(nf_write in n.flags)) then
                 begin
-                  varsym:=tabstractnormalvarsym(tloadnode(n).symtableentry);
+                  varsym:=TAbstractNormalVarSym(tloadnode(n).symtableentry);
 
                   if assigned(varsym.owner) and SymbolCandidateForWarningOrHint(varsym) then
                     begin
@@ -841,7 +841,7 @@ unit optdfa;
                      (varsym.owner=CurrentProcInfo.procdef.parast) and
                      (varsym.typ=paravarsym) and
                      (CurrentProcInfo.procdef.parast.symtablelevel=varsym.owner.symtablelevel) and
-                     (tparavarsym(varsym).varspez=vs_var) then
+                     (TParaVarSym(varsym).varspez=vs_var) then
                     result:=fen_norecurse_true;
 {$endif dummy}
                 end;

@@ -408,7 +408,7 @@ interface
         tmpref: treference;
       begin
          location_reset_ref(location,LOC_REFERENCE,OS_NO,2,[]);
-         case tstringdef(resultdef).stringtype of
+         case TStringDef(resultdef).stringtype of
            st_shortstring :
              begin
                tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,resultdef.size,tt_normal,location.reference);
@@ -531,17 +531,17 @@ interface
       var
         href: treference;
         tmpreg: tregister;
-        procvarrectype: trecorddef;
+        procvarrectype: TRecordDef;
         procvarselfname: TIDString;
       begin
-        if tabstractprocdef(resultdef).is_addressonly then
+        if TAbstractProcDef(resultdef).is_addressonly then
           begin
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
             { only a code pointer? (when taking the address of classtype.method
               we also only get a code pointer even though the resultdef is a
               procedure of object, and hence is_addressonly would return false)
              }
-	    if left.location.size = def_cgsize(tabstractprocdef(left.resultdef).address_type) then
+	    if left.location.size = def_cgsize(TAbstractProcDef(left.resultdef).address_type) then
               begin
                 case left.location.loc of
                   LOC_REFERENCE,LOC_CREFERENCE:
@@ -562,7 +562,7 @@ interface
                     begin
                       location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,resultdef);
                       { code field is the first one }
-                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(cprocvardef.getreusableprocaddr(tprocdef(left.resultdef),pc_normal)),cpointerdef.getreusable(resultdef),left.location.reference);
+                      hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(cprocvardef.getreusableprocaddr(TProcDef(left.resultdef),pc_normal)),cpointerdef.getreusable(resultdef),left.location.reference);
                       hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,resultdef,resultdef,left.location.reference,location.register);
                     end;
                   LOC_REGISTER,LOC_CREGISTER:
@@ -579,7 +579,7 @@ interface
           end
         else
           begin
-            if not tabstractprocdef(left.resultdef).is_addressonly then
+            if not TAbstractProcDef(left.resultdef).is_addressonly then
               location_copy(location,left.location)
             else
               begin
@@ -590,24 +590,24 @@ interface
                 location_reset_ref(location,LOC_REFERENCE,int_cgsize(resultdef.size),sizeof(pint),[]);
                 tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,resultdef.size,tt_normal,location.reference);
                 href:=location.reference;
-                if is_nested_pd(tabstractprocdef(resultdef)) then
+                if is_nested_pd(TAbstractProcDef(resultdef)) then
                   begin
-                    procvarrectype:=trecorddef(nestedprocpointertype);
+                    procvarrectype:=TRecordDef(nestedprocpointertype);
                     procvarselfname:='parentfp';
                   end
                 else
                   begin
-                    procvarrectype:=trecorddef(methodpointertype);
+                    procvarrectype:=TRecordDef(methodpointertype);
                     procvarselfname:='self';
                   end;
                 hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(resultdef),cpointerdef.getreusable(procvarrectype),href);
                 tmpreg:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,voidcodepointertype);
-                hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,tprocdef(left.resultdef),voidcodepointertype,left.location.reference,tmpreg);
-                hlcg.g_load_reg_field_by_name(CurrentAsmData.CurrAsmList,voidcodepointertype,trecorddef(procvarrectype),tmpreg,'proc',href);
+                hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,TProcDef(left.resultdef),voidcodepointertype,left.location.reference,tmpreg);
+                hlcg.g_load_reg_field_by_name(CurrentAsmData.CurrAsmList,voidcodepointertype,TRecordDef(procvarrectype),tmpreg,'proc',href);
                 { setting the frame pointer to nil is not strictly necessary
                   since the global procedure won't use it, but it can help with
                   debugging }
-                hlcg.g_load_const_field_by_name(CurrentAsmData.CurrAsmList,trecorddef(procvarrectype),0,procvarselfname,href);
+                hlcg.g_load_const_field_by_name(CurrentAsmData.CurrAsmList,TRecordDef(procvarrectype),0,procvarselfname,href);
               end;
           end;
       end;
@@ -704,7 +704,7 @@ interface
     procedure tcgtypeconvnode.second_class_to_intf;
       var
          l1 : tasmlabel;
-         hd : tobjectdef;
+         hd : TObjectDef;
          ImplIntf : TImplementedInterface;
       begin
          l1:=nil;
@@ -735,10 +735,10 @@ interface
             else
               internalerror(121120001);
          end;
-         hd:=tobjectdef(left.resultdef);
+         hd:=TObjectDef(left.resultdef);
          while assigned(hd) do
            begin
-             ImplIntf:=find_implemented_interface(hd,tobjectdef(resultdef));
+             ImplIntf:=find_implemented_interface(hd,TObjectDef(resultdef));
              if assigned(ImplIntf) then
                begin
                  case ImplIntf.IType of
@@ -855,9 +855,9 @@ interface
          { Check explicit conversions to objects pointers !! }
          if p^.explizit and
             (p^.resultdef.typ=pointerdef) and
-            (tpointerdef(p^.resultdef).definition.typ=objectdef) and not
-            (tobjectdef(tpointerdef(p^.resultdef).definition).isclass) and
-            ((tobjectdef(tpointerdef(p^.resultdef).definition).options and oo_hasvmt)<>0) and
+            (TPointerDef(p^.resultdef).definition.typ=objectdef) and not
+            (TObjectDef(TPointerDef(p^.resultdef).definition).isclass) and
+            ((TObjectDef(TPointerDef(p^.resultdef).definition).options and oo_hasvmt)<>0) and
             (cs_check_range in CurrentSettings.localswitches) then
            checkobject;
 {$endif TESTOBJEXT2}

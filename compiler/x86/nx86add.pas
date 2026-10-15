@@ -37,7 +37,7 @@ unit nx86add;
       protected
         function  getresflags(unsigned : boolean) : tresflags;
         function  getfpuresflags : tresflags;
-        procedure left_must_be_reg(opdef: tdef; opsize:TCGSize;noswap:boolean);
+        procedure left_must_be_reg(opdef: TDef; opsize:TCGSize;noswap:boolean);
         procedure force_left_and_right_fpureg;
         procedure prepare_x87_locations(out refnode: TNode);
         procedure emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
@@ -248,7 +248,7 @@ unit nx86add;
       end;
 
 
-    procedure tx86addnode.left_must_be_reg(opdef: tdef; opsize:TCGSize;noswap:boolean);
+    procedure tx86addnode.left_must_be_reg(opdef: TDef; opsize:TCGSize;noswap:boolean);
       begin
         { left location is not a register? }
         if (left.location.loc<>LOC_REGISTER) then
@@ -510,7 +510,7 @@ unit nx86add;
     procedure tx86addnode.second_addsmallset;
       var
         setbase : aint;
-        opdef  : tdef;
+        opdef  : TDef;
         opsize : TCGSize;
         op     : TAsmOp;
         extra_not,
@@ -526,9 +526,9 @@ unit nx86add;
         opdef:=resultdef;
         opsize:=int_cgsize(opdef.size);
         if (left.resultdef.typ=setdef) then
-          setbase:=tsetdef(left.resultdef).setbase
+          setbase:=TSetDef(left.resultdef).setbase
         else
-          setbase:=tsetdef(right.resultdef).setbase;
+          setbase:=TSetDef(right.resultdef).setbase;
         case nodetype of
           addn :
             begin
@@ -662,7 +662,7 @@ unit nx86add;
               swapleftright;
             force_reg_left_right(false,false);
             set_result_location_reg;
-            setbase:=tsetdef(left.resultdef).setbase;
+            setbase:=TSetDef(left.resultdef).setbase;
             if (right.location.loc = LOC_CONSTANT) then
               begin
                 mask:=aint(1 shl (right.location.value-setbase));
@@ -688,7 +688,7 @@ unit nx86add;
 
     procedure tx86addnode.second_cmpsmallset;
       var
-        opdef  : tdef;
+        opdef  : TDef;
         opsize : TCGSize;
         op     : TAsmOp;
       begin
@@ -1694,12 +1694,12 @@ unit nx86add;
                 if UseAVX then
                   begin
                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
-                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,right.location.register,location.register,nil);
+                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).floattype],left.location,right.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=right.location.register;
-                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,location.register,nil);
+                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[TFloatDef(left.resultdef).floattype],left.location,location.register,nil);
                   end;
               end
             else
@@ -1709,13 +1709,13 @@ unit nx86add;
                   begin
                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
                     cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,
-                      tfloat2tcgsize[tfloatdef(tarraydef(left.resultdef).elementdef).floattype],right.location,left.location.register,location.register,nil);
+                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).elementdef).floattype],right.location,left.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=left.location.register;
                     cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,
-                      tfloat2tcgsize[tfloatdef(tarraydef(left.resultdef).elementdef).floattype],right.location,location.register,nil);
+                      tfloat2tcgsize[TFloatDef(TArrayDef(left.resultdef).elementdef).floattype],right.location,location.register,nil);
                   end;
               end;
           end
@@ -2302,7 +2302,7 @@ unit nx86add;
 
     procedure tx86addnode.second_cmpordinal;
       var
-         opdef  : tdef;
+         opdef  : TDef;
          opsize : tcgsize;
          unsigned : boolean;
       begin

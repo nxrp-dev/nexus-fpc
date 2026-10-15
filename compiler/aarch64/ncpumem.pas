@@ -40,7 +40,7 @@ interface
      protected
       function valid_index_size(size: tcgsize): boolean; override;
      public
-       procedure update_reference_reg_mul(maybe_const_reg: tregister; regsize: tdef; l: aint); override;
+       procedure update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint); override;
     end;
 
 implementation
@@ -89,7 +89,7 @@ implementation
     end;
 
 
-  procedure taarch64vecnode.update_reference_reg_mul(maybe_const_reg: tregister; regsize: tdef; l: aint);
+  procedure taarch64vecnode.update_reference_reg_mul(maybe_const_reg: tregister; regsize: TDef; l: aint);
     var
       base: tregister;
       oldoffset: asizeint;

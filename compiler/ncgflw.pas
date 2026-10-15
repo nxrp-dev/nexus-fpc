@@ -743,8 +743,8 @@ implementation
          oldBreakLabel : tasmlabel;
          doobjectdestroyandreraisestate: tcgexceptionstatehandler.texceptionstate;
          excepttemps : tcgexceptionstatehandler.texceptiontemps;
-         exceptvarsym : tlocalvarsym;
-         exceptlocdef: tdef;
+         exceptvarsym : TLocalVarSym;
+         exceptlocdef: TDef;
          exceptlocreg: tregister;
       begin
          location_reset(location,LOC_VOID,OS_NO);
@@ -759,7 +759,7 @@ implementation
 
          { Retrieve exception variable }
          if assigned(excepTSymtable) then
-           exceptvarsym:=tlocalvarsym(excepTSymtable.SymList[0])
+           exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
          else
            internalerror(2011020401);
 
@@ -873,9 +873,9 @@ implementation
     procedure tcgtryfinallynode.handle_safecall_exception;
       var
         cgpara, resultpara: tcgpara;
-        selfsym: tparavarsym;
-        pd: tprocdef;
-        safecallresult: tlocalvarsym;
+        selfsym: TParaVarSym;
+        pd: TProcDef;
+        safecallresult: TLocalVarSym;
       begin
         { call fpc_safecallhandler, passing self for methods of classes,
           nil otherwise. }
@@ -884,7 +884,7 @@ implementation
         paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,cgpara);
         if is_class(CurrentProcInfo.procdef.struct) then
           begin
-            selfsym:=tparavarsym(CurrentProcInfo.procdef.parast.Find('self'));
+            selfsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('self'));
             if (selfsym=nil) or (selfsym.typ<>paravarsym) then
               InternalError(2011123101);
             hlcg.a_load_loc_cgpara(CurrentAsmData.CurrAsmList,selfsym.vardef,selfsym.localloc,cgpara);
@@ -894,7 +894,7 @@ implementation
         paramanager.freecgpara(CurrentAsmData.CurrAsmList,cgpara);
         resultpara:=hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,pd,[@cgpara],nil);
         cgpara.done;
-        safecallresult:=tlocalvarsym(CurrentProcInfo.procdef.localst.Find('safecallresult'));
+        safecallresult:=TLocalVarSym(CurrentProcInfo.procdef.localst.Find('safecallresult'));
         hlcg.gen_load_cgpara_loc(CurrentAsmData.CurrAsmList,resultpara.def,resultpara,safecallresult.localloc,false);
         resultpara.resetiftemp;
       end;

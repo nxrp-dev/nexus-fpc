@@ -45,23 +45,23 @@ unit paramgr;
           { true if the location in paraloc can be reused as localloc }
           function param_use_paraloc(const cgpara:tcgpara):boolean;virtual;
           { Returns true if the return value is actually a parameter pointer }
-          function ret_in_param(def:tdef;pd:tabstractprocdef):boolean;virtual;
+          function ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;virtual;
           { Returns true if a result variable should be allocated for an assembler routine }
-          function asm_result_var(def:tdef;pd:tabstractprocdef):boolean;virtual;
+          function asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;virtual;
 
-          function push_high_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
-          function keep_para_array_range(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
+          function push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
+          function keep_para_array_range(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
 
           { Returns true if a parameter is too large to copy and only
             the address is pushed
           }
-          function push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;abstract;
+          function push_addr_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;abstract;
           { returns true if a parameter must be handled via copy-out (construct
             a reference, copy the parameter's value there in case of copy-in/out, pass the reference)
           }
-          function push_copyout_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
+          function push_copyout_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;virtual;
           { return the size of a push }
-          function push_size(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : longint;virtual;
+          function push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : longint;virtual;
           {# Returns a structure giving the information on
             the storage of the parameter (which must be
             an integer parameter). This is only used when calling
@@ -96,7 +96,7 @@ unit paramgr;
 
           { \brief Get a parameter location for calling a procdef directly instead of via a call node }
           { \returns parameter location in \c cgpara for parameter \c nr of \c pd }
-          procedure getcgtempparaloc(list: TAsmList; pd: tabstractprocdef; nr : longint; var cgpara: tcgpara);virtual;
+          procedure getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : longint; var cgpara: tcgpara);virtual;
 
           {# allocate an individual pcgparalocation that's part of a tcgpara
 
@@ -123,35 +123,35 @@ unit paramgr;
             for the routine as seen in either the caller or the callee. It returns
             the size allocated on the stack
           }
-          function  create_paraloc_info(p : tabstractprocdef; side: tcallercallee):longint;virtual;abstract;
+          function  create_paraloc_info(p : TAbstractProcDef; side: TCallerCallee):longint;virtual;abstract;
 
           { Returns the location of the function result if p had def as
             function result instead of its actual result. Used if the compiler
             forces the function result to something different than the real
             result.  }
-          function  get_funcretloc(p : tabstractprocdef; side: tcallercallee; forcetempdef: tdef): tcgpara;virtual;abstract;
-          function  get_safecallresult_funcretloc(p : tabstractprocdef; side: tcallercallee): tcgpara; virtual;
-          procedure create_funcretloc_info(p : tabstractprocdef; side: tcallercallee);
+          function  get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): tcgpara;virtual;abstract;
+          function  get_safecallresult_funcretloc(p : TAbstractProcDef; side: TCallerCallee): tcgpara; virtual;
+          procedure create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
 
           { This is used to populate the location information on all parameters
             for the routine when it is being inlined. It returns
             the size allocated on the stack
           }
-          function  create_inline_paraloc_info(p : tabstractprocdef):longint;virtual;
+          function  create_inline_paraloc_info(p : TAbstractProcDef):longint;virtual;
 
           { This is used to populate the location information on all parameters
             for the routine that are passed as varargs. It returns
             the size allocated on the stack (including the normal parameters)
           }
-          function  create_varargs_paraloc_info(p : tabstractprocdef; side: tcallercallee; varargspara:tvarargsparalist):longint;virtual;abstract;
+          function  create_varargs_paraloc_info(p : TAbstractProcDef; side: TCallerCallee; varargspara:tvarargsparalist):longint;virtual;abstract;
 
           function is_stack_paraloc(paraloc: pcgparalocation): boolean;virtual;
-          procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
+          procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
           procedure duplicatecgparaloc(const orgparaloc: pcgparalocation; intonewparaloc: pcgparalocation);
-          procedure duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;var cgpara:TCGPara);
+          procedure duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
 
-          function parseparaloc(parasym : tparavarsym;const s : string) : boolean;virtual;
-          function parsefuncretloc(p : tabstractprocdef; const s : string) : boolean;virtual;
+          function parseparaloc(parasym : TParaVarSym;const s : string) : boolean;virtual;
+          function parsefuncretloc(p : TAbstractProcDef; const s : string) : boolean;virtual;
 
           { Convert a list of CGParaLocation entries to a RTTIParaLoc array that
             can be written by ncgrtti }
@@ -166,21 +166,21 @@ unit paramgr;
             The default implementation returns false. }
           function has_strict_proc_signature: boolean; virtual;
           { Returns true if parasym is unused and can be optimized. }
-          function can_opt_unused_para(parasym: tparavarsym): boolean;
+          function can_opt_unused_para(parasym: TParaVarSym): boolean;
          strict protected
           { common part of get_funcretloc; returns true if retloc is completely
             initialized afterwards }
-          function set_common_funcretloc_info(p : tabstractprocdef; forcetempdef: tdef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
+          function set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
           { common part of ret_in_param; is called by ret_in_param at the
             beginning and every tparamanager descendant can decide to call it
             itself as well; parameter retinparam is only valid if function
             returns true }
-          function handle_common_ret_in_param(def:tdef;pd:tabstractprocdef;out retinparam:boolean):boolean;
+          function handle_common_ret_in_param(def:TDef;pd:TAbstractProcDef;out retinparam:boolean):boolean;
 
           { returns the def to use for a tparalocation part of a cgpara for paradef,
             for which the def is paradef and the integer length is restlen.
             fullsize is true if restlen equals the full paradef size }
-          function get_paraloc_def(paradef: tdef; restlen: aint; fullsize: boolean): tdef;
+          function get_paraloc_def(paradef: TDef; restlen: aint; fullsize: boolean): TDef;
 
           { convert a single CGParaLocation to a RTTIParaLoc; the method *might*
             be overridden by targets to provide backwards compatibility with
@@ -210,7 +210,7 @@ implementation
 
 
     { true if uses a parameter as return value }
-    function tparamanager.ret_in_param(def:tdef;pd:tabstractprocdef):boolean;
+    function tparamanager.ret_in_param(def:TDef;pd:TAbstractProcDef):boolean;
       begin
          { This handles all managed types, including COM interfaces and Variants }
          if handle_common_ret_in_param(def,pd,result) then
@@ -218,14 +218,14 @@ implementation
          ret_in_param:=(def.typ=arraydef) or
            (def.typ=recorddef) or
            (def.typ=stringdef) or
-           ((def.typ=procvardef) and not tprocvardef(def).is_addressonly) or
+           ((def.typ=procvardef) and not TProcVarDef(def).is_addressonly) or
            ((def.typ=objectdef) and (is_object(def))) or
            ((def.typ=setdef) and not is_smallset(def));
       end;
 
 
     { true if a result variable should be allocated for an assembler routine }
-    function tparamanager.asm_result_var(def:tdef;pd:tabstractprocdef):boolean;
+    function tparamanager.asm_result_var(def:TDef;pd:TAbstractProcDef):boolean;
       begin
         if not(po_assembler in pd.procoptions) then
           internalerror(2018021501);
@@ -233,7 +233,7 @@ implementation
       end;
 
 
-    function tparamanager.push_high_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;
+    function tparamanager.push_high_param(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : boolean;
       begin
          push_high_param:=not(calloption in cdecl_pocalls) and
                           (
@@ -244,20 +244,20 @@ implementation
       end;
 
 
-    function tparamanager.keep_para_array_range(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean;
+    function tparamanager.keep_para_array_range(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
         result:=push_high_param(varspez,def,calloption);
       end;
 
 
-    function tparamanager.push_copyout_param(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean;
+    function tparamanager.push_copyout_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean;
       begin
         push_copyout_param:=false;
       end;
 
 
     { return the size of a push }
-    function tparamanager.push_size(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : longint;
+    function tparamanager.push_size(varspez:TVarSpez;def : TDef;calloption : TProcCallOption) : longint;
       begin
         push_size:=-1;
         case varspez of
@@ -447,7 +447,7 @@ implementation
       end;
 
 
-    function tparamanager.get_safecallresult_funcretloc(p: tabstractprocdef; side: tcallercallee): tcgpara;
+    function tparamanager.get_safecallresult_funcretloc(p: TAbstractProcDef; side: TCallerCallee): tcgpara;
       var
         paraloc: pcgparalocation;
       begin
@@ -477,7 +477,7 @@ implementation
       end;
 
 
-    procedure tparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure tparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
       var
         href : treference;
         len  : aint;
@@ -570,7 +570,7 @@ implementation
       end;
 
 
-    procedure tparamanager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;var cgpara:TCGPara);
+    procedure tparamanager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : TParaVarSym;var cgpara:TCGPara);
       var
         paraloc,
         newparaloc : pcgparalocation;
@@ -589,14 +589,14 @@ implementation
       end;
 
 
-    procedure tparamanager.create_funcretloc_info(p : tabstractprocdef; side: tcallercallee);
+    procedure tparamanager.create_funcretloc_info(p : TAbstractProcDef; side: TCallerCallee);
       begin
         if not assigned(p.funcretloc[side].Location) then
           p.funcretloc[side]:=get_funcretloc(p,side,nil);
       end;
 
 
-    function tparamanager.create_inline_paraloc_info(p : tabstractprocdef):longint;
+    function tparamanager.create_inline_paraloc_info(p : TAbstractProcDef):longint;
       begin
         { We need to return the size allocated }
         p.init_paraloc_info(callbothsides);
@@ -606,7 +606,7 @@ implementation
 
     { used by syscall conventions which require explicit paralocation support }
     { this is the standard implementation, CGs might overwrite it }
-    function tparamanager.parseparaloc(parasym: tparavarsym; const s: string): boolean;
+    function tparamanager.parseparaloc(parasym: TParaVarSym; const s: string): boolean;
       var
         paraloc : pcgparalocation;
       begin
@@ -625,7 +625,7 @@ implementation
       end;
 
 
-    function tparamanager.parsefuncretloc(p: tabstractprocdef; const s: string): boolean;
+    function tparamanager.parsefuncretloc(p: TAbstractProcDef; const s: string): boolean;
       begin
         Result:=False;
         internalerror(200807236);
@@ -660,7 +660,7 @@ implementation
       end;
 
 
-    function tparamanager.set_common_funcretloc_info(p : tabstractprocdef; forcetempdef: tdef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
+    function tparamanager.set_common_funcretloc_info(p : TAbstractProcDef; forcetempdef: TDef; out retcgsize: tcgsize; out retloc: tcgpara): boolean;
       var
         paraloc : pcgparalocation;
       begin
@@ -689,7 +689,7 @@ implementation
         { Constructors return self instead of a boolean }
         if p.proctypeoption=potype_constructor then
           begin
-            retloc.def:=tdef(p.owner.defowner);
+            retloc.def:=TDef(p.owner.defowner);
             if not (is_implicit_pointer_object_type(retloc.def) or
                (retloc.def.typ<>objectdef)) then
               retloc.def:=cpointerdef.getreusable_no_free(retloc.def);
@@ -711,8 +711,8 @@ implementation
       end;
 
 
-    function tparamanager.handle_common_ret_in_param(def: tdef;
-      pd: tabstractprocdef; out retinparam: boolean): boolean;
+    function tparamanager.handle_common_ret_in_param(def: TDef;
+      pd: TAbstractProcDef; out retinparam: boolean): boolean;
       begin
         { This must be system independent: safecall and record constructor result
           is always returned in param.
@@ -727,7 +727,7 @@ implementation
                (
                  (def.typ<>objectdef) and
                  (pd.owner.symtabletype=objectsymtable) and
-                 is_objectpascal_helper(tdef(pd.owner.defowner))
+                 is_objectpascal_helper(TDef(pd.owner.defowner))
                )
              )
            ) or is_managed_type(def) then
@@ -744,7 +744,7 @@ implementation
       end;
 
 
-    function tparamanager.get_paraloc_def(paradef: tdef; restlen: aint; fullsize: boolean): tdef;
+    function tparamanager.get_paraloc_def(paradef: TDef; restlen: aint; fullsize: boolean): TDef;
       begin
         if fullsize then
           result:=paradef
@@ -757,12 +757,12 @@ implementation
       end;
 
 
-    procedure tparamanager.getcgtempparaloc(list: TAsmList; pd: tabstractprocdef; nr : longint; var cgpara: tcgpara);
+    procedure tparamanager.getcgtempparaloc(list: TAsmList; pd: TAbstractProcDef; nr : longint; var cgpara: tcgpara);
       begin
         if (nr<1) or (nr>pd.paras.count) then
           InternalError(2013060101);
         pd.init_paraloc_info(callerside);
-        cgpara:=tparavarsym(pd.paras[nr-1]).paraloc[callerside].getcopy;
+        cgpara:=TParaVarSym(pd.paras[nr-1]).paraloc[callerside].getcopy;
       end;
 
 
@@ -838,9 +838,9 @@ implementation
       end;
 
 
-    function tparamanager.can_opt_unused_para(parasym: tparavarsym): boolean;
+    function tparamanager.can_opt_unused_para(parasym: TParaVarSym): boolean;
       var
-        pd: tprocdef;
+        pd: TProcDef;
       begin
         { The parameter can be optimized as unused when:
             this optimization is enabled
@@ -854,7 +854,7 @@ implementation
           (parasym.Owner.defowner.typ=procdef);
         if not result then
           exit;
-        pd:=tprocdef(parasym.Owner.defowner);
+        pd:=TProcDef(parasym.Owner.defowner);
         result:=(pd.proctypeoption<>potype_exceptfilter) and
           not parasym.is_used and
           pd.is_implemented;

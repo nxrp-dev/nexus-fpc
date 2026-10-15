@@ -44,14 +44,14 @@ interface
        { tcginnode }
 
        tcginnode = class(tinnode)
-         procedure in_smallset(opdef: tdef; setbase: aint); virtual;
+         procedure in_smallset(opdef: TDef; setbase: aint); virtual;
 
          function pass_1: TNode;override;
          procedure pass_generate_code;override;
        protected
          function checkgenjumps(out setparts: Tsetparts; out numparts: byte; out use_small: boolean): boolean; virtual;
          function analizeset(const Aset:TConstSet;out setparts: Tsetparts; out numparts: byte;is_small:boolean):boolean;virtual;
-         procedure in_reg_const(uopdef: tdef; opsize: tcgsize);virtual;
+         procedure in_reg_const(uopdef: TDef; opsize: tcgsize);virtual;
        end;
 
        tcgcasenode = class(tcasenode)
@@ -64,7 +64,7 @@ interface
 
         protected
           with_sign : boolean;
-          opsize : tdef;
+          opsize : TDef;
           jmp_gt,jmp_lt,jmp_le : topcmp;
           { register with case expression }
           hregister,hregister2 : tregister;
@@ -181,7 +181,7 @@ implementation
     end;
 
 
-    procedure tcginnode.in_reg_const(uopdef: tdef; opsize: tcgsize);
+    procedure tcginnode.in_reg_const(uopdef: TDef; opsize: tcgsize);
       var
         hr: tregister;
       begin
@@ -220,7 +220,7 @@ implementation
       end;
 
 
-    procedure tcginnode.in_smallset(opdef: tdef; setbase: aint);
+    procedure tcginnode.in_smallset(opdef: TDef; setbase: aint);
       begin
         { location is always LOC_REGISTER }
         location_reset(location, LOC_REGISTER, def_cgsize(resultdef));
@@ -253,8 +253,8 @@ implementation
            to 32 bits, the left side may also not contain higher values !! }
          use_small:=is_smallset(right.resultdef) and
                     not is_signed(left.resultdef) and
-                    ((left.resultdef.typ=orddef) and (torddef(left.resultdef).high<32) or
-                     (left.resultdef.typ=enumdef) and (tenumdef(left.resultdef).max<32));
+                    ((left.resultdef.typ=orddef) and (TOrdDef(left.resultdef).high<32) or
+                     (left.resultdef.typ=enumdef) and (TEnumDef(left.resultdef).max<32));
 
          { Can we generate jumps? Possible for all types of sets }
          checkgenjumps:=(right.nodetype=setconstn) and
@@ -283,9 +283,9 @@ implementation
          pleftreg   : tregister;
          setparts   : Tsetparts;
          opsize     : tcgsize;
-         opdef      : tdef;
+         opdef      : TDef;
          uopsize    : tcgsize;
-         uopdef     : tdef;
+         uopdef     : TDef;
          orgopsize  : tcgsize;
          genjumps,
          use_small  : boolean;
@@ -341,7 +341,7 @@ implementation
          if nf_swapped in flags then
           swapleftright;
 
-         setbase:=tsetdef(right.resultdef).setbase;
+         setbase:=TSetDef(right.resultdef).setbase;
          if genjumps then
            begin
              { location is always LOC_JUMP }
@@ -436,9 +436,9 @@ implementation
                  if (right.location.loc=LOC_CONSTANT) and
                       (opsize < OS_S8) and { = if unsigned }
                       (((left.resultdef.typ=orddef) and
-                        (torddef(left.resultdef).low >= int64(tsetdef(right.resultdef).setbase))) or
+                        (TOrdDef(left.resultdef).low >= int64(TSetDef(right.resultdef).setbase))) or
                        ((left.resultdef.typ=enumdef) and
-                        (tenumdef(left.resultdef).min >= aint(tsetdef(right.resultdef).setbase)))) then
+                        (TEnumDef(left.resultdef).min >= aint(TSetDef(right.resultdef).setbase)))) then
                    begin
                      { can it actually occur currently? CEC }
                      { yes: "if bytevar in [1,3,5,7,9,11,13,15]" (JM) }
@@ -470,17 +470,17 @@ implementation
 
                      if (opsize >= OS_S8) or { = if signed }
                         ((left.resultdef.typ=orddef) and
-                         ((torddef(left.resultdef).low < int64(tsetdef(right.resultdef).setbase)) or
-                          (torddef(left.resultdef).high > int64(tsetdef(right.resultdef).setmax)))) or
+                         ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).setbase)) or
+                          (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).setmax)))) or
                         ((left.resultdef.typ=enumdef) and
-                         ((tenumdef(left.resultdef).min < aint(tsetdef(right.resultdef).setbase)) or
-                          (tenumdef(left.resultdef).max > aint(tsetdef(right.resultdef).setmax)))) then
+                         ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).setbase)) or
+                          (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).setmax)))) then
                        begin
                          CurrentAsmData.getjumplabel(l);
                          CurrentAsmData.getjumplabel(l2);
                          needslabel := True;
 
-                         hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList, opdef, OC_BE, tsetdef(right.resultdef).setmax-tsetdef(right.resultdef).setbase, pleftreg, l);
+                         hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList, opdef, OC_BE, TSetDef(right.resultdef).setmax-TSetDef(right.resultdef).setbase, pleftreg, l);
 
                          hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList, uopdef, 0, location.register);
                          hlcg.a_jmp_always(CurrentAsmData.CurrAsmList, l2);
@@ -623,7 +623,7 @@ implementation
          last : TConstExprInt;
          scratch_reg: tregister;
          newsize: tcgsize;
-         newdef: tdef;
+         newdef: TDef;
 
       procedure gensub(value:tcgint);
         begin

@@ -55,7 +55,7 @@ unit rasm;
             1) pointer to a records/object, or a class instance pointer, passed in a register to a pure assembler routine
             2) record located on the stack (passed as parameter, or local variable)
          }
-         procedure checklocalsubscript(sym: tabstractnormalvarsym); virtual;
+         procedure checklocalsubscript(sym: TAbstractNormalVarSym); virtual;
        end;
 
   implementation
@@ -142,7 +142,7 @@ unit rasm;
       end;
 
 
-    procedure tasmreader.checklocalsubscript(sym: tabstractnormalvarsym);
+    procedure tasmreader.checklocalsubscript(sym: TAbstractNormalVarSym);
       var
         isimplicitpointer: boolean;
       begin
@@ -156,9 +156,9 @@ unit rasm;
         { pointer parameter to aggregate passed in register to pure assembler routine }
         if (po_assembler in CurrentProcInfo.procdef.procoptions) and
            (sym.typ=paravarsym) and
-           (tparavarsym(sym).paraloc[calleeside].location^.loc=LOC_REGISTER) and
+           (TParaVarSym(sym).paraloc[calleeside].location^.loc=LOC_REGISTER) and
            { ... however this is only possible if the pointer takes only one register location }
-           not assigned(tparavarsym(sym).paraloc[calleeside].location^.Next) and
+           not assigned(TParaVarSym(sym).paraloc[calleeside].location^.Next) and
            isimplicitpointer then
           exit;
 
@@ -166,7 +166,7 @@ unit rasm;
         if (po_assembler in CurrentProcInfo.procdef.procoptions) and
            (sym.typ=paravarsym) and
            { sym.localloc is not yet initialised here for pure assembler routines }
-           (tparavarsym(sym).paraloc[calleeside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
+           (TParaVarSym(sym).paraloc[calleeside].location^.loc in [LOC_REFERENCE,LOC_CREFERENCE]) and
            not isimplicitpointer then
           exit;
 

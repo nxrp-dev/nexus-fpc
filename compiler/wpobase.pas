@@ -114,23 +114,23 @@ type
   tcalledvmtentries = class
    protected
     { the class }
-    fobjdef: tdef;
-    fobjdefderef: tderef;
+    fobjdef: TDef;
+    fobjdefderef: TDeref;
     { the vmt entries }
     fcalledentries: tbitset;
    public
-    constructor create(_objdef: tdef; nentries: longint);
-    constructor ppuload(ppufile: tcompilerppufile);
+    constructor create(_objdef: TDef; nentries: longint);
+    constructor ppuload(ppufile: TCompilerPPUFile);
     destructor destroy; override;
-    procedure ppuwrite(ppufile: tcompilerppufile);
+    procedure ppuwrite(ppufile: TCompilerPPUFile);
 
     procedure buildderef;
     procedure buildderefimpl;
     procedure deref;
     procedure derefimpl;
 
-    property objdef: tdef read fobjdef write fobjdef;
-    property objdefderef: tderef read fobjdefderef write fobjdefderef;
+    property objdef: TDef read fobjdef write fobjdef;
+    property objdefderef: TDeref read fobjdefderef write fobjdefderef;
     property calledentries: tbitset read fcalledentries write fcalledentries;
   end;
 
@@ -167,10 +167,10 @@ type
     property maybecreatedbyclassrefdeftypes: tfpobjectlist read fmaybecreatedbyclassrefdeftypes;
     property calledvmtentries: tfphashlist read fcalledvmtentries;
 
-    procedure addcreatedobjtype(def: tdef);
-    procedure addcreatedobjtypeforclassref(def: tdef);
-    procedure addmaybecreatedbyclassref(def: tdef);
-    procedure addcalledvmtentry(def: tdef; index: longint);
+    procedure addcreatedobjtype(def: TDef);
+    procedure addcreatedobjtypeforclassref(def: TDef);
+    procedure addmaybecreatedbyclassref(def: TDef);
+    procedure addcalledvmtentry(def: TDef; index: longint);
 
     { resets the "I've been registered with wpo" flags for all defs in the
       above lists }
@@ -254,12 +254,12 @@ type
       a static call when it's called as objdef.procdef, and if so returns the
       mangled name in staticname.
     }
-    function staticnameforcallingvirtualmethod(objdef, procdef: tdef; out staticname: TSymStr): boolean; virtual; abstract;
+    function staticnameforcallingvirtualmethod(objdef, procdef: TDef; out staticname: TSymStr): boolean; virtual; abstract;
     { checks whether procdef (a procdef for a virtual method) can be replaced with
       a different procname in the vmt of objdef, and if so returns the new
       mangledname in staticname
     }
-    function staticnameforvmtentry(objdef, procdef: tdef; out staticname: TSymStr): boolean; virtual; abstract;
+    function staticnameforvmtentry(objdef, procdef: TDef; out staticname: TSymStr): boolean; virtual; abstract;
   end;
 
   twpodeadcodehandler = class(twpocomponentbase)
@@ -325,15 +325,15 @@ type
 
     { routines accessing the optimizer information }
     { 1) devirtualization at the symbol name level }
-    function can_be_devirtualized(objdef, procdef: tdef; out name: TSymStr): boolean; virtual; abstract;
+    function can_be_devirtualized(objdef, procdef: TDef; out name: TSymStr): boolean; virtual; abstract;
     { 2) optimal replacement method name in vmt }
-    function optimized_name_for_vmt(objdef, procdef: tdef; out name: TSymStr): boolean; virtual; abstract;
+    function optimized_name_for_vmt(objdef, procdef: TDef; out name: TSymStr): boolean; virtual; abstract;
     { 3) does a symbol appear in the final binary (i.e., not removed by dead code stripping/smart linking).
         WARNING: do *not* call for inline functions/procedures/methods/...
     }
     function symbol_live(const name: shortstring): boolean; virtual; abstract;
 
-    function symbol_live_in_currentproc(fordef: tdef): boolean;
+    function symbol_live_in_currentproc(fordef: TDef): boolean;
 
     constructor create; reintroduce;
     destructor destroy; override;
@@ -399,44 +399,44 @@ implementation
     begin
       if assigned(fcreatedobjtypes) then
         for i:=0 to fcreatedobjtypes.count-1 do
-          tobjectdef(fcreatedobjtypes[i]).created_in_current_module:=false;
+          TObjectDef(fcreatedobjtypes[i]).created_in_current_module:=false;
       if assigned(fcreatedclassrefobjtypes) then
         for i:=0 to fcreatedclassrefobjtypes.count-1 do
-          tobjectdef(fcreatedclassrefobjtypes[i]).classref_created_in_current_module:=false;
+          TObjectDef(fcreatedclassrefobjtypes[i]).classref_created_in_current_module:=false;
       if assigned(fmaybecreatedbyclassrefdeftypes) then
         for i:=0 to fmaybecreatedbyclassrefdeftypes.count-1 do
-          tobjectdef(fmaybecreatedbyclassrefdeftypes[i]).maybe_created_in_current_module:=false;
+          TObjectDef(fmaybecreatedbyclassrefdeftypes[i]).maybe_created_in_current_module:=false;
     end;
 
 
-  procedure tunitwpoinfobase.addcreatedobjtype(def: tdef);
+  procedure tunitwpoinfobase.addcreatedobjtype(def: TDef);
     begin
       fcreatedobjtypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addcreatedobjtypeforclassref(def: tdef);
+  procedure tunitwpoinfobase.addcreatedobjtypeforclassref(def: TDef);
     begin
       fcreatedclassrefobjtypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addmaybecreatedbyclassref(def: tdef);
+  procedure tunitwpoinfobase.addmaybecreatedbyclassref(def: TDef);
     begin
       fmaybecreatedbyclassrefdeftypes.add(def);
     end;
 
 
-  procedure tunitwpoinfobase.addcalledvmtentry(def: tdef; index: longint);
+  procedure tunitwpoinfobase.addcalledvmtentry(def: TDef; index: longint);
     var
       entries: tcalledvmtentries;
       key: shortstring;
     begin
-      key:=tobjectdef(def).vmt_mangledname;
+      key:=TObjectDef(def).vmt_mangledname;
       entries:=tcalledvmtentries(fcalledvmtentries.find(key));
       if not assigned(entries) then
         begin
-          entries:=tcalledvmtentries.create(def,tobjectdef(def).vmtentries.count);
+          entries:=tcalledvmtentries.create(def,TObjectDef(def).vmtentries.count);
           fcalledvmtentries.add(key,entries);
         end;
       entries.calledentries.include(index);
@@ -728,7 +728,7 @@ implementation
           twpocomponentbaseclass(fwpocomponents[i]).checkoptions
     end;
 
-  function twpoinfomanagerbase.symbol_live_in_currentproc(fordef: tdef): boolean;
+  function twpoinfomanagerbase.symbol_live_in_currentproc(fordef: TDef): boolean;
 
     function alias_symbol_live: boolean;
       var
@@ -807,14 +807,14 @@ implementation
 
   { tcalledvmtentries }
 
-  constructor tcalledvmtentries.create(_objdef: tdef; nentries: longint);
+  constructor tcalledvmtentries.create(_objdef: TDef; nentries: longint);
     begin
       objdef:=_objdef;
       calledentries:=tbitset.create(nentries);
     end;
 
 
-  constructor tcalledvmtentries.ppuload(ppufile: tcompilerppufile);
+  constructor tcalledvmtentries.ppuload(ppufile: TCompilerPPUFile);
     var
       len: longint;
     begin
@@ -835,7 +835,7 @@ implementation
     end;
 
 
-  procedure tcalledvmtentries.ppuwrite(ppufile: tcompilerppufile);
+  procedure tcalledvmtentries.ppuwrite(ppufile: TCompilerPPUFile);
     begin
       ppufile.putderef(objdefderef);
       ppufile.putlongint(calledentries.datasize);
@@ -856,7 +856,7 @@ implementation
 
   procedure tcalledvmtentries.deref;
     begin
-      objdef:=tdef(objdefderef.resolve);
+      objdef:=TDef(objdefderef.resolve);
     end;
 
 

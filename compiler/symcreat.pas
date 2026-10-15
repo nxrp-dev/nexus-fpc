@@ -51,7 +51,7 @@ interface
 
     WARNING: save the scanner state before calling this routine, and restore
       when done. }
-  function str_parse_method_dec(str: ansistring; potype: tproctypeoption; is_classdef: boolean; astruct: tabstractrecorddef; out pd: tprocdef): boolean;
+  function str_parse_method_dec(str: ansistring; potype: TProcTypeOption; is_classdef: boolean; astruct: TAbstractRecordDef; out pd: TProcDef): boolean;
 
   { parses a (class or regular)  method/constructor/destructor implementation
     from str, as if it appeared in the current unit's implementation section
@@ -60,7 +60,7 @@ interface
         * save the scanner state before calling this routine, and restore when done.
         * the code *must* be written in objfpc style
   }
-  function str_parse_method_impl(const str: ansistring; usefwpd: tprocdef; is_classdef: boolean):boolean;
+  function str_parse_method_impl(const str: ansistring; usefwpd: TProcDef; is_classdef: boolean):boolean;
 
   { parses a typed constant assignment to ssym
 
@@ -68,7 +68,7 @@ interface
         * save the scanner state before calling this routine, and restore when done.
         * the code *must* be written in objfpc style
   }
-  procedure str_parse_typedconst(list: TAsmList; str: ansistring; ssym: tstaticvarsym);
+  procedure str_parse_typedconst(list: TAsmList; str: ansistring; ssym: TStaticVarSym);
 
 
 
@@ -76,11 +76,11 @@ interface
     them). To emulate the Pascal behaviour, we have to automatically add
     all parent constructors to the current class as well. We also have to do
     the same for the (emulated) virtual class methods }
-  procedure add_missing_parent_constructors_intf(obj: tobjectdef; addvirtclassmeth: boolean; forcevis: tvisibility);
+  procedure add_missing_parent_constructors_intf(obj: TObjectDef; addvirtclassmeth: boolean; forcevis: TVisibility);
 
   { goes through all defs in st to add implementations for synthetic methods
     added earlier }
-  procedure add_synthetic_method_implementations(st: tsymtable);
+  procedure add_synthetic_method_implementations(st: TSymTable);
 
   { create an alias for a procdef with Pascal name "newrealname",
     mangledname "newmangledname", in symtable newparentst, part of the
@@ -88,45 +88,45 @@ interface
     synthetic kind para "skpara" to create the implementation (tsk_none and nil
     in case not necessary). Returns the new procdef; finish_copied_procdef() is
     not required/must not be called for the result. }
-  function create_procdef_alias(pd: tprocdef; const newrealname: string; const newmangledname: TSymStr; newparentst: tsymtable; newstruct: tabstractrecorddef; sk: tsynthetickind; skpara: pointer): tprocdef;
+  function create_procdef_alias(pd: TProcDef; const newrealname: string; const newmangledname: TSymStr; newparentst: TSymTable; newstruct: TAbstractRecordDef; sk: TSyntheticKind; skpara: pointer): TProcDef;
 
   { finalize a procdef that has been copied with
     tprocdef.getcopyas(procdef,pc_bareproc) }
-  procedure finish_copied_procdef(var pd: tprocdef; const realname: string; newparentst: tsymtable; newstruct: tabstractrecorddef);
+  procedure finish_copied_procdef(var pd: TProcDef; const realname: string; newparentst: TSymTable; newstruct: TAbstractRecordDef);
 
   { checks whether sym (a local or para of pd) already has a counterpart in
     pd's parentfpstruct, and if not adds a new field to the struct with type
     "vardef" (can be different from sym's type in case it's a call-by-reference
     parameter, which is indicated by addrparam). If it already has a field in
     the parentfpstruct, this field is returned. }
-  function maybe_add_sym_to_parentfpstruct(pd: tprocdef; sym: tsym; vardef: tdef; addrparam: boolean): tsym;
+  function maybe_add_sym_to_parentfpstruct(pd: TProcDef; sym: TSym; vardef: TDef; addrparam: boolean): TSym;
   { given a localvarsym or paravarsym of pd, returns the field of the
     parentfpstruct corresponding to this sym }
-  function find_sym_in_parentfpstruct(pd: tprocdef; sym: tsym): tsym;
+  function find_sym_in_parentfpstruct(pd: TProcDef; sym: TSym): TSym;
   { replaces all local and paravarsyms that have been mirrored in the
     parentfpstruct with aliasvarsyms that redirect to these fields (used to
     make sure that references to these syms in the owning procdef itself also
     use the ones in the parentfpstructs) }
-  procedure redirect_parentfpstruct_local_syms(pd: tprocdef);
+  procedure redirect_parentfpstruct_local_syms(pd: TProcDef);
   { finalises the parentfpstruct (alignment padding, ...) }
-  procedure finish_parentfpstruct(pd: tprocdef);
+  procedure finish_parentfpstruct(pd: TProcDef);
 
   { turns a fieldvarsym into a class/static field definition, and returns the
     created staticvarsym that is responsible for allocating the global storage }
-  function make_field_static(recst: tsymtable; fieldvs: tfieldvarsym): tstaticvarsym;
+  function make_field_static(recst: TSymTable; fieldvs: TFieldVarSym): TStaticVarSym;
 
   { create a new procdef with the signature of orgpd and (mangled) name
     newname, and change the implementation of orgpd so that it calls through
     to this new procedure }
-  procedure call_through_new_name(orgpd: tprocdef; const newname: TSymStr);
+  procedure call_through_new_name(orgpd: TProcDef; const newname: TSymStr);
 
-  function generate_pkg_stub(pd:tprocdef):TNode;
+  function generate_pkg_stub(pd:TProcDef):TNode;
   procedure generate_attr_constrs(attrs:tfpobjectlist);
 
   { Generate the hidden thunk class for interfaces,
     so we can use them in TVirtualInterface on platforms that do not allow
     generating executable code in memory at runtime.}
-  procedure add_synthetic_interface_classes_for_st(st : tsymtable; gen_intf, gen_impl : boolean);
+  procedure add_synthetic_interface_classes_for_st(st : TSymTable; gen_intf, gen_impl : boolean);
 
 
 implementation
@@ -178,7 +178,7 @@ implementation
     end;
 
 
-  function str_parse_method_dec(str: ansistring; potype: tproctypeoption; is_classdef: boolean; astruct: tabstractrecorddef; out pd: tprocdef): boolean;
+  function str_parse_method_dec(str: ansistring; potype: TProcTypeOption; is_classdef: boolean; astruct: TAbstractRecordDef; out pd: TProcDef): boolean;
     var
       oldparse_only: boolean;
     begin
@@ -221,7 +221,7 @@ implementation
     end;
 
 
-  function str_parse_method_impl_with_fileinfo(str: ansistring; usefwpd: tprocdef; fileno, lineno: longint; is_classdef: boolean; out result_procdef: tprocdef):boolean;
+  function str_parse_method_impl_with_fileinfo(str: ansistring; usefwpd: TProcDef; fileno, lineno: longint; is_classdef: boolean; out result_procdef: TProcDef):boolean;
      var
        oldparse_only: boolean;
        tmpstr: ansistring;
@@ -262,21 +262,21 @@ implementation
      end;
 
 
-  function str_parse_method_impl(const str: ansistring; usefwpd: tprocdef; is_classdef: boolean):boolean;
+  function str_parse_method_impl(const str: ansistring; usefwpd: TProcDef; is_classdef: boolean):boolean;
     var
-      tmpproc: tprocdef;
+      tmpproc: TProcDef;
     begin
       result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.ref_index, CurrentScanner.line_no, is_classdef, tmpproc);
     end;
 
 
-  function str_parse_method_impl(const str: ansistring; usefwpd: tprocdef; is_classdef: boolean; out result_procdef: tprocdef):boolean;
+  function str_parse_method_impl(const str: ansistring; usefwpd: TProcDef; is_classdef: boolean; out result_procdef: TProcDef):boolean;
     begin
       result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.ref_index, CurrentScanner.line_no, is_classdef, result_procdef);
     end;
 
 
-  procedure str_parse_typedconst(list: TAsmList; str: ansistring; ssym: tstaticvarsym);
+  procedure str_parse_typedconst(list: TAsmList; str: ansistring; ssym: TStaticVarSym);
     var
       old_block_type: TBlockType;
       old_parse_only: boolean;
@@ -300,7 +300,7 @@ implementation
       CurrentScanner.tempopeninputfile;
     end;
 
-    function str_parse_objecttypedef(typename : shortstring;str: ansistring): tobjectdef;
+    function str_parse_objecttypedef(typename : shortstring;str: ansistring): TObjectDef;
      var
        b,oldparse_only: boolean;
        i : integer;
@@ -325,9 +325,9 @@ implementation
       While (result=nil) and (i>=0) do
         begin
         O:=CurrentModule.DefList[i];
-        if (o is tobjectdef) then
-           if (tobjectdef(o).GetTypeName=typename) then
-             result:=tobjectdef(o);
+        if (o is TObjectDef) then
+           if (TObjectDef(o).GetTypeName=typename) then
+             result:=TObjectDef(o);
         dec(i);
         end;
       if result=nil then
@@ -340,7 +340,7 @@ implementation
      end;
 
 
-  function def_unit_name_prefix_if_toplevel(def: tdef): TSymStr;
+  function def_unit_name_prefix_if_toplevel(def: TDef): TSymStr;
     begin
       result:='';
       { if the routine is a global routine in a unit, explicitly use this unit
@@ -353,31 +353,31 @@ implementation
     end;
 
 
-  procedure add_missing_parent_constructors_intf(obj: tobjectdef; addvirtclassmeth: boolean; forcevis: tvisibility);
+  procedure add_missing_parent_constructors_intf(obj: TObjectDef; addvirtclassmeth: boolean; forcevis: TVisibility);
     var
-      parent: tobjectdef;
-      def: tdef;
+      parent: TObjectDef;
+      def: TDef;
       parentpd,
-      childpd: tprocdef;
+      childpd: TProcDef;
       i: longint;
-      srsym: tsym;
-      srsymtable: tsymtable;
+      srsym: TSym;
+      srsymtable: TSymTable;
     begin
       if (oo_is_external in obj.objectoptions) or
          not assigned(obj.childof) then
         exit;
       parent:=obj.childof;
       { find all constructor in the parent }
-      for i:=0 to tobjectsymtable(parent.symtable).deflist.count-1 do
+      for i:=0 to TObjectSymTable(parent.symtable).deflist.count-1 do
         begin
-          def:=tdef(tobjectsymtable(parent.symtable).deflist[i]);
+          def:=TDef(TObjectSymTable(parent.symtable).deflist[i]);
           if (def.typ<>procdef) or
-             ((tprocdef(def).proctypeoption<>potype_constructor) and
+             ((TProcDef(def).proctypeoption<>potype_constructor) and
               (not addvirtclassmeth or
-               not([po_classmethod,po_virtualmethod]<=tprocdef(def).procoptions))) or
-             not is_visible_for_object(tprocdef(def),obj) then
+               not([po_classmethod,po_virtualmethod]<=TProcDef(def).procoptions))) or
+             not is_visible_for_object(TProcDef(def),obj) then
             continue;
-          parentpd:=tprocdef(def);
+          parentpd:=TProcDef(def);
           { do we have this constructor too? (don't use
             search_struct_member/searchsym_in_class, since those will
             search parents too) }
@@ -387,8 +387,8 @@ implementation
                 same type with the same parameters? }
               if srsym.typ=procsym then
                 begin
-                  childpd:=tprocsym(srsym).find_procdef_bytype_and_para(
-                    tprocdef(def).proctypeoption,parentpd.paras,nil,
+                  childpd:=TProcSym(srsym).find_procdef_bytype_and_para(
+                    TProcDef(def).proctypeoption,parentpd.paras,nil,
                     [cpo_ignorehidden,cpo_ignoreuniv,cpo_openequalisexact]);
                   if assigned(childpd) then
                     continue;
@@ -396,7 +396,7 @@ implementation
             end;
           { if we get here, we did not find it in the current objectdef ->
             add }
-          childpd:=tprocdef(parentpd.getcopyas(procdef,pc_normal_no_hidden,'',true));
+          childpd:=TProcDef(parentpd.getcopyas(procdef,pc_normal_no_hidden,'',true));
           { get rid of the import name for inherited virtual class methods,
             it has to be regenerated rather than amended }
           if [po_classmethod,po_virtualmethod]<=childpd.procoptions then
@@ -418,7 +418,7 @@ implementation
     end;
 
 
-  procedure implement_anon_inherited(pd: tprocdef);
+  procedure implement_anon_inherited(pd: TProcDef);
     var
       str: ansistring;
       isclassmethod: boolean;
@@ -435,13 +435,13 @@ implementation
     end;
 
 
-  procedure implement_jvm_clone(pd: tprocdef);
+  procedure implement_jvm_clone(pd: TProcDef);
     var
-      struct: tabstractrecorddef;
+      struct: TAbstractRecordDef;
       str: ansistring;
       i: longint;
-      sym: tsym;
-      fsym: tfieldvarsym;
+      sym: TSym;
+      fsym: TFieldVarSym;
     begin
       if not(pd.struct.typ in [recorddef,objectdef]) then
         internalerror(2011032802);
@@ -466,10 +466,10 @@ implementation
       { copy all field contents }
       for i:=0 to struct.symtable.symlist.count-1 do
         begin
-          sym:=tsym(struct.symtable.symlist[i]);
+          sym:=TSym(struct.symtable.symlist[i]);
           if (sym.typ=fieldvarsym) then
             begin
-              fsym:=tfieldvarsym(sym);
+              fsym:=TFieldVarSym(sym);
               str:=str+'__fpc_newcopy.&'+fsym.realname+':=&'+fsym.realname+';';
             end;
         end;
@@ -478,13 +478,13 @@ implementation
     end;
 
 
-  procedure implement_record_deepcopy(pd: tprocdef);
+  procedure implement_record_deepcopy(pd: TProcDef);
     var
-      struct: tabstractrecorddef;
+      struct: TAbstractRecordDef;
       str: ansistring;
       i: longint;
-      sym: tsym;
-      fsym: tfieldvarsym;
+      sym: TSym;
+      fsym: TFieldVarSym;
     begin
       if not(pd.struct.typ in [recorddef,objectdef]) then
         internalerror(2011032810);
@@ -498,10 +498,10 @@ implementation
       str:='type _fpc_ptrt = ^'+struct.typesym.realname+'; var res: _fpc_ptrt; begin res:=_fpc_ptrt(result);';
       for i:=0 to struct.symtable.symlist.count-1 do
         begin
-          sym:=tsym(struct.symtable.symlist[i]);
+          sym:=TSym(struct.symtable.symlist[i]);
           if (sym.typ=fieldvarsym) then
             begin
-              fsym:=tfieldvarsym(sym);
+              fsym:=TFieldVarSym(sym);
               str:=str+'res^.&'+fsym.realname+':=&'+fsym.realname+';';
             end;
         end;
@@ -510,13 +510,13 @@ implementation
     end;
 
 
-  procedure implement_record_initialize(pd: tprocdef);
+  procedure implement_record_initialize(pd: TProcDef);
     var
-      struct: tabstractrecorddef;
+      struct: TAbstractRecordDef;
       str: ansistring;
       i: longint;
-      sym: tsym;
-      fsym: tfieldvarsym;
+      sym: TSym;
+      fsym: TFieldVarSym;
     begin
       if not(pd.struct.typ in [recorddef,objectdef]) then
         internalerror(2011071710);
@@ -530,11 +530,11 @@ implementation
       str:='begin ';
       for i:=0 to struct.symtable.symlist.count-1 do
         begin
-          sym:=tsym(struct.symtable.symlist[i]);
+          sym:=TSym(struct.symtable.symlist[i]);
           if (sym.typ=fieldvarsym) then
             begin
-              fsym:=tfieldvarsym(sym);
-              if fsym.vardef.needs_inittable then
+              fsym:=TFieldVarSym(sym);
+              if fsym.vardef.NeedsInitTable then
                 str:=str+(internal_macro_escape_unit_namespace_name+'system.initialize(&')+fsym.realname+');';
             end;
         end;
@@ -542,7 +542,7 @@ implementation
       str_parse_method_impl(str,pd,false);
     end;
 
-  procedure implement_empty(pd: tprocdef);
+  procedure implement_empty(pd: TProcDef);
     var
       str: ansistring;
       isclassmethod: boolean;
@@ -555,16 +555,16 @@ implementation
     end;
 
 
-  procedure addvisibleparameters(var str: ansistring; pd: tprocdef);
+  procedure addvisibleparameters(var str: ansistring; pd: TProcDef);
     var
-      currpara: tparavarsym;
+      currpara: TParaVarSym;
       i: longint;
       firstpara: boolean;
     begin
       firstpara:=true;
       for i:=0 to pd.paras.count-1 do
         begin
-          currpara:=tparavarsym(pd.paras[i]);
+          currpara:=TParaVarSym(pd.paras[i]);
           if not(vo_is_hidden_para in currpara.varoptions) then
             begin
               if not firstpara then
@@ -577,16 +577,16 @@ implementation
 
 
 
-  procedure implement_callthrough(pd: tprocdef);
+  procedure implement_callthrough(pd: TProcDef);
     var
       str: ansistring;
-      callpd: tprocdef;
+      callpd: TProcDef;
       isclassmethod: boolean;
     begin
       isclassmethod:=
         (po_classmethod in pd.procoptions) and
         not(pd.proctypeoption in [potype_constructor,potype_destructor]);
-      callpd:=tprocdef(pd.skpara);
+      callpd:=TProcDef(pd.skpara);
       str:='begin ';
       if pd.returndef<>voidtype then
         str:=str+'result:=';
@@ -604,17 +604,17 @@ implementation
 
 
 
-  procedure implement_field_getter(pd: tprocdef);
+  procedure implement_field_getter(pd: TProcDef);
     var
       i: longint;
-      pvs: tparavarsym;
+      pvs: TParaVarSym;
       str: ansistring;
-      callthroughprop: tpropertysym;
-      propaccesslist: tpropaccesslist;
+      callthroughprop: TPropertySym;
+      propaccesslist: TPropAccessList;
       lastparanr: longint;
       firstpara: boolean;
     begin
-      callthroughprop:=tpropertysym(pd.skpara);
+      callthroughprop:=TPropertySym(pd.skpara);
       str:='begin result:='+callthroughprop.realname;
       if ppo_hasparameters in callthroughprop.propoptions then
         begin
@@ -622,13 +622,13 @@ implementation
             internalerror(2012100701);
           str:=str+'[';
           firstpara:=true;
-          lastparanr:=tprocdef(propaccesslist.procdef).paras.count-1;
+          lastparanr:=TProcDef(propaccesslist.procdef).paras.count-1;
           if ppo_indexed in callthroughprop.propoptions then
             dec(lastparanr);
           for i:=0 to lastparanr do
             begin
               { skip self/vmt/parentfp, passed implicitly }
-              pvs:=tparavarsym(tprocdef(propaccesslist.procdef).paras[i]);
+              pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[i]);
               if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*pvs.varoptions)<>[] then
                 continue;
               if not firstpara then
@@ -643,16 +643,16 @@ implementation
     end;
 
 
-  procedure implement_field_setter(pd: tprocdef);
+  procedure implement_field_setter(pd: TProcDef);
     var
       i, lastparaindex: longint;
-      pvs: tparavarsym;
+      pvs: TParaVarSym;
       paraname,  str: ansistring;
-      callthroughprop: tpropertysym;
-      propaccesslist: tpropaccesslist;
+      callthroughprop: TPropertySym;
+      propaccesslist: TPropAccessList;
       firstpara: boolean;
     begin
-      callthroughprop:=tpropertysym(pd.skpara);
+      callthroughprop:=TPropertySym(pd.skpara);
       str:='begin '+callthroughprop.realname;
       if not callthroughprop.getpropaccesslist(palt_write,propaccesslist) then
         internalerror(2012100702);
@@ -662,13 +662,13 @@ implementation
           firstpara:=true;
           { last parameter is the value to be set, skip (only add index
             parameters here) }
-          lastparaindex:=tprocdef(propaccesslist.procdef).paras.count-2;
+          lastparaindex:=TProcDef(propaccesslist.procdef).paras.count-2;
           if ppo_indexed in callthroughprop.propoptions then
             dec(lastparaindex);
           for i:=0 to lastparaindex do
             begin
               { skip self/vmt/parentfp/index, passed implicitly }
-              pvs:=tparavarsym(tprocdef(propaccesslist.procdef).paras[i]);
+              pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[i]);
               if ([vo_is_self,vo_is_vmt,vo_is_parentfp]*pvs.varoptions)<>[] then
                 continue;
               if not firstpara then
@@ -681,7 +681,7 @@ implementation
       { the value-to-be-set }
       if assigned(propaccesslist.procdef) then
         begin
-          pvs:=tparavarsym(tprocdef(propaccesslist.procdef).paras[tprocdef(propaccesslist.procdef).paras.count-1]);
+          pvs:=TParaVarSym(TProcDef(propaccesslist.procdef).paras[TProcDef(propaccesslist.procdef).paras.count-1]);
           paraname:=pvs.realname;
         end
       else
@@ -691,7 +691,7 @@ implementation
     end;
 
 
-  procedure implement_block_invoke_procvar(pd: tprocdef);
+  procedure implement_block_invoke_procvar(pd: TProcDef);
     var
       str: ansistring;
     begin
@@ -706,17 +706,17 @@ implementation
     end;
 
 
-  procedure implement_interface_wrapper(pd: tprocdef);
+  procedure implement_interface_wrapper(pd: TProcDef);
     var
-      wrapperinfo: pskpara_interface_wrapper;
-      callthroughpd, tmpproc: tprocdef;
+      wrapperinfo: PSKParaInterfaceWrapper;
+      callthroughpd, tmpproc: TProcDef;
       str: ansistring;
       fileinfo: TFilePosInfo;
     begin
-      wrapperinfo:=pskpara_interface_wrapper(pd.skpara);
+      wrapperinfo:=PSKParaInterfaceWrapper(pd.skpara);
       if not assigned(wrapperinfo) then
         internalerror(2015090801);
-      callthroughpd:=tprocdef(wrapperinfo^.pd);
+      callthroughpd:=TProcDef(wrapperinfo^.pd);
       str:='begin ';
       { self right now points to the VMT of interface inside the instance ->
         adjust so it points to the start of the instance }
@@ -743,9 +743,9 @@ implementation
     end;
 
 
-  procedure implement_call_no_parameters(pd: tprocdef);
+  procedure implement_call_no_parameters(pd: TProcDef);
     var
-      callpd: tprocdef;
+      callpd: TProcDef;
       str: ansistring;
       warningson,
       isclassmethod: boolean;
@@ -754,7 +754,7 @@ implementation
       warningson:=(status.verbosity and V_Warning)<>0;
       setverbosity('W-');
       str:='begin ';
-      callpd:=tprocdef(pd.skpara);
+      callpd:=TProcDef(pd.skpara);
       str:=str+def_unit_name_prefix_if_toplevel(callpd)+callpd.procsym.realname+'; end;';
       isclassmethod:=
         (po_classmethod in pd.procoptions) and
@@ -764,24 +764,24 @@ implementation
         setverbosity('W+');
     end;
 
-  function get_method_paramtype(vardef  : Tdef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : ansistring; forward;
+  function get_method_paramtype(vardef  : TDef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : ansistring; forward;
 
-  function str_parse_method(str: ansistring; allowgenericid : boolean): tprocdef; forward;
+  function str_parse_method(str: ansistring; allowgenericid : boolean): TProcDef; forward;
 
-  function str_parse_method(str: ansistring): tprocdef;
+  function str_parse_method(str: ansistring): TProcDef;
   begin
      Result:=str_parse_method(str,false);
   end;
 
-  procedure implement_invoke_helper(cn : string;pd: tprocdef; idx : integer);
+  procedure implement_invoke_helper(cn : string;pd: TProcDef; idx : integer);
 
     var
       sarg,str : ansistring;
       pt, pn,d : shortstring;
-      sym : tsym;
+      sym : TSym;
       aArg,argcount,i : integer;
       isarray,haveresult : boolean;
-      para : tparavarsym;
+      para : TParaVarSym;
       hasopenarray, washigh: Boolean;
 
     begin
@@ -795,7 +795,7 @@ implementation
       argCount:=0;
       for i:=0 to pd.paras.Count-1 do
         begin
-          para:=tparavarsym(pd.paras[i]);
+          para:=TParaVarSym(pd.paras[i]);
           if vo_is_hidden_para in para.varoptions then
             continue;
           inc(argCount);
@@ -829,7 +829,7 @@ implementation
       argCount:=0;
       for i:=0 to pd.paras.Count-1 do
         begin
-          para:=tparavarsym(pd.paras[i]);
+          para:=TParaVarSym(pd.paras[i]);
           if vo_is_hidden_para in para.varoptions then
             continue;
           inc(argCount);
@@ -843,22 +843,22 @@ implementation
       pd.invoke_helper:=str_parse_method(str,true);
   end;
 
-  procedure add_synthetic_method_implementations_for_st(st: tsymtable);
+  procedure add_synthetic_method_implementations_for_st(st: TSymTable);
     var
       i   : longint;
-      def : tdef;
-      pd  : tprocdef;
+      def : TDef;
+      pd  : TProcDef;
       cn  : shortstring;
     begin
       for i:=0 to st.deflist.count-1 do
         begin
-          def:=tdef(st.deflist[i]);
+          def:=TDef(st.deflist[i]);
           if (def.typ<>procdef) then
             continue;
           { skip methods when processing unit symtable }
           if def.owner<>st then
             continue;
-          pd:=tprocdef(def);
+          pd:=TProcDef(def);
           case pd.synthetickind of
             tsk_none:
               ;
@@ -879,7 +879,7 @@ implementation
             tsk_callthrough_nonabstract:
               begin
                 if (pd.owner.defowner.typ<>objectdef) or
-                   (tobjectdef(pd.owner.defowner).abstractcnt=0) then
+                   (TObjectDef(pd.owner.defowner).abstractcnt=0) then
                   implement_callthrough(pd)
                 else
                   implement_empty(pd);
@@ -913,8 +913,8 @@ implementation
               implement_call_no_parameters(pd);
             tsk_invoke_helper:
               begin
-                if (pd.owner.defowner) is tobjectdef  then
-                  cn:=tobjectdef(def.owner.defowner).GetTypeName
+                if (pd.owner.defowner) is TObjectDef  then
+                  cn:=TObjectDef(def.owner.defowner).GetTypeName
                 else
                   internalerror(2023061107);
                 implement_invoke_helper(cn,pd,i);
@@ -923,11 +923,11 @@ implementation
         end;
     end;
 
-  function get_method_paramtype(vardef  : Tdef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : ansistring;
+  function get_method_paramtype(vardef  : TDef; asPointer : Boolean; out isAnonymousArrayDef : Boolean) : ansistring;
 
   var
     p : integer;
-    arrdef : tarraydef absolute vardef;
+    arrdef : TArrayDef absolute vardef;
 
   begin
     {
@@ -937,13 +937,13 @@ implementation
     isAnonymousArrayDef:=false;
     if asPointer and (vardef.typ=formaldef) then
       exit('pointer');
-    if (vardef is tprocvardef) then
+    if (vardef is TProcVarDef) then
       begin
       result:=vardef.fullownerhierarchyname(false,false);
       if Assigned(vardef.typesym) then
         Result:=Result+(vardef.typesym.Name);
       end
-    else if not (vardef is tarraydef) then
+    else if not (vardef is TArrayDef) then
       result:=vardef.fulltypename
     else
       begin
@@ -977,7 +977,7 @@ implementation
       Result:='^'+Result;
   end;
 
-  function get_method_paramtype(vardef  : Tdef; asPointer : Boolean) : ansistring;
+  function get_method_paramtype(vardef  : TDef; asPointer : Boolean) : ansistring;
 
   var
     ad : boolean;
@@ -986,15 +986,15 @@ implementation
     result:=get_method_paramtype(vardef,aspointer,ad);
   end;
 
-  function create_intf_method_args(p : tprocdef; out argcount: integer) : ansistring;
+  function create_intf_method_args(p : TProcDef; out argcount: integer) : ansistring;
 
   const
-    varspezprefixes : array[tvarspez] of shortstring =
+    varspezprefixes : array[TVarSpez] of shortstring =
       ('','const','var','out','constref','final');
   var
     i : integer;
     s : string;
-    para : tparavarsym;
+    para : TParaVarSym;
 
 
   begin
@@ -1002,21 +1002,21 @@ implementation
     argCount:=0;
     for i:=0 to p.paras.Count-1 do
       begin
-      para:=tparavarsym(p.paras[i]);
+      para:=TParaVarSym(p.paras[i]);
       if vo_is_hidden_para in para.varoptions then
         continue;
       if Result<>'' then
         Result:=Result+';';
       inc(argCount);
       result:=result+varspezprefixes[para.varspez]+' p'+tostr(argcount);
-      if Assigned(para.vardef) and not (para.vardef is tformaldef) then
+      if Assigned(para.vardef) and not (para.vardef is TFormalDef) then
         result:=Result+' : '+get_method_paramtype(para.vardef,false);
       end;
     if Result<>'' then
       Result:='('+Result+')';
   end;
 
-  function generate_thunkclass_name(acount: Integer; objdef : tobjectdef) : shortstring;
+  function generate_thunkclass_name(acount: Integer; objdef : TObjectDef) : shortstring;
 
   var
     cn : shortstring;
@@ -1034,26 +1034,26 @@ implementation
     result:='_t_hidden'+tostr(acount)+cn;
   end;
 
-  function get_thunkclass_interface_vmtoffset(objdef : tobjectdef) : integer;
+  function get_thunkclass_interface_vmtoffset(objdef : TObjectDef) : integer;
 
   var
     i,j,offs : integer;
-    sym : tsym;
-    proc : tprocsym absolute sym;
-    pd : tprocdef;
+    sym : TSym;
+    proc : TProcSym absolute sym;
+    pd : TProcDef;
 
   begin
     offs:=maxint;
     for I:=0 to objdef.symtable.symList.Count-1 do
       begin
-      sym:=tsym(objdef.symtable.symList[i]);
+      sym:=TSym(objdef.symtable.symList[i]);
       if Not assigned(sym) then
         continue;
       if (Sym.typ<>procsym) then
         continue;
       for j:=0 to proc.ProcdefList.Count-1 do
         begin
-        pd:=tprocdef(proc.ProcdefList[j]);
+        pd:=TProcDef(proc.ProcdefList[j]);
         if pd.extnumber<offs then
           offs:=pd.extnumber;
         end;
@@ -1066,12 +1066,12 @@ implementation
 
   // return parent Interface def, but skip iunknown.
 
-  function getparent_interface_def(odef : tobjectdef) : tobjectdef;
+  function getparent_interface_def(odef : TObjectDef) : TObjectDef;
 
   begin
-    if (odef.getparentdef is tobjectdef) then
+    if (odef.getparentdef is TObjectDef) then
       begin
-      result:=odef.getparentdef as tobjectdef;
+      result:=odef.getparentdef as TObjectDef;
       if result=interface_iunknown then
         result:=Nil;
       end
@@ -1079,16 +1079,16 @@ implementation
       result:=nil;
   end;
 
-  procedure implement_interface_thunkclass_decl(cn : shortstring; objdef : tobjectdef);
+  procedure implement_interface_thunkclass_decl(cn : shortstring; objdef : TObjectDef);
 
   var
     parentname,str : ansistring;
-    sym : tsym;
-    proc : tprocsym absolute sym;
-    pd : tprocdef;
-    odef,def : tobjectdef;
+    sym : TSym;
+    proc : TProcSym absolute sym;
+    pd : TProcDef;
+    odef,def : TObjectDef;
     offs,argcount,i,j : integer;
-    intfDef : tobjectdef;
+    intfDef : TObjectDef;
   begin
     str:='type '#10;
     odef:=getparent_interface_def(objdef);
@@ -1103,14 +1103,14 @@ implementation
       if not IntfDef.is_generic then
         for I:=0 to intfdef.symtable.symList.Count-1 do
           begin
-          sym:=tsym(intfdef.symtable.symList[i]);
+          sym:=TSym(intfdef.symtable.symList[i]);
           if Not assigned(sym) then
             continue;
           if (Sym.typ<>procsym) then
             continue;
           for j:=0 to proc.ProcdefList.Count-1 do
             begin
-            pd:=tprocdef(proc.ProcdefList[j]);
+            pd:=TProcDef(proc.ProcdefList[j]);
             if pd.returndef<>voidtype then
               str:=str+'function '
             else
@@ -1139,15 +1139,15 @@ implementation
     if assigned(def) then
       begin
       def.created_in_current_module:=true;
-      if not def.typesym.is_registered then
-        def.typesym.register_sym;
+      if not def.typesym.IsRegistered then
+        def.typesym.RegisterSym;
       def.buildderef;
       include(def.objectoptions,oo_can_have_published);
       end;
     objdef.hiddenclassdef:=def;
   end;
 
-  function str_parse_method(str: ansistring; allowgenericid : boolean): tprocdef;
+  function str_parse_method(str: ansistring; allowgenericid : boolean): TProcDef;
    var
      oldparse_only: boolean;
      tmpstr: ansistring;
@@ -1176,15 +1176,15 @@ implementation
    end;
 
 
-  procedure implement_interface_thunkclass_impl_method(cn : shortstring; objdef : tobjectdef; proc : tprocsym; pd : tprocdef);
+  procedure implement_interface_thunkclass_impl_method(cn : shortstring; objdef : TObjectDef; proc : TProcSym; pd : TProcDef);
 
   var
     rest,str : ansistring;
     pn,d : shortstring;
-    sym : tsym;
+    sym : TSym;
     aArg,argcount,i : integer;
     haveresult : boolean;
-    para : tparavarsym;
+    para : TParaVarSym;
     hasopenarray, washigh: Boolean;
 
   begin
@@ -1228,7 +1228,7 @@ implementation
     d:='0';
     for i:=0 to pd.paras.Count-1 do
       begin
-      para:=tparavarsym(pd.paras[i]);
+      para:=TParaVarSym(pd.paras[i]);
       // previous was open array. Record high
       if (i>1) then
         begin
@@ -1245,7 +1245,7 @@ implementation
       d:=tostr(aArg);
       Str:=Str+'  data['+d+'].addr:=@p'+d+';'#10;
       Str:=Str+'  data['+d+'].idx:='+tostr(i)+';'#10;
-      if Assigned(para.vardef) and not (para.vardef is tformaldef) then
+      if Assigned(para.vardef) and not (para.vardef is TFormalDef) then
         Str:=Str+'  data['+d+'].info:=TypeInfo(p'+d+');'#10
       else
         Str:=Str+'  data['+d+'].info:=Nil;'#10
@@ -1260,7 +1260,7 @@ implementation
     pd:=str_parse_method(str,true);
   end;
 
-  procedure implement_thunkclass_interfacevmtoffset(cn : shortstring; objdef : tobjectdef; offs : integer);
+  procedure implement_thunkclass_interfacevmtoffset(cn : shortstring; objdef : TObjectDef; offs : integer);
 
   var
     str : ansistring;
@@ -1273,15 +1273,15 @@ implementation
   end;
 
 
-  procedure implement_interface_thunkclass_impl(cn: shortstring; objdef : tobjectdef);
+  procedure implement_interface_thunkclass_impl(cn: shortstring; objdef : TObjectDef);
 
   var
     str : ansistring;
-    sym : tsym;
-    proc : tprocsym absolute sym;
-    pd : tprocdef;
+    sym : TSym;
+    proc : TProcSym absolute sym;
+    pd : TProcDef;
     offs,i,j : integer;
-    intfDef : tobjectdef;
+    intfDef : TObjectDef;
 
   begin
     offs:=get_thunkclass_interface_vmtoffset(objdef);
@@ -1291,14 +1291,14 @@ implementation
     repeat
       for I:=0 to intfdef.symtable.symList.Count-1 do
         begin
-        sym:=tsym(intfdef.symtable.symList[i]);
+        sym:=TSym(intfdef.symtable.symList[i]);
         if Not assigned(sym) then
           continue;
         if (Sym.typ<>procsym) then
           continue;
         for j:=0 to proc.ProcdefList.Count-1 do
           begin
-          pd:=tprocdef(proc.ProcdefList[j]);
+          pd:=TProcDef(proc.ProcdefList[j]);
           implement_interface_thunkclass_impl_method(cn,intfdef,proc,pd);
           end;
         end;
@@ -1310,13 +1310,13 @@ implementation
     until (intfdef=Nil);
   end;
 
-  procedure add_synthetic_interface_classes_for_st(st : tsymtable; gen_intf, gen_impl : boolean);
+  procedure add_synthetic_interface_classes_for_st(st : TSymTable; gen_intf, gen_impl : boolean);
 
   var
     i   : longint;
-    def : tdef;
-    objdef : tobjectdef absolute def;
-    recdef : trecorddef absolute def;
+    def : TDef;
+    objdef : TObjectDef absolute def;
+    recdef : TRecordDef absolute def;
     sstate: tscannerstate;
     cn : shortstring;
     isDelphiMode : boolean;
@@ -1337,7 +1337,7 @@ implementation
       end;
     for i:=0 to st.deflist.count-1 do
       begin
-      def:=tdef(st.deflist[i]);
+      def:=TDef(st.deflist[i]);
       if (def.typ<>objectdef) then
         continue;
       if not (objdef.objecttype in objecttypes_with_thunk) then
@@ -1355,7 +1355,7 @@ implementation
     // Recurse for interfaces defined in a type section of a class/record.
     for i:=0 to st.deflist.count-1 do
       begin
-      def:=tdef(st.deflist[i]);
+      def:=TDef(st.deflist[i]);
       if (def.typ=objectdef) and (objdef.objecttype=odt_class) then
         add_synthetic_interface_classes_for_st(objdef.symtable,gen_intf,gen_impl)
       else if (def.typ=recorddef) and (m_advanced_records in CurrentSettings.modeswitches) then
@@ -1363,10 +1363,10 @@ implementation
       end;
   end;
 
-  procedure add_synthetic_method_implementations(st: tsymtable);
+  procedure add_synthetic_method_implementations(st: TSymTable);
     var
       i: longint;
-      def: tdef;
+      def: TDef;
       sstate: tscannerstate;
     begin
       { skip if any errors have occurred, since then this can only cause more
@@ -1377,36 +1377,36 @@ implementation
       add_synthetic_method_implementations_for_st(st);
       for i:=0 to st.deflist.count-1 do
         begin
-          def:=tdef(st.deflist[i]);
+          def:=TDef(st.deflist[i]);
           if (def.typ=procdef) and
-             assigned(tprocdef(def).localst) and
+             assigned(TProcDef(def).localst) and
              { not true for the "main" procedure, whose localsymtable is the staticsymtable }
-             (tprocdef(def).localst.symtabletype=localsymtable) then
-            add_synthetic_method_implementations(tprocdef(def).localst)
+             (TProcDef(def).localst.symtabletype=localsymtable) then
+            add_synthetic_method_implementations(TProcDef(def).localst)
           else if ((def.typ=objectdef) and
-                   not(oo_is_external in tobjectdef(def).objectoptions) and
+                   not(oo_is_external in TObjectDef(def).objectoptions) and
                    { we must not create duplicate synthetic methods for a unique
                      type declaration as that simply shares the VMT of the aliased
                      types }
-                   not(tobjectdef(def).is_unique_objpasdef)) or
+                   not(TObjectDef(def).is_unique_objpasdef)) or
                   (def.typ=recorddef) then
            begin
             { also complete nested types }
-            add_synthetic_method_implementations(tabstractrecorddef(def).symtable);
+            add_synthetic_method_implementations(TAbstractRecordDef(def).symtable);
            end;
         end;
       restore_scanner(sstate);
     end;
 
 
-  function create_procdef_alias(pd: tprocdef; const newrealname: string; const newmangledname: TSymStr; newparentst: tsymtable; newstruct: tabstractrecorddef;
-      sk: tsynthetickind; skpara: pointer): tprocdef;
+  function create_procdef_alias(pd: TProcDef; const newrealname: string; const newmangledname: TSymStr; newparentst: TSymTable; newstruct: TAbstractRecordDef;
+      sk: TSyntheticKind; skpara: pointer): TProcDef;
     begin
       { bare copy so we don't copy the aliasnames (specify prefix for
         parameter names so we don't get issues in the body in case
         we e.g. reference system.initialize and one of the parameters
         is called "system") }
-      result:=tprocdef(pd.getcopyas(procdef,pc_bareproc,'__FPCW_',true));
+      result:=TProcDef(pd.getcopyas(procdef,pc_bareproc,'__FPCW_',true));
       { set the mangled name to the wrapper name }
       result.setmangledname(newmangledname);
       { finish creating the copy }
@@ -1425,11 +1425,11 @@ implementation
     end;
 
 
-  procedure finish_copied_procdef(var pd: tprocdef; const realname: string; newparentst: tsymtable; newstruct: tabstractrecorddef);
+  procedure finish_copied_procdef(var pd: TProcDef; const realname: string; newparentst: TSymTable; newstruct: TAbstractRecordDef);
     var
-      sym: tsym;
-      parasym: tparavarsym;
-      ps: tprocsym;
+      sym: TSym;
+      parasym: TParaVarSym;
+      ps: TProcSym;
       stname: string;
       i: longint;
     begin
@@ -1442,12 +1442,12 @@ implementation
         stname:=upper(realname)
       else
         stname:=lower(realname);
-      sym:=tsym(newparentst.find(stname));
+      sym:=TSym(newparentst.find(stname));
       if assigned(sym) then
         begin
           if sym.typ<>procsym then
             internalerror(2011040601);
-          ps:=tprocsym(sym);
+          ps:=TProcSym(sym);
         end
       else
         begin
@@ -1465,7 +1465,7 @@ implementation
             begin
               for i:=0 to pd.paras.count-1 do
                 begin
-                  parasym:=tparavarsym(pd.paras[i]);
+                  parasym:=TParaVarSym(pd.paras[i]);
                   if vo_is_self in parasym.varoptions then
                     begin
                       if parasym.vardef.typ=classrefdef then
@@ -1485,21 +1485,21 @@ implementation
     end;
 
 
-  function maybe_add_sym_to_parentfpstruct(pd: tprocdef; sym: tsym; vardef: tdef; addrparam: boolean): tsym;
+  function maybe_add_sym_to_parentfpstruct(pd: TProcDef; sym: TSym; vardef: TDef; addrparam: boolean): TSym;
     var
       fieldvardef,
-      nestedvarsdef: tdef;
-      nestedvarsst: tsymtable;
+      nestedvarsdef: TDef;
+      nestedvarsst: TSymTable;
       initcode: TNode;
       old_filepos: TFilePosInfo;
       symname,
       symrealname: TSymStr;
-      highsym: tabstractvarsym;
+      highsym: TAbstractVarSym;
     begin
-      nestedvarsdef:=tlocalvarsym(pd.parentfpstruct).vardef;
+      nestedvarsdef:=TLocalVarSym(pd.parentfpstruct).vardef;
       { redirect all aliases for the function result also to the function
         result }
-      if vo_is_funcret in tabstractvarsym(sym).varoptions then
+      if vo_is_funcret in TAbstractVarSym(sym).varoptions then
         begin
           symname:='result';
           symrealname:='$result'
@@ -1509,14 +1509,14 @@ implementation
           symname:=sym.name;
           symrealname:=sym.EscapedRealName;
         end;
-      result:=search_struct_member(trecorddef(nestedvarsdef),symname);
+      result:=search_struct_member(TRecordDef(nestedvarsdef),symname);
       if not assigned(result) then
         begin
           { mark that this symbol is mirrored in the parentfpstruct }
-          tabstractnormalvarsym(sym).inparentfpstruct:=true;
+          TAbstractNormalVarSym(sym).inparentfpstruct:=true;
           { add field to the struct holding all locals accessed
             by nested routines }
-          nestedvarsst:=trecorddef(nestedvarsdef).symtable;
+          nestedvarsst:=TRecordDef(nestedvarsdef).symtable;
           { indicate whether or not this is a var/out/constref/... parameter }
           if addrparam then
             fieldvardef:=cpointerdef.getreusable(vardef)
@@ -1524,7 +1524,7 @@ implementation
             fieldvardef:=vardef;
           result:=cfieldvarsym.create(symrealname,vs_value,fieldvardef,[]);
           nestedvarsst.insertsym(result);
-          trecordsymtable(nestedvarsst).addfield(tfieldvarsym(result),vis_public);
+          TRecordSymTable(nestedvarsst).addfield(TFieldVarSym(result),vis_public);
 
           { add initialization with original value if it's a parameter }
           if (sym.typ=paravarsym) then
@@ -1553,7 +1553,7 @@ implementation
               { also add the associated high para, if any. It may not be accessed
                 during code generation, and we need to catch 'em all (TM) during
                 the typecheck/firstpass }
-              highsym:=get_high_value_sym(tparavarsym(sym));
+              highsym:=get_high_value_sym(TParaVarSym(sym));
               if assigned(highsym) then
                 maybe_add_sym_to_parentfpstruct(pd, highsym, highsym.vardef, false);
             end;
@@ -1561,31 +1561,31 @@ implementation
     end;
 
 
-  procedure redirect_parentfpstruct_local_syms(pd: tprocdef);
+  procedure redirect_parentfpstruct_local_syms(pd: TProcDef);
     var
-      nestedvarsdef: trecorddef;
-      sl: tpropaccesslist;
+      nestedvarsdef: TRecordDef;
+      sl: TPropAccessList;
       fsym,
       lsym,
-      aliassym: tsym;
+      aliassym: TSym;
       i: longint;
     begin
-      nestedvarsdef:=trecorddef(tlocalvarsym(pd.parentfpstruct).vardef);
+      nestedvarsdef:=TRecordDef(TLocalVarSym(pd.parentfpstruct).vardef);
       for i:=0 to nestedvarsdef.symtable.symlist.count-1 do
         begin
-          fsym:=tsym(nestedvarsdef.symtable.symlist[i]);
+          fsym:=TSym(nestedvarsdef.symtable.symlist[i]);
           if fsym.typ<>fieldvarsym then
             continue;
-          lsym:=tsym(pd.localst.find(fsym.name));
+          lsym:=TSym(pd.localst.find(fsym.name));
           if not assigned(lsym) then
-            lsym:=tsym(pd.parast.find(fsym.name));
+            lsym:=TSym(pd.parast.find(fsym.name));
           if not assigned(lsym) then
             internalerror(2011060408);
           { add an absolute variable that redirects to the field }
-          sl:=tpropaccesslist.create;
+          sl:=TPropAccessList.create;
           sl.addsym(sl_load,pd.parentfpstruct);
-          sl.addsym(sl_subscript,tfieldvarsym(fsym));
-          aliassym:=cabsolutevarsym.create_ref(lsym.EscapedRealName,tfieldvarsym(fsym).vardef,sl);
+          sl.addsym(sl_subscript,TFieldVarSym(fsym));
+          aliassym:=cabsolutevarsym.create_ref(lsym.EscapedRealName,TFieldVarSym(fsym).vardef,sl);
           { hide the original variable (can't delete, because there
             may be other loadnodes that reference it)
             -- only for locals; hiding parameters changes the
@@ -1601,39 +1601,39 @@ implementation
     end;
 
 
-  function find_sym_in_parentfpstruct(pd: tprocdef; sym: tsym): tsym;
+  function find_sym_in_parentfpstruct(pd: TProcDef; sym: TSym): TSym;
     var
-      nestedvarsdef: tdef;
+      nestedvarsdef: TDef;
     begin
-      nestedvarsdef:=tlocalvarsym(pd.parentfpstruct).vardef;
-      result:=search_struct_member(trecorddef(nestedvarsdef),sym.name);
+      nestedvarsdef:=TLocalVarSym(pd.parentfpstruct).vardef;
+      result:=search_struct_member(TRecordDef(nestedvarsdef),sym.name);
     end;
 
 
-  procedure finish_parentfpstruct(pd: tprocdef);
+  procedure finish_parentfpstruct(pd: TProcDef);
     begin
-      trecordsymtable(trecorddef(tlocalvarsym(pd.parentfpstruct).vardef).symtable).addalignmentpadding;
+      TRecordSymTable(TRecordDef(TLocalVarSym(pd.parentfpstruct).vardef).symtable).addalignmentpadding;
     end;
 
 
-  function make_field_static(recst: tsymtable; fieldvs: tfieldvarsym): tstaticvarsym;
+  function make_field_static(recst: TSymTable; fieldvs: TFieldVarSym): TStaticVarSym;
     var
       static_name: string;
-      hstaticvs: tstaticvarsym;
-      tmp: tabsolutevarsym;
-      sl: tpropaccesslist;
+      hstaticvs: TStaticVarSym;
+      tmp: TAbsoluteVarSym;
+      sl: TPropAccessList;
     begin
       include(fieldvs.symoptions,sp_static);
       { generate the symbol which reserves the space }
       static_name:=lower(generate_nested_name(recst,'_'))+'_'+fieldvs.name;
       hstaticvs:=cstaticvarsym.create_from_fieldvar(static_name,fieldvs);
       include(hstaticvs.symoptions,sp_internal);
-      if df_generic in tdef(recst.defowner).defoptions then
-        tabstractrecordsymtable(recst).insertsym(hstaticvs)
+      if df_generic in TDef(recst.defowner).defoptions then
+        TAbstractRecordSymTable(recst).insertsym(hstaticvs)
       else
-        tdef(tabstractrecordsymtable(recst).defowner).get_top_level_symtable(false).insertsym(hstaticvs);
+        TDef(TAbstractRecordSymTable(recst).defowner).GetTopLevelSymTable(false).insertsym(hstaticvs);
       { generate the symbol for the access }
-      sl:=tpropaccesslist.create;
+      sl:=TPropAccessList.create;
       sl.addsym(sl_load,hstaticvs);
       { do *not* change the visibility of this absolutevarsym from vis_public
         to anything else, because its visibility is used by visibility checks
@@ -1647,9 +1647,9 @@ implementation
     end;
 
 
-  procedure call_through_new_name(orgpd: tprocdef; const newname: TSymStr);
+  procedure call_through_new_name(orgpd: TProcDef; const newname: TSymStr);
     var
-      newpd: tprocdef;
+      newpd: TProcDef;
     begin
       { we have a forward declaration like
          procedure test; (in the unit interface or "forward")
@@ -1665,7 +1665,7 @@ implementation
 
       { prefixing the parameters here is useless, because the new procdef will
         just be an external declaration without a body }
-      newpd:=tprocdef(orgpd.getcopyas(procdef,pc_bareproc,'',true));
+      newpd:=TProcDef(orgpd.getcopyas(procdef,pc_bareproc,'',true));
       insert_funcret_para(newpd);
       newpd.procoptions:=newpd.procoptions+orgpd.procoptions*[po_external,po_has_importname,po_has_importdll];
       stringdispose(orgpd.import_name);
@@ -1684,11 +1684,11 @@ implementation
     end;
 
 
-  function generate_pkg_stub(pd:tprocdef):TNode;
+  function generate_pkg_stub(pd:TProcDef):TNode;
     var
       stat: tstatementnode;
-      handlevar: tstaticvarsym;
-      instance: tsym;
+      handlevar: TStaticVarSym;
+      instance: TSym;
     begin
       if TargetInfo.system in systems_all_windows then
         begin
@@ -1700,7 +1700,7 @@ implementation
                 vs_value,sizeuinttype);
               include(handlevar.varoptions,vo_is_external);
               CurrentModule.localsymtable.insertsym(handlevar);
-              instance:=tsym(pd.parast.find('HINSTANCE'));
+              instance:=TSym(pd.parast.find('HINSTANCE'));
               addstatement(stat,cassignmentnode.create(
                 cloadnode.create(handlevar,handlevar.owner),
                 cloadnode.create(instance,pd.parast)));
@@ -1716,11 +1716,11 @@ implementation
 
   procedure generate_attr_constrs(attrs:tfpobjectlist);
     var
-      ps : tprocsym;
-      pd : tprocdef;
+      ps : TProcSym;
+      pd : TProcDef;
       pi : tcgprocinfo;
       i : sizeint;
-      attr : trtti_attribute;
+      attr : TRTTIAttribute;
     begin
       if attrs.count=0 then
         exit;
@@ -1729,17 +1729,17 @@ implementation
         internalerror(2019071003);
       for i:=0 to attrs.count-1 do
         begin
-          attr:=trtti_attribute(attrs[i]);
+          attr:=TRTTIAttribute(attrs[i]);
           {Generate a procsym for main}
           ps:=cprocsym.create('$rttiattrconstr$'+tostr(i));
           { always register the symbol }
-          ps.register_sym;
+          ps.RegisterSym;
           { the RTTI always references this symbol }
           inc(ps.refs);
           CurrentModule.localsymtable.insertsym(ps);
           pd:=cprocdef.create(normal_function_level,true);
           { always register the def }
-          pd.register_def;
+          pd.RegisterDef;
           pd.procsym:=ps;
           ps.ProcdefList.Add(pd);
           { set procdef options }

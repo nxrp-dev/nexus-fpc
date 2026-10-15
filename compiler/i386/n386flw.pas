@@ -90,7 +90,7 @@ end;
 procedure ti386onnode.pass_generate_code;
   var
     oldflowcontrol : TFlowControl;
-    exceptvarsym : tlocalvarsym;
+    exceptvarsym : TLocalVarSym;
   begin
     if (TargetInfo.system<>system_i386_win32) then
       begin
@@ -108,7 +108,7 @@ procedure ti386onnode.pass_generate_code;
 
     { Retrieve exception variable }
     if assigned(excepTSymtable) then
-      exceptvarsym:=tlocalvarsym(excepTSymtable.SymList[0])
+      exceptvarsym:=TLocalVarSym(excepTSymtable.SymList[0])
     else
       exceptvarsym:=nil;
 
@@ -199,7 +199,7 @@ constructor ti386tryfinallynode.create_implicit(l, r: TNode);
 
 function ti386tryfinallynode.pass_1: TNode;
   var
-    selfsym: tparavarsym;
+    selfsym: TParaVarSym;
   begin
     result:=inherited pass_1;
     if (TargetInfo.system=system_i386_win32) then
@@ -208,7 +208,7 @@ function ti386tryfinallynode.pass_1: TNode;
         if implicitframe and (CurrentProcInfo.procdef.proccalloption=pocall_safecall) and
           is_class(CurrentProcInfo.procdef.struct) then
           begin
-            selfsym:=tparavarsym(CurrentProcInfo.procdef.parast.Find('self'));
+            selfsym:=TParaVarSym(CurrentProcInfo.procdef.parast.Find('self'));
             if (selfsym=nil) or (selfsym.typ<>paravarsym) then
               InternalError(2011123102);
             selfsym.varregable:=vr_none;
@@ -235,7 +235,7 @@ function ti386tryfinallynode.dogetcopy: TNode;
         if assigned(finalizepi.code) then
           begin
             n.finalizepi.code:=finalizepi.code.getcopy;
-            n.right:=ccallnode.create(nil,tprocsym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
+            n.right:=ccallnode.create(nil,TProcSym(n.finalizepi.procdef.procsym),nil,nil,[],nil);
             FirstPass(n.right);
           end;
       end;
@@ -253,7 +253,7 @@ function ti386tryfinallynode.simplify(forinline: boolean): TNode;
       begin
         finalizepi.code:=right;
         foreachnodestatic(right,@copy_parasize,finalizepi);
-        right:=ccallnode.create(nil,tprocsym(finalizepi.procdef.procsym),nil,nil,[],nil);
+        right:=ccallnode.create(nil,TProcSym(finalizepi.procdef.procsym),nil,nil,[],nil);
         FirstPass(right);
         { For implicit frames, no actual code is available at this time,
           it is added later in assembler form. So store the nested procinfo

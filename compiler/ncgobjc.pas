@@ -65,9 +65,9 @@ procedure tcgobjcselectornode.pass_generate_code;
         begin
           if (tloadnode(left).symtableentry.typ<>procsym) then
             internalerror(2009051602);
-          if (tprocsym(tloadnode(left).symtableentry).procdeflist.count<>1) then
+          if (TProcSym(tloadnode(left).symtableentry).procdeflist.count<>1) then
             internalerror(2009051701);
-          name:=tprocdef(tprocsym(tloadnode(left).symtableentry).procdeflist[0]).messageinf.str;
+          name:=TProcDef(TProcSym(tloadnode(left).symtableentry).procdeflist[0]).messageinf.str;
           entry:=pool.FindOrAdd(@name^[1],length(name^))
         end;
       stringconstn:

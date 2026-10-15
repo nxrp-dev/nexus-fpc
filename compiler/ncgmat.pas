@@ -42,7 +42,7 @@ interface
            point values are stored in the register
            in IEEE-754 format.
          }
-         procedure emit_float_sign_change(r: tregister; _size : tdef);virtual;
+         procedure emit_float_sign_change(r: tregister; _size : TDef);virtual;
 {$ifdef SUPPORT_MMX}
          procedure second_mmx;virtual;abstract;
 {$endif SUPPORT_MMX}
@@ -142,7 +142,7 @@ implementation
                           TCGUNARYMINUSNODE
 *****************************************************************************}
 
-    procedure tcgunaryminusnode.emit_float_sign_change(r: tregister; _size : tdef);
+    procedure tcgunaryminusnode.emit_float_sign_change(r: tregister; _size : TDef);
       var
         href,
         href2 : treference;
@@ -165,7 +165,7 @@ implementation
         href2:=href;
         if _size.typ<>floatdef then
           internalerror(2014012211);
-        case tfloatdef(_size).floattype of
+        case TFloatDef(_size).floattype of
           s64real,
           s64comp,
           s64currency:
@@ -288,7 +288,7 @@ implementation
         if (cs_check_overflow in CurrentSettings.localswitches) then
           begin
             CurrentAsmData.getjumplabel(hl);
-            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,torddef(resultdef).low.svalue,location.register,hl);
+            hlcg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,resultdef,OC_NE,TOrdDef(resultdef).low.svalue,location.register,hl);
             hlcg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
             hlcg.g_call_system_proc(CurrentAsmData.CurrAsmList,'fpc_overflow',[],nil).resetiftemp;
             hlcg.a_label(CurrentAsmData.CurrAsmList,hl);
@@ -339,8 +339,8 @@ implementation
          hl : tasmlabel;
          paraloc1 : tcgpara;
          opsize : tcgsize;
-         opdef : tdef;
-         pd: tprocdef;
+         opdef : TDef;
+         pd: TProcDef;
       begin
          SecondPass(left);
          if CodeGenError then
@@ -469,7 +469,7 @@ implementation
     procedure tcgshlshrnode.second_integer;
       var
          op : topcg;
-         opdef,shiftcountdef: tdef;
+         opdef,shiftcountdef: TDef;
          hcountreg : tregister;
          opsize : tcgsize;
          shiftval : longint;

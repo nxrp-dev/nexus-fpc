@@ -5535,7 +5535,7 @@ unit aoptx86;
               (taicpu(p).oper[1]^.ref^.base = CurrentProcInfo.FramePointer) and
               not (
                 assigned(CurrentProcInfo.procdef.funcretsym) and
-                (taicpu(p).oper[1]^.ref^.offset <= tabstractnormalvarsym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)
+                (taicpu(p).oper[1]^.ref^.offset <= TAbstractNormalVarSym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)
               )
             ) or
             { Also discard writes to the stack that are below the base pointer,
@@ -8745,7 +8745,7 @@ unit aoptx86;
                IsExitCode(hp2) and
                (taicpu(p).oper[0]^.ref^.base = CurrentProcInfo.FramePointer) and
                not(assigned(CurrentProcInfo.procdef.funcretsym) and
-                   (taicpu(p).oper[0]^.ref^.offset < tabstractnormalvarsym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)) and
+                   (taicpu(p).oper[0]^.ref^.offset < TAbstractNormalVarSym(CurrentProcInfo.procdef.funcretsym).localloc.reference.offset)) and
                (taicpu(p).oper[0]^.ref^.index = NR_NO)) or
                { fstp <temp>
                  fld  <temp>

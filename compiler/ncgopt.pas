@@ -92,7 +92,7 @@ begin
          (tg.sizeoftemp(CurrentAsmData.CurrAsmList,left.location.reference) = 256)) then
     begin
        tg.gethltemp(CurrentAsmData.CurrAsmList,cshortstringtype,256,tt_normal,href);
-       hlcg.g_copyshortstring(CurrentAsmData.CurrAsmList,left.location.reference,href,tstringdef(cshortstringtype));
+       hlcg.g_copyshortstring(CurrentAsmData.CurrAsmList,left.location.reference,href,TStringDef(cshortstringtype));
        location_freetemp(CurrentAsmData.CurrAsmList,left.location);
        { return temp reference }
        location_reset_ref(left.location,LOC_REFERENCE,def_cgsize(resultdef),1,[]);
@@ -126,7 +126,7 @@ begin
   if tg.istemp(left.location.reference) then
     checklength := curmaxlen = 255
   else
-    checklength := curmaxlen >= tstringdef(left.resultdef).len;
+    checklength := curmaxlen >= TStringDef(left.resultdef).len;
   if checklength then
     begin
       { is it already maximal? }
@@ -134,7 +134,7 @@ begin
       if tg.istemp(left.location.reference) then
         len:=255
       else
-        len:=tstringdef(left.resultdef).len;
+        len:=TStringDef(left.resultdef).len;
       cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,OS_INT,OC_EQ,len,lengthreg,l)
     end;
 

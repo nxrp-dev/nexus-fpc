@@ -70,7 +70,7 @@ unit optcall;
     { reference symbols that are imported from another unit }
     function importglobalsyms(var n:TNode; arg:pointer):foreachnoderesult;
       var
-        sym : tsym;
+        sym : TSym;
       begin
         result:=fen_false;
         if n.nodetype=loadn then
@@ -81,7 +81,7 @@ unit optcall;
                 if FindUnitSymtable(tloadnode(n).symtable).moduleid<>CurrentModule.moduleid then
                   CurrentModule.addimportedsym(sym);
               end
-            else if (sym.typ=constsym) and (tconstsym(sym).consttyp in [constwresourcestring,constresourcestring]) then
+            else if (sym.typ=constsym) and (TConstSym(sym).consttyp in [constwresourcestring,constresourcestring]) then
               begin
                 if tloadnode(n).symtableentry.owner.moduleid<>CurrentModule.moduleid then
                   CurrentModule.addimportedsym(sym);
@@ -92,7 +92,7 @@ unit optcall;
             if (assigned(tcallnode(n).procdefinition)) and
                (tcallnode(n).procdefinition.typ=procdef) and
                (findunitsymtable(tcallnode(n).procdefinition.owner).moduleid<>CurrentModule.moduleid) then
-              CurrentModule.addimportedsym(tprocdef(tcallnode(n).procdefinition).procsym);
+              CurrentModule.addimportedsym(TProcDef(tcallnode(n).procdefinition).procsym);
           end;
       end;
 
@@ -127,19 +127,19 @@ unit optcall;
         if not(callnode.doinlining) then
           begin
             if not(po_compilerproc in callnode.procdefinition.procoptions) then
-              Message1(cg_n_no_inline,tprocdef(callnode.procdefinition).customprocname([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
+              Message1(cg_n_no_inline,TProcDef(callnode.procdefinition).customprocname([pno_proctypeoption, pno_paranames,pno_ownername, pno_noclassmarker, pno_prettynames]));
             exit;
           end;
 
-        if not(assigned(tprocdef(callnode.procdefinition).inlininginfo) and
-          assigned(tprocdef(callnode.procdefinition).inlininginfo^.code)) then
+        if not(assigned(TProcDef(callnode.procdefinition).inlininginfo) and
+          assigned(TProcDef(callnode.procdefinition).inlininginfo^.code)) then
           internalerror(200412021);
 
         callnode.inlinelocals:=TFPObjectList.create(true);
 
         { inherit flags }
         CurrentProcInfo.flags:=CurrentProcInfo.flags+
-          ((callnode.procdefinition as tprocdef).inlininginfo^.flags*inherited_inlining_flags);
+          ((callnode.procdefinition as TProcDef).inlininginfo^.flags*inherited_inlining_flags);
 
         { Create new code block for inlining }
         inlineblock:=internalstatements(callnode.inlineinitstatement);
@@ -156,7 +156,7 @@ unit optcall;
         callnode.createinlineparas;
 
         { create a copy of the body and replace parameter loads with the parameter values }
-        body:=tprocdef(callnode.procdefinition).inlininginfo^.code.getcopy;
+        body:=TProcDef(callnode.procdefinition).inlininginfo^.code.getcopy;
         foreachnodestatic(pm_postprocess,body,@ removeusercodeflag,nil);
         foreachnodestatic(pm_postprocess,body,@importglobalsyms,nil);
         foreachnodestatic(pm_postprocess,body,@setinlinelevel,pointer(callnode.inlinelevel+1));
@@ -234,7 +234,7 @@ unit optcall;
 {$ifdef EXTDEBUG_INLINE}
         writeln;
         writeln('**************************************************************************************************************');
-        writeln('************************** Inlined ',tprocdef(callnode.procdefinition).mangledname,'**************************');
+        writeln('************************** Inlined ',TProcDef(callnode.procdefinition).mangledname,'**************************');
         writeln('**************************************************************************************************************');
 {$endif EXTDEBUG_INLINE}
       end;

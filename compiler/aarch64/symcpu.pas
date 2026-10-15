@@ -30,112 +30,112 @@ uses
 
 type
   { defs }
-  tcpufiledef = class(tfiledef)
+  tcpufiledef = class(TFileDef)
   end;
 
-  tcpuvariantdef = class(tvariantdef)
+  tcpuvariantdef = class(TVariantDef)
   end;
 
-  tcpuformaldef = class(tformaldef)
+  tcpuformaldef = class(TFormalDef)
   end;
 
-  tcpuforwarddef = class(tforwarddef)
+  tcpuforwarddef = class(TForwardDef)
   end;
 
-  tcpuundefineddef = class(tundefineddef)
+  tcpuundefineddef = class(TUndefinedDef)
   end;
 
-  tcpuerrordef = class(terrordef)
+  tcpuerrordef = class(TErrorDef)
   end;
 
-  tcpupointerdef = class(tpointerdef)
+  tcpupointerdef = class(TPointerDef)
   end;
 
-  tcpurecorddef = class(trecorddef)
+  tcpurecorddef = class(TRecordDef)
   end;
 
   tcpuimplementedinterface = class(timplementedinterface)
   end;
 
-  tcpuobjectdef = class(tobjectdef)
+  tcpuobjectdef = class(TObjectDef)
   end;
 
-  tcpuclassrefdef = class(tclassrefdef)
+  tcpuclassrefdef = class(TClassRefDef)
   end;
 
-  tcpuarraydef = class(tarraydef)
+  tcpuarraydef = class(TArrayDef)
   end;
 
-  tcpuorddef = class(torddef)
+  tcpuorddef = class(TOrdDef)
   end;
 
-  tcpufloatdef = class(tfloatdef)
+  tcpufloatdef = class(TFloatDef)
   end;
 
-  tcpuprocvardef = class(tprocvardef)
+  tcpuprocvardef = class(TProcVarDef)
   end;
 
-  tcpuprocdef = class(tprocdef)
+  tcpuprocdef = class(TProcDef)
   end;
 
-  tcpustringdef = class(tstringdef)
+  tcpustringdef = class(TStringDef)
   end;
 
-  tcpuenumdef = class(tenumdef)
+  tcpuenumdef = class(TEnumDef)
   end;
 
-  tcpusetdef = class(tsetdef)
+  tcpusetdef = class(TSetDef)
   end;
 
   { syms }
-  tcpulabelsym = class(tlabelsym)
+  tcpulabelsym = class(TLabelSym)
   end;
 
-  tcpuunitsym = class(tunitsym)
+  tcpuunitsym = class(TUnitSym)
   end;
 
-  tcpuprogramparasym = class(tprogramparasym)
+  tcpuprogramparasym = class(TProgramParaSym)
   end;
 
-  tcpunamespacesym = class(tnamespacesym)
+  tcpunamespacesym = class(TNamespaceSym)
   end;
 
-  tcpuprocsym = class(tprocsym)
+  tcpuprocsym = class(TProcSym)
   end;
 
-  tcputypesym = class(ttypesym)
+  tcputypesym = class(TTypeSym)
   end;
 
-  tcpufieldvarsym = class(tfieldvarsym)
+  tcpufieldvarsym = class(TFieldVarSym)
   end;
 
-  tcpulocalvarsym = class(tlocalvarsym)
+  tcpulocalvarsym = class(TLocalVarSym)
   end;
 
-  tcpuparavarsym = class(tparavarsym)
+  tcpuparavarsym = class(TParaVarSym)
   end;
 
-  tcpustaticvarsym = class(tstaticvarsym)
+  tcpustaticvarsym = class(TStaticVarSym)
   end;
 
-  tcpuabsolutevarsym = class(tabsolutevarsym)
+  tcpuabsolutevarsym = class(TAbsoluteVarSym)
   end;
 
-  tcpupropertysym = class(tpropertysym)
+  tcpupropertysym = class(TPropertySym)
   end;
 
-  tcpuconstsym = class(tconstsym)
+  tcpuconstsym = class(TConstSym)
   end;
 
-  tcpuenumsym = class(tenumsym)
+  tcpuenumsym = class(TEnumSym)
   end;
 
-  tcpusyssym = class(tsyssym)
+  tcpusyssym = class(TSysSym)
   end;
 
 
 var
-  pbestrealtype : ^tdef = @s64floattype;
+  pbestrealtype : ^TDef = @s64floattype;
 
 
 implementation

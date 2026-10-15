@@ -128,10 +128,10 @@ const
         // Check for the JNI_OnLoad export
         if CurrentModule.islibrary and not hp.is_var and assigned(hp.sym) and
            (hp.sym.typ = procsym) and (eo_name in hp.options) and
-           (hp.name^ = SJNI_OnLoad) and (tprocsym(hp.sym).procdeflist.count = 1) then
+           (hp.name^ = SJNI_OnLoad) and (TProcSym(hp.sym).procdeflist.count = 1) then
           begin
             // Save the JNI_OnLoad procdef
-            tlinkerandroid(Linker).FJNIOnLoadName:=tprocdef(tprocsym(hp.sym).procdeflist[0]).mangledname;
+            tlinkerandroid(Linker).FJNIOnLoadName:=TProcDef(TProcSym(hp.sym).procdeflist[0]).mangledname;
             hp.Free;
             exit;
           end;

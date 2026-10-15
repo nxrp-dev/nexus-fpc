@@ -43,16 +43,16 @@ interface
 
        taddnode = class(TBinOpNode)
        private
-          resultrealdefderef: tderef;
+          resultrealdefderef: TDeref;
           function pass_typecheck_internal:TNode;
           function do_currency_corrections: TNode;
        public
-          resultrealdef : tdef;
+          resultrealdef : TDef;
           addnodeflags : TAddNodeFlags;
           constructor create(tt : TNodeType;l,r : TNode);override;
           constructor create_internal(tt:TNodeType;l,r:TNode);
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           function pass_1 : TNode;override;
@@ -115,7 +115,7 @@ interface
           function cmp_of_disjunct_ranges(var res : boolean) : boolean;
 
           { tries to replace the current node by a fma node }
-          function try_fma(ld,rd : tdef) : TNode;
+          function try_fma(ld,rd : TDef) : TNode;
        end;
        taddnodeclass = class of taddnode;
 
@@ -157,7 +157,7 @@ const
 
 {$maxfpuregisters 0}
 
-    function getbestreal(t1,t2 : tdef) : tdef;
+    function getbestreal(t1,t2 : TDef) : TDef;
       const
         floatweight : array[TFloatType] of byte =
           (2,3,4,5,0,1);
@@ -169,12 +169,12 @@ const
               begin
                 { when a comp or currency is used, use always the
                   best float type to calculate the result }
-                if (tfloatdef(t1).floattype in [s64comp,s64currency]) or
-                  (tfloatdef(t2).floattype in [s64comp,s64currency]) or
+                if (TFloatDef(t1).floattype in [s64comp,s64currency]) or
+                  (TFloatDef(t2).floattype in [s64comp,s64currency]) or
                   (cs_excessprecision in CurrentSettings.localswitches) then
                   result:=pbestrealtype^
                 else
-                  if floatweight[tfloatdef(t2).floattype]>floatweight[tfloatdef(t1).floattype] then
+                  if floatweight[TFloatDef(t2).floattype]>floatweight[TFloatDef(t1).floattype] then
                     result:=t2;
               end;
           end
@@ -197,7 +197,7 @@ const
       end;
 
 
-    constructor taddnode.ppuload(t: TNodeType; ppufile: tcompilerppufile);
+    constructor taddnode.ppuload(t: TNodeType; ppufile: TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(addnodeflags));
@@ -205,7 +205,7 @@ const
       end;
 
 
-    procedure taddnode.ppuwrite(ppufile: tcompilerppufile);
+    procedure taddnode.ppuwrite(ppufile: TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putset(tppuset1(addnodeflags));
@@ -223,14 +223,14 @@ const
     procedure taddnode.derefimpl;
       begin
         inherited derefimpl;
-        resultrealdef:=tdef(resultrealdefderef.resolve);
+        resultrealdef:=TDef(resultrealdefderef.resolve);
       end;
 
 
     function taddnode.cmp_of_disjunct_ranges(var res : boolean) : boolean;
       var
         hp          : TNode;
-        realdef     : tdef;
+        realdef     : TDef;
         v           : tconstexprint;
       begin
         result:=false;
@@ -270,7 +270,7 @@ const
              if realdef.typ<>orddef then
                exit;
              if is_constintnode(left) then
-               with torddef(realdef) do
+               with TOrdDef(realdef) do
                  case nodetype of
                   ltn:
                     if v<low then
@@ -332,7 +332,7 @@ const
                     ;
                  end
              else
-               with torddef(realdef) do
+               with TOrdDef(realdef) do
                  case nodetype of
                   ltn:
                     if high<v then
@@ -607,9 +607,9 @@ const
               left:=ctypeconvnode.create_internal(left,resultdef);
               DoTypeCheckPass(left);
             end
-          else if tpointerdef(resultdef).pointeddef.size>1 then
+          else if TPointerDef(resultdef).pointeddef.size>1 then
           { the constants were already multiplied by the pointer element size }
-            left:=cmoddivnode.create(divn,left,cordconstnode.create(tpointerdef(resultdef).pointeddef.size,left.resultdef,false));
+            left:=cmoddivnode.create(divn,left,cordconstnode.create(TPointerDef(resultdef).pointeddef.size,left.resultdef,false));
           right:=left;
           left:=hp;
           result:=GetCopyAndTypeCheck;
@@ -674,7 +674,7 @@ const
           if is_integer(tshlshrnode(left).left.resultdef) and
             { Avoid using custom integers due to the risk of unusual sizes and
               undesired effects in, say, bitpacked records. [Kit] }
-            (torddef(tshlshrnode(left).left.resultdef).ordtype<>customint) and
+            (TOrdDef(tshlshrnode(left).left.resultdef).ordtype<>customint) and
             not might_have_sideeffects(tshlshrnode(left).left) and
             tshlshrnode(left).left.isequal(tshlshrnode(right).left) then
             begin
@@ -714,7 +714,7 @@ const
         t,vl,lefttarget,righttarget,value1conv,value2conv: TNode;
         lt,rt,nt : TNodeType;
         hdef,
-        rd,ld   , inttype: tdef;
+        rd,ld   , inttype: TDef;
         rv,lv,v : tconstexprint;
         rvd,lvd : bestreal;
         ws1,ws2 : tcompilerwidestring;
@@ -847,7 +847,7 @@ const
                      if (rt=pointerconstn) then
                        begin
                          if (cs_typed_addresses in CurrentSettings.localswitches) and
-                            (tpointerdef(rd).pointeddef.size>1) and
+                            (TPointerDef(rd).pointeddef.size>1) and
                             not(anf_has_pointerdiv in addnodeflags) then
                            internalerror(2008030101);
                          t:=cpointerconstnode.create(qword(v),resultdef)
@@ -1350,7 +1350,7 @@ const
           { do not mess with currency and comp types }
           (not(is_currency(rd)) and
            not((rd.typ=floatdef) and
-               (tfloatdef(rd).floattype=s64comp)
+               (TFloatDef(rd).floattype=s64comp)
               )
           ) and
           (((cs_opt_fastmath in CurrentSettings.optimizerswitches) and (rt=ordconstn)) or
@@ -1479,7 +1479,7 @@ const
                     Freemem(stmp);
                     TypeCheckPass(t);
                     if not is_ansistring(resultdef) or
-                       (tstringdef(resultdef).encoding<>globals.CP_NONE) then
+                       (TStringDef(resultdef).encoding<>globals.CP_NONE) then
                       tstringconstnode(t).changestringtype(resultdef)
                     else
                       tstringconstnode(t).changestringtype(getansistringdef)
@@ -2029,7 +2029,7 @@ const
             if (nodetype in [addn,orn]) { add also works here }
 {$ifndef cpu64bitalu}
                and (ld.typ=orddef) and
-               not(torddef(ld).ordtype in [s64bit,u64bit,scurrency])
+               not(TOrdDef(ld).ordtype in [s64bit,u64bit,scurrency])
 {$endif cpu64bitalu}
               then
               begin
@@ -2178,11 +2178,11 @@ const
     function taddnode.pass_typecheck_internal:TNode;
       var
         hp          : TNode;
-        rd,ld,nd    : tdef;
-        hsym        : tfieldvarsym;
+        rd,ld,nd    : TDef;
+        hsym        : TFieldVarSym;
         llow,lhigh,
         rlow,rhigh  : tconstexprint;
-        strtype     : tstringtype;
+        strtype     : TStringType;
         res,
         b           : boolean;
         lt,rt       : TNodeType;
@@ -2192,10 +2192,10 @@ const
         change      : boolean;
 {$endif}
 
-        function maybe_cast_ordconst(var n: TNode; adef: tdef): boolean;
+        function maybe_cast_ordconst(var n: TNode; adef: TDef): boolean;
           begin
-            result:=(tordconstnode(n).value>=torddef(adef).low) and
-              (tordconstnode(n).value<=torddef(adef).high);
+            result:=(tordconstnode(n).value>=TOrdDef(adef).low) and
+              (tordconstnode(n).value<=TOrdDef(adef).high);
             if result then
               inserttypeconv(n,adef);
           end;
@@ -2389,8 +2389,8 @@ const
              floattype for results }
            if (right.resultdef.typ=floatdef) and
               (left.resultdef.typ=floatdef) and
-              (tfloatdef(left.resultdef).floattype=tfloatdef(right.resultdef).floattype) and
-              not(tfloatdef(left.resultdef).floattype in [s64comp,s64currency]) then
+              (TFloatDef(left.resultdef).floattype=TFloatDef(right.resultdef).floattype) and
+              not(TFloatDef(left.resultdef).floattype in [s64comp,s64currency]) then
              begin
                if cs_excessprecision in CurrentSettings.localswitches then
                  begin
@@ -2602,14 +2602,14 @@ const
                           exit;
                         end;
                       { Make sides equal to the largest boolean }
-                      if (torddef(left.resultdef).size>torddef(right.resultdef).size) or
+                      if (TOrdDef(left.resultdef).size>TOrdDef(right.resultdef).size) or
                         (is_cbool(left.resultdef) and not is_cbool(right.resultdef)) then
                         begin
                           right:=ctypeconvnode.create_internal(right,left.resultdef);
                           ttypeconvnode(right).convtype:=tc_bool_2_bool;
                           TypeCheckPass(right);
                         end
-                      else if (torddef(left.resultdef).size<torddef(right.resultdef).size) or
+                      else if (TOrdDef(left.resultdef).size<TOrdDef(right.resultdef).size) or
                         (not is_cbool(left.resultdef) and is_cbool(right.resultdef)) then
                         begin
                           left:=ctypeconvnode.create_internal(left,right.resultdef);
@@ -2703,30 +2703,30 @@ const
                  if nodetype=addn then
                    begin
                      inserttypeconv(left,cunicodestringtype);
-                     if (torddef(rd).ordtype<>uwidechar) then
+                     if (TOrdDef(rd).ordtype<>uwidechar) then
                        inserttypeconv(right,cwidechartype);
                      resultdef:=cunicodestringtype;
                    end
                  else
                    begin
-                     if (torddef(ld).ordtype<>uwidechar) then
+                     if (TOrdDef(ld).ordtype<>uwidechar) then
                        inserttypeconv(left,cwidechartype);
-                     if (torddef(rd).ordtype<>uwidechar) then
+                     if (TOrdDef(rd).ordtype<>uwidechar) then
                        inserttypeconv(right,cwidechartype);
                    end;
                end
              { is there a currency type ? }
-             else if ((torddef(rd).ordtype=scurrency) or (torddef(ld).ordtype=scurrency)) then
+             else if ((TOrdDef(rd).ordtype=scurrency) or (TOrdDef(ld).ordtype=scurrency)) then
                begin
                  if (nodetype=muln) and
                    { Is only one currency? }
                    (
-                     (torddef(ld).ordtype=scurrency) xor (torddef(rd).ordtype=scurrency)
+                     (TOrdDef(ld).ordtype=scurrency) xor (TOrdDef(rd).ordtype=scurrency)
                    ) then
                    begin
                      { Don't actually set the nf_is_currency flag, as it doesn't
                        need scaling }
-                     if (torddef(ld).ordtype<>scurrency) then
+                     if (TOrdDef(ld).ordtype<>scurrency) then
                        begin
                          left:=ctypeconvnode.create_internal(left,s64currencytype);
                          TypeCheckPass(left);
@@ -2739,9 +2739,9 @@ const
                    end
                  else
                    begin
-                     if (torddef(ld).ordtype<>scurrency) then
+                     if (TOrdDef(ld).ordtype<>scurrency) then
                        inserttypeconv(left,s64currencytype);
-                     if (torddef(rd).ordtype<>scurrency) then
+                     if (TOrdDef(rd).ordtype<>scurrency) then
                        inserttypeconv(right,s64currencytype);
                    end;
                end
@@ -2784,7 +2784,7 @@ const
                      { not to left right.resultdef, because that may
                        cause a range error if left and right's def don't
                        completely overlap }
-                     nd:=get_common_intdef(torddef(ld),torddef(rd),true);
+                     nd:=get_common_intdef(TOrdDef(ld),TOrdDef(rd),true);
                      inserttypeconv(left,nd);
                      inserttypeconv(right,nd);
                    end;
@@ -2802,25 +2802,25 @@ const
                  { done here }
                end
              { is there a signed 64 bit type ? }
-             else if ((torddef(rd).ordtype=s64bit) or (torddef(ld).ordtype=s64bit)) then
+             else if ((TOrdDef(rd).ordtype=s64bit) or (TOrdDef(ld).ordtype=s64bit)) then
                begin
-                  if (torddef(ld).ordtype<>s64bit) then
+                  if (TOrdDef(ld).ordtype<>s64bit) then
                    inserttypeconv(left,s64inttype);
-                  if (torddef(rd).ordtype<>s64bit) then
+                  if (TOrdDef(rd).ordtype<>s64bit) then
                    inserttypeconv(right,s64inttype);
                end
              { is there a unsigned 64 bit type ? }
-             else if ((torddef(rd).ordtype=u64bit) or (torddef(ld).ordtype=u64bit)) then
+             else if ((TOrdDef(rd).ordtype=u64bit) or (TOrdDef(ld).ordtype=u64bit)) then
                begin
-                  if (torddef(ld).ordtype<>u64bit) then
+                  if (TOrdDef(ld).ordtype<>u64bit) then
                    inserttypeconv(left,u64inttype);
-                  if (torddef(rd).ordtype<>u64bit) then
+                  if (TOrdDef(rd).ordtype<>u64bit) then
                    inserttypeconv(right,u64inttype);
                end
              { is there a larger int? }
              else if is_oversizedint(rd) or is_oversizedint(ld) then
                begin
-                 nd:=get_common_intdef(torddef(ld),torddef(rd),false);
+                 nd:=get_common_intdef(TOrdDef(ld),TOrdDef(rd),false);
                  inserttypeconv(right,nd);
                  inserttypeconv(left,nd);
                end
@@ -2860,7 +2860,7 @@ const
                         (nodetype in [orn,xorn]) then
                        include(flags,nf_internal);
                      { get next larger signed int type }
-                     nd:=get_common_intdef(torddef(sinttype),torddef(uinttype),false);
+                     nd:=get_common_intdef(TOrdDef(sinttype),TOrdDef(uinttype),false);
                      inserttypeconv(left,nd);
                      inserttypeconv(right,nd);
                    end
@@ -2927,8 +2927,8 @@ const
                 {    either an empty set without elementdef or a set whose }
                 {    elementdef fits in rd's elementdef -> convert to rd   }
                 if ((rd.typ=setdef) and
-                    assigned(tsetdef(rd).elementdef) and
-                    (not assigned(tsetdef(ld).elementdef) or
+                    assigned(TSetDef(rd).elementdef) and
+                    (not assigned(TSetDef(ld).elementdef) or
                      is_in_limit(ld,rd))) then
                   inserttypeconv(left,rd)
                 { 2: rd is either an empty set without elementdef or a set }
@@ -2937,28 +2937,28 @@ const
                 {    to ld. ld's elementdef can't be nil here, is caught   }
                 {    previous case and "note:" above                       }
                 else if ((rd.typ=setdef) and
-                         (not assigned(tsetdef(rd).elementdef) or
+                         (not assigned(TSetDef(rd).elementdef) or
                           is_in_limit(rd,ld))) or
                         ((rd.typ<>setdef) and
-                         is_in_limit(rd,tsetdef(ld).elementdef)) then
+                         is_in_limit(rd,TSetDef(ld).elementdef)) then
                    if (rd.typ=setdef) then
                     inserttypeconv(right,ld)
                   else
-                    inserttypeconv(right,tsetdef(ld).elementdef)
+                    inserttypeconv(right,TSetDef(ld).elementdef)
                 { 3: otherwise create setdef which encompasses both, taking }
                 {    into account empty sets without elementdef             }
                 else
                   begin
-                    if assigned(tsetdef(ld).elementdef) then
+                    if assigned(TSetDef(ld).elementdef) then
                       begin
-                        llow:=tsetdef(ld).setlow;
-                        lhigh:=tsetdef(ld).setmax;
+                        llow:=TSetDef(ld).setlow;
+                        lhigh:=TSetDef(ld).setmax;
                       end;
                     if (rd.typ=setdef) then
-                      if assigned(tsetdef(rd).elementdef) then
+                      if assigned(TSetDef(rd).elementdef) then
                         begin
-                          rlow:=tsetdef(rd).setlow;
-                          rhigh:=tsetdef(rd).setmax;
+                          rlow:=TSetDef(rd).setlow;
+                          rhigh:=TSetDef(rd).setmax;
                         end
                       else
                         begin
@@ -2968,17 +2968,17 @@ const
                         end
                     else
                       getrange(rd,rlow,rhigh);
-                    if not assigned(tsetdef(ld).elementdef) then
+                    if not assigned(TSetDef(ld).elementdef) then
                       begin
                         llow:=rlow;
                         lhigh:=rhigh;
                       end;
-                    nd:=csetdef.create(tsetdef(ld).elementdef,min(llow,rlow).svalue,max(lhigh,rhigh).svalue,true);
+                    nd:=csetdef.create(TSetDef(ld).elementdef,min(llow,rlow).svalue,max(lhigh,rhigh).svalue,true);
                     inserttypeconv(left,nd);
                     if (rd.typ=setdef) then
                       inserttypeconv(right,nd)
                     else
-                       inserttypeconv(right,tsetdef(nd).elementdef);
+                       inserttypeconv(right,TSetDef(nd).elementdef);
                   end;
               end;
           end
@@ -3038,8 +3038,8 @@ const
                            (
                              (cs_pointermath in CurrentSettings.localswitches) or
                              (
-                               tpointerdef(ld).has_pointer_math and
-                               tpointerdef(rd).has_pointer_math
+                               TPointerDef(ld).has_pointer_math and
+                               TPointerDef(rd).has_pointer_math
                              )
                            )
                          ) and not(equal_defs(ld,rd)) then
@@ -3068,14 +3068,14 @@ const
                       CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
 
                     if not(anf_has_pointerdiv in addnodeflags) and
-                      (tpointerdef(rd).pointeddef.size>1) then
+                      (TPointerDef(rd).pointeddef.size>1) then
                       begin
                         hp:=getcopy;
                         include(taddnode(hp).addnodeflags, anf_has_pointerdiv);
                         result:=cmoddivnode.create(divn,hp,
-                          cordconstnode.create(tpointerdef(rd).pointeddef.size,tpointerdef(rd).pointer_subtraction_result_type,false));
+                          cordconstnode.create(TPointerDef(rd).pointeddef.size,TPointerDef(rd).pointer_subtraction_result_type,false));
                       end;
-                    resultdef:=tpointerdef(rd).pointer_subtraction_result_type;
+                    resultdef:=TPointerDef(rd).pointer_subtraction_result_type;
                     exit;
                  end;
                else
@@ -3163,18 +3163,18 @@ const
                         helpers will convert them at run time to an encoding
                         that can represent both encodings) }
                       if is_ansistring(ld) and
-                         (tstringdef(ld).encoding<>0) and
-                         (tstringdef(ld).encoding<>globals.CP_NONE) and
+                         (TStringDef(ld).encoding<>0) and
+                         (TStringDef(ld).encoding<>globals.CP_NONE) and
                          (not is_ansistring(rd) or
-                          (tstringdef(rd).encoding=0) or
-                          (tstringdef(rd).encoding=globals.CP_NONE)) then
+                          (TStringDef(rd).encoding=0) or
+                          (TStringDef(rd).encoding=globals.CP_NONE)) then
                         inserttypeconv(right,ld)
                       else if is_ansistring(rd) and
-                         (tstringdef(rd).encoding<>0) and
-                         (tstringdef(rd).encoding<>globals.CP_NONE) and
+                         (TStringDef(rd).encoding<>0) and
+                         (TStringDef(rd).encoding<>globals.CP_NONE) and
                          (not is_ansistring(ld) or
-                          (tstringdef(ld).encoding=0) or
-                          (tstringdef(ld).encoding=globals.CP_NONE)) then
+                          (TStringDef(ld).encoding=0) or
+                          (TStringDef(ld).encoding=globals.CP_NONE)) then
                         inserttypeconv(left,rd)
                       else
                         begin
@@ -3212,7 +3212,7 @@ const
               begin
                 if is_implicit_pointer_object_type(rd) and is_implicit_pointer_object_type(ld) then
                  begin
-                   if def_is_related(tobjectdef(rd),tobjectdef(ld)) then
+                   if def_is_related(TObjectDef(rd),TObjectDef(ld)) then
                     inserttypeconv(right,left.resultdef)
                    else
                     inserttypeconv(left,right.resultdef);
@@ -3230,8 +3230,8 @@ const
           begin
             if (nodetype in [equaln,unequaln]) then
               begin
-                if def_is_related(tobjectdef(tclassrefdef(rd).pointeddef),
-                        tobjectdef(tclassrefdef(ld).pointeddef)) then
+                if def_is_related(TObjectDef(TClassRefDef(rd).pointeddef),
+                        TObjectDef(TClassRefDef(ld).pointeddef)) then
                   inserttypeconv(right,left.resultdef)
                 else
                   inserttypeconv(left,right.resultdef);
@@ -3264,12 +3264,12 @@ const
             if not(nodetype in [equaln,unequaln]) then
               CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
             { find proc field in methodpointer record }
-            hsym:=tfieldvarsym(trecorddef(methodpointertype).symtable.Find('proc'));
+            hsym:=TFieldVarSym(TRecordDef(methodpointertype).symtable.Find('proc'));
             if not assigned(hsym) then
               internalerror(200412043);
             { For methodpointers compare only tmethodpointer.proc }
             if (rd.typ=procvardef) and
-               (not tprocvardef(rd).is_addressonly) then
+               (not TProcVarDef(rd).is_addressonly) then
               begin
                 right:=csubscriptnode.create(
                            hsym,
@@ -3277,7 +3277,7 @@ const
                 TypeCheckPass(right);
                end;
             if (ld.typ=procvardef) and
-               (not tprocvardef(ld).is_addressonly) then
+               (not TProcVarDef(ld).is_addressonly) then
               begin
                 left:=csubscriptnode.create(
                           hsym,
@@ -3371,12 +3371,12 @@ const
           begin
             if is_zero_based_array(rd) then
               begin
-                resultdef:=cpointerdef.getreusable(tarraydef(rd).elementdef);
+                resultdef:=cpointerdef.getreusable(TArrayDef(rd).elementdef);
                 inserttypeconv(right,resultdef);
               end
             else
               resultdef:=right.resultdef;
-            inserttypeconv(left,tpointerdef(right.resultdef).pointer_arithmetic_int_type);
+            inserttypeconv(left,TPointerDef(right.resultdef).pointer_arithmetic_int_type);
             if nodetype=addn then
               begin
                 if (rt=niln) then
@@ -3384,13 +3384,13 @@ const
                 if (not(cs_extsyntax in CurrentSettings.moduleswitches) and not(nf_internal in flags))  or
                    (not (is_pchar(rd) or is_chararray(rd) or is_open_chararray(rd) or is_widechar(rd) or is_widechararray(rd) or is_open_widechararray(rd)) and
                     not(cs_pointermath in CurrentSettings.localswitches) and
-                    not((rd.typ=pointerdef) and tpointerdef(rd).has_pointer_math)) then
+                    not((rd.typ=pointerdef) and TPointerDef(rd).has_pointer_math)) then
                   CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
                 if (rd.typ=pointerdef) and
-                   (tpointerdef(rd).pointeddef.size>1) then
+                   (TPointerDef(rd).pointeddef.size>1) then
                    begin
                      left:=caddnode.create(muln,left,
-                       cordconstnode.create(tpointerdef(rd).pointeddef.size,tpointerdef(right.resultdef).pointer_arithmetic_int_type,true));
+                       cordconstnode.create(TPointerDef(rd).pointeddef.size,TPointerDef(right.resultdef).pointer_arithmetic_int_type,true));
                      TypeCheckPass(left);
                    end;
               end
@@ -3403,13 +3403,13 @@ const
            begin
              if is_zero_based_array(ld) then
                begin
-                  resultdef:=cpointerdef.getreusable(tarraydef(ld).elementdef);
+                  resultdef:=cpointerdef.getreusable(TArrayDef(ld).elementdef);
                   inserttypeconv(left,resultdef);
                end
              else
                resultdef:=left.resultdef;
 
-             inserttypeconv(right,tpointerdef(left.resultdef).pointer_arithmetic_int_type);
+             inserttypeconv(right,TPointerDef(left.resultdef).pointer_arithmetic_int_type);
              if nodetype in [addn,subn] then
                begin
                  if (lt=niln) then
@@ -3417,24 +3417,24 @@ const
                  if (not(cs_extsyntax in CurrentSettings.moduleswitches) and not(nf_internal in flags)) or
                    (not (is_pchar(ld) or is_chararray(ld) or is_open_chararray(ld) or is_widechar(ld) or is_widechararray(ld) or is_open_widechararray(ld)) and
                     not(cs_pointermath in CurrentSettings.localswitches) and
-                    not((ld.typ=pointerdef) and tpointerdef(ld).has_pointer_math)) then
+                    not((ld.typ=pointerdef) and TPointerDef(ld).has_pointer_math)) then
                    CGMessage3(type_e_operator_not_supported_for_types,node2opstr(nodetype),ld.typename,rd.typename);
                  if (ld.typ=pointerdef) then
                  begin
                    if is_big_untyped_addrnode(left) then
                      CGMessage1(type_w_untyped_arithmetic_unportable,node2opstr(nodetype));
-                   if (tpointerdef(ld).pointeddef.size>1) then
+                   if (TPointerDef(ld).pointeddef.size>1) then
                    begin
                      right:=caddnode.create(muln,right,
-                       cordconstnode.create(tpointerdef(ld).pointeddef.size,tpointerdef(left.resultdef).pointer_arithmetic_int_type,true));
+                       cordconstnode.create(TPointerDef(ld).pointeddef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
                      TypeCheckPass(right);
                    end
                  end else
                    if is_zero_based_array(ld) and
-                      (tarraydef(ld).elementdef.size>1) then
+                      (TArrayDef(ld).elementdef.size>1) then
                      begin
                        right:=caddnode.create(muln,right,
-                         cordconstnode.create(tarraydef(ld).elementdef.size,tpointerdef(left.resultdef).pointer_arithmetic_int_type,true));
+                         cordconstnode.create(TArrayDef(ld).elementdef.size,TPointerDef(left.resultdef).pointer_arithmetic_int_type,true));
                        TypeCheckPass(right);
                      end;
                end
@@ -3448,7 +3448,7 @@ const
           begin
             if (nodetype in [equaln,unequaln]) then
               begin
-                if tprocvardef(rd).is_addressonly then
+                if TProcVarDef(rd).is_addressonly then
                   begin
                     inserttypeconv_internal(right,voidcodepointertype);
                     inserttypeconv_internal(left,voidcodepointertype);
@@ -3456,7 +3456,7 @@ const
                 else
                   begin
                     { find proc field in methodpointer record }
-                    hsym:=tfieldvarsym(trecorddef(methodpointertype).symtable.Find('proc'));
+                    hsym:=TFieldVarSym(TRecordDef(methodpointertype).symtable.Find('proc'));
                     if not assigned(hsym) then
                       internalerror(2004120405);
                     { Compare tmehodpointer(left).proc }
@@ -3875,14 +3875,14 @@ const
                             cordconstnode.create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
-                              tstringdef(resultdef).encoding,
+                              TStringDef(resultdef).encoding,
                               u16inttype,
                               true
                             ),
                             para
                           );
                   result:=ccallnode.createintern(
-                            'fpc_'+tstringdef(resultdef).stringtypname+'_concat',
+                            'fpc_'+TStringDef(resultdef).stringtypname+'_concat',
                             para
                           );
                   include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
@@ -3905,7 +3905,7 @@ const
                             cordconstnode.create(
                               { don't use getparaencoding(), we have to know
                                 when the result is rawbytestring }
-                              tstringdef(resultdef).encoding,
+                              TStringDef(resultdef).encoding,
                               u16inttype,
                               true
                             ),
@@ -3914,7 +3914,7 @@ const
                   addstatement(
                     newstatement,
                     ccallnode.createintern(
-                      'fpc_'+tstringdef(resultdef).stringtypname+'_concat',
+                      'fpc_'+TStringDef(resultdef).stringtypname+'_concat',
                       para
                     )
                   );
@@ -3975,7 +3975,7 @@ const
                   exit;
                 end;
               { no string constant -> call compare routine }
-              cmpfuncname := 'fpc_'+tstringdef(left.resultdef).stringtypname+'_compare';
+              cmpfuncname := 'fpc_'+TStringDef(left.resultdef).stringtypname+'_compare';
               { for equality checks use optimized version }
               if nodetype in [equaln,unequaln] then
                 cmpfuncname := cmpfuncname + '_equal';
@@ -4105,7 +4105,7 @@ const
                   { adjust for set base }
                   tsetelementnode(right).left:=caddnode.create(subn,
                     ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                    cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                    cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                   if no_temp then
                     begin
@@ -4150,12 +4150,12 @@ const
                               { adjust for set base }
                               tsetelementnode(right).left:=caddnode.create(subn,
                                 ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                                cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                               { adjust for set base }
                               tsetelementnode(right).right:=caddnode.create(subn,
                                 ctypeconvnode.create_internal(tsetelementnode(right).right,sinttype),
-                                cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                               result:=ccallnode.createintern('fpc_varset_set_range',
                                 ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
@@ -4169,13 +4169,13 @@ const
                               { s:=s+[element]; ? }
                               if left.isequal(aktassignmentnode.left) then
                                 result:=cinlinenode.createintern(in_include_x_y,false,ccallparanode.create(aktassignmentnode.left.getcopy,
-                                  ccallparanode.create(ctypeconvnode.create_internal(tsetelementnode(right).left,tsetdef(resultdef).elementdef),nil)))
+                                  ccallparanode.create(ctypeconvnode.create_internal(tsetelementnode(right).left,TSetDef(resultdef).elementdef),nil)))
                               else
                                 begin
                                   { adjust for set base }
                                   tsetelementnode(right).left:=caddnode.create(subn,
                                     ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                                    cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                                    cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                                   result:=ccallnode.createintern('fpc_varset_set',
                                     ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
@@ -4192,7 +4192,7 @@ const
                           { adjust for set base }
                           tsetelementnode(right).left:=caddnode.create(subn,
                             ctypeconvnode.create_internal(tsetelementnode(right).left,sinttype),
-                            cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                            cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
 
                           result:=internalstatements(newstatement);
 
@@ -4206,7 +4206,7 @@ const
                               { adjust for set base }
                               tsetelementnode(right).right:=caddnode.create(subn,
                                 ctypeconvnode.create_internal(tsetelementnode(right).right,sinttype),
-                                cordconstnode.create(tsetdef(resultdef).setbase,sinttype,false));
+                                cordconstnode.create(TSetDef(resultdef).setbase,sinttype,false));
                               addstatement(newstatement,ccallnode.createintern('fpc_varset_set_range',
                                 ccallparanode.create(cordconstnode.create(resultdef.size,sinttype,false),
                                 ccallparanode.create(tsetelementnode(right).right,
@@ -4289,7 +4289,7 @@ const
                         ccallparanode.create(
                           ctypeconvnode.create_internal(left,voidcodepointertype),
                         ccallparanode.create(
-                          caddrnode.create_internal(crttinode.create(tstoreddef(resultdef),initrtti,rdt_normal)),
+                          caddrnode.create_internal(crttinode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
                         ccallparanode.create(
                           ctypeconvnode.create_internal(aktassignmentnode.left.getcopy,voidcodepointertype),nil)
                         )));
@@ -4310,7 +4310,7 @@ const
                         ccallparanode.create(
                           ctypeconvnode.create_internal(left,voidcodepointertype),
                         ccallparanode.create(
-                          caddrnode.create_internal(crttinode.create(tstoreddef(resultdef),initrtti,rdt_normal)),
+                          caddrnode.create_internal(crttinode.create(TStoredDef(resultdef),initrtti,rdt_normal)),
                         ccallparanode.create(
                           ctypeconvnode.create_internal(ctemprefnode.create(tempnode),voidcodepointertype),nil)
                         )));
@@ -4396,7 +4396,7 @@ const
                   ((leftoriginallysigned =
                     is_signed(ttypeconvnode(right).left.resultdef)) or
                    (leftoriginallysigned and
-                    (torddef(ttypeconvnode(right).left.resultdef).ordtype in [u8bit,u16bit]))))) then
+                    (TOrdDef(ttypeconvnode(right).left.resultdef).ordtype in [u8bit,u16bit]))))) then
               begin
                 temp := ttypeconvnode(left).left;
                 ttypeconvnode(left).left := nil;
@@ -4437,7 +4437,7 @@ const
       end;
 
 
-    function taddnode.try_fma(ld,rd : tdef) : TNode;
+    function taddnode.try_fma(ld,rd : TDef) : TNode;
       var
         inlinennr : tinlinenumber;
       begin
@@ -4475,7 +4475,7 @@ const
             (node_complexity(left)<3))
           ) then
           begin
-            case tfloatdef(ld).floattype of
+            case TFloatDef(ld).floattype of
               s32real:
                inlinennr:=in_fma_single;
               s64real:
@@ -4655,7 +4655,7 @@ const
     function taddnode.use_mul_helper: boolean;
       begin
         result:=(nodetype=muln) and
-                not(torddef(resultdef).ordtype in [u8bit,s8bit
+                not(TOrdDef(resultdef).ordtype in [u8bit,s8bit
                 ]);
       end;
 {$endif cpuneedsmulhelper}
@@ -4669,7 +4669,7 @@ const
         end;
 
       var
-         rd,ld   : tdef;
+         rd,ld   : TDef;
          i,i2    : longint;
          lt,rt   : TNodeType;
 {$ifdef cpuneedsmulhelper}
@@ -4740,7 +4740,7 @@ const
                      for i:=low(TConstSet) to high(TConstSet) do
                        if i in constsetnode.value_set^ then
                          begin
-                           tempn:=cinnode.create(cordconstnode.create(i,tsetdef(constsetnode.resultdef).elementdef,false),varsetnode.getcopy);
+                           tempn:=cinnode.create(cordconstnode.create(i,TSetDef(constsetnode.resultdef).elementdef,false),varsetnode.getcopy);
                            if assigned(result) then
                              result:=caddnode.create_internal(orn,result,tempn)
                            else
@@ -4848,7 +4848,7 @@ const
                end
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
               { is there a 64 bit type ? }
-             else if (torddef(ld).ordtype in [s64bit,u64bit,scurrency]) then
+             else if (TOrdDef(ld).ordtype in [s64bit,u64bit,scurrency]) then
                begin
                  result := first_add64bitint;
                  if assigned(result) then
@@ -4867,7 +4867,7 @@ const
                    begin
                      result := nil;
 
-                     case torddef(resultdef).ordtype of
+                     case TOrdDef(resultdef).ordtype of
                        s8bit:
                          procname := 'fpc_mul_shortint';
                        u8bit:
@@ -4897,7 +4897,7 @@ const
                   if nodetype in [addn,subn,muln,andn,orn,xorn] then
                     expectloc:=LOC_REGISTER
 {$if not defined(cpuhighleveltarget)}
-                  else if torddef(ld).size>sizeof(aint) then
+                  else if TOrdDef(ld).size>sizeof(aint) then
                     expectloc:=LOC_JUMP
 {$endif}
                   else
@@ -5040,8 +5040,8 @@ const
          else if ((ld.typ=procvardef) and (rt=niln)) or
                  ((rd.typ=procvardef) and (lt=niln)) then
             begin
-              if (ld.typ=procvardef) and (tprocvardef(ld).size>sizeof(aint)) or
-                 (rd.typ=procvardef) and (tprocvardef(rd).size>sizeof(aint)) then
+              if (ld.typ=procvardef) and (TProcVarDef(ld).size>sizeof(aint)) or
+                 (rd.typ=procvardef) and (TProcVarDef(rd).size>sizeof(aint)) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;
@@ -5066,7 +5066,7 @@ const
                   (ld.typ=procvardef) and
                   equal_defs(rd,ld) then
            begin
-             if tprocvardef(ld).size>sizeof(aint) then
+             if TProcVarDef(ld).size>sizeof(aint) then
                expectloc:=LOC_JUMP
              else
                expectloc:=LOC_FLAGS;
@@ -5074,7 +5074,7 @@ const
 
          else if (ld.typ=enumdef) then
            begin
-              if tenumdef(ld).size>sizeof(aint) then
+              if TEnumDef(ld).size>sizeof(aint) then
                 expectloc:=LOC_JUMP
               else
                 expectloc:=LOC_FLAGS;

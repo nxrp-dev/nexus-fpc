@@ -84,7 +84,7 @@ unit optcse;
           ((n.nodetype=callparan) and not(assigned(tcallparanode(n).right))) or
           ((n.nodetype=loadn) and
             not((tloadnode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) and
-                (vo_volatile in tabstractvarsym(tloadnode(n).symtableentry).varoptions))
+                (vo_volatile in TAbstractVarSym(tloadnode(n).symtableentry).varoptions))
           ) then
           result:=fen_true
         else
@@ -176,7 +176,7 @@ unit optcse;
 
       var
         i : longint;
-        tempdef : tdef;
+        tempdef : TDef;
       begin
         result:=fen_false;
         { don't add the tree below an untyped const parameter: there is
@@ -203,9 +203,9 @@ unit optcse;
             { regable expressions }
             (actualtargetnode(@n)^.flags*[nf_write,nf_modify,nf_address_taken]=[]) and
             (
-              tstoreddef(n.resultdef).is_intregable or
-              tstoreddef(n.resultdef).is_fpuregable or
-              tstoreddef(n.resultdef).is_const_intregable
+              TStoredDef(n.resultdef).is_intregable or
+              TStoredDef(n.resultdef).is_fpuregable or
+              TStoredDef(n.resultdef).is_const_intregable
             ) and
             { is_int/fpuregable allows arrays and records to be in registers, cse cannot handle this }
             (
@@ -213,13 +213,13 @@ unit optcse;
               (
                 (
                   (n.resultdef.typ = recorddef) and
-                  tabstractrecordsymtable(tabstractrecorddef(n.resultdef).symtable).has_single_field(tempdef)
+                  TAbstractRecordSymTable(TAbstractRecordDef(n.resultdef).symtable).has_single_field(tempdef)
                 ) or
                 is_dynamic_array(n.resultdef) or
                 (
-                  not(is_special_array(tstoreddef(n.resultdef))) and
-                  not(tstoreddef(n.resultdef).is_intregable) and
-                  not(tstoreddef(n.resultdef).is_fpuregable)
+                  not(is_special_array(TStoredDef(n.resultdef))) and
+                  not(TStoredDef(n.resultdef).is_intregable) and
+                  not(TStoredDef(n.resultdef).is_fpuregable)
                 )
               )
             ) and
@@ -250,8 +250,8 @@ unit optcse;
              not(tloadnode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) or
              { apply cse on non-regable variables }
              ((tloadnode(actualtargetnode(@n)^).symtableentry.typ in [paravarsym,localvarsym,staticvarsym]) and
-               not(tabstractvarsym(tloadnode(actualtargetnode(@n)^).symtableentry).is_regvar(true)) and
-               not(vo_volatile in tabstractvarsym(tloadnode(actualtargetnode(@n)^).symtableentry).varoptions)) or
+               not(TAbstractVarSym(tloadnode(actualtargetnode(@n)^).symtableentry).is_regvar(true)) and
+               not(vo_volatile in TAbstractVarSym(tloadnode(actualtargetnode(@n)^).symtableentry).varoptions)) or
              (node_complexity(n)>1)
             ) and
 
@@ -339,7 +339,7 @@ unit optcse;
         lists : tlists;
         templist : tfplist;
         i : longint;
-        def : tstoreddef;
+        def : TStoredDef;
         nodes : tblocknode;
         creates,
         statements : tstatementnode;
@@ -477,7 +477,7 @@ unit optcse;
                             addstatement(statements,internalstatements(creates));
                           end;
 
-                        def:=tstoreddef(TNode(lists.nodelist[i]).resultdef);
+                        def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
@@ -528,7 +528,7 @@ unit optcse;
                     { current node reference to another node? }
                     else if lists.equalto[i]<>pointer(-1) then
                       begin
-                        def:=tstoreddef(TNode(lists.nodelist[i]).resultdef);
+                        def:=TStoredDef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
@@ -645,10 +645,10 @@ unit optcse;
     function CSEOnReference(n : TNode) : Boolean;
       begin
         Result:=(n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym)
-          and ((vo_is_thread_var in tstaticvarsym(tloadnode(n).symtableentry).varoptions) or
+          and ((vo_is_thread_var in TStaticVarSym(tloadnode(n).symtableentry).varoptions) or
             (cs_create_pic in CurrentSettings.moduleswitches)
 {$if defined(aarch64)}
-            or (not(tabstractvarsym(tloadnode(n).symtableentry).is_regvar(false)))
+            or (not(TAbstractVarSym(tloadnode(n).symtableentry).is_regvar(false)))
 {$endif defined(aarch64) or defined(sparc) or defined(sparc64)}
            );
       end;
@@ -685,7 +685,7 @@ unit optcse;
                 inc(consts^[i].weight);
 
                 { non-sectioned threadvars really hurt so do more aggressive cse on them }
-                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in tstaticvarsym(tloadnode(n).symtableentry).varoptions) then
+                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in TStaticVarSym(tloadnode(n).symtableentry).varoptions) then
                   inc(consts^[i].weight);
               end
             else

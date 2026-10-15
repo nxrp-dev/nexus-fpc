@@ -93,8 +93,8 @@ interface
         procedure a_jmp_cond(list: TAsmList; cond: TOpCmp; l: tasmlabel);{ override;}
         procedure a_jmp_flags(list: TAsmList; const f: tresflags; l: tasmlabel);override;
         procedure g_flags2reg(list: TAsmList; size: tcgsize; const f:tresflags; reg: tregister);override;
-        procedure g_overflowcheck(list: TAsmList; const loc: tlocation; def: tdef);override;
-        procedure g_overflowcheck_loc(list: TAsmList; const loc: tlocation; def: tdef; ovloc: tlocation);override;
+        procedure g_overflowcheck(list: TAsmList; const loc: tlocation; def: TDef);override;
+        procedure g_overflowcheck_loc(list: TAsmList; const loc: tlocation; def: TDef; ovloc: tlocation);override;
         procedure g_stackpointer_alloc(list: TAsmList; localsize: longint);override;
         procedure g_proc_entry(list: TAsmList; localsize: longint; nostackframe: boolean);override;
         procedure g_proc_exit(list: TAsmList; parasize: longint; nostackframe: boolean);override;
@@ -102,7 +102,7 @@ interface
         procedure g_restore_registers(list: TAsmList);override;
         procedure g_save_registers(list: TAsmList);override;
         procedure g_concatcopy(list: TAsmList; const source, dest: treference; len: tcgint);override;
-        procedure g_adjust_self_value(list: TAsmList; procdef: tprocdef; ioffset: tcgint);override;
+        procedure g_adjust_self_value(list: TAsmList; procdef: TProcDef; ioffset: tcgint);override;
         procedure g_check_for_fpu_exception(list: TAsmList; force, clear: boolean);override;
         procedure g_local_unwind(list: TAsmList; l: TAsmLabel);override;
         procedure adjust_exceptfilter_ref(var ref: treference; for_finalization: boolean);override;
@@ -1719,7 +1719,7 @@ implementation
       end;
 
 
-    procedure tcgaarch64.g_overflowcheck(list: TAsmList; const loc: tlocation; def: tdef);
+    procedure tcgaarch64.g_overflowcheck(list: TAsmList; const loc: tlocation; def: TDef);
       begin
         { we need an explicit overflow location, because there are many
           possibilities (not just the overflow flag, which is only used for
@@ -1728,7 +1728,7 @@ implementation
       end;
 
 
-    procedure tcgaarch64.g_overflowcheck_loc(list: TAsmList; const loc: tlocation; def: tdef; ovloc : tlocation);
+    procedure tcgaarch64.g_overflowcheck_loc(list: TAsmList; const loc: tlocation; def: TDef; ovloc : tlocation);
       var
         hl : tasmlabel;
         hflags : tresflags;
@@ -1831,9 +1831,9 @@ implementation
 
     procedure FixupOffsets(p:TObject;arg:pointer);
       var
-        sym: tabstractnormalvarsym absolute p;
+        sym: TAbstractNormalVarSym absolute p;
       begin
-        if (tsym(p).typ in [paravarsym,localvarsym]) and
+        if (TSym(p).typ in [paravarsym,localvarsym]) and
           (sym.localloc.loc=LOC_REFERENCE) and
           (sym.localloc.reference.base=NR_STACK_POINTER_REG) then
           begin
@@ -2682,7 +2682,7 @@ implementation
       end;
 
 
-    procedure tcgaarch64.g_adjust_self_value(list:TAsmList;procdef: tprocdef;ioffset: tcgint);
+    procedure tcgaarch64.g_adjust_self_value(list:TAsmList;procdef: TProcDef;ioffset: tcgint);
       begin
         { This method is integrated into g_intf_wrapper and shouldn't be called separately }
         InternalError(2013020102);
@@ -2726,7 +2726,7 @@ implementation
     procedure tcgaarch64.g_local_unwind(list: TAsmList; l: TAsmLabel);
       var
         para1,para2: tcgpara;
-        pd: tprocdef;
+        pd: TProcDef;
         reg: tregister;
         href: treference;
       begin

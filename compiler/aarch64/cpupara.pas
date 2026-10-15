@@ -39,11 +39,11 @@ unit cpupara;
           function get_volatile_registers_mm(calloption: TProcCallOption): tcpuregisterset; override;
           function get_saved_registers_int(calloption: TProcCallOption): tcpuregisterarray; override;
           function get_saved_registers_mm(calloption: TProcCallOption): tcpuregisterarray; override;
-          function push_addr_param(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean; override;
-          function ret_in_param(def: tdef; pd: tabstractprocdef):boolean;override;
-          function create_paraloc_info(p: tabstractprocdef; side: tcallercallee):longint;override;
-          function create_varargs_paraloc_info(p: tabstractprocdef; side: tcallercallee; varargspara: tvarargsparalist):longint;override;
-          function get_funcretloc(p: tabstractprocdef; side: tcallercallee; forcetempdef: tdef): tcgpara;override;
+          function push_addr_param(varspez: TVarSpez; def: TDef; calloption: TProcCallOption): boolean; override;
+          function ret_in_param(def: TDef; pd: TAbstractProcDef):boolean;override;
+          function create_paraloc_info(p: TAbstractProcDef; side: TCallerCallee):longint;override;
+          function create_varargs_paraloc_info(p: TAbstractProcDef; side: TCallerCallee; varargspara: tvarargsparalist):longint;override;
+          function get_funcretloc(p: TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): tcgpara;override;
           function param_use_paraloc(const cgpara: tcgpara): boolean; override;
          private
           curintreg,
@@ -51,10 +51,10 @@ unit cpupara;
           curstackoffset: aword;
 
           procedure init_para_alloc_values;
-          procedure alloc_para(out result: tcgpara; p: tabstractprocdef; varspez: tvarspez; side: tcallercallee; paradef: tdef; isvariadic, isdelphinestedcc: boolean);
-          function getparaloc(calloption: TProcCallOption; p: tdef): tcgloc;
+          procedure alloc_para(out result: tcgpara; p: TAbstractProcDef; varspez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
+          function getparaloc(calloption: TProcCallOption; p: TDef): tcgloc;
 
-          procedure create_paraloc_info_intern(p: tabstractprocdef; side: tcallercallee; paras: tparalist; isvariadic: boolean);
+          procedure create_paraloc_info_intern(p: TAbstractProcDef; side: TCallerCallee; paras: tparalist; isvariadic: boolean);
        end;
 
   implementation
@@ -108,9 +108,9 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.getparaloc(calloption: TProcCallOption; p: tdef): tcgloc;
+    function tcpuparamanager.getparaloc(calloption: TProcCallOption; p: TDef): tcgloc;
       var
-        hfabasedef: tdef;
+        hfabasedef: TDef;
       begin
          { Later, the LOC_REFERENCE is in most cases changed into LOC_REGISTER
            if push_addr_param for the def is true
@@ -162,9 +162,9 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.push_addr_param(varspez: tvarspez; def :tdef; calloption: TProcCallOption): boolean;
+    function tcpuparamanager.push_addr_param(varspez: TVarSpez; def :TDef; calloption: TProcCallOption): boolean;
       var
-        hfabasedef: tdef;
+        hfabasedef: TDef;
       begin
         result:=false;
         if varspez in [vs_var,vs_out,vs_constref] then
@@ -206,21 +206,21 @@ unit cpupara;
               is_open_array(def) or
               is_array_of_const(def) or
               is_array_constructor(def) or
-              ((tarraydef(def).highrange>=tarraydef(def).lowrange) and
+              ((TArrayDef(def).highrange>=TArrayDef(def).lowrange) and
                ((varspez=vs_const) or
                 (not is_hfa(def,hfabasedef) and
                  (def.size>16))));
           setdef :
             result:=def.size>16;
           stringdef :
-            result:=tstringdef(def).stringtype in [st_shortstring,st_longstring];
+            result:=TStringDef(def).stringtype in [st_shortstring,st_longstring];
           else
             ;
         end;
       end;
 
 
-    function tcpuparamanager.ret_in_param(def: tdef; pd: tabstractprocdef): boolean;
+    function tcpuparamanager.ret_in_param(def: TDef; pd: TAbstractProcDef): boolean;
       begin
         if handle_common_ret_in_param(def,pd,result) then
           exit;
@@ -230,14 +230,14 @@ unit cpupara;
       end;
 
 
-    procedure tcpuparamanager.create_paraloc_info_intern(p : tabstractprocdef; side: tcallercallee; paras: tparalist; isvariadic: boolean);
+    procedure tcpuparamanager.create_paraloc_info_intern(p : TAbstractProcDef; side: TCallerCallee; paras: tparalist; isvariadic: boolean);
       var
-        hp: tparavarsym;
+        hp: TParaVarSym;
         i: longint;
       begin
         for i:=0 to paras.count-1 do
           begin
-            hp:=tparavarsym(paras[i]);
+            hp:=TParaVarSym(paras[i]);
             { hidden function result parameter is passed in X8 (doesn't have to
               be valid on return) according to the ABI
 
@@ -282,10 +282,10 @@ unit cpupara;
       end;
 
 
-    function  tcpuparamanager.get_funcretloc(p : tabstractprocdef; side: tcallercallee; forcetempdef: tdef): tcgpara;
+    function  tcpuparamanager.get_funcretloc(p : TAbstractProcDef; side: TCallerCallee; forcetempdef: TDef): tcgpara;
       var
         retcgsize: tcgsize;
-        otherside: tcallercallee;
+        otherside: TCallerCallee;
       begin
          if set_common_funcretloc_info(p,forcetempdef,retcgsize,result) then
            exit;
@@ -344,9 +344,9 @@ unit cpupara;
       end;
 
 
-    procedure tcpuparamanager.alloc_para(out result: tcgpara; p: tabstractprocdef; varspez: tvarspez; side: tcallercallee; paradef: tdef; isvariadic, isdelphinestedcc: boolean);
+    procedure tcpuparamanager.alloc_para(out result: tcgpara; p: TAbstractProcDef; varspez: TVarSpez; side: TCallerCallee; paradef: TDef; isvariadic, isdelphinestedcc: boolean);
       var
-        hfabasedef, locdef: tdef;
+        hfabasedef, locdef: TDef;
         paraloc: pcgparalocation;
         paralen, stackslotlen: asizeint;
         loc: tcgloc;
@@ -617,7 +617,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.create_paraloc_info(p: tabstractprocdef; side: tcallercallee):longint;
+    function tcpuparamanager.create_paraloc_info(p: TAbstractProcDef; side: TCallerCallee):longint;
       begin
         init_para_alloc_values;
 
@@ -628,7 +628,7 @@ unit cpupara;
      end;
 
 
-    function tcpuparamanager.create_varargs_paraloc_info(p: tabstractprocdef; side: tcallercallee; varargspara: tvarargsparalist):longint;
+    function tcpuparamanager.create_varargs_paraloc_info(p: TAbstractProcDef; side: TCallerCallee; varargspara: tvarargsparalist):longint;
       begin
         init_para_alloc_values;
 

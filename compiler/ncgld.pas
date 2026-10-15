@@ -35,10 +35,10 @@ interface
     type
        tcgloadnode = class(tloadnode)
          protected
-          procedure generate_nested_access(vs: tsym);virtual;
-          procedure generate_absaddr_access(vs: tabsolutevarsym); virtual;
-          procedure generate_threadvar_access(gvs: tstaticvarsym); virtual;
-          function use_indirect_symbol(gvs: tstaticvarsym): boolean;
+          procedure generate_nested_access(vs: TSym);virtual;
+          procedure generate_absaddr_access(vs: TAbsoluteVarSym); virtual;
+          procedure generate_threadvar_access(gvs: TStaticVarSym); virtual;
+          function use_indirect_symbol(gvs: TStaticVarSym): boolean;
          public
           procedure pass_generate_code;override;
           procedure changereflocation(const ref: treference);
@@ -53,7 +53,7 @@ interface
 
        tcgarrayconstructornode = class(tarrayconstructornode)
          protected
-          procedure makearrayref(var ref: treference; eledef: tdef);virtual;
+          procedure makearrayref(var ref: treference; eledef: TDef);virtual;
           procedure advancearrayoffset(var ref: treference; elesize: asizeint);virtual;
          public
           procedure pass_generate_code;override;
@@ -90,7 +90,7 @@ implementation
       preplacerefrec = ^treplacerefrec;
       treplacerefrec = record
         old, new: preference;
-        ressym: tsym;
+        ressym: TSym;
       end;
 
     function doreplaceref(var n: TNode; para: pointer): foreachnoderesult;
@@ -102,20 +102,20 @@ implementation
           loadn:
             begin
                  { regular variable }
-              if (tabstractvarsym(tloadnode(n).symtableentry).varoptions * [vo_is_dll_var, vo_is_thread_var] = []) and
+              if (TAbstractVarSym(tloadnode(n).symtableentry).varoptions * [vo_is_dll_var, vo_is_thread_var] = []) and
                  not assigned(tloadnode(n).left) and
                  { not function result, or no exit in function }
                  (((tloadnode(n).symtableentry <> rr^.ressym) and
-                   not(vo_is_funcret in tabstractvarsym(tloadnode(n).symtableentry).varoptions)) or
+                   not(vo_is_funcret in TAbstractVarSym(tloadnode(n).symtableentry).varoptions)) or
                   not(fc_exit in flowcontrol)) and
                  { stored in memory... }
-                 (tabstractnormalvarsym(tloadnode(n).symtableentry).localloc.loc in [LOC_REFERENCE]) and
+                 (TAbstractNormalVarSym(tloadnode(n).symtableentry).localloc.loc in [LOC_REFERENCE]) and
                  { ... at the place we are looking for }
-                 references_equal(tabstractnormalvarsym(tloadnode(n).symtableentry).localloc.reference,rr^.old^) and
+                 references_equal(TAbstractNormalVarSym(tloadnode(n).symtableentry).localloc.reference,rr^.old^) and
                  { its address cannot have escaped the current routine }
-                 not(tabstractvarsym(tloadnode(n).symtableentry).addr_taken) and
+                 not(TAbstractVarSym(tloadnode(n).symtableentry).addr_taken) and
                  { it is not accessed in nested procedures }
-                 not(tabstractvarsym(tloadnode(n).symtableentry).different_scope) then
+                 not(TAbstractVarSym(tloadnode(n).symtableentry).different_scope) then
                 begin
                   { relocate variable }
                   tcgloadnode(n).changereflocation(rr^.new^);
@@ -203,9 +203,9 @@ implementation
         rr.ressym := nil;
 
         if assigned(CurrentProcInfo.procdef.funcretsym) and
-           (tabstractvarsym(CurrentProcInfo.procdef.funcretsym).refs <> 0) then
+           (TAbstractVarSym(CurrentProcInfo.procdef.funcretsym).refs <> 0) then
           if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) then
-            rr.ressym:=tsym(CurrentProcInfo.procdef.parast.Find('self'))
+            rr.ressym:=TSym(CurrentProcInfo.procdef.parast.Find('self'))
          else
             rr.ressym:=CurrentProcInfo.procdef.funcretsym;
 
@@ -235,15 +235,15 @@ implementation
         tg.ungettemp(CurrentAsmData.CurrAsmList,location.reference);
         location.reference:=ref;
         tg.ChangeTempType(CurrentAsmData.CurrAsmList,location.reference,oldtemptype);
-        tabstractnormalvarsym(symtableentry).localloc:=location;
-        hlcg.recordnewsymloc(CurrentAsmData.CurrAsmList,symtableentry,tabstractnormalvarsym(symtableentry).vardef,location.reference,false);
+        TAbstractNormalVarSym(symtableentry).localloc:=location;
+        hlcg.recordnewsymloc(CurrentAsmData.CurrAsmList,symtableentry,TAbstractNormalVarSym(symtableentry).vardef,location.reference,false);
       end;
 
 
-    procedure tcgloadnode.generate_nested_access(vs: tsym);
+    procedure tcgloadnode.generate_nested_access(vs: TSym);
       var
         { parameter declared as tsym to reduce interface unit dependencies }
-        lvs: tabstractnormalvarsym absolute vs;
+        lvs: TAbstractNormalVarSym absolute vs;
       begin
         SecondPass(left);
         if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
@@ -254,16 +254,16 @@ implementation
       end;
 
 
-    procedure tcgloadnode.generate_absaddr_access(vs: tabsolutevarsym);
+    procedure tcgloadnode.generate_absaddr_access(vs: TAbsoluteVarSym);
       begin
         location.reference.offset:=asizeint(vs.addroffset);
         location.reference.volatility:=[vol_read,vol_write];
       end;
 
 
-    procedure tcgloadnode.generate_threadvar_access(gvs: tstaticvarsym);
+    procedure tcgloadnode.generate_threadvar_access(gvs: TStaticVarSym);
       var
-        pd: tprocdef;
+        pd: TProcDef;
         para, respara: tcgpara;
         ref: treference;
         reg: tregister;
@@ -299,7 +299,7 @@ implementation
       end;
 
 
-    function tcgloadnode.use_indirect_symbol(gvs:tstaticvarsym):boolean;
+    function tcgloadnode.use_indirect_symbol(gvs:TStaticVarSym):boolean;
       begin
         { we are using a direct reference if any of the following is true:
           - the target does not support packages
@@ -320,14 +320,14 @@ implementation
     procedure tcgloadnode.pass_generate_code;
       var
         hregister : tregister;
-        vs   : tabstractnormalvarsym;
-        gvs  : tstaticvarsym;
-        vmtdef : tpointerdef;
-        vmtentry: tfieldvarsym;
-        pd   : tprocdef;
+        vs   : TAbstractNormalVarSym;
+        gvs  : TStaticVarSym;
+        vmtdef : TPointerDef;
+        vmtentry: TFieldVarSym;
+        pd   : TProcDef;
         href : treference;
         newsize : tcgsize;
-        vd : tdef;
+        vd : TDef;
         alignment: longint;
         indirect : boolean;
         name : TSymStr;
@@ -340,18 +340,18 @@ implementation
            absolutevarsym :
               begin
                  { this is only for toasm and toaddr }
-                 case tabsolutevarsym(symtableentry).abstyp of
+                 case TAbsoluteVarSym(symtableentry).abstyp of
                    toaddr :
-                     generate_absaddr_access(tabsolutevarsym(symtableentry));
+                     generate_absaddr_access(TAbsoluteVarSym(symtableentry));
                    toasm :
-                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(tabsolutevarsym(symtableentry).mangledname,AT_DATA);
+                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(TAbsoluteVarSym(symtableentry).mangledname,AT_DATA);
                    else
                      internalerror(200310283);
                  end;
               end;
            constsym:
              begin
-                if tconstsym(symtableentry).consttyp in [constresourcestring,constwresourcestring] then
+                if TConstSym(symtableentry).consttyp in [constresourcestring,constwresourcestring] then
                   begin
                      location_reset_ref(location,LOC_CREFERENCE,def_cgsize(cansistringtype),cansistringtype.size,[]);
                      indirect:=(tf_supports_packages in TargetInfo.flags) and
@@ -364,8 +364,8 @@ implementation
                      vd:=search_system_type('TRESOURCESTRINGRECORD').typedef;
                      hlcg.g_set_addr_nonbitpacked_field_ref(
                        CurrentAsmData.CurrAsmList,
-                       trecorddef(vd),
-                       tfieldvarsym(search_struct_member(trecorddef(vd),'CURRENTVALUE')),
+                       TRecordDef(vd),
+                       TFieldVarSym(search_struct_member(TRecordDef(vd),'CURRENTVALUE')),
                        location.reference);
                   end
                 else
@@ -373,16 +373,16 @@ implementation
              end;
            staticvarsym :
              begin
-               gvs:=tstaticvarsym(symtableentry);
+               gvs:=TStaticVarSym(symtableentry);
 
                if (vo_is_dll_var in gvs.varoptions) then
                { DLL variable }
                  begin
                    hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
                    if not(vo_is_weak_external in gvs.varoptions) then
-                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(tstaticvarsym(symtableentry).mangledname,AT_DATA)
+                     location.reference.symbol:=CurrentAsmData.RefAsmSymbol(TStaticVarSym(symtableentry).mangledname,AT_DATA)
                    else
-                     location.reference.symbol:=CurrentAsmData.WeakRefAsmSymbol(tstaticvarsym(symtableentry).mangledname,AT_DATA);
+                     location.reference.symbol:=CurrentAsmData.WeakRefAsmSymbol(TStaticVarSym(symtableentry).mangledname,AT_DATA);
                    cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,location.reference,hregister);
                    reference_reset_base(location.reference,hregister,0,ctempposinvalid,location.reference.alignment,[]);
                  end
@@ -412,7 +412,7 @@ implementation
             paravarsym,
             localvarsym :
               begin
-                vs:=tabstractnormalvarsym(symtableentry);
+                vs:=TAbstractNormalVarSym(symtableentry);
                 { Nested variable }
                 if assigned(left) then
                   generate_nested_access(vs)
@@ -436,7 +436,7 @@ implementation
                       end;
                     { assume packed records may always be unaligned }
                     if not(resultdef.typ in [recorddef,objectdef]) or
-                       (tabstractrecordsymtable(tabstractrecorddef(resultdef).symtable).usefieldalignment<>1) then
+                       (TAbstractRecordSymTable(TAbstractRecordDef(resultdef).symtable).usefieldalignment<>1) then
                       begin
                         alignment:=min(min(min(resultdef.alignment,CurrentSettings.alignment.localalignmax),CurrentSettings.alignment.constalignmax),CurrentSettings.alignment.varalignmax);
                         location_reset_ref(location,LOC_REFERENCE,newsize,alignment,[]);
@@ -457,7 +457,7 @@ implementation
                    internalerror(200312011);
                  if assigned(left) and
                    (resultdef.typ in [symconst.procdef,procvardef]) and
-                    not tabstractprocdef(resultdef).is_addressonly then
+                    not TAbstractProcDef(resultdef).is_addressonly then
                    begin
                      location_reset(location,LOC_CREGISTER,int_cgsize(voidpointertype.size*2));
 
@@ -517,7 +517,7 @@ implementation
                        begin
                          if (not assigned(CurrentProcInfo) or
                              wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
-                           tobjectdef(procdef.struct).register_vmt_call(procdef.extnumber);
+                           TObjectDef(procdef.struct).register_vmt_call(procdef.extnumber);
             {$ifdef vtentry}
                          if not is_interface(procdef.struct) then
                            begin
@@ -526,18 +526,18 @@ implementation
                            end;
             {$endif vtentry}
                          if (left.resultdef.typ=objectdef) and
-                            assigned(tobjectdef(left.resultdef).vmt_field) then
+                            assigned(TObjectDef(left.resultdef).vmt_field) then
                            begin
                              { vmt pointer is a pointer to the vmt record }
                              hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
-                             vmtdef:=cpointerdef.getreusable(tobjectdef(left.resultdef).vmt_def);
-                             hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,tobjectdef(left.resultdef),tfieldvarsym(tobjectdef(left.resultdef).vmt_field),href);
+                             vmtdef:=cpointerdef.getreusable(TObjectDef(left.resultdef).vmt_def);
+                             hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TObjectDef(left.resultdef),TFieldVarSym(TObjectDef(left.resultdef).vmt_field),href);
                              hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
-                             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,tfieldvarsym(tobjectdef(left.resultdef).vmt_field).vardef,vmtdef,href,hregister);
+                             hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,TFieldVarSym(TObjectDef(left.resultdef).vmt_field).vardef,vmtdef,href,hregister);
                            end
                          else if left.resultdef.typ=classrefdef then
                            begin
-                             vmtdef:=cpointerdef.getreusable(tobjectdef(tclassrefdef(left.resultdef).pointeddef).vmt_def);
+                             vmtdef:=cpointerdef.getreusable(TObjectDef(TClassRefDef(left.resultdef).pointeddef).vmt_def);
                              { classrefdef is a pointer to the vmt already }
 
                              { targets with 32 bit method pointers got already a register assigned }
@@ -549,21 +549,21 @@ implementation
                            begin
                              { an interface is a pointer to a pointer to a vmt }
                              hlcg.reference_reset_base(href,vd,location.registerhi,0,ctempposinvalid,vd.alignment,[]);
-                             vmtdef:=cpointerdef.getreusable(tobjectdef(left.resultdef).vmt_def);
+                             vmtdef:=cpointerdef.getreusable(TObjectDef(left.resultdef).vmt_def);
                              hregister:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtdef);
                              hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,vmtdef,vmtdef,href,hregister);
                            end
                          else
                            internalerror(2015112501);
                          { load method address }
-                         vmtentry:=tabstractrecordsymtable(trecorddef(vmtdef.pointeddef).symtable).findfieldbyoffset(
-                           tobjectdef(procdef.struct).vmtmethodoffset(procdef.extnumber));
+                         vmtentry:=TAbstractRecordSymTable(TRecordDef(vmtdef.pointeddef).symtable).findfieldbyoffset(
+                           TObjectDef(procdef.struct).vmtmethodoffset(procdef.extnumber));
                          hlcg.reference_reset_base(href,vmtdef,hregister,0,ctempposinvalid,vmtdef.alignment,[]);
                          { targets with 32 bit method pointers got already a register assigned }
 
                          location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,vmtentry.vardef);
 
-                         hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,tabstractrecorddef(vmtdef.pointeddef),vmtentry,href);
+                         hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TAbstractRecordDef(vmtdef.pointeddef),vmtentry,href);
                          hlcg.a_load_ref_reg(CurrentAsmData.CurrAsmList,vmtentry.vardef,vmtentry.vardef,href,location.register);
                        end
                      else
@@ -590,7 +590,7 @@ implementation
                    end
                  else
                    begin
-                      pd:=tprocdef(tprocsym(symtableentry).ProcdefList[0]);
+                      pd:=TProcDef(TProcSym(symtableentry).ProcdefList[0]);
                       { def_cgsize does not work for tprocdef, so we use pd.address_type }
                       location.size:=def_cgsize(pd.address_type);
                       if not(po_weakexternal in pd.procoptions) then
@@ -600,10 +600,10 @@ implementation
                    end;
               end;
            labelsym :
-             if assigned(tlabelsym(symtableentry).asmblocklabel) then
-               location.reference.symbol:=tlabelsym(symtableentry).asmblocklabel
+             if assigned(TLabelSym(symtableentry).asmblocklabel) then
+               location.reference.symbol:=TLabelSym(symtableentry).asmblocklabel
              else
-               location.reference.symbol:=tcglabelnode((tlabelsym(symtableentry).code)).getasmlabel;
+               location.reference.symbol:=tcglabelnode((TLabelSym(symtableentry).code)).getasmlabel;
            else internalerror(200510032);
         end;
       end;
@@ -709,7 +709,7 @@ implementation
             else if (right.nodetype=stringconstn) and
                (tstringconstnode(right).len=0) then
               begin
-                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),tpointerdef(charpointertype),left.location.reference);
+                hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),TPointerDef(charpointertype),left.location.reference);
                 hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,cansichartype,0,left.location.reference);
               end
             { char loading }
@@ -728,7 +728,7 @@ implementation
                 else
                   begin
                     href:=left.location.reference;
-                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),tpointerdef(charpointertype),href);
+                    hlcg.g_ptrtypecast_ref(CurrentAsmData.CurrAsmList,cpointerdef.getreusable(left.resultdef),TPointerDef(charpointertype),href);
                     hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,cansichartype,1,href);
                     inc(href.offset,1);
                     href.alignment:=1;
@@ -1143,7 +1143,7 @@ implementation
         vtAnsiString64  = 20;
 
 
-    procedure tcgarrayconstructornode.makearrayref(var ref: treference; eledef: tdef);
+    procedure tcgarrayconstructornode.makearrayref(var ref: treference; eledef: TDef);
       begin
         { do nothing by default }
       end;
@@ -1161,12 +1161,12 @@ implementation
         hp    : tarrayconstructornode;
         href,
         fref  : treference;
-        lt    : tdef;
+        lt    : TDef;
         paraloc : tcgparalocation;
         varvtypefield,
-        varfield : tfieldvarsym;
+        varfield : TFieldVarSym;
         vtype : longint;
-        eledef: tdef;
+        eledef: TDef;
         elesize : longint;
         tmpreg  : tregister;
         vaddr : boolean;
@@ -1177,10 +1177,10 @@ implementation
           internalerror(200608042);
         dovariant:=
           (acnf_forcevaria in arrayconstructornodeflags) or is_variant_array(resultdef);
-        eledef:=tarraydef(resultdef).elementdef;
+        eledef:=TArrayDef(resultdef).elementdef;
         elesize:=eledef.size;
         if dovariant then
-          varvtypefield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VTYPE'))
+          varvtypefield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VTYPE'))
         else
           varvtypefield:=nil;
         { alignment is filled in by tg.gethltemp below }
@@ -1193,7 +1193,7 @@ implementation
           of the proper length to avoid getting unexpected results later --
           allocating a temp of size 0 also forces it to be size 4 on regular
           targets }
-        tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,(tarraydef(resultdef).highrange+1)*elesize,tt_normal,location.reference);
+        tg.gethltemp(CurrentAsmData.CurrAsmList,resultdef,(TArrayDef(resultdef).highrange+1)*elesize,tt_normal,location.reference);
         href:=location.reference;
         makearrayref(href,eledef);
         { Process nodes in array constructor }
@@ -1224,21 +1224,21 @@ implementation
                      begin
                        if is_64bit(lt) then
                          begin
-                            case torddef(lt).ordtype of
+                            case TOrdDef(lt).ordtype of
                               scurrency:
                                 begin
                                   vtype:=vtCurrency;
-                                  varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VCURRENCY'));
+                                  varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VCURRENCY'));
                                 end;
                               s64bit:
                                 begin
                                   vtype:=vtInt64;
-                                  varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINT64'));
+                                  varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINT64'));
                                 end;
                               u64bit:
                                 begin
                                   vtype:=vtQWord;
-                                  varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VQWORD'));
+                                  varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VQWORD'));
                                 end;
                               else
                                 ;
@@ -1250,27 +1250,27 @@ implementation
                            is_integer(lt) then
                          begin
                            vtype:=vtInteger;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINTEGER'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINTEGER'));
                          end
                        else
                          if is_boolean(lt) then
                            begin
                              vtype:=vtBoolean;
-                             varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINTEGER'));
+                             varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINTEGER'));
                            end
                          else
                            if (lt.typ=orddef) then
                              begin
-                               case torddef(lt).ordtype of
+                               case TOrdDef(lt).ordtype of
                                  uchar:
                                    begin
                                      vtype:=vtChar;
-                                     varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINTEGER'));
+                                     varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINTEGER'));
                                    end;
                                  uwidechar:
                                    begin
                                      vtype:=vtWideChar;
-                                     varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINTEGER'));
+                                     varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINTEGER'));
                                    end;
                                  else
                                    ;
@@ -1282,12 +1282,12 @@ implementation
                        if is_currency(lt) then
                          begin
                            vtype:=vtCurrency;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VCURRENCY'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VCURRENCY'));
                          end
                        else
                          begin
                            vtype:=vtExtended;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VEXTENDED'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VEXTENDED'));
                          end;
                        freetemp:=false;
                        vaddr:=true;
@@ -1298,42 +1298,42 @@ implementation
                        if is_pchar(lt) then
                          begin
                            vtype:=vtPChar;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VPCHAR'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VPCHAR'));
                          end
                        else if is_pwidechar(lt) then
                          begin
                            vtype:=vtPWideChar;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VPWIDECHAR'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VPWIDECHAR'));
                          end
                        else
                          begin
                            vtype:=vtPointer;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VPOINTER'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VPOINTER'));
                          end;
                      end;
                    variantdef :
                      begin
                         vtype:=vtVariant;
-                        varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VVARIANT'));
+                        varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VVARIANT'));
                         vaddr:=true;
                         freetemp:=false;
                      end;
                    classrefdef :
                      begin
                        vtype:=vtClass;
-                       varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VCLASS'));
+                       varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VCLASS'));
                      end;
                    objectdef :
                      if is_interface(lt) then
                        begin
                          vtype:=vtInterface;
-                         varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VINTERFACE'));
+                         varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VINTERFACE'));
                        end
                      { vtObject really means a class based on TObject }
                      else if is_class(lt) then
                        begin
                          vtype:=vtObject;
-                         varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VOBJECT'));
+                         varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VOBJECT'));
                        end
                      else
                        internalerror(200505171);
@@ -1342,7 +1342,7 @@ implementation
                        if is_shortstring(lt) then
                         begin
                           vtype:=vtString;
-                          varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VSTRING'));
+                          varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VSTRING'));
                           vaddr:=true;
                           freetemp:=false;
                         end
@@ -1350,21 +1350,21 @@ implementation
                         if is_ansistring(lt) then
                          begin
                            vtype:=vtAnsiString;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VANSISTRING'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VANSISTRING'));
                            freetemp:=false;
                          end
                        else
                         if is_widestring(lt) then
                          begin
                            vtype:=vtWideString;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VWIDESTRING'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VWIDESTRING'));
                            freetemp:=false;
                          end
                        else
                         if is_unicodestring(lt) then
                          begin
                            vtype:=vtUnicodeString;
-                           varfield:=tfieldvarsym(search_struct_member_no_helper(trecorddef(eledef),'VUNICODESTRING'));
+                           varfield:=TFieldVarSym(search_struct_member_no_helper(TRecordDef(eledef),'VUNICODESTRING'));
                            freetemp:=false;
                          end;
                      end;
@@ -1377,7 +1377,7 @@ implementation
                    internalerror(2015102901);
                  { write changing field update href to the next element }
                  fref:=href;
-                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,trecorddef(eledef),varfield,fref);
+                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varfield,fref);
                  if vaddr then
                    begin
                      hlcg.location_force_mem(CurrentAsmData.CurrAsmList,hp.left.location,lt);
@@ -1389,7 +1389,7 @@ implementation
                    hlcg.a_load_loc_ref(CurrentAsmData.CurrAsmList,hp.left.resultdef,varfield.vardef,hp.left.location,fref);
                  { update href to the vtype field and write it }
                  fref:=href;
-                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,trecorddef(eledef),varvtypefield,fref);
+                 hlcg.g_set_addr_nonbitpacked_field_ref(CurrentAsmData.CurrAsmList,TRecordDef(eledef),varvtypefield,fref);
                  hlcg.a_load_const_ref(CurrentAsmData.CurrAsmList,varvtypefield.vardef,vtype,fref);
                  { goto next array element }
                  advancearrayoffset(href,elesize);
@@ -1412,7 +1412,7 @@ implementation
                      begin
                        if is_shortstring(hp.left.resultdef) then
                          hlcg.g_copyshortstring(CurrentAsmData.CurrAsmList,hp.left.location.reference,href,
-                             Tstringdef(hp.left.resultdef))
+                             TStringDef(hp.left.resultdef))
                        else
                          hlcg.g_concatcopy(CurrentAsmData.CurrAsmList,eledef,hp.left.location.reference,href);
                      end;

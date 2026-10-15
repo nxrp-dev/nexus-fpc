@@ -191,7 +191,7 @@ implementation
     function AddUnit(curr : tmodule; const s:string; addasused:boolean = true): tppumodule;
       var
         hp : tppumodule;
-        unitsym : tunitsym;
+        unitsym : TUnitSym;
         isnew : boolean;
         uu: tused_unit;
 
@@ -213,7 +213,7 @@ implementation
         { insert unitsym }
         unitsym:=cunitsym.create(hp.modulename^,hp);
         inc(unitsym.refs);
-        tabstractunitsymtable(curr.localsymtable).insertunit(unitsym);
+        TAbstractUnitSymTable(curr.localsymtable).insertunit(unitsym);
         if addasused then
         begin
           { add to used units }
@@ -349,7 +349,7 @@ implementation
         { are we compiling the system unit? }
         if (cs_compilesystem in CurrentSettings.moduleswitches) then
          begin
-           systemunit:=tglobalsymtable(curr.localsymtable);
+           systemunit:=TGlobalSymTable(curr.localsymtable);
            { create system defines }
            create_intern_types;
            create_intern_symbols;
@@ -364,7 +364,7 @@ implementation
           internal types from the system unit }
         Sys:=AddUnit(curr,'system');
         Result:=Assigned(Sys) and (Sys.State in [ms_processed,ms_compiled]);
-        systemunit:=tglobalsymtable(symtablestack.top);
+        systemunit:=TGlobalSymTable(symtablestack.top);
 
         { load_intern_types resets the scanner... }
         CurrentScanner.tempcloseinputfile;
@@ -392,7 +392,7 @@ implementation
 
       var
         profileunit : tppumodule;
-        profilesym : tunitsym;
+        profilesym : TUnitSym;
         isnew : boolean;
 
       Procedure CheckAddUnit(s: string);
@@ -530,7 +530,7 @@ implementation
          fn      : string;
          pu  : tused_unit;
          hp2     : tmodule;
-         unitsym : tunitsym;
+         unitsym : TUnitSym;
          filepos : TFilePosInfo;
          isnew : boolean;
 
@@ -689,12 +689,12 @@ implementation
        this can only be called after all units were actually loaded!
      }
 
-     procedure connect_loaded_units(_module : tmodule; preservest:tsymtable);
+     procedure connect_loaded_units(_module : tmodule; preservest:TSymTable);
 
      var
        pu  : tused_unit;
        sorg   : ansistring;
-       unitsymtable: tabstractunitsymtable;
+       unitsymtable: TAbstractUnitSymTable;
 
      begin
        // writeln(_module.get_modulename,': Connecting units');
@@ -738,7 +738,7 @@ implementation
              begin
                { connect unitsym to the module }
                pu.unitsym.module:=pu.u;
-               pu.unitsym.register_sym;
+               pu.unitsym.RegisterSym;
              end;
            {
              Add the unit symbol in the current symtable.
@@ -746,9 +746,9 @@ implementation
              is moved to the global.
            }
            if assigned(_module.localsymtable) then
-             unitsymtable:=tabstractunitsymtable(_module.localsymtable)
+             unitsymtable:=TAbstractUnitSymTable(_module.localsymtable)
            else
-             unitsymtable:=tabstractunitsymtable(_module.globalsymtable);
+             unitsymtable:=TAbstractUnitSymTable(_module.globalsymtable);
            // Writeln('Adding used unit sym ',pu.unitsym.realName,' to table ',unitsymtable.get_name);
            unitsymtable.insertunit(pu.unitsym);
            { add to symtable stack }
@@ -776,18 +776,18 @@ implementation
        end;
 
 
-    procedure free_localsymtables(st:TSymtable);
+    procedure free_localsymtables(st:TSymTable);
       var
         i   : longint;
-        def : tstoreddef;
-        pd  : tprocdef;
+        def : TStoredDef;
+        pd  : TProcDef;
       begin
         for i:=0 to st.DefList.Count-1 do
           begin
-            def:=tstoreddef(st.DefList[i]);
+            def:=TStoredDef(st.DefList[i]);
             if def.typ=procdef then
               begin
-                pd:=tprocdef(def);
+                pd:=TProcDef(def);
                 if assigned(pd.localst) and
                    (pd.localst.symtabletype<>staticsymtable) and
                    not(po_inline in pd.procoptions) then
@@ -804,29 +804,29 @@ implementation
 
 
     procedure free_unregistered_localsymtable_elements(curr : tmodule);
-      procedure remove_from_procdeflist(adef: tdef);
+      procedure remove_from_procdeflist(adef: TDef);
         var
           i: Integer;
-          childdef: tdef;
+          childdef: TDef;
         begin
           if adef=nil then exit;
-          if (adef.typ in [objectdef, recorddef]) and (adef is tabstractrecorddef) then
+          if (adef.typ in [objectdef, recorddef]) and (adef is TAbstractRecordDef) then
             begin
-              if tabstractrecorddef(adef).symtable<>nil then
-                for i:=0 to tabstractrecorddef(adef).symtable.DefList.Count-1 do
+              if TAbstractRecordDef(adef).symtable<>nil then
+                for i:=0 to TAbstractRecordDef(adef).symtable.DefList.Count-1 do
                   begin
-                    childdef:=tdef(tabstractrecorddef(adef).symtable.DefList[i]);
+                    childdef:=TDef(TAbstractRecordDef(adef).symtable.DefList[i]);
                     remove_from_procdeflist(childdef);
                   end;
             end
           else
             if adef.typ=procdef then
               begin
-                tprocsym(tprocdef(adef).procsym).ProcdefList.Remove(adef);
-                if tprocdef(adef).localst<>nil then
-                  for i:=0 to tprocdef(adef).localst.DefList.Count-1 do
+                TProcSym(TProcDef(adef).procsym).ProcdefList.Remove(adef);
+                if TProcDef(adef).localst<>nil then
+                  for i:=0 to TProcDef(adef).localst.DefList.Count-1 do
                     begin
-                      childdef:=tdef(tprocdef(adef).localst.DefList[i]);
+                      childdef:=TDef(TProcDef(adef).localst.DefList[i]);
                       remove_from_procdeflist(childdef);
                     end;
               end;
@@ -834,17 +834,17 @@ implementation
 
       var
         i: longint;
-        def: tdef;
-        sym: tsym;
+        def: TDef;
+        sym: TSym;
       begin
         for i:=curr.localsymtable.deflist.count-1 downto 0 do
           begin
-            def:=tdef(curr.localsymtable.deflist[i]);
+            def:=TDef(curr.localsymtable.deflist[i]);
             { since commit 48986 deflist might have NIL entries }
             if not assigned(def) then
               continue;
             { this also frees def, as the defs are owned by the symtable }
-            if not def.is_registered and
+            if not def.IsRegistered and
                not(df_not_registered_no_free in def.defoptions) then
               begin
                 { if it's a procdef, unregister it from its procsym first,
@@ -858,9 +858,9 @@ implementation
         { from high to low so we hopefully have moves of less data }
         for i:=curr.localsymtable.symlist.count-1 downto 0 do
           begin
-            sym:=tsym(curr.localsymtable.symlist[i]);
+            sym:=TSym(curr.localsymtable.symlist[i]);
             { this also frees sym, as the symbols are owned by the symtable }
-            if not sym.is_registered then
+            if not sym.IsRegistered then
               curr.localsymtable.DeleteSym(sym);
           end;
       end;
@@ -876,10 +876,10 @@ implementation
       end;
 
 
-    function create_main_proc(const name:TSymStr;potype:tproctypeoption;st:TSymtable):tcgprocinfo;
+    function create_main_proc(const name:TSymStr;potype:TProcTypeOption;st:TSymTable):tcgprocinfo;
       var
-        ps  : tprocsym;
-        pd  : tprocdef;
+        ps  : TProcSym;
+        pd  : TProcDef;
       begin
         { there should be no current_procinfo available }
         if assigned(CurrentProcInfo) then
@@ -887,11 +887,11 @@ implementation
         {Generate a procsym for main}
         ps:=cprocsym.create('$'+name);
         { always register the symbol }
-        ps.register_sym;
+        ps.RegisterSym;
         { main are always used }
         inc(ps.refs);
         st.insertsym(ps);
-        pd:=tprocdef(cnodeutils.create_main_procdef(TargetInfo.cprefix+name,potype,ps));
+        pd:=TProcDef(cnodeutils.create_main_procdef(TargetInfo.cprefix+name,potype,ps));
         { We don't need a local symtable, change it into the static symtable }
         if not (potype in [potype_mainstub,potype_pkgstub,potype_libmainstub]) then
           begin
@@ -930,7 +930,7 @@ implementation
     procedure maybe_load_got(curr: tmodule);
 {$if defined(i386)}
        var
-         gotvarsym : tstaticvarsym;
+         gotvarsym : TStaticVarSym;
 {$endif i386 or sparcgen}
       begin
 {$if defined(i386)}
@@ -949,7 +949,7 @@ implementation
 {$endif i386 or sparcgen}
       end;
 
-    function gen_implicit_initfinal(curr: tmodule; flag:TModuleFlag;st:TSymtable):tcgprocinfo;
+    function gen_implicit_initfinal(curr: tmodule; flag:TModuleFlag;st:TSymTable):tcgprocinfo;
       begin
         { create procdef }
         case flag of
@@ -974,7 +974,7 @@ implementation
 
     procedure copy_macro(p:TObject; arg:pointer);
       begin
-        TModule(arg).globalmacrosymtable.insertsym(tmacro(p).getcopy);
+        TModule(arg).globalmacrosymtable.insertsym(TMacro(p).getcopy);
       end;
 
     function try_consume_hintdirective(var moduleopt:tmoduleoptions; var deprecatedmsg:pshortstring):boolean;
@@ -1163,7 +1163,7 @@ type
 
         if (m_mac in CurrentSettings.modeswitches) then
           begin
-            curr.globalmacrosymtable:=tmacrosymtable.create(true);
+            curr.globalmacrosymtable:=TMacroSymTable.create(true);
             curr.localmacrosymtable.SymList.ForEachCall(@copy_macro,curr);
           end;
 
@@ -1195,7 +1195,7 @@ type
         parse_only:=false;
 
         { create static symbol table }
-        curr.localsymtable:=tstaticsymtable.create(curr.realmodulename^,curr.moduleid);
+        curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
 
 
         { Insert _GLOBAL_OFFSET_TABLE_ symbol if system uses it }
@@ -1316,11 +1316,11 @@ type
 
          { generate now the global symboltable,
            define first as local to overcome dependency conflicts }
-         curr.localsymtable:=tglobalsymtable.create(curr.modulename^,curr.moduleid);
+         curr.localsymtable:=TGlobalSymTable.create(curr.modulename^,curr.moduleid);
 
          { insert unitsym of this unit to prevent other units having
            the same name }
-         tabstractunitsymtable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+         TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
 
          { load default system unit, it must be loaded before interface is parsed
            else we cannot use e.g. feature switches before the next real token }
@@ -1471,8 +1471,8 @@ type
 
          { if the unit contains ansi/widestrings, initialization and
            finalization code must be forced }
-         force_init_final:=tglobalsymtable(module.globalsymtable).needs_init_final or
-                           tstaticsymtable(module.localsymtable).needs_init_final;
+         force_init_final:=TGlobalSymTable(module.globalsymtable).needs_init_final or
+                           TStaticSymTable(module.localsymtable).needs_init_final;
 
          { should we force unit initialization? }
          { this is a hack, but how can it be done better ? }
@@ -1556,15 +1556,15 @@ type
          if (Errorcount=0) then
            begin
              { tests, if all (interface) forwards are resolved }
-             tstoredsymtable(module.globalsymtable).check_forwards;
+             TStoredSymTable(module.globalsymtable).check_forwards;
              { check if all private fields are used }
-             tstoredsymtable(module.globalsymtable).allprivatesused;
+             TStoredSymTable(module.globalsymtable).allprivatesused;
 
              { test static symtable }
-             tstoredsymtable(module.localsymtable).allsymbolsused;
-             tstoredsymtable(module.localsymtable).allprivatesused;
-             tstoredsymtable(module.localsymtable).check_forwards;
-             tstoredsymtable(module.localsymtable).checklabels;
+             TStoredSymTable(module.localsymtable).allsymbolsused;
+             TStoredSymTable(module.localsymtable).allprivatesused;
+             TStoredSymTable(module.localsymtable).check_forwards;
+             TStoredSymTable(module.localsymtable).checklabels;
 
              { used units }
              module.allunitsused;
@@ -1742,10 +1742,10 @@ type
         writeln('constructed object/class/classreftypes in ',module.realmodulename^);
         for i := 0 to module.wpoinfo.createdobjtypes.count-1 do
           begin
-            write('  ',tdef(module.wpoinfo.createdobjtypes[i]).GetTypeName);
-            case tdef(module.wpoinfo.createdobjtypes[i]).typ of
+            write('  ',TDef(module.wpoinfo.createdobjtypes[i]).GetTypeName);
+            case TDef(module.wpoinfo.createdobjtypes[i]).typ of
               objectdef:
-                case tobjectdef(module.wpoinfo.createdobjtypes[i]).objecttype of
+                case TObjectDef(module.wpoinfo.createdobjtypes[i]).objecttype of
                   odt_object:
                     writeln(' (object)');
                   odt_class:
@@ -1760,10 +1760,10 @@ type
 
         for i := 0 to module.wpoinfo.createdclassrefobjtypes.count-1 do
           begin
-            write('  Class Of ',tdef(module.wpoinfo.createdclassrefobjtypes[i]).GetTypeName);
-            case tdef(module.wpoinfo.createdclassrefobjtypes[i]).typ of
+            write('  Class Of ',TDef(module.wpoinfo.createdclassrefobjtypes[i]).GetTypeName);
+            case TDef(module.wpoinfo.createdclassrefobjtypes[i]).typ of
               objectdef:
-                case tobjectdef(module.wpoinfo.createdclassrefobjtypes[i]).objecttype of
+                case TObjectDef(module.wpoinfo.createdclassrefobjtypes[i]).objecttype of
                   odt_class:
                     writeln(' (classrefdef)');
                   else
@@ -1870,7 +1870,7 @@ type
 
          { insert after the unit symbol tables the static symbol table }
          { of the program                                             }
-         curr.localsymtable:=tstaticsymtable.create(curr.realmodulename^,curr.moduleid);
+         curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
 
          { ensure that no packages are picked up from the options }
          packagelist.clear;
@@ -1919,7 +1919,7 @@ type
              { this means the SYSTEM unit *must* be part of one of the required
                packages, so load it }
              AddUnit(curr,'system',false);
-             systemunit:=tglobalsymtable(symtablestack.top);
+             systemunit:=TGlobalSymTable(symtablestack.top);
              load_intern_types;
              checksystemcharwidth;
              { system unit is loaded, now insert feature defines }
@@ -1963,7 +1963,7 @@ type
            begin
              if (hp.modulename^='SYSTEM') and not assigned(systemunit) then
                begin
-                 systemunit:=tglobalsymtable(hp.globalsymtable);
+                 systemunit:=TGlobalSymTable(hp.globalsymtable);
                  load_intern_types;
                  checksystemcharwidth;
                end;
@@ -2017,7 +2017,7 @@ type
 
          {Insert the name of the main program into the symbol table.}
          if curr.realmodulename^<>'' then
-           tabstractunitsymtable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+           TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
 
          Message1(parser_u_parsing_implementation,curr.mainsource);
 
@@ -2027,7 +2027,7 @@ type
          curr.wpoinfo:=tunitwpoinfo.create;
 
          { should we force unit initialization? }
-         force_init_final:=tstaticsymtable(curr.localsymtable).needs_init_final;
+         force_init_final:=TStaticSymTable(curr.localsymtable).needs_init_final;
          if force_init_final or cnodeutils.force_init then
            {InitializationProcedure:=gen_implicit_initfinal(mf_init,curr.localsymtable)};
 
@@ -2040,7 +2040,7 @@ type
 
          { all labels must be defined before generating code }
          if Errorcount=0 then
-           tstoredsymtable(curr.localsymtable).checklabels;
+           TStoredSymTable(curr.localsymtable).checklabels;
 
          symtablestack.pop(curr.localsymtable);
 
@@ -2051,9 +2051,9 @@ type
          if (Errorcount=0) then
            begin
              { test static symtable }
-             tstoredsymtable(curr.localsymtable).allsymbolsused;
-             tstoredsymtable(curr.localsymtable).allprivatesused;
-             tstoredsymtable(curr.localsymtable).check_forwards;
+             TStoredSymTable(curr.localsymtable).allsymbolsused;
+             TStoredSymTable(curr.localsymtable).allprivatesused;
+             TStoredSymTable(curr.localsymtable).check_forwards;
 
              { Note: all contained units are considered as used }
            end;
@@ -2120,7 +2120,7 @@ type
            begin
              if not assigned(systemunit) and (uu.u.modulename^='SYSTEM') then
                begin
-                 systemunit:=tglobalsymtable(uu.u.globalsymtable);
+                 systemunit:=TGlobalSymTable(uu.u.globalsymtable);
                  load_intern_types;
                  checksystemcharwidth;
                end;
@@ -2368,9 +2368,9 @@ type
         if (Errorcount=0) then
           begin
             { test static symtable }
-            tstoredsymtable(curr.localsymtable).allsymbolsused;
-            tstoredsymtable(curr.localsymtable).allprivatesused;
-            tstoredsymtable(curr.localsymtable).check_forwards;
+            TStoredSymTable(curr.localsymtable).allsymbolsused;
+            TStoredSymTable(curr.localsymtable).allprivatesused;
+            TStoredSymTable(curr.localsymtable).check_forwards;
 
             curr.allunitsused;
           end;
@@ -2517,7 +2517,7 @@ type
     function proc_program_declarations(curr : tmodule; islibrary : boolean) : boolean;
 
       var
-        initpd    : tprocdef;
+        initpd    : TProcDef;
         FinalizationProcedure,
         InitializationProcedure,
         main_procinfo : tcgprocinfo;
@@ -2546,7 +2546,7 @@ type
 
         {Insert the name of the main program into the symbol table.}
         if curr.realmodulename^<>'' then
-          tabstractunitsymtable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
+          TAbstractUnitSymTable(curr.localsymtable).insertunit(cunitsym.create(curr.realmodulename^,curr));
 
         Message1(parser_u_parsing_implementation,curr.mainsource);
 
@@ -2638,7 +2638,7 @@ type
         add_synthetic_method_implementations(curr.localsymtable);
 
         { should we force unit initialization? }
-        force_init_final:=tstaticsymtable(curr.localsymtable).needs_init_final;
+        force_init_final:=TStaticSymTable(curr.localsymtable).needs_init_final;
         if force_init_final or cnodeutils.force_init then
           InitializationProcedure:=gen_implicit_initfinal(curr,mf_init,curr.localsymtable);
 
@@ -2673,7 +2673,7 @@ type
 
         { all labels must be defined before generating code }
         if Errorcount=0 then
-          tstoredsymtable(curr.localsymtable).checklabels;
+          TStoredSymTable(curr.localsymtable).checklabels;
 
         { See remark in unit init/final }
         main_procinfo.generate_code_tree;
@@ -2813,8 +2813,8 @@ type
       var
          main_file : tinputfile;
          consume_semicolon_after_loaded : boolean;
-         ps : tprogramparasym;
-         textsym : ttypesym;
+         ps : TProgramParaSym;
+         textsym : TTypeSym;
          sc : TProgramParamArray;
          i : Longint;
          feature : TFeature;
@@ -2879,7 +2879,7 @@ type
 
          { insert after the unit symbol tables the static symbol table
            of the program                                              }
-         curr.localsymtable:=tstaticsymtable.create(curr.realmodulename^,curr.moduleid);
+         curr.localsymtable:=TStaticSymTable.create(curr.realmodulename^,curr.moduleid);
 
          { load system unit }
          load_ok:=loadsystemunit(curr);

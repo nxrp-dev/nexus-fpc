@@ -70,7 +70,7 @@ unit cgexcept;
         class procedure handle_nested_exception(list:TAsmList;var t:texceptiontemps;var entrystate: texceptionstate); virtual;
         class procedure handle_reraise(list:TAsmList;const t:texceptiontemps;const entrystate: texceptionstate; const exceptframekind: texceptframekind); virtual;
         { start of an "on" (catch) block }
-        class procedure begin_catch(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel; out exceptlocdef: tdef; out exceptlocreg: tregister); virtual;
+        class procedure begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out exceptlocreg: tregister); virtual;
         { end of an "on" (catch) block }
         class procedure end_catch(list: TAsmList); virtual;
         { called for a catch all exception }
@@ -150,7 +150,7 @@ unit cgexcept;
     class procedure tcgexceptionstatehandler.new_exception(list:TAsmList;const t:texceptiontemps; const exceptframekind: texceptframekind; out exceptstate: texceptionstate);
       var
         paraloc1, paraloc2, paraloc3, pushexceptres, setjmpres: tcgpara;
-        pd: tprocdef;
+        pd: TProcDef;
         tmpresloc: tlocation;
       begin
         CurrentAsmData.getjumplabel(exceptstate.exceptionlabel);
@@ -281,9 +281,9 @@ unit cgexcept;
       end;
 
 
-    class procedure tcgexceptionstatehandler.begin_catch(list: TAsmList; excepttype: tobjectdef; nextonlabel: tasmlabel; out exceptlocdef: tdef; out exceptlocreg: tregister);
+    class procedure tcgexceptionstatehandler.begin_catch(list: TAsmList; excepttype: TObjectDef; nextonlabel: tasmlabel; out exceptlocdef: TDef; out exceptlocreg: tregister);
       var
-        pd: tprocdef;
+        pd: TProcDef;
         href2: treference;
         fpc_catches_res,
         paraloc1: tcgpara;

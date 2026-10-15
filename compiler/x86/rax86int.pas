@@ -305,8 +305,8 @@ Unit Rax86int;
       var
         len : longint;
         forcelabel : boolean;
-        srsym : tsym;
-        srsymtable : TSymtable;
+        srsym : TSym;
+        srsymtable : TSymTable;
       begin
         actoperextention := '';
 
@@ -1271,9 +1271,9 @@ Unit Rax86int;
         prevtok : tasmtoken;
         hl : tasmlabel;
         hssymtyp : Tasmsymtype;
-        def : tdef;
-        sym : tsym;
-        srsymtable : TSymtable;
+        def : TDef;
+        sym : TSym;
+        srsymtable : TSymTable;
         hastypecast : boolean;
 	stop_at_plus_minus: boolean;
       Begin
@@ -1457,9 +1457,9 @@ Unit Rax86int;
                            staticvarsym,
                            localvarsym,
                            paravarsym :
-                             l:=tabstractvarsym(sym).getsize;
+                             l:=TAbstractVarSym(sym).getsize;
                            typesym :
-                             l:=ttypesym(sym).typedef.size;
+                             l:=TTypeSym(sym).typedef.size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1554,8 +1554,8 @@ Unit Rax86int;
                          case sym.typ of
                            staticvarsym :
                              begin
-                               hs:=tstaticvarsym(sym).mangledname;
-                               def:=tstaticvarsym(sym).vardef;
+                               hs:=TStaticVarSym(sym).mangledname;
+                               def:=TStaticVarSym(sym).vardef;
                              end;
                            localvarsym,
                            paravarsym :
@@ -1564,21 +1564,21 @@ Unit Rax86int;
                              end;
                            procsym :
                              begin
-                               if Tprocsym(sym).ProcdefList.Count>1 then
+                               if TProcSym(sym).ProcdefList.Count>1 then
                                 Message(asmr_w_calling_overload_func);
-                               hs:=tprocdef(tprocsym(sym).ProcdefList[0]).mangledname;
+                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).mangledname;
 
                                hssymtyp:=AT_FUNCTION;
                              end;
                            typesym :
                              begin
-                               if not(ttypesym(sym).typedef.typ in [recorddef,objectdef]) then
+                               if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
-                               size:=ttypesym(sym).typedef.size;
+                               size:=TTypeSym(sym).typedef.size;
                              end;
                            fieldvarsym :
                              begin
-                               tempstr:=upper(tdef(sym.owner.defowner).GetTypeName)+'.'+tempstr;
+                               tempstr:=upper(TDef(sym.owner.defowner).GetTypeName)+'.'+tempstr;
                              end;
                            else
                              Message(asmr_e_wrong_sym_type);
@@ -1628,7 +1628,7 @@ Unit Rax86int;
                    else if (actasmtoken<>AS_DOT) and
                            assigned(sym) and
                            (sym.typ=typesym) and
-                           (ttypesym(sym).typedef.typ in [recorddef,objectdef]) then
+                           (TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                      begin
                        { just a record type (without being followed by dot)
                          evaluates to 0. Ugly, but TP7 compatible. }
@@ -1645,13 +1645,13 @@ Unit Rax86int;
                      begin
                        consume(AS_LBRACKET);
                        l:=BuildConstExpression;
-                       if l<tarraydef(def).lowrange then
+                       if l<TArrayDef(def).lowrange then
                          begin
                            Message(asmr_e_constant_out_of_bounds);
                            l:=0;
                          end
                        else
-                         l:=(l-tarraydef(def).lowrange)*tarraydef(def).elesize;
+                         l:=(l-TArrayDef(def).lowrange)*TArrayDef(def).elesize;
                        str(l, tempstr);
                        expr:=expr + '+' + tempstr;
                        consume(AS_RBRACKET);
@@ -1738,7 +1738,7 @@ Unit Rax86int;
         hl : tasmlabel;
         hastypecast: boolean;
         tmpoper: tx86operand;
-        refparasym: tabstractnormalvarsym;
+        refparasym: TAbstractNormalVarSym;
         cse_in_flags: tconstsymbolexpressioninputflags;
         cse_out_flags: tconstsymbolexpressionoutputflags;
       Begin
@@ -3078,8 +3078,8 @@ Unit Rax86int;
     Var
       hl : tasmlabel;
       instr : Tx86Instruction;
-      tmpsym: tsym;
-      tmpsrsymtable: TSymtable;
+      tmpsym: TSym;
+      tmpsrsymtable: TSymTable;
     Begin
       Message1(asmr_d_start_reading,'intel');
       inexpression:=FALSE;
@@ -3169,7 +3169,7 @@ Unit Rax86int;
                           begin
                             hl.is_public:=true;
                             asmsearchsym(upper(actasmpattern),tmpsym,tmpsrsymtable);
-                            if tlabelsym(tmpsym).defined then
+                            if TLabelSym(tmpsym).defined then
                               Message1(asmr_e_public_must_be_used_before_label_definition,actasmpattern);
                           end;
                       end

@@ -360,14 +360,14 @@ begin
                 cordconstnode.create(
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
-                  tstringdef(p.resultdef).encoding,
+                  TStringDef(p.resultdef).encoding,
                   u16inttype,
                   true
                 ),
                 para
               );
       result:=ccallnode.createintern(
-                'fpc_'+tstringdef(p.resultdef).stringtypname+'_concat_multi',
+                'fpc_'+TStringDef(p.resultdef).stringtypname+'_concat_multi',
                 para
               );
       include(aktassignmentnode.assignmentnodeflags,anf_assign_done_in_right);
@@ -386,7 +386,7 @@ begin
                 cordconstnode.create(
                   { don't use getparaencoding(), we have to know
                     when the result is rawbytestring }
-                  tstringdef(p.resultdef).encoding,
+                  TStringDef(p.resultdef).encoding,
                   u16inttype,
                   true
                 ),
@@ -395,7 +395,7 @@ begin
       addstatement(
         newstatement,
         ccallnode.createintern(
-          'fpc_'+tstringdef(p.resultdef).stringtypname+'_concat_multi',
+          'fpc_'+TStringDef(p.resultdef).stringtypname+'_concat_multi',
           para
         )
       );
@@ -480,7 +480,7 @@ begin
       para:=ccallparanode.create(
               arrp,
             ccallparanode.create(
-              caddrnode.create_internal(crttinode.create(tstoreddef(p.resultdef),initrtti,rdt_normal)),
+              caddrnode.create_internal(crttinode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
             ccallparanode.create(
               ctypeconvnode.create_internal(aktassignmentnode.left.getcopy,voidpointertype),nil)
           ));
@@ -499,7 +499,7 @@ begin
       para:=ccallparanode.create(
               arrp,
             ccallparanode.create(
-              caddrnode.create_internal(crttinode.create(tstoreddef(p.resultdef),initrtti,rdt_normal)),
+              caddrnode.create_internal(crttinode.create(TStoredDef(p.resultdef),initrtti,rdt_normal)),
             ccallparanode.create(
               ctypeconvnode.create_internal(ctemprefnode.create(tempnode),voidpointertype),nil)
           ));

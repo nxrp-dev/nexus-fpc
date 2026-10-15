@@ -216,14 +216,14 @@ implementation
       begin
         result:=use_vectorfpu(resultdef) and
 {$ifdef cpu64bitalu}
-           ((torddef(left.resultdef).ordtype in [s32bit,s64bit]) or
-            ((torddef(left.resultdef).ordtype in [u32bit,u64bit]) and
+           ((TOrdDef(left.resultdef).ordtype in [s32bit,s64bit]) or
+            ((TOrdDef(left.resultdef).ordtype in [u32bit,u64bit]) and
              (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]))
            );
 {$else cpu64bitalu}
-           ((torddef(left.resultdef).ordtype=s32bit)
+           ((TOrdDef(left.resultdef).ordtype=s32bit)
 {$ifdef i386}
-            or ((torddef(left.resultdef).ordtype=u32bit) and
+            or ((TOrdDef(left.resultdef).ordtype=u32bit) and
              (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]))
 {$endif i386}
            );
@@ -269,12 +269,12 @@ implementation
             if UseAVX then
               case location.size of
                 OS_F32:
-                  if torddef(left.resultdef).ordtype in [s32bit,s64bit] then
+                  if TOrdDef(left.resultdef).ordtype in [s32bit,s64bit] then
                     op:=A_VCVTSI2SS
                   else
                     op:=A_VCVTUSI2SS;
                 OS_F64:
-                  if torddef(left.resultdef).ordtype in [s32bit,s64bit] then
+                  if TOrdDef(left.resultdef).ordtype in [s32bit,s64bit] then
                     op:=A_VCVTSI2SD
                   else
                     op:=A_VCVTUSI2SD;
@@ -285,7 +285,7 @@ implementation
               begin
                 { do not use is_signed here as it checks the boundaries instead
                   of the ordtype }
-                if not(torddef(left.resultdef).ordtype in [s32bit,s64bit]) then
+                if not(TOrdDef(left.resultdef).ordtype in [s32bit,s64bit]) then
                   Internalerror(2020101001);
                 case location.size of
                   OS_F32:
@@ -300,7 +300,7 @@ implementation
             { don't use left.location.size, because that one may be OS_32/OS_64
               if the lower bound of the orddef >= 0
             }
-            case torddef(left.resultdef).ordtype of
+            case TOrdDef(left.resultdef).ordtype of
               s32bit,u32bit:
                 opsize:=S_L;
               s64bit,u64bit:
@@ -334,7 +334,7 @@ implementation
         else
           begin
             location_reset(location,LOC_FPUREGISTER,def_cgsize(resultdef));
-            if (left.location.loc=LOC_REGISTER) and (torddef(left.resultdef).ordtype=u64bit) then
+            if (left.location.loc=LOC_REGISTER) and (TOrdDef(left.resultdef).ordtype=u64bit) then
               begin
                 cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                 if use_bt then
@@ -365,7 +365,7 @@ implementation
 
             { For u32bit we need to load it as comp and need to
               make it 64bits }
-            if (torddef(left.resultdef).ordtype=u32bit) then
+            if (TOrdDef(left.resultdef).ordtype=u32bit) then
               begin
                 tg.GetTemp(CurrentAsmData.CurrAsmList,8,8,tt_normal,href);
                 location_freetemp(CurrentAsmData.CurrAsmList,left.location);
@@ -379,7 +379,7 @@ implementation
               end;
 
             { Load from reference to fpu reg }
-            case torddef(left.resultdef).ordtype of
+            case TOrdDef(left.resultdef).ordtype of
               u32bit,
               scurrency,
               s64bit:

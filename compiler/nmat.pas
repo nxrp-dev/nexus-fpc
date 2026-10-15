@@ -39,8 +39,8 @@ interface
        tmoddivnode = class(TBinOpNode)
           moddivnodeflags : TModDivNodeFlags;
           constructor create(t:TNodeType;l,r : TNode); override;
-          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
-          procedure ppuwrite(ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:TCompilerPPUFile);override;
+          procedure ppuwrite(ppufile:TCompilerPPUFile);override;
           function pass_1 : TNode;override;
           function pass_typecheck:TNode;override;
           function simplify(forinline : boolean) : TNode;override;
@@ -131,14 +131,14 @@ implementation
       end;
 
 
-    constructor tmoddivnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
+    constructor tmoddivnode.ppuload(t:TNodeType;ppufile:TCompilerPPUFile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(moddivnodeflags));
       end;
 
 
-    procedure tmoddivnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure tmoddivnode.ppuwrite(ppufile:TCompilerPPUFile);
       begin
         inherited ppuwrite(ppufile);
         ppufile.putset(tppuset1(moddivnodeflags));
@@ -278,11 +278,11 @@ implementation
       var
         else_block,
         hp,t : TNode;
-        rd,ld : torddef;
+        rd,ld : TOrdDef;
         else_statements,
         statements : tstatementnode;
         result_data : ttempcreatenode;
-        nd : torddef;
+        nd : TOrdDef;
       begin
          result:=nil;
          TypeCheckPass(left);
@@ -353,8 +353,8 @@ implementation
          if assigned(result) then
            exit;
 
-         rd:=torddef(right.resultdef);
-         ld:=torddef(left.resultdef);
+         rd:=TOrdDef(right.resultdef);
+         ld:=TOrdDef(left.resultdef);
 
          { if one operand is a cardinal and the other is a positive constant, convert the }
          { constant to a cardinal as well so we don't have to do a 64bit division (JM)    }
@@ -451,7 +451,7 @@ implementation
            begin
               CGMessage(type_h_mixed_signed_unsigned);
               { get a signed int, larger than the native int }
-              nd:=get_common_intdef(torddef(sinttype),torddef(uinttype),false);
+              nd:=get_common_intdef(TOrdDef(sinttype),TOrdDef(uinttype),false);
               if (ld.ordtype<>nd.ordtype) then
                 inserttypeconv(left,nd);
               if (rd.ordtype<>nd.ordtype) then
@@ -461,9 +461,9 @@ implementation
          else
            begin
               { Make everything always default signed int }
-              if not(rd.ordtype in [torddef(sinttype).ordtype,torddef(uinttype).ordtype]) then
+              if not(rd.ordtype in [TOrdDef(sinttype).ordtype,TOrdDef(uinttype).ordtype]) then
                 inserttypeconv(right,sinttype);
-              if not(ld.ordtype in [torddef(sinttype).ordtype,torddef(uinttype).ordtype]) then
+              if not(ld.ordtype in [TOrdDef(sinttype).ordtype,TOrdDef(uinttype).ordtype]) then
                 inserttypeconv(left,sinttype);
               resultdef:=right.resultdef;
            end;
@@ -525,7 +525,7 @@ implementation
 
         { only qword needs the unsigned code, the
           signed code is also used for currency }
-        case torddef(resultdef).ordtype of
+        case TOrdDef(resultdef).ordtype of
           u8bit:
             procname := procname + 'byte';
           s8bit:
@@ -554,7 +554,7 @@ implementation
           internalerror(2013031701);
         if resultdef.typ<>orddef then
           internalerror(2013031702);
-        if torddef(result.resultdef).ordtype <> torddef(resultdef).ordtype then
+        if TOrdDef(result.resultdef).ordtype <> TOrdDef(resultdef).ordtype then
           inserttypeconv(result,resultdef);
       end;
 {$else cpuneedsdivhelper}
@@ -813,7 +813,7 @@ implementation
     function tshlshrnode.simplify(forinline : boolean):TNode;
       var
         lvalue, rvalue, mask : Tconstexprint;
-        rangedef: tdef;
+        rangedef: TDef;
         size: longint;
       begin
         result:=nil;
@@ -937,7 +937,7 @@ implementation
                32 bit for backwards compatibility. That way 'shl 33' is
                the same as 'shl 1'. It's ugly but compatible with delphi/tp/gcc }
              if (not is_64bit(left.resultdef)) and
-                (torddef(left.resultdef).ordtype<>u32bit) then
+                (TOrdDef(left.resultdef).ordtype<>u32bit) then
                begin
                  { keep signedness of original type }
                  if is_signed(left.resultdef) then
@@ -1147,7 +1147,7 @@ implementation
            end
          else if left.resultdef.typ=floatdef then
            begin
-             if not(tfloatdef(left.resultdef).floattype in [s64comp,s64currency]) and
+             if not(TFloatDef(left.resultdef).floattype in [s64comp,s64currency]) and
                (cs_excessprecision in CurrentSettings.localswitches) then
                begin
                  inserttypeconv(left,pbestrealtype^);
@@ -1320,7 +1320,7 @@ implementation
       var
         v : tconstexprint;
         t : TNode;
-        def : tdef;
+        def : TDef;
       begin
         result:=nil;
         { Try optimizing ourself away }

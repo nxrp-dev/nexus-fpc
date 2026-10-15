@@ -201,8 +201,8 @@ unit raatt;
     procedure tattreader.GetToken;
       var
         len : longint;
-        srsym : tsym;
-        srsymtable : TSymtable;
+        srsym : TSym;
+        srsymtable : TSymTable;
       begin
         c:=CurrentScanner.c;
         { save old token and reset new token }
@@ -1410,8 +1410,8 @@ unit raatt;
         l,k : tcgint;
         errorflag : boolean;
         prevtok : tasmtoken;
-        sym : tsym;
-        srsymtable : TSymtable;
+        sym : TSym;
+        srsymtable : TSymTable;
         hl  : tasmlabel;
       Begin
         asmsym:='';
@@ -1570,9 +1570,9 @@ unit raatt;
                            staticvarsym,
                            localvarsym,
                            paravarsym :
-                             l:=tabstractvarsym(sym).getsize;
+                             l:=TAbstractVarSym(sym).getsize;
                            typesym :
-                             l:=ttypesym(sym).typedef.size;
+                             l:=TTypeSym(sym).typedef.size;
                            else
                              Message(asmr_e_wrong_sym_type);
                          end;
@@ -1636,28 +1636,28 @@ unit raatt;
                              begin
                                { we always assume in asm statements that     }
                                { that the variable is valid.                 }
-                               tabstractvarsym(sym).varstate:=vs_readwritten;
-                               inc(tabstractvarsym(sym).refs);
+                               TAbstractVarSym(sym).varstate:=vs_readwritten;
+                               inc(TAbstractVarSym(sym).refs);
                                { variable can't be placed in a register }
-                               tabstractvarsym(sym).varregable:=vr_none;
+                               TAbstractVarSym(sym).varregable:=vr_none;
                                { and anything may happen with its address }
-                               tabstractvarsym(sym).addr_taken:=true;
+                               TAbstractVarSym(sym).addr_taken:=true;
 
-                               hs:=tstaticvarsym(sym).mangledname;
+                               hs:=TStaticVarSym(sym).mangledname;
                              end;
                            localvarsym,
                            paravarsym :
                              Message(asmr_e_no_local_or_para_allowed);
                            procsym :
                              begin
-                               if Tprocsym(sym).ProcdefList.Count>1 then
+                               if TProcSym(sym).ProcdefList.Count>1 then
                                 Message(asmr_w_calling_overload_func);
-                               hs:=tprocdef(tprocsym(sym).ProcdefList[0]).mangledname;
+                               hs:=TProcDef(TProcSym(sym).ProcdefList[0]).mangledname;
                                hssymtyp:=AT_FUNCTION;
                              end;
                            typesym :
                              begin
-                               if not(ttypesym(sym).typedef.typ in [recorddef,objectdef]) then
+                               if not(TTypeSym(sym).typedef.typ in [recorddef,objectdef]) then
                                 Message(asmr_e_wrong_sym_type);
                              end;
                            else

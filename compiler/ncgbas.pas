@@ -132,7 +132,7 @@ interface
 
     procedure tcgasmnode.ResolveRef(const filepos: TFilePosInfo; var op:toper);
       var
-        sym : tabstractnormalvarsym;
+        sym : TAbstractNormalVarSym;
 {$ifdef x86}
         segment : tregister;
         scale : byte;
@@ -152,7 +152,7 @@ interface
 {$endif x86}
             getoffset:=op.localoper^.localgetoffset;
             forceref:=op.localoper^.localforceref;
-            sym:=tabstractnormalvarsym(pointer(op.localoper^.localsym));
+            sym:=TAbstractNormalVarSym(pointer(op.localoper^.localsym));
             dispose(op.localoper);
             case sym.localloc.loc of
               LOC_REFERENCE :
@@ -240,7 +240,7 @@ interface
                     funcret loc is set to LOC_INVALID in case the
                     result is returned via a complex location
                     (more than one register, ...) }
-                  if (vo_is_funcret in tabstractvarsym(sym).varoptions) then
+                  if (vo_is_funcret in TAbstractVarSym(sym).varoptions) then
                     MessagePos(filepos,asmr_e_complex_function_result_location)
                   else
                     internalerror(2012082101);
@@ -273,7 +273,7 @@ interface
       var
         hp,hp2 : tai;
         i : longint;
-        vs : tabstractnormalvarsym;
+        vs : TAbstractNormalVarSym;
       begin
          location_reset(location,LOC_VOID,OS_NO);
 
@@ -398,9 +398,9 @@ interface
                       { Handle references to locals from TP-style INLINE(). }
                       if assigned(sym) and (sym.bind=AB_NONE) then
                         begin
-                          vs:=tabstractnormalvarsym(CurrentProcInfo.procdef.parast.Find(sym.Name));
+                          vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.parast.Find(sym.Name));
                           if not assigned(vs) then
-                            vs:=tabstractnormalvarsym(CurrentProcInfo.procdef.localst.Find(sym.Name));
+                            vs:=TAbstractNormalVarSym(CurrentProcInfo.procdef.localst.Find(sym.Name));
                           if not assigned(vs) then
                             Internalerror(2021081401);
                           if vs.localloc.loc<>LOC_REFERENCE then

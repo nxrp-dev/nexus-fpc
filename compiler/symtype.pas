@@ -42,24 +42,24 @@ interface
                 Required Forwards
 ************************************************}
 
-      tsym = class;
-      Tcompilerppufile=class;
+      TSym = class;
+      TCompilerPPUFile=class;
 
 
 {************************************************
                      TDef
 ************************************************}
 
-      tgetsymtable = (gs_none,gs_record,gs_local,gs_para);
-      tpublishproperty = (pp_ignore, pp_error, pp_publish);
+      TGetSymTable = (gs_none,gs_record,gs_local,gs_para);
+      TPublishProperty = (pp_ignore, pp_error, pp_publish);
 
-      tdef = class(TDefEntry)
+      TDef = class(TDefEntry)
         protected
          { whether this def is already registered in the unit's def list }
          function registered : boolean;
          { initialize the defid field; only call from a constructor as it threats
            0 as an invalid value! }
-         procedure init_defid;
+         procedure InitDefID;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintDefTree(var T: Text; Sym: TSym); virtual;
          procedure XMLPrintDefInfo(var T: Text; Sym: TSym); dynamic;
@@ -68,13 +68,13 @@ interface
 {$endif DEBUG_NODE_XML}
         public
          registered_in_module : tmodulebase;
-         typesym    : tsym;  { which type the definition was generated this def }
+         typesym    : TSym;  { which type the definition was generated this def }
          { stabs debugging }
          stab_number : word;
-         dbg_state   : tdefdbgstatus;
-         defoptions  : tdefoptions;
-         defstates   : tdefstates;
-         constructor create(dt:tdeftyp);
+         dbg_state   : TDefDbgStatus;
+         defoptions  : TDefOptions;
+         defstates   : TDefStates;
+         constructor create(dt:TDefTyp);
          destructor destroy; override;
          procedure buildderef;virtual;abstract;
          procedure buildderefimpl;virtual;abstract;
@@ -86,11 +86,11 @@ interface
          function  typesymbolprettyname:string;virtual;
          function  mangledparaname:string;
          function  getmangledparaname:TSymStr;virtual;
-         function  rtti_mangledname(rt:trttitype):TSymStr;virtual;abstract;
+         function  RTTIMangledName(rt:TRTTIType):TSymStr;virtual;abstract;
          function  OwnerHierarchyName: string; virtual; abstract;
          function  OwnerHierarchyPrettyName: string; virtual; abstract;
          function  fullownerhierarchyname(skipprocparams:boolean;use_pretty : boolean):TSymStr;virtual;abstract;
-         function  unique_id_str: string;
+         function  UniqueIDStr: string;
          function  size:asizeint;virtual;abstract;
          function  packedbitsize:asizeint;virtual;
          function  alignment:shortint;virtual;abstract;
@@ -98,25 +98,25 @@ interface
          function  structalignment:shortint;virtual;
          function  aggregatealignment:shortint;virtual;
          function  getvardef:longint;virtual;abstract;
-         function  getparentdef:tdef;virtual;
-         function  getsymtable(t:tgetsymtable):TSymtable;virtual;
-         function  is_publishable:tpublishproperty;virtual;abstract;
-         function  needs_inittable:boolean;virtual;abstract;
+         function  getparentdef:TDef;virtual;
+         function  getsymtable(t:TGetSymTable):TSymTable;virtual;
+         function  IsPublishable:TPublishProperty;virtual;abstract;
+         function  NeedsInitTable:boolean;virtual;abstract;
          { contains a (managed) child that is not initialized to 0/Nil }
-         function  has_non_trivial_init_child(check_parent:boolean):boolean;virtual;abstract;
-         function  needs_separate_initrtti:boolean;virtual;abstract;
-         procedure ChangeOwner(st:TSymtable);
-         function getreusablesymtab: tsymtable;
-         procedure register_created_object_type;virtual;
-         function  get_top_level_symtable(skipprocdefs: boolean): tsymtable;
+         function  HasNonTrivialInitChild(check_parent:boolean):boolean;virtual;abstract;
+         function  NeedsSeparateInitRTTI:boolean;virtual;abstract;
+         procedure ChangeOwner(st:TSymTable);
+         function getreusablesymtab: TSymTable;
+         procedure RegisterCreatedObjectType;virtual;
+         function  GetTopLevelSymTable(skipprocdefs: boolean): TSymTable;
          { only valid for registered defs and defs for which a unique id string
            has been requested; otherwise, first call register_def }
-         function  deflist_index: longint;
-         procedure register_def; virtual; abstract;
+         function  DefListIndex: longint;
+         procedure RegisterDef; virtual; abstract;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintDef(Sym: TSym);
 {$endif DEBUG_NODE_XML}
-         property is_registered: boolean read registered;
+         property IsRegistered: boolean read registered;
       end;
 
 {************************************************
@@ -124,80 +124,80 @@ interface
 ************************************************}
 
       { this object is the base for all symbol objects }
-      tsym = class(TSymEntry)
+      TSym = class(TSymEntry)
       protected
        function registered : boolean;
       public
          fileinfo   : TFilePosInfo;
          { size of fileinfo is 10 bytes, so if a >word aligned type would follow,
            two bytes of memory would be wasted, so we put two one byte fields over here }
-         visibility : tvisibility;
+         visibility : TVisibility;
          isdbgwritten : boolean;
-         symoptions : tsymoptions;
+         symoptions : TSymOptions;
          refs       : longint;
          reflist    : TLinkedList;
          { deprecated optionally can have a message }
          deprecatedmsg: pshortstring;
-         constructor create(st:tsymtyp;const aname:string);
+         constructor create(st:TSymTyp;const aname:string);
          destructor  destroy;override;
          function  mangledname:TSymStr; virtual;
          function  prettyname:string; virtual;
          procedure buildderef;virtual;
          procedure deref;virtual;
-         procedure ChangeOwner(st:TSymtable);
-         procedure ChangeOwnerAndName(st:TSymtable;const aname:tsymstr);
+         procedure ChangeOwner(st:TSymTable);
+         procedure ChangeOwnerAndName(st:TSymTable;const aname:tsymstr);
          procedure IncRefCount;
          procedure IncRefCountBy(AValue : longint);
          procedure MaybeCreateRefList;
          procedure AddRef;
-         procedure register_sym; virtual; abstract;
-         property is_registered:boolean read registered;
+         procedure RegisterSym; virtual; abstract;
+         property IsRegistered:boolean read registered;
       end;
 
-      tsymarr = array[0..maxlongint div sizeof(pointer)-1] of tsym;
-      psymarr = ^tsymarr;
+      TSymArr = array[0..maxlongint div sizeof(pointer)-1] of TSym;
+      PSymArr = ^TSymArr;
 
 {************************************************
                    TDeref
 ************************************************}
 
-      tderef = record
+      TDeref = record
         dataidx : longint;
         procedure reset;
         procedure build(s:TObject);
         function  resolve:TObject;
      end;
-     pderef = ^tderef;
+     PDeref = ^TDeref;
 
 {************************************************
                    tpropaccesslist
 ************************************************}
 
-      ppropaccesslistitem = ^tpropaccesslistitem;
-      tpropaccesslistitem = record
-        sltype : tsltype;
-        next   : ppropaccesslistitem;
+      PPropAccessListItem = ^TPropAccessListItem;
+      TPropAccessListItem = record
+        sltype : TSLType;
+        next   : PPropAccessListItem;
         case byte of
-          0 : (sym : tsym; symderef : tderef);
-          1 : (value  : TConstExprInt; valuedef: tdef; valuedefderef:tderef);
-          2 : (def: tdef; defderef:tderef);
+          0 : (sym : TSym; symderef : TDeref);
+          1 : (value  : TConstExprInt; valuedef: TDef; valuedefderef:TDeref);
+          2 : (def: TDef; defderef:TDeref);
       end;
 
-      tpropaccesslist = class
-        procdef  : tdef;
-        procdefderef : tderef;
+      TPropAccessList = class
+        procdef  : TDef;
+        procdefderef : TDeref;
         firstsym,
-        lastsym  : ppropaccesslistitem;
+        lastsym  : PPropAccessListItem;
         constructor create;
         destructor  destroy;override;
         function  empty:boolean;
-        function getcopy: tpropaccesslist;
-        procedure addsym(slt:tsltype;p:tsym);
-        procedure addconst(slt:tsltype;const v:TConstExprInt;d:tdef);
-        procedure addtype(slt:tsltype;d:tdef);
-        procedure addsymderef(slt:tsltype;d:tderef);
-        procedure addconstderef(slt:tsltype;const v:TConstExprInt;d:tderef);
-        procedure addtypederef(slt:tsltype;d:tderef);
+        function getcopy: TPropAccessList;
+        procedure addsym(slt:TSLType;p:TSym);
+        procedure addconst(slt:TSLType;const v:TConstExprInt;d:TDef);
+        procedure addtype(slt:TSLType;d:TDef);
+        procedure addsymderef(slt:TSLType;d:TDeref);
+        procedure addconstderef(slt:TSLType;const v:TConstExprInt;d:TDeref);
+        procedure addtypederef(slt:TSLType;d:TDeref);
         procedure clear;
         procedure resolve;
         procedure buildderef;
@@ -206,20 +206,20 @@ interface
 {************************************************
                 Tcompilerppufile
 ************************************************}
-       tcompilerppufile=class(tppufile)
+       TCompilerPPUFile=class(tppufile)
        public
          procedure checkerror;
          procedure getguid(var g: tguid);
          function  getexprint:Tconstexprint;
          procedure getposinfo(var p:TFilePosInfo);
-         procedure getderef(var d:tderef);
-         function  getpropaccesslist:tpropaccesslist;
+         procedure getderef(var d:TDeref);
+         function  getpropaccesslist:TPropAccessList;
          function  getasmsymbol:tasmsymbol;
          procedure putguid(const g: tguid);
          procedure putexprint(const v:tconstexprint);
          procedure putposinfo(const p:TFilePosInfo);
-         procedure putderef(const d:tderef);
-         procedure putpropaccesslist(p:tpropaccesslist);
+         procedure putderef(const d:TDeref);
+         procedure putpropaccesslist(p:TPropAccessList);
          procedure putasmsymbol(s:tasmsymbol);
        protected
          procedure RaiseAssertion(Code: Longint); override;
@@ -234,7 +234,7 @@ interface
       memprocnodetree : tmemdebug;
 {$endif MEMDEBUG}
 
-    function  FindUnitSymtable(st:TSymtable):TSymtable;
+    function  FindUnitSymtable(st:TSymTable):TSymTable;
 
 
 implementation
@@ -249,7 +249,7 @@ implementation
                                 Utils
 ****************************************************************************}
 
-    function FindUnitSymtable(st:TSymtable):TSymtable;
+    function FindUnitSymtable(st:TSymTable):TSymTable;
       begin
         result:=nil;
         repeat
@@ -283,20 +283,20 @@ implementation
                                 Tdef
 ****************************************************************************}
 
-    function tdef.registered: boolean;
+    function TDef.registered: boolean;
       begin
         result:=defid>defid_not_registered;
       end;
 
 
-    procedure tdef.init_defid;
+    procedure TDef.InitDefID;
       begin
         if defid=0 then
           defid:=defid_not_registered;
       end;
 
 {$ifdef DEBUG_NODE_XML}
-    procedure tdef.XMLPrintDefTree(var T: Text; Sym: TSym);
+    procedure TDef.XMLPrintDefTree(var T: Text; Sym: TSym);
       begin
         Write(T, PrintNodeIndention, '<definition');
         XMLPrintDefInfo(T, Sym);
@@ -312,7 +312,7 @@ implementation
       end;
 
 
-    procedure tdef.XMLPrintDefInfo(var T: Text; Sym: TSym);
+    procedure TDef.XMLPrintDefInfo(var T: Text; Sym: TSym);
       var
         i: TSymOption;
         first: Boolean;
@@ -340,7 +340,7 @@ implementation
       end;
 
 
-    procedure tdef.XMLPrintDefData(var T: Text; Sym: TSym);
+    procedure TDef.XMLPrintDefData(var T: Text; Sym: TSym);
       begin
         WriteLn(T, PrintNodeIndention, '<size>', size, '</size>');
 
@@ -367,14 +367,14 @@ implementation
       end;
 
 
-    function tdef.XMLPrintType: ansistring;
+    function TDef.XMLPrintType: ansistring;
       begin
         Result := SanitiseXMLString(GetTypeName);
       end;
 
 {$endif DEBUG_NODE_XML}
 
-    constructor tdef.create(dt:tdeftyp);
+    constructor TDef.create(dt:TDefTyp);
       begin
          inherited create;
          typ:=dt;
@@ -383,11 +383,11 @@ implementation
          defoptions:=[];
          dbg_state:=dbg_state_unused;
          stab_number:=0;
-         init_defid;
+         InitDefID;
       end;
 
 
-    destructor tdef.destroy;
+    destructor TDef.destroy;
       begin
         { set self to nil in registered_in_module's deflist, if the def has been
           registered, in order to avoid dangling pointers in registered_in_module.deflist }
@@ -404,7 +404,7 @@ implementation
       end;
 
 
-    function tdef.typename:string;
+    function TDef.typename:string;
       begin
         result:=OwnerHierarchyName;
         if assigned(typesym) and
@@ -416,7 +416,7 @@ implementation
       end;
 
 
-    function tdef.fulltypename:string;
+    function TDef.fulltypename:string;
       begin
         result:=fullownerhierarchyname(false,false);
         if assigned(typesym) and
@@ -428,13 +428,13 @@ implementation
       end;
 
 
-    function tdef.GetTypeName : string;
+    function TDef.GetTypeName : string;
       begin
          GetTypeName:='<unknown type>'
       end;
 
 
-    function tdef.typesymbolprettyname:string;
+    function TDef.typesymbolprettyname:string;
       begin
         result:=OwnerHierarchyPrettyName;
         if assigned(typesym) then
@@ -444,7 +444,7 @@ implementation
       end;
 
 
-    function tdef.mangledparaname:string;
+    function TDef.mangledparaname:string;
       begin
         result:=OwnerHierarchyName;
         if assigned(typesym) then
@@ -454,13 +454,13 @@ implementation
       end;
 
 
-    function tdef.getmangledparaname:TSymStr;
+    function TDef.getmangledparaname:TSymStr;
       begin
          result:='<unknown type>';
       end;
 
 
-    function tdef.unique_id_str: string;
+    function TDef.UniqueIDStr: string;
       begin
         if (defid=defid_not_registered) or
            (defid=defid_registered_nost) then
@@ -477,34 +477,34 @@ implementation
         { use deflist_index so that it will remain the same if def first gets a
           defid just for the unique id (as above) and later it gets registered
           because it must be saved to the ppu }
-        result:=hexstr(deflist_index,sizeof(defid)*2);
+        result:=hexstr(DefListIndex,sizeof(defid)*2);
       end;
 
 
-    function tdef.getparentdef:tdef;
+    function TDef.getparentdef:TDef;
       begin
         result:=nil;
       end;
 
 
-    function tdef.getsymtable(t:tgetsymtable):TSymtable;
+    function TDef.getsymtable(t:TGetSymTable):TSymTable;
       begin
         result:=nil;
       end;
 
 
-    function tdef.packedbitsize:asizeint;
+    function TDef.packedbitsize:asizeint;
       begin
         result:=size * 8;
       end;
 
 
-    function tdef.structalignment: shortint;
+    function TDef.structalignment: shortint;
       begin
         result:=alignment;
       end;
 
-    function tdef.aggregatealignment: shortint;
+    function TDef.aggregatealignment: shortint;
       begin
         if Assigned(Owner) and Assigned(Owner.defowner) and (Owner.defowner is TDef) and (Owner.defowner <> Self) then
           Result := max(structalignment, TDef(Owner.defowner).aggregatealignment)
@@ -513,7 +513,7 @@ implementation
       end;
 
 
-    procedure tdef.ChangeOwner(st:TSymtable);
+    procedure TDef.ChangeOwner(st:TSymTable);
       begin
         if assigned(Owner) and owner.deflist.OwnsObjects then
           Owner.DefList.extract(self);
@@ -522,9 +522,9 @@ implementation
       end;
 
 
-    function tdef.getreusablesymtab: tsymtable;
+    function TDef.getreusablesymtab: TSymTable;
       var
-        origowner: TSymtable;
+        origowner: TSymTable;
       begin
         { if the original def was in a localsymtable, don't create a
           reusable copy in the unit's staticsymtable since the localsymtable
@@ -547,22 +547,22 @@ implementation
       end;
 
 
-    procedure tdef.register_created_object_type;
+    procedure TDef.RegisterCreatedObjectType;
       begin
       end;
 
 
-    function tdef.get_top_level_symtable(skipprocdefs: boolean): tsymtable;
+    function TDef.GetTopLevelSymTable(skipprocdefs: boolean): TSymTable;
       begin
         result:=owner;
         while assigned(result) and
               assigned(result.defowner) and
               (skipprocdefs or (result.symtabletype in [ObjectSymtable,recordsymtable])) do
-          result:=tdef(result.defowner).owner;
+          result:=TDef(result.defowner).owner;
       end;
 
 
-    function tdef.deflist_index: longint;
+    function TDef.DefListIndex: longint;
       begin
         if defid<defid_not_registered then
           result:=-(defid-defid_not_registered+1)
@@ -603,13 +603,13 @@ implementation
                           TSYM (base for all symtypes)
 ****************************************************************************}
 
-    function tsym.registered: boolean;
+    function TSym.registered: boolean;
       begin
         result:=symid>symid_not_registered;
       end;
 
 
-    constructor tsym.create(st:tsymtyp;const aname:string);
+    constructor TSym.create(st:TSymTyp;const aname:string);
       begin
          inherited CreateNotOwned;
          realname:=aname;
@@ -623,7 +623,7 @@ implementation
          symid:=symid_not_registered;
       end;
 
-    destructor  Tsym.destroy;
+    destructor  TSym.destroy;
       begin
         stringdispose(deprecatedmsg);
         RefList.Free;
@@ -631,7 +631,7 @@ implementation
         inherited Destroy;
       end;
 
-    procedure Tsym.IncRefCount;
+    procedure TSym.IncRefCount;
       begin
         inc(refs);
         if cs_browser in CurrentSettings.moduleswitches then
@@ -641,18 +641,18 @@ implementation
           end;
       end;
 
-    procedure Tsym.IncRefCountBy(AValue : longint);
+    procedure TSym.IncRefCountBy(AValue : longint);
       begin
         inc(refs,AValue);
       end;
 
-    procedure Tsym.MaybeCreateRefList;
+    procedure TSym.MaybeCreateRefList;
       begin
         if not assigned(reflist) then
           reflist:=TRefLinkedList.create;
       end;
 
-    procedure Tsym.AddRef;
+    procedure TSym.AddRef;
       var
         RefItem: TRefItem;
       begin
@@ -660,24 +660,24 @@ implementation
         RefList.Concat(RefItem);
       end;
 
-    procedure Tsym.buildderef;
+    procedure TSym.buildderef;
       begin
       end;
 
 
-    procedure Tsym.deref;
+    procedure TSym.deref;
       begin
       end;
 
 
-    function tsym.mangledname : TSymStr;
+    function TSym.mangledname : TSymStr;
       begin
         internalerror(200204171);
         result:='';
       end;
 
 
-    function tsym.prettyname : string;
+    function TSym.prettyname : string;
       var
        i: SizeInt;
       begin
@@ -689,7 +689,7 @@ implementation
       end;
 
 
-    procedure tsym.ChangeOwner(st:TSymtable);
+    procedure TSym.ChangeOwner(st:TSymTable);
       begin
         if assigned(owner) and owner.SymList.OwnsObjects then
           owner.symlist.extract(self);
@@ -698,7 +698,7 @@ implementation
       end;
 
 
-    procedure tsym.ChangeOwnerAndName(st:TSymtable;const aname:tsymstr);
+    procedure TSym.ChangeOwnerAndName(st:TSymTable;const aname:tsymstr);
       begin
         if assigned(owner) and owner.SymList.OwnsObjects then
           owner.symlist.extract(self);
@@ -711,7 +711,7 @@ implementation
                                  tpropaccesslist
 ****************************************************************************}
 
-    constructor tpropaccesslist.create;
+    constructor TPropAccessList.create;
       begin
         procdef:=nil; { needed for procedures }
         firstsym:=nil;
@@ -719,22 +719,22 @@ implementation
       end;
 
 
-    destructor tpropaccesslist.destroy;
+    destructor TPropAccessList.destroy;
       begin
         clear;
       end;
 
 
-    function tpropaccesslist.empty:boolean;
+    function TPropAccessList.empty:boolean;
       begin
         empty:=(firstsym=nil);
       end;
 
-    function tpropaccesslist.getcopy: tpropaccesslist;
+    function TPropAccessList.getcopy: TPropAccessList;
       var
-        hp, dest : ppropaccesslistitem;
+        hp, dest : PPropAccessListItem;
       begin
-        result:=tpropaccesslist.create;
+        result:=TPropAccessList.create;
         result.procdef:=procdef;
         hp:=firstsym;
         while assigned(hp) do
@@ -752,9 +752,9 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.clear;
+    procedure TPropAccessList.clear;
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         while assigned(firstsym) do
          begin
@@ -768,12 +768,12 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.addsym(slt:tsltype;p:tsym);
+    procedure TPropAccessList.addsym(slt:TSLType;p:TSym);
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         new(hp);
-        fillchar(hp^,sizeof(tpropaccesslistitem),0);
+        fillchar(hp^,sizeof(TPropAccessListItem),0);
         hp^.sltype:=slt;
         hp^.sym:=p;
         hp^.symderef.reset;
@@ -785,12 +785,12 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.addconst(slt:tsltype;const v:TConstExprInt;d:tdef);
+    procedure TPropAccessList.addconst(slt:TSLType;const v:TConstExprInt;d:TDef);
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         new(hp);
-        fillchar(hp^,sizeof(tpropaccesslistitem),0);
+        fillchar(hp^,sizeof(TPropAccessListItem),0);
         hp^.sltype:=slt;
         hp^.value:=v;
         hp^.valuedef:=d;
@@ -803,12 +803,12 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.addtype(slt:tsltype;d:tdef);
+    procedure TPropAccessList.addtype(slt:TSLType;d:TDef);
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         new(hp);
-        fillchar(hp^,sizeof(tpropaccesslistitem),0);
+        fillchar(hp^,sizeof(TPropAccessListItem),0);
         hp^.sltype:=slt;
         hp^.def:=d;
         hp^.defderef.reset;
@@ -820,32 +820,32 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.addsymderef(slt:tsltype;d:tderef);
+    procedure TPropAccessList.addsymderef(slt:TSLType;d:TDeref);
       begin
         addsym(slt,nil);
         lastsym^.symderef:=d;
       end;
 
 
-    procedure tpropaccesslist.addconstderef(slt:tsltype;const v:TConstExprInt;d:tderef);
+    procedure TPropAccessList.addconstderef(slt:TSLType;const v:TConstExprInt;d:TDeref);
       begin
         addconst(slt,v,nil);
         lastsym^.valuedefderef:=d;
       end;
 
 
-    procedure tpropaccesslist.addtypederef(slt:tsltype;d:tderef);
+    procedure TPropAccessList.addtypederef(slt:TSLType;d:TDeref);
       begin
         addtype(slt,nil);
         lastsym^.defderef:=d;
       end;
 
 
-    procedure tpropaccesslist.resolve;
+    procedure TPropAccessList.resolve;
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
-        procdef:=tdef(procdefderef.resolve);
+        procdef:=TDef(procdefderef.resolve);
         hp:=firstsym;
         while assigned(hp) do
          begin
@@ -853,12 +853,12 @@ implementation
              sl_call,
              sl_load,
              sl_subscript :
-               hp^.sym:=tsym(hp^.symderef.resolve);
+               hp^.sym:=TSym(hp^.symderef.resolve);
              sl_absolutetype,
              sl_typeconv :
-               hp^.def:=tdef(hp^.defderef.resolve);
+               hp^.def:=TDef(hp^.defderef.resolve);
              sl_vec:
-               hp^.valuedef:=tdef(hp^.valuedefderef.resolve);
+               hp^.valuedef:=TDef(hp^.valuedefderef.resolve);
              else
               internalerror(2001102001);
            end;
@@ -867,9 +867,9 @@ implementation
       end;
 
 
-    procedure tpropaccesslist.buildderef;
+    procedure TPropAccessList.buildderef;
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         procdefderef.build(procdef);
         hp:=firstsym;
@@ -898,13 +898,13 @@ implementation
 ****************************************************************************}
 
 
-    procedure tderef.reset;
+    procedure TDeref.reset;
       begin
         dataidx:=-1;
       end;
 
 
-    procedure tderef.build(s:TObject);
+    procedure TDeref.build(s:TObject);
 
        procedure do_internal_error(i : integer);noreturn;
        // local proc so we do not have an implicit try..finally in the build proc.
@@ -920,7 +920,7 @@ implementation
 
       var
         len  : byte;
-        st   : TSymtable;
+        st   : TSymTable;
         data : array[0..255] of byte;
         idx : word;
 
@@ -930,26 +930,26 @@ implementation
         if assigned(s) then
          begin
 { TODO: ugly hack}
-           if s is tsym then
+           if s is TSym then
              begin
                { if it has been registered but it wasn't put in a symbol table,
                  this symbol shouldn't be written to a ppu }
-               if tsym(s).SymId=symid_registered_nost then
+               if TSym(s).SymId=symid_registered_nost then
                  do_internal_error(2015102504);
-               if not tsym(s).registered then
-                 tsym(s).register_sym;
-               st:=FindUnitSymtable(tsym(s).owner)
+               if not TSym(s).registered then
+                 TSym(s).RegisterSym;
+               st:=FindUnitSymtable(TSym(s).owner)
              end
-           else if s is tdef then
+           else if s is TDef then
              begin
                { same as above }
-               if tdef(s).defid=defid_registered_nost then
+               if TDef(s).defid=defid_registered_nost then
                  do_internal_error(2015102501);
-               if tdef(s).typ=errordef then
+               if TDef(s).typ=errordef then
                  do_internal_error(2024011501);
-               if not tdef(s).registered then
-                 tdef(s).register_def;
-               st:=FindUnitSymtable(tdef(s).owner);
+               if not TDef(s).registered then
+                 TDef(s).RegisterDef;
+               st:=FindUnitSymtable(TDef(s).owner);
              end
            else
              // Unknown object type
@@ -962,16 +962,16 @@ implementation
                unaligned(PUint16(@data[len+1{..len+2}])^):=NtoBE(uint16(idx));
                inc(len,3);
              end;
-           if s is tsym then
+           if s is TSym then
              begin
                data[len]:=ord(deref_symid);
-               unaligned(PInt32(@data[len+1{..len+4}])^):=NtoBE(int32(tsym(s).symid));
+               unaligned(PInt32(@data[len+1{..len+4}])^):=NtoBE(int32(TSym(s).symid));
                inc(len,5);
              end
            else
              begin
                data[len]:=ord(deref_defid);
-               unaligned(PInt32(@data[len+1{..len+4}])^):=NtoBE(int32(tdef(s).defid));
+               unaligned(PInt32(@data[len+1{..len+4}])^):=NtoBE(int32(TDef(s).defid));
                inc(len,5);
              end;
          end
@@ -991,10 +991,10 @@ implementation
       end;
 
 
-    function tderef.resolve:TObject;
+    function TDeref.resolve:TObject;
       var
         pm     : tmodule;
-        typ    : tdereftype;
+        typ    : TDerefType;
         idx    : longint;
         i      : aint;
         len    : byte;
@@ -1018,7 +1018,7 @@ implementation
         i:=0;
         while (i<len) do
           begin
-            typ:=tdereftype(data[i]);
+            typ:=TDerefType(data[i]);
             inc(i);
             case typ of
               deref_unit :
@@ -1031,13 +1031,13 @@ implementation
                 begin
                   idx:=BEtoN(unaligned(PInt32(@data[i{..i+3}])^));
                   inc(i,4);
-                  result:=tdef(pm.deflist[idx]);
+                  result:=TDef(pm.deflist[idx]);
                 end;
               deref_symid :
                 begin
                   idx:=BEtoN(unaligned(PInt32(@data[i{..i+3}])^));
                   inc(i,4);
-                  result:=tsym(pm.symlist[idx]);
+                  result:=TSym(pm.symlist[idx]);
                 end;
               deref_nil :
                 begin
@@ -1055,18 +1055,18 @@ implementation
                             TCompilerPPUFile
 *****************************************************************************}
 
-    procedure tcompilerppufile.checkerror;
+    procedure TCompilerPPUFile.checkerror;
       begin
         if error then
          Message(unit_f_ppu_read_error);
       end;
 
-    procedure tcompilerppufile.RaiseAssertion(Code: Longint);
+    procedure TCompilerPPUFile.RaiseAssertion(Code: Longint);
       begin
         InternalError(Code);
       end;
 
-    procedure tcompilerppufile.getguid(var g: tguid);
+    procedure TCompilerPPUFile.getguid(var g: tguid);
       begin
         longint(g.d1):=getlongint;
         g.d2:=getword;
@@ -1075,7 +1075,7 @@ implementation
       end;
 
 
-    function tcompilerppufile.getexprint:Tconstexprint;
+    function TCompilerPPUFile.getexprint:Tconstexprint;
 
     begin
       getexprint.overflow:=false;
@@ -1084,7 +1084,7 @@ implementation
     end;
 
 
-    procedure tcompilerppufile.getposinfo(var p:TFilePosInfo);
+    procedure TCompilerPPUFile.getposinfo(var p:TFilePosInfo);
       var
         info : byte;
       begin
@@ -1117,23 +1117,23 @@ implementation
       end;
 
 
-    procedure tcompilerppufile.getderef(var d:tderef);
+    procedure TCompilerPPUFile.getderef(var d:TDeref);
       begin
         d.dataidx:=getlongint;
       end;
 
 
-    function tcompilerppufile.getpropaccesslist:tpropaccesslist;
+    function TCompilerPPUFile.getpropaccesslist:TPropAccessList;
       var
-        hderef : tderef;
-        slt : tsltype;
+        hderef : TDeref;
+        slt : TSLType;
         idx : longint;
-        p   : tpropaccesslist;
+        p   : TPropAccessList;
       begin
-        p:=tpropaccesslist.create;
+        p:=TPropAccessList.create;
         getderef(p.procdefderef);
         repeat
-          slt:=tsltype(getbyte);
+          slt:=TSLType(getbyte);
           case slt of
             sl_none :
               break;
@@ -1158,18 +1158,18 @@ implementation
               end;
           end;
         until false;
-        getpropaccesslist:=tpropaccesslist(p);
+        getpropaccesslist:=TPropAccessList(p);
       end;
 
 
-    function  tcompilerppufile.getasmsymbol:tasmsymbol;
+    function  TCompilerPPUFile.getasmsymbol:tasmsymbol;
       begin
         getlongint;
         getasmsymbol:=nil;
       end;
 
 
-    procedure tcompilerppufile.putposinfo(const p:TFilePosInfo);
+    procedure TCompilerPPUFile.putposinfo(const p:TFilePosInfo);
       var
         oldcrc : boolean;
         info   : byte;
@@ -1254,7 +1254,7 @@ implementation
       end;
 
 
-    procedure tcompilerppufile.putguid(const g: tguid);
+    procedure TCompilerPPUFile.putguid(const g: tguid);
       begin
         putlongint(longint(g.d1));
         putword(g.d2);
@@ -1263,7 +1263,7 @@ implementation
       end;
 
 
-    procedure Tcompilerppufile.putexprint(const v:Tconstexprint);
+    procedure TCompilerPPUFile.putexprint(const v:Tconstexprint);
 
     begin
       if v.overflow then
@@ -1273,7 +1273,7 @@ implementation
     end;
 
 
-    procedure tcompilerppufile.putderef(const d:tderef);
+    procedure TCompilerPPUFile.putderef(const d:TDeref);
       var
         oldcrc : boolean;
       begin
@@ -1293,9 +1293,9 @@ implementation
       end;
 
 
-    procedure tcompilerppufile.putpropaccesslist(p:tpropaccesslist);
+    procedure TCompilerPPUFile.putpropaccesslist(p:TPropAccessList);
       var
-        hp : ppropaccesslistitem;
+        hp : PPropAccessListItem;
       begin
         putderef(p.procdefderef);
         hp:=p.firstsym;
@@ -1324,7 +1324,7 @@ implementation
       end;
 
 
-    procedure tcompilerppufile.putasmsymbol(s:tasmsymbol);
+    procedure TCompilerPPUFile.putasmsymbol(s:tasmsymbol);
       begin
         putlongint(0);
       end;

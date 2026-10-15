@@ -38,7 +38,7 @@ interface
 ************************************************}
 
     type
-       TSymtable = class;
+       TSymTable = class;
 
        { THashedIDString }
 
@@ -58,9 +58,9 @@ interface
 ************************************************}
 
       TDefEntry = class
-         typ   : tdeftyp;
+         typ   : TDefTyp;
          defid : longint;
-         owner : TSymtable;
+         owner : TSymTable;
       end;
 
 
@@ -76,9 +76,9 @@ interface
          function  GetRealname: TSymStr;
          procedure SetRealname(const ANewName: TSymStr);
       public
-         typ   : tsymtyp;
+         typ   : TSymTyp;
          SymId : longint;
-         Owner : TSymtable;
+         Owner : TSymTable;
          destructor destroy;override;
          property RealName: TSymStr read GetRealName write SetRealName;
          property EscapedRealName: TSymStr read GetEscapedRealName;
@@ -88,7 +88,7 @@ interface
                  TSymtable
 ************************************************}
 
-       TSymtable = class
+       TSymTable = class
        public
           name      : pshortstring;
           realname  : pshortstring;
@@ -97,19 +97,19 @@ interface
           defowner  : TDefEntry; { for records and objects }
           moduleid  : longint;
           refcount  : smallint;
-          currentvisibility : tvisibility;
+          currentvisibility : TVisibility;
           currentlyoptional : boolean;
-          tableoptions : tsymtableoptions;
+          tableoptions : TSymTableOptions;
           { level of symtable, used for nested procedures }
           symtablelevel : byte;
           { do not allow to add new definitions, can be extended to symbols probably }
           sealed : boolean;
-          symtabletype  : TSymtabletype;
+          symtabletype  : TSymTableType;
           constructor Create(const s:string);
           { attention: only execute the a child's destructor if refcount is 1! }
           destructor  destroy;override;
           procedure freeinstance;override;
-          function  getcopy:TSymtable;
+          function  getcopy:TSymTable;
           procedure clear;virtual;
           function  checkduplicate(var s:THashedIDString;sym:TSymEntry):boolean;virtual;
           procedure insertsym(sym:TSymEntry;checkdup:boolean=true);virtual;
@@ -121,42 +121,42 @@ interface
           function  iscurrentunit:boolean;virtual;
           { includes the flag in this symtable and all parent symtables; if
             it's already set the flag is not set again }
-          procedure includeoption(option:tsymtableoption);
+          procedure includeoption(option:TSymTableOption);
           class function maybe_adjust_symname(const s:tsymstr):tsymstr;
        end;
 
-       psymtablestackitem = ^TSymtablestackitem;
-       TSymtablestackitem = record
-         symtable : TSymtable;
+       PSymTableStackItem = ^TSymTableStackItem;
+       TSymTableStackItem = record
+         symtable : TSymTable;
          saved_moduleid : longint;
-         next     : psymtablestackitem;
+         next     : PSymTableStackItem;
        end;
 
-       TSymtablestack = class
-         stack : psymtablestackitem;
+       TSymTableStack = class
+         stack : PSymTableStackItem;
          constructor create;
          destructor destroy;override;
          procedure clear;
-         function finditem(st:TSymtable):psymtablestackitem;
-         procedure push(st:TSymtable); virtual;
-         procedure pushafter(st,afterst:TSymtable); virtual;
-         procedure pop(st:TSymtable); virtual;
+         function finditem(st:TSymTable):PSymTableStackItem;
+         procedure push(st:TSymTable); virtual;
+         procedure pushafter(st,afterst:TSymTable); virtual;
+         procedure pop(st:TSymTable); virtual;
          { Remove st from anywhere in the stack without raising an error if
            it is not present.  Used by the CTask PPU-cycle fix to excise a
            symtable that is about to be freed (via tmodule.reset) from a
            suspended module's saved symtablestack before RestoreState runs. }
-         procedure remove(st:TSymtable);
-         function  top:TSymtable;
-         function getcopyuntil(finalst: TSymtable): TSymtablestack;
+         procedure remove(st:TSymTable);
+         function  top:TSymTable;
+         function getcopyuntil(finalst: TSymTable): TSymTableStack;
        end;
 
 
     var
-       initialmacrosymtable: TSymtable;   { macros initially defined by the compiler or
+       initialmacrosymtable: TSymTable;   { macros initially defined by the compiler or
                                             given on the command line. Is common
                                             for all files compiled and do not change. }
        macrosymtablestack,
-       symtablestack        : TSymtablestack;
+       symtablestack        : TSymTableStack;
 
 {$ifdef MEMDEBUG}
     var
@@ -247,7 +247,7 @@ implementation
                                 TSymtable
 ****************************************************************************}
 
-    constructor TSymtable.Create(const s:string);
+    constructor TSymTable.Create(const s:string);
       begin
          if s<>'' then
            begin
@@ -270,7 +270,7 @@ implementation
       end;
 
 
-    destructor TSymtable.destroy;
+    destructor TSymTable.destroy;
       begin
         { freeinstance decreases refcount }
         if refcount>1 then
@@ -287,7 +287,7 @@ implementation
       end;
 
 
-    procedure TSymtable.freeinstance;
+    procedure TSymTable.freeinstance;
       begin
         dec(refcount);
         if refcount=0 then
@@ -295,21 +295,21 @@ implementation
       end;
 
 
-    function TSymtable.getcopy:TSymtable;
+    function TSymTable.getcopy:TSymTable;
       begin
         inc(refcount);
         result:=self;
       end;
 
 
-    function TSymtable.iscurrentunit:boolean;
+    function TSymTable.iscurrentunit:boolean;
       begin
         result:=false;
       end;
 
-    procedure TSymtable.includeoption(option: tsymtableoption);
+    procedure TSymTable.includeoption(option: TSymTableOption);
       var
-        st: tsymtable;
+        st: TSymTable;
       begin
         if option in tableoptions then
           exit;
@@ -332,7 +332,7 @@ implementation
       end;
 
 
-    procedure TSymtable.clear;
+    procedure TSymTable.clear;
       var
         i : integer;
       begin
@@ -347,13 +347,13 @@ implementation
       end;
 
 
-    function TSymtable.checkduplicate(var s:THashedIDString;sym:TSymEntry):boolean;
+    function TSymTable.checkduplicate(var s:THashedIDString;sym:TSymEntry):boolean;
       begin
         result:=(FindWithHash(s)<>nil);
       end;
 
 
-    procedure TSymtable.insertsym(sym:TSymEntry;checkdup:boolean=true);
+    procedure TSymTable.insertsym(sym:TSymEntry;checkdup:boolean=true);
       var
         hashedid : THashedIDString;
         s : tsymstr;
@@ -381,7 +381,7 @@ implementation
       end;
 
 
-    procedure TSymtable.Deletesym(sym:TSymEntry);
+    procedure TSymTable.Deletesym(sym:TSymEntry);
       begin
         if sym.Owner<>self then
           internalerror(200611121);
@@ -389,14 +389,14 @@ implementation
       end;
 
 
-    procedure TSymtable.insertdef(def:TDefEntry);
+    procedure TSymTable.insertdef(def:TDefEntry);
       begin
          DefList.Add(def);
          def.owner:=self;
       end;
 
 
-    procedure TSymtable.deletedef(def:TDefEntry);
+    procedure TSymTable.deletedef(def:TDefEntry);
       begin
         if def.Owner<>self then
           internalerror(200611122);
@@ -405,19 +405,19 @@ implementation
       end;
 
 
-    function TSymtable.Find(const s : TIDString) : TSymEntry;
+    function TSymTable.Find(const s : TIDString) : TSymEntry;
       begin
         result:=TSymEntry(SymList.Find(s));
       end;
 
 
-    function TSymtable.FindWithHash(const s:THashedIDString) : TSymEntry;
+    function TSymTable.FindWithHash(const s:THashedIDString) : TSymEntry;
       begin
         result:=TSymEntry(SymList.FindWithHash(s.id,s.hash));
       end;
 
 
-    class function TSymtable.maybe_adjust_symname(const s:tsymstr):tsymstr;
+    class function TSymTable.maybe_adjust_symname(const s:tsymstr):tsymstr;
       begin
         if s[1]='$' then
           result:=copy(s,2,maxidlen+1)
@@ -432,21 +432,21 @@ implementation
                             Symtable Stack
 ****************************************************************************}
 
-    constructor TSymtablestack.create;
+    constructor TSymTableStack.create;
       begin
         stack:=nil;
       end;
 
 
-    destructor TSymtablestack.destroy;
+    destructor TSymTableStack.destroy;
       begin
         clear;
       end;
 
 
-    procedure TSymtablestack.clear;
+    procedure TSymTableStack.clear;
       var
-        hp : psymtablestackitem;
+        hp : PSymTableStackItem;
       begin
         while assigned(stack) do
           begin
@@ -456,7 +456,7 @@ implementation
           end;
       end;
 
-    function TSymtablestack.finditem(st: TSymtable): psymtablestackitem;
+    function TSymTableStack.finditem(st: TSymTable): PSymTableStackItem;
       begin
         if not assigned(stack) then
           internalerror(200601233);
@@ -465,9 +465,9 @@ implementation
           result:=result^.next;
       end;
 
-    procedure TSymtablestack.push(st:TSymtable);
+    procedure TSymTableStack.push(st:TSymTable);
       var
-        hp : psymtablestackitem;
+        hp : PSymTableStackItem;
       begin
         new(hp);
         hp^.symtable:=st;
@@ -475,9 +475,9 @@ implementation
         stack:=hp;
       end;
 
-    procedure TSymtablestack.pushafter(st,afterst:TSymtable);
+    procedure TSymTableStack.pushafter(st,afterst:TSymTable);
       var
-        hp,afteritem: psymtablestackitem;
+        hp,afteritem: PSymTableStackItem;
       begin
         afteritem:=finditem(afterst);
         if assigned(afteritem) then
@@ -491,9 +491,9 @@ implementation
           internalerror(201309171);
       end;
 
-    procedure TSymtablestack.pop(st:TSymtable);
+    procedure TSymTableStack.pop(st:TSymTable);
       var
-        hp : psymtablestackitem;
+        hp : PSymTableStackItem;
       begin
         if not assigned(stack) then
           internalerror(200601231);
@@ -505,12 +505,12 @@ implementation
       end;
 
 
-    procedure TSymtablestack.remove(st: TSymtable);
+    procedure TSymTableStack.remove(st: TSymTable);
       { Remove st from anywhere in the stack.  If st appears more than once
         (which should not happen in normal operation) all occurrences are
         removed.  A missing st is silently ignored. }
       var
-        prev, cur, nxt: psymtablestackitem;
+        prev, cur, nxt: PSymTableStackItem;
       begin
         prev:=nil;
         cur:=stack;
@@ -533,7 +533,7 @@ implementation
       end;
 
 
-    function TSymtablestack.top:TSymtable;
+    function TSymTableStack.top:TSymTable;
       begin
         if not assigned(stack) then
           internalerror(2006012304);
@@ -541,7 +541,7 @@ implementation
       end;
 
 
-  function addstitemreverse(st: TSymtablestack; finalst: tsymtable; curitem: psymtablestackitem): boolean;
+  function addstitemreverse(st: TSymTableStack; finalst: TSymTable; curitem: PSymTableStackItem): boolean;
     begin
       if not assigned(curitem) then
         begin
@@ -558,9 +558,9 @@ implementation
     end;
 
 
-  function TSymtablestack.getcopyuntil(finalst: TSymtable): TSymtablestack;
+  function TSymTableStack.getcopyuntil(finalst: TSymTable): TSymTableStack;
     begin
-      result:=TSymtablestack.create;
+      result:=TSymTableStack.create;
       addstitemreverse(result,finalst,stack);
     end;
 

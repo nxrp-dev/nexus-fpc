@@ -90,7 +90,7 @@ interface
             be translated into a tlocation so the rest of the code generator
             can work with it. This routine decides what the most appropriate
             tlocation is and sets self.location based on that. }
-          procedure set_result_location(realresdef: tstoreddef);virtual;
+          procedure set_result_location(realresdef: TStoredDef);virtual;
 
           { if an unused return value is in another location than a
             LOC_REFERENCE, this method will be called to perform the necessary
@@ -112,11 +112,11 @@ interface
 
           { loads the code pointer of a complex procvar (one with a self/
             parentfp/... and a procedure address) into a register and returns it }
-          procedure load_complex_procvar_codeptr(out reg: tregister; out callprocdef: tabstractprocdef); virtual;
+          procedure load_complex_procvar_codeptr(out reg: tregister; out callprocdef: TAbstractProcDef); virtual;
           { loads the procvar code pointer into a register with type def }
-          procedure load_procvar_codeptr(out reg: tregister; out callprocdef: tabstractprocdef);
+          procedure load_procvar_codeptr(out reg: tregister; out callprocdef: TAbstractProcDef);
 
-          procedure load_block_invoke(out toreg: tregister; out callprocdef: tabstractprocdef);
+          procedure load_block_invoke(out toreg: tregister; out callprocdef: TAbstractProcDef);
 
           function get_call_reg(list: TAsmList): tregister; virtual;
           procedure unget_call_reg(list: TAsmList; reg: tregister); virtual;
@@ -141,7 +141,7 @@ implementation
       wpobase;
 
 
-    function can_skip_para_push(parasym: tparavarsym): boolean;
+    function can_skip_para_push(parasym: TParaVarSym): boolean;
       begin
         { We can skip passing the parameter when:
             the parameter can be optimized as unused
@@ -154,7 +154,7 @@ implementation
           not paramanager.has_strict_proc_signature and
           (paramanager.use_fixed_stack or
            ((vo_is_parentfp in parasym.varoptions) and
-            (po_delphi_nested_cc in tabstractprocdef(parasym.owner.defowner).procoptions)) or
+            (po_delphi_nested_cc in TAbstractProcDef(parasym.owner.defowner).procoptions)) or
            (parasym.paraloc[callerside].Location^.Loc in [LOC_REGISTER,LOC_CREGISTER]));
       end;
 
@@ -178,7 +178,7 @@ implementation
 
     procedure tcgcallparanode.push_addr_para;
       var
-        valuedef: tdef;
+        valuedef: TDef;
       begin
         if not(left.location.loc in [LOC_CREFERENCE,LOC_REFERENCE]) then
           internalerror(200304235);
@@ -363,8 +363,8 @@ implementation
                        extends a pointer type }
                      (vo_is_self in parasym.varoptions) and
                      (callnode.procdefinition.owner.symtabletype=objectsymtable) and
-                     (is_objectpascal_helper(tdef(callnode.procdefinition.owner.defowner))) and
-                     (tobjectdef(callnode.procdefinition.owner.defowner).extendeddef.typ=pointerdef)
+                     (is_objectpascal_helper(TDef(callnode.procdefinition.owner.defowner))) and
+                     (TObjectDef(callnode.procdefinition.owner.defowner).extendeddef.typ=pointerdef)
                    )
                  ) and
                 paramanager.push_addr_param(parasym.varspez,parasym.vardef,
@@ -485,12 +485,12 @@ implementation
 
     function tcgcallnode.get_syscall_libbase_paraloc: pcgparalocation;
       var
-        hsym: tsym;
+        hsym: TSym;
       begin
-        hsym:=tsym(procdefinition.parast.Find('syscalllib'));
+        hsym:=TSym(procdefinition.parast.Find('syscalllib'));
         if not assigned(hsym) then
           internalerror(2016110605);
-        result:=tparavarsym(hsym).paraloc[callerside].location;
+        result:=TParaVarSym(hsym).paraloc[callerside].location;
         if not assigned(result) then
           internalerror(2016110604);
       end;
@@ -503,12 +503,12 @@ implementation
 
         case libparaloc^.loc of
           LOC_REGISTER:
-            reference_reset_base(tmpref,libparaloc^.register,-tprocdef(procdefinition).extnumber,ctempposinvalid,sizeof(pint),[]);
+            reference_reset_base(tmpref,libparaloc^.register,-TProcDef(procdefinition).extnumber,ctempposinvalid,sizeof(pint),[]);
           LOC_REFERENCE:
             begin
               reference_reset_base(tmpref,libparaloc^.reference.index,libparaloc^.reference.offset,ctempposinvalid,sizeof(pint),[]);
               cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,tmpref,reg);
-              reference_reset_base(tmpref,reg,-tprocdef(procdefinition).extnumber,ctempposinvalid,sizeof(pint),[]);
+              reference_reset_base(tmpref,reg,-TProcDef(procdefinition).extnumber,ctempposinvalid,sizeof(pint),[]);
             end;
           else
             begin
@@ -538,12 +538,12 @@ implementation
       end;
 
 
-    procedure tcgcallnode.load_block_invoke(out toreg: tregister; out callprocdef: tabstractprocdef);
+    procedure tcgcallnode.load_block_invoke(out toreg: tregister; out callprocdef: TAbstractProcDef);
       var
         href: treference;
-        literaldef: trecorddef;
+        literaldef: TRecordDef;
       begin
-        literaldef:=get_block_literal_type_for_proc(tabstractprocdef(right.resultdef));
+        literaldef:=get_block_literal_type_for_proc(TAbstractProcDef(right.resultdef));
         hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,cpointerdef.getreusable(literaldef),true);
         { load the invoke pointer }
         hlcg.reference_reset_base(href,right.resultdef,right.location.register,0,ctempposinvalid,right.resultdef.alignment,[]);
@@ -565,7 +565,7 @@ implementation
       end;
 
 
-    procedure tcgcallnode.set_result_location(realresdef: tstoreddef);
+    procedure tcgcallnode.set_result_location(realresdef: TStoredDef);
       begin
         if realresdef.is_intregable or
            realresdef.is_fpuregable or
@@ -608,7 +608,7 @@ implementation
 
     procedure tcgcallnode.handle_return_value;
       var
-        realresdef: tstoreddef;
+        realresdef: TStoredDef;
       begin
         { Check that the return location is set when the result is passed in
           a parameter }
@@ -622,9 +622,9 @@ implementation
           end;
 
         if not assigned(typedef) then
-          realresdef:=tstoreddef(resultdef)
+          realresdef:=TStoredDef(resultdef)
         else
-          realresdef:=tstoreddef(typedef);
+          realresdef:=TStoredDef(typedef);
 
           { get a tlocation that can hold the return value that's currently in
             the return value's tcgpara }
@@ -914,11 +914,11 @@ implementation
            end;
          setlength(paralocs,procdefinition.paras.count);
          for i:=0 to procdefinition.paras.count-1 do
-           paralocs[i]:=@tparavarsym(procdefinition.paras[i]).paraloc[callerside];
+           paralocs[i]:=@TParaVarSym(procdefinition.paras[i]).paraloc[callerside];
        end;
 
 
-     procedure tcgcallnode.load_complex_procvar_codeptr(out reg: tregister; out callprocdef: tabstractprocdef);
+     procedure tcgcallnode.load_complex_procvar_codeptr(out reg: tregister; out callprocdef: TAbstractProcDef);
        var
          srcreg: tregister;
        begin
@@ -951,7 +951,7 @@ implementation
        end;
 
 
-     procedure tcgcallnode.load_procvar_codeptr(out reg: tregister; out callprocdef: tabstractprocdef);
+     procedure tcgcallnode.load_procvar_codeptr(out reg: tregister; out callprocdef: TAbstractProcDef);
        begin
          if po_is_block in procdefinition.procoptions then
            load_block_invoke(reg,callprocdef)
@@ -988,7 +988,7 @@ implementation
     function tcgcallnode.is_parentfp_pushed: boolean;
       begin
         result:=(procdefinition.typ<>procdef) or
-          not can_skip_para_push(tparavarsym(tprocdef(procdefinition).parentfpsym));
+          not can_skip_para_push(TParaVarSym(TProcDef(procdefinition).parentfpsym));
       end;
 
 
@@ -1003,8 +1003,8 @@ implementation
         pop_size : longint;
         pvreg : tregister;
         retlocitem: pcgparalocation;
-        callpvdef: tabstractprocdef;
-        pd : tprocdef;
+        callpvdef: TAbstractProcDef;
+        pd : TProcDef;
         callref: boolean;
 {$ifdef vtentry}
         sym : tasmsymbol;
@@ -1072,17 +1072,17 @@ implementation
                otherwise optimised called methods are no longer registered)
              }
              if (po_virtualmethod in procdefinition.procoptions) and
-                not is_objectpascal_helper(tprocdef(procdefinition).struct) and
+                not is_objectpascal_helper(TProcDef(procdefinition).struct) and
                 assigned(methodpointer) and
                 (methodpointer.nodetype<>typen) and
                 (not assigned(CurrentProcInfo) or
                  wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
-               tobjectdef(tprocdef(procdefinition).struct).register_vmt_call(tprocdef(procdefinition).extnumber);
+               TObjectDef(TProcDef(procdefinition).struct).register_vmt_call(TProcDef(procdefinition).extnumber);
 {$ifdef vtentry}
-             if not is_interface(tprocdef(procdefinition)._class) then
+             if not is_interface(TProcDef(procdefinition)._class) then
                begin
                  inc(CurrentAsmData.NextVTEntryNr);
-                 CurrentAsmData.CurrAsmList.Concat(tai_symbol.CreateName('VTREF'+tostr(CurrentAsmData.NextVTEntryNr)+'_'+tprocdef(procdefinition).struct.vmt_mangledname+'$$'+tostr(vmtoffset div sizeof(pint)),AT_FUNCTION,0,voidpointerdef));
+                 CurrentAsmData.CurrAsmList.Concat(tai_symbol.CreateName('VTREF'+tostr(CurrentAsmData.NextVTEntryNr)+'_'+TProcDef(procdefinition).struct.vmt_mangledname+'$$'+tostr(vmtoffset div sizeof(pint)),AT_FUNCTION,0,voidpointerdef));
                end;
 {$endif vtentry}
 
@@ -1091,13 +1091,13 @@ implementation
              name_to_call:='';
              if not assigned(overrideprocnamedef) and
                 (po_virtualmethod in procdefinition.procoptions) and
-                not is_objectpascal_helper(tprocdef(procdefinition).struct) and
+                not is_objectpascal_helper(TProcDef(procdefinition).struct) and
                 assigned(methodpointer) and
                 (methodpointer.nodetype<>typen) and
                 not wpoinfomanager.can_be_devirtualized(methodpointer.resultdef,procdefinition,name_to_call) then
                begin
                  { virtual methods require an index }
-                 if tprocdef(procdefinition).extnumber=$ffff then
+                 if TProcDef(procdefinition).extnumber=$ffff then
                    internalerror(200304021);
 
                  { load the VMT entry (address of the virtual method) }
@@ -1106,7 +1106,7 @@ implementation
                  { register call for WPO }
                  if (not assigned(CurrentProcInfo) or
                      wpoinfomanager.symbol_live(CurrentProcInfo.procdef.mangledname)) then
-                   tobjectdef(tprocdef(procdefinition).struct).register_vmt_call(tprocdef(procdefinition).extnumber);
+                   TObjectDef(TProcDef(procdefinition).struct).register_vmt_call(TProcDef(procdefinition).extnumber);
 
                  if not(vmt_entry.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                    internalerror(2015052502);
@@ -1149,7 +1149,7 @@ implementation
                  else
                    begin
                      hlcg.g_ptrtypecast_reg(CurrentAsmData.CurrAsmList,vmt_entry.resultdef,cpointerdef.getreusable(procdefinition),pvreg);
-                     retloc:=hlcg.a_call_reg(CurrentAsmData.CurrAsmList,tabstractprocdef(procdefinition),pvreg,paralocs);
+                     retloc:=hlcg.a_call_reg(CurrentAsmData.CurrAsmList,TAbstractProcDef(procdefinition),pvreg,paralocs);
                      unget_call_reg(CurrentAsmData.CurrAsmList,pvreg);
                    end;
 
@@ -1186,19 +1186,19 @@ implementation
                       if name_to_call='' then
                         begin
                           if not assigned(overrideprocnamedef) then
-                            name_to_call:=tprocdef(procdefinition).mangledname
+                            name_to_call:=TProcDef(procdefinition).mangledname
                           else
                             name_to_call:=overrideprocnamedef.mangledname;
                         end;
                       if cnf_inherited in callnodeflags then
-                        retloc:=hlcg.a_call_name_inherited(CurrentAsmData.CurrAsmList,tprocdef(procdefinition),name_to_call,paralocs)
+                        retloc:=hlcg.a_call_name_inherited(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs)
                       { under certain conditions, a static call (i.e. without PIC) can be generated }
                       else if ((procdefinition.owner=CurrentProcInfo.procdef.owner) or
                          (procdefinition.owner.symtabletype in [localsymtable,staticsymtable])
                         ) and ((procdefinition.procoptions*[po_weakexternal,po_external])=[]) then
-                        retloc:=hlcg.a_call_name_static(CurrentAsmData.CurrAsmList,tprocdef(procdefinition),name_to_call,paralocs,typedef)
+                        retloc:=hlcg.a_call_name_static(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef)
                       else
-                        retloc:=hlcg.a_call_name(CurrentAsmData.CurrAsmList,tprocdef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.procoptions);
+                        retloc:=hlcg.a_call_name(CurrentAsmData.CurrAsmList,TProcDef(procdefinition),name_to_call,paralocs,typedef,po_weakexternal in procdefinition.procoptions);
                       extra_post_call_code;
                     end;
                end;

@@ -460,7 +460,7 @@ unit cgcpu;
       var
         para1,para2: tcgpara;
         href: treference;
-        pd: tprocdef;
+        pd: TProcDef;
       begin
         if (TargetInfo.system<>system_x86_64_win64) then
           begin

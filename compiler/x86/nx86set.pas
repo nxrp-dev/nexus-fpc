@@ -424,7 +424,7 @@ implementation
          hreg, hreg2,
          pleftreg   : tregister;
          opsize     : tcgsize;
-         opdef      : torddef;
+         opdef      : TOrdDef;
          orgopsize  : tcgsize;
          setparts   : array[1..8] of Tsetpart;
          setbase    : aint;
@@ -512,8 +512,8 @@ implementation
            to 32 bits, the left side may also not contain higher values or be signed !! }
          use_small:=is_smallset(right.resultdef) and
                     not is_signed(left.resultdef) and
-                    ((left.resultdef.typ=orddef) and (torddef(left.resultdef).high.svalue<32) or
-                     (left.resultdef.typ=enumdef) and (tenumdef(left.resultdef).max<32));
+                    ((left.resultdef.typ=orddef) and (TOrdDef(left.resultdef).high.svalue<32) or
+                     (left.resultdef.typ=enumdef) and (TEnumDef(left.resultdef).max<32));
 
          { Can we generate jumps? Possible for all types of sets }
          genjumps:=(right.nodetype=setconstn) and
@@ -638,7 +638,7 @@ implementation
          else
           begin
             location_reset(location,LOC_FLAGS,OS_NO);
-            setbase:=tsetdef(right.resultdef).setbase;
+            setbase:=TSetDef(right.resultdef).setbase;
 
             { We will now generated code to check the set itself, no jmps,
               handle smallsets separate, because it allows faster checks }
@@ -794,11 +794,11 @@ implementation
 
                   if (opsize >= OS_S8) or { = if signed }
                      ((left.resultdef.typ=orddef) and
-                      ((torddef(left.resultdef).low < int64(tsetdef(right.resultdef).setbase)) or
-                       (torddef(left.resultdef).high > int64(tsetdef(right.resultdef).setmax)))) or
+                      ((TOrdDef(left.resultdef).low < int64(TSetDef(right.resultdef).setbase)) or
+                       (TOrdDef(left.resultdef).high > int64(TSetDef(right.resultdef).setmax)))) or
                      ((left.resultdef.typ=enumdef) and
-                      ((tenumdef(left.resultdef).min < aint(tsetdef(right.resultdef).setbase)) or
-                       (tenumdef(left.resultdef).max > aint(tsetdef(right.resultdef).setmax)))) then
+                      ((TEnumDef(left.resultdef).min < aint(TSetDef(right.resultdef).setbase)) or
+                       (TEnumDef(left.resultdef).max > aint(TSetDef(right.resultdef).setmax)))) then
                     begin
                       { we have to check if the value is < 0 or > setmax }
 
@@ -806,7 +806,7 @@ implementation
                       CurrentAsmData.getjumplabel(l2);
 
                       { BE will be false for negative values }
-                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opsize,OC_BE,tsetdef(right.resultdef).setmax-tsetdef(right.resultdef).setbase,pleftreg,l);
+                      cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opsize,OC_BE,TSetDef(right.resultdef).setmax-TSetDef(right.resultdef).setbase,pleftreg,l);
                       cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
                       { reset carry flag }
                       CurrentAsmData.CurrAsmList.concat(taicpu.op_none(A_CLC,S_NO));

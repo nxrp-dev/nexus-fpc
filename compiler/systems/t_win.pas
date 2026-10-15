@@ -642,9 +642,9 @@ implementation
           begin
             case hp.sym.typ of
               staticvarsym:
-                hp.internalname:=tstaticvarsym(hp.sym).mangledname;
+                hp.internalname:=TStaticVarSym(hp.sym).mangledname;
               procsym:
-                hp.internalname:=tprocdef(tprocsym(hp.sym).ProcdefList[0]).mangledname;
+                hp.internalname:=TProcDef(TProcSym(hp.sym).ProcdefList[0]).mangledname;
               else
                 internalerror(200709272);
             end;

@@ -31,11 +31,11 @@ interface
 
     function is_funcret_sym(p:TSymEntry):boolean;
 
-    function equal_constsym(sym1,sym2:tconstsym; nanequal: boolean):boolean;
+    function equal_constsym(sym1,sym2:TConstSym; nanequal: boolean):boolean;
 
     function get_first_proc_str(Options: TProcOptions): ShortString;
 
-    function is_normal_fieldvarsym(sym: tsym): boolean; inline;
+    function is_normal_fieldvarsym(sym: TSym): boolean; inline;
 
 
 implementation
@@ -50,11 +50,11 @@ implementation
     function is_funcret_sym(p:TSymEntry):boolean;
       begin
         is_funcret_sym:=(p.typ in [absolutevarsym,localvarsym,paravarsym]) and
-                        (vo_is_funcret in tabstractvarsym(p).varoptions);
+                        (vo_is_funcret in TAbstractVarSym(p).varoptions);
       end;
 
 
-    function equal_constsym(sym1,sym2:tconstsym; nanequal: boolean):boolean;
+    function equal_constsym(sym1,sym2:TConstSym; nanequal: boolean):boolean;
       var
         p1,p2,pend : pchar;
       begin
@@ -123,7 +123,7 @@ implementation
       end;
 
 
-    function is_normal_fieldvarsym(sym: tsym): boolean; inline;
+    function is_normal_fieldvarsym(sym: TSym): boolean; inline;
       begin
         result:=
            (sym.typ=fieldvarsym) and

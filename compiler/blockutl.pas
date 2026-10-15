@@ -43,7 +43,7 @@ interface
 
     for a procvardef, return a basic recorddef representing a block literal
     with enough info to call this procvardef }
-  function get_block_literal_type_for_proc(pd: tabstractprocdef): trecorddef;
+  function get_block_literal_type_for_proc(pd: TAbstractProcDef): TRecordDef;
 
 implementation
 
@@ -56,25 +56,25 @@ implementation
     paramgr;
 
 
-  function get_block_literal_type_for_proc(pd: tabstractprocdef): trecorddef;
+  function get_block_literal_type_for_proc(pd: TAbstractProcDef): TRecordDef;
     begin
       if pd.typ=procvardef then
-        result:=trecorddef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_BASE',true).typedef)
+        result:=TRecordDef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_BASE',true).typedef)
       else if pd.is_addressonly then
-        result:=trecorddef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_STATIC',true).typedef)
+        result:=TRecordDef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_STATIC',true).typedef)
       { todo: nested functions and Objective-C methods }
       else if not is_nested_pd(pd) and
-              not is_objcclass(tdef(pd.owner.defowner)) then
-        result:=trecorddef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).typedef)
+              not is_objcclass(TDef(pd.owner.defowner)) then
+        result:=TRecordDef(search_named_unit_globaltype('BLOCKRTL','FPC_BLOCK_LITERAL_COMPLEX_PROCVAR',true).typedef)
       else
         internalerror(2014071304);
     end;
 
 
-  function get_block_literal_isa(orgpd: tprocdef): tstaticvarsym;
+  function get_block_literal_isa(orgpd: TProcDef): TStaticVarSym;
     var
-      srsym: tsym;
-      srsymtable: tsymtable;
+      srsym: TSym;
+      srsymtable: TSymTable;
       name: tidstring;
     begin
       if orgpd.is_addressonly then
@@ -84,11 +84,11 @@ implementation
       if not searchsym_in_named_module('BLOCKRTL',name,srsym,srsymtable) or
          (srsym.typ<>staticvarsym) then
         internalerror(2014071501);
-      result:=tstaticvarsym(srsym);
+      result:=TStaticVarSym(srsym);
     end;
 
 
-  function get_block_literal_flags(orgpd, invokepd: tprocdef): longint;
+  function get_block_literal_flags(orgpd, invokepd: TProcDef): longint;
     { BlockLiteralFlags }
     const
       BLOCK_HAS_COPY_DISPOSE    = 1 shl 25;
@@ -138,13 +138,13 @@ implementation
     end;
 
 
-  function get_block_literal_descriptor(invokepd: tprocdef; block_literal_size: tcgint): tstaticvarsym;
+  function get_block_literal_descriptor(invokepd: TProcDef; block_literal_size: tcgint): TStaticVarSym;
     var
-      descriptordef: tdef;
-      descriptor: tstaticvarsym;
+      descriptordef: TDef;
+      descriptor: TStaticVarSym;
       name: tsymstr;
-      srsym: tsym;
-      srsymtable: tsymtable;
+      srsym: TSym;
+      srsymtable: TSymTable;
     begin
       (*
         FPC_Block_descriptor_simple = record
@@ -162,13 +162,13 @@ implementation
       { we don't have to include the moduleid in this mangledname, because
         the invokepd is a local procedure in the current unit -> unique_id_str
         by itself is unique }
-      name:='__FPC_BLOCK_DESCRIPTOR_SIMPLE_'+invokepd.unique_id_str;
+      name:='__FPC_BLOCK_DESCRIPTOR_SIMPLE_'+invokepd.UniqueIDStr;
       { already exists -> return }
       if searchsym(name,srsym,srsymtable) then
         begin
           if srsym.typ<>staticvarsym then
             internalerror(2014071402);
-          result:=tstaticvarsym(srsym);
+          result:=TStaticVarSym(srsym);
           exit;
         end;
       { find the type of the descriptor structure }
@@ -188,26 +188,26 @@ implementation
   { creates a wrapper function for pd with the C calling convention and an
     extra first parameter pointing to the block "self" pointer. This wrapper is
     what will be assigned to the "invoke" field of the block }
-  function get_invoke_wrapper(orgpd: tprocdef; orgpv: tprocvardef): tprocdef;
+  function get_invoke_wrapper(orgpd: TProcDef; orgpv: TProcVarDef): TProcDef;
     var
       wrappername: TIDString;
-      srsym: tsym;
-      srsymtable: tsymtable;
+      srsym: TSym;
+      srsymtable: TSymTable;
     begin
       { the copy() is to ensure we don't overflow the maximum identifier length;
         the combination of owner.moduleid and defid will make the name unique }
-      wrappername:='__FPC_BLOCK_INVOKE_'+upper(copy(orgpd.procsym.realname,1,60))+'_'+tostr(orgpd.owner.moduleid)+'_'+orgpd.unique_id_str;
+      wrappername:='__FPC_BLOCK_INVOKE_'+upper(copy(orgpd.procsym.realname,1,60))+'_'+tostr(orgpd.owner.moduleid)+'_'+orgpd.UniqueIDStr;
       { already an invoke wrapper for this procsym -> reuse }
       if searchsym(wrappername,srsym,srsymtable) then
         begin
           if (srsym.typ<>procsym) or
-             (tprocsym(srsym).procdeflist.count<>1) then
+             (TProcSym(srsym).procdeflist.count<>1) then
             internalerror(2014071503);
-          result:=tprocdef(tprocsym(srsym).procdeflist[0]);
+          result:=TProcDef(TProcSym(srsym).procdeflist[0]);
           exit;
         end;
       { bare copy, so that self etc are not inserted }
-      result:=tprocdef(orgpd.getcopyas(procdef,pc_bareproc,'',true));
+      result:=TProcDef(orgpd.getcopyas(procdef,pc_bareproc,'',true));
       { will be called according to the ABI conventions }
       result.proccalloption:=pocall_cdecl;
       { add po_is_block so that a block "self" pointer gets added (of the type
@@ -234,11 +234,11 @@ implementation
 
 
   { compose a block literal for a static block (one without context) }
-  function get_global_proc_literal_sym(blockliteraldef: tdef; blockisasym: tstaticvarsym; blockflags: longint; invokepd: tprocdef; descriptor: tstaticvarsym): tstaticvarsym;
+  function get_global_proc_literal_sym(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: longint; invokepd: TProcDef; descriptor: TStaticVarSym): TStaticVarSym;
     var
       literalname: TIDString;
-      srsym: tsym;
-      srsymtable: tsymtable;
+      srsym: TSym;
+      srsymtable: TSymTable;
     begin
       literalname:='block_literal_for_'+invokepd.procsym.realname;
       { already exists -> return }
@@ -246,7 +246,7 @@ implementation
         begin
           if srsym.typ<>staticvarsym then
             internalerror(2014071506);
-          result:=tstaticvarsym(srsym);
+          result:=TStaticVarSym(srsym);
           exit;
         end;
       { create new block literal symbol }
@@ -269,7 +269,7 @@ implementation
 
 
   { compose an on-stack block literal for a "procedure of object" }
-  function get_pascal_method_literal(blockliteraldef: tdef; blockisasym: tstaticvarsym; blockflags: longint; procvarnode: TNode; invokepd: tprocdef; orgpv: tprocvardef; descriptor: tstaticvarsym): TNode;
+  function get_pascal_method_literal(blockliteraldef: TDef; blockisasym: TStaticVarSym; blockflags: longint; procvarnode: TNode; invokepd: TProcDef; orgpv: TProcVarDef; descriptor: TStaticVarSym): TNode;
     var
       statement: tstatementnode;
       literaltemp: ttempcreatenode;
@@ -317,25 +317,25 @@ implementation
     var
       procvarnode: TNode;
       { procvardef representing the original function we want to invoke }
-      orgpv: tprocvardef;
+      orgpv: TProcVarDef;
       { procdef of the original function we want to invoke }
       orgpd,
       { procdef for the invoke-wrapper that we generated to call the original
         function via a procvar }
-      invokepd: tprocdef;
-      blockliteraldef: tdef;
+      invokepd: TProcDef;
+      blockliteraldef: TDef;
       descriptor,
       blockisasym,
-      blockliteralsym: tstaticvarsym;
+      blockliteralsym: TStaticVarSym;
       blockflags: longint;
-      old_symtablestack: tsymtablestack;
+      old_symtablestack: TSymTableStack;
       sstate: tscannerstate;
     begin
       result:=nil;
       { supported? (should be caught earlier) }
       if (procloadnode.resultdef.typ<>procdef) or
-         is_nested_pd(tprocdef(procloadnode.resultdef)) or
-         is_objcclass(tdef(procloadnode.resultdef.owner.defowner)) then
+         is_nested_pd(TProcDef(procloadnode.resultdef)) or
+         is_objcclass(TDef(procloadnode.resultdef.owner.defowner)) then
         internalerror(2014071401);
 
       { add every symbol that we create here to the unit-level symbol table }
@@ -345,11 +345,11 @@ implementation
       replace_scanner('block literal creation',sstate);
 
       { def representing the original function }
-      orgpd:=tprocdef(procloadnode.resultdef);
+      orgpd:=TProcDef(procloadnode.resultdef);
       { def representing the corresponding procvar type }
       procvarnode:=ctypeconvnode.create_proc_to_procvar(procloadnode.getcopy);
       TypeCheckPass(procvarnode);
-      orgpv:=tprocvardef(procvarnode.resultdef);
+      orgpv:=TProcVarDef(procvarnode.resultdef);
       { get blockdef for this kind of procdef }
       blockliteraldef:=get_block_literal_type_for_proc(orgpd);
       { get the invoke wrapper }

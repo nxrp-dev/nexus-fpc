@@ -31,7 +31,7 @@ uses
 type
   tsyscallinfo = record
     token: ttoken;
-    procoption: tprocoption;
+    procoption: TProcOption;
     validon: set of TSystem;
   end;
   psyscallinfo = ^tsyscallinfo;
@@ -42,8 +42,8 @@ const
 
 function get_syscall_by_token(const token: ttoken): psyscallinfo;
 function get_syscall_by_name(const name: string): psyscallinfo;
-function get_default_syscall: tprocoption;
-procedure set_default_syscall(sc: tprocoption);
+function get_default_syscall: TProcOption;
+procedure set_default_syscall(sc: TProcOption);
 
 implementation
 
@@ -55,7 +55,7 @@ const
                              po_syscall_baselast, po_syscall_basefirst, po_syscall_basereg ];
 
 var
-  default_syscall_convention: tprocoption = po_none;
+  default_syscall_convention: TProcOption = po_none;
 
 function get_syscall_by_token(const token: ttoken): psyscallinfo;
 var
@@ -83,7 +83,7 @@ begin
       end;
 end;
 
-function get_default_syscall: tprocoption;
+function get_default_syscall: TProcOption;
 begin
   if not (default_syscall_convention in syscall_conventions_po) then
     internalerror(2016090302);
@@ -91,7 +91,7 @@ begin
   result:=default_syscall_convention;
 end;
 
-procedure set_default_syscall(sc: tprocoption);
+procedure set_default_syscall(sc: TProcOption);
 begin
   if not (sc in syscall_conventions_po) then
     internalerror(2016090301);

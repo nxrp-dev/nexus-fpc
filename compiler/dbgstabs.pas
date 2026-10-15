@@ -75,54 +75,54 @@ interface
         paravarsymref_stab: byte;
         writing_def_stabs  : boolean;
         global_stab_number : word;
-        vardatadef: trecorddef;
+        vardatadef: TRecordDef;
         tagtypeprefix: ansistring;
-        function use_tag_prefix(def : tdef) : boolean;
+        function use_tag_prefix(def : TDef) : boolean;
         { tsym writing }
         function  sym_var_value(const s:string;arg:pointer):string;
-        function  sym_stabstr_evaluate(sym:tsym;const s:string;const vars:array of string):ansistring;
-        procedure write_sym_stabstr(list:TAsmList;sym:tsym;const ss:ansistring);
-        function  staticvarsym_mangled_name(sym: tstaticvarsym):string;virtual;
-        procedure maybe_add_vmt_sym(list:TAsmList;def: tobjectdef);virtual;
+        function  sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):ansistring;
+        procedure write_sym_stabstr(list:TAsmList;sym:TSym;const ss:ansistring);
+        function  staticvarsym_mangled_name(sym: TStaticVarSym):string;virtual;
+        procedure maybe_add_vmt_sym(list:TAsmList;def: TObjectDef);virtual;
         { tdef writing }
-        function  def_stab_number(def:tdef):string;
-        function  def_stab_classnumber(def:tabstractrecorddef):string;
+        function  def_stab_number(def:TDef):string;
+        function  def_stab_classnumber(def:TAbstractRecordDef):string;
         function  def_var_value(const s:string;arg:pointer):string;
-        function  def_stabstr_evaluate(def:tdef;const s:string;const vars:array of string):ansistring;
-        procedure write_def_stabstr(list:TAsmList;def:tdef;const ss:ansistring);virtual;
+        function  def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):ansistring;
+        procedure write_def_stabstr(list:TAsmList;def:TDef;const ss:ansistring);virtual;
         procedure field_add_stabstr(p:TObject;arg:pointer);
         procedure method_add_stabstr(p:TObject;arg:pointer);
         procedure field_write_defs(p:TObject;arg:pointer);
-        function  get_enum_defstr(def: tenumdef; lowerbound: longint): ansistring;
-        function  get_appendsym_paravar_reg(sym:tparavarsym;const typ,stabstr:string;reg: tregister): ansistring;
+        function  get_enum_defstr(def: TEnumDef; lowerbound: longint): ansistring;
+        function  get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: tregister): ansistring;
         function  base_stabs_str(typ: longint; const other, desc, value: ansistring): ansistring;overload;
         function  base_stabs_str(const typ, other, desc, value: ansistring): ansistring;overload;virtual;
-        function  gen_procdef_startsym_stabs(def: tprocdef): TAsmList;virtual;
-        function  gen_procdef_endsym_stabs(def: tprocdef): TAsmList;virtual;
+        function  gen_procdef_startsym_stabs(def: TProcDef): TAsmList;virtual;
+        function  gen_procdef_endsym_stabs(def: TProcDef): TAsmList;virtual;
       protected
-        procedure appendsym_staticvar(list:TAsmList;sym:tstaticvarsym);override;
-        procedure appendsym_paravar(list:TAsmList;sym:tparavarsym);override;
-        procedure appendsym_localvar(list:TAsmList;sym:tlocalvarsym);override;
-        procedure appendsym_fieldvar(list:TAsmList;sym:tfieldvarsym);override;
-        procedure appendsym_const(list:TAsmList;sym:tconstsym);override;
-        procedure appendsym_type(list:TAsmList;sym:ttypesym);override;
-        procedure appendsym_label(list:TAsmList;sym:tlabelsym);override;
-        procedure beforeappenddef(list:TAsmList;def:tdef);override;
-        procedure appenddef_ord(list:TAsmList;def:torddef);override;
-        procedure appenddef_float(list:TAsmList;def:tfloatdef);override;
-        procedure appenddef_file(list:TAsmList;def:tfiledef);override;
-        procedure appenddef_enum(list:TAsmList;def:tenumdef);override;
-        procedure appenddef_array(list:TAsmList;def:tarraydef);override;
-        procedure appenddef_record(list:TAsmList;def:trecorddef);override;
-        procedure appenddef_object(list:TAsmList;def:tobjectdef);override;
-        procedure appenddef_pointer(list:TAsmList;def:tpointerdef);override;
-        procedure appenddef_string(list:TAsmList;def:tstringdef);override;
-        procedure appenddef_procvar(list:TAsmList;def:tprocvardef);override;
-        procedure appenddef_variant(list:TAsmList;def:tvariantdef);override;
-        procedure appenddef_set(list:TAsmList;def:tsetdef);override;
-        procedure appenddef_formal(list:TAsmList;def:tformaldef);override;
-        procedure appenddef_undefined(list:TAsmList;def: tundefineddef);override;
-        procedure appendprocdef(list:TAsmList;def:tprocdef);override;
+        procedure appendsym_staticvar(list:TAsmList;sym:TStaticVarSym);override;
+        procedure appendsym_paravar(list:TAsmList;sym:TParaVarSym);override;
+        procedure appendsym_localvar(list:TAsmList;sym:TLocalVarSym);override;
+        procedure appendsym_fieldvar(list:TAsmList;sym:TFieldVarSym);override;
+        procedure appendsym_const(list:TAsmList;sym:TConstSym);override;
+        procedure appendsym_type(list:TAsmList;sym:TTypeSym);override;
+        procedure appendsym_label(list:TAsmList;sym:TLabelSym);override;
+        procedure beforeappenddef(list:TAsmList;def:TDef);override;
+        procedure appenddef_ord(list:TAsmList;def:TOrdDef);override;
+        procedure appenddef_float(list:TAsmList;def:TFloatDef);override;
+        procedure appenddef_file(list:TAsmList;def:TFileDef);override;
+        procedure appenddef_enum(list:TAsmList;def:TEnumDef);override;
+        procedure appenddef_array(list:TAsmList;def:TArrayDef);override;
+        procedure appenddef_record(list:TAsmList;def:TRecordDef);override;
+        procedure appenddef_object(list:TAsmList;def:TObjectDef);override;
+        procedure appenddef_pointer(list:TAsmList;def:TPointerDef);override;
+        procedure appenddef_string(list:TAsmList;def:TStringDef);override;
+        procedure appenddef_procvar(list:TAsmList;def:TProcVarDef);override;
+        procedure appenddef_variant(list:TAsmList;def:TVariantDef);override;
+        procedure appenddef_set(list:TAsmList;def:TSetDef);override;
+        procedure appenddef_formal(list:TAsmList;def:TFormalDef);override;
+        procedure appenddef_undefined(list:TAsmList;def: TUndefinedDef);override;
+        procedure appendprocdef(list:TAsmList;def:TProcDef);override;
       public
         procedure inserttypeinfo;override;
         procedure insertmoduleinfo;override;
@@ -159,7 +159,7 @@ implementation
 
 
     var
-      current_procdef : tprocdef = nil;
+      current_procdef : TProcDef = nil;
 
     function GetOffsetStr(reference : TReference) : string;
     begin
@@ -177,8 +177,8 @@ implementation
         result := Sym.Name
       else
         result := Sym.RealName;
-      if (Sym.typ=typesym) and (ttypesym(Sym).Fprettyname<>'') then
-        result:=ttypesym(Sym).FPrettyName;
+      if (Sym.typ=typesym) and (TTypeSym(Sym).Fprettyname<>'') then
+        result:=TTypeSym(Sym).FPrettyName;
       if TargetAsm.dollarsign<>'$' then
         result:=ApplyAsmSymbolRestrictions(result);
     end;
@@ -331,7 +331,7 @@ implementation
                                TDef support
 ****************************************************************************}
 
-    function TDebugInfoStabs.def_stab_number(def:tdef):string;
+    function TDebugInfoStabs.def_stab_number(def:TDef):string;
       begin
         { procdefs only need a number, mark them as already written
           so they won't be written implicitly }
@@ -367,11 +367,11 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.def_stab_classnumber(def:tabstractrecorddef):string;
+    function TDebugInfoStabs.def_stab_classnumber(def:TAbstractRecordDef):string;
       begin
         if def.stab_number=0 then
           def_stab_number(def);
-        if (def.typ=objectdef) and (tobjectdef(def).objecttype=odt_class) then
+        if (def.typ=objectdef) and (TObjectDef(def).objecttype=odt_class) then
           result:=tostr(def.stab_number-1)
         else
           result:=tostr(def.stab_number);
@@ -380,23 +380,23 @@ implementation
 
     function TDebugInfoStabs.def_var_value(const s:string;arg:pointer):string;
       var
-        def : tdef;
+        def : TDef;
       begin
-        def:=tdef(arg);
+        def:=TDef(arg);
         result:='';
         if s='numberstring' then
           result:=def_stab_number(def)
         else if s='sym_name' then
           begin
             if assigned(def.typesym) then
-               result:=GetSymName(Ttypesym(def.typesym));
+               result:=GetSymName(TTypeSym(def.typesym));
           end
         else if s='savesize' then
           result:=tostr(def.size);
       end;
 
 
-    function TDebugInfoStabs.def_stabstr_evaluate(def:tdef;const s:string;const vars:array of string):ansistring;
+    function TDebugInfoStabs.def_stabstr_evaluate(def:TDef;const s:string;const vars:array of string):ansistring;
       begin
         result:=string_evaluate(s,@def_var_value,def,vars);
       end;
@@ -409,12 +409,12 @@ implementation
         newss   : ansistring;
         ss      : pansistring absolute arg;
       begin
-        if (tsym(p).visibility=vis_hidden) then
+        if (TSym(p).visibility=vis_hidden) then
           exit;
         { static variables from objects are like global objects }
-        if is_normal_fieldvarsym(Tsym(p)) then
+        if is_normal_fieldvarsym(TSym(p)) then
           begin
-           case tsym(p).visibility of
+           case TSym(p).visibility of
              vis_private,
              vis_strictprivate :
                spec:='/0';
@@ -424,23 +424,23 @@ implementation
              else
                spec:='';
            end;
-           if (tabstractrecordsymtable(tsym(p).owner).usefieldalignment<>bit_alignment) then
+           if (TAbstractRecordSymTable(TSym(p).owner).usefieldalignment<>bit_alignment) then
               begin
-                varsize:=tfieldvarsym(p).vardef.size;
+                varsize:=TFieldVarSym(p).vardef.size;
                 { open arrays made overflows !! }
                 { how can a record/object/class contain an open array? (JM) }
 
                 if varsize>$fffffff then
                   varsize:=$fffffff;
 
-                newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(tfieldvarsym(p)),
-                                     spec+def_stab_number(tfieldvarsym(p).vardef),
-                                     tostr(TConstExprInt(tfieldvarsym(p).fieldoffset)*8),tostr(varsize*8)])
+                newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(TFieldVarSym(p)),
+                                     spec+def_stab_number(TFieldVarSym(p).vardef),
+                                     tostr(TConstExprInt(TFieldVarSym(p).fieldoffset)*8),tostr(varsize*8)])
               end
             else
-              newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(tfieldvarsym(p)),
-                                   spec+def_stab_number(tfieldvarsym(p).vardef),
-                                   tostr(TConstExprInt(tfieldvarsym(p).fieldoffset)),tostr(tfieldvarsym(p).vardef.packedbitsize)]);
+              newss:=def_stabstr_evaluate(nil,'$1:$2,$3,$4;',[GetSymName(TFieldVarSym(p)),
+                                   spec+def_stab_number(TFieldVarSym(p).vardef),
+                                   tostr(TConstExprInt(TFieldVarSym(p).fieldoffset)),tostr(TFieldVarSym(p).vardef.packedbitsize)]);
             ss^:=ss^+newss;
           end;
       end;
@@ -449,21 +449,21 @@ implementation
     procedure TDebugInfoStabs.method_add_stabstr(p:TObject;arg:pointer);
       var
         virtualind,argnames : string;
-        pd     : tprocdef;
+        pd     : TProcDef;
         lindex : longint;
         arglength : byte;
         sp : char;
         i : integer;
-        parasym : tparavarsym;
+        parasym : TParaVarSym;
         newss   : ansistring;
         ss      : pansistring absolute arg;
       begin
-        if tsym(p).typ = procsym then
+        if TSym(p).typ = procsym then
          begin
-           if (sp_generic_dummy in tsym(p).symoptions) and
-               (tprocsym(p).procdeflist.count=0) then
+           if (sp_generic_dummy in TSym(p).symoptions) and
+               (TProcSym(p).procdeflist.count=0) then
              exit;
-           pd :=tprocdef(tprocsym(p).ProcdefList[0]);
+           pd :=TProcDef(TProcSym(p).ProcdefList[0]);
            if (po_virtualmethod in pd.procoptions) and
                not is_objectpascal_helper(pd.struct) then
              begin
@@ -487,7 +487,7 @@ implementation
            {we don't need another definition}
             for i:=0 to pd.paras.count-1 do
               begin
-                parasym:=tparavarsym(pd.paras[i]);
+                parasym:=TParaVarSym(pd.paras[i]);
                 if Parasym.vardef.typ = formaldef then
                   begin
                     case Parasym.varspez of
@@ -520,7 +520,7 @@ implementation
               end;
            { here 2A must be changed for private and protected }
            { 0 is private 1 protected and 2 public }
-           case tsym(p).visibility of
+           case TSym(p).visibility of
              vis_private,
              vis_strictprivate :
                sp:='0';
@@ -530,7 +530,7 @@ implementation
              else
                sp:='2';
            end;
-           newss:=def_stabstr_evaluate(nil,'$1::$2=##$3;:$4;$5A$6;',[GetSymName(tsym(p)),def_stab_number(pd),
+           newss:=def_stabstr_evaluate(nil,'$1::$2=##$3;:$4;$5A$6;',[GetSymName(TSym(p)),def_stab_number(pd),
                                     def_stab_number(pd.returndef),argnames,sp,
                                     virtualind]);
            ss^:=ss^+newss;
@@ -540,22 +540,22 @@ implementation
 
     procedure TDebugInfoStabs.field_write_defs(p:TObject;arg:pointer);
       begin
-        if is_normal_fieldvarsym(Tsym(p)) then
-          appenddef(TAsmList(arg),tfieldvarsym(p).vardef);
+        if is_normal_fieldvarsym(TSym(p)) then
+          appenddef(TAsmList(arg),TFieldVarSym(p).vardef);
       end;
 
-    function TDebugInfoStabs.use_tag_prefix(def : tdef) : boolean;
+    function TDebugInfoStabs.use_tag_prefix(def : TDef) : boolean;
       begin
         { stringdefs are not all considered as 'taggable',
           because ansi, unicode and wide strings are
           just associated to pointer types }
         use_tag_prefix:=(def.typ in tagtypes) and
                       ((def.typ<>stringdef) or
-                       (tstringdef(def).stringtype in [st_shortstring,st_longstring]));
+                       (TStringDef(def).stringtype in [st_shortstring,st_longstring]));
       end;
 
 
-    procedure TDebugInfoStabs.write_def_stabstr(list:TAsmList;def:tdef;const ss:ansistring);
+    procedure TDebugInfoStabs.write_def_stabstr(list:TAsmList;def:TDef;const ss:ansistring);
       var
         stabchar : string[2];
         symname  : string[20];
@@ -570,8 +570,8 @@ implementation
           use the class name (so it refers both to the struct and the
           pointer to the struct), otherwise gdb crashes (see tests/tbs/tw9766.pas) }
         if is_class(def) and
-           tobjectdef(def).writing_class_record_dbginfo then
-          st:=def_stabstr_evaluate(def,'"${sym_name}:$1$2=',[stabchar,def_stab_classnumber(tobjectdef(def))])
+           TObjectDef(def).writing_class_record_dbginfo then
+          st:=def_stabstr_evaluate(def,'"${sym_name}:$1$2=',[stabchar,def_stab_classnumber(TObjectDef(def))])
         else
           begin
             { Type names for types defined in the current unit are already written in
@@ -592,7 +592,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_string(list:TAsmList;def:tstringdef);
+    procedure TDebugInfoStabs.appenddef_string(list:TAsmList;def:TStringDef);
       var
         bytest,charst,longst : string;
         ss : ansistring;
@@ -635,10 +635,10 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.get_enum_defstr(def: tenumdef; lowerbound: longint): ansistring;
+    function TDebugInfoStabs.get_enum_defstr(def: TEnumDef; lowerbound: longint): ansistring;
       var
         i: longint;
-        p: tenumsym;
+        p: TEnumSym;
       begin
         { we can specify the size with @s<size>; prefix PM }
         if def.size <> std_param_align then
@@ -654,7 +654,7 @@ implementation
 
         for i := 0 to def.symtable.SymList.Count - 1 do
           begin
-            p := tenumsym(def.symtable.SymList[i]);
+            p := TEnumSym(def.symtable.SymList[i]);
             if p.value<def.minval then
               continue
             else
@@ -666,13 +666,13 @@ implementation
         result:=result+';';
       end;
 
-    procedure TDebugInfoStabs.appenddef_enum(list:TAsmList;def:tenumdef);
+    procedure TDebugInfoStabs.appenddef_enum(list:TAsmList;def:TEnumDef);
       begin
         write_def_stabstr(list,def,get_enum_defstr(def,def.minval));
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_ord(list:TAsmList;def:torddef);
+    procedure TDebugInfoStabs.appenddef_ord(list:TAsmList;def:TOrdDef);
       var
         ss : ansistring;
       begin
@@ -744,7 +744,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_float(list:TAsmList;def:tfloatdef);
+    procedure TDebugInfoStabs.appenddef_float(list:TAsmList;def:TFloatDef);
       var
         ss : ansistring;
       begin
@@ -763,7 +763,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_file(list:TAsmList;def:tfiledef);
+    procedure TDebugInfoStabs.appenddef_file(list:TAsmList;def:TFileDef);
       var
         ss : ansistring;
       begin
@@ -785,7 +785,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_record(list:TAsmList;def:trecorddef);
+    procedure TDebugInfoStabs.appenddef_record(list:TAsmList;def:TRecordDef);
       var
         ss : ansistring;
       begin
@@ -796,12 +796,12 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_object(list:TAsmList;def:tobjectdef);
+    procedure TDebugInfoStabs.appenddef_object(list:TAsmList;def:TObjectDef);
 
-        procedure do_write_object(list:TAsmList;def:tobjectdef);
+        procedure do_write_object(list:TAsmList;def:TObjectDef);
         var
           ss : ansistring;
-          anc    : tobjectdef;
+          anc    : TObjectDef;
         begin
           ss:='';
           { Write the invisible pointer for the class? }
@@ -813,7 +813,7 @@ implementation
               exit;
             end;
 
-          ss:='s'+tostr(tobjecTSymtable(def.symtable).datasize);
+          ss:='s'+tostr(TObjectSymTable(def.symtable).datasize);
           if assigned(def.childof) then
             begin
               {only one ancestor not virtual, public, at base offset 0 }
@@ -845,16 +845,16 @@ implementation
         end;
 
       var
-        oldtypesym : tsym;
+        oldtypesym : TSym;
       begin
-        tobjectdef(def).symtable.symList.ForEachCall(@field_write_defs,list);
+        TObjectDef(def).symtable.symList.ForEachCall(@field_write_defs,list);
         { classes require special code to write the record and the invisible pointer }
         if is_class(def) then
           begin
             { Write the record class itself }
-            tobjectdef(def).writing_class_record_dbginfo:=true;
+            TObjectDef(def).writing_class_record_dbginfo:=true;
             do_write_object(list,def);
-            tobjectdef(def).writing_class_record_dbginfo:=false;
+            TObjectDef(def).writing_class_record_dbginfo:=false;
             { Write the invisible pointer class }
             oldtypesym:=def.typesym;
             def.typesym:=nil;
@@ -868,7 +868,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_variant(list:TAsmList;def:tvariantdef);
+    procedure TDebugInfoStabs.appenddef_variant(list:TAsmList;def:TVariantDef);
       var
         ss : ansistring;
       begin
@@ -882,16 +882,16 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_pointer(list:TAsmList;def:tpointerdef);
+    procedure TDebugInfoStabs.appenddef_pointer(list:TAsmList;def:TPointerDef);
       var
         ss : ansistring;
       begin
-        ss:='*'+def_stab_number(tpointerdef(def).pointeddef);
+        ss:='*'+def_stab_number(TPointerDef(def).pointeddef);
         write_def_stabstr(list,def,ss);
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_set(list:TAsmList;def:tsetdef);
+    procedure TDebugInfoStabs.appenddef_set(list:TAsmList;def:TSetDef);
       var
         st,
         ss : ansistring;
@@ -908,7 +908,7 @@ implementation
             { anonymous subrange def }
             st:='":t'+elementdefstabnr+'=';
             if (def.elementdef.typ = enumdef) then
-              st:=st+get_enum_defstr(tenumdef(def.elementdef),def.setbase)
+              st:=st+get_enum_defstr(TEnumDef(def.elementdef),def.setbase)
             else
               st:=st+def_stabstr_evaluate(def.elementdef,'r'+elementdefstabnr+';$1;$2;',[tostr(longint(def.setbase)),tostr(longint(get_max_value(def.elementdef).svalue))]);
             st:=st+'",'+base_stabs_str(def_stab,'0','0','0');
@@ -922,7 +922,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_formal(list:TAsmList;def:tformaldef);
+    procedure TDebugInfoStabs.appenddef_formal(list:TAsmList;def:TFormalDef);
       var
         ss : ansistring;
       begin
@@ -931,7 +931,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_array(list:TAsmList;def:tarraydef);
+    procedure TDebugInfoStabs.appenddef_array(list:TAsmList;def:TArrayDef);
       var
         tempstr: shortstring;
         ss : ansistring;
@@ -946,32 +946,32 @@ implementation
               tempstr:='ar$1;$2;$3;$4';
             if is_dynamic_array(def) then
               tempstr:='*'+tempstr;
-            ss:=def_stabstr_evaluate(def,tempstr,[def_stab_number(tarraydef(def).rangedef),
-                     tostr(tarraydef(def).lowrange),tostr(tarraydef(def).highrange),def_stab_number(tarraydef(def).elementdef)])
+            ss:=def_stabstr_evaluate(def,tempstr,[def_stab_number(TArrayDef(def).rangedef),
+                     tostr(TArrayDef(def).lowrange),tostr(TArrayDef(def).highrange),def_stab_number(TArrayDef(def).elementdef)])
           end
         else
           begin
             // the @P seems to be ignored by gdb
-            tempstr:=def_stabstr_evaluate(tarraydef(def).rangedef,'r${numberstring};$1;$2;',
-              [tostr(tarraydef(def).lowrange),tostr(tarraydef(def).highrange)]);
+            tempstr:=def_stabstr_evaluate(TArrayDef(def).rangedef,'r${numberstring};$1;$2;',
+              [tostr(TArrayDef(def).lowrange),tostr(TArrayDef(def).highrange)]);
             // will only show highrange-lowrange+1 bits in gdb
             ss:=def_stabstr_evaluate(def,'@s$1;@S;S$2',
-              [tostr(TConstExprInt(tarraydef(def).elepackedbitsize) * tarraydef(def).elecount),tempstr]);
+              [tostr(TConstExprInt(TArrayDef(def).elepackedbitsize) * TArrayDef(def).elecount),tempstr]);
           end;
         write_def_stabstr(list,def,ss);
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_procvar(list:TAsmList;def:tprocvardef);
+    procedure TDebugInfoStabs.appenddef_procvar(list:TAsmList;def:TProcVarDef);
       var
         ss : ansistring;
       begin
-        ss:='*f'+def_stab_number(tprocvardef(def).returndef);
+        ss:='*f'+def_stab_number(TProcVarDef(def).returndef);
         write_def_stabstr(list,def,ss);
       end;
 
 
-    procedure TDebugInfoStabs.appenddef_undefined(list:TAsmList;def:tundefineddef);
+    procedure TDebugInfoStabs.appenddef_undefined(list:TAsmList;def:TUndefinedDef);
       var
         ss : ansistring;
       begin
@@ -980,16 +980,16 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.beforeappenddef(list:TAsmList;def:tdef);
+    procedure TDebugInfoStabs.beforeappenddef(list:TAsmList;def:TDef);
       var
-        anc : tobjectdef;
+        anc : TObjectDef;
         i : longint;
       begin
         { write dependencies first }
         case def.typ of
           stringdef :
             begin
-              if tstringdef(def).stringtype in [st_widestring,st_unicodestring] then
+              if TStringDef(def).stringtype in [st_widestring,st_unicodestring] then
                 appenddef(list,cwidechartype)
               else
                 begin
@@ -1011,39 +1011,39 @@ implementation
           classrefdef :
             appenddef(list,pvmttype);
           pointerdef :
-            appenddef(list,tpointerdef(def).pointeddef);
+            appenddef(list,TPointerDef(def).pointeddef);
           setdef :
-            appenddef(list,tsetdef(def).elementdef);
+            appenddef(list,TSetDef(def).elementdef);
           procvardef :
             begin
-              appenddef(list,tprocvardef(def).returndef);
-              if assigned(tprocvardef(def).parast) then
-                write_symtable_defs(list,tprocvardef(def).parast);
+              appenddef(list,TProcVarDef(def).returndef);
+              if assigned(TProcVarDef(def).parast) then
+                write_symtable_defs(list,TProcVarDef(def).parast);
             end;
           procdef :
             begin
-              appenddef(list,tprocdef(def).returndef);
-              if assigned(tprocdef(def).parast) then
-                write_symtable_defs(list,tprocdef(def).parast);
-              if assigned(tprocdef(def).localst) and
-                 (tprocdef(def).localst.symtabletype=localsymtable) then
-                write_symtable_defs(list,tprocdef(def).localst);
+              appenddef(list,TProcDef(def).returndef);
+              if assigned(TProcDef(def).parast) then
+                write_symtable_defs(list,TProcDef(def).parast);
+              if assigned(TProcDef(def).localst) and
+                 (TProcDef(def).localst.symtabletype=localsymtable) then
+                write_symtable_defs(list,TProcDef(def).localst);
             end;
           arraydef :
             begin
-              appenddef(list,tarraydef(def).rangedef);
-              appenddef(list,tarraydef(def).elementdef);
+              appenddef(list,TArrayDef(def).rangedef);
+              appenddef(list,TArrayDef(def).elementdef);
             end;
           recorddef :
-            trecorddef(def).symtable.symList.ForEachCall(@field_write_defs,list);
+            TRecordDef(def).symtable.symList.ForEachCall(@field_write_defs,list);
           enumdef :
-            if assigned(tenumdef(def).basedef) then
-              appenddef(list,tenumdef(def).basedef);
+            if assigned(TEnumDef(def).basedef) then
+              appenddef(list,TEnumDef(def).basedef);
           objectdef :
             begin
               { make sure we don't write child classdefs before their parent }
               { classdefs, because this crashes gdb                          }
-              anc:=tobjectdef(def);
+              anc:=TObjectDef(def);
               while assigned(anc.childof) do
                 begin
                   anc:=anc.childof;
@@ -1068,11 +1068,11 @@ implementation
                   end;
                 end;
               appenddef(list,vmtarraytype);
-              if assigned(tobjectdef(def).ImplementedInterfaces) then
-                for i:=0 to tobjectdef(def).ImplementedInterfaces.Count-1 do
-                  appenddef(list,TImplementedInterface(tobjectdef(def).ImplementedInterfaces[i]).IntfDef);
+              if assigned(TObjectDef(def).ImplementedInterfaces) then
+                for i:=0 to TObjectDef(def).ImplementedInterfaces.Count-1 do
+                  appenddef(list,TImplementedInterface(TObjectDef(def).ImplementedInterfaces[i]).IntfDef);
               { first the parents }
-              anc:=tobjectdef(def);
+              anc:=TObjectDef(def);
               while assigned(anc.childof) do
                 begin
                   anc:=anc.childof;
@@ -1098,11 +1098,11 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendprocdef(list:TAsmList;def:tprocdef);
+    procedure TDebugInfoStabs.appendprocdef(list:TAsmList;def:TProcDef);
       var
         hs : ansistring;
         templist : TAsmList;
-        prev_procdef : tprocdef;
+        prev_procdef : TProcDef;
       begin
         if not(def.in_currentunit) or
            { happens for init procdef of units without init section }
@@ -1132,9 +1132,9 @@ implementation
           write_symtable_syms(templist,def.localst);
 
         if assigned(def.funcretsym) and
-           (tabstractnormalvarsym(def.funcretsym).refs>0) then
+           (TAbstractNormalVarSym(def.funcretsym).refs>0) then
           begin
-            if tabstractnormalvarsym(def.funcretsym).localloc.loc=LOC_REFERENCE then
+            if TAbstractNormalVarSym(def.funcretsym).localloc.loc=LOC_REFERENCE then
               begin
 { TODO: Need to add gdb support for ret in param register calling}
                 if paramanager.ret_in_param(def.returndef,def) then
@@ -1143,11 +1143,11 @@ implementation
                   hs:='X';
                 templist.concat(Tai_stab.create(stabsdir,strpnew(
                    '"'+GetSymName(def.procsym)+':'+hs+def_stab_number(def.returndef)+'",'+
-                   base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(tabstractnormalvarsym(def.funcretsym).localloc.reference)))));
+                   base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(TAbstractNormalVarSym(def.funcretsym).localloc.reference)))));
                 if (m_result in CurrentSettings.modeswitches) then
                   templist.concat(Tai_stab.create(stabsdir,strpnew(
                      '"RESULT:'+hs+def_stab_number(def.returndef)+'",'+
-                     base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(tabstractnormalvarsym(def.funcretsym).localloc.reference)))));
+                     base_stabs_str(localvarsymref_stab,'0','0',getoffsetstr(TAbstractNormalVarSym(def.funcretsym).localloc.reference)))));
               end;
           end;
 
@@ -1166,7 +1166,7 @@ implementation
 
     function TDebugInfoStabs.sym_var_value(const s:string;arg:pointer):string;
       var
-        sym : tsym absolute arg;
+        sym : TSym absolute arg;
       begin
         result:='';
         if s='name' then
@@ -1182,13 +1182,13 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.sym_stabstr_evaluate(sym:tsym;const s:string;const vars:array of string):ansistring;
+    function TDebugInfoStabs.sym_stabstr_evaluate(sym:TSym;const s:string;const vars:array of string):ansistring;
       begin
         result:=string_evaluate(s,@sym_var_value,sym,vars);
       end;
 
 
-    procedure TDebugInfoStabs.write_sym_stabstr(list:TAsmList;sym:tsym;const ss:ansistring);
+    procedure TDebugInfoStabs.write_sym_stabstr(list:TAsmList;sym:TSym;const ss:ansistring);
       begin
         if ss='' then
           exit;
@@ -1197,24 +1197,24 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.staticvarsym_mangled_name(sym: tstaticvarsym): string;
+    function TDebugInfoStabs.staticvarsym_mangled_name(sym: TStaticVarSym): string;
       begin
         result:=ApplyAsmSymbolRestrictions(sym.mangledname);
       end;
 
 
-    procedure TDebugInfoStabs.maybe_add_vmt_sym(list: TAsmList; def: tobjectdef);
+    procedure TDebugInfoStabs.maybe_add_vmt_sym(list: TAsmList; def: TObjectDef);
       begin
         if (oo_has_vmt in def.objectoptions) and
            assigned(def.owner) and
            assigned(def.owner.name) then
-          list.concat(Tai_stab.create_ansistr(stabsdir,ansistring('"vmt_')+GetSymTableName(def.owner)+tobjectdef(def).objname^+':S'+
+          list.concat(Tai_stab.create_ansistr(stabsdir,ansistring('"vmt_')+GetSymTableName(def.owner)+TObjectDef(def).objname^+':S'+
                  def_stab_number(vmttype)+'",'+
-                 base_stabs_str(globalvarsym_inited_stab,'0','0',ApplyAsmSymbolRestrictions(tobjectdef(def).vmt_mangledname))));
+                 base_stabs_str(globalvarsym_inited_stab,'0','0',ApplyAsmSymbolRestrictions(TObjectDef(def).vmt_mangledname))));
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_fieldvar(list:TAsmList;sym:tfieldvarsym);
+    procedure TDebugInfoStabs.appendsym_fieldvar(list:TAsmList;sym:TFieldVarSym);
       var
         ss : ansistring;
       begin
@@ -1227,7 +1227,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_staticvar(list:TAsmList;sym:tstaticvarsym);
+    procedure TDebugInfoStabs.appendsym_staticvar(list:TAsmList;sym:TStaticVarSym);
       var
         ss : ansistring;
         st : string;
@@ -1281,7 +1281,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_localvar(list:TAsmList;sym:tlocalvarsym);
+    procedure TDebugInfoStabs.appendsym_localvar(list:TAsmList;sym:TLocalVarSym);
       var
         ss : ansistring;
         st : string;
@@ -1318,7 +1318,7 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.get_appendsym_paravar_reg(sym:tparavarsym;const typ,stabstr:string;reg: tregister): ansistring;
+    function TDebugInfoStabs.get_appendsym_paravar_reg(sym:TParaVarSym;const typ,stabstr:string;reg: tregister): ansistring;
       var
         ltyp: string[1];
         regidx : Tregisterindex;
@@ -1348,7 +1348,7 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.gen_procdef_startsym_stabs(def: tprocdef): TAsmList;
+    function TDebugInfoStabs.gen_procdef_startsym_stabs(def: TProcDef): TAsmList;
       var
         RType : Char;
         Obj,Info,
@@ -1379,8 +1379,8 @@ implementation
             if not(cs_gdb_valgrind in CurrentSettings.globalswitches) and
                (def.owner.symtabletype=localsymtable) and
                assigned(def.owner.defowner) and
-               assigned(tprocdef(def.owner.defowner).procsym) then
-              info := ','+GetSymName(def.procsym)+','+GetSymName(tprocdef(def.owner.defowner).procsym);
+               assigned(TProcDef(def.owner.defowner).procsym) then
+              info := ','+GetSymName(def.procsym)+','+GetSymName(TProcDef(def.owner.defowner).procsym);
           end;
         mangledname:=ApplyAsmSymbolRestrictions(def.mangledname);
         result.concat(Tai_stab.Create_ansistr(stabsdir,'"'+obj+':'+RType+def_stab_number(def.returndef)+info+'",'+
@@ -1388,7 +1388,7 @@ implementation
       end;
 
 
-    function TDebugInfoStabs.gen_procdef_endsym_stabs(def: tprocdef): TAsmList;
+    function TDebugInfoStabs.gen_procdef_endsym_stabs(def: TProcDef): TAsmList;
       var
         ss, mangledname: ansistring;
         stabsendlabel: tasmlabel;
@@ -1433,7 +1433,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_paravar(list:TAsmList;sym:tparavarsym);
+    procedure TDebugInfoStabs.appendsym_paravar(list:TAsmList;sym:TParaVarSym);
       var
         ss : ansistring;
         c  : string[1];
@@ -1453,8 +1453,8 @@ implementation
               else
                 internalerror(2003091815);
             end;
-            if (po_classmethod in tabstractprocdef(sym.owner.defowner).procoptions) or
-               (po_staticmethod in tabstractprocdef(sym.owner.defowner).procoptions) then
+            if (po_classmethod in TAbstractProcDef(sym.owner.defowner).procoptions) or
+               (po_staticmethod in TAbstractProcDef(sym.owner.defowner).procoptions) then
               begin
                 if (sym.localloc.loc=LOC_REFERENCE) then
                   ss:=sym_stabstr_evaluate(sym,'"pvmt:p$1",'+base_stabs_str(localvarsymref_stab,'0','0','$2'),
@@ -1468,13 +1468,13 @@ implementation
                 end
             else
               begin
-                if not(is_class(tprocdef(sym.owner.defowner).struct)) then
+                if not(is_class(TProcDef(sym.owner.defowner).struct)) then
                   c:='v'
                 else
                   c:='p';
                 if (sym.localloc.loc=LOC_REFERENCE) then
                   ss:=sym_stabstr_evaluate(sym,'"$$t:$1",'+base_stabs_str(localvarsymref_stab,'0','0','$2'),
-                        [c+def_stab_number(tprocdef(sym.owner.defowner).struct),getoffsetstr(sym.localloc.reference)])
+                        [c+def_stab_number(TProcDef(sym.owner.defowner).struct),getoffsetstr(sym.localloc.reference)])
                 else
                   begin
                     if (c='p') then
@@ -1483,7 +1483,7 @@ implementation
                       c:='a';
                     regidx:=findreg_by_number(sym.localloc.register);
                     ss:=sym_stabstr_evaluate(sym,'"$$t:$1",'+base_stabs_str(regvar_stab,'0','0','$2'),
-                        [c+def_stab_number(tprocdef(sym.owner.defowner).struct),tostr(regstabs_table[regidx])]);
+                        [c+def_stab_number(TProcDef(sym.owner.defowner).struct),tostr(regstabs_table[regidx])]);
                   end
               end;
           end
@@ -1491,7 +1491,7 @@ implementation
           begin
             st:=def_stab_number(sym.vardef);
 
-            if paramanager.push_addr_param(sym.varspez,sym.vardef,tprocdef(sym.owner.defowner).proccalloption) and
+            if paramanager.push_addr_param(sym.varspez,sym.vardef,TProcDef(sym.owner.defowner).proccalloption) and
                not(vo_has_local_copy in sym.varoptions) and
                not is_open_string(sym.vardef) then
               c:='v' { should be 'i' but 'i' doesn't work }
@@ -1568,7 +1568,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_const(list:TAsmList;sym:tconstsym);
+    procedure TDebugInfoStabs.appendsym_const(list:TAsmList;sym:TConstSym);
       var
         st : string;
         ss : ansistring;
@@ -1617,7 +1617,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_type(list:TAsmList;sym:ttypesym);
+    procedure TDebugInfoStabs.appendsym_type(list:TAsmList;sym:TTypeSym);
       var
         ss : ansistring;
         stabchar : string[2];
@@ -1634,7 +1634,7 @@ implementation
       end;
 
 
-    procedure TDebugInfoStabs.appendsym_label(list:TAsmList;sym:tlabelsym);
+    procedure TDebugInfoStabs.appendsym_label(list:TAsmList;sym:TLabelSym);
       var
         ss : ansistring;
       begin
@@ -1653,7 +1653,7 @@ implementation
         stabstypelist : TAsmList;
         storefilepos  : TFilePosInfo;
         i  : longint;
-        vardatatype : ttypesym;
+        vardatatype : TTypeSym;
       begin
         storefilepos:=CurrentFilePos;
         CurrentFilePos:=CurrentModule.mainfilepos;
@@ -1666,7 +1666,7 @@ implementation
 
         vardatatype:=try_search_system_type('TVARDATA');
         if assigned(vardatatype) then
-          vardatadef:=trecorddef(vardatatype.typedef);
+          vardatadef:=TRecordDef(vardatatype.typedef);
 
         { include symbol that will be referenced from the main to be sure to
           include this debuginfo .o file }
@@ -1712,8 +1712,8 @@ implementation
           begin
             if assigned(defnumberlist[i]) then
               begin
-                tdef(defnumberlist[i]).stab_number:=0;
-                tdef(defnumberlist[i]).dbg_state:=dbg_state_unused;
+                TDef(defnumberlist[i]).stab_number:=0;
+                TDef(defnumberlist[i]).dbg_state:=dbg_state_unused;
               end;
           end;
 
