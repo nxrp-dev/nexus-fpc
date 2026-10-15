@@ -62,6 +62,13 @@ for example, `univint/src/MacOS.pas` itself specifies `{$mode macpas}`, and
 
 ## Source selection and compiler settings
 
+The `users` package was restored on 2026-10-15 for fpGUI's Linux file-owner
+and group-name lookup. Its five runtime units are `users`, `pwd`, `grp`,
+`shadow`, and `crypth`, under `packages/users/src`. They depend on RTL units;
+`crypth` additionally links the host's `crypt` library. Namespace mappings and
+examples are retained using `.pas` filenames. The retired Make/fpmake drivers
+are not part of this restoration.
+
 - **FCL platform includes:** `fcl-base` used `src`, `src/<os>`, `src/unix` or
   `src/win`, plus `src/dummy` as a fallback. `fcl-net` used `src` with
   `src/unix` or `src/win` includes. `fcl-process` used `src`, then `src/unix`
