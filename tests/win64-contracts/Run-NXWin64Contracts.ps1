@@ -31,7 +31,7 @@ foreach ($name in @('clang','lld-link','llvm-dlltool','llvm-rc','llvm-readobj'))
 if ((Split-Path $tools['lld-link']) -ne (Split-Path $tools['clang'])) {
     throw 'Clang and LLD must come from the same LLVM bin directory used by FPC -FD.'
 }
-foreach ($path in @($compiler, "$units\system.ppu", $fpcres)) {
+foreach ($path in @($compiler, "$units\system.nxu", $fpcres)) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing matched build artifact: $path" }
 }
 if ((& $compiler -iTP) -ne 'x86_64' -or (& $compiler -iTO) -ne 'win64') { throw 'Requires native Win64 compiler' }
@@ -61,7 +61,7 @@ try {
     try {
         foreach ($tool in @('clang','lld-link','llvm-readobj')) { Invoke-Step ($tool+'-version') $tools[$tool] @('--version') }
         Invoke-Step 'compiler-version' $compiler @('-iV')
-        Get-FileHash -LiteralPath @($compiler, "$units\system.ppu", "$units\sysutils.ppu", "$units\windows.ppu", $fpcres) -Algorithm SHA256 |
+        Get-FileHash -LiteralPath @($compiler, "$units\system.nxu", "$units\sysutils.nxu", "$units\windows.nxu", $fpcres) -Algorithm SHA256 |
             Select-Object Path, Hash |
             ConvertTo-Json | Set-Content "$OutputRoot\build-inputs.json"
         Copy-Item "$PSScriptRoot\*.pas", "$PSScriptRoot\*.lpr", "$PSScriptRoot\*.c" $OutputRoot

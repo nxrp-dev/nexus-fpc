@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 {
     *********************************************************************
     Copyright (C) 1997, 1998 Gertjan Schouten
@@ -63,7 +63,7 @@ Const
 Var TrueBoolStrs,
     FalseBoolStrs : Array of String;
 
-// declaring this breaks delphi compatibility and e.g. tw3721.pp
+// declaring this breaks delphi compatibility and e.g. tw3721.pas
 // function NewStr(Const S: ShortString): PShortString; overload;
 function NewStr(const S: string): PString; overload;
 procedure DisposeStr(S: PString); overload;

@@ -665,7 +665,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
@@ -681,7 +681,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
@@ -698,7 +698,7 @@ implementation
               consume(_LKLAMMER);
               got_addrn:=true;
               p1:=factor(true,[]);
-              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
+              { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
               if current_scanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=geninlinenode(in_seg_x,false,p1);
@@ -1182,7 +1182,7 @@ implementation
          { only need to get the address of the procedure? Check token because
            in the case of opening parenthesis is possible to get pointer to
            function result (lack of checking for token was the reason of
-           tw10933.pp test failure) }
+           tw10933.pas test failure) }
          if getaddr and (current_scanner.token<>_LKLAMMER) then
            begin
              { for now we don't support pointers to generic functions, but since
@@ -4269,7 +4269,7 @@ implementation
                  if try_to_consume(_LKLAMMER) then
                   begin
                     p1:=factor(true,[]);
-                    { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pp }
+                    { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
                     if current_scanner.token<>_RKLAMMER then
                       p1:=sub_expr(opcompare,[ef_accept_equal],p1);
                     consume(_RKLAMMER);
@@ -4346,7 +4346,7 @@ implementation
                       p1:=sub_expr(oppower,[],nil);
                       {  -1 ** 4 should be - (1 ** 4) and not
                          (-1) ** 4
-                         This was the reason of tw0869.pp test failure PM }
+                         This was the reason of tw0869.pas test failure PM }
                       if p1.nodetype=starstarn then
                         begin
                           if tbinarynode(p1).left.nodetype=ordconstn then

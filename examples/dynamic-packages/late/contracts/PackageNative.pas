@@ -10,11 +10,7 @@ implementation
 uses {$ifdef windows}Windows{$else}dl{$endif};
 function PackageFileName(const Stem: string): string;
 begin
-{$ifdef windows}
-  Result:=Stem+'.dll';
-{$else}
-  Result:='lib'+Stem+'.so';
-{$endif}
+  Result:=Stem+'.nxpl';
 end;
 function NativePackageHandle(const Name: string): HMODULE;
 begin

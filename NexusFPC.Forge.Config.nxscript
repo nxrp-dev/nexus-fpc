@@ -14,8 +14,10 @@ FPC CrossCompiler Build[Cross] {
         "build/forge-bootstrap/cycle3/rtl64",
         "build/forge-bootstrap/seed/source/" + @CrossTarget.Architecture,
         "build/forge-bootstrap/seed/source/" + @CrossTarget.SharedBackend,
-        "build/forge-bootstrap/seed/source/systems"
-    ];
+        "build/forge-bootstrap/seed/source/systems",
+        "build/forge-bootstrap/seed/dependencies/paszlib",
+        "build/forge-bootstrap/seed/dependencies/hash"
+        ];
     IncludePaths: [
         "build/forge-bootstrap/seed/source",
         "build/forge-bootstrap/seed/source/" + @CrossTarget.Architecture,

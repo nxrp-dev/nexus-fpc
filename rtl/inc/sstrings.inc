@@ -467,7 +467,7 @@ begin
     s:=space(len-length(s))+s;
 end;
 {$else with RTTI feature}
-{ The following contains the TTypeInfo/TTypeData records from typinfo.pp
+{ The following contains the TTypeInfo/TTypeData records from typinfo.pas
   specialized for the tkEnumeration case (and stripped of unused things). }
 type
   PPstring=^Pstring;

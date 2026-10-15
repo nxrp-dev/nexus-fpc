@@ -1449,7 +1449,7 @@ implementation
             while (temp.nodetype = typeconvn) do
               temp := ttypeconvnode(temp).left;
 
-            { see tests/test/prefetch1.pp }
+            { see tests/test/prefetch1.pas }
             if (temp.nodetype = derefn) then
               temp := tderefnode(temp).left
             else

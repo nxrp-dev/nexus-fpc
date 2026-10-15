@@ -26,7 +26,7 @@ unit i_android;
   interface
 
     uses
-       systems, rescmn;
+       systems,nxartifactid, rescmn;
 
     const
 
@@ -46,7 +46,7 @@ unit i_android;
              defext       : '.def';
              scriptext    : '.sh';
              smartext     : '.sl';
-             unitext      : '.ppu';
+             unitext      : NexusUnitExtension;
              unitlibext   : '.ppl';
              asmext       : '.s';
              objext       : '.o';
@@ -114,7 +114,7 @@ unit i_android;
              defext       : '.def';
              scriptext    : '.sh';
              smartext     : '.sl';
-             unitext      : '.ppu';
+             unitext      : NexusUnitExtension;
              unitlibext   : '.ppl';
              asmext       : '.s';
              objext       : '.o';

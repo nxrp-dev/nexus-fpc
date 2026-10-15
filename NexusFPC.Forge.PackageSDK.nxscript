@@ -16,16 +16,16 @@ Group RuntimePackageSDK {
         Source: "build/forge-bootstrap/cycle3/rtl64";
         Destination: "build/forge-bootstrap/package-sdk/work/rtl-units";
         Recursive: True;
-        IncludeMasks: ["*.ppu", "*.o", "*.a", "*.res", "*.rsj"];
-        ExcludeNames: "buildrtl.ppu;buildrtl.o";
+        IncludeMasks: ["*.nxu", "*.o", "*.a", "*.res", "*.rsj"];
+        ExcludeNames: "buildrtl.nxu;buildrtl.o";
     }
     CopyFile FoundationDeclaration {
-        Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.ppk";
-        Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
+        Source: "build/forge-bootstrap/seed/rtl/win64/nxrtl.nxpk";
+        Destination: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk";
     }
     CopyFile StartupSource {
-        Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pp";
-        Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+        Source: "build/forge-bootstrap/seed/rtl/win64/sysinitpkg.pas";
+        Destination: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pas";
     }
     PackageSDKOptions PackageIdentity {
         BootstrapDirectory: "build/forge-bootstrap";
@@ -34,9 +34,9 @@ Group RuntimePackageSDK {
     FPC SharedRTL {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
-        Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk"];
-        EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.ppk";
-        Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
+        Source: ["build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpk";
+        Output: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpl";
         UnitOutput: "build/forge-bootstrap/package-sdk/work/nxrtl";
         UnitPaths: ["build/forge-bootstrap/package-sdk/work/rtl-units", "build/forge-bootstrap/seed/rtl/inc"];
         ResponseFiles: ["build/forge-bootstrap/seed/build-options.cfg", "build/forge-bootstrap/package-sdk/work/foundation.cfg"];
@@ -46,25 +46,21 @@ Group RuntimePackageSDK {
         GenerateReleaseUnitFiles: True;
         StripSymbols: True;
     }
-    CopyFile FoundationMetadata {
-        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.pcp";
-        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.pcp";
-    }
     CopyFile FoundationImage {
-        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.dll";
-        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.dll";
+        Source: "build/forge-bootstrap/package-sdk/work/nxrtl/nxrtl.nxpl";
+        Destination: "build/forge-bootstrap/package-sdk/packages/nxrtl.nxpl";
     }
     CopyFile PerImageResourceAdapter {
         Source: "build/forge-bootstrap/package-sdk/work/rtl-units";
         Destination: "build/forge-bootstrap/package-sdk/units";
         Recursive: True;
-        IncludeMasks: ["fpintres.ppu", "fpintres.o", "libimpfpintres.a"];
+        IncludeMasks: ["fpintres.nxu", "fpintres.o", "libimpfpintres.a"];
     }
     FPC HostStartup {
         Template: "../../nexus/projects/forge/examples/FPC.mustache";
         Compiler: "build/forge-bootstrap/package-sdk/bin/ppcx64.exe";
-        Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pp"];
-        EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pp";
+        Source: ["build/forge-bootstrap/package-sdk/work/sysinitpkg.pas"];
+        EntryPoint: "build/forge-bootstrap/package-sdk/work/sysinitpkg.pas";
         UnitOutput: "build/forge-bootstrap/package-sdk/units";
         UnitPaths: ["build/forge-bootstrap/package-sdk/units"];
         LibraryPaths: ["build/forge-bootstrap/package-sdk/packages"];

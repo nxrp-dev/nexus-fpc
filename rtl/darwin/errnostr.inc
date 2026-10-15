@@ -2,7 +2,7 @@
     This file is part of the Free Pascal run time library.
     Copyright (c) 2005 by Ales Katona
 
-    Contains BSD specific errors for error.pp in rtl/unix
+    Contains BSD specific errors for error.pas in rtl/unix
 
     See the file COPYING.FPC, included in this distribution,
     for details about the copyright.

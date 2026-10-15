@@ -1899,15 +1899,13 @@ type
                     { try to find the file, this like 'include' }
                     found:=findincludefile(path,name,foundfile);
                     fileext:=lower(ExtractFileExt(name));
-                    if (not found) and ((fileext<>'.inc') and (fileext<>sourceext) and (fileext<>pasext)) then
+                    if (not found) and ((fileext<>'.inc') and (fileext<>sourceext)) then
                      begin
-                       { try default extensions .inc , .pp and .pas }
+                       { try default extensions .inc and .pas }
                        if (not found) then
                         found:=findincludefile(path,name+'.inc',foundfile);
                        if (not found) then
                         found:=findincludefile(path,name+sourceext,foundfile);
-                       if (not found) then
-                        found:=findincludefile(path,name+pasext,foundfile);
                      end;
                     if (not found) and (ExtractFileExt(name)=ExtensionSeparator) and (Length(name)>=2) then
                       found:=findincludefile(path,Copy(name,1,Length(name)-1),foundfile);
@@ -2870,15 +2868,13 @@ type
            { try to find the file }
            found:=findincludefile(path,name,foundfile);
            fileext:=lower(ExtractFileExt(name));
-           if (not found) and ((fileext<>'.inc') and (fileext<>sourceext) and (fileext<>pasext)) then
+           if (not found) and ((fileext<>'.inc') and (fileext<>sourceext)) then
             begin
-              { try default extensions .inc , .pp and .pas }
+              { try default extensions .inc and .pas }
               if (not found) then
                found:=findincludefile(path,name+'.inc',foundfile);
               if (not found) then
                found:=findincludefile(path,name+sourceext,foundfile);
-              if (not found) then
-               found:=findincludefile(path,name+pasext,foundfile);
             end;
            { if the name ends in dot, try without the dot }
            if (not found) and (ExtractFileExt(name)=ExtensionSeparator) and (Length(name)>=2) then

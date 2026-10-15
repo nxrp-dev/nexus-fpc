@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 function IntFloatToTextFmt(Buf: FPChar; const Value; ValueType: TFloatValue; Format: FPChar; const AFormatSettings: TFormatSettings): Integer;
 
 Type

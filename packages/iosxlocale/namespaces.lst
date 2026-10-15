@@ -1,4 +1,4 @@
-src/iosxlocale.pp=namespaced/IosApi.Iosxlocale.pp
+src/iosxlocale.pas=namespaced/IosApi.Iosxlocale.pas
 {s*:src/}=namespaced/
 {i+:src/}
-src/iosxwstr.pp=namespaced/IosApi.Iosxwstr.pp
+src/iosxwstr.pas=namespaced/IosApi.Iosxwstr.pas

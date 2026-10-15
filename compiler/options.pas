@@ -2616,6 +2616,12 @@ begin
         else
           includesearchpath.AddPath(More,true);
       end;
+    'J' :
+      begin
+        if (more='') or (more='+') or (upper(more)='ENABLED') then embed_package_metadata:=true
+        else if (more='-') or (upper(more)='DISABLED') then embed_package_metadata:=false
+        else IllegalPara(opt);
+      end;
     'j','k' :
       begin
         { Explicit experimental package identities, supplied by the SDK tools. }
@@ -3607,7 +3613,7 @@ begin
            else
              include(init_settings.globalswitches,cs_link_map);
          end;
-       'p' : ; { Ignore used by fpc.pp }
+       'p' : ; { Ignore used by fpc.pas }
        'r' :
          begin
            if (target_info.system in suppported_targets_x_smallr) then
@@ -4120,8 +4126,6 @@ begin
     begin
       if FileExists(inputfilepath+ChangeFileExt(inputfilename,sourceext)) then
         inputfilename:=ChangeFileExt(inputfilename,sourceext)
-      else if FileExists(inputfilepath+ChangeFileExt(inputfilename,pasext)) then
-        inputfilename:=ChangeFileExt(inputfilename,pasext)
       else if ((m_mac in current_settings.modeswitches) or
               (tf_p_ext_support in target_info.flags))
              and FileExists(inputfilepath+ChangeFileExt(inputfilename,pext)) then

@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 {
     This file is part of the Free Pascal run time library.
     Copyright (c) 2012 by the Free Pascal development team

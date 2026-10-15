@@ -17,21 +17,21 @@ are historical; reconcile them with consolidated test groups when integrating.
 
 Former runner: `compiler-regressions/run_compiler_regressions.py`.
 
-- Build and run generic sets in Delphi and ObjFPC modes: `tw40453.pp`,
-  `tb_generic_set_operations_objfpc.pp`, `tb_generic_set_literals_delphi.pp`,
-  `tb_generic_set_literals_objfpc.pp`; repeat Delphi literals at `-O2`.
+- Build and run generic sets in Delphi and ObjFPC modes: `tw40453.pas`,
+  `tb_generic_set_operations_objfpc.pas`, `tb_generic_set_literals_delphi.pas`,
+  `tb_generic_set_literals_objfpc.pas`; repeat Delphi literals at `-O2`.
 - Preserve literal membership, mixed elements, ranges, union/difference, nested
   routines, expression evaluation counts, enum/Byte specializations and unused
   declarations, including fixed `set of Byte` destinations.
-- `tw6036a.pp`, ordinary and `-O2`, and `tb_corba_string_ids_short.pp` cover CORBA
+- `tw6036a.pas`, ordinary and `-O2`, and `tb_corba_string_ids_short.pas` cover CORBA
   identifiers converted to supported strings, bounded truncation and `{$H-}`.
-- Reject `tb_generic_set_invalid_object.pp` and `_invalid_range.pp` with illegal
-  set element diagnostics; reject `_literal_object.pp` and `_literal_string.pp`
-  with ordinal-expression diagnostics; reject `tb_corba_id_invalid_integer.pp`
-  and `webtbf/tw6036b.pp` as incompatible types. `tbf/tb0215a` through `e` must
+- Reject `tb_generic_set_invalid_object.pas` and `_invalid_range.pas` with illegal
+  set element diagnostics; reject `_literal_object.pas` and `_literal_string.pas`
+  with ordinal-expression diagnostics; reject `tb_corba_id_invalid_integer.pas`
+  and `webtbf/tw6036b.pas` as incompatible types. `tbf/tb0215a` through `e` must
   produce ordinary errors without internal exceptions.
-- Compile `ugeneric_set_storage.pp` separately, hide its source, and build/run
-  `tb_generic_set_storage.pp` twice without modifying the saved PPU/object.
+- Compile `ugeneric_set_storage.pas` separately, hide its source, and build/run
+  `tb_generic_set_storage.pas` twice without modifying the saved PPU/object.
 
 ## Profiler mixed caches
 

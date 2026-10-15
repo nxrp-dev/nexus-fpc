@@ -1118,7 +1118,7 @@ implementation
          typecheckpass(right);
 
          { implicitly convert stringconstant to stringdef,
-           see tbs/tb0476.pp for a test }
+           see tbs/tb0476.pas for a test }
          if (left.nodetype=stringconstn) and
             (tstringconstnode(left).cst_type=cst_conststring) then
            begin
@@ -1227,7 +1227,7 @@ implementation
                         then
                         begin
                           { in case of an integer type, we need a new type which covers declaration range and index range,
-                            see tests/tbs/tw38413.pp
+                            see tests/tbs/tw38413.pas
 
                             This matters only if we sign extend, if the type exceeds the sint range, we can fall back only
                             to the index type

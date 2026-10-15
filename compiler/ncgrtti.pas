@@ -1620,7 +1620,7 @@ implementation
                there are two types, eltype and eltype2, the latter is nil if the element type needs
                no finalization, the former is always valid, delphi has this swapped, but for
                compatibility with older fpc versions we do it different, to be delphi compatible,
-               the names are swapped in typinfo.pp
+               the names are swapped in typinfo.pas
              }
              begin
                tcb.begin_anonymous_record(

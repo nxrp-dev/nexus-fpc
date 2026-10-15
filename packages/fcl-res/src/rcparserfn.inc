@@ -127,8 +127,8 @@ procedure SetDefaults;
 procedure PragmaCodePage(cp: string);
 
 {$DEFINE INC_HEADER}
-{$I yyinclude.pp}
-{$I yypreproc.pp}
+{$I yyinclude.pas}
+{$I yypreproc.pas}
 {$UNDEF INC_HEADER}
 
 implementation
@@ -140,8 +140,8 @@ begin
   WriteLn(ErrOutput, '^':yycolno);
 end(*yyerrmsg*);
 
-{$I yyinclude.pp}
-{$I yypreproc.pp}
+{$I yyinclude.pas}
+{$I yypreproc.pas}
 
 (* I/O routines: *)
 

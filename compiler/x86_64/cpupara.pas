@@ -1031,7 +1031,7 @@ unit cpupara;
             end;
           undefineddef:
             { show shall we know?
-              since classify_argument is called during parsing, see tw27685.pp,
+              since classify_argument is called during parsing, see tw27685.pas,
               we handle undefineddef here }
             result:=0;
           errordef:

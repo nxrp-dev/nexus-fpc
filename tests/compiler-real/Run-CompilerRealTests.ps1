@@ -42,45 +42,45 @@ foreach ($lVariant in @('normal','O2')) {
     [void](New-Item -ItemType Directory -Force -Path $lDirectory)
     $lOptions = @('-n', "-T$Target", '-Aas-clang', '-XLL', "-Fu$RTL", "-FU$lDirectory", "-FE$lDirectory")
     if ($lVariant -eq 'O2') { $lOptions += '-O2' }
-    Invoke-Check "$lVariant-core-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/tcompilerreal.pp"))
+    Invoke-Check "$lVariant-core-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/tcompilerreal.pas"))
     Invoke-Check "$lVariant-core-run" "$lDirectory/tcompilerreal.exe" @()
-    Invoke-Check "$lVariant-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/textendedabi.pp"))
+    Invoke-Check "$lVariant-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/textendedabi.pas"))
     Invoke-Check "$lVariant-abi-run" "$lDirectory/textendedabi.exe" @()
-    Invoke-Check "$lVariant-math-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/tmathabi.pp"))
+    Invoke-Check "$lVariant-math-abi-build" $Compiler ($lOptions + @("$PSScriptRoot/tmathabi.pas"))
     Invoke-Check "$lVariant-math-abi-run" "$lDirectory/tmathabi.exe" @()
     $lCPU = if ($Target -eq 'win64') { 'x86_64' } else { 'i386' }
     Invoke-Check "$lVariant-rtti-build" $Compiler ($lOptions + @(
         "-Fu$lSource/packages/rtl-objpas/src/inc", "-Fu$lSource/packages/rtl-objpas/src/$lCPU",
         "-Fi$lSource/packages/rtl-objpas/src/$lCPU",
-        "-Fi$lSource/packages/rtl-objpas/src/win", "$PSScriptRoot/textendedrtti.pp"))
+        "-Fi$lSource/packages/rtl-objpas/src/win", "$PSScriptRoot/textendedrtti.pas"))
     Invoke-Check "$lVariant-rtti-run" "$lDirectory/textendedrtti.exe" @()
     if ($Target -eq 'win64') {
         Invoke-Check "$lVariant-c-build" 'clang.exe' @('-target','x86_64-pc-windows-msvc','-O2','-c',
             "$PSScriptRoot/nativebridge.c",'-o',"$lDirectory/nativebridge.obj")
         Invoke-Check "$lVariant-c-link" 'lld-link.exe' @('/dll','/noentry','/nodefaultlib','/machine:x64',
             "/out:$lDirectory/nativebridge.dll","$lDirectory/nativebridge.obj")
-        Invoke-Check "$lVariant-c-bridge-build" $Compiler ($lOptions + @("$PSScriptRoot/tcbridge.pp"))
+        Invoke-Check "$lVariant-c-bridge-build" $Compiler ($lOptions + @("$PSScriptRoot/tcbridge.pas"))
         Invoke-Check "$lVariant-c-bridge-run" "$lDirectory/tcbridge.exe" @()
     }
     if ($ReferenceVectors) {
-        Invoke-Check "$lVariant-reference-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/treference.pp"))
+        Invoke-Check "$lVariant-reference-build" $Compiler ($lOptions + @("-Fu$lSource/compiler", "$PSScriptRoot/treference.pas"))
         Invoke-Check "$lVariant-reference-run" "$lDirectory/treference.exe" @((Resolve-Path -LiteralPath $ReferenceVectors).Path)
     }
-    Copy-Item -LiteralPath "$PSScriptRoot/urealconstants.pp" -Destination $lDirectory
-    Copy-Item -LiteralPath "$PSScriptRoot/tcachedreal.pp" -Destination $lDirectory
-    Invoke-Check "$lVariant-fresh-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pp"))
+    Copy-Item -LiteralPath "$PSScriptRoot/urealconstants.pas" -Destination $lDirectory
+    Copy-Item -LiteralPath "$PSScriptRoot/tcachedreal.pas" -Destination $lDirectory
+    Invoke-Check "$lVariant-fresh-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pas"))
     Invoke-Check "$lVariant-fresh-run" "$lDirectory/tcachedreal.exe" @()
-    $lHash = (Get-FileHash -LiteralPath "$lDirectory/urealconstants.ppu").Hash
-    Remove-Item -LiteralPath "$lDirectory/urealconstants.pp"
-    Invoke-Check "$lVariant-cached-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pp"))
+    $lHash = (Get-FileHash -LiteralPath "$lDirectory/urealconstants.nxu").Hash
+    Remove-Item -LiteralPath "$lDirectory/urealconstants.pas"
+    Invoke-Check "$lVariant-cached-build" $Compiler ($lOptions + @("-Fu$lDirectory", "$lDirectory/tcachedreal.pas"))
     Invoke-Check "$lVariant-cached-run" "$lDirectory/tcachedreal.exe" @()
-    if ((Get-FileHash -LiteralPath "$lDirectory/urealconstants.ppu").Hash -ne $lHash) {
+    if ((Get-FileHash -LiteralPath "$lDirectory/urealconstants.nxu").Hash -ne $lHash) {
         throw 'The cached unit changed during the reuse test.'
     }
     $lIndex = 0
     foreach ($lLiteral in @('922337203685477.5808','-922337203685477.5809','1.0e30')) {
         $lIndex++
-        $lInput = Join-Path $lDirectory ("range$lIndex.pp")
+        $lInput = Join-Path $lDirectory ("range$lIndex.pas")
         "program range$lIndex; const cValue: Currency = $lLiteral; begin end." |
             Set-Content -LiteralPath $lInput -Encoding ASCII
         Invoke-Check "$lVariant-range-$lIndex" $Compiler ($lOptions + @($lInput)) -ExpectRangeError

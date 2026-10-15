@@ -1304,7 +1304,7 @@ end;
 
 
     function Shell(const command:ansistring): longint;
-      { This is already defined in the linux.ppu for linux, need for the *
+      { This is already defined in the linux.nxu for linux, need for the *
         expansion under linux }
 {$ifdef hasunix}
       begin

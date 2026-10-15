@@ -106,7 +106,7 @@ is included in this removal batch.
 
 ## Known consumers and remaining work
 
-- `fcl-base/src/custapp.pp` uses CoreFoundation bundle/path APIs through
+- `fcl-base/src/custapp.pas` uses CoreFoundation bundle/path APIs through
   `MacOSAll`. Preserve this functioning path.
 - Nexus fpGUI's Cocoa backend uses `CocoaAll`; preserve it and its AppKit types.
 - Nexus2D's old `Rtt_MacSurfaceVideoRecorder.mm` is disabled by `#if 0`. Its
@@ -222,7 +222,7 @@ Compile options:
 ```
 
 For macOS, compile `MacOS.pas`, `MacOSAll.pas`, then every `AddUnit` target in
-`cocoaint/fpmake.pp`. For iOS/simulator, compile the two universal-interface roots.
+`cocoaint/fpmake.pas`. For iOS/simulator, compile the two universal-interface roots.
 `-Cn -s` deliberately skips assembly/linking; these checks do not validate
 framework availability at link time or runtime on a current Mac.
 
@@ -236,7 +236,7 @@ framework availability at link time or runtime on a current Mac.
 | Initial 32-bit branch pruning, before deleting obsolete Cocoa wrappers | All 493 then-compiled unit interfaces matched on each macOS CPU. Removing obsolete public Cocoa names subsequently changes CocoaAll and dependent package checksums intentionally. |
 | Namespaced MacOSAll, CocoaAll, AVFoundation and AVKit on x86_64-darwin | 4/4 passed. Build namespaced RTL types in their normal mode, universal interfaces with MacPas, and Cocoa wrappers with Delphi mode. |
 | Existing `fcl-base` CustApp consumer on both macOS CPUs | 2/2 passed with the final MacOSAll PPU. |
-| Both changed `fpmake.pp` package definitions | Compiled successfully. All unit and namespace-map source paths resolve. |
+| Both changed `fpmake.pas` package definitions | Compiled successfully. All unit and namespace-map source paths resolve. |
 | Actual i386 compiler, direct MacTypes compilation | Rejected as intended: `Nexus Apple bindings require a 64-bit target`. |
 | Mechanical source audit | 589 modified binding source/include files contain only retained original lines, conditional-start promotions, and the explicit 64-bit guard. |
 | Working diff | `git diff --check` passes. 638 tracked files affected, including 46 deleted files; net reduction 178,874 lines, excluding this new document. Compiler and RTL source diffs are empty. |
@@ -265,7 +265,7 @@ baseline and changed sources.
 | Changed source: identical matrix | 128/128 passed: 61 each on x86_64-darwin and aarch64-darwin; 2 each on x86_64-iphonesim, aarch64-iphonesim and aarch64-ios. |
 | Namespaced MacOSAll, CocoaAll, AVFoundation and AVKit on both macOS CPUs | 8/8 passed. Namespaced System.CTypes was built in its normal mode, MacOSAll with MacPas, and the Cocoa wrappers with Delphi mode. |
 | Existing `fcl-base` CustApp consumer on both macOS CPUs | 2/2 passed with the changed MacOSAll PPU. |
-| Both `fpmake.pp` package definitions | Compiled successfully with the native compiler. All unit and namespace-map source paths resolve. |
+| Both `fpmake.pas` package definitions | Compiled successfully with the native compiler. All unit and namespace-map source paths resolve. |
 | PPU interface inventory | Exactly the 22 intentionally deleted units are absent on every target; no unexpected missing units. |
 | Interface checksums on each macOS CPU | 511 unchanged, 65 changed, 22 removed. Changes include the removed class/setters and obsolete imports, with dependent interface checksums. |
 | Interface checksums on mobile/simulator targets | x86_64-iphonesim and aarch64-ios: 442 unchanged, 11 changed, 22 removed each. aarch64-iphonesim: 440 unchanged, 13 changed, 22 removed. This batch intentionally changes interfaces; it does not claim checksum identity. |

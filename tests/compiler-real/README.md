@@ -44,7 +44,7 @@ The original fixtures under `tbs` and `test` are unchanged.
 
 ## Optional high-precision comparison
 
-`treference.pp` compares native mathematics with the unchanged 2,617-vector
+`treference.pas` compares native mathematics with the unchanged 2,617-vector
 reference corpus. Passing `-ReferenceVectors tests/compiler-real/reference-vectors.txt`
 to the runner deliberately requests exact agreement and fails when results
 differ. It is a characterization tool, not a required native-contract check.

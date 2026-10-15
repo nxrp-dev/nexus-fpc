@@ -1126,7 +1126,7 @@ implementation
                    if po_compilerproc in fwpd.procoptions then
                      begin
                        fwpd.setcompilerprocname;
-                       current_module.add_public_asmsym(fwpd.procsym.realname,AB_GLOBAL,AT_FUNCTION);
+                       current_module.add_public_asmsym(fwpd.mangledname,AB_GLOBAL,AT_FUNCTION);
                      end;
                    if po_public in fwpd.procoptions then
                      begin

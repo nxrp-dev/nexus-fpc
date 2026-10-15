@@ -26,7 +26,7 @@ unit i_darwin;
 interface
 
 uses
-   systems;
+   systems,nxartifactid;
 
 const
    res_macho_info : tresinfo =
@@ -69,7 +69,7 @@ const
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
-        unitext      : '.ppu';
+        unitext      : NexusUnitExtension;
         unitlibext   : '.ppl';
         asmext       : '.s';
         objext       : '.o';
@@ -137,7 +137,7 @@ const
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
-        unitext      : '.ppu';
+        unitext      : NexusUnitExtension;
         unitlibext   : '.ppl';
         asmext       : '.s';
         objext       : '.o';
@@ -207,7 +207,7 @@ const
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
-        unitext      : '.ppu';
+        unitext      : NexusUnitExtension;
         unitlibext   : '.ppl';
         asmext       : '.s';
         objext       : '.o';
@@ -274,7 +274,7 @@ const
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
-        unitext      : '.ppu';
+        unitext      : NexusUnitExtension;
         unitlibext   : '.ppl';
         asmext       : '.s';
         objext       : '.o';
@@ -342,7 +342,7 @@ const
         defext       : '.def';
         scriptext    : '.sh';
         smartext     : '.sl';
-        unitext      : '.ppu';
+        unitext      : NexusUnitExtension;
         unitlibext   : '.ppl';
         asmext       : '.s';
         objext       : '.o';

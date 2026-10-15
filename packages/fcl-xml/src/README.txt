@@ -37,7 +37,7 @@ For normal text nodes, the following replacements will be done:
 For attribute values, additionally '"' gets replaced by '&quot;', and characters
 #9, #10 and #13 are escaped using numerical references. Single apostrophes (')
 don't need to get converted, as values are already written using "" quotes.
-The XML reader (in xmlread.pp) will convert these entity references back to
+The XML reader (in xmlread.pas) will convert these entity references back to
 their original characters.
 
 

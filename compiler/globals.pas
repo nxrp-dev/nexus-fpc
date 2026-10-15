@@ -81,8 +81,7 @@ tpcompilerreal,
        maxnesting = 32;
 
        { Filenames and extensions }
-       sourceext  = '.pp';
-       pasext     = '.pas';
+       sourceext  = '.pas';
        pext       = '.p';
 
        treelogfilename = 'tree.log';
@@ -353,6 +352,7 @@ Const
        { contains tpackageentry entries }
        packagelist : TFPHashList;
        package_sdk_identity, package_build_identity: shortstring;
+       embed_package_metadata: boolean;
        autoloadunits      : string;
 
        { linking }
@@ -1497,6 +1497,7 @@ implementation
         packagesearchpath:=TSearchPathList.Create;
         package_sdk_identity:='';
         package_build_identity:='';
+        embed_package_metadata:=true;
         namespacelist:=TCmdStrList.Create;
         premodule_namespacelist:=TCmdStrList.Create;
         current_namespacelist:=Nil;

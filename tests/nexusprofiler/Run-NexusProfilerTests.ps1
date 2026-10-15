@@ -76,7 +76,7 @@ function Read-Trace([string]$Path) {
 }
 
 function Invoke-ProfiledExe([string]$Output, [string]$Name) {
-    Get-ChildItem -LiteralPath $Output -Filter 'nexus-profile-*.nxp' |
+    Get-ChildItem -LiteralPath $Output -Filter 'nexus-profile-*.nxtrace' |
         Remove-Item -Force
     Push-Location $Output
     try {
@@ -85,7 +85,7 @@ function Invoke-ProfiledExe([string]$Output, [string]$Name) {
     }
     finally { Pop-Location }
     if ($exitCode -ne 0) { throw "$Name exited with code $exitCode" }
-    $traces = @(Get-ChildItem -LiteralPath $Output -Filter 'nexus-profile-*.nxp')
+    $traces = @(Get-ChildItem -LiteralPath $Output -Filter 'nexus-profile-*.nxtrace')
     Assert-True ($traces.Count -eq 1) "$Name did not produce exactly one trace"
     $values = Read-Trace $traces[0].FullName
     Assert-True ($values.truncated -eq 0) "$Name produced a truncated trace"
@@ -202,7 +202,7 @@ Write-Host 'Runtime start and stop control'
 $controlOutput = Join-Path $OutputRoot 'control'
 Invoke-Compile (Join-Path $testSource 'profiler_control.pas') $controlOutput `
     -Profile -Build -Release
-Get-ChildItem -LiteralPath $controlOutput -Filter 'nexus-profile-*.nxp' |
+Get-ChildItem -LiteralPath $controlOutput -Filter 'nexus-profile-*.nxtrace' |
     Remove-Item -Force
 $savedStartMode = $env:NEXUS_PROFILE_START
 $env:NEXUS_PROFILE_START = 'paused'
@@ -223,7 +223,7 @@ finally {
 Assert-True ($controlExitCode -eq 0) `
     "Profiler control test exited with code $controlExitCode"
 $controlTraces = @(Get-ChildItem -LiteralPath $controlOutput `
-    -Filter 'nexus-profile-*.nxp' | Sort-Object Name)
+    -Filter 'nexus-profile-*.nxtrace' | Sort-Object Name)
 Assert-True ($controlTraces.Count -eq 2) `
     'Profiler control did not create one trace per active interval'
 & $controlProbe $controlTraces[0].FullName 'FIRSTINTERVALLEAF' `
@@ -269,7 +269,7 @@ finally {
 Assert-True ($unhandledCode -ne 0) `
     'Unhandled exception test unexpectedly succeeded'
 $unhandledFiles = @(Get-ChildItem -LiteralPath $unhandledOutput `
-    -Filter 'nexus-profile-*.nxp')
+    -Filter 'nexus-profile-*.nxtrace')
 Assert-True ($unhandledFiles.Count -eq 1) `
     'Unhandled exception test did not leave exactly one trace'
 $unhandledTrace = Read-Trace $unhandledFiles[0].FullName

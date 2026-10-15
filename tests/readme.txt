@@ -1,5 +1,15 @@
-Usage
------
+Nexus status
+------------
+The Make-based test build recipes have been retired. Test sources and data
+remain for migration to nxtest. Required helper objects and package preparation
+are recorded in ../nexusfpc-package-build-requirements.md.
+
+The runner commands, target lists and options below are historical reference,
+not supported Nexus test entry points. Test-source conventions remain useful
+when interpreting the retained cases.
+
+Historical usage
+----------------
 To start the test suite execute:
 
   make full TEST_FPC=path_to_your_compiler
@@ -11,20 +21,13 @@ statistics.
 
 scans the created log file and outputs some statistics
 
-The focused generic-set/CORBA regression checks, including source-hidden PPU
-loading, can also be run with:
-
-  python compiler-regressions/run_compiler_regressions.py
-
-See compiler-regressions/README.md for compiler/RTL selection and coverage.
-
   make digest USESQL=YES TEST_FPC=path_to_your_compiler
 
 sends the results to an SQL database
 
 When the tests are performed, first the units (e.g. rtl) needed by the
 tests are compiled in a clean determined way and put in the units
-directory. Then tbs/tbf/webtbf/test are searched for t*.pp to be
+directory. Then tbs/tbf/webtbf/test are searched for t*.pas to be
 compiled and executed as tests.
 
 
@@ -62,7 +65,7 @@ utils............Utilities for processing tests
 
 Writing a test
 --------------
-A test should have a name on the form t*.pp, to be recognized as a test.
+A test should have a name on the form t*.pas, to be recognized as a test.
 It should return 0 on success, any other value indicates failure.
 
 

@@ -3,7 +3,7 @@
     Copyright (c) 1999-2000 by Jonas Maebe, member of the
     Free Pascal development team
 
-    Processor dependent part of strings.pp, not shared with
+    Processor dependent part of strings.pas, not shared with
     sysutils unit.
 
     See the file COPYING.FPC, included in this distribution,

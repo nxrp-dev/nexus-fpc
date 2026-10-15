@@ -8,7 +8,7 @@
 # Only tested under Linux with Kylix installed, might also work under cygwin
 
 ./genvartests
-BIGTEST=tnofalvarol.pp
+BIGTEST=tnofalvarol.pas
 BIGTESTMAIN=tnofalvarol.inc
 rm ivarol*
 rm $BIGTEST
@@ -22,7 +22,7 @@ echo '{$endif fpc}' >> $BIGTEST
 echo '{$define bigfile}' >> $BIGTEST
 echo >> $BIGTEST
 
-for file in tvarol*.pp
+for file in tvarol*.pas
 do
   dcc $file
   if [ $? -ne 0 ]; then
@@ -30,7 +30,7 @@ do
     cat $file >> $file.new
     mv $file.new $file
   else
-    ./`basename $file .pp` > output
+    ./`basename $file .pas` > output
 
     if grep XXX output >/dev/null; then
       sed -e "s/writeln('YYY')/halt(1)/" < $file > $file.new
@@ -59,7 +59,7 @@ do
     mv $file.new $file
 
     if ! grep "ifdef FPC_HAS_TYPE_EXTENDED" $file >/dev/null; then
-      namenr=`echo $file | sed -e 's/tvarol//' -e 's/\.pp//'`
+      namenr=`echo $file | sed -e 's/tvarol//' -e 's/\.pas//'`
 #      lines=`wc -l < $file`
 #      lines=$(($lines - 5))
 #      tail -$lines < $file >> $BIGTEST

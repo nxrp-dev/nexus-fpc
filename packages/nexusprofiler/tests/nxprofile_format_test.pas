@@ -292,7 +292,7 @@ begin
     Stream.Free;
   end;
   FileName := IncludeTrailingPathDelimiter(GetTempDir(False)) +
-    'nxprofile-format-test-' + IntToStr(GetProcessID) + '.nxp';
+    'nxprofile-format-test-' + IntToStr(GetProcessID) + '.nxtrace';
   CheckFileRoundTrip(FileName);
   CheckMalformedString;
   WriteLn('NXProfile reader/writer tests passed');

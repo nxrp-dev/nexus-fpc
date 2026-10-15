@@ -1,4 +1,4 @@
-src/zstream.pp=namespaced/System.ZLib.Zstream.pp
+src/zstream.pas=namespaced/System.ZLib.Zstream.pas
 {s*:src/}=namespaced/
 {i+:src/}
 src/adler.pas=namespaced/System.ZLib.Adler.pas
@@ -16,6 +16,6 @@ src/infcodes.pas=namespaced/System.ZLib.Infcodes.pas
 src/inftrees.pas=namespaced/System.ZLib.Inftrees.pas
 src/zinflate.pas=namespaced/System.ZLib.Zinflate.pas
 src/trees.pas=namespaced/System.ZLib.Trees.pas
-src/zipper.pp=namespaced/System.ZLib.Zipper.pp
+src/zipper.pas=namespaced/System.ZLib.Zipper.pas
 src/ziputils.pas=namespaced/System.ZLib.Ziputils.pas
 src/paszlib.pas=namespaced/System.ZLib.Paszlib.pas

@@ -1770,7 +1770,7 @@ implementation
               { search procdefs matching accessordef }
               { we ignore hidden stuff here because the property access symbol might have
                 non default calling conventions which might change the hidden stuff;
-                see tw3216.pp (FK) }
+                see tw3216.pas (FK) }
               cpo:=[cpo_allowdefaults,cpo_ignorehidden];
               { allow var-parameters for setters in case of VARPROPSETTER+ }
               if (getset=palt_write) and
@@ -1922,8 +1922,8 @@ implementation
     procedure tabstractvarsym.deref;
       begin
         { assigning vardef also updates varregable. We just loaded this   }
-        { value from a ppu, so it must not be changed (e.g. tw7817a.pp/   }
-        { tw7817b.pp: the address is taken of a local variable in an      }
+        { value from a ppu, so it must not be changed (e.g. tw7817a.pas/   }
+        { tw7817b.pas: the address is taken of a local variable in an      }
         { inlined procedure -> must remain non-regable when inlining)     }
         setvardef(tdef(vardefderef.resolve));
       end;

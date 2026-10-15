@@ -2723,6 +2723,11 @@ implementation
              end;
          { static symbols that are used in public functions must be exported
            for packages as well }
+         { A private overload can share its procsym with public overloads.
+           Use the selected definition's implementation owner in that case. }
+         if (sym.typ=procsym) and assigned(def) and
+            (def.typ=procdef) and (def.owner.symtabletype=staticsymtable) then
+           owner:=def.owner;
          if ([tf_supports_packages,tf_supports_hidden_symbols]<=target_info.flags) and
              (owner.symtabletype=staticsymtable) and
              assigned(current_procinfo) and

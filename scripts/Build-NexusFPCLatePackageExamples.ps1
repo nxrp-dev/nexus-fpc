@@ -35,7 +35,7 @@ $packages = Join-Path $OutputRoot 'packages'
 New-Item -ItemType Directory -Path $packages | Out-Null
 $compile = Join-Path $PSScriptRoot 'Invoke-NexusFPCPackageCompile.ps1'
 foreach ($item in @(@('contracts','democontracts'),@('base','pluginbase'),@('left','pluginleft'),@('right','pluginright'))) {
-    & $compile -Forge $Forge -SdkRoot $SdkRoot -Kind Package -Source "$source\$($item[0])\$($item[1]).ppk" `
+    & $compile -Forge $Forge -SdkRoot $SdkRoot -Kind Package -Source "$source\$($item[0])\$($item[1]).nxpk" `
         -PackagePath $packages -OutputDirectory $packages -SmartLink:$SmartLink
 }
 foreach ($kind in @('Console','GUI')) {

@@ -26,7 +26,7 @@ unit i_linux;
   interface
 
     uses
-       systems;
+       systems,nxartifactid;
 
     const
        system_i386_linux_info : tsysteminfo =
@@ -46,7 +46,7 @@ unit i_linux;
             defext       : '.def';
             scriptext    : '.sh';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';
@@ -119,7 +119,7 @@ unit i_linux;
             defext       : '.def';
             scriptext    : '.sh';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';
@@ -196,7 +196,7 @@ unit i_linux;
             defext       : '.def';
             scriptext    : '.sh';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';

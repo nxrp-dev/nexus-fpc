@@ -12,14 +12,14 @@ $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 . "$lSource/scripts/NexusFPCPackageArtifacts.ps1"
 $lInputs = Join-Path $OutputRoot 'inputs'
 New-Item -ItemType Directory -Force -Path "$lInputs/provider","$lInputs/consumer" | Out-Null
-Copy-Item -LiteralPath "$PSScriptRoot/uextendedabi.pp" -Destination "$lInputs/provider"
-Copy-Item -LiteralPath "$PSScriptRoot/textendedabi.pp" -Destination "$lInputs/consumer"
+Copy-Item -LiteralPath "$PSScriptRoot/uextendedabi.pas" -Destination "$lInputs/provider"
+Copy-Item -LiteralPath "$PSScriptRoot/textendedabi.pas" -Destination "$lInputs/consumer"
 'package nativeabi; requires nxrtl; contains uextendedabi; end.' |
-    Set-Content -LiteralPath "$lInputs/provider/nativeabi.ppk" -Encoding ASCII
+    Set-Content -LiteralPath "$lInputs/provider/nativeabi.nxpk" -Encoding ASCII
 $lBuild = "$lSource/scripts/Invoke-NexusFPCPackageCompile.ps1"
-& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/provider/nativeabi.ppk" `
+& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/provider/nativeabi.nxpk" `
     -OutputDirectory "$OutputRoot/provider" -Kind Package -SmartLink:$SmartLink
-& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/consumer/textendedabi.pp" `
+& $lBuild -SdkRoot $SdkRoot -Source "$lInputs/consumer/textendedabi.pas" `
     -OutputDirectory "$OutputRoot/host" -Kind Console -RequiredPackages nativeabi `
     -PackagePath "$OutputRoot/provider" -SmartLink:$SmartLink
 $lBundle = Get-NexusPackageBundle "$OutputRoot/host"
@@ -30,8 +30,8 @@ if ($LASTEXITCODE -ne 0 -or
     (Get-Content -LiteralPath "$OutputRoot/extended-imports.log" -Raw) -notmatch 'nativeabi.dll') {
     throw 'Host must import the provider DLL; compiling the unit into the host is not this test.'
 }
-foreach ($lFixture in @('tests/compiler-real/tmathabi.pp','tests/tbs/tw1737.pp',
-    'tests/test/units/system/ttrig.pp','tests/test/twrstr8.pp')) {
+foreach ($lFixture in @('tests/compiler-real/tmathabi.pas','tests/tbs/tw1737.pas',
+    'tests/test/units/system/ttrig_tolerance.pas','tests/test/twrstr8.pas')) {
     $lName = [IO.Path]::GetFileNameWithoutExtension($lFixture)
     $lOutput = Join-Path $OutputRoot $lName
     & $lBuild -SdkRoot $SdkRoot -Source "$lSource/$lFixture" -OutputDirectory $lOutput -Kind Console -SmartLink:$SmartLink

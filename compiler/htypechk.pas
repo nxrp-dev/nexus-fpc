@@ -309,7 +309,7 @@ implementation
                              (treetyp in (order_theoretic_operators+[addn, subn]))
                            ) or
                            (
-                             { for enum definitions, see tbs/tw22860.pp }
+                             { for enum definitions, see tbs/tw22860.pas }
                              is_integer(rd) and
                              (treetyp in (order_theoretic_operators+bit_manipulation_operators+arithmetic_operators))
                            )
@@ -343,7 +343,7 @@ implementation
                              is_stringlike(rd) and
                              (ld.typ=orddef) and
                              (treetyp in string_comparison_operators)) or
-                             { c.f. $(source)\tests\tmacpas5.pp }
+                             { c.f. $(source)\tests\tmacpas5.pas }
                              (
                                (rd.typ=setdef) and
                                (ld.typ=orddef) and

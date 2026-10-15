@@ -398,6 +398,7 @@ implementation
       var
         i : longint;
         def : tdef;
+        lAlias: TCmdStrListItem;
       begin
         if not assigned(localrefdefs) then
           exit;
@@ -407,6 +408,21 @@ implementation
             if def.typ<>symconst.procdef then
               internalerror(2019111801);
             include(tprocdef(def).defoptions,df_has_global_ref);
+            { An inline body retains the referenced definition even when its
+              implementation-only procsym is not loaded from a cached unit.
+              Preserve its callable names independently for package exports. }
+            if not (df_generic in def.defoptions) and
+               not (po_external in tprocdef(def).procoptions) and
+               (tprocdef(def).proccalloption<>pocall_internproc) then
+              begin
+                current_module.add_public_asmsym(tprocdef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
+                lAlias:=TCmdStrListItem(tprocdef(def).aliasnames.first);
+                while assigned(lAlias) do
+                  begin
+                    current_module.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
+                    lAlias:=TCmdStrListItem(lAlias.next);
+                  end;
+              end;
           end;
       end;
 

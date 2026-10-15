@@ -711,7 +711,7 @@ const
 
       var
         hp: taddnode;
-        t,vl,lefttarget,righttarget: tnode;
+        t,vl,lefttarget,righttarget,value1conv,value2conv: tnode;
         lt,rt,nt : tnodetype;
         hdef,
         rd,ld   , inttype: tdef;
@@ -1013,7 +1013,7 @@ const
             }
             else if (left.nodetype=nodetype) and
               { there might be a mul operation e.g. longint*longint => int64 in this case
-                we cannot do this optimization, see e.g. tests/tbs/tw36587.pp on arm }
+                we cannot do this optimization, see e.g. tests/tbs/tw36587.pas on arm }
               (compare_defs(resultdef,ld,nothingn)=te_exact) then
               begin
                 if is_constintnode(taddnode(left).left) then
@@ -1862,11 +1862,17 @@ const
                              Internalerror(2020060101);
                          end;
 
+                         { Assigned compares procvar values. Preserve that
+                           meaning in the casts introduced by this rewrite. }
+                         value1conv:=ctypeconvnode.create_internal(v1p^.getcopy,inttype);
+                         value1conv.flags:=value1conv.flags+(left.flags*[nf_load_procvar]);
+                         value2conv:=ctypeconvnode.create_internal(v2p^.getcopy,inttype);
+                         value2conv.flags:=value2conv.flags+(right.flags*[nf_load_procvar]);
                          result:=caddnode.create_internal(equaln,
                            caddnode.create_internal(orn,
-                             caddnode.create_internal(xorn,ctypeconvnode.create_internal(v1p^.getcopy,inttype),
+                             caddnode.create_internal(xorn,value1conv,
                                ctypeconvnode.create_internal(c1p^.getcopy,inttype)),
-                             caddnode.create_internal(xorn,ctypeconvnode.create_internal(v2p^.getcopy,inttype),
+                             caddnode.create_internal(xorn,value2conv,
                                ctypeconvnode.create_internal(c2p^.getcopy,inttype))
                            ),
                            cordconstnode.create(0,inttype,false));
@@ -1960,7 +1966,7 @@ const
               compile x < length(arr) as x <= high(arr)
               compile x >= length(arr) as x > high(arr)
 
-              tested by tests/tbs/tw40292.pp
+              tested by tests/tbs/tw40292.pas
             }
             if (nodetype in [ltn,gten]) and
               (right.nodetype=inlinen) and (tinlinenode(right).inlinenumber=in_length_x) and
@@ -1985,7 +1991,7 @@ const
               compile length(arr) > x as high(arr) >= x
               compile length(arr) <= x as high(arr) < x
 
-              tested by tests/tbs/tw40292.pp
+              tested by tests/tbs/tw40292.pas
             }
             if (nodetype in [lten,gtn]) and
               (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_length_x) and

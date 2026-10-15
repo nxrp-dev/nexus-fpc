@@ -30,10 +30,11 @@ interface
     uses
       cpubase,systems,
       globtype,cgutils,
-      aasmtai,assemble,aggas;
+      aasmbase,aasmtai,assemble,aggas;
 
     type
       Tx86ATTAssembler=class(TGNUassembler)
+        function sectionflags(secflags:TSectionFlags):string;override;
         constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
@@ -75,6 +76,15 @@ interface
 {****************************************************************************
                             Tx86ATTAssembler
  ****************************************************************************}
+
+    function Tx86ATTAssembler.sectionflags(secflags:TSectionFlags):string;
+      begin
+        result:=inherited sectionflags(secflags);
+        { COFF defaults unnamed attributes to writable data, unlike ELF. }
+        if (target_info.system in [system_i386_win32,system_x86_64_win64]) and
+           not (SF_W in secflags) then
+          result:=result+'r';
+      end;
 
     constructor Tx86ATTAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin

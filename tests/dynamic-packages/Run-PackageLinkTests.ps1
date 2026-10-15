@@ -19,27 +19,27 @@ foreach ($lSmart in @($false,$true)) {
             $null=Invoke-TestProcess "$lName-$Label" $lCompiler ($lOptions+$Extra+@("$Directory/$Filename")) $Expected $Contains $Directory
         }
         Copy-Item "$PSScriptRoot/upackagebase.pas" $lProvider
-        Write-TestFile "$lProvider/pkgbase.ppk" 'package pkgbase; contains upackagebase; end.'
+        Write-TestFile "$lProvider/pkgbase.nxpk" 'package pkgbase; contains upackagebase; end.'
         if($lCached){
             Compile 'base-unit' $lProvider 'upackagebase.pas'
             $lBefore=Get-TestUnitHash $lProvider upackagebase
             Move-TestArtifact "$lProvider/upackagebase.pas" "$lProvider/upackagebase.pas.hidden"
         }
-        Compile 'base-package' $lProvider 'pkgbase.ppk'
+        Compile 'base-package' $lProvider 'pkgbase.nxpk'
         if($lCached){Assert-PackageTest ($lBefore -eq (Get-TestUnitHash $lProvider upackagebase)) 'Cached provider changed'}
-        foreach($lSuffix in @('.pcp','.dll')){Copy-Item "$lProvider/pkgbase$lSuffix" $lDist}
+        foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lProvider/pkgbase$lSuffix" $lDist}
         Hide-TestUnit $lProvider upackagebase
         Copy-Item "$PSScriptRoot/upackageconsumer.pas" $lConsumer
-        Write-TestFile "$lConsumer/pkgconsumer.ppk" 'package pkgconsumer; requires pkgbase; contains upackageconsumer; end.'
+        Write-TestFile "$lConsumer/pkgconsumer.nxpk" 'package pkgconsumer; requires pkgbase; contains upackageconsumer; end.'
         if($lCached){
             Compile 'consumer-unit' $lConsumer 'upackageconsumer.pas' $true 0 '' @('-FPpkgbase')
             $lBefore=Get-TestUnitHash $lConsumer upackageconsumer
             Move-TestArtifact "$lConsumer/upackageconsumer.pas" "$lConsumer/upackageconsumer.pas.hidden"
         }
-        Compile 'consumer-package' $lConsumer 'pkgconsumer.ppk' $true
+        Compile 'consumer-package' $lConsumer 'pkgconsumer.nxpk' $true
         if($lCached){Assert-PackageTest ($lBefore -eq (Get-TestUnitHash $lConsumer upackageconsumer)) 'Cached consumer changed'}
-        Assert-PackageTest (-not(Test-Path "$lConsumer/upackagebase.ppu")) 'Provider unit leaked into consumer'
-        foreach($lSuffix in @('.pcp','.dll')){Copy-Item "$lConsumer/pkgconsumer$lSuffix" $lDist}
+        Assert-PackageTest (-not(Test-Path "$lConsumer/upackagebase.nxu")) 'Provider unit leaked into consumer'
+        foreach($lSuffix in @('.nxp','.dll')){Copy-Item "$lConsumer/pkgconsumer$lSuffix" $lDist}
         $lExports=Invoke-TestProcess "$lName-exports" llvm-readobj.exe @('--coff-exports',"$lDist/pkgbase.dll")
         $lImports=Invoke-TestProcess "$lName-imports" llvm-readobj.exe @('--coff-imports',"$lDist/pkgconsumer.dll")
         $lExported=@([regex]::Matches($lExports,'(?m)^\s*Name: (.+)$') | ForEach-Object {$_.Groups[1].Value.Trim()})
@@ -59,8 +59,8 @@ foreach ($lSmart in @($false,$true)) {
                 @('empty','package empty; end.','does not contain or require the System unit'),
                 @('missing','package missing; contains no_such_unit;',"Can't find unit"),
                 @('duplicate','package duplicate; requires pkgbase; contains upackagebase; end.','is already contained in package pkgbase'))){
-                Write-TestFile "$lConsumer/$($lNegative[0]).ppk" $lNegative[1]
-                Compile $lNegative[0] $lConsumer "$($lNegative[0]).ppk" $true 1 $lNegative[2]
+                Write-TestFile "$lConsumer/$($lNegative[0]).nxpk" $lNegative[1]
+                Compile $lNegative[0] $lConsumer "$($lNegative[0]).nxpk" $true 1 $lNegative[2]
             }
         }
     }

@@ -113,7 +113,7 @@ Type
 
   { moved here from psystem.pas
     Delphi allows chose of overloaded procedure depending
-    on Real <-> Double, so use type here, see also tw7425.pp (FK) }
+    on Real <-> Double, so use type here, see also tw7425.pas (FK) }
 {$ifndef FPUNONE}
   Real = type Double;
 { Include generic version of float64 record }

@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 
 Type
   TStringArray = Array of string;

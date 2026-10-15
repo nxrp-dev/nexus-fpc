@@ -79,27 +79,27 @@ wstrings.inc    Widestring type implementation
 The unit files are:
 Note these units are often implicitely used in certain compiler modi, and might not be for direct use!
 
-blockrtl.pp     Objective C block management functions
-charset.pp      Base unit for character conversions
-cmem.pp         Link to (a?) C runtimes memory allocator
-ctypes.pp       Aliases for common C/POSIX types
+blockrtl.pas     Objective C block management functions
+charset.pas      Base unit for character conversions
+cmem.pas         Link to (a?) C runtimes memory allocator
+ctypes.pas       Aliases for common C/POSIX types
 dynlibs.pas     Dynamic library loading implementation
-exeinfo.pp      Part of traceback support
-extpas.pp       Extended pascal compatible mode runtime parts
-fpextres.pp     External resource support
-fpintres.pp     Internal resource support
-getopts.pp      Pascal implementation of the GNU Getops
-heaptrc.pp      Runtime memory leak tracer and tests for memory integrity
-iso7185.pp      Unit that is automatically added when mode ISO is selected
-lineinfo.pp     Provide lineinformation in tracebacks (STABS)
-lnfodwrf.pp     Provide lineinformation in tracebacks (DWARF)
-lstrings.pp     Longstring type (?)
-macpas.pp       Macpas (Classic MacOS) mode runtime parts
-nothreads.pp    Empty thread manager
-objc.pp         Objective C related 
-objcbase.pp     Objective C related - NSObject root class
-sortbase.pp     Pluggable sorting algorithm support
-strings.pp      Pchar support
-uachar.pp       Aliases  (p)char  to (p)ansichar etc. Normal delphi mode
-uuchar.pp       Aliases  (p)char  to (p)unicodechar etc. Delphiunicode mode
+exeinfo.pas      Part of traceback support
+extpas.pas       Extended pascal compatible mode runtime parts
+fpextres.pas     External resource support
+fpintres.pas     Internal resource support
+getopts.pas      Pascal implementation of the GNU Getops
+heaptrc.pas      Runtime memory leak tracer and tests for memory integrity
+iso7185.pas      Unit that is automatically added when mode ISO is selected
+lineinfo.pas     Provide lineinformation in tracebacks (STABS)
+lnfodwrf.pas     Provide lineinformation in tracebacks (DWARF)
+lstrings.pas     Longstring type (?)
+macpas.pas       Macpas (Classic MacOS) mode runtime parts
+nothreads.pas    Empty thread manager
+objc.pas         Objective C related
+objcbase.pas     Objective C related - NSObject root class
+sortbase.pas     Pluggable sorting algorithm support
+strings.pas      Pchar support
+uachar.pas       Aliases  (p)char  to (p)ansichar etc. Normal delphi mode
+uuchar.pas       Aliases  (p)char  to (p)unicodechar etc. Delphiunicode mode
 

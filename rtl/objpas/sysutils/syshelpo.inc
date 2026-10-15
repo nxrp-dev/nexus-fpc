@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 
 Class Function TORDINALHELPER.Parse(const AString: string): TORDINALTYPE; inline; static;
 

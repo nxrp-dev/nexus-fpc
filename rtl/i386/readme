@@ -11,7 +11,7 @@ Include files for system are :
   rttip.inc (rtti handling, for speed reasons)
   
 Units are :
-  strings.pp (written in assembler for speed)
-  cpu.pp     (routines to access cpu info)
-  mmx.pp     (special mmx routines)
+  strings.pas (written in assembler for speed)
+  cpu.pas     (routines to access cpu info)
+  mmx.pas     (special mmx routines)
   

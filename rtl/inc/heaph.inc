@@ -108,7 +108,7 @@ function GetFPCHeapStatus:TFPCHeapStatus;
 {$endif need *HeapProcessWide (general considerations)}
 
 {$ifdef SUPPORT_INIT_HEAP_PROCESS_WIDE}
-procedure DeferInitHeapProcessWide; inline; { for Windows sysinit.pp... }
+procedure DeferInitHeapProcessWide; inline; { for Windows sysinit.pas... }
 procedure DoneHeapProcessWide; inline;
 {$endif SUPPORT_INIT_HEAP_PROCESS_WIDE}
 {$endif FPC_HAS_FEATURE_HEAP}

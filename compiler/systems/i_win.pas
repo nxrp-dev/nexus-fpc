@@ -26,7 +26,7 @@ unit i_win;
   interface
 
     uses
-       systems;
+       systems,nxartifactid;
 
     const
 
@@ -48,7 +48,7 @@ unit i_win;
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';
@@ -119,7 +119,7 @@ unit i_win;
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';
@@ -190,7 +190,7 @@ unit i_win;
             defext       : '.def';
             scriptext    : '.bat';
             smartext     : '.sl';
-            unitext      : '.ppu';
+            unitext      : NexusUnitExtension;
             unitlibext   : '.ppl';
             asmext       : '.s';
             objext       : '.o';

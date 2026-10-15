@@ -1,4 +1,4 @@
-{%MainUnit fpcanvas.pp}
+{%MainUnit fpcanvas.pas}
 {
     This file is part of the Free Pascal run time library.
     Copyright (c) 2003 by the Free Pascal development team

@@ -3061,7 +3061,7 @@ var
         if (pd_procvar in pdflags) and
            not(pd_procvar in proc_direcdata[p].pd_flags) then
           begin
-            { reset mismatching calling convention to avoid further errors, see e.g. tests/webtbf/tw41041.pp }
+            { reset mismatching calling convention to avoid further errors, see e.g. tests/webtbf/tw41041.pas }
             if proc_direcdata[p].pocall<>pocall_none then
               pd.proccalloption:=pocall_default;
 

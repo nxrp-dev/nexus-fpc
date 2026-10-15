@@ -27,19 +27,12 @@ the "msgstr" line. Please translate the strings carefully, especially some
 special characters like "%" inserts or quotation marks have to be at exactly
 the same semantic position as in the original string.
 
-When you are finished with your translation, add the language code to
-the variable DEMOLANGUAGES in the Makefile and do a 'make'. If all goes
-well, a file
-  restest.<langcode>.mo
-will be created. This file will be loaded by the restest example program.
-if there weren't any errors in your input file, you're finished.
-
-If you don't have 'make', you can make the .mo file with the following
-command:
+When you are finished with your translation, create the .mo file with:
 
 msgfmt -o restest.<langcode>.mo restest.<langcode>.po
 
-(msgfmt is part of the GNU gettext tools)
+The restest example program loads this .mo file. msgfmt is part of the GNU
+gettext tools. The former Makefile has been retired.
 
 If you add a new language, please send the .po file to the Free Pascal
 developers.

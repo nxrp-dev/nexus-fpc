@@ -38,7 +38,7 @@ The initial implementation writes a deterministic file in the process current
 directory:
 
 ```text
-nexus-profile-<process-id>-<startup-counter>.nxp
+nexus-profile-<process-id>-<startup-counter>.nxtrace
 ```
 
 Alternate paths, compression, sampling, filtering, blocking capture, and live
@@ -86,7 +86,7 @@ Background worker
     -> consume completed blocks
     -> pair events by originating thread
     -> calculate inclusive and self ticks
-    -> write completed calls to the .nxp trace
+    -> write completed calls to the .nxtrace trace
 
 TNXProfileReader
     -> validate and enumerate length-bounded trace records

@@ -140,7 +140,7 @@ uses
   symtable, symsym,
   wpoinfo,
   scanner,
-  aasmbase,ogbase,
+  aasmbase,aasmdata,ogbase,
   comphook,
   entfile,fpkg,fpcp,export;
 
@@ -478,13 +478,8 @@ var
          { Check for Sources }
            ppufile:=nil;
            recompile_reason:=rr_noppu;
-         {Check for .pp file}
+         { Check for Pascal source }
            Found:=UnitExists(sourceext,hs,prefix);
-           if not Found then
-            begin
-              { Check for .pas }
-              Found:=UnitExists(pasext,hs,prefix);
-            end;
            if not Found and
               ((m_mac in current_settings.modeswitches) or
                (tf_p_ext_support in target_info.flags)) then
@@ -626,13 +621,6 @@ var
               Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,sourceext));
             if FindFile(ChangeFileExt(sourcefn,sourceext),'',true,hs) then
               include(fnd,auSrc);
-            if (fnd=[]) then
-             begin
-               if CheckVerbosity(V_Tried) then
-                 Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,pasext));
-               if FindFile(ChangeFileExt(sourcefn,pasext),'',true,hs) then
-                 include(fnd,auSrc);
-             end;
             if (fnd=[]) and
                ((m_mac in current_settings.modeswitches) or
                 (tf_p_ext_support in target_info.flags)) then
@@ -1631,6 +1619,10 @@ var
 
 
     procedure tppumodule.writeppu;
+      var
+        lIndex: longint;
+        lAsmSymbols: TFPHashObjectList;
+        lSymbol: TAsmSymbol;
       begin
          { A System unit built with a contradictory Char alias must never
            receive a PPU bearing the invocation's text-model flag. }
@@ -1765,6 +1757,25 @@ var
 
          { write implementation uses }
          writeusedunit(false);
+
+         { Calls and procedure addresses introduced by inlining or code
+           generation need the same package import lookup as parsed calls. }
+         if tf_supports_packages in target_info.flags then
+           begin
+             lAsmSymbols:=TAsmData(asmdata).AsmSymbolDict;
+             for lIndex:=0 to lAsmSymbols.Count-1 do
+               begin
+                 lSymbol:=TAsmSymbol(lAsmSymbols[lIndex]);
+                 if lSymbol.typ<>AT_FUNCTION then
+                   continue;
+                 case lSymbol.bind of
+                   AB_EXTERNAL:
+                     add_extern_asmsym(lSymbol);
+                   else
+                     ;
+                 end;
+               end;
+           end;
 
          { write all public assembler symbols }
          writeasmsyms(ualt_public,publicasmsyms);

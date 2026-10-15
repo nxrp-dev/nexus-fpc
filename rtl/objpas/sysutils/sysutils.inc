@@ -1,4 +1,4 @@
-{%MainUnit sysutils.pp}
+{%MainUnit sysutils.pas}
 {$if defined(win64) or (defined(linux) and defined(cpux86_64))}
 {$ifdef win64}
 function PackageGetModuleHandleEx(Flags: DWord; Address: Pointer; var Module: HMODULE): LongBool;

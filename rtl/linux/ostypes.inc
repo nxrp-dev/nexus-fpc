@@ -101,7 +101,7 @@ type
   TStat      = Stat;
   PStat      = ^Stat;
 
-  { Referred to rtl/linux/linux.pp }
+  { Referred to rtl/linux/linux.pas }
   statx64_timestamp = record
     tv_sec : cint64;
     tv_nsec : cuint32;

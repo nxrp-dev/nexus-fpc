@@ -146,7 +146,7 @@
     // comprehensive testing.
     // Define to print 10 digits.
     // Note: there is no much sense to print 10 digits, except that it fixes
-    // the test "./tests/test/units/sysutils/tfloattostr.pp".
+    // the test "./tests/test/units/sysutils/tfloattostr.pas".
     // Alternate way would be to print 9 digits, and change the test to
     // compare against "6e-9" instead of "6e-10".
     {$define GRISU1_F2A_SINGLE_10DIGITS}

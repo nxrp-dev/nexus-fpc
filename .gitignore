@@ -2,10 +2,10 @@
 *.bak
 *.exe
 *.ppu
+*.nxu
 *.pcp
 *.o
 *.s
-*.fpm
 *.a
 *.hex
 *.elf
@@ -31,11 +31,8 @@
 *.ttp
 *.prg
 *.compiled
-fpcmade.*
 *-stamp.*
 build-stamp.*
-BuildUnit_*.pp
-BUnit.pp
 log.*
 faillist.*
 gdb4fpc.ini
@@ -46,6 +43,7 @@ backup
 lazbuild
 *.wpo
 *.nxp
+*.nxtrace
 fp.dsk
 fp.ini
 fp.cfg
@@ -67,7 +65,6 @@ symbol_order*.fpc
 /compiler/ppc*
 /compiler/gppc*
 /compiler/vppc*
-!/compiler/ppc*.lpi
 !/compiler/ppcgen/*.pas
 !/compiler/ppcgen/*.inc
 !/compiler/ppc*.pas
@@ -87,9 +84,6 @@ symbol_order*.fpc
 /compiler/utils/ppumove
 /compiler/utils/mkx86inl
 /compiler/html
-/packages/fpmake
-/packages/fpmkunit/units_bs
-/rtl/Package.fpc
 /rtl/units-*
 units
 /tests/createlst
@@ -106,7 +100,6 @@ units
 /tests/utils/fptime
 /tests/utils/testfail
 bin/
-fpmake
 packages/fcl-db/tests/database.ini
 /output/
 /build/forge-bootstrap/

@@ -231,7 +231,7 @@ function BuildTraceFileName(var Buffer: array of AnsiChar;
   ProcessId, Counter: DWord): SizeInt;
 const
   Prefix: PAnsiChar = 'nexus-profile-';
-  Suffix: PAnsiChar = '.nxp';
+  Suffix: PAnsiChar = '.nxtrace';
 var
   Index, Position: SizeInt;
 begin

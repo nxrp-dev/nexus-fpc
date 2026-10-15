@@ -16,8 +16,8 @@ function Compile([string]$Name,[string]$Source,[string[]]$Requires=@(),[bool]$Pr
     $null=Invoke-TestScript $Name "$lRoot/scripts/Invoke-NexusFPCPackageCompile.ps1" $p
 }
 Copy-Item "$PSScriptRoot/threadvar_contracts.pas" $lSource
-Write-TestFile "$lSource/tvcontracts.ppk" 'package tvcontracts; requires nxrtl; contains Threadvar_Contracts; end.'
-Compile contracts "$lSource/tvcontracts.ppk"
+Write-TestFile "$lSource/tvcontracts.nxpk" 'package tvcontracts; requires nxrtl; contains Threadvar_Contracts; end.'
+Compile contracts "$lSource/tvcontracts.nxpk"
 $lTemplate=Get-Content "$PSScriptRoot/threadvar_provider.pas.in" -Raw
 for($i=0;$i -lt 26;$i++){
     $lName="tv$i"; $lUnit="Threadvar_Provider_$i"
@@ -26,8 +26,8 @@ for($i=0;$i -lt 26;$i++){
         $lName='tvfail'; $lUnit+=', Threadvar_Failure'
         Write-TestFile "$lSource/threadvar_failure.pas" "unit Threadvar_Failure; {`$mode objfpc} interface implementation uses SysUtils, Threadvar_Provider_25; threadvar Value: LongInt; initialization if Value<>0 then Halt(91); Value:=18; raise Exception.Create('threadvar-init-failure'); end."
     }
-    Write-TestFile "$lSource/$lName.ppk" "package $lName; requires nxrtl, tvcontracts; contains $lUnit; end."
-    Compile $lName "$lSource/$lName.ppk"
+    Write-TestFile "$lSource/$lName.nxpk" "package $lName; requires nxrtl, tvcontracts; contains $lUnit; end."
+    Compile $lName "$lSource/$lName.nxpk"
 }
 Compile host "$PSScriptRoot/threadvar_package_host.pas" @('tvcontracts','tv24') $true
 $lBundle=Get-NexusPackageBundle $lHost

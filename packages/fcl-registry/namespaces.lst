@@ -1,4 +1,4 @@
-src/registry.pp=namespaced/System.Registry.pp
+src/registry.pas=namespaced/System.Registry.pas
 {s*:src/}=namespaced/
 {i+:src/}
-src/xmlreg.pp=namespaced/System.Xmlreg.pp
+src/xmlreg.pas=namespaced/System.Xmlreg.pas

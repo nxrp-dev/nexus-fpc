@@ -8,6 +8,9 @@ interface
 const
   NexusPPUSignature = 'NXU';
   NexusPCPSignature = 'NXP';
+  NexusUnitFileType = 'nxu';
+  NexusUnitExtension = '.' + NexusUnitFileType;
+  NexusPackageExtension = '.nxp';
 
 { Package targets currently have 64-bit descriptor fields. Keep all 32 bits of
   the unit compatibility revision distinct from the compiler and header versions.

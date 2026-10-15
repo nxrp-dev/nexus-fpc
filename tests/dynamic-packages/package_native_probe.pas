@@ -16,7 +16,7 @@ begin
 end;
 function Load(const AName: string): HMODULE;
 begin
-  Result:=LoadLibrary(PChar(IncludeTrailingPathDelimiter(ParamStr(2))+AName+'.dll'));
+  Result:=LoadLibrary(PChar(IncludeTrailingPathDelimiter(ParamStr(2))+AName+'.nxpl'));
   Check(Result<>0,'LoadLibrary '+AName+': '+IntToStr(GetLastError));
 end;
 function Symbol(ALibrary: HMODULE; const AName: string): Pointer;

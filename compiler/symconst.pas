@@ -165,7 +165,7 @@ const
   defid_registered_nost = -1;
 
 type
-  { keep this in sync with TIntfFlag in rtl/objpas/typinfo.pp }
+  { keep this in sync with TIntfFlag in rtl/objpas/typinfo.pas }
   TCompilerIntfFlag = (ifHasGuid,ifDispInterface,ifDispatch,ifHasStrGUID);
 
   { Deref entry options }

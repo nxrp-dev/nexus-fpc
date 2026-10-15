@@ -8,7 +8,7 @@ executed tests is provided at the testcase and testsuite level.
 Summary of the results of the contained testcases (number of
 run tests, number of errors, failures and ignored tests)
 is provided for each test suite.
-A modified console test runner (consoletestrunner.pp)
+A modified console test runner (consoletestrunner.pas)
 is included that uses this new reporting classes.
 Of course a separate xmltestreport class is included for those
 that would like to use the xml test report through xslt to produce

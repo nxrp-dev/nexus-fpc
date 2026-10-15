@@ -1,4 +1,4 @@
-{%MainUnit fpcunit.pp}
+{%MainUnit fpcunit.pas}
 
 {
     This file is part of the Free Pascal run time library.
