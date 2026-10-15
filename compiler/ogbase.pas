@@ -161,8 +161,6 @@ interface
        oso_debug_copy,
        { Has relocations with explicit addends (ELF-specific) }
        oso_rela_relocs,
-       { Supports bss-like allocation of data, even though it is written in file (i.e. also has oso_Data) }
-       oso_sparse_data,
        { Section to support the resolution of multiple symbols with the same name }
        oso_comdat,
        { section containing thread variables }
@@ -211,9 +209,6 @@ interface
        { Darwin asm is using indirect symbols resolving }
        indsymbol  : TObjSymbol;
 
-       { Used by the OMF object format and its complicated relocation records }
-       group: TObjSectionGroup;
-
        constructor create(AList:TFPHashObjectList;const AName:string);virtual;
        function  ToString:AnsiString;override;
        function  address:qword;
@@ -242,13 +237,11 @@ interface
                                       { ELF: explicit addend }
         symbol     : TObjSymbol;
         objsection : TObjSection; { only used if symbol=nil }
-        group      : TObjSectionGroup; { only used if symbol=nil and objsection=nil }
         ftype      : byte;
         size       : byte;
         flags      : byte;
         constructor CreateSymbol(ADataOffset:TObjSectionOfs;s:TObjSymbol;Atyp:TObjRelocationType);
         constructor CreateSection(ADataOffset:TObjSectionOfs;aobjsec:TObjSection;Atyp:TObjRelocationType);
-        constructor CreateGroup(ADataOffset:TObjSectionOfs;grp:TObjSectionGroup;Atyp:TObjRelocationType);
         constructor CreateRaw(ADataOffset:TObjSectionOfs;s:TObjSymbol;ARawType:byte);
         function TargetName:TSymStr;
         function ToString: AnsiString; override;
@@ -498,9 +491,6 @@ implementation
     uses
       SysUtils,
       Globals,Verbose
-{$ifdef OMFOBJSUPPORT}
-      ,omfbase
-{$endif OMFOBJSUPPORT}
       ;
 
 {$ifdef MEMDEBUG}
@@ -639,7 +629,6 @@ implementation
         DataOffset:=ADataOffset;
         Symbol:=s;
         OrgSize:=0;
-        Group:=nil;
         ObjSection:=nil;
         ftype:=ord(Atyp);
       end;
@@ -652,21 +641,7 @@ implementation
         DataOffset:=ADataOffset;
         Symbol:=nil;
         OrgSize:=0;
-        Group:=nil;
         ObjSection:=aobjsec;
-        ftype:=ord(Atyp);
-      end;
-
-
-    constructor TObjRelocation.CreateGroup(ADataOffset:TObjSectionOfs;grp:TObjSectionGroup;Atyp:TObjRelocationType);
-      begin
-        if not Assigned(grp) then
-          InternalError(2015111201);
-        DataOffset:=ADataOffset;
-        Symbol:=nil;
-        ObjSection:=nil;
-        OrgSize:=0;
-        Group:=grp;
         ftype:=ord(Atyp);
       end;
 
@@ -677,7 +652,6 @@ implementation
         DataOffset:=ADataOffset;
         Symbol:=s;
         ObjSection:=nil;
-        Group:=nil;
         orgsize:=0;
         ftype:=ARawType;
         flags:=rf_raw;
@@ -716,8 +690,7 @@ implementation
       var
         typstr,
         symbolstr,
-        objsectionstr,
-        groupstr: AnsiString;
+        objsectionstr: AnsiString;
       begin
         Str(typ,typstr);
         if Assigned(symbol) then
@@ -728,13 +701,9 @@ implementation
           objsectionstr:=objsection.ToString
         else
           objsectionstr:='nil';
-        if Assigned(group) then
-          groupstr:=group.ToString
-        else
-          groupstr:='nil';
         Result:='(typ:'+typstr+';DataOffset:'+ToStr(DataOffset)+
           ';orgsize:'+ToStr(orgsize)+';symbol:'+symbolstr+
-          ';objsection:'+objsectionstr+';group:'+groupstr+
+          ';objsection:'+objsectionstr+
           ';ftype:'+ToStr(ftype)+';size:'+ToStr(size)+
           ';flags:'+ToStr(flags)+')';
       end;
@@ -1027,10 +996,7 @@ implementation
         if (qword(size)+l)>SizeLimit then
           SectionTooLargeError;
 {$endif}
-        if oso_sparse_data in SecOptions then
-          WriteZeros(l)
-        else
-          inc(size,l);
+        inc(size,l);
       end;
 
 
@@ -1243,12 +1209,6 @@ implementation
            (tf_supports_packages in TargetInfo.flags) and
            (cs_create_pic in CurrentSettings.ModuleSwitches) then
           include(result,oso_write);
-{$ifdef OMFOBJSUPPORT}
-        { in the huge memory model, BSS data is actually written in the regular
-          FAR_DATA segment of the module }
-        if omf_segclass(atype)='FAR_DATA' then
-          Result:=Result+[oso_data,oso_sparse_data];
-{$endif OMFOBJSUPPORT}
       end;
 
 

@@ -2773,10 +2773,6 @@ begin
                 include(InitSettings.GlobalSwitches,cs_use_lineinfo);
               end;
           end;
-        'm' :
-          begin
-            paratargetdbg:=dbg_codeview;
-          end;
         'o' :
           begin
             if not UpdateDebugStr(copy(more,j+1),InitSettings.DebugSwitches) then

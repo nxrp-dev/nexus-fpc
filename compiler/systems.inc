@@ -134,8 +134,6 @@
             ,ar_mpw_ar
             ,ar_gnu_ar_scripted
             ,ar_gnu_gar
-            ,ar_watcom_wlib_omf
-            ,ar_watcom_wlib_omf_scripted
             ,ar_sdcc_sdar
             ,ar_sdcc_sdar_scripted
        );
@@ -152,7 +150,6 @@
 
        TDbg = (dbg_none
             ,dbg_stabs,dbg_stabx,dbg_dwarf3,dbg_dwarf4,dbg_dwarf5,dbg_jasmin
-            ,dbg_codeview
        );
 
        TScriptType = (script_none

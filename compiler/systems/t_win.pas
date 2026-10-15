@@ -92,9 +92,6 @@ implementation
     CFileUtl,
     cgutils,DbgBase,
     owar,ogbase
-{$ifdef SUPPORT_OMF}
-    ,ogomf
-{$endif SUPPORT_OMF}
     ,ogcoff;
 
 

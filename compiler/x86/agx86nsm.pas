@@ -86,7 +86,7 @@ interface
 
     uses
       CUtils,Globals,Systems,FPCHash,
-      FModule,FinPut,Verbose,CPUInfo,cgbase,omfbase
+      FModule,FinPut,Verbose,CPUInfo,cgbase
       ;
 
     const
@@ -1188,10 +1188,6 @@ interface
                            end;
                        end;
                    end;
-{$ifdef OMFOBJSUPPORT}
-                 asd_omf_linnum_line :
-                   writer.AsmWriteLn('; OMF LINNUM Line '+TAIDirective(hp).name);
-{$endif OMFOBJSUPPORT}
                  else
                    InternalError(2005091903);
                end;

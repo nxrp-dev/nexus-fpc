@@ -309,8 +309,6 @@ interface
           NASM's 'CPU 686' or MASM/TASM's '.686p'. Might not be supported by
           all assemblers. }
         asd_cpu,
-        { for the OMF object format }
-        asd_omf_linnum_line,
         { RISC-V }
         asd_option
       );
@@ -353,8 +351,6 @@ interface
         'code',
 	'force_thumb',
         'cpu',
-        { for the OMF object format }
-        'omf_line',
         { RISC-V }
         'option'
       );

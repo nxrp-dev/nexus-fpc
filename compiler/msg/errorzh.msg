@@ -3553,11 +3553,9 @@ A*2CV<x>_将线程变量模型设置为 <x>
 *g2gc_生成指针检查(实验性，仅在某些目标上可用，可能产生误报)
 *g2gh_使用 heaptrace 单元(用于内存泄漏/损坏调试)
 *g2gl_使用行信息单元(在回溯中显示更多信息)
-*g2gm_生成 Microsoft CodeView 调试信息(实验性)
 *g2go<x>_设置调试信息选项
 *g3godwarfcpp_在 DWARF 中模拟 C++ 调试信息
 *g3godwarfmethodclassprefix_在 DWARF 中用类名作为方法名的前缀
-*g3godwarfomflinnum_除了 DWARF 调试信息外，还在 MS LINK 格式的 OMF LINNUM 记录中生成行号信息(Open Watcom 调试器/链接器兼容性)
 *g3godwarfsets_启用 DWARF 'set' 类型调试信息(破坏 gdb < 6.5)
 *g3gostabsabsincludes_在 Stabs 中存储绝对/完整包含文件路径
 *g2gp_在 stabs 符号名中保留大小写

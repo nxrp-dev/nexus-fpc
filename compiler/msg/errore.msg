@@ -4010,7 +4010,6 @@ F*0*_Only options valid for the default or selected platform are listed.
 4*2Ayasm_Assemble using Yasm (experimental)
 8*2Anasm_Assemble using Nasm
 8*2Anasmobj_Assemble using Nasm
-8*2Aomf Assemble using internal OMF object writer
 A*2Aas_Assemble using GNU AS
 A*2Aas-darwin_Assemble using GNU AS for Darwin targets
 A*2Aclang_Assemble using clang
@@ -4123,11 +4122,9 @@ A*2CV<x>_Set section threadvar model to <x>
 *g2gc_Generate checks for pointers (experimental, only available on some targets, might generate false positive)
 *g2gh_Use heaptrace unit (for memory leak/corruption debugging)
 *g2gl_Use line info unit (show more info with backtraces)
-*g2gm_Generate Microsoft CodeView debug information (experimental)
 *g2go<x>_Set debug information options
 *g3godwarfcpp_ Simulate C++ debug information in DWARF
 *g3godwarfmethodclassprefix_ Prefix method names in DWARF with class name
-*g3godwarfomflinnum_ Generate line number information in OMF LINNUM records in MS LINK format in addition to the DWARF debug information (Open Watcom Debugger/Linker compatibility)
 *g3godwarfsets_ Enable DWARF 'set' type debug information (breaks gdb < 6.5)
 *g3gostabsabsincludes_ Store absolute/full include file paths in Stabs
 *g2gp_Preserve case in stabs symbol names

@@ -259,10 +259,6 @@ Implementation
 {$ifdef memdebug}
       CClasses,
 {$endif memdebug}
-{$ifdef OMFOBJSUPPORT}
-      omfbase,
-      ogomf,
-{$endif OMFOBJSUPPORT}
 
       CScript,FModule,Verbose,
       cpubase,CPUInfo,Triplet,
@@ -1720,11 +1716,6 @@ Implementation
                        objsym:=ObjData.symbolref(TAIDirective(hp).name);
                        objsym.bind:=AB_WEAK;
                      end;
-{$ifdef OMFOBJSUPPORT}
-                   asd_omf_linnum_line:
-                     { ignore for now, but should be added}
-                     ;
-{$endif OMFOBJSUPPORT}
                    else
                      InternalError(2010011101);
                  end;
@@ -1828,8 +1819,7 @@ Implementation
                end;
              ait_datablock :
                begin
-                 if (oso_data in ObjData.CurrObjSec.secoptions) and
-                    not (oso_sparse_data in ObjData.CurrObjSec.secoptions) then
+                 if oso_data in ObjData.CurrObjSec.secoptions then
                    Message(asmw_e_alloc_data_only_in_bss);
 {$ifdef USE_COMM_IN_BSS}
                  if writingpackages and
@@ -1938,11 +1928,6 @@ Implementation
                    asd_weak_definition:
                      { ignore for now, but should be added}
                      ;
-{$ifdef OMFOBJSUPPORT}
-                   asd_omf_linnum_line:
-                     { ignore for now, but should be added}
-                     ;
-{$endif OMFOBJSUPPORT}
                    asd_cpu:
                      begin
                        ObjData.CPUType:=cpu_none;
@@ -2261,16 +2246,6 @@ Implementation
                              break;
                            end;
                      end;
-{$ifdef OMFOBJSUPPORT}
-                   asd_omf_linnum_line:
-                     begin
-                       TOmfObjSection(ObjData.CurrObjSec).LinNumEntries.Add(
-                         TOMFSubRecordLINNUMMsLinkEntry.Create(
-                           strtoint(TAIDirective(hp).name),
-                           ObjData.CurrObjSec.Size
-                         ));
-                     end;
-{$endif OMFOBJSUPPORT}
                    else
                      ;
                  end

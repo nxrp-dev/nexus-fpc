@@ -856,10 +856,7 @@ Implementation
 
     Function TExternalLinker.MakeStaticLibrary:boolean;
 
-      var
-        total_size, power : LongInt;
-
-        function GetNextFiles(const maxCmdLength : LongInt; var item : TCmdStrListItem; const addfilecmd : string) : TCmdStr;
+      function GetNextFiles(const maxCmdLength : LongInt; var item : TCmdStrListItem; const addfilecmd : string) : TCmdStr;
           var
             ItemExists : boolean;
 	    ItemSize : LongInt;
@@ -875,7 +872,6 @@ Implementation
                   system.reset(fs);
 		  ItemSize:=FileSize(fs);
                   system.close(fs);
-                  system.inc(total_size,align(ItemSize,16));
                 end;
               if (cs_link_nolink in CurrentSettings.GlobalSwitches) or
                  (ItemExists and (ItemSize>0)) then
@@ -884,36 +880,16 @@ Implementation
             end;
           end;
 
-        function get_wlib_record_size: integer;
-	  var
-            nb_pages,page_size : LongInt;
-          begin
-            { Set wlib page size to a sensible value }
-            if total_size>0 then
-              begin
-                page_size:=16 div 2;
-                repeat
-                  page_size:=page_size*2;
-                  nb_pages:=(total_size + (page_size-1)*SmartLinkOFiles.count) div page_size;
-		until nb_pages <= high(word);
-                result:=nb_pages;
-              end
-            else
-              result:=max(16,NextPowerOf2(SmartLinkOFiles.count div 16, power));
-          end;
-
       var
         binstr, firstbinstr, scriptfile : TCmdStr;
         cmdstr, firstcmd, nextcmd, smartpath : TCmdStr;
         current : TCmdStrListItem;
         script: Text;
         scripted_ar : boolean;
-        ar_creates_different_output_file : boolean;
         success : boolean;
         first : boolean;
       begin
         MakeStaticLibrary:=false;
-	total_size:=0;
       { remove the library, to be sure that it is rewritten }
         DeleteFile(CurrentModule.StaticLibFileName);
       { Call AR }
@@ -933,7 +909,6 @@ Implementation
 
 
         scripted_ar:=(TargetAr.id=ar_gnu_ar_scripted) or
-                     (TargetAr.id=ar_watcom_wlib_omf_scripted) or
                      (TargetAr.id=ar_sdcc_sdar_scripted);
 
         if scripted_ar then
@@ -943,25 +918,15 @@ Implementation
             Assign(script, scriptfile);
             Rewrite(script);
             try
-              if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                WriteLn(script, 'CREATE ' + CurrentModule.StaticLibFileName)
-              else { wlib case }
-                WriteLn(script,'-q -p=',get_wlib_record_size,' -fo -c -b '+
-                  MaybeQuoted(CurrentModule.StaticLibFileName));
+              WriteLn(script, 'CREATE ' + CurrentModule.StaticLibFileName);
               current := TCmdStrListItem(SmartLinkOFiles.First);
               while current <> nil do
                 begin
-                  if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                  WriteLn(script, 'ADDMOD ' + current.str)
-                  else
-                    WriteLn(script,'+' + current.str);
+                  WriteLn(script, 'ADDMOD ' + current.str);
                   current := TCmdStrListItem(current.next);
                 end;
-              if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                begin
-                  WriteLn(script, 'SAVE');
-                  WriteLn(script, 'END');
-                end;
+              WriteLn(script, 'SAVE');
+              WriteLn(script, 'END');
             finally
               Close(script);
             end;
@@ -969,16 +934,8 @@ Implementation
           end
         else
           begin
-            ar_creates_different_output_file:=(Pos('$OUTPUTLIB',cmdstr)>0) or (Pos('$OUTPUTLIB',firstcmd)>0);
             Replace(cmdstr,'$LIB',MaybeQuoted(CurrentModule.StaticLibFileName));
             Replace(firstcmd,'$LIB',MaybeQuoted(CurrentModule.StaticLibFileName));
-            Replace(cmdstr,'$OUTPUTLIB',MaybeQuoted(CurrentModule.StaticLibFileName+'.tmp'));
-            Replace(firstcmd,'$OUTPUTLIB',MaybeQuoted(CurrentModule.StaticLibFileName+'.tmp'));
-            if TargetAr.id=ar_watcom_wlib_omf then
-              begin
-                Replace(cmdstr,'$RECSIZE','-p='+IntToStr(get_wlib_record_size));
-                Replace(firstcmd,'$RECSIZE','-p='+IntToStr(get_wlib_record_size));
-              end;
             { create AR commands }
             success := true;
             current := TCmdStrListItem(SmartLinkOFiles.First);
@@ -993,13 +950,6 @@ Implementation
                 success:=DoExec(firstbinstr,nextcmd,false,true)
               else
                 success:=DoExec(binstr,nextcmd,false,true);
-              if ar_creates_different_output_file then
-                begin
-                  if FileExists(CurrentModule.StaticLibFileName,false) then
-                    DeleteFile(CurrentModule.StaticLibFileName);
-                  if FileExists(CurrentModule.StaticLibFileName+'.tmp',false) then
-                    RenameFile(CurrentModule.StaticLibFileName+'.tmp',CurrentModule.StaticLibFileName);
-                end;
               first := false;
             until (not Assigned(current)) or (not success);
           end;
@@ -1489,23 +1439,6 @@ Implementation
             arfinishcmd : 'gar s $LIB'
           );
 
-      ar_watcom_wlib_omf_info : TArInfo =
-          ( id          : ar_watcom_wlib_omf;
-            addfilecmd  : '+';
-            arfirstcmd  : 'wlib -q $RECSIZE -fo -c -b -n -o=$OUTPUTLIB $LIB $FILES';
-            arcmd       : 'wlib -q $RECSIZE -fo -c -b -o=$OUTPUTLIB $LIB $FILES';
-            arfinishcmd : ''
-          );
-
-      ar_watcom_wlib_omf_scripted_info : TArInfo =
-          (
-            id    : ar_watcom_wlib_omf_scripted;
-            addfilecmd  : '+';
-            arfirstcmd  : '';
-            arcmd : 'wlib @$SCRIPT';
-            arfinishcmd : ''
-          );
-
       ar_sdcc_sdar_info : TArInfo =
           ( id          : ar_sdcc_sdar;
           addfilecmd  : '';
@@ -1528,8 +1461,6 @@ initialization
   RegisterAr(ar_gnu_ar_info);
   RegisterAr(ar_gnu_ar_scripted_info);
   RegisterAr(ar_gnu_gar_info);
-  RegisterAr(ar_watcom_wlib_omf_info);
-  RegisterAr(ar_watcom_wlib_omf_scripted_info);
   RegisterAr(ar_sdcc_sdar_info);
   RegisterAr(ar_sdcc_sdar_scripted_info);
 end.

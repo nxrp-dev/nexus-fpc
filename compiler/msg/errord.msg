@@ -4194,11 +4194,9 @@ A*2CV<x>_Setze das Section-Threadvar-Modell auf <x>
 *g2gc_ZeigerÅberprÅfung (experimentell, nur auf einige Systemen, kann falschen Alarm erzeugen)
 *g2gh_Heaptrace-Unit einbinden (fÅr Speicherlecks und -korruption)
 *g2gl_Line info Unit einbinden, um mehr backtrace Informationen anzuzeigen
-*g2gm_Erzeuge Microsoft-CodeView Debug-Informationen (experimentell)
 *g2go<x>_Setze Optionen fÅr die Debug-Informationen
 *g3godwarfcpp_ Simuliere C++ Debug-Informationen in DWARF
 *g3godwarfmethodclassprefix_ Stelle Methodennamen in DWARF den Namen der Klasse voran
-*g3godwarfomflinnum_ Erzeuge Zeilennummer-Informationen in den "OMF LINNUM"-Records im Format "MS LINK" zusÑtzlich zu Debug-Informationen in DWARF (KompatibilitÑt zum Open Watcom Debugger/Linker)
 *g3godwarfsets_Schalte DWARF Debug-Informationen fÅr Mengen (sets) ein (verhindert debugging mit gdb < 6.5)
 *g3gostabsabsincludes_ Absolute/volle Include-Datei-Pfade in Stabs speichern
 *g2gp_Erhalte Gro·/Kleinschreibung in Stabs-Symbolnamen

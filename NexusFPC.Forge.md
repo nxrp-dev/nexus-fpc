@@ -52,6 +52,13 @@ Object-file writers and Windows import-library generation remain available.
 This removal does not change external linker selection: use `-XLL` to select
 LLD on Linux and Darwin.
 
+OMF object/library readers and writers, Watcom OMF archivers, and the old OMF
+CodeView debug path are removed. `-Aomf`, `-gm` and `-godwarfomflinnum` are no
+longer accepted. Windows PE/COFF object and import-library support remains.
+NXU long compatibility revision 40 replaces 39; rebuild cached units and SDKs.
+The OMF switch checks use the same three arguments as the linker checks below:
+`bash tests/switches/Run-NXRemovedOMFTests.sh <compiler> <rtl-units> <output>`.
+
 On a Linux host, check the removed options and native LLVM linking with:
 
 ```bash

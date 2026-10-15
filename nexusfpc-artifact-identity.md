@@ -8,7 +8,7 @@ artifact, even when all numeric version fields happen to match.
 
 | Artifact | Extension | Signature | Current revision |
 | --- | --- | --- | --- |
-| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 39 |
+| Compiled unit | `.nxu` | `NXU` | Header 208; long compatibility revision 40 |
 | Compiler package metadata | `.nxp` | `NXP` | 4 |
 | Runtime package descriptor | Native DLL or SO | Existing `NXPK` magic (`$4e58504b`) | 4; 168 bytes on supported package targets |
 
@@ -39,6 +39,11 @@ The Currency correction used revision 37 for saved range state. The subsequent
 [native floating-point policy](nexusfpc-native-real-design.md) advances it to 38:
 Win64 Extended is binary80, and real payloads use ten bytes for x86 targets or
 eight bytes for ARM targets. The runtime compiler identity includes this revision.
+
+OMF removal advances the compatibility revision from 39 to 40. The retired OMF
+assembler directive is removed from the serialized directive enum, and its
+debug-switch member is removed from saved compiler settings. Rebuild cached
+units and package SDKs. The `NXU208` header and `NXP004` container are unchanged.
 
 The family constants live in `compiler/nxartifactid.pas`. Unit readers, package
 readers, embedded package units, package rewriting, `ppufiles`, and `ppumove`

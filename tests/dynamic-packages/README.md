@@ -73,7 +73,7 @@ link, runtime, SDK and loader Python runners. It shares SDK construction instead
 of separately bootstrapping obsolete stock-Win64 compiler builds in every suite.
 Native descriptor checks derive the compatibility revision from current source;
 there is no stale hard-coded revision 35 expectation. Current artifacts use
-NXP v4 and NXU header 208, compatibility revision **39**.
+NXP v4 and NXU header 208, compatibility revision **40**.
 
 ## Timings
 
