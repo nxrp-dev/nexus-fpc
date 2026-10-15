@@ -33,37 +33,37 @@ interface
 
   type
     TContainedUnit=record
-      module:TModuleBase;
-      ppufile:TPathStr;
-      offset:LongInt;
-      size:LongInt;
+      Module:TModuleBase;
+      PPUFile:TPathStr;
+      Offset:LongInt;
+      Size:LongInt;
     end;
     PContainedUnit=^TContainedUnit;
 
     TPackage=class
     public
-      realpackagename,
-      packagename : PShortString;
-      containedmodules : TFPHashList;
-      requiredpackages : TFPHashObjectList;
-      requiredidentities : TFPHashList;
-      sdkidentity, buildidentity: shortstring;
-      pcpfilename,
-      ppafilename,
-      pplfilename : TPathStr;
-      constructor create(const pn:string);
+      RealPackageName,
+      PackageName : PShortString;
+      ContainedModules : TFPHashList;
+      RequiredPackages : TFPHashObjectList;
+      RequiredIdentities : TFPHashList;
+      SDKIdentity, BuildIdentity: ShortString;
+      PCPFileName,
+      PPAFileName,
+      PPLFileName : TPathStr;
+      constructor Create(const PN:string);
       destructor Destroy;override;
     end;
 
     TPackageEntry=record
-      package : TPackage;
-      realpkgname : string;
-      usedunits : LongInt;
-      direct : boolean;
+      Package : TPackage;
+      RealPkgName : string;
+      UsedUnits : LongInt;
+      Direct : Boolean;
     end;
     PPackageEntry=^TPackageEntry;
 
-  function current_package_build_identity: shortstring;
+  function Current_Package_Build_Identity: ShortString;
 
 implementation
 
@@ -72,68 +72,68 @@ implementation
 
   { tpackage }
 
-  function current_package_build_identity: shortstring;
-    var g: System.TGUID;
+  function Current_Package_Build_Identity: ShortString;
+    var G: System.TGUID;
     begin
       if Package_Build_Identity='' then
         begin
-          if CreateGUID(g)<>0 then
+          if CreateGUID(G)<>0 then
             raise Exception.Create('Cannot create package build identity');
           Package_Build_Identity:=StringReplace(StringReplace(
-            Copy(GUIDToString(g),2,36),'-','',[rfReplaceAll]),'}','',[]);
+            Copy(GUIDToString(G),2,36),'-','',[rfReplaceAll]),'}','',[]);
         end;
-      result:=Package_Build_Identity;
+      Result:=Package_Build_Identity;
     end;
 
-  constructor TPackage.create(const pn: string);
+  constructor TPackage.Create(const PN: string);
     begin
-      realpackagename:=StringDup(pn);
-      packagename:=StringDup(upper(pn));
-      containedmodules:=TFPHashList.Create;
-      requiredpackages:=TFPHashObjectList.Create(false);
-      requiredidentities:=TFPHashList.Create;
+      RealPackageName:=StringDup(PN);
+      PackageName:=StringDup(Upper(PN));
+      ContainedModules:=TFPHashList.Create;
+      RequiredPackages:=TFPHashObjectList.Create(False);
+      RequiredIdentities:=TFPHashList.Create;
     end;
 
   destructor TPackage.Destroy;
     var
-      p : PContainedUnit;
-      i : LongInt;
+      P : PContainedUnit;
+      I : LongInt;
     begin
-      if Assigned(containedmodules) then
-        for i:=0 to containedmodules.count-1 do
+      if Assigned(ContainedModules) then
+        for I:=0 to ContainedModules.Count-1 do
           begin
-            p:=PContainedUnit(containedmodules[i]);
-            dispose(p);
+            P:=PContainedUnit(ContainedModules[I]);
+            Dispose(P);
           end;
-      containedmodules.free;
-      containedmodules := nil;
-      requiredpackages.free;
-      requiredpackages := nil;
-      for i:=0 to requiredidentities.Count-1 do
-        FreeMem(requiredidentities[i]);
-      requiredidentities.Free;
+      ContainedModules.Free;
+      ContainedModules := nil;
+      RequiredPackages.Free;
+      RequiredPackages := nil;
+      for I:=0 to RequiredIdentities.Count-1 do
+        FreeMem(RequiredIdentities[I]);
+      RequiredIdentities.Free;
       inherited Destroy;
     end;
 
 
-    procedure packageinit;
+    procedure PackageInit;
       begin
         PackageList:=TFPHashList.Create;
       end;
 
 
-    procedure packagedone;
+    procedure PackageDone;
       var
-        i : LongInt;
-        pkgentry : PPackageEntry;
+        I : LongInt;
+        PkgEntry : PPackageEntry;
       begin
         if Assigned(PackageList) then
           begin
-            for i:=0 to PackageList.count-1 do
+            for I:=0 to PackageList.Count-1 do
               begin
-                pkgentry:=PPackageEntry(PackageList[i]);
-                FreeAndNil(pkgentry^.package);
-                dispose(pkgentry);
+                PkgEntry:=PPackageEntry(PackageList[I]);
+                FreeAndNil(PkgEntry^.Package);
+                Dispose(PkgEntry);
               end;
           end;
         PackageList.Free;
@@ -142,6 +142,6 @@ implementation
 
 
 initialization
-  Register_InitDone_Proc(@packageinit,@packagedone);
+  Register_InitDone_Proc(@PackageInit,@PackageDone);
 end.
 

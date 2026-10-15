@@ -27,245 +27,245 @@ unit pkgutil;
 interface
 
   uses
-    FModule,fpkg,link,CStreams,CClasses;
+    FModule,FPkg,Link,CStreams,CClasses;
 
-  procedure createimportlibfromexternals;
+  procedure CreateImportLibFromExternals;
   Function RewritePPU(const PPUFn:String;OutStream:TCStream):Boolean;
-  procedure export_unit(u:TModule);
-  procedure load_packages;
-  procedure add_package(const name:string;ignoreduplicates:boolean;direct:boolean);
-  procedure add_package_unit_ref(package:TPackage);
-  procedure add_package_libs(l:TLinker);
-  procedure check_for_indirect_package_usages(modules:TLinkedList);
-  procedure emit_package_descriptor;
+  procedure Export_Unit(U:TModule);
+  procedure Load_Packages;
+  procedure Add_Package(const Name:string;IgnoreDuplicates:Boolean;Direct:Boolean);
+  procedure Add_Package_Unit_Ref(Package:TPackage);
+  procedure Add_Package_Libs(L:TLinker);
+  procedure Check_For_Indirect_Package_Usages(Modules:TLinkedList);
+  procedure Emit_Package_Descriptor;
 
 implementation
 
   uses
     SysUtils,
-    GlobType,Systems,version,
+    GlobType,Systems,Version,
     CUtils,
     Globals,Verbose,
-    aasmbase,AAsmData,aasmcnst,aasmtai,
-    symtype,symconst,SymSym,symdef,SymBase,SymTable,
-    psub,pdecsub,
-    ppu,entfile,fpcp,nxartifactid,
-    export;
+    AAsmBase,AAsmData,AAsmCnst,AAsmTai,
+    SymType,SymConst,SymSym,SymDef,SymBase,SymTable,
+    PSub,PDecSub,
+    PPU,EntFile,FPCP,NXArtifactID,
+    Export;
 
-  procedure emit_package_descriptor;
+  procedure Emit_Package_Descriptor;
     var
-      b: TTAITypedConstBuilder;
-      d: TDef;
-      u: TModule;
-      entry: PPackageEntry;
-      i,unitcount,depcount: LongInt;
-      name: TSymStr;
+      B: TTAITypedConstBuilder;
+      D: TDef;
+      U: TModule;
+      Entry: PPackageEntry;
+      I,UnitCount,DepCount: LongInt;
+      Name: TSymStr;
 
-    procedure start;
+    procedure Start;
       begin
-        b:=CTAITypedConstBuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
-        b.begin_anonymous_record('',8,8,8);
+        B:=CTAITypedConstBuilder.Create([tcalo_new_section,tcalo_make_dead_strippable]);
+        B.begin_anonymous_record('',8,8,8);
       end;
 
-    procedure finish(const s: TSymStr; section: TAsmSectiontype);
+    procedure Finish(const S: TSymStr; Section: TAsmSectiontype);
       begin
-        d:=b.end_anonymous_record;
-        CurrentAsmData.asmlists[al_globals].ConcatList(b.get_final_asmlist(
-          CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA,d),d,section,s,8));
-        b.free;
+        D:=B.end_anonymous_record;
+        CurrentAsmData.AsmLists[al_globals].ConcatList(B.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol(S,AB_GLOBAL,AT_DATA,D),D,Section,S,8));
+        B.Free;
       end;
 
-    procedure number(n: Int64);
+    procedure Number(N: Int64);
       begin
-        b.emit_tai(TAIConst.create_sizeint(n),sizeuinttype);
+        B.emit_tai(TAIConst.create_sizeint(N),SizeUIntType);
       end;
 
-    procedure address(const s: TSymStr);
+    procedure Address(const S: TSymStr);
       begin
-        b.emit_tai(TAIConst.createname(s,0),voidpointertype);
+        B.emit_tai(TAIConst.CreateName(S,0),VoidPointerType);
       end;
 
     begin
       { Layout matches rtl/inc/fpcpackage.pas. The experimental targets are
         currently 64 bit; every field occupies one native word. }
-      if not (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) then exit;
-      start;
-      for i:=1 to 6 do number(0);
-      finish('FPC_PACKAGE_CONTEXT',sec_data);
-      start;
-      number(0);
-      finish('FPC_PACKAGE_HANDLE',sec_data);
-      start;
-      unitcount:=0;
-      u:=TModule(loaded_units.first);
-      while Assigned(u) do
+      if not (TargetInfo.System in [system_x86_64_win64,system_x86_64_linux]) then Exit;
+      Start;
+      for I:=1 to 6 do Number(0);
+      Finish('FPC_PACKAGE_CONTEXT',sec_data);
+      Start;
+      Number(0);
+      Finish('FPC_PACKAGE_HANDLE',sec_data);
+      Start;
+      UnitCount:=0;
+      U:=TModule(Loaded_Units.First);
+      while Assigned(U) do
         begin
-          if u.is_unit and not Assigned(u.package) then
+          if U.is_unit and not Assigned(U.Package) then
             begin
-              b.emit_pooled_shortstring_const_ref(u.ModuleName^);
-              inc(unitcount);
+              B.emit_pooled_shortstring_const_ref(U.ModuleName^);
+              Inc(UnitCount);
             end;
-          u:=TModule(u.next);
+          U:=TModule(U.Next);
         end;
       { Retain a valid address even for an empty owned-unit list. }
-      if unitcount=0 then number(0);
-      finish('FPC_PACKAGE_UNITS',sec_rodata);
-      if TargetInfo.system=system_x86_64_linux then
+      if UnitCount=0 then Number(0);
+      Finish('FPC_PACKAGE_UNITS',sec_rodata);
+      if TargetInfo.System=system_x86_64_linux then
         begin
           { ELF resolves these local slots directly. Keep the descriptor's
             pointer-to-pointer ABI without manufacturing PE import symbols. }
-          start;
-          for i:=0 to PackageList.count-1 do
+          Start;
+          for I:=0 to PackageList.Count-1 do
             begin
-              entry:=PPackageEntry(PackageList[i]);
-              if entry^.direct then
-                address('FPC_PACKAGE_'+entry^.package.packagename^);
+              Entry:=PPackageEntry(PackageList[I]);
+              if Entry^.Direct then
+                Address('FPC_PACKAGE_'+Entry^.Package.PackageName^);
             end;
-          number(0);
-          finish('FPC_PACKAGE_DEPENDENCY_SLOTS',sec_rodata);
+          Number(0);
+          Finish('FPC_PACKAGE_DEPENDENCY_SLOTS',sec_rodata);
         end;
-      start;
-      depcount:=0;
-      for i:=0 to PackageList.count-1 do
+      Start;
+      DepCount:=0;
+      for I:=0 to PackageList.Count-1 do
         begin
-          entry:=PPackageEntry(PackageList[i]);
-          if not entry^.direct then continue;
-          name:='FPC_PACKAGE_'+entry^.package.packagename^;
-          if TargetInfo.system=system_x86_64_linux then
-            b.emit_tai(TAIConst.createname('FPC_PACKAGE_DEPENDENCY_SLOTS',depcount*8),voidpointertype)
+          Entry:=PPackageEntry(PackageList[I]);
+          if not Entry^.Direct then Continue;
+          Name:='FPC_PACKAGE_'+Entry^.Package.PackageName^;
+          if TargetInfo.System=system_x86_64_linux then
+            B.emit_tai(TAIConst.CreateName('FPC_PACKAGE_DEPENDENCY_SLOTS',DepCount*8),VoidPointerType)
           else
             begin
-              CurrentModule.addexternalimport(entry^.package.pplfilename,
-                name,name+suffix_indirect,0,true,false);
-              b.emit_tai(TAIConst.create_sym(
-                CurrentAsmData.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
+              CurrentModule.AddExternalImport(Entry^.Package.PPLFileName,
+                Name,Name+suffix_indirect,0,True,False);
+              B.emit_tai(TAIConst.create_sym(
+                CurrentAsmData.RefAsmSymbol(Name,AT_DATA,True)),VoidPointerType);
             end;
-          inc(depcount);
+          Inc(DepCount);
         end;
-      if depcount=0 then number(0);
-      finish('FPC_PACKAGE_DEPENDENCIES',sec_rodata);
-      start;
-      for i:=0 to PackageList.count-1 do
+      if DepCount=0 then Number(0);
+      Finish('FPC_PACKAGE_DEPENDENCIES',sec_rodata);
+      Start;
+      for I:=0 to PackageList.Count-1 do
         begin
-          entry:=PPackageEntry(PackageList[i]);
-          if entry^.direct then
-            b.emit_pooled_shortstring_const_ref(entry^.package.buildidentity);
+          Entry:=PPackageEntry(PackageList[I]);
+          if Entry^.Direct then
+            B.emit_pooled_shortstring_const_ref(Entry^.Package.BuildIdentity);
         end;
-      if depcount=0 then number(0);
-      finish('FPC_PACKAGE_DEPENDENCY_IDS',sec_rodata);
-      start;
-      number($4e58504b);
-      number(4);
-      number(21*8);
-      number(NexusCompilerIdentity(CurrentPPUVersion,WordVersion,CurrentPPULongVersion));
-      number(ord(TargetInfo.system));
-      number(find_module_from_symtable(systemunit).crc);
-      b.emit_pooled_shortstring_const_ref(CurrentModule.ModuleName^);
-      number(unitcount);
-      address('FPC_PACKAGE_UNITS');
-      number(depcount);
-      address('FPC_PACKAGE_DEPENDENCIES');
-      address('INITFINAL');
-      address('FPC_THREADVARTABLES');
-      address('FPC_RESOURCESTRINGTABLES');
-      address('FPC_WIDEINITTABLES');
-      address('FPC_RESSTRINITTABLES');
-      address('FPC_PACKAGE_CONTEXT');
-      address('FPC_PACKAGE_HANDLE');
-      b.emit_pooled_shortstring_const_ref(Package_SDK_Identity);
-      b.emit_pooled_shortstring_const_ref(current_package_build_identity);
-      address('FPC_PACKAGE_DEPENDENCY_IDS');
+      if DepCount=0 then Number(0);
+      Finish('FPC_PACKAGE_DEPENDENCY_IDS',sec_rodata);
+      Start;
+      Number($4e58504b);
+      Number(4);
+      Number(21*8);
+      Number(NexusCompilerIdentity(CurrentPPUVersion,WordVersion,CurrentPPULongVersion));
+      Number(Ord(TargetInfo.System));
+      Number(find_module_from_symtable(SystemUnit).CRC);
+      B.emit_pooled_shortstring_const_ref(CurrentModule.ModuleName^);
+      Number(UnitCount);
+      Address('FPC_PACKAGE_UNITS');
+      Number(DepCount);
+      Address('FPC_PACKAGE_DEPENDENCIES');
+      Address('INITFINAL');
+      Address('FPC_THREADVARTABLES');
+      Address('FPC_RESOURCESTRINGTABLES');
+      Address('FPC_WIDEINITTABLES');
+      Address('FPC_RESSTRINITTABLES');
+      Address('FPC_PACKAGE_CONTEXT');
+      Address('FPC_PACKAGE_HANDLE');
+      B.emit_pooled_shortstring_const_ref(Package_SDK_Identity);
+      B.emit_pooled_shortstring_const_ref(Current_Package_Build_Identity);
+      Address('FPC_PACKAGE_DEPENDENCY_IDS');
       if CurrentModule.IsPackage then
-        name:='FPC_PACKAGE_'+CurrentModule.ModuleName^
+        Name:='FPC_PACKAGE_'+CurrentModule.ModuleName^
       else
-        name:='FPC_PACKAGE_ROOT';
-      finish(name,sec_rodata);
+        Name:='FPC_PACKAGE_ROOT';
+      Finish(Name,sec_rodata);
       if CurrentModule.IsPackage then
         begin
-          export.exportname(name,[eo_name]);
-          start;
-          address(name);
-          finish('FPC_PACKAGE_INFO',sec_rodata);
-          export.exportname('FPC_PACKAGE_INFO',[eo_name]);
+          Export.ExportName(Name,[eo_name]);
+          Start;
+          Address(Name);
+          Finish('FPC_PACKAGE_INFO',sec_rodata);
+          Export.ExportName('FPC_PACKAGE_INFO',[eo_name]);
         end;
     end;
 
-  procedure procexport(const s : string);
+  procedure ProcExport(const S : string);
     var
-      hp : TExportedItem;
+      HP : TExportedItem;
     begin
-      hp:=TExportedItem.create;
-      hp.name:=StringDup(s);
-      hp.options:=hp.options+[eo_name];
-      exportlib.exportprocedure(hp);
+      HP:=TExportedItem.Create;
+      HP.Name:=StringDup(S);
+      HP.Options:=HP.Options+[eo_name];
+      ExportLib.ExportProcedure(HP);
     end;
 
 
-  procedure varexport(const s : string);
+  procedure VarExport(const S : string);
     var
-      hp : TExportedItem;
+      HP : TExportedItem;
     begin
-      hp:=TExportedItem.create;
-      hp.name:=StringDup(s);
-      hp.options:=hp.options+[eo_name];
-      exportlib.exportvar(hp);
+      HP:=TExportedItem.Create;
+      HP.Name:=StringDup(S);
+      HP.Options:=HP.Options+[eo_name];
+      ExportLib.ExportVar(HP);
     end;
 
 
-  procedure exportprocsym(sym:TProcSym;SymTable:TSymTable);
+  procedure ExportProcSym(Sym:TProcSym;SymTable:TSymTable);
     var
-      i : LongInt;
-      pd : TProcDef;
+      I : LongInt;
+      PD : TProcDef;
     begin
-      for i:=0 to TProcSym(sym).ProcdefList.Count-1 do
+      for I:=0 to TProcSym(Sym).ProcDefList.Count-1 do
         begin
-          pd:=TProcDef(TProcSym(sym).procdeflist[i]);
-          if not(pd.proccalloption in [pocall_internproc]) and
-              not (df_generic in pd.defoptions) and
-              ((pd.procoptions*[po_external])=[]) and
+          PD:=TProcDef(TProcSym(Sym).ProcDefList[I]);
+          if not(PD.ProcCallOption in [pocall_internproc]) and
+              not (df_generic in PD.DefOptions) and
+              ((PD.ProcOptions*[po_external])=[]) and
               (
-                (SymTable.symtabletype in [GlobalSymTable,recordsymtable,objectsymtable]) or
+                (SymTable.SymTableType in [GlobalSymTable,RecordSymTable,ObjectSymTable]) or
                 (
-                  (SymTable.symtabletype=staticsymtable) and
+                  (SymTable.SymTableType=StaticSymTable) and
                   (
-                    ([po_public,po_has_public_name]*pd.procoptions<>[]) or
-                    (df_has_global_ref in pd.defoptions)
+                    ([po_public,po_has_public_name]*PD.ProcOptions<>[]) or
+                    (df_has_global_ref in PD.DefOptions)
                   )
                 )
               ) then
             begin
-              exportallprocdefnames(TProcSym(sym),pd,[eo_name,eo_no_sym_name]);
+              ExportAllProcDefNames(TProcSym(Sym),PD,[eo_name,eo_no_sym_name]);
             end;
         end;
     end;
 
 
-  procedure exportabstractrecorddef(def:TAbstractRecordDef;SymTable:TSymTable); forward;
+  procedure ExportAbstractRecordDef(Def:TAbstractRecordDef;SymTable:TSymTable); forward;
 
 
-  procedure exportabstractrecordsymproc(sym:tobject;arg:pointer);
+  procedure ExportAbstractRecordSymProc(Sym:TObject;Arg:Pointer);
     begin
-      case TSym(sym).typ of
-        typesym:
+      case TSym(Sym).Typ of
+        TypeSym:
           begin
-            case TTypeSym(sym).typedef.typ of
-              objectdef,
-              recorddef:
-                exportabstractrecorddef(TAbstractRecordDef(TTypeSym(sym).typedef),TSymTable(arg));
+            case TTypeSym(Sym).TypeDef.Typ of
+              ObjectDef,
+              RecordDef:
+                ExportAbstractRecordDef(TAbstractRecordDef(TTypeSym(Sym).TypeDef),TSymTable(Arg));
               else
                 ;
             end;
           end;
-        procsym:
+        ProcSym:
           begin
             { don't export methods of interfaces }
-            if is_interface(TDef(TAbstractRecordSymTable(arg).defowner)) then
-              exit;
-            exportprocsym(TProcSym(sym),TSymTable(arg));
+            if is_interface(TDef(TAbstractRecordSymTable(Arg).DefOwner)) then
+              Exit;
+            ExportProcSym(TProcSym(Sym),TSymTable(Arg));
           end;
-        staticvarsym:
+        StaticVarSym:
           begin
-            varexport(TSym(sym).mangledname);
+            VarExport(TSym(Sym).MangledName);
           end;
         else
           ;
@@ -273,97 +273,97 @@ implementation
     end;
 
 
-  procedure exportname(const s:TSymStr);
+  procedure ExportName(const S:TSymStr);
     var
-      hp : TExportedItem;
+      HP : TExportedItem;
     begin
-      hp:=TExportedItem.create;
-      hp.name:=StringDup(s);
-      hp.options:=hp.options+[eo_name];
-      exportlib.exportvar(hp);
+      HP:=TExportedItem.Create;
+      HP.Name:=StringDup(S);
+      HP.Options:=HP.Options+[eo_name];
+      ExportLib.ExportVar(HP);
     end;
 
 
-  procedure exportabstractrecorddef(def:TAbstractRecordDef;SymTable:TSymTable);
+  procedure ExportAbstractRecordDef(Def:TAbstractRecordDef;SymTable:TSymTable);
     begin
       { for cross unit type aliases this might happen }
-      if def.owner<>SymTable then
-        exit;
+      if Def.Owner<>SymTable then
+        Exit;
       { don't export generics or their nested types }
-      if df_generic in def.defoptions then
-        exit;
-      def.SymTable.SymList.ForEachCall(@exportabstractrecordsymproc,def.SymTable);
-      if def.typ=objectdef then
+      if df_generic in Def.DefOptions then
+        Exit;
+      Def.SymTable.SymList.ForEachCall(@ExportAbstractRecordSymProc,Def.SymTable);
+      if Def.Typ=ObjectDef then
         begin
-          if (oo_has_vmt in TObjectDef(def).objectoptions) then
-            exportname(TObjectDef(def).vmt_mangledname);
-          if is_interface(def) then
+          if (oo_has_vmt in TObjectDef(Def).ObjectOptions) then
+            ExportName(TObjectDef(Def).vmt_mangledname);
+          if is_interface(Def) then
             begin
-              if Assigned(TObjectDef(def).iidguid) then
-                exportname(make_mangledname('IID',def.owner,def.objname^));
-              exportname(make_mangledname('IIDSTR',def.owner,def.objname^));
+              if Assigned(TObjectDef(Def).IIDGUID) then
+                ExportName(make_mangledname('IID',Def.Owner,Def.ObjName^));
+              ExportName(make_mangledname('IIDSTR',Def.Owner,Def.ObjName^));
             end;
         end;
     end;
 
 
-  procedure export_typedef(def:TDef;SymTable:TSymTable;global:boolean);
+  procedure ExportTypeDef(Def:TDef;SymTable:TSymTable;Global:Boolean);
     begin
-      if not (global or is_class(def)) or
-          ([df_internal,df_generic]*def.defoptions<>[]) or
+      if not (Global or is_class(Def)) or
+          ([df_internal,df_generic]*Def.DefOptions<>[]) or
           { happens with type renaming declarations ("abc = xyz") }
-          (def.owner<>SymTable) then
-        exit;
-      if ds_rtti_table_written in def.defstates then
-        exportname(def.RTTIMangledName(fullrtti));
-      if (ds_init_table_written in def.defstates) and
-          def.NeedsSeparateInitRTTI then
-        exportname(def.RTTIMangledName(initrtti));
-      case def.typ of
-        recorddef,
-        objectdef:
-          exportabstractrecorddef(TAbstractRecordDef(def),SymTable);
+          (Def.Owner<>SymTable) then
+        Exit;
+      if ds_rtti_table_written in Def.DefStates then
+        ExportName(Def.RTTIMangledName(FullRTTI));
+      if (ds_init_table_written in Def.DefStates) and
+          Def.NeedsSeparateInitRTTI then
+        ExportName(Def.RTTIMangledName(InitRTTI));
+      case Def.Typ of
+        RecordDef,
+        ObjectDef:
+          ExportAbstractRecordDef(TAbstractRecordDef(Def),SymTable);
         else
           ;
       end;
     end;
 
 
-  procedure insert_export(sym : TObject;arg:pointer);
+  procedure InsertExport(Sym : TObject;Arg:Pointer);
     var
-      isglobal,
-      publiconly : boolean;
+      IsGlobal,
+      PublicOnly : Boolean;
     begin
-      publiconly:=TSymTable(arg).symtabletype=staticsymtable;
-      isglobal:=TSymTable(arg).symtabletype=GlobalSymTable;
-      case TSym(sym).typ of
+      PublicOnly:=TSymTable(Arg).SymTableType=StaticSymTable;
+      IsGlobal:=TSymTable(Arg).SymTableType=GlobalSymTable;
+      case TSym(Sym).Typ of
         { ignore: }
-        unitsym,
-        syssym,
-        namespacesym,
-        propertysym,
-        enumsym:
+        UnitSym,
+        SysSym,
+        NamespaceSym,
+        PropertySym,
+        EnumSym:
           ;
-        constsym:
+        ConstSym:
           begin
-            if TConstSym(sym).consttyp=constresourcestring then
-              varexport(make_mangledname('RESSTR',TSym(sym).owner,TSym(sym).name));
+            if TConstSym(Sym).ConstTyp=ConstResourceString then
+              VarExport(make_mangledname('RESSTR',TSym(Sym).Owner,TSym(Sym).Name));
           end;
-        typesym:
+        TypeSym:
           begin
-            export_typedef(TTypeSym(sym).typedef,TSymTable(arg),isglobal);
+            ExportTypeDef(TTypeSym(Sym).TypeDef,TSymTable(Arg),IsGlobal);
           end;
-        procsym:
+        ProcSym:
           begin
-            exportprocsym(TProcSym(sym),TSymTable(arg));
+            ExportProcSym(TProcSym(Sym),TSymTable(Arg));
           end;
-        staticvarsym:
+        StaticVarSym:
           begin
-            if publiconly and ([vo_is_public,vo_has_global_ref]*TStaticVarSym(sym).varoptions=[]) then
-              exit;
-            varexport(TSym(sym).mangledname);
+            if PublicOnly and ([vo_is_public,vo_has_global_ref]*TStaticVarSym(Sym).VarOptions=[]) then
+              Exit;
+            VarExport(TSym(Sym).MangledName);
           end;
-        absolutevarsym:
+        AbsoluteVarSym:
           ;
         else
           begin
@@ -374,49 +374,49 @@ implementation
     end;
 
 
-  procedure export_unit(u: TModule);
+  procedure Export_Unit(U: TModule);
     var
-      i : LongInt;
-      sym : TAsmSymbol;
+      I : LongInt;
+      Sym : TAsmSymbol;
     begin
-      u.GlobalSymTable.symlist.ForEachCall(@insert_export,u.GlobalSymTable);
+      U.GlobalSymTable.SymList.ForEachCall(@InsertExport,U.GlobalSymTable);
       { check localsymtable for exports too to get public symbols }
-      u.localsymtable.symlist.ForEachCall(@insert_export,u.localsymtable);
+      U.LocalSymTable.SymList.ForEachCall(@InsertExport,U.LocalSymTable);
 
       { Callable names retained for inline implementation helpers must remain
         exported even when a cached unit no longer has their local procsym.
         Public records can contain anonymous managed types with no typesym.
         Their emitted metadata is nevertheless referenced by consumer cleanup
         code, so include the unit's globally visible RTTI/init symbols. }
-      for i:=0 to u.publicasmsyms.count-1 do
+      for I:=0 to U.PublicAsmSyms.Count-1 do
         begin
-          sym:=TAsmSymbol(u.publicasmsyms[i]);
-          if (sym.bind=AB_GLOBAL) and (sym.typ=AT_FUNCTION) then
-            procexport(sym.name)
-          else if (sym.bind=AB_GLOBAL) and (sym.typ=AT_DATA) and
-             ((copy(sym.name,1,5)='RTTI_') or (copy(sym.name,1,5)='INIT_')) then
-            varexport(sym.name);
+          Sym:=TAsmSymbol(U.PublicAsmSyms[I]);
+          if (Sym.Bind=AB_GLOBAL) and (Sym.Typ=AT_FUNCTION) then
+            ProcExport(Sym.Name)
+          else if (Sym.Bind=AB_GLOBAL) and (Sym.Typ=AT_DATA) and
+             ((Copy(Sym.Name,1,5)='RTTI_') or (Copy(Sym.Name,1,5)='INIT_')) then
+            VarExport(Sym.Name);
         end;
 
       { create special exports }
-      if mf_init in u.moduleflags then
-        procexport(make_mangledname('INIT$',u.GlobalSymTable,''));
-      if mf_finalize in u.moduleflags then
-        procexport(make_mangledname('FINALIZE$',u.GlobalSymTable,''));
-      if mf_threadvars in u.moduleflags then
-        varexport(make_mangledname('THREADVARLIST',u.GlobalSymTable,''));
-      if mf_has_resourcestrings in u.moduleflags then
+      if mf_init in U.ModuleFlags then
+        ProcExport(make_mangledname('INIT$',U.GlobalSymTable,''));
+      if mf_finalize in U.ModuleFlags then
+        ProcExport(make_mangledname('FINALIZE$',U.GlobalSymTable,''));
+      if mf_threadvars in U.ModuleFlags then
+        VarExport(make_mangledname('THREADVARLIST',U.GlobalSymTable,''));
+      if mf_has_resourcestrings in U.ModuleFlags then
         begin
-          varexport(CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',u.localsymtable,[]).name);
-          varexport(CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_end('RESSTR',u.localsymtable,[]).name);
+          VarExport(CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_start('RESSTR',U.LocalSymTable,[]).Name);
+          VarExport(CTAITypedConstBuilder.get_vectorized_dead_strip_section_symbol_end('RESSTR',U.LocalSymTable,[]).Name);
         end;
 
-      if not (TargetInfo.system in systems_indirect_var_imports) then
-        for i:=0 to u.publicasmsyms.count-1 do
+      if not (TargetInfo.System in systems_indirect_var_imports) then
+        for I:=0 to U.PublicAsmSyms.Count-1 do
           begin
-            sym:=TAsmSymbol(u.publicasmsyms[i]);
-            if sym.bind=AB_INDIRECT then
-              varexport(sym.name);
+            Sym:=TAsmSymbol(U.PublicAsmSyms[I]);
+            if Sym.Bind=AB_INDIRECT then
+              VarExport(Sym.Name);
           end;
     end;
 
@@ -424,122 +424,122 @@ implementation
     Var
       MakeStatic : Boolean;
     Var
-      buffer : array[0..$1fff] of byte;
-      inppu,
-      outppu : TPPUFile;
-      b,
-      untilb : byte;
-      l,m    : LongInt;
-      ext,
-      s      : string;
-      ppuversion,ppulongversion : dword;
+      Buffer : array[0..$1fff] of Byte;
+      InPPU,
+      OutPPU : TPPUFile;
+      B,
+      UntilB : Byte;
+      L,M    : LongInt;
+      Ext,
+      S      : string;
+      PPUVersion,PPULongVersion : DWORD;
     begin
-      Result:=false;
+      Result:=False;
       MakeStatic:=False;
-      inppu:=TPPUFile.create(PPUFn);
-      if not inppu.openfile then
+      InPPU:=TPPUFile.Create(PPUFn);
+      if not InPPU.OpenFile then
        begin
-         inppu.free;
-         inppu := nil;
+         InPPU.Free;
+         InPPU := nil;
          Comment(VError,'Could not open : '+PPUFn);
          Exit;
        end;
     { Check the ppufile }
-      if not inppu.CheckPPUId then
+      if not InPPU.CheckPPUId then
        begin
-         inppu.free;
-         inppu := nil;
+         InPPU.Free;
+         InPPU := nil;
          Comment(VError,'Expected NexusFPC NXU unit signature in '+PPUFn+'; rebuild with NexusFPC');
          Exit;
        end;
-      ppuversion:=inppu.getversion;
-      if ppuversion<>CurrentPPUVersion then
+      PPUVersion:=InPPU.GetVersion;
+      if PPUVersion<>CurrentPPUVersion then
        begin
-         inppu.free;
-         inppu := nil;
-         Comment(VError,'Wrong PPU Version '+ToStr(ppuversion)+' in '+PPUFn);
+         InPPU.Free;
+         InPPU := nil;
+         Comment(VError,'Wrong PPU Version '+ToStr(PPUVersion)+' in '+PPUFn);
          Exit;
        end;
     { Already a lib? }
-      if (inppu.header.common.flags and uf_in_library)<>0 then
+      if (InPPU.Header.Common.Flags and uf_in_library)<>0 then
        begin
-         inppu.free;
-         inppu := nil;
+         InPPU.Free;
+         InPPU := nil;
          Comment(VError,'PPU is already in a library : '+PPUFn);
          Exit;
        end;
     { We need a static linked unit, but we also accept those without .o file }
-      if (inppu.header.common.flags and (uf_static_linked or uf_no_link))=0 then
+      if (InPPU.Header.Common.Flags and (uf_static_linked or uf_no_link))=0 then
        begin
-         inppu.free;
-         inppu := nil;
+         InPPU.Free;
+         InPPU := nil;
          Comment(VError,'PPU is not static linked : '+PPUFn);
          Exit;
        end;
     { Create the new ppu }
-      outppu:=TPPUFile.create(PPUFn);
-      outppu.createstream(OutStream);
+      OutPPU:=TPPUFile.Create(PPUFn);
+      OutPPU.CreateStream(OutStream);
     { Create new header, with the new flags }
-      outppu.header:=inppu.header;
-      outppu.header.common.flags:=outppu.header.common.flags or uf_in_library;
+      OutPPU.Header:=InPPU.Header;
+      OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_in_library;
       if MakeStatic then
-       outppu.header.common.flags:=outppu.header.common.flags or uf_static_linked
+       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_static_linked
       else
-       outppu.header.common.flags:=outppu.header.common.flags or uf_shared_linked;
+       OutPPU.Header.Common.Flags:=OutPPU.Header.Common.Flags or uf_shared_linked;
     { read until the object files are found }
-      untilb:=iblinkunitofiles;
+      UntilB:=IBLinkUnitOFiles;
       repeat
-        b:=inppu.readentry;
-        if b in [ibendinterface,ibend] then
+        B:=InPPU.ReadEntry;
+        if B in [IBEndInterface,IBEnd] then
          begin
-           inppu.free;
-           inppu := nil;
-           outppu.free;
-           outppu := nil;
+           InPPU.Free;
+           InPPU := nil;
+           OutPPU.Free;
+           OutPPU := nil;
            Comment(VError,'No files to be linked found : '+PPUFn);
            Exit;
          end;
-        if b<>untilb then
+        if B<>UntilB then
          begin
-           if b=ibextraheader then
+           if B=IBExtraHeader then
              begin
-               ppulongversion:=cardinal(inppu.getlongint);
-               if ppulongversion<>CurrentPPULongVersion then
+               PPULongVersion:=Cardinal(InPPU.GetLongInt);
+               if PPULongVersion<>CurrentPPULongVersion then
                  begin
-                   inppu.free;
-                   outppu.free;
+                   InPPU.Free;
+                   OutPPU.Free;
                    Comment(VError,'Wrong NexusFPC PPU Long Version in '+PPUFn);
-                   exit;
+                   Exit;
                  end;
-               outppu.putlongint(LongInt(ppulongversion));
+               OutPPU.PutLongInt(LongInt(PPULongVersion));
              end;
            repeat
-             inppu.getdatabuf(buffer,sizeof(buffer),l);
-             outppu.putdata(buffer,l);
-           until l<sizeof(buffer);
-           outppu.writeentry(b);
+             InPPU.GetDataBuf(Buffer,SizeOf(Buffer),L);
+             OutPPU.PutData(Buffer,L);
+           until L<SizeOf(Buffer);
+           OutPPU.WriteEntry(B);
          end;
-      until (b=untilb);
+      until (B=UntilB);
     { we have now reached the section for the files which need to be added,
       now add them to the list }
-      case b of
-        iblinkunitofiles :
+      case B of
+        IBLinkUnitOFiles :
           begin
             { add all o files, and save the entry when not creating a static
               library to keep staticlinking possible }
-            while not inppu.endofentry do
+            while not InPPU.EndOfEntry do
              begin
-               s:=inppu.getstring;
-               m:=inppu.getlongint;
+               S:=InPPU.GetString;
+               M:=InPPU.GetLongInt;
                if not MakeStatic then
                 begin
-                  outppu.putstring(s);
-                  outppu.putlongint(m);
+                  OutPPU.PutString(S);
+                  OutPPU.PutLongInt(M);
                 end;
-               CurrentModule.linkotherofiles.add(s,link_always);
+               CurrentModule.LinkOtherOFiles.Add(S,link_always);
              end;
             if not MakeStatic then
-             outppu.writeentry(b);
+             OutPPU.WriteEntry(B);
           end;
     {    iblinkunitstaticlibs :
           begin
@@ -557,200 +557,200 @@ implementation
     { just add a new entry with the new lib }
       if MakeStatic then
        begin
-         outppu.putstring('imp'+CurrentModule.RealModuleName^);
-         outppu.putlongint(link_static);
-         outppu.writeentry(iblinkunitstaticlibs)
+         OutPPU.PutString('imp'+CurrentModule.RealModuleName^);
+         OutPPU.PutLongInt(link_static);
+         OutPPU.WriteEntry(IBLinkUnitStaticLibs)
        end
       else
        begin
-         outppu.putstring('imp'+CurrentModule.RealModuleName^);
-         outppu.putlongint(link_shared);
-         outppu.writeentry(iblinkunitsharedlibs);
+         OutPPU.PutString('imp'+CurrentModule.RealModuleName^);
+         OutPPU.PutLongInt(link_shared);
+         OutPPU.WriteEntry(IBLinkUnitSharedLibs);
        end;
     { read all entries until the end and write them also to the new ppu }
       repeat
-        b:=inppu.readentry;
+        B:=InPPU.ReadEntry;
       { don't write ibend, that's written automatically }
-        if b<>ibend then
+        if B<>IBEnd then
          begin
-           if b=iblinkothersharedlibs then
+           if B=IBLinkOtherSharedLibs then
              begin
-               while not inppu.endofentry do
+               while not InPPU.EndOfEntry do
                  begin
-                   s:=inppu.getstring;
-                   m:=inppu.getlongint;
+                   S:=InPPU.GetString;
+                   M:=InPPU.GetLongInt;
 
-                   outppu.putstring(s);
-                   outppu.putlongint(m);
+                   OutPPU.PutString(S);
+                   OutPPU.PutLongInt(M);
 
                    { strip lib prefix }
-                   if copy(s,1,3)='lib' then
-                     delete(s,1,3);
-                   ext:=ExtractFileExt(s);
-                   if ext<>'' then
-                     delete(s,length(s)-length(ext)+1,length(ext));
+                   if Copy(S,1,3)='lib' then
+                     Delete(S,1,3);
+                   Ext:=ExtractFileExt(S);
+                   if Ext<>'' then
+                     Delete(S,Length(S)-Length(Ext)+1,Length(Ext));
 
-                   CurrentModule.linkOtherSharedLibs.add(s,link_always);
+                   CurrentModule.LinkOtherSharedLibs.Add(S,link_always);
                  end;
              end
            else
              repeat
-               inppu.getdatabuf(buffer,sizeof(buffer),l);
-               outppu.putdata(buffer,l);
-             until l<sizeof(buffer);
-           outppu.writeentry(b);
+               InPPU.GetDataBuf(Buffer,SizeOf(Buffer),L);
+               OutPPU.PutData(Buffer,L);
+             until L<SizeOf(Buffer);
+           OutPPU.WriteEntry(B);
          end;
-      until b=ibend;
+      until B=IBEnd;
     { write the last stuff and close }
-      outppu.flush;
-      outppu.writeheader;
-      outppu.free;
-      outppu := nil;
-      inppu.free;
-      inppu := nil;
+      OutPPU.Flush;
+      OutPPU.WriteHeader;
+      OutPPU.Free;
+      OutPPU := nil;
+      InPPU.Free;
+      InPPU := nil;
       Result:=True;
     end;
 
 
-  procedure load_packages;
+  procedure Load_Packages;
     var
-      active : TFPList;
-      owners : TFPHashList;
-      i,j : LongInt;
-      entry : PPackageEntry;
-      owner : TPackage;
-      name : string;
+      Active : TFPList;
+      Owners : TFPHashList;
+      I,J : LongInt;
+      Entry : PPackageEntry;
+      Owner : TPackage;
+      Name : string;
 
-    procedure load_package(entry:PPackageEntry);
+    procedure LoadPackage(Entry:PPackageEntry);
       var
-        i : LongInt;
-        required : PPackageEntry;
-        pcp : TPCPPackage;
-        chain : AnsiString;
-        buildingpackage : boolean;
+        I : LongInt;
+        Required : PPackageEntry;
+        PCP : TPCPPackage;
+        Chain : AnsiString;
+        BuildingPackage : Boolean;
       begin
-        buildingpackage:=Assigned(CurrentModule) and CurrentModule.IsPackage;
-        if (active.IndexOf(entry)>=0) or
-           (buildingpackage and (upper(entry^.realpkgname)=CurrentModule.ModuleName^)) then
+        BuildingPackage:=Assigned(CurrentModule) and CurrentModule.IsPackage;
+        if (Active.IndexOf(Entry)>=0) or
+           (BuildingPackage and (Upper(Entry^.RealPkgName)=CurrentModule.ModuleName^)) then
           begin
-            chain:='';
-            if buildingpackage then
-              chain:=CurrentModule.RealModuleName^+' -> ';
-            for i:=0 to active.count-1 do
-              chain:=chain+PPackageEntry(active[i])^.realpkgname+' -> ';
-            Comment(VFatal,'Circular package dependency: '+chain+entry^.realpkgname);
+            Chain:='';
+            if BuildingPackage then
+              Chain:=CurrentModule.RealModuleName^+' -> ';
+            for I:=0 to Active.Count-1 do
+              Chain:=Chain+PPackageEntry(Active[I])^.RealPkgName+' -> ';
+            Comment(VFatal,'Circular package dependency: '+Chain+Entry^.RealPkgName);
           end;
-        if Assigned(entry^.package) then
-          exit;
-        active.Add(entry);
+        if Assigned(Entry^.Package) then
+          Exit;
+        Active.Add(Entry);
         try
-          Comment(VInfo,'Loading package: '+entry^.realpkgname);
-          pcp:=TPCPPackage.create(entry^.realpkgname);
+          Comment(VInfo,'Loading package: '+Entry^.RealPkgName);
+          PCP:=TPCPPackage.Create(Entry^.RealPkgName);
           { Give the package list ownership even if loading aborts. }
-          entry^.package:=pcp;
-          pcp.loadpcp;
-          for i:=0 to pcp.requiredpackages.count-1 do
+          Entry^.Package:=PCP;
+          PCP.LoadPCP;
+          for I:=0 to PCP.RequiredPackages.Count-1 do
             begin
-              add_package(pcp.requiredpackages.NameOfIndex(i),true,false);
-              required:=PPackageEntry(PackageList.Find(upper(pcp.requiredpackages.NameOfIndex(i))));
-              load_package(required);
-              if PShortString(pcp.requiredidentities.Find(upper(pcp.requiredpackages.NameOfIndex(i))))^<>
-                 required^.package.buildidentity then
+              Add_Package(PCP.RequiredPackages.NameOfIndex(I),True,False);
+              Required:=PPackageEntry(PackageList.Find(Upper(PCP.RequiredPackages.NameOfIndex(I))));
+              LoadPackage(Required);
+              if PShortString(PCP.RequiredIdentities.Find(Upper(PCP.RequiredPackages.NameOfIndex(I))))^<>
+                 Required^.Package.BuildIdentity then
                 Comment(VFatal,'Package dependency build differs: '+
-                  pcp.realpackagename^+' requires '+required^.realpkgname);
-              pcp.requiredpackages[i]:=required^.package;
+                  PCP.RealPackageName^+' requires '+Required^.RealPkgName);
+              PCP.RequiredPackages[I]:=Required^.Package;
             end;
         finally
-          active.Delete(active.count-1);
+          Active.Delete(Active.Count-1);
         end;
       end;
 
     begin
-      if not (tf_supports_packages in TargetInfo.flags) then
-        exit;
-      active:=TFPList.Create;
-      owners:=TFPHashList.Create;
+      if not (tf_supports_packages in TargetInfo.Flags) then
+        Exit;
+      Active:=TFPList.Create;
+      Owners:=TFPHashList.Create;
       try
-        i:=0;
-        while i<PackageList.count do
+        I:=0;
+        while I<PackageList.Count do
           begin
-            load_package(PPackageEntry(PackageList[i]));
-            inc(i);
+            LoadPackage(PPackageEntry(PackageList[I]));
+            Inc(I);
           end;
         { Check the complete closure before unit lookup can choose a provider. }
-        for i:=0 to PackageList.count-1 do
+        for I:=0 to PackageList.Count-1 do
           begin
-            entry:=PPackageEntry(PackageList[i]);
-            for j:=0 to entry^.package.containedmodules.count-1 do
+            Entry:=PPackageEntry(PackageList[I]);
+            for J:=0 to Entry^.Package.ContainedModules.Count-1 do
               begin
-                name:=upper(entry^.package.containedmodules.NameOfIndex(j));
-                owner:=TPackage(owners.Find(name));
-                if Assigned(owner) then
-                  Comment(VFatal,'Unit '+name+' is contained in both packages '+
-                    owner.realpackagename^+' and '+entry^.package.realpackagename^);
-                owners.Add(name,entry^.package);
+                Name:=Upper(Entry^.Package.ContainedModules.NameOfIndex(J));
+                Owner:=TPackage(Owners.Find(Name));
+                if Assigned(Owner) then
+                  Comment(VFatal,'Unit '+Name+' is contained in both packages '+
+                    Owner.RealPackageName^+' and '+Entry^.Package.RealPackageName^);
+                Owners.Add(Name,Entry^.Package);
               end;
           end;
       finally
-        owners.Free;
-        active.Free;
+        Owners.Free;
+        Active.Free;
       end;
     end;
 
 
-  procedure add_package(const name:string;ignoreduplicates:boolean;direct:boolean);
+  procedure Add_Package(const Name:string;IgnoreDuplicates:Boolean;Direct:Boolean);
     var
-      entry : PPackageEntry;
-      key : string;
+      Entry : PPackageEntry;
+      Key : string;
     begin
-      key:=upper(name);
-      entry:=PPackageEntry(PackageList.Find(key));
-      if Assigned(entry) then
+      Key:=Upper(Name);
+      Entry:=PPackageEntry(PackageList.Find(Key));
+      if Assigned(Entry) then
         begin
-          if not ignoreduplicates then
-            Message1(package_e_duplicate_package,name);
-          entry^.direct:=entry^.direct or direct;
-          exit;
+          if not IgnoreDuplicates then
+            Message1(package_e_duplicate_package,Name);
+          Entry^.Direct:=Entry^.Direct or Direct;
+          Exit;
         end;
-      new(entry);
-      entry^.package:=nil;
-      entry^.realpkgname:=name;
-      entry^.usedunits:=0;
-      entry^.direct:=direct;
-      PackageList.add(key,entry);
+      New(Entry);
+      Entry^.Package:=nil;
+      Entry^.RealPkgName:=Name;
+      Entry^.UsedUnits:=0;
+      Entry^.Direct:=Direct;
+      PackageList.Add(Key,Entry);
     end;
 
 
-  procedure add_package_unit_ref(package: TPackage);
+  procedure Add_Package_Unit_Ref(Package: TPackage);
     var
-      pkgentry : PPackageEntry;
+      PkgEntry : PPackageEntry;
     begin
-      pkgentry:=PPackageEntry(PackageList.find(package.packagename^));
-      if not Assigned(pkgentry) then
+      PkgEntry:=PPackageEntry(PackageList.Find(Package.PackageName^));
+      if not Assigned(PkgEntry) then
         InternalError(2015100302);
-      inc(pkgentry^.usedunits);
+      Inc(PkgEntry^.UsedUnits);
     end;
 
 
-  procedure add_package_libs(l:TLinker);
+  procedure Add_Package_Libs(L:TLinker);
     var
-      pkgentry : PPackageEntry;
-      i : LongInt;
-      pkgname : TPathStr;
+      PkgEntry : PPackageEntry;
+      I : LongInt;
+      PkgName : TPathStr;
     begin
-      if TargetInfo.system in systems_indirect_var_imports then
+      if TargetInfo.System in systems_indirect_var_imports then
         { we're using import libraries anyway }
-        exit;
-      for i:=0 to PackageList.count-1 do
+        Exit;
+      for I:=0 to PackageList.Count-1 do
         begin
-          pkgentry:=PPackageEntry(PackageList[i]);
-          if (pkgentry^.usedunits>0) or pkgentry^.direct then
+          PkgEntry:=PPackageEntry(PackageList[I]);
+          if (PkgEntry^.UsedUnits>0) or PkgEntry^.Direct then
             begin
               //writeln('package used: ',pkgentry^.realpkgname);
-              pkgname:=pkgentry^.package.pplfilename;
+              PkgName:=PkgEntry^.Package.PPLFileName;
               { GNU/LLD exact-name lookup preserves the .nxpl dependency name. }
-              pkgname:=':'+pkgname;
-              l.sharedlibfiles.concat(pkgname);
+              PkgName:=':'+PkgName;
+              L.SharedLibFiles.Concat(PkgName);
             end
           else
             {writeln('ignoring package: ',pkgentry^.realpkgname)};
@@ -758,271 +758,271 @@ implementation
     end;
 
 
-  procedure check_for_indirect_package_usages(modules:TLinkedList);
+  procedure Check_For_Indirect_Package_Usages(Modules:TLinkedList);
     var
-      uu : TUsedUnit;
-      pentry : PPackageEntry;
+      UU : TUsedUnit;
+      PEntry : PPackageEntry;
     begin
-      uu:=TUsedUnit(modules.first);
-      while Assigned(uu) do
+      UU:=TUsedUnit(Modules.First);
+      while Assigned(UU) do
         begin
-          if Assigned(uu.u.package) then
+          if Assigned(UU.U.Package) then
             begin
-              pentry:=PPackageEntry(PackageList.find(uu.u.package.packagename^));
-              if not Assigned(pentry) then
+              PEntry:=PPackageEntry(PackageList.Find(UU.U.Package.PackageName^));
+              if not Assigned(PEntry) then
                 InternalError(2015112304);
-              if not pentry^.direct then
-                Message2(package_w_unit_from_indirect_package,uu.u.RealModuleName^,uu.u.package.realpackagename^);
+              if not PEntry^.Direct then
+                Message2(package_w_unit_from_indirect_package,UU.U.RealModuleName^,UU.U.Package.RealPackageName^);
             end;
 
-          uu:=TUsedUnit(uu.Next);
+          UU:=TUsedUnit(UU.Next);
         end;
     end;
 
 
-  procedure createimportlibfromexternals;
+  procedure CreateImportLibFromExternals;
     type
       TCacheEntry=record
-        pkg:TPackage;
-        sym:TAsmSymbol;
+        Pkg:TPackage;
+        Sym:TAsmSymbol;
       end;
       PCacheEntry=^TCacheEntry;
     var
-      cache : TFPHashList;
-      alreadyloaded : TFPObjectList;
+      Cache : TFPHashList;
+      AlreadyLoaded : TFPObjectList;
 
 
-      function findpackagewithsym(symname:TSymStr):TCacheEntry;
+      function FindPackageWithSym(SymName:TSymStr):TCacheEntry;
         var
-          i,j : LongInt;
-          pkgentry : PPackageEntry;
-          unitentry : PContainedUnit;
+          I,J : LongInt;
+          PkgEntry : PPackageEntry;
+          UnitEntry : PContainedUnit;
         begin
-          for i:=0 to PackageList.count-1 do
+          for I:=0 to PackageList.Count-1 do
             begin
-              pkgentry:=PPackageEntry(PackageList[i]);
-              for j:=0 to pkgentry^.package.containedmodules.count-1 do
+              PkgEntry:=PPackageEntry(PackageList[I]);
+              for J:=0 to PkgEntry^.Package.ContainedModules.Count-1 do
                 begin
-                  unitentry:=PContainedUnit(pkgentry^.package.containedmodules[j]);
-                  if not Assigned(unitentry^.module) then
+                  UnitEntry:=PContainedUnit(PkgEntry^.Package.ContainedModules[J]);
+                  if not Assigned(UnitEntry^.Module) then
                     { the unit is not loaded }
-                    continue;
-                  result.sym:=TAsmSymbol(TModule(unitentry^.module).publicasmsyms.find(symname));
-                  if Assigned(result.sym) then
+                    Continue;
+                  Result.Sym:=TAsmSymbol(TModule(UnitEntry^.Module).PublicAsmSyms.Find(SymName));
+                  if Assigned(Result.Sym) then
                     begin
                       { completely ignore other external symbols }
-                      if result.sym.bind in [ab_external,ab_weak_external] then
+                      if Result.Sym.Bind in [ab_external,ab_weak_external] then
                         begin
-                          result.sym:=nil;
-                          continue;
+                          Result.Sym:=nil;
+                          Continue;
                         end;
                       { only accept global symbols of the used unit }
-                      if result.sym.bind<>ab_global then
+                      if Result.Sym.Bind<>ab_global then
                         begin
-                          result.sym:=nil;
-                          result.pkg:=nil;
+                          Result.Sym:=nil;
+                          Result.Pkg:=nil;
                         end
                       else
-                        result.pkg:=pkgentry^.package;
-                      exit;
+                        Result.Pkg:=PkgEntry^.Package;
+                      Exit;
                     end;
                 end;
             end;
-          result.sym:=nil;
-          result.pkg:=nil;
+          Result.Sym:=nil;
+          Result.Pkg:=nil;
         end;
 
 
-    procedure processasmsyms(symlist:TFPHashObjectList);
+    procedure ProcessAsmSyms(SymList:TFPHashObjectList);
       var
-        i,j,k : LongInt;
-        sym : TAsmSymbol;
-        cacheentry : PCacheEntry;
-        psym : TSymEntry;
-        pd : TProcDef;
-        found : boolean;
-        impname,symname : TSymStr;
-        suffixidx : LongInt;
+        I,J,K : LongInt;
+        Sym : TAsmSymbol;
+        CacheEntry : PCacheEntry;
+        PSym : TSymEntry;
+        PD : TProcDef;
+        Found : Boolean;
+        ImpName,SymName : TSymStr;
+        SuffixIdx : LongInt;
       begin
-        for i:=0 to symlist.count-1 do
+        for I:=0 to SymList.Count-1 do
           begin
-            sym:=TAsmSymbol(symlist[i]);
-            if not (sym.bind in [ab_external,ab_external_indirect]) then
-              continue;
+            Sym:=TAsmSymbol(SymList[I]);
+            if not (Sym.Bind in [ab_external,ab_external_indirect]) then
+              Continue;
 
             { remove the indirect suffix }
-            symname:=sym.name;
-            if sym.bind=ab_external_indirect then
+            SymName:=Sym.Name;
+            if Sym.Bind=ab_external_indirect then
               begin
-                suffixidx:=pos(suffix_indirect,symname);
-                if suffixidx=length(symname)-length(suffix_indirect)+1 then
-                  symname:=copy(symname,1,suffixidx-1)
+                SuffixIdx:=Pos(suffix_indirect,SymName);
+                if SuffixIdx=Length(SymName)-Length(suffix_indirect)+1 then
+                  SymName:=Copy(SymName,1,SuffixIdx-1)
                 else
                   InternalError(2016062401);
               end;
 
             { did we already import the symbol? }
-            cacheentry:=PCacheEntry(cache.find(symname));
-            if Assigned(cacheentry) then
-              continue;
+            CacheEntry:=PCacheEntry(Cache.Find(SymName));
+            if Assigned(CacheEntry) then
+              Continue;
 
             { was the symbol already imported in the previous pass? }
-            found:=false;
-            for j:=0 to alreadyloaded.count-1 do
+            Found:=False;
+            for J:=0 to AlreadyLoaded.Count-1 do
               begin
-                psym:=TSymEntry(alreadyloaded[j]);
-                case psym.typ of
-                  procsym:
-                    for k:=0 to TProcSym(psym).procdeflist.count-1 do
+                PSym:=TSymEntry(AlreadyLoaded[J]);
+                case PSym.Typ of
+                  ProcSym:
+                    for K:=0 to TProcSym(PSym).ProcDefList.Count-1 do
                       begin
-                        pd:=TProcDef(TProcSym(psym).procdeflist[k]);
-                        if pd.has_alias_name(symname) or
+                        PD:=TProcDef(TProcSym(PSym).ProcDefList[K]);
+                        if PD.has_alias_name(SymName) or
                             (
-                              ([po_external,po_has_importdll]*pd.procoptions=[po_external,po_has_importdll]) and
-                              (symname=proc_get_importname(pd))
+                              ([po_external,po_has_importdll]*PD.ProcOptions=[po_external,po_has_importdll]) and
+                              (SymName=proc_get_importname(PD))
                             ) then
                           begin
-                            found:=true;
-                            break;
+                            Found:=True;
+                            Break;
                           end;
                       end;
-                  staticvarsym:
-                    if TStaticVarSym(psym).mangledname=symname then
-                      found:=true;
-                  constsym:
+                  StaticVarSym:
+                    if TStaticVarSym(PSym).MangledName=SymName then
+                      Found:=True;
+                  ConstSym:
                     begin
-                      if TConstSym(psym).consttyp<>constresourcestring then
+                      if TConstSym(PSym).ConstTyp<>ConstResourceString then
                         InternalError(2016072202);
-                      if make_mangledname('RESSTR',psym.owner,psym.name)=symname then
-                        found:=true;
+                      if make_mangledname('RESSTR',PSym.Owner,PSym.Name)=SymName then
+                        Found:=True;
                     end;
                   else
                     InternalError(2014101003);
                 end;
-                if found then
-                  break;
+                if Found then
+                  Break;
               end;
-            if found then begin
+            if Found then begin
               { add a dummy entry }
-              new(cacheentry);
-              cacheentry^.pkg:=nil;
-              cacheentry^.sym:=sym;
-              cache.add(symname,cacheentry);
-              continue;
+              New(CacheEntry);
+              CacheEntry^.Pkg:=nil;
+              CacheEntry^.Sym:=Sym;
+              Cache.Add(SymName,CacheEntry);
+              Continue;
             end;
 
-            new(cacheentry);
-            cacheentry^:=findpackagewithsym(symname);
-            cache.add(symname,cacheentry);
+            New(CacheEntry);
+            CacheEntry^:=FindPackageWithSym(SymName);
+            Cache.Add(SymName,CacheEntry);
 
             { use cacheentry^.sym instead of sym, because for the later typ
               is always at_none in case of an external symbol }
-            if Assigned(cacheentry^.pkg) then
+            if Assigned(CacheEntry^.Pkg) then
               begin
-                impname:=symname;
-                if cacheentry^.sym.typ=AT_DATA then
+                ImpName:=SymName;
+                if CacheEntry^.Sym.Typ=AT_DATA then
                   { import as the $indirect symbol if it as a variable }
-                  impname:=symname+suffix_indirect;
-                CurrentModule.addexternalimport(cacheentry^.pkg.pplfilename,symname,impname,0,cacheentry^.sym.typ=at_data,false);
+                  ImpName:=SymName+suffix_indirect;
+                CurrentModule.AddExternalImport(CacheEntry^.Pkg.PPLFileName,SymName,ImpName,0,CacheEntry^.Sym.Typ=at_data,False);
               end;
           end;
       end;
 
 
-    procedure import_proc_symbol(pd:TProcDef;pkg:TPackage);
+    procedure ImportProcSymbol(PD:TProcDef;Pkg:TPackage);
       var
-        item : TCmdStrListItem;
+        Item : TCmdStrListItem;
       begin
-        item := TCmdStrListItem(pd.aliasnames.first);
-        if not Assigned(item) then
+        Item := TCmdStrListItem(PD.AliasNames.First);
+        if not Assigned(Item) then
           { at least import the mangled name }
-          CurrentModule.addexternalimport(pkg.pplfilename,pd.mangledname,pd.mangledname,0,false,false);
-        while Assigned(item) do
+          CurrentModule.AddExternalImport(Pkg.PPLFileName,PD.MangledName,PD.MangledName,0,False,False);
+        while Assigned(Item) do
           begin
-            CurrentModule.addexternalimport(pkg.pplfilename,item.str,item.str,0,false,false);
-            item := TCmdStrListItem(item.next);
+            CurrentModule.AddExternalImport(Pkg.PPLFileName,Item.Str,Item.Str,0,False,False);
+            Item := TCmdStrListItem(Item.Next);
           end;
        end;
 
 
-    procedure processimportedsyms(syms:TFPObjectList);
+    procedure ProcessImportedSyms(Syms:TFPObjectList);
       { syms is a list of tunitimportsym }
       var
-        i,j,k,l : LongInt;
-        pkgentry : PPackageEntry;
-        sym : TSymEntry;
-        srsymtable : TSymTable;
-        module : TModule;
-        unitentry : PContainedUnit;
-        name : TSymStr;
-        pd : TProcDef;
+        I,J,K,L : LongInt;
+        PkgEntry : PPackageEntry;
+        Sym : TSymEntry;
+        SRSymTable : TSymTable;
+        Module : TModule;
+        UnitEntry : PContainedUnit;
+        Name : TSymStr;
+        PD : TProcDef;
       begin
-        for i:=0 to syms.count-1 do
+        for I:=0 to Syms.Count-1 do
           begin
-            sym:=TUnitImportSym(syms[i]).sym;
-            if not (sym.typ in [staticvarsym,procsym,constsym]) or
+            Sym:=TUnitImportSym(Syms[I]).Sym;
+            if not (Sym.Typ in [StaticVarSym,ProcSym,ConstSym]) or
                 (
-                  (sym.typ=constsym) and
-                  (TConstSym(sym).consttyp<>constresourcestring)
+                  (Sym.Typ=ConstSym) and
+                  (TConstSym(Sym).ConstTyp<>ConstResourceString)
                 ) then
-              continue;
-            if alreadyloaded.indexof(sym)>=0 then
-              continue;
+              Continue;
+            if AlreadyLoaded.IndexOf(Sym)>=0 then
+              Continue;
             { determine the unit of the symbol }
-            srsymtable:=sym.owner;
-            while not (srsymtable.symtabletype in [staticsymtable,GlobalSymTable]) do
-              srsymtable:=srsymtable.defowner.owner;
-            module:=TModule(loaded_units.first);
-            while Assigned(module) do
+            SRSymTable:=Sym.Owner;
+            while not (SRSymTable.SymTableType in [StaticSymTable,GlobalSymTable]) do
+              SRSymTable:=SRSymTable.DefOwner.Owner;
+            Module:=TModule(Loaded_Units.First);
+            while Assigned(Module) do
               begin
-                if (module.GlobalSymTable=srsymtable) or (module.localsymtable=srsymtable) then
-                  break;
-                module:=TModule(module.next);
+                if (Module.GlobalSymTable=SRSymTable) or (Module.LocalSymTable=SRSymTable) then
+                  Break;
+                Module:=TModule(Module.Next);
               end;
-            if not Assigned(module) then
+            if not Assigned(Module) then
               InternalError(2014101001);
-            if (uf_in_library and module.headerflags)=0 then
+            if (uf_in_library and Module.HeaderFlags)=0 then
               { unit is not part of a package, so no need to handle it }
-              continue;
+              Continue;
             { loaded by a package? }
-            for j:=0 to PackageList.count-1 do
+            for J:=0 to PackageList.Count-1 do
               begin
-                pkgentry:=PPackageEntry(PackageList[j]);
-                for k:=0 to pkgentry^.package.containedmodules.count-1 do
+                PkgEntry:=PPackageEntry(PackageList[J]);
+                for K:=0 to PkgEntry^.Package.ContainedModules.Count-1 do
                   begin
-                    unitentry:=PContainedUnit(pkgentry^.package.containedmodules[k]);
-                    if unitentry^.module=module then
+                    UnitEntry:=PContainedUnit(PkgEntry^.Package.ContainedModules[K]);
+                    if UnitEntry^.Module=Module then
                       begin
-                        case sym.typ of
-                          constsym:
+                        case Sym.Typ of
+                          ConstSym:
                             begin
-                              if TConstSym(sym).consttyp<>constresourcestring then
+                              if TConstSym(Sym).ConstTyp<>ConstResourceString then
                                 InternalError(2016072201);
-                              name:=make_mangledname('RESSTR',sym.owner,sym.name);
-                              CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
+                              Name:=make_mangledname('RESSTR',Sym.Owner,Sym.Name);
+                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+suffix_indirect,0,True,False);
                             end;
-                          staticvarsym:
+                          StaticVarSym:
                             begin
-                              name:=TStaticVarSym(sym).mangledname;
-                              CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
+                              Name:=TStaticVarSym(Sym).MangledName;
+                              CurrentModule.AddExternalImport(PkgEntry^.Package.PPLFileName,Name,Name+suffix_indirect,0,True,False);
                             end;
-                          procsym:
+                          ProcSym:
                             begin
-                              for l:=0 to TProcSym(sym).procdeflist.count-1 do
+                              for L:=0 to TProcSym(Sym).ProcDefList.Count-1 do
                                 begin
-                                  pd:=TProcDef(TProcSym(sym).procdeflist[l]);
-                                  if [po_external,po_has_importdll]*pd.procoptions=[po_external,po_has_importdll] then
+                                  PD:=TProcDef(TProcSym(Sym).ProcDefList[L]);
+                                  if [po_external,po_has_importdll]*PD.ProcOptions=[po_external,po_has_importdll] then
                                     { if we use an external procedure of another unit we
                                       need to import it ourselves from the correct library }
-                                    import_external_proc(pd)
+                                    import_external_proc(PD)
                                   else
-                                    import_proc_symbol(pd,pkgentry^.package);
+                                    ImportProcSymbol(PD,PkgEntry^.Package);
                                 end;
                             end;
                           else
                             InternalError(2014101002);
                         end;
-                        alreadyloaded.add(sym);
+                        AlreadyLoaded.Add(Sym);
                       end;
                   end;
               end;
@@ -1031,59 +1031,59 @@ implementation
 
 
     var
-      module : TModule;
-      i : LongInt;
-      libname : TCmdStr;
+      Module : TModule;
+      I : LongInt;
+      LibName : TCmdStr;
     begin
-      cache:=TFPHashList.create;
+      Cache:=TFPHashList.Create;
       { check each external asm symbol of each unit of the package whether it is
         contained in the unit of a loaded package (and thus an import entry
         is needed) }
-      alreadyloaded:=TFPObjectList.create(false);
+      AlreadyLoaded:=TFPObjectList.Create(False);
 
       { first pass to find all symbols that were not loaded by asm name }
-      module:=TModule(loaded_units.first);
-      while Assigned(module) do
+      Module:=TModule(Loaded_Units.First);
+      while Assigned(Module) do
         begin
-          if not Assigned(module.package) then
-            processimportedsyms(module.unitimportsyms);
-          if (TargetInfo.system=system_x86_64_linux) and Assigned(module.package) then
+          if not Assigned(Module.Package) then
+            ProcessImportedSyms(Module.UnitImportSyms);
+          if (TargetInfo.System=system_x86_64_linux) and Assigned(Module.Package) then
             begin
               { Declarations imported from a packaged unit may still reference
                 native libraries. Preserve its $LINKLIB requirements without
                 linking the package's unit objects into this image. }
-              while not module.linkothersharedlibs.empty do
+              while not Module.LinkOtherSharedLibs.Empty do
                 begin
-                  libname:=module.linkothersharedlibs.GetUseMask(link_always);
-                  if libname<>'' then
-                    CurrentModule.linkothersharedlibs.add(libname,link_always);
+                  LibName:=Module.LinkOtherSharedLibs.GetUseMask(link_always);
+                  if LibName<>'' then
+                    CurrentModule.LinkOtherSharedLibs.Add(LibName,link_always);
                 end;
             end;
-          module:=TModule(module.next);
+          Module:=TModule(Module.Next);
         end;
 
       { second pass to find all symbols that were loaded by asm name }
-      module:=TModule(loaded_units.first);
-      while Assigned(module) do
+      Module:=TModule(Loaded_Units.First);
+      while Assigned(Module) do
         begin
-          if not Assigned(module.package) then
+          if not Assigned(Module.Package) then
             begin
-              processasmsyms(module.externasmsyms);
+              ProcessAsmSyms(Module.ExternAsmSyms);
               { A program has no unit file in which to preserve references
                 introduced during code generation. Inspect its live symbols
                 as well as those retained for compiled/cached units. }
-              if Assigned(module.asmdata) then
-                processasmsyms(TAsmData(module.asmdata).AsmSymbolDict);
+              if Assigned(Module.AsmData) then
+                ProcessAsmSyms(TAsmData(Module.AsmData).AsmSymbolDict);
             end;
-          module:=TModule(module.next);
+          Module:=TModule(Module.Next);
         end;
 
-      alreadyloaded.free;
-      alreadyloaded := nil;
-      for i:=0 to cache.count-1 do
-        dispose(PCacheEntry(cache[i]));
-      cache.free;
-      cache := nil;
+      AlreadyLoaded.Free;
+      AlreadyLoaded := nil;
+      for I:=0 to Cache.Count-1 do
+        Dispose(PCacheEntry(Cache[I]));
+      Cache.Free;
+      Cache := nil;
     end;
 
 

@@ -27,7 +27,7 @@ interface
 
     uses
        CUtils,CClasses,CFileUtl,
-       GlobType,FinPut,ogbase,fpkg,
+       GlobType,FinPut,ogbase,FPkg,
        SymBase,SymSym,
        wpobase,
        aasmbase,AAsmData;
@@ -161,7 +161,7 @@ interface
         moduleflags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
         IsLibrary     : boolean;  { if it is a library (win32 dll) }
         IsPackage     : boolean;
-        change_endian : boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
+        ChangeEndian : boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
         unitmap       : TUnitMapArray; { mapping of all used units }
         unitmapsize   : LongInt;  { number of units in the map }
         derefmap      : TDerefMapArray; { mapping of all units needed for deref }
@@ -332,7 +332,7 @@ interface
     var
        main_module       : TModule;     { Main module of the program }
        CurrentModule    : TModule;     { Current module which is compiled or loaded }
-       usedunits         : TLinkedList; { Used units for this program }
+       UsedUnits         : TLinkedList; { Used units for this program }
        loaded_units      : TLinkedList; { All loaded units, excluding main_module }
        unloaded_units    : TLinkedList; { Units removed from loaded_units, to be freed }
        all_modules: array of TModule;   { modules by moduleid }
@@ -680,7 +680,7 @@ implementation
         is_unit:=_is_unit;
         IsLibrary:=false;
         IsPackage:=false;
-        change_endian:=false;
+        ChangeEndian:=false;
         is_dbginfo_written:=false;
         mode_switch_allowed:= true;
         moduleoptions:=[];

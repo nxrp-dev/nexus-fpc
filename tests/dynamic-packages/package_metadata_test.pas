@@ -4,7 +4,7 @@ program package_metadata_test;
 
 uses
   SysUtils, compiler, Systems, CUtils, CFileUtl, CClasses, CStreams,
-  Globals, Verbose, CompHook, fpkg, fpcp, pkgutil, FinPut, FModule;
+  Globals, Verbose, CompHook, FPkg, FPCP, PkgUtil, FinPut, FModule;
 
 procedure Check(Condition: Boolean; const Text: string);
 begin
@@ -16,15 +16,15 @@ procedure TestNames;
 var
   Entry: PPackageEntry;
 begin
-  add_package('MixedName',true,false);
-  add_package('MIXEDNAME',true,true);
-  add_package('mixedname',true,false);
+  Add_Package('MixedName',true,false);
+  Add_Package('MIXEDNAME',true,true);
+  Add_Package('mixedname',true,false);
   Check(PackageList.Count=1,'case variants created multiple packages');
   Entry:=PPackageEntry(PackageList[0]);
-  Check(Entry^.realpkgname='MixedName','display name was changed');
+  Check(Entry^.RealPkgName='MixedName','display name was changed');
   Check(Entry^.direct,'direct requirement was lost');
   Check(ErrorCount=0,'ignored duplicate reported an error');
-  add_package('mIxEdNaMe',false,true);
+  Add_Package('mIxEdNaMe',false,true);
   Check(ErrorCount=1,'explicit duplicate did not report one error');
   Check(PackageList.Count=1,'diagnosed duplicate created another package');
   WriteLn('PASS names');
@@ -41,17 +41,17 @@ var
 begin
   P:=TPCPPackage.Create(ParamStr(3));
   try
-    P.loadpcp;
-    Count:=P.containedmodules.Count;
-    P.loadpcp;
-    Check(P.containedmodules.Count=Count,'second load appended units');
+    P.LoadPCP;
+    Count:=P.ContainedModules.Count;
+    P.LoadPCP;
+    Check(P.ContainedModules.Count=Count,'second load appended units');
     for I:=0 to Count-1 do
       begin
-        C:=PContainedUnit(P.containedmodules[I]);
-        U:=TModuleBase.Create(P.containedmodules.NameOfIndex(I));
+        C:=PContainedUnit(P.ContainedModules[I]);
+        U:=TModuleBase.Create(P.ContainedModules.NameOfIndex(I));
         C^.module:=U;
-        S:=P.getmodulestream(U);
-        Other:=P.getmodulestream(U);
+        S:=P.GetModuleStream(U);
+        Other:=P.GetModuleStream(U);
         try
           Check(Assigned(S) and Assigned(Other),'missing unit stream');
           Check(S.Size=C^.size,'incorrect bounded stream size');
@@ -82,10 +82,10 @@ begin
   P:=TPCPPackage.Create('Fixture');
   U:=TModuleBase.Create('UX');
   try
-    P.pplfilename:='Fixture.dll';
+    P.PPLFileName:='Fixture.dll';
     U.PPUFileName:=ParamStr(3);
-    P.addunit(U);
-    P.savepcp;
+    P.AddUnit(U);
+    P.SavePCP;
     WriteLn('PASS write');
   finally
     U.Free;
@@ -109,10 +109,10 @@ begin
     end;
   try
     for I:=First to ParamCount do
-      add_package(ParamStr(I),true,true);
+      Add_Package(ParamStr(I),true,true);
     if ParamStr(1)='disabled' then
       Exclude(TargetInfo.flags,tf_supports_packages);
-    load_packages;
+    Load_Packages;
     if ParamStr(1)='disabled' then
       Check(not Assigned(PPackageEntry(PackageList[0])^.package),'disabled loader ran')
     else

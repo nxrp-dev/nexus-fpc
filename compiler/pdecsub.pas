@@ -108,7 +108,7 @@ implementation
        objcutil,
        { parser }
        Scanner,
-       syscinfo,
+       SysCInfo,
        pbase,pexpr,ptype,pdecl,pparautl,pgenutil
        ;
 

@@ -26,7 +26,7 @@ unit ppu;
 interface
 
   uses
-    GlobType,ConstExp,entfile,nxartifactid;
+    GlobType,ConstExp,entfile,NXArtifactID;
 
 { Also write the ppu if only crc if done, this can be used with ppudump to
   see the differences between the intf and implementation }
@@ -132,7 +132,7 @@ type
       by the crc's of all object/class definitions in the interfaces of units
       used by this unit. Reason: see mantis #13840 }
     indirect_crc     : cardinal;
-    do_crc,
+    DoCRC,
     do_interface_crc,
     do_indirect_crc  : boolean;
     crc_only         : boolean;    { used to calculate interface_crc before implementation }
@@ -235,9 +235,9 @@ begin
   header.symlistsize:=swapendian(header.symlistsize);
 
   { the PPU DATA is stored in native order }
-  change_endian := (header.common.flags and uf_little_endian) = uf_little_endian;
+  ChangeEndian := (header.common.flags and uf_little_endian) = uf_little_endian;
 {$ELSE not ENDIAN_BIG}
-  change_endian := (header.common.flags and uf_big_endian) = uf_big_endian;
+  ChangeEndian := (header.common.flags and uf_big_endian) = uf_big_endian;
 {$ENDIF}
 end;
 
@@ -252,7 +252,7 @@ begin
   inherited ppu_log(st);
   if flog_open then
     begin
-      if do_crc and (ppu_log_idx < BufferedPosition) then
+      if DoCRC and (ppu_log_idx < BufferedPosition) then
         begin
           write(flog,'New crc : ',HexStr(dword(crc),8));
           WriteLn(flog);
@@ -334,7 +334,7 @@ end;
 
 procedure TPPUFile.putdata(const b;len:integer);
 begin
-  if do_crc then
+  if DoCRC then
    begin
      crc:=UpdateCRC32(crc,b,len);
      if do_interface_crc then
@@ -382,7 +382,7 @@ begin
   indirect_crc:=0;
   do_interface_crc:=true;
   do_indirect_crc:=false;
-  do_crc:=true;
+  DoCRC:=true;
 end;
 
 

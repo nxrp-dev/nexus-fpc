@@ -71,9 +71,9 @@ implementation
     FModule,
     aasmbase,aasmtai,aasmcpu,cpubase,
     cgbase,ogbase,
-    comprsrc,
+    CompRsrc,
     ogelf,owar,
-    rescmn, i_linux
+    ResCmn, i_linux
     ;
 
 {*****************************************************************************
@@ -912,5 +912,5 @@ initialization
   RegisterExport(system_aarch64_linux,TExportLibLinux);
   RegisterTarget(system_aarch64_linux_info);
 {$endif aarch64}
-  RegisterRes(res_elf_info,TWinLikeResourceFile);
+  RegisterRes(Res_ELF_Info,TWinLikeResourceFile);
 end.

@@ -79,7 +79,7 @@ Unit aopt;
 
     uses
       CUtils,
-      cprofile,
+      CProfile,
       GlobType, Globals,
       Verbose,
       cpubase,

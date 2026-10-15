@@ -30,39 +30,39 @@ uses
   Systems;
 
     const
-       res_elf_info : TResInfo =
+       Res_ELF_Info : TResInfo =
           (
-             id     : res_elf;
-             resbin : 'fpcres';
-             rescmd : '-o $OBJ -a $ARCH -of elf $DBG';
+             ID     : res_elf;
+             ResBin : 'fpcres';
+             ResCmd : '-o $OBJ -a $ARCH -of elf $DBG';
              { cross compiled windres can be used to compile .rc files on linux }
-             rcbin  : 'windres';
-             rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-             resourcefileclass : nil;
-             resflags : [];
+             RCBin  : 'windres';
+             RCCmd  : '--include $INC -O res -D FPC -o $RES $RC';
+             ResourceFileClass : nil;
+             ResFlags : [];
           );
 
-       res_xcoff_info : TResInfo =
+       Res_XCOFF_Info : TResInfo =
           (
-             id     : res_xcoff;
-             resbin : 'fpcres';
-             rescmd : '-o $OBJ -a $ARCH -of xcoff $DBG';
+             ID     : res_xcoff;
+             ResBin : 'fpcres';
+             ResCmd : '-o $OBJ -a $ARCH -of xcoff $DBG';
              { cross compiled windres can be used to compile .rc files on other platforms }
-             rcbin  : 'windres';
-             rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-             resourcefileclass : nil;
-             resflags : [];
+             RCBin  : 'windres';
+             RCCmd  : '--include $INC -O res -D FPC -o $RES $RC';
+             ResourceFileClass : nil;
+             ResFlags : [];
           );
 
-       res_ext_info : TResInfo =
+       Res_Ext_Info : TResInfo =
           (
-             id     : res_ext;
-             resbin : 'fpcres';
-             rescmd : '-o $OBJ -a $ENDIAN -of external $DBG';
-             rcbin  : 'windres';
-             rccmd  : '--include $INC -O res -D FPC -o $RES $RC';
-             resourcefileclass : nil;
-             resflags : [res_external_file];
+             ID     : res_ext;
+             ResBin : 'fpcres';
+             ResCmd : '-o $OBJ -a $ENDIAN -of external $DBG';
+             RCBin  : 'windres';
+             RCCmd  : '--include $INC -O res -D FPC -o $RES $RC';
+             ResourceFileClass : nil;
+             ResFlags : [res_external_file];
           );
 
       FPCResRCArgs = '--include $INC -of res -D FPC -o $RES $RC';

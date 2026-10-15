@@ -64,8 +64,8 @@ unit scandir;
       Scanner,Switches,
       FModule,
       defutil,
-      dirparse,link,
-      syscinfo,
+      DirParse,link,
+      SysCInfo,
       symconst,SymTable,SymBase,symtype,SymSym,symdef,
       rabase;
 
@@ -1596,13 +1596,13 @@ unit scandir;
         CurrentScanner.skipspace;
         sctype:=CurrentScanner.readid;
 
-        syscall:=get_syscall_by_name(sctype);
+        syscall:=Get_SysCall_By_Name(sctype);
         if Assigned(syscall) then
           begin
             if not (TargetInfo.system in syscall^.validon) then
               Message(scan_w_syscall_convention_not_useable_on_target)
             else
-              set_default_syscall(syscall^.procoption);
+              Set_Default_SysCall(syscall^.procoption);
             exit;
           end;
         Message(scan_w_syscall_convention_invalid);

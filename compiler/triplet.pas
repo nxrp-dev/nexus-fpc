@@ -28,45 +28,45 @@ interface
 uses
   GlobType;
 
-function targettriplet(tripletstyle: TTripletStyle): AnsiString;
+function TargetTriplet(TripletStyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
   Globals,Systems,
-  CPUInfo,tripletcpu;
+  CPUInfo,TripletCPU;
 
-  function targettriplet(tripletstyle: TTripletStyle): AnsiString;
+  function TargetTriplet(TripletStyle: TTripletStyle): AnsiString;
     begin
       { architecture }
-      result:=tripletcpustr(tripletstyle);
+      Result:=TripletCPUStr(TripletStyle);
       { vendor and/or OS }
-      if TargetInfo.system in systems_darwin then
+      if TargetInfo.System in systems_darwin then
         begin
-          result:=result+'-apple';
-          if TargetInfo.system in systems_macosx then
-            result:=result+'-macosx'+MacOSXVersionMin.str
-          else if TargetInfo.system = system_aarch64_iphonesim then
-            result:=result+'-ios-simulator'+IPhoneOSVersionMin.str
+          Result:=Result+'-apple';
+          if TargetInfo.System in systems_macosx then
+            Result:=Result+'-macosx'+MacOSXVersionMin.Str
+          else if TargetInfo.System = system_aarch64_iphonesim then
+            Result:=Result+'-ios-simulator'+IPhoneOSVersionMin.Str
           else
-            result:=result+'-ios'+IPhoneOSVersionMin.str;
+            Result:=Result+'-ios'+IPhoneOSVersionMin.Str;
         end
-      else if TargetInfo.system in (systems_linux+systems_android) then
-        result:=result+'-unknown-linux'
-      else if TargetInfo.system in systems_all_windows then
+      else if TargetInfo.System in (systems_linux+systems_android) then
+        Result:=Result+'-unknown-linux'
+      else if TargetInfo.System in systems_all_windows then
         begin
-          result:=result+'-pc';
-          result:=result+'-windows-msvc19'
+          Result:=Result+'-pc';
+          Result:=Result+'-windows-msvc19'
         end
       else
-        result:=result+'-unknown';
+        Result:=Result+'-unknown';
 
       { environment/ABI }
-      if TargetInfo.system in systems_android then
-        result:=result+'-android'
+      if TargetInfo.System in systems_android then
+        Result:=Result+'-android'
       else
-      if TargetInfo.system in systems_linux then
-        result:=result+'-gnu';
+      if TargetInfo.System in systems_linux then
+        Result:=Result+'-gnu';
     end;
 
 

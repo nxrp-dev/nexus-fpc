@@ -28,14 +28,14 @@ interface
 uses
   GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
   Globals, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
   begin
     result:='x86_64';
   end;

@@ -26,7 +26,7 @@ unit i_darwin;
 interface
 
 uses
-   Systems,nxartifactid;
+   Systems,NXArtifactID;
 
 const
    res_macho_info : TResInfo =

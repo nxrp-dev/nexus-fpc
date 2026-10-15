@@ -55,13 +55,13 @@ interface
       ct_none,
       ct_aopt);
 
-  procedure ResumeTimer(t : TCTimer);
+  procedure ResumeTimer(T : TCTimer);
   procedure StopTimer;
 
 implementation
 
 {$ifndef COMPILER_TIMINGS}
-  procedure ResumeTimer(t : TCTimer);
+  procedure ResumeTimer(T : TCTimer);
     begin
     end;
 
@@ -71,42 +71,42 @@ implementation
     end;
 {$else COMPILER_TIMINGS}
   uses
-    cepiktimer;
+    CEpikTimer;
 
   var
-    currenttimer : TCTimer;
-    timers : array[TCTimer] of TEpikTimer;
+    CurrentTimer : TCTimer;
+    Timers : array[TCTimer] of TEpikTimer;
 
 
-  procedure ResumeTimer(t : TCTimer);
+  procedure ResumeTimer(T : TCTimer);
     begin
-      timers[currenttimer].Stop;
-      timers[t].Start;
-      currenttimer:=t;
+      Timers[CurrentTimer].Stop;
+      Timers[T].Start;
+      CurrentTimer:=T;
     end;
 
 
   procedure StopTimer;
     begin
-      timers[currenttimer].Stop;
-      currenttimer:=ct_none;
-      timers[currenttimer].Start;
+      Timers[CurrentTimer].Stop;
+      CurrentTimer:=ct_none;
+      Timers[CurrentTimer].Start;
     end;
 
 var
-  t : TCTimer;
+  T : TCTimer;
 
 initialization
-  for t:=low(timers) to high(timers) do
-    timers[t]:=TEpikTimer.Create;
-  currenttimer:=ct_none;
+  for T:=Low(Timers) to High(Timers) do
+    Timers[T]:=TEpikTimer.Create;
+  CurrentTimer:=ct_none;
 finalization
   WriteLn(StdErr,'Compiler profiler results:');
-  timers[currenttimer].Stop;
-  for t:=low(timers) to high(timers) do
-    WriteLn(StdErr,'  ',t,' ',timers[t].Elapsed:0:9,' s');
-  for t:=low(timers) to high(timers) do
-    FreeAndNil(timers[t]);
+  Timers[CurrentTimer].Stop;
+  for T:=Low(Timers) to High(Timers) do
+    WriteLn(StdErr,'  ',T,' ',Timers[T].Elapsed:0:9,' s');
+  for T:=Low(Timers) to High(Timers) do
+    FreeAndNil(Timers[T]);
 {$endif COMPILER_TIMINGS}
 end.
 

@@ -75,8 +75,8 @@ implementation
     FModule,
     aasmbase,aasmtai,aasmcpu,cpubase,hlcgcpu,hlcgobj,
     cgbase,cgobj,cgutils,ogbase,ncgutil,
-    comprsrc,
-    rescmn, i_android
+    CompRsrc,
+    ResCmn, i_android
     ;
 
 const
@@ -498,5 +498,5 @@ initialization
   RegisterExport(system_x86_64_android,TExportLibAndroid);
   RegisterTarget(system_x86_64_android_info);
 {$endif X86_64}
-  RegisterRes(res_elf_info,TWinLikeResourceFile);
+  RegisterRes(Res_ELF_Info,TWinLikeResourceFile);
 end.

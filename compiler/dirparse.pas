@@ -31,11 +31,11 @@ interface
       GlobType,
       Systems;
 
-     function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
-     function UpdateOptimizerStr(s:ShortString;var a:TOptimizerSwitches):boolean;
-     function UpdateWpoStr(s: ShortString; var a: TWPOptimizerSwitches): boolean;
-     function UpdateDebugStr(s:ShortString;var a:TDebugSwitches):boolean;
-     function UpdateTargetSwitchStr(s: ShortString; var a: TTargetSwitches; global: boolean): boolean;
+     function UpdateAlignmentStr(S:ShortString;var A:TAlignmentInfo):Boolean;
+     function UpdateOptimizerStr(S:ShortString;var A:TOptimizerSwitches):Boolean;
+     function UpdateWPOStr(S: ShortString; var A: TWPOptimizerSwitches): Boolean;
+     function UpdateDebugStr(S:ShortString;var A:TDebugSwitches):Boolean;
+     function UpdateTargetSwitchStr(S: ShortString; var A: TTargetSwitches; Global: Boolean): Boolean;
 
 implementation
 
@@ -44,61 +44,61 @@ implementation
       CUtils,
       SymTable;
 
-     function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
+     function UpdateAlignmentStr(S:ShortString;var A:TAlignmentInfo):Boolean;
       var
-         tok  : ShortString;
-         vstr : ShortString;
-        l    : LongInt;
-        code : integer;
-        b    : TAlignmentInfo;
+         Tok  : ShortString;
+         VStr : ShortString;
+        L    : LongInt;
+        Code : Integer;
+        B    : TAlignmentInfo;
       begin
-        UpdateAlignmentStr:=true;
-        UpperVar(s);
-        fillchar(b,sizeof(b),0);
+        UpdateAlignmentStr:=True;
+        UpperVar(S);
+        FillChar(B,SizeOf(B),0);
         repeat
-          tok:=GetToken(s,'=');
-          if tok='' then
-           break;
-          vstr:=GetToken(s,',');
-          val(vstr,l,code);
-          if tok='PROC' then
-           b.ProcAlign:=l
-          else if tok='JUMP' then
-           b.JumpAlign:=l
-          else if tok='LOOP' then
-           b.LoopAlign:=l
-          else if tok='CONSTMIN' then
+          Tok:=GetToken(S,'=');
+          if Tok='' then
+           Break;
+          VStr:=GetToken(S,',');
+          Val(VStr,L,Code);
+          if Tok='PROC' then
+           B.ProcAlign:=L
+          else if Tok='JUMP' then
+           B.JumpAlign:=L
+          else if Tok='LOOP' then
+           B.LoopAlign:=L
+          else if Tok='CONSTMIN' then
            begin
-             b.ConstAlignMin:=l;
-             if l>b.ConstAlignMax then
-               b.ConstAlignMax:=l;
+             B.ConstAlignMin:=L;
+             if L>B.ConstAlignMax then
+               B.ConstAlignMax:=L;
            end
-          else if tok='CONSTMAX' then
-           b.ConstAlignMax:=l
-          else if tok='VARMIN' then
+          else if Tok='CONSTMAX' then
+           B.ConstAlignMax:=L
+          else if Tok='VARMIN' then
            begin
-             b.VarAlignMin:=l;
-             if l>b.VarAlignMax then
-               b.VarAlignMax:=l;
+             B.VarAlignMin:=L;
+             if L>B.VarAlignMax then
+               B.VarAlignMax:=L;
            end
-          else if tok='VARMAX' then
-           b.VarAlignMax:=l
-          else if tok='LOCALMIN' then
+          else if Tok='VARMAX' then
+           B.VarAlignMax:=L
+          else if Tok='LOCALMIN' then
            begin
-             b.LocalAlignMin:=l;
-             if l>b.LocalAlignMax then
-               b.LocalAlignMax:=l;
+             B.LocalAlignMin:=L;
+             if L>B.LocalAlignMax then
+               B.LocalAlignMax:=L;
            end
-          else if tok='LOCALMAX' then
-           b.LocalAlignMax:=l
-          else if tok='RECORDMIN' then
+          else if Tok='LOCALMAX' then
+           B.LocalAlignMax:=L
+          else if Tok='RECORDMIN' then
            begin
-             b.RecordAlignMin:=l;
-             if l>b.RecordAlignMax then
-               b.RecordAlignMax:=l;
+             B.RecordAlignMin:=L;
+             if L>B.RecordAlignMax then
+               B.RecordAlignMax:=L;
            end
-          else if tok='RECORDMAX' then
-           b.RecordAlignMax:=l
+          else if Tok='RECORDMAX' then
+           B.RecordAlignMax:=L
 
 {          disabled for now as - as Jonas pointed out - this
            is a matter of abi
@@ -106,236 +106,236 @@ implementation
            else if tok='MAXCRECORD' then
            b.maxCrecordalign:=l }
           else { Error }
-           UpdateAlignmentStr:=false;
-        until false;
-        Result:=Result and UpdateAlignment(a,b);
+           UpdateAlignmentStr:=False;
+        until False;
+        Result:=Result and UpdateAlignment(A,B);
       end;
 
 
-     function UpdateOptimizerStr(s:ShortString;var a:TOptimizerSwitches):boolean;
+     function UpdateOptimizerStr(S:ShortString;var A:TOptimizerSwitches):Boolean;
       var
-         tok   : ShortString;
-        doset,
-        found : boolean;
-        opt   : TOptimizerSwitch;
+         Tok   : ShortString;
+        DoSet,
+        Found : Boolean;
+        Opt   : TOptimizerSwitch;
       begin
-        result:=true;
-        UpperVar(s);
+        Result:=True;
+        UpperVar(S);
         repeat
-          tok:=GetToken(s,',');
-          if tok='' then
-           break;
-          if Copy(tok,1,2)='NO' then
+          Tok:=GetToken(S,',');
+          if Tok='' then
+           Break;
+          if Copy(Tok,1,2)='NO' then
             begin
-              delete(tok,1,2);
-              doset:=false;
+              Delete(Tok,1,2);
+              DoSet:=False;
             end
           else
-            doset:=true;
-          found:=false;
-          for opt:=low(TOptimizerSwitch) to high(TOptimizerSwitch) do
+            DoSet:=True;
+          Found:=False;
+          for Opt:=Low(TOptimizerSwitch) to High(TOptimizerSwitch) do
             begin
-              if OptimizerSwitchStr[opt]=tok then
+              if OptimizerSwitchStr[Opt]=Tok then
                 begin
-                  found:=true;
-                  break;
+                  Found:=True;
+                  Break;
                 end;
             end;
-          if found then
+          if Found then
             begin
-              if doset then
-                include(a,opt)
+              if DoSet then
+                Include(A,Opt)
               else
-                exclude(a,opt);
+                Exclude(A,Opt);
             end
           else
-            result:=false;
-        until false;
+            Result:=False;
+        until False;
       end;
 
 
-     function UpdateWpoStr(s: ShortString; var a: TWPOptimizerSwitches): boolean;
+     function UpdateWPOStr(S: ShortString; var A: TWPOptimizerSwitches): Boolean;
       var
-         tok   : ShortString;
-        doset,
-        found : boolean;
-        opt   : TWPOptimizerSwitch;
+         Tok   : ShortString;
+        DoSet,
+        Found : Boolean;
+        Opt   : TWPOptimizerSwitch;
       begin
-        result:=true;
-        UpperVar(s);
+        Result:=True;
+        UpperVar(S);
         repeat
-          tok:=GetToken(s,',');
-          if tok='' then
-           break;
-          if Copy(tok,1,2)='NO' then
+          Tok:=GetToken(S,',');
+          if Tok='' then
+           Break;
+          if Copy(Tok,1,2)='NO' then
             begin
-              delete(tok,1,2);
-              doset:=false;
+              Delete(Tok,1,2);
+              DoSet:=False;
             end
           else
-            doset:=true;
-          found:=false;
-          if (tok = 'ALL') then
+            DoSet:=True;
+          Found:=False;
+          if (Tok = 'ALL') then
             begin
-              for opt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
-                if doset then
-                  include(a,opt)
+              for Opt:=Low(TWPOptimizerSwitch) to High(TWPOptimizerSwitch) do
+                if DoSet then
+                  Include(A,Opt)
                 else
-                  exclude(a,opt);
+                  Exclude(A,Opt);
             end
           else
             begin
-              for opt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
+              for Opt:=Low(TWPOptimizerSwitch) to High(TWPOptimizerSwitch) do
                 begin
-                  if WPOptimizerSwitchStr[opt]=tok then
+                  if WPOptimizerSwitchStr[Opt]=Tok then
                     begin
-                      found:=true;
-                      break;
+                      Found:=True;
+                      Break;
                     end;
                 end;
-              if found then
+              if Found then
                 begin
-                  if doset then
-                    include(a,opt)
+                  if DoSet then
+                    Include(A,Opt)
                   else
-                    exclude(a,opt);
+                    Exclude(A,Opt);
                 end
               else
-                result:=false;
+                Result:=False;
             end;
-        until false;
+        until False;
       end;
 
 
-     function UpdateDebugStr(s:ShortString;var a:TDebugSwitches):boolean;
+     function UpdateDebugStr(S:ShortString;var A:TDebugSwitches):Boolean;
       var
-         tok   : ShortString;
-        doset,
-        found : boolean;
-        opt   : TDebugSwitch;
+         Tok   : ShortString;
+        DoSet,
+        Found : Boolean;
+        Opt   : TDebugSwitch;
       begin
-        result:=true;
-        UpperVar(s);
+        Result:=True;
+        UpperVar(S);
         repeat
-          tok:=GetToken(s,',');
-          if tok='' then
-           break;
-          if Copy(tok,1,2)='NO' then
+          Tok:=GetToken(S,',');
+          if Tok='' then
+           Break;
+          if Copy(Tok,1,2)='NO' then
             begin
-              delete(tok,1,2);
-              doset:=false;
+              Delete(Tok,1,2);
+              DoSet:=False;
             end
           else
-            doset:=true;
-          found:=false;
-          for opt:=low(TDebugSwitch) to high(TDebugSwitch) do
+            DoSet:=True;
+          Found:=False;
+          for Opt:=Low(TDebugSwitch) to High(TDebugSwitch) do
             begin
-              if DebugSwitchStr[opt]=tok then
+              if DebugSwitchStr[Opt]=Tok then
                 begin
-                  found:=true;
-                  break;
+                  Found:=True;
+                  Break;
                 end;
             end;
-          if found then
+          if Found then
             begin
-              if doset then
-                include(a,opt)
+              if DoSet then
+                Include(A,Opt)
               else
-                exclude(a,opt);
+                Exclude(A,Opt);
             end
           else
-            result:=false;
-        until false;
+            Result:=False;
+        until False;
       end;
 
 
-     function UpdateTargetSwitchStr(s: ShortString; var a: TTargetSwitches; global: boolean): boolean;
+     function UpdateTargetSwitchStr(S: ShortString; var A: TTargetSwitches; Global: Boolean): Boolean;
       var
-        tok,
-         value : ShortString;
-        setstr: string[2];
-        equalspos: LongInt;
-        doset,
-        gotvalue,
-        found : boolean;
-        opt   : TTargetSwitch;
+        Tok,
+         Value : ShortString;
+        SetStr: string[2];
+        EqualsPos: LongInt;
+        DoSet,
+        GotValue,
+        Found : Boolean;
+        Opt   : TTargetSwitch;
       begin
-        result:=true;
-        value:='';
+        Result:=True;
+        Value:='';
         repeat
-          tok:=GetToken(s,',');
-          if tok='' then
-           break;
-          setstr:=upper(copy(tok,length(tok),1));
-          if setstr='-' then
+          Tok:=GetToken(S,',');
+          if Tok='' then
+           Break;
+          SetStr:=Upper(Copy(Tok,Length(Tok),1));
+          if SetStr='-' then
             begin
-              SetLength(tok,length(tok)-1);
-              doset:=false;
+              SetLength(Tok,Length(Tok)-1);
+              DoSet:=False;
             end
           else
-            doset:=true;
+            DoSet:=True;
           { value specified? }
-          gotvalue:=false;
-          equalspos:=pos('=',tok);
-          if equalspos<>0 then
+          GotValue:=False;
+          EqualsPos:=Pos('=',Tok);
+          if EqualsPos<>0 then
             begin
-              value:=copy(tok,equalspos+1,length(tok));
-              delete(tok,equalspos,length(tok));
-              gotvalue:=true;
+              Value:=Copy(Tok,EqualsPos+1,Length(Tok));
+              Delete(Tok,EqualsPos,Length(Tok));
+              GotValue:=True;
             end;
-          found:=false;
-          UpperVar(tok);
-          for opt:=low(TTargetSwitch) to high(TTargetSwitch) do
+          Found:=False;
+          UpperVar(Tok);
+          for Opt:=Low(TTargetSwitch) to High(TTargetSwitch) do
             begin
-              if TargetSwitchStr[opt].name=tok then
+              if TargetSwitchStr[Opt].Name=Tok then
                 begin
-                  found:=true;
-                  break;
+                  Found:=True;
+                  Break;
                 end;
             end;
-          if found then
+          if Found then
             begin
-              if not global and
-                 TargetSwitchStr[opt].isglobal then
-                result:=false
-              else if not TargetSwitchStr[opt].hasvalue then
+              if not Global and
+                 TargetSwitchStr[Opt].IsGlobal then
+                Result:=False
+              else if not TargetSwitchStr[Opt].HasValue then
                 begin
-                  if gotvalue then
-                    result:=false;
-                  if (TargetSwitchStr[opt].define<>'') and (doset xor (opt in a)) then
-                    if doset then
-                      def_system_macro(TargetSwitchStr[opt].define)
+                  if GotValue then
+                    Result:=False;
+                  if (TargetSwitchStr[Opt].Define<>'') and (DoSet xor (Opt in A)) then
+                    if DoSet then
+                      def_system_macro(TargetSwitchStr[Opt].Define)
                     else
-                      undef_system_macro(TargetSwitchStr[opt].define);
-                  if doset then
-                    include(a,opt)
+                      undef_system_macro(TargetSwitchStr[Opt].Define);
+                  if DoSet then
+                    Include(A,Opt)
                   else
-                    exclude(a,opt)
+                    Exclude(A,Opt)
                 end
               else
                 begin
-                  if not gotvalue or
-                     not doset then
-                    result:=false
+                  if not GotValue or
+                     not DoSet then
+                    Result:=False
                   else
                     begin
-                      case opt of
+                      case Opt of
                         ts_auto_getter_prefix:
-                          Prop_Auto_Getter_Prefix:=value;
+                          Prop_Auto_Getter_Prefix:=Value;
                         ts_auto_setter_predix:
-                          Prop_Auto_Setter_Prefix:=value;
+                          Prop_Auto_Setter_Prefix:=Value;
                         else
                           begin
                             WriteLn('Internalerror 2012053001');
-                            halt(1);
+                            Halt(1);
                           end;
                       end;
                     end;
                 end;
             end
           else
-            result:=false;
-        until false;
+            Result:=False;
+        until False;
       end;
 
 end.

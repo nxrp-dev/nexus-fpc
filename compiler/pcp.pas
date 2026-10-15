@@ -28,53 +28,53 @@ unit pcp;
 interface
 
   uses
-    CStreams,entfile,nxartifactid;
+    CStreams,EntFile,NXArtifactID;
 
   const
     { Nexus-owned revision within the NXP family. }
     CurrentPCPVersion=4;
 
     { unit flags }
-    pf_big_endian          = $000004;
+    PfBigEndian          = $000004;
     //uf_in_library          = $000020; { is the file in another file than <ppufile>.* ? }
     //uf_smart_linked        = $000040; { the ppu can be smartlinked }
     //uf_static_linked       = $000080; { the ppu can be linked static }
     //uf_shared_linked       = $000100; { the ppu can be linked shared }
     //uf_no_link             = $000400; { unit has no .o generated, but can still have external linking! }
-    pf_little_endian       = $001000;
+    PfLittleEndian       = $001000;
 
 
   type
     TPCPHeader=record
-      common   : TEntryHeader;
-      checksum : cardinal; { checksum for this pcpfile }
-      requiredlistsize, { number of entries for required packages }
-      ppulistsize : LongInt; { number of entries for contained PPUs }
+      Common   : TEntryHeader;
+      Checksum : Cardinal; { checksum for this pcpfile }
+      RequiredListSize, { number of entries for required packages }
+      PPUListSize : LongInt; { number of entries for contained PPUs }
     end;
 
     TPCPFile=class(TEntryFile)
     private
-      headerread : boolean;
+      HeaderRead : Boolean;
     public
-      header : TPCPHeader;
+      Header : TPCPHeader;
       { crc for the entire package }
-      crc : cardinal;
-      do_crc : boolean;
+      CRC : Cardinal;
+      DoCRC : Boolean;
     protected
-      function getheadersize:LongInt;override;
-      function getheaderaddr:PEntryHeader;override;
-      procedure newheader;override;
-      function readheader:LongInt;override;
-      procedure resetfile;override;
+      function GetHeaderSize:LongInt;override;
+      function GetHeaderAddr:PEntryHeader;override;
+      procedure NewHeader;override;
+      function ReadHeader:LongInt;override;
+      procedure ResetFile;override;
       procedure RaiseAssertion(Code: LongInt); override;
     public
-      procedure writeheader;override;
-      function checkpcpid:boolean;
-      function readpackageentry(expected:byte):boolean;
-      function packageentrydone:boolean;
-      function metadataend:LongInt;
-      function metadatadone:boolean;
-      procedure putdata(const b;len:integer);override;
+      procedure WriteHeader;override;
+      function CheckPCPID:Boolean;
+      function ReadPackageEntry(Expected:Byte):Boolean;
+      function PackageEntryDone:Boolean;
+      function MetadataEnd:LongInt;
+      function MetadataDone:Boolean;
+      procedure PutData(const B;Len:Integer);override;
     end;
 
 implementation
@@ -84,14 +84,14 @@ uses
 
   { tpcpfile }
 
-  function TPCPFile.getheadersize: LongInt;
+  function TPCPFile.GetHeaderSize: LongInt;
     begin
-      result:=sizeof(TPCPHeader);
+      Result:=SizeOf(TPCPHeader);
     end;
 
-  function TPCPFile.getheaderaddr: PEntryHeader;
+  function TPCPFile.GetHeaderAddr: PEntryHeader;
     begin
-      result:=@header;
+      Result:=@Header;
     end;
 
   procedure TPCPFile.RaiseAssertion(Code: LongInt);
@@ -100,184 +100,184 @@ uses
       inherited RaiseAssertion(Code);
     end;
 
-  procedure TPCPFile.newheader;
+  procedure TPCPFile.NewHeader;
     var
-      s : string;
+      S : string;
     begin
-      fillchar(header,sizeof(TPCPHeader),0);
-      str(CurrentPCPVersion,s);
-      while length(s)<3 do
-        s:='0'+s;
-      with header.common do
+      FillChar(Header,SizeOf(TPCPHeader),0);
+      Str(CurrentPCPVersion,S);
+      while Length(S)<3 do
+        S:='0'+S;
+      with Header.Common do
         begin
-          id[1]:=NexusPCPSignature[1];
-          id[2]:=NexusPCPSignature[2];
-          id[3]:=NexusPCPSignature[3];
-          ver[1]:=s[1];
-          ver[2]:=s[2];
-          ver[3]:=s[3];
+          ID[1]:=NexusPCPSignature[1];
+          ID[2]:=NexusPCPSignature[2];
+          ID[3]:=NexusPCPSignature[3];
+          Ver[1]:=S[1];
+          Ver[2]:=S[2];
+          Ver[3]:=S[3];
         end;
     end;
 
-  function TPCPFile.readheader: LongInt;
+  function TPCPFile.ReadHeader: LongInt;
     begin
-      headerread:=false;
-      crc:=0;
-      if fsize<sizeof(TPCPHeader) then
-        exit(0);
-      result:=f.Read(header,sizeof(TPCPHeader));
-      if result<>sizeof(TPCPHeader) then
-        exit;
-      headerread:=true;
+      HeaderRead:=False;
+      CRC:=0;
+      if FSize<SizeOf(TPCPHeader) then
+        Exit(0);
+      Result:=F.Read(Header,SizeOf(TPCPHeader));
+      if Result<>SizeOf(TPCPHeader) then
+        Exit;
+      HeaderRead:=True;
       { The header is always stored in little endian order }
       { therefore swap if on a big endian machine          }
     {$IFDEF ENDIAN_BIG}
-      header.common.compiler := swapendian(header.common.compiler);
-      header.common.cpu := swapendian(header.common.cpu);
-      header.common.target := swapendian(header.common.target);
-      header.common.flags := swapendian(header.common.flags);
-      header.common.size := swapendian(header.common.size);
-      header.checksum := swapendian(header.checksum);
-      header.requiredlistsize:=swapendian(header.requiredlistsize);
-      header.ppulistsize:=swapendian(header.ppulistsize);
+      Header.Common.Compiler := SwapEndian(Header.Common.Compiler);
+      Header.Common.CPU := SwapEndian(Header.Common.CPU);
+      Header.Common.Target := SwapEndian(Header.Common.Target);
+      Header.Common.Flags := SwapEndian(Header.Common.Flags);
+      Header.Common.Size := SwapEndian(Header.Common.Size);
+      Header.Checksum := SwapEndian(Header.Checksum);
+      Header.RequiredListSize:=SwapEndian(Header.RequiredListSize);
+      Header.PPUListSize:=SwapEndian(Header.PPUListSize);
     {$ENDIF}
       { the PPU DATA is stored in native order }
-      if (header.common.flags and pf_big_endian) = pf_big_endian then
+      if (Header.Common.Flags and PfBigEndian) = PfBigEndian then
        Begin
     {$IFDEF ENDIAN_LITTLE}
-         change_endian := TRUE;
+         ChangeEndian := True;
     {$ELSE}
-         change_endian := FALSE;
+         ChangeEndian := False;
     {$ENDIF}
        End
-      else if (header.common.flags and pf_little_endian) = pf_little_endian then
+      else if (Header.Common.Flags and PfLittleEndian) = PfLittleEndian then
        Begin
     {$IFDEF ENDIAN_BIG}
-         change_endian := TRUE;
+         ChangeEndian := True;
     {$ELSE}
-         change_endian := FALSE;
+         ChangeEndian := False;
     {$ENDIF}
        End;
     end;
 
-  procedure TPCPFile.resetfile;
+  procedure TPCPFile.ResetFile;
     begin
-      crc:=0;
-      do_crc:=true;
+      CRC:=0;
+      DoCRC:=True;
     end;
 
 
-  procedure TPCPFile.writeheader;
+  procedure TPCPFile.WriteHeader;
     var
-      opos : integer;
+      OPos : Integer;
     begin
       { flush buffer }
-      writebuf;
+      WriteBuf;
       { update size (w/o header!) in the header }
-      header.common.size:=BufStart-sizeof(TPCPHeader);
+      Header.Common.Size:=BufStart-SizeOf(TPCPHeader);
       { set the endian flag }
 {$ifndef FPC_BIG_ENDIAN}
-      header.common.flags:=header.common.flags or pf_little_endian;
+      Header.Common.Flags:=Header.Common.Flags or PfLittleEndian;
 {$else not FPC_BIG_ENDIAN}
-      header.common.flags:=header.common.flags or pf_big_endian;
+      Header.Common.Flags:=Header.Common.Flags or PfBigEndian;
       { Now swap the header in the correct endian (always little endian) }
-      header.common.compiler:=swapendian(header.common.compiler);
-      header.common.cpu:=swapendian(header.common.cpu);
-      header.common.target:=swapendian(header.common.target);
-      header.common.flags:=swapendian(header.common.flags);
-      header.common.size:=swapendian(header.common.size);
-      header.checksum:=swapendian(header.checksum);
-      header.requiredlistsize:=swapendian(header.requiredlistsize);
-      header.ppulistsize:=swapendian(header.ppulistsize);
+      Header.Common.Compiler:=SwapEndian(Header.Common.Compiler);
+      Header.Common.CPU:=SwapEndian(Header.Common.CPU);
+      Header.Common.Target:=SwapEndian(Header.Common.Target);
+      Header.Common.Flags:=SwapEndian(Header.Common.Flags);
+      Header.Common.Size:=SwapEndian(Header.Common.Size);
+      Header.Checksum:=SwapEndian(Header.Checksum);
+      Header.RequiredListSize:=SwapEndian(Header.RequiredListSize);
+      Header.PPUListSize:=SwapEndian(Header.PPUListSize);
 {$endif not FPC_BIG_ENDIAN}
     { write header and restore filepos after it }
-      opos:=f.Position;
-      f.Position:=0;
-      f.Write(header,sizeof(TPCPHeader));
-      f.Position:=opos;
+      OPos:=F.Position;
+      F.Position:=0;
+      F.Write(Header,SizeOf(TPCPHeader));
+      F.Position:=OPos;
   end;
 
 
-  function TPCPFile.checkpcpid:boolean;
+  function TPCPFile.CheckPCPID:Boolean;
     begin
-      result:=headerread and
-               (header.common.size<=dword(fsize-sizeof(TPCPHeader))) and
-               (header.requiredlistsize>=0) and (header.ppulistsize>=0) and
-               (((header.common.flags and (pf_big_endian or pf_little_endian))=pf_big_endian) or
-                ((header.common.flags and (pf_big_endian or pf_little_endian))=pf_little_endian)) and
-               ((Header.common.Id[1]=NexusPCPSignature[1]) and
-                (Header.common.Id[2]=NexusPCPSignature[2]) and
-                (Header.common.Id[3]=NexusPCPSignature[3]));
+      Result:=HeaderRead and
+               (Header.Common.Size<=DWORD(FSize-SizeOf(TPCPHeader))) and
+               (Header.RequiredListSize>=0) and (Header.PPUListSize>=0) and
+               (((Header.Common.Flags and (PfBigEndian or PfLittleEndian))=PfBigEndian) or
+                ((Header.Common.Flags and (PfBigEndian or PfLittleEndian))=PfLittleEndian)) and
+               ((Header.Common.ID[1]=NexusPCPSignature[1]) and
+                (Header.Common.ID[2]=NexusPCPSignature[2]) and
+                (Header.Common.ID[3]=NexusPCPSignature[3]));
     end;
 
 
-  function TPCPFile.metadataend:LongInt;
+  function TPCPFile.MetadataEnd:LongInt;
     begin
       { Version 3 stores the metadata size, excluding embedded PPU data. }
-      result:=sizeof(TPCPHeader)+LongInt(header.common.size);
+      Result:=SizeOf(TPCPHeader)+LongInt(Header.Common.Size);
     end;
 
 
-  function TPCPFile.packageentrydone:boolean;
+  function TPCPFile.PackageEntryDone:Boolean;
     begin
-      result:=not error and (entryleft=0);
+      Result:=not Error and (EntryLeft=0);
     end;
 
 
-  function TPCPFile.readpackageentry(expected:byte):boolean;
+  function TPCPFile.ReadPackageEntry(Expected:Byte):Boolean;
     var
-      savedpos,left,count : LongInt;
-      buffer : array[0..4095] of byte;
+      SavedPos,Left,Count : LongInt;
+      Buffer : array[0..4095] of Byte;
     begin
-      result:=false;
+      Result:=False;
       { Do not allow readentry to skip unread fields or read a partial header.
         Keep these stricter checks local to PCP consumers. }
-      if not packageentrydone or
-         (BufferedPosition>metadataend-sizeof(TEntry)) then
-        exit;
-      if (readentry<>expected) or (entry.id<>mainentryid) or
-         (entry.size<0) or (entry.size>metadataend-BufferedPosition) then
-        exit;
+      if not PackageEntryDone or
+         (BufferedPosition>MetadataEnd-SizeOf(TEntry)) then
+        Exit;
+      if (ReadEntry<>Expected) or (Entry.ID<>MainEntryID) or
+         (Entry.Size<0) or (Entry.Size>MetadataEnd-BufferedPosition) then
+        Exit;
       { The existing checksum covers metadata payloads, not entry headers,
         the PPU offset table, or embedded PPUs. Preserve that definition. }
-      if not (expected in [ibpputable,ibend]) then
+      if not (Expected in [IBPPUTable,IBEnd]) then
         begin
-          savedpos:=f.Position;
+          SavedPos:=F.Position;
           try
-            f.Position:=BufferedPosition;
-            left:=entry.size;
-            while left>0 do
+            F.Position:=BufferedPosition;
+            Left:=Entry.Size;
+            while Left>0 do
               begin
-                count:=left;
-                if count>sizeof(buffer) then
-                  count:=sizeof(buffer);
-                if f.Read(buffer,count)<>count then
-                  exit;
-                crc:=UpdateCRC32(crc,buffer,count);
-                dec(left,count);
+                Count:=Left;
+                if Count>SizeOf(Buffer) then
+                  Count:=SizeOf(Buffer);
+                if F.Read(Buffer,Count)<>Count then
+                  Exit;
+                CRC:=UpdateCRC32(CRC,Buffer,Count);
+                Dec(Left,Count);
               end;
           finally
-            f.Position:=savedpos;
+            F.Position:=SavedPos;
           end;
         end;
-      result:=true;
+      Result:=True;
     end;
 
 
-  function TPCPFile.metadatadone:boolean;
+  function TPCPFile.MetadataDone:Boolean;
     begin
-      result:=packageentrydone and (entry.nr=ibend) and
-        (BufferedPosition=metadataend) and (crc=header.checksum);
+      Result:=PackageEntryDone and (Entry.NR=IBEnd) and
+        (BufferedPosition=MetadataEnd) and (CRC=Header.Checksum);
     end;
 
 
-  procedure TPCPFile.putdata(const b;len:integer);
+  procedure TPCPFile.PutData(const B;Len:Integer);
     begin
-      if do_crc then
+      if DoCRC then
         begin
-          crc:=UpdateCRC32(crc,b,len);
+          CRC:=UpdateCRC32(CRC,B,Len);
         end;
-      inherited putdata(b, len);
+      inherited PutData(B, Len);
     end;
 
 

@@ -26,7 +26,7 @@ unit i_android;
   interface
 
     uses
-       Systems,nxartifactid, rescmn;
+       Systems,NXArtifactID, ResCmn;
 
     const
 

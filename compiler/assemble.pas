@@ -265,7 +265,7 @@ Implementation
 {$endif OMFOBJSUPPORT}
 
       CScript,FModule,Verbose,
-      cpubase,CPUInfo,triplet,
+      cpubase,CPUInfo,Triplet,
       aasmcpu;
 
     var
@@ -976,7 +976,7 @@ Implementation
       begin
         result:=asminfo^.asmcmd;
         if af_llvm in TargetAsm.flags then
-          Replace(result,'$TRIPLET',targettriplet(triplet_llvm));
+          Replace(result,'$TRIPLET',TargetTriplet(triplet_llvm));
         if (cs_assemble_on_target in CurrentSettings.GlobalSwitches) then
          begin
            Replace(result,'$ASM',MaybeQuoted(ScriptFixFileName(AsmFileName)));

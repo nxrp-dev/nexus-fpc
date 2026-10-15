@@ -669,12 +669,12 @@ implementation
            This does mean that changing e.g. the "deprecated" state of a symbol
            by itself will not trigger a recompilation of dependent units.
          }
-         oldcrc:=ppufile.do_crc;
-         ppufile.do_crc:=false;
+         oldcrc:=ppufile.DoCRC;
+         ppufile.DoCRC:=false;
          ppufile.putset(TPPUSet2(symoptions));
          if sp_has_deprecated_msg in symoptions then
            ppufile.putstring(deprecatedmsg^);
-         ppufile.do_crc:=oldcrc;
+         ppufile.DoCRC:=oldcrc;
          TRTTIAttributeList.ppuwrite(RTTIAttributeList,ppufile);
       end;
 
@@ -1935,11 +1935,11 @@ implementation
       begin
          inherited ppuwrite(ppufile);
          ppufile.putbyte(byte(varspez));
-         oldcrc:=ppufile.do_crc;
-         ppufile.do_crc:=false;
+         oldcrc:=ppufile.DoCRC;
+         ppufile.DoCRC:=false;
          ppufile.putbyte(byte(varregable));
          ppufile.putset(TPPUSet1(varsymaccess));
-         ppufile.do_crc:=oldcrc;
+         ppufile.DoCRC:=oldcrc;
          ppufile.putderef(vardefderef);
          ppufile.putset(TPPUSet4(varoptions));
       end;
@@ -2534,13 +2534,13 @@ implementation
            we write them to the unit file.
            This enables constant folding for inline procedures loaded from units
          }
-         oldcrc:=ppufile.do_crc;
-         ppufile.do_crc:=false;
+         oldcrc:=ppufile.DoCRC;
+         ppufile.DoCRC:=false;
          ppufile.putbyte(ord(varstate));
          { write also info about the usage of parameters,
            the absolute usage does not matter }
          ppufile.putbyte(min(1,refs));
-         ppufile.do_crc:=oldcrc;
+         ppufile.DoCRC:=oldcrc;
 
          if vo_has_explicit_paraloc in varoptions then
            begin

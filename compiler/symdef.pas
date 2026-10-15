@@ -2284,8 +2284,8 @@ implementation
         ppufile.putlongint(DefId);
         ppufile.putderef(typesymderef);
         ppufile.putset(TPPUSet2(defoptions));
-        oldintfcrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        oldintfcrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
         ppufile.putset(TPPUSet1(defstates));
         if df_unique in defoptions then
           ppufile.putderef(orgdefderef);
@@ -2310,7 +2310,7 @@ implementation
         if df_generic in defoptions then
           begin
             { crc generic implementation }
-            ppufile.do_crc:=true;
+            ppufile.DoCRC:=true;
             if Assigned(generictokenbuf) then
               begin
                 sizeleft:=generictokenbuf.size;
@@ -2330,7 +2330,7 @@ implementation
                 dec(sizeleft,i);
               end;
           end;
-        ppufile.do_crc:=oldintfcrc;
+        ppufile.DoCRC:=oldintfcrc;
         if df_specialization in defoptions then
           ppufile.putderef(genericdefderef);
         TRTTIAttributeList.ppuwrite(RTTIAttributeList,ppufile);
@@ -6801,8 +6801,8 @@ implementation
          if (po_dispid in procoptions) then
            ppufile.putlongint(dispid);
          { inline stuff }
-         oldcrc:=ppufile.do_crc;
-         ppufile.do_crc:=false;
+         oldcrc:=ppufile.DoCRC;
+         ppufile.DoCRC:=false;
          ppufile.putset(TPPUSet1(implprocoptions));
          if has_inlininginfo then
            begin
@@ -6828,7 +6828,7 @@ implementation
             item:=TCmdStrListItem(item.next);
           end;
 
-         ppufile.do_crc:=oldcrc;
+         ppufile.DoCRC:=oldcrc;
 
          { generic tokens for the declaration }
          if Assigned(genericdecltokenbuf) and (genericdecltokenbuf.size>0) then
@@ -6860,10 +6860,10 @@ implementation
            browser info is requested, this has no influence on the crc }
          if store_localst and not ppufile.crc_only then
           begin
-            oldcrc:=ppufile.do_crc;
-            ppufile.do_crc:=false;
+            oldcrc:=ppufile.DoCRC;
+            ppufile.DoCRC:=false;
             TLocalSymTable(localst).ppuwrite(ppufile);
-            ppufile.do_crc:=oldcrc;
+            ppufile.DoCRC:=oldcrc;
           end;
 
          { node tree for inlining }

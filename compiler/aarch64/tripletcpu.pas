@@ -28,14 +28,14 @@ interface
 uses
   GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
   Globals, Systems, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
   begin
     if TargetInfo.system in systems_darwin then
       result:='arm64'

@@ -28,14 +28,14 @@ interface
 uses
   GlobType;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
 
 implementation
 
 uses
   Globals, Systems, CPUInfo;
 
-function tripletcpustr(tripletstyle: TTripletStyle): AnsiString;
+function TripletCPUStr(tripletstyle: TTripletStyle): AnsiString;
   begin
     if tripletstyle in [triplet_llvm,triplet_llvmrt] then
       begin

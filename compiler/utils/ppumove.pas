@@ -35,7 +35,7 @@ uses
 {$else unix}
   dos,
 {$endif unix}
-  CUtils,ppu,entfile,Systems,nxartifactid,
+  CUtils,ppu,entfile,Systems,NXArtifactID,
   getopts;
 
 const

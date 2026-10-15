@@ -31,7 +31,7 @@ interface
        symconst,symdef,SymSym,
        CScript,gendef,
        cpubase,
-       import,export,link,comprsrc,i_win;
+       import,export,link,CompRsrc,i_win;
 
 
     const

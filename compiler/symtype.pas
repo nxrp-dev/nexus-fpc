@@ -240,7 +240,7 @@ interface
 implementation
 
     uses
-       crefs,
+       CRefs,
        Verbose,
        FModule
        ;
@@ -1175,8 +1175,8 @@ implementation
         info   : byte;
       begin
         { posinfo is not relevant for changes in PPU }
-        oldcrc:=do_crc;
-        do_crc:=false;
+        oldcrc:=DoCRC;
+        DoCRC:=false;
         {
           info byte layout in bits:
           0-1 - amount of bytes for fileindex
@@ -1250,7 +1250,7 @@ implementation
              end;
          3 : putlongint(p.column);
         end;
-        do_crc:=oldcrc;
+        DoCRC:=oldcrc;
       end;
 
 
@@ -1277,8 +1277,8 @@ implementation
       var
         oldcrc : boolean;
       begin
-        oldcrc:=do_crc;
-        do_crc:=false;
+        oldcrc:=DoCRC;
+        DoCRC:=false;
 {$ifdef DEBUG_GENERATE_INTERFACE_PPU}
 	{ Accept invalid marker inside getppucrc }
         if writing_interface_ppu then
@@ -1289,7 +1289,7 @@ implementation
           InternalError(2019022201)
         else
           putlongint(d.dataidx);
-        do_crc:=oldcrc;
+        DoCRC:=oldcrc;
       end;
 
 

@@ -2087,7 +2087,7 @@ uses
                 replaydepth:=CurrentScanner.replay_stack_depth;
                 if genericdef.typ=procdef then
                   begin
-                    CurrentScanner.startreplaytokens(TProcDef(genericdef).genericdecltokenbuf,hmodule.change_endian);
+                    CurrentScanner.startreplaytokens(TProcDef(genericdef).genericdecltokenbuf,hmodule.ChangeEndian);
                     parse_proc_head(TProcDef(genericdef).struct,TProcDef(genericdef).proctypeoption,[],genericdef,generictypelist,pd);
                     if Assigned(pd) then
                       begin
@@ -2104,7 +2104,7 @@ uses
                   end
                 else
                   begin
-                    CurrentScanner.startreplaytokens(genericdef.generictokenbuf,hmodule.change_endian);
+                    CurrentScanner.startreplaytokens(genericdef.generictokenbuf,hmodule.ChangeEndian);
                     if Assigned(context.forwarddef) then
                       begin
                         tsrsym:=nil;
@@ -2990,7 +2990,7 @@ uses
             { use the index the module got from the current compilation process }
             CurrentFilePos.moduleindex:=hmodule.ModuleID;
             CurrentTokenPos:=CurrentFilePos;
-            CurrentScanner.startreplaytokens(TProcDef(def.genericdef).generictokenbuf,hmodule.change_endian);
+            CurrentScanner.startreplaytokens(TProcDef(def.genericdef).generictokenbuf,hmodule.ChangeEndian);
             read_proc_body(def);
             CurrentFilePos:=oldcurrent_filepos;
           end

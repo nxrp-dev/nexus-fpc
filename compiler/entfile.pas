@@ -27,7 +27,7 @@ interface
 
   uses
     TPCompilerReal,
-    Systems,GlobType,ConstExp,CStreams,nxentrybuffer;
+    Systems,GlobType,ConstExp,CStreams,NXEntryBuffer;
 
 const
 { buffer sizes }
@@ -264,7 +264,7 @@ type
   public
     entrytyp : byte;
     size             : integer;
-    change_endian    : boolean; { Used in ppudump util }
+    ChangeEndian    : boolean; { Used in ppudump util }
 {$ifdef generic_cpu}
     has_more,
 {$endif not generic_cpu}
@@ -385,7 +385,7 @@ constructor TEntryFile.create(const fn:string
 begin
   fname:=fn;
   fisfile:=false;
-  change_endian:=false;
+  ChangeEndian:=false;
   mode:=0;
   newheader;
   error:=false;
@@ -794,7 +794,7 @@ begin
   ppu_log('entrystart');
 {$endif}
   readdata(entry,sizeof(TEntry));
-  if change_endian then
+  if ChangeEndian then
     entry.size:=swapendian(entry.size);
   entrystart:=BufferedPosition;
   entryidx:=0;
@@ -923,7 +923,7 @@ begin
     end
   else
     readdata(result,sizeof(word));
-  if change_endian then
+  if ChangeEndian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
   ppu_log_val(ToStr(result));
@@ -952,7 +952,7 @@ begin
     end
   else
     readdata(result,sizeof(LongInt));
-  if change_endian then
+  if ChangeEndian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
   ppu_log_val(ToStr(result));
@@ -981,7 +981,7 @@ begin
     end
   else
     readdata(result,sizeof(dword));
-  if change_endian then
+  if ChangeEndian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
   ppu_log_val(ToStr(result));
@@ -1010,7 +1010,7 @@ begin
     end
   else
     readdata(result,sizeof(int64));
-  if change_endian then
+  if ChangeEndian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
   ppu_log_val(ToStr(result));
@@ -1039,7 +1039,7 @@ begin
     end
   else
     readdata(result,sizeof(qword));
-  if change_endian then
+  if ChangeEndian then
    result:=swapendian(result);
 {$ifdef DEBUG_PPU}
   ppu_log_val(ToStr(result));
@@ -1385,7 +1385,7 @@ begin
   inc_log_level;
 {$endif}
   getdata(arr,sizeof(arr));
-  if change_endian then
+  if ChangeEndian then
     for i:=low(arr) to high(arr) do
       arr[i]:=Reverse_Byte(arr[i]);
 {$ifdef DEBUG_PPU}

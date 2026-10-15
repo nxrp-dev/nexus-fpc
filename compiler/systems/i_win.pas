@@ -26,7 +26,7 @@ unit i_win;
   interface
 
     uses
-       Systems,nxartifactid;
+       Systems,NXArtifactID;
 
     const
 

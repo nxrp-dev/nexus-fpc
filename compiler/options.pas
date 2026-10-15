@@ -27,7 +27,7 @@ interface
 
 uses
   CFileUtl,CClasses,VersionCmp,
-  GlobType,Globals,Verbose,Systems,CPUInfo,comprsrc;
+  GlobType,Globals,Verbose,Systems,CPUInfo,CompRsrc;
 
 Type
   TOption=class
@@ -147,8 +147,8 @@ uses
   SymTable,Scanner,rabase,
   symconst,
 
-  dirparse,
-  pkgutil;
+  DirParse,
+  PkgUtil;
 
 const
   page_size = 24;
@@ -2679,7 +2679,7 @@ begin
         if ispara then
           parapackages.add(more,nil)
         else
-          add_package(more,true,true);
+          Add_Package(more,true,true);
       end;
     'p' :
       begin
@@ -3021,13 +3021,13 @@ begin
          end;
        'w' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),InitSettings.DoWPOptimizerSwitches) then
+           if not UpdateWPOStr(copy(more,j+1),InitSettings.DoWPOptimizerSwitches) then
              IllegalPara(opt);
            break;
          end;
        'W' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),InitSettings.GenWPOptimizerSwitches) then
+           if not UpdateWPOStr(copy(more,j+1),InitSettings.GenWPOptimizerSwitches) then
              IllegalPara(opt);
            break;
          end;
@@ -4148,7 +4148,7 @@ begin
   FrameworkSearchPath.AddList(option.ParaFrameworkPath,true);
   PackageSearchPath.addlist(option.parapackagepath,true);
   for j:=0 to option.parapackages.count-1 do
-    add_package(option.parapackages.NameOfIndex(j),true,true);
+    Add_Package(option.parapackages.NameOfIndex(j),true,true);
 
   { add default namespaces }
   tmplist:=TCmdStrList.Create;

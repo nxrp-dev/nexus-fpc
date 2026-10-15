@@ -26,24 +26,24 @@ unit syscinfo;
 interface
 
 uses
-  Systems, tokens, symconst;
+  Systems, Tokens, SymConst;
 
 type
   TSysCallInfo = record
-    token: TToken;
-    procoption: TProcOption;
-    validon: set of TSystem;
+    Token: TToken;
+    ProcOption: TProcOption;
+    ValidOn: set of TSystem;
   end;
   PSysCallInfo = ^TSysCallInfo;
 
 const
-  syscall_conventions: array[1..1] of TSysCallInfo = (
-      ( token: NOTOKEN;    procoption: po_syscall;           validon: [] ));
+  SysCall_Conventions: array[1..1] of TSysCallInfo = (
+      ( Token: NOTOKEN;    ProcOption: po_syscall;           ValidOn: [] ));
 
-function get_syscall_by_token(const token: TToken): PSysCallInfo;
-function get_syscall_by_name(const name: string): PSysCallInfo;
-function get_default_syscall: TProcOption;
-procedure set_default_syscall(sc: TProcOption);
+function Get_SysCall_By_Token(const Token: TToken): PSysCallInfo;
+function Get_SysCall_By_Name(const Name: string): PSysCallInfo;
+function Get_Default_SysCall: TProcOption;
+procedure Set_Default_SysCall(SC: TProcOption);
 
 implementation
 
@@ -51,52 +51,52 @@ uses
   Verbose;
 
 const
-  syscall_conventions_po = [ po_syscall, po_syscall_legacy, po_syscall_basenone,
+  SysCallConventionsPO = [ po_syscall, po_syscall_legacy, po_syscall_basenone,
                              po_syscall_baselast, po_syscall_basefirst, po_syscall_basereg ];
 
 var
-  default_syscall_convention: TProcOption = po_none;
+  DefaultSysCallConvention: TProcOption = po_none;
 
-function get_syscall_by_token(const token: TToken): PSysCallInfo;
+function Get_SysCall_By_Token(const Token: TToken): PSysCallInfo;
 var
-  i: LongInt;
+  I: LongInt;
 begin
-  result:=nil;
-  for i:=low(syscall_conventions) to high(syscall_conventions) do
-    if syscall_conventions[i].token = token then
+  Result:=nil;
+  for I:=Low(SysCall_Conventions) to High(SysCall_Conventions) do
+    if SysCall_Conventions[I].Token = Token then
       begin
-        result:=@syscall_conventions[i];
-        break;
+        Result:=@SysCall_Conventions[I];
+        Break;
       end;
 end;
 
-function get_syscall_by_name(const name: string): PSysCallInfo;
+function Get_SysCall_By_Name(const Name: string): PSysCallInfo;
 var
-  i: LongInt;
+  I: LongInt;
 begin
-  result:=nil;
-  for i:=low(syscall_conventions) to high(syscall_conventions) do
-    if arraytokeninfo[syscall_conventions[i].token].str = name then
+  Result:=nil;
+  for I:=Low(SysCall_Conventions) to High(SysCall_Conventions) do
+    if ArrayTokenInfo[SysCall_Conventions[I].Token].Str = Name then
       begin
-        result:=@syscall_conventions[i];
-        break;
+        Result:=@SysCall_Conventions[I];
+        Break;
       end;
 end;
 
-function get_default_syscall: TProcOption;
+function Get_Default_SysCall: TProcOption;
 begin
-  if not (default_syscall_convention in syscall_conventions_po) then
+  if not (DefaultSysCallConvention in SysCallConventionsPO) then
     InternalError(2016090302);
 
-  result:=default_syscall_convention;
+  Result:=DefaultSysCallConvention;
 end;
 
-procedure set_default_syscall(sc: TProcOption);
+procedure Set_Default_SysCall(SC: TProcOption);
 begin
-  if not (sc in syscall_conventions_po) then
+  if not (SC in SysCallConventionsPO) then
     InternalError(2016090301);
 
-  default_syscall_convention:=sc;
+  DefaultSysCallConvention:=SC;
 end;
 
 end.

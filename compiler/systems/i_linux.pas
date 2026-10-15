@@ -26,7 +26,7 @@ unit i_linux;
   interface
 
     uses
-       Systems,nxartifactid;
+       Systems,NXArtifactID;
 
     const
        system_i386_linux_info : TSystemInfo =

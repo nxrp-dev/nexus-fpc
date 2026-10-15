@@ -174,7 +174,7 @@ Implementation
 {$ifdef hasUnix}
       BaseUnix,
 {$endif hasUnix}
-      CScript,Globals,Verbose,CompHook,ppu,FPCHash,triplet,tripletcpu,
+      CScript,Globals,Verbose,CompHook,ppu,FPCHash,Triplet,tripletcpu,
       aasmbase,aasmcpu,
       ogmap;
 
@@ -709,7 +709,7 @@ Implementation
           begin
             if withArch then
               begin
-                result:=result+'-'+tripletcpustr(triplet_llvmrt);
+                result:=result+'-'+TripletCPUStr(triplet_llvmrt);
                 if TargetInfo.system in systems_android then
                   result:=result+'-android';
               end;
@@ -741,7 +741,7 @@ Implementation
           if clang<>'' then
             begin
               clangsearchdirspath:=OutputExeDir+UniqueName('clangsearchdirs');
-              searchres:=shell(MaybeQuoted(clang)+' -target '+targettriplet(triplet_llvm)+' -print-file-name=lib > '+MaybeQuoted(clangsearchdirspath));
+              searchres:=shell(MaybeQuoted(clang)+' -target '+TargetTriplet(triplet_llvm)+' -print-file-name=lib > '+MaybeQuoted(clangsearchdirspath));
               if searchres=0 then
                 begin
                   AssignFile(clangsearchdirsfile,clangsearchdirspath);

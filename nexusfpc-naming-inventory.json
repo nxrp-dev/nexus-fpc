@@ -128,6 +128,22 @@
             "compiler/widestr.pas"
           ],
           "status": "owned_roles_reviewed_with_explicit_ABI_exceptions_provider_references_pending"
+        },
+        {
+          "batch": "023",
+          "name": "Directive/syscall/triple/resource/TTY/profiling/reference support",
+          "scope": [
+            "compiler/dirparse.pas",
+            "compiler/syscinfo.pas",
+            "compiler/rescmn.pas",
+            "compiler/triplet.pas",
+            "compiler/cprofile.pas",
+            "compiler/comptty.pas",
+            "compiler/crefs.pas",
+            "compiler/comprsrc.pas",
+            "compiler/cepiktimer.pas"
+          ],
+          "status": "owned_roles_reviewed_with_explicit_ABI_and_external_dependency_exceptions_provider_references_pending"
         }
       ],
       "exceptions": [
@@ -1187,6 +1203,158 @@
             }
           ],
           "evidence": "All 998 compiler-unit objects and a targeted wide-string probe match before/after."
+        },
+        {
+          "batch": "023",
+          "scope": [
+            "compiler/dirparse.pas",
+            "compiler/syscinfo.pas",
+            "compiler/rescmn.pas",
+            "compiler/triplet.pas",
+            "compiler/cprofile.pas",
+            "compiler/comptty.pas",
+            "compiler/crefs.pas",
+            "compiler/comprsrc.pas",
+            "compiler/cepiktimer.pas"
+          ],
+          "contracts": [
+            {
+              "names": [
+                "dirparse",
+                "syscinfo",
+                "rescmn",
+                "triplet",
+                "cprofile",
+                "comptty",
+                "crefs",
+                "comprsrc",
+                "TrefItem"
+              ],
+              "reason": "Legacy unit and type declaration spelling retains runtime identity and RTTI."
+            },
+            {
+              "names": [
+                "Get_SysCall_By_Token",
+                "Get_SysCall_By_Name",
+                "Get_Default_SysCall",
+                "Set_Default_SysCall",
+                "SysCall_Conventions",
+                "Res_ELF_Info",
+                "Res_XCOFF_Info",
+                "Res_Ext_Info"
+              ],
+              "reason": "Public routine or typed-constant binary symbols contain these underscores; capitalization is normalized."
+            },
+            {
+              "names": [
+                "ct_none",
+                "ct_aopt",
+                "roRES",
+                "roOBJ"
+              ],
+              "reason": "Enum declaration names preserve RTTI and enum-to-text output."
+            },
+            {
+              "names": [
+                "compiler/cepiktimer.pas",
+                "epiktimer",
+                "NOCLASSES"
+              ],
+              "reason": "Wrapper macro/include contracts target an external source file absent from this checkout. Wrapper requires those names and is unchanged."
+            }
+          ],
+          "remaining_owned_spellings": {
+            "compiler/dirparse.pas": [
+              "Prop_Auto_Getter_Prefix",
+              "Prop_Auto_Setter_Prefix",
+              "def_system_macro",
+              "dirparse",
+              "ts_auto_getter_prefix",
+              "ts_auto_setter_predix",
+              "undef_system_macro"
+            ],
+            "compiler/syscinfo.pas": [
+              "Get_Default_SysCall",
+              "Get_SysCall_By_Name",
+              "Get_SysCall_By_Token",
+              "Set_Default_SysCall",
+              "SysCall_Conventions",
+              "po_none",
+              "po_syscall",
+              "po_syscall_basefirst",
+              "po_syscall_baselast",
+              "po_syscall_basenone",
+              "po_syscall_basereg",
+              "po_syscall_legacy",
+              "syscinfo"
+            ],
+            "compiler/rescmn.pas": [
+              "Res_ELF_Info",
+              "Res_Ext_Info",
+              "Res_XCOFF_Info",
+              "res_elf",
+              "res_ext",
+              "res_external_file",
+              "res_xcoff",
+              "rescmn"
+            ],
+            "compiler/triplet.pas": [
+              "system_aarch64_iphonesim",
+              "systems_all_windows",
+              "systems_android",
+              "systems_darwin",
+              "systems_linux",
+              "systems_macosx",
+              "triplet"
+            ],
+            "compiler/cprofile.pas": [
+              "cprofile",
+              "ct_aopt",
+              "ct_none"
+            ],
+            "compiler/comptty.pas": [
+              "comptty"
+            ],
+            "compiler/crefs.pas": [
+              "crefs"
+            ],
+            "compiler/comprsrc.pas": [
+              "MaybeQuoted_For_Script",
+              "Path_Absolute",
+              "Register_InitDone_Proc",
+              "comprsrc",
+              "cs_link_nolink",
+              "endian_big",
+              "endian_little",
+              "exec_d_resbin_params",
+              "exec_e_cant_call_resource_compiler",
+              "exec_e_cant_open_resource_file",
+              "exec_e_cant_write_resource_file",
+              "exec_e_error_while_compiling_resources",
+              "exec_e_res_not_found",
+              "exec_i_compilingresource",
+              "fmCreate",
+              "fmOpenRead",
+              "fmShareDenyNone",
+              "link_always",
+              "res_arch_in_file_name",
+              "res_external_file",
+              "res_no_compile",
+              "res_none",
+              "roOBJ",
+              "roRES",
+              "scan_e_resourcefiles_not_supported",
+              "script_fpcres",
+              "tf_use_8_3"
+            ],
+            "compiler/cepiktimer.pas": []
+          },
+          "pending_provider_reason": "Provider-owned APIs, target enum names, macro helpers and message constants remain assigned to provider audits.",
+          "validation_limits": [
+            "Optional COMPILER_TIMINGS branch cannot be built without external EpikTimer source.",
+            "Windows TTY branch is statically checked; Linux/i386/AArch64 builds do not compile host-Windows API calls."
+          ],
+          "evidence": "Before/after native bootstraps and cross/debug images identical; 998 object comparisons and targeted parsing/syscall/triple/resource/reference checks pass."
         }
       ],
       "remaining_candidate_report": "build/forge-bootstrap/naming-goal/compiler-type-candidates-after-batch-004.json",
@@ -7154,10 +7322,201 @@
         "build/forge-bootstrap/naming-goal/batch-022-probe-validation.json",
         "build/forge-bootstrap/naming-goal/batch-022-resource-validation.json"
       ]
+    },
+    {
+      "id": "023",
+      "status": "validated",
+      "scope": [
+        "compiler/dirparse.pas",
+        "compiler/syscinfo.pas",
+        "compiler/rescmn.pas",
+        "compiler/triplet.pas",
+        "compiler/cprofile.pas",
+        "compiler/comptty.pas",
+        "compiler/crefs.pas",
+        "compiler/comprsrc.pas",
+        "compiler/cepiktimer.pas"
+      ],
+      "identifiers": 146,
+      "substitutions": 974,
+      "files": 24,
+      "baseline_revision": "8b556442164b92a6ceffe3212647fba57e7079a4",
+      "scope_notes": [
+        "Directive parsing, syscall metadata, resource target descriptors, target triples, profiling/TTY support, references and resource compiler orchestration reviewed.",
+        "Three private identifiers lose underscores; all other changes are capitalization. No literal, numeric, punctuation, directive or comment bytes changed.",
+        "Public underscore-bearing syscall functions/resource typed constants and legacy type/unit/enum declaration spellings retain ABI/RTTI identity.",
+        "The compiler timing wrapper is reviewed unchanged; its external EpikTimer include is absent and the optional timing branch cannot be built in this checkout. Windows TTY branch checked statically, not compiled on Linux.",
+        "This batch begins at the user checkpoint commit 8b556442164b92a6ceffe3212647fba57e7079a4, which includes batches 001\u2013022. Native and cross baseline builds use that same revision/dirty identity. Prior compiler image hashes differ because the embedded revision/date changed with the user commit; new before/after images match.",
+        "No generated files changed; generated-source origin audit 021 remains applicable.",
+        "Unstripped targeted probe binaries retain the intentionally renamed private symbol. Their executable sections, symbols and relocations match after only the reviewed private-name mapping; runtime results match.",
+        "Imported provider-owned identifiers are assigned to provider audits; these reference updates do not mark providers complete."
+      ],
+      "audit": "build/forge-bootstrap/naming-goal/batch-023-audit.json",
+      "commands": [
+        "python3 /tmp/nexus_goal_build023.py baseline-stage",
+        "python3 /tmp/nexus_goal_build023.py baseline-full",
+        "python3 /tmp/nexus_goal_build023.py cross-baseline",
+        "python3 /tmp/nexus_goal_build023.py renamed",
+        "python3 /tmp/nexus_goal_build023.py cross",
+        "python3 /tmp/nexus_goal_verify023.py",
+        "python3 /tmp/nexus_goal_metadata023.py",
+        "python3 /tmp/nexus_goal_target023.py",
+        "python3 /tmp/nexus_goal_objects023.py",
+        "python3 /tmp/nexus_goal_probe023.py",
+        "python3 /tmp/nexus_goal_audit023.py",
+        "python3 /tmp/nexus_goal_record023.py"
+      ],
+      "source_hashes": [
+        {
+          "file": "compiler/aarch64/tripletcpu.pas",
+          "sha256": "297d8f48ecb0c6d100f1616156bd54b444d97bd284e7f57424895f573fc5336b"
+        },
+        {
+          "file": "compiler/aopt.pas",
+          "sha256": "b2a2789992b0675d5939d8c6aa71b0e222d770738f1bae04971030489eda8c46"
+        },
+        {
+          "file": "compiler/assemble.pas",
+          "sha256": "108e946c626c6d4a6e9478afd6cb7ef1b63ff322f1171c5c8762faa0a9b8991f"
+        },
+        {
+          "file": "compiler/comprsrc.pas",
+          "sha256": "ead9a57a9b6c9c2efa2ec7f9719489bcda8c097f955cfbeaef19a9a12139be7b"
+        },
+        {
+          "file": "compiler/comptty.pas",
+          "sha256": "d172312b27b750a47bab98bece92f2455d5b80522118566e0130ecae2b27c1bb"
+        },
+        {
+          "file": "compiler/cprofile.pas",
+          "sha256": "9c3776c2bc5c28145bc580f07271e63e169f50dffd827e46cf3b5e3277314e3d"
+        },
+        {
+          "file": "compiler/crefs.pas",
+          "sha256": "3ba3459abf56cef184702067a25af8d60983e087f8196772f2dc964f283cbe31"
+        },
+        {
+          "file": "compiler/dirparse.pas",
+          "sha256": "e3074cee3606a485ca4260c1c833f8027a0d43004d5103f6955978ba5fd194cb"
+        },
+        {
+          "file": "compiler/i386/tripletcpu.pas",
+          "sha256": "03c1a19969807ebdd5c292a6c58960a224d67debf25e71d02a40b31931b8c263"
+        },
+        {
+          "file": "compiler/link.pas",
+          "sha256": "03581dc2b4b1398f761bab5aaa511f736f1f7a4d7bab87e3f3306c62963972dd"
+        },
+        {
+          "file": "compiler/options.pas",
+          "sha256": "e5c46305b2e515ecc2e50f130c7b86bbcaac413a50d67d80e6cb573f80c14653"
+        },
+        {
+          "file": "compiler/pdecsub.pas",
+          "sha256": "0ee8c3f62935dcf019d1b0a803c38e17343c45ae6d4b7f42f6d559593e78623f"
+        },
+        {
+          "file": "compiler/pmodules.pas",
+          "sha256": "dc37b189c77849a1ab5412ef331c09117d42bd582e4a48fd0d1e52750019941c"
+        },
+        {
+          "file": "compiler/rescmn.pas",
+          "sha256": "a2b0e26acebffaf0ea6aa071a48a3daa4e6051a5ae79a82dd80db81c2648efd4"
+        },
+        {
+          "file": "compiler/scandir.pas",
+          "sha256": "abfbc178850dd7a4836a0db0fac137bbac80c2d4a567dbd95a38451eb3af814f"
+        },
+        {
+          "file": "compiler/symtype.pas",
+          "sha256": "142f73b898f1044434669180098964a8f3cfe9dfea6f92765c39f07b92415108"
+        },
+        {
+          "file": "compiler/syscinfo.pas",
+          "sha256": "7b563658d497803f966adcb67bb88b78d39d1678d07a1023575baf04543cbd92"
+        },
+        {
+          "file": "compiler/systems/i_android.pas",
+          "sha256": "94778deafc69200d4051c9cc7f6cb7bdfac0347bc0c2a656b9e3e6578fc558aa"
+        },
+        {
+          "file": "compiler/systems/t_android.pas",
+          "sha256": "5a3881c7442e04527d4fe8eaa6a5eaaf9ce8acfc2d9a4be522624ec565fec1ee"
+        },
+        {
+          "file": "compiler/systems/t_darwin.pas",
+          "sha256": "afe102f8e6c6d7435f0988b03bdd45e57f5d2bc7ab7f01152f1281d974648dc3"
+        },
+        {
+          "file": "compiler/systems/t_linux.pas",
+          "sha256": "e4437fcb99e4774378eec2a8cfc3916d8f02ea6dfe192925842647f6711cd597"
+        },
+        {
+          "file": "compiler/systems/t_win.pas",
+          "sha256": "370ae05927f59f11839eeafce82ba37769af6022202d92b01ff83390bcf0c618"
+        },
+        {
+          "file": "compiler/triplet.pas",
+          "sha256": "14e6605bbf940ea695c5b4a93b64026a652505ad40f8e0c33ac14f65277f7bbb"
+        },
+        {
+          "file": "compiler/x86_64/tripletcpu.pas",
+          "sha256": "726f6f82cfad2d75f84eccd9cd638ba0859c6ea7c15d323dc365918725b2d7a4"
+        }
+      ],
+      "validation_summary": {
+        "GenerationsTwoAndThreeByteIdentical": true,
+        "BaselineAlsoBootstrappedThreeGenerations": true,
+        "CompilerSHA256": "34a9317f48eaa9fd2ccc83b8058964b6c2078b750058263f929e615154a065a8",
+        "CompilerByteIdenticalToSameRevisionBaseline": true,
+        "CrossCompilersBuilt": [
+          "i386",
+          "aarch64"
+        ],
+        "ExtdebugCompilerBuilt": true,
+        "CrossImagesByteIdenticalToSameRevisionBaseline": true,
+        "RegressionRuns": 76,
+        "MatchedBaselineRuns": 38,
+        "ByteIdenticalExecutables": 38,
+        "CompilerUnitObjectsChecked": 998,
+        "CodeDataSymbolsAndRelocationsMatchReviewedNames": true,
+        "TargetedSupportProbeByteIdentical": false,
+        "TargetedSupportProbeCodeDataSymbolsAndRelocationsMatchReviewedNames": true,
+        "MetadataNamesPassed": true,
+        "WhitespaceWarnings": 0
+      },
+      "validation": [
+        "build/forge-bootstrap/naming-goal/batch-023-build/baseline/bootstrap-result.json",
+        "build/forge-bootstrap/naming-goal/batch-023-build/renamed/bootstrap-result.json",
+        "build/forge-bootstrap/naming-goal/batch-023-build/regression-result.json",
+        "build/forge-bootstrap/naming-goal/batch-023-build/cross-build-result.json",
+        "build/forge-bootstrap/naming-goal/batch-023-all-object-validation.json",
+        "build/forge-bootstrap/naming-goal/batch-023-probe-validation.json"
+      ]
+    },
+    {
+      "id": "024",
+      "status": "validation_in_progress",
+      "scope": [
+        "compiler/fpkg.pas",
+        "compiler/fpcp.pas",
+        "compiler/pcp.pas",
+        "compiler/nxpackagefile.pas",
+        "compiler/nxartifactid.pas",
+        "compiler/nxentrybuffer.pas",
+        "compiler/pkgutil.pas"
+      ],
+      "identifiers": 389,
+      "substitutions": 3068,
+      "files": 25,
+      "baseline_revision": "8b556442164b92a6ceffe3212647fba57e7079a4",
+      "scope_notes": [
+        "Compiler package model, package metadata, entry buffer and artifact helpers. Shared CRC/endian fields and references updated across compiler."
+      ]
     }
   ],
   "verification": {
-    "status": "batch_022_validated_repository_audit_in_progress",
+    "status": "batch_024_validation_in_progress_repository_audit_in_progress",
     "required": [
       "Repository-wide audit",
       "Native Linux seed plus three compiler/RTL generations",
@@ -7166,17 +7525,18 @@
       "Relevant regressions and cached-unit checks"
     ],
     "prior_evidence": "build/forge-bootstrap/naming-cleanup-pass2/",
-    "latest_validated_batch": "022",
-    "aggregate_diff_audit": "build/forge-bootstrap/naming-goal/batches-001-022-audit.json",
-    "latest_validated_compiler_batch": "022",
+    "latest_validated_batch": "023",
+    "aggregate_diff_audit": "build/forge-bootstrap/naming-goal/batch-023-audit.json",
+    "latest_validated_compiler_batch": "023",
     "unrelated_baseline_failures": "Two data2inc paths exit 216; two resource-thinning fixture paths exit 217; Charset GetASCII with nil buffer and unmapped Unicode value exits 216. All reproduce before the relevant naming batch.",
-    "source_files_in_aggregate_audit": 525,
-    "whitespace_audit": "build/forge-bootstrap/naming-goal/batches-001-022-whitespace-audit.json",
-    "latest_native_bootstrap": "build/forge-bootstrap/naming-goal/batch-022-build/renamed/bootstrap-result.json",
-    "latest_regression_results": "build/forge-bootstrap/naming-goal/batch-022-build/regression-result.json",
-    "latest_cross_results": "build/forge-bootstrap/naming-goal/batch-022-build/cross-build-result.json",
+    "source_files_in_aggregate_audit": 24,
+    "whitespace_audit": "build/forge-bootstrap/naming-goal/batch-023-audit.json",
+    "latest_native_bootstrap": "build/forge-bootstrap/naming-goal/batch-023-build/renamed/bootstrap-result.json",
+    "latest_regression_results": "build/forge-bootstrap/naming-goal/batch-023-build/regression-result.json",
+    "latest_cross_results": "build/forge-bootstrap/naming-goal/batch-023-build/cross-build-result.json",
     "generated_origin_audit": "build/forge-bootstrap/naming-goal/batch-021-generated-origin-audit.json",
-    "goal_tracker_note": "User explicitly requested continuation after pausing. Work resumed through batches 021 and 022; goal API still reports paused and exposes no resume operation. Repository-wide work remains incomplete."
+    "current_checkpoint_revision": "8b556442164b92a6ceffe3212647fba57e7079a4",
+    "previous_checkpoint_audit": "build/forge-bootstrap/naming-goal/batches-001-022-audit.json"
   },
   "next_work": [
     "Continue RTL owned identifiers beyond the completed Charset/code-page audit. Continue remaining fcl-res constants/enums referenced by utilities.",

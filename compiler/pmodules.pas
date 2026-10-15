@@ -43,16 +43,16 @@ implementation
        SysUtils,
        GlobType,Systems,tokens,
        CUtils,CFileUtl,CClasses,CompHook,
-       Globals,Verbose,FinPut,fppu,GlobStat,fpcp,fpkg,
+       Globals,Verbose,FinPut,fppu,GlobStat,FPCP,FPkg,
        symconst,SymBase,symtype,symdef,SymSym,SymTable,defutil,symcreat,
        wpoinfo,
        aasmtai,AAsmData,aasmbase,aasmcpu,
        cgbase,ngenutil,
        nbas,nutils,ncgutil,
-       link,assemble,import,export,gendef,ppu,comprsrc,DbgBase,
+       link,assemble,import,export,gendef,ppu,CompRsrc,DbgBase,
        CResStr,ProcInfo,
        objcgutl,
-       pkgutil,nxpackagefile,
+       PkgUtil,NXPackageFile,
        wpobase,
        Scanner,pbase,pexpr,psystem,psub,pgenutil,pparautl,ncgvmt,ncgrtti,
        CPUInfo;
@@ -178,7 +178,7 @@ implementation
         CheckResourcesUsed:=tf_has_winlike_resources in TargetInfo.flags;
         if not CheckResourcesUsed then exit;
 
-        hp:=TUsedUnit(usedunits.first);
+        hp:=TUsedUnit(UsedUnits.first);
         found:=mf_has_resourcefiles in curr.moduleflags;
         while Assigned(hp) and not found do
           begin
@@ -199,7 +199,7 @@ implementation
         { load unit }
         hp:=registerunit(curr,s,'',isnew);
         if isnew then
-          usedunits.concat(TUsedUnit.create(hp,true,addasused,nil));
+          UsedUnits.concat(TUsedUnit.create(hp,true,addasused,nil));
         hp.adddependency(curr,curr.in_interface); { adddependency before loadppu for invalid cycle test }
         hp.loadppu(curr);
         TModule.finish_module(hp);
@@ -291,7 +291,7 @@ implementation
             if Assigned(hp.package) then
               exit(resources_used);
             { find its tused_unit in the global list }
-            uu:=TUsedUnit(usedunits.first);
+            uu:=TUsedUnit(UsedUnits.first);
             while Assigned(uu) do
               begin
                 if uu.u=hp then break;
@@ -300,7 +300,7 @@ implementation
             if not Assigned(uu) then
               InternalError(200801072);
            { remove the tused_unit }
-            usedunits.Remove(uu);
+            UsedUnits.Remove(uu);
             uu.Free;
             // Remove from local list
             uu:=TUsedUnit(curr.used_units.first);
@@ -457,7 +457,7 @@ implementation
           begin
             profileunit:=registerunit(curr,'nxprofilerruntime','',isnew);
             if isnew then
-              usedunits.concat(TUsedUnit.create(profileunit,false,true,nil));
+              UsedUnits.concat(TUsedUnit.create(profileunit,false,true,nil));
             profilesym:=CUnitSym.create('NXPROFILERRUNTIME',nil);
             inc(profilesym.refs);
             curr.addusedunit(profileunit,true,profilesym);
@@ -586,7 +586,7 @@ implementation
                begin
                hp2:=registerunit(curr,sorg,fn,isnew);
                if isnew then
-                 usedunits.concat(TUsedUnit.create(hp2,curr.in_interface,true,nil));
+                 UsedUnits.concat(TUsedUnit.create(hp2,curr.in_interface,true,nil));
                end
              else
                Message1(sym_e_duplicate_id,s);
@@ -1325,7 +1325,7 @@ type
          { load default system unit, it must be loaded before interface is parsed
            else we cannot use e.g. feature switches before the next real token }
          if curr.IsInitial then
-           load_packages;
+           Load_Packages;
          load_ok:=loadsystemunit(curr);
 
          { system unit is loaded, now insert feature defines }
@@ -1898,7 +1898,7 @@ type
                          module_name:=module_name+'.'+CurrentScanner.orgpattern;
                          consume(_ID);
                        end;
-                     add_package(module_name,false,true);
+                     Add_Package(module_name,false,true);
                    end
                  else
                    consume(_ID);
@@ -1912,7 +1912,7 @@ type
 
          { now load all packages, so that we can determine whether a unit is
            already provided by one of the loaded packages }
-         load_packages;
+         Load_Packages;
 
          if PackageList.Count>0 then
            begin
@@ -2010,7 +2010,7 @@ type
                      uu:=TUsedUnit(uu.next);
                    end;
                  if Assigned(uu) then
-                   message2(package_e_unit_already_contained_in_package,hp.RealModuleName^,hp.package.realpackagename^);
+                   message2(package_e_unit_already_contained_in_package,hp.RealModuleName^,hp.package.RealPackageName^);
                end;
              hp:=TModule(hp.next);
            end;
@@ -2091,7 +2091,7 @@ type
             hp2:=hp;
             hp:=TModule(hp.next);
             if Assigned(hp2.package) then
-              add_package_unit_ref(hp2.package);
+              Add_Package_Unit_Ref(hp2.package);
             if hp2.is_unit and
                not Assigned(hp2.GlobalSymTable) then
               loaded_units.remove(hp2);
@@ -2106,7 +2106,7 @@ type
              CNodeUtils.InsertResourceTablesTable;
              CNodeUtils.InsertWideInitsTablesTable;
              CNodeUtils.InsertResStrTablesTable;
-             emit_package_descriptor;
+             Emit_Package_Descriptor;
              if TargetInfo.system=system_x86_64_linux then
                begin
                  CNodeUtils.InsertResourceInfo(CheckResourcesUsed(curr));
@@ -2115,7 +2115,7 @@ type
            end;
 
          { force exports }
-         uu:=TUsedUnit(usedunits.first);
+         uu:=TUsedUnit(UsedUnits.first);
          while Assigned(uu) do
            begin
              if not Assigned(systemunit) and (uu.u.ModuleName^='SYSTEM') then
@@ -2125,7 +2125,7 @@ type
                  checksystemcharwidth;
                end;
              if not Assigned(uu.u.package) then
-               export_unit(uu.u);
+               Export_Unit(uu.u);
 
              uu:=TUsedUnit(uu.next);
            end;
@@ -2140,7 +2140,7 @@ type
 
          { create import libraries for all packages }
          if PackageList.count>0 then
-           createimportlibfromexternals;
+           CreateImportLibFromExternals;
 
          { generate imports }
          if curr.ImportLibraryList.Count>0 then
@@ -2160,15 +2160,15 @@ type
               begin
                 if not Assigned(hp.package) then
                   begin
-                    pkg.addunit(hp);
-                    check_for_indirect_package_usages(hp.used_units);
+                    pkg.AddUnit(hp);
+                    Check_For_Indirect_Package_Usages(hp.used_units);
                   end
                 else
                   begin
-                    pentry:=PPackageEntry(PackageList.find(hp.package.packagename^));
+                    pentry:=PPackageEntry(PackageList.find(hp.package.PackageName^));
                     if not Assigned(pentry) then
                       InternalError(2015112301);
-                    pkg.add_required_package(hp.package);
+                    pkg.Add_Required_Package(hp.package);
                   end;
               end;
             hp:=TModule(hp.next);
@@ -2180,12 +2180,12 @@ type
            begin
              pentry:=PPackageEntry(PackageList[i]);
              if pentry^.direct then
-               pkg.add_required_package(pentry^.package);
+               pkg.Add_Required_Package(pentry^.package);
            end;
-         pkg.initmoduleinfo(curr);
+         pkg.InitModuleInfo(curr);
 
          { Metadata is part of the package object before native linking. }
-         pkg.savepcp;
+         pkg.SavePCP;
 
          { insert own objectfile }
          insertobjectfile(curr);
@@ -2251,7 +2251,7 @@ type
                         hp:=hp2;
                       end;
                      { add the library of directly used packages }
-                     add_package_libs(linker);
+                     Add_Package_Libs(linker);
                      { and now link the package library }
                      linker.MakeSharedLibrary
                    end
@@ -2313,7 +2313,7 @@ type
                  end;
                hp2:=TModule(hp.next);
                if Assigned(hp.package) then
-                 add_package_unit_ref(hp.package);
+                 Add_Package_Unit_Ref(hp.package);
                if (hp<>curr) and
                   (not NeedSymbolInfo) then
                  begin
@@ -2331,7 +2331,7 @@ type
               Message1(link_w_program_uses_checkpointer,curr.ModuleName^);
 
             { add all directly used packages as libraries }
-            add_package_libs(linker);
+            Add_Package_Libs(linker);
             { finally we can create an executable }
             if curr.IsLibrary then
               linker.MakeSharedLibrary
@@ -2456,7 +2456,7 @@ type
 
         if (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) and
            Assigned(find_module_from_symtable(systemunit).package) then
-          emit_package_descriptor;
+          Emit_Package_Descriptor;
 
         { Insert symbol to resource info }
         CNodeUtils.InsertResourceInfo(resources_used);
@@ -2466,7 +2466,7 @@ type
 
         { create import library for all packages }
         if PackageList.count>0 then
-          createimportlibfromexternals;
+          CreateImportLibFromExternals;
 
         { generate imports }
         if curr.ImportLibraryList.Count>0 then
@@ -2871,7 +2871,7 @@ type
 
          { load all packages, so we know whether a unit is contained inside a
            package or not }
-         load_packages;
+         Load_Packages;
 
          { set implementation flag }
          curr.in_interface:=false;

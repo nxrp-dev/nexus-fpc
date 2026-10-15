@@ -1234,7 +1234,7 @@ implementation
         Exit;
 
       { Check used units }
-      hp:=TUsedUnit(usedunits.first);
+      hp:=TUsedUnit(UsedUnits.first);
       while Assigned(hp) do
         begin
           if mf_init in hp.u.moduleflags then
@@ -1264,7 +1264,7 @@ implementation
       tcb.begin_anonymous_record('',Default_Settings.PackRecords,voidpointertype.alignment,targetinfos[Ord(TargetInfo.system)]^.alignment.RecordAlignMin);
       placeholder:=tcb.emit_placeholder(sizesinttype);
 
-      hp:=TUsedUnit(usedunits.first);
+      hp:=TUsedUnit(UsedUnits.first);
       while Assigned(hp) do
        begin
          if not Assigned(hp.u.package) and (mf_threadvars in hp.u.moduleflags) then
@@ -1393,7 +1393,7 @@ implementation
       { placeholder for the count }
       countplaceholder:=tcb.emit_placeholder(sizesinttype);
       count:=0;
-      hp:=TUsedUnit(usedunits.first);
+      hp:=TUsedUnit(UsedUnits.first);
       while Assigned(hp) do
        begin
          if not Assigned(hp.u.package) and (unitflag in hp.u.moduleflags) then

@@ -96,7 +96,7 @@ interface
          constructor Create(atoken: TToken;aidtoken:TToken;
            const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
            apatternw:TCompilerWideString;asettings:TSettings;
-           atokenbuf:TDynamicArray;change_endian:boolean;const apending:TPendingState;
+           atokenbuf:TDynamicArray;ChangeEndian:boolean;const apending:TPendingState;
            averbosity:LongInt;anext:TReplayStack);
          destructor Destroy;override;
        end;
@@ -238,7 +238,7 @@ interface
           procedure stoprecordtokens;
           function is_recording_tokens:boolean;
           procedure replaytoken;
-          procedure startreplaytokens(buf:TDynamicArray; change_endian:boolean);
+          procedure startreplaytokens(buf:TDynamicArray; ChangeEndian:boolean);
           { bit length asizeint is target depend }
           procedure tokenwritesizeint(val : asizeint);
           procedure tokenwritelongint(val : LongInt);
@@ -2979,7 +2979,7 @@ type
     constructor TReplayStack.Create(atoken:TToken;aidtoken:TToken;
       const aorgpattern,apattern:ShortString;const acstringpattern:AnsiString;
       apatternw:TCompilerWideString;asettings:TSettings;
-      atokenbuf:TDynamicArray;change_endian:boolean;const apending:TPendingState;
+      atokenbuf:TDynamicArray;ChangeEndian:boolean;const apending:TPendingState;
       averbosity:LongInt;anext:TReplayStack);
       begin
         token:=atoken;
@@ -2996,7 +2996,7 @@ type
         pending:=apending;
         verbosity:=averbosity;
         tokenbuf:=atokenbuf;
-        tokenbuf_needs_swapping:=change_endian;
+        tokenbuf_needs_swapping:=ChangeEndian;
         next:=anext;
       end;
 
@@ -3734,7 +3734,7 @@ type
       end;
 
 
-    procedure TScannerFile.startreplaytokens(buf:TDynamicArray; change_endian:boolean);
+    procedure TScannerFile.startreplaytokens(buf:TDynamicArray; ChangeEndian:boolean);
       begin
         if not Assigned(buf) then
           InternalError(200511175);
@@ -3758,7 +3758,7 @@ type
         PendingState:=default(TPendingState);
 
         { Initialize value of change_endian_for_replay variable }
-        change_endian_for_replay:=change_endian;
+        change_endian_for_replay:=ChangeEndian;
 
         { reload next token }
         replaytokenbuf.seek(0);

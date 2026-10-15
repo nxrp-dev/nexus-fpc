@@ -26,14 +26,14 @@ unit comptty;
 
 interface
 
-function IsATTY(var t : text) : Boolean;
+function IsATTY(var T : Text) : Boolean;
 
 const
 (* This allows compile-time removal of the colouring functionality under not supported platforms *)
 {$if defined(linux) or defined(MSWINDOWS) or defined(DARWIN)}
-  TTYCheckSupported = true;
+  TTYCheckSupported = True;
 {$else}
-  TTYCheckSupported = false;
+  TTYCheckSupported = False;
 {$endif}
 
 
@@ -41,7 +41,7 @@ implementation
 
 {$if defined(linux) or defined(darwin)}
   uses
-   termio;
+   TermIO;
 {$endif}
 {$ifdef mswindows}
   uses
@@ -49,47 +49,47 @@ implementation
 {$endif mswindows}
 
 var
-  CachedIsATTY : Boolean = false;
-  IsATTYValue : Boolean = false;
+  CachedIsATTY : Boolean = False;
+  IsATTYValue : Boolean = False;
 
 {$if defined(linux) or defined(darwin)}
-function LinuxIsATTY(var t : text) : Boolean; inline;
+function LinuxIsATTY(var T : Text) : Boolean; inline;
 begin
-  LinuxIsATTY:=termio.IsATTY(t)=1;
+  LinuxIsATTY:=TermIO.IsATTY(T)=1;
 end;
 {$endif defined(linux) or defined(darwin)}
 
 {$ifdef MSWINDOWS}
 const
-  ENABLE_VIRTUAL_TERMINAL_PROCESSING = $0004;
+  EnableVirtualTerminalProcessing = $0004;
 
-function WindowsIsATTY(var t : text) : Boolean; inline;
+function WindowsIsATTY(var T : Text) : Boolean; inline;
 var 
-  dwMode: dword;
+  DWMode: DWORD;
 begin
-  dwMode:=0;
-  WindowsIsATTY := false;
-  if GetConsoleMode(TextRec(t).handle, dwMode) then
+  DWMode:=0;
+  WindowsIsATTY := False;
+  if GetConsoleMode(TextRec(T).Handle, DWMode) then
    begin
-    dwMode := dwMode or ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    if SetConsoleMode(TextRec(t).handle, dwMode) then
-                                     WindowsIsATTY := true;
+    DWMode := DWMode or EnableVirtualTerminalProcessing;
+    if SetConsoleMode(TextRec(T).Handle, DWMode) then
+                                     WindowsIsATTY := True;
    end;
 end;
 {$endif MSWINDOWS}
 
-function IsATTY(var t : text) : Boolean;
+function IsATTY(var T : Text) : Boolean;
 begin
   if not(CachedIsATTY) then
     begin
 (* If none of the supported values is defined, false is returned by default. *)
 {$if defined(linux) or defined(darwin)}
-      IsATTYValue:=LinuxIsATTY(t);
+      IsATTYValue:=LinuxIsATTY(T);
 {$endif}
 {$ifdef MSWINDOWS}
-      IsATTYValue:=WindowsIsATTY(t);
+      IsATTYValue:=WindowsIsATTY(T);
 {$endif MSWINDOWS}
-      CachedIsATTY:=true;
+      CachedIsATTY:=True;
     end;
   Result:=IsATTYValue;
 end;

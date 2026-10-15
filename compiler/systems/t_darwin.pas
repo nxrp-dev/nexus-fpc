@@ -34,9 +34,9 @@ implementation
     SysUtils,
     CUtils,CFileUtl,CClasses,
     Verbose,Systems,GlobType,Globals,
-    symconst,CScript,triplet,
+    symconst,CScript,Triplet,
     FModule,aasmbase,aasmtai,AAsmData,aasmcpu,cpubase,SymSym,symdef,
-    import,export,link,comprsrc,rescmn,i_darwin,expunix,
+    import,export,link,CompRsrc,ResCmn,i_darwin,expunix,
     cgutils,cgbase,cgobj,CPUInfo,ogbase;
 
   type

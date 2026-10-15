@@ -142,7 +142,7 @@ uses
   Scanner,
   aasmbase,AAsmData,ogbase,
   CompHook,
-  entfile,fpkg,fpcp,export;
+  entfile,FPkg,FPCP,export;
 
 
 var
@@ -396,7 +396,7 @@ var
         crc_final:=true;
         interface_crc:=ppufile.header.interface_checksum;
         indirect_crc:=ppufile.header.indirect_checksum;
-        change_endian:=ppufile.change_endian;
+        ChangeEndian:=ppufile.ChangeEndian;
       { Show Debug info }
         if ppufiletime<>-1 then
           Message1(unit_u_ppu_time,FileTimeString(ppufiletime))
@@ -711,24 +711,24 @@ var
             pkg:=PPackageEntry(PackageList[i]);
             if not Assigned(pkg^.package) then
               InternalError(2013053103);
-            idx:=pkg^.package.containedmodules.FindIndexOf(ModuleName^);
+            idx:=pkg^.package.ContainedModules.FindIndexOf(ModuleName^);
             if idx>=0 then
               begin
                 { the unit is part of this package }
-                pkgunit:=PContainedUnit(pkg^.package.containedmodules[idx]);
+                pkgunit:=PContainedUnit(pkg^.package.ContainedModules[idx]);
                 if not Assigned(pkgunit^.module) then
                   pkgunit^.module:=self;
                 { ToDo: check whether we really don't need this anymore }
                 {filename:=pkgunit^.ppufile;
                 if not SearchPathList(unitsearchpath) then
                   exit};
-                packageppustream:=TPCPPackage(pkg^.package).getmodulestream(self);
+                packageppustream:=TPCPPackage(pkg^.package).GetModuleStream(self);
                 if not Assigned(packageppustream) then
                   InternalError(2015103002);
                 if not openppustream(packageppustream) then
                   exit;
                 package:=pkg^.package;
-                Message2(unit_u_loading_from_package,ModuleName^,pkg^.package.packagename^);
+                Message2(unit_u_loading_from_package,ModuleName^,pkg^.package.PackageName^);
 
                 { Package PPUs use the same resumable dependency loading as
                   ordinary PPUs. Dependencies need not be ready yet. }
@@ -809,8 +809,8 @@ var
       var
         oldcrc : boolean;
       begin
-        oldcrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        oldcrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
         IsInitial:= true;
         initialmacrosymtable.foreach(@writeusedmacro,nil);
         IsInitial:= false;
@@ -818,7 +818,7 @@ var
           GlobalMacroSymTable.foreach(@writeusedmacro,nil);
         localmacrosymtable.foreach(@writeusedmacro,nil);
         ppufile.writeentry(ibusedmacros);
-        ppufile.do_crc:=oldcrc;
+        ppufile.DoCRC:=oldcrc;
       end;
 {$ENDIF}
 
@@ -829,8 +829,8 @@ var
         oldcrc : boolean;
       begin
       { write the used source files }
-        oldcrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        oldcrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
       { write source files directly in good order }
         for ifile:=0 to SourceFiles.nfiles-1 do
           begin
@@ -839,7 +839,7 @@ var
             ppufile.putlongint(hp.GetFileTime);
          end;
         ppufile.writeentry(ibsourcefiles);
-        ppufile.do_crc:=oldcrc;
+        ppufile.DoCRC:=oldcrc;
       end;
 
 
@@ -858,15 +858,15 @@ var
                u:=hp.u;
                ppufile.putstring(u.RealModuleName^);
                { the checksum should not affect the crc of this unit ! (PFV) }
-               oldcrc:=ppufile.do_crc;
-               ppufile.do_crc:=false;
+               oldcrc:=ppufile.DoCRC;
+               ppufile.DoCRC:=false;
                hp.checksum:=u.crc;
                hp.interface_checksum:=u.interface_crc;
                hp.indirect_checksum:=u.indirect_crc;
                ppufile.putlongint(LongInt(hp.checksum));
                ppufile.putlongint(LongInt(hp.interface_checksum));
                ppufile.putlongint(LongInt(hp.indirect_checksum));
-               ppufile.do_crc:=oldcrc;
+               ppufile.DoCRC:=oldcrc;
                { Combine all indirect checksums from units used by this unit.
                  The indirect_crc contains the classes+records of this unit as well. }
                if intf then
@@ -907,8 +907,8 @@ var
         oldcrc : boolean;
       begin
         { This does not influence crc }
-        oldcrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        oldcrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
         { The unit map used for resolving }
         ppufile.putlongint(derefmapcnt);
         for i:=0 to derefmapcnt-1 do
@@ -918,7 +918,7 @@ var
             ppufile.putstring(derefmap[i].u.ModuleName^)
           end;
         ppufile.writeentry(ibderefmap);
-        ppufile.do_crc:=oldcrc;
+        ppufile.DoCRC:=oldcrc;
       end;
 
 
@@ -944,8 +944,8 @@ var
             dec(len,hlen);
           end;
         { Write implementation data, this does not influence crc }
-        oldcrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        oldcrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
         len:=derefdata.size-derefdataintflen;
         while (len>0) do
           begin
@@ -959,7 +959,7 @@ var
           end;
         if derefdata.pos<>derefdata.size then
           InternalError(200310224);
-        ppufile.do_crc:=oldcrc;
+        ppufile.DoCRC:=oldcrc;
         ppufile.writeentry(ibderefdata);
       end;
 
@@ -1095,12 +1095,12 @@ var
         include(moduleflags,mf_symansistr);
 {$endif}
 
-        old_docrc:=ppufile.do_crc;
-        ppufile.do_crc:=false;
+        old_docrc:=ppufile.DoCRC;
+        ppufile.DoCRC:=false;
         ppufile.putlongint(LongInt(CurrentPPULongVersion));
         ppufile.putset(TPPUSet4(moduleflags));
         ppufile.writeentry(ibextraheader);
-        ppufile.do_crc:=old_docrc;
+        ppufile.DoCRC:=old_docrc;
       end;
 
 
@@ -1312,7 +1312,7 @@ var
              needed for a correct circular dependency check }
            hp:=registerunit(self,hs,'',isnew);
            if isnew then
-             usedunits.Concat(TUsedUnit.create(hp,in_interface,true,nil));
+             UsedUnits.Concat(TUsedUnit.create(hp,in_interface,true,nil));
            pu:=findusedunit(hp);
            if pu=nil then
              pu:=addusedunit(hp,false,nil);
@@ -1684,7 +1684,7 @@ var
            the link.res.
             All doesn't depend on the crc! It doesn't matter
            if a unit is in a .o or .a file }
-         ppufile.do_crc:=false;
+         ppufile.DoCRC:=false;
          { write after source files, so that we know whether or not the compiler
            will recompile the unit when checking whether the correct wpo file is
            used (if it will recompile the unit anyway, it doesn't matter)
@@ -1706,7 +1706,7 @@ var
          writeResources;
          writeOrderedSymbols;
          writeUnitExports;
-         ppufile.do_crc:=true;
+         ppufile.DoCRC:=true;
 
          { generate implementation deref data, the interface deref data is
            already generated when calculating the interface crc }
@@ -1753,7 +1753,7 @@ var
            end;
 
          { everything after this doesn't affect the crc }
-         ppufile.do_crc:=false;
+         ppufile.DoCRC:=false;
 
          { write implementation uses }
          writeusedunit(false);
@@ -2277,7 +2277,7 @@ var
           begin
             do_reload:=false;
             { add the unit to the used units list of the program }
-            usedunits.concat(TUsedUnit.create(self,true,false,nil));
+            UsedUnits.concat(TUsedUnit.create(self,true,false,nil));
           end;
       end;
 
