@@ -29,7 +29,7 @@ uses
    node;
 
     type
-       tenumflowcontrol = (
+       TEnumFlowControl = (
          fc_exit,
          fc_break,
          fc_continue,
@@ -48,14 +48,14 @@ uses
            immediately finishing execution of the current routine. }
          fc_no_direct_exit);
 
-       tflowcontrol = set of tenumflowcontrol;
+       TFlowControl = set of TEnumFlowControl;
 
     var
-       flowcontrol : tflowcontrol;
+       flowcontrol : TFlowControl;
 
 { produces the actual code }
-function do_secondpass(var p : tnode) : boolean;
-procedure secondpass(p : tnode);
+function DoSecondPass(var p : TNode) : boolean;
+procedure SecondPass(p : TNode);
 
 
 implementation
@@ -80,9 +80,9 @@ implementation
      var
        secondprefix : string;
 
-     procedure logsecond(ht:tnodetype; entry: boolean);
+     procedure logsecond(ht:TNodeType; entry: boolean);
        const
-         secondnames: array[tnodetype] of string[13] =
+         secondnames: array[TNodeType] of string[13] =
             ('<emptynode>',
              'add-addn',  {addn}
              'add-muln',  {muln}
@@ -174,15 +174,15 @@ implementation
             p := strpnew(secondprefix+'second '+secondnames[ht]+' (exit)');
             delete(secondprefix,length(secondprefix),1);
           end;
-        current_asmdata.CurrAsmList.concat(tai_comment.create(p));
+        CurrentAsmData.CurrAsmList.concat(tai_comment.create(p));
       end;
 {$endif EXTDEBUG}
 
-     procedure secondpass(p : tnode);
+     procedure SecondPass(p : TNode);
       var
          oldcodegenerror  : boolean;
-         oldlocalswitches : tlocalswitches;
-         oldpos    : tfileposinfo;
+         oldlocalswitches : TLocalSwitches;
+         oldpos    : TFilePosInfo;
          oldexecutionweight : longint;
       begin
          if not assigned(p) then
@@ -194,12 +194,12 @@ implementation
             if (tnf_do_not_execute in p.transientflags) then
               InternalError(2022112402);
 
-            oldcodegenerror:=codegenerror;
-            oldlocalswitches:=current_settings.localswitches;
-            oldpos:=current_filepos;
-            current_filepos:=p.fileinfo;
-            current_settings.localswitches:=p.localswitches;
-            codegenerror:=false;
+            oldcodegenerror:=CodeGenError;
+            oldlocalswitches:=CurrentSettings.localswitches;
+            oldpos:=CurrentFilePos;
+            CurrentFilePos:=p.fileinfo;
+            CurrentSettings.localswitches:=p.localswitches;
+            CodeGenError:=false;
             oldexecutionweight:=cg.executionweight;
             if assigned(p.optinfo) then
               cg.executionweight:=min(p.optinfo^.executionweight,high(cg.executionweight))
@@ -210,14 +210,14 @@ implementation
               Comment(V_Warning,'ExpectLoc is not set before secondpass: '+nodetype2str[p.nodetype]);
             if (p.location.loc<>LOC_INVALID) then
               Comment(V_Warning,'Location.Loc is already set before secondpass: '+nodetype2str[p.nodetype]);
-            if (cs_asm_nodes in current_settings.globalswitches) then
+            if (cs_asm_nodes in CurrentSettings.globalswitches) then
               logsecond(p.nodetype,true);
 {$endif EXTDEBUG}
             p.pass_generate_code;
 {$ifdef EXTDEBUG}
-            if (cs_asm_nodes in current_settings.globalswitches) then
+            if (cs_asm_nodes in CurrentSettings.globalswitches) then
               logsecond(p.nodetype,false);
-            if (not codegenerror) then
+            if (not CodeGenError) then
              begin
                if (p.location.loc<>p.expectloc) then
                  begin
@@ -236,29 +236,29 @@ implementation
                  Comment(V_Warning,'Location not set in secondpass: '+nodetype2str[p.nodetype]);
              end;
 {$endif EXTDEBUG}
-            if codegenerror then
+            if CodeGenError then
               include(p.transientflags,tnf_error);
-            codegenerror:=codegenerror or oldcodegenerror;
-            current_settings.localswitches:=oldlocalswitches;
-            current_filepos:=oldpos;
+            CodeGenError:=CodeGenError or oldcodegenerror;
+            CurrentSettings.localswitches:=oldlocalswitches;
+            CurrentFilePos:=oldpos;
             cg.executionweight:=oldexecutionweight;
           end
          else
-           codegenerror:=true;
+           CodeGenError:=true;
       end;
 
 
-    function do_secondpass(var p : tnode) : boolean;
+    function DoSecondPass(var p : TNode) : boolean;
       begin
          { current_asmdata.CurrAsmList must be empty }
-         if not current_asmdata.CurrAsmList.empty then
+         if not CurrentAsmData.CurrAsmList.empty then
            internalerror(200405201);
 
          { clear errors before starting }
-         codegenerror:=false;
+         CodeGenError:=false;
          if not(tnf_error in p.transientflags) then
-           secondpass(p);
-         do_secondpass:=codegenerror;
+           SecondPass(p);
+         DoSecondPass:=CodeGenError;
       end;
 
 

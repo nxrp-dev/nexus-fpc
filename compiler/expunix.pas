@@ -99,11 +99,11 @@ begin
   { first test the index value }
   if eo_index in hp.options then
    begin
-     Message1(parser_e_no_export_with_index_for_target,target_info.shortname);
+     Message1(parser_e_no_export_with_index_for_target,TargetInfo.shortname);
      exit;
    end;
   { now place in correct order }
-  hp2:=texported_item(current_module._exports.first);
+  hp2:=texported_item(CurrentModule._exports.first);
   while assigned(hp2) and
      (hp.name^>hp2.name^) do
     hp2:=texported_item(hp2.next);
@@ -114,8 +114,8 @@ begin
       duplicatesymbol(hp.name^);
       exit;
     end;
-  if hp2=texported_item(current_module._exports.first) then
-    current_module._exports.concat(hp)
+  if hp2=texported_item(CurrentModule._exports.first) then
+    CurrentModule._exports.concat(hp)
   else if assigned(hp2) then
     begin
        hp.next:=hp2;
@@ -125,7 +125,7 @@ begin
        hp2.previous:=hp;
     end
   else
-    current_module._exports.concat(hp);
+    CurrentModule._exports.concat(hp);
 {$ifdef cpuhighleveltarget}
   { in case of a high level target create a stub procedure at the node/def
     level instead of via hlcg.g_external_wrapper() later on, because it's
@@ -152,7 +152,7 @@ begin
         begin
           { avoid name clashes for the identifier }
           wrapperpd:=create_procdef_alias(pd,'$fpc_exported$'+hp.name^,hp.name^,
-            current_module.localsymtable,nil,
+            CurrentModule.localsymtable,nil,
             tsk_callthrough,pd);
         end;
     end;
@@ -176,8 +176,8 @@ var
 begin
   pd:=nil;
   create_hlcodegen(nil);
-  new_section(current_asmdata.asmlists[al_procedures],sec_code,'',0);
-  hp2:=texported_item(current_module._exports.first);
+  new_section(CurrentAsmData.asmlists[al_procedures],sec_code,'',0);
+  hp2:=texported_item(CurrentModule._exports.first);
   while assigned(hp2) do
    begin
      if (not hp2.is_var) and
@@ -198,9 +198,9 @@ begin
               break;
           end;
         if not anyhasalias then
-          hlcg.g_external_wrapper(current_asmdata.asmlists[al_procedures],pd,hp2.name^,pd.mangledname,true);
+          hlcg.g_external_wrapper(CurrentAsmData.asmlists[al_procedures],pd,hp2.name^,pd.mangledname,true);
 {$endif cpuhighleveltarget}
-        if not (current_module.is_unit and (target_info.system in systems_linux)) then
+        if not (CurrentModule.is_unit and (TargetInfo.system in systems_linux)) then
           exportedsymnames.insert(hp2.name^);
       end
      else
@@ -208,7 +208,7 @@ begin
          if assigned(hp2.sym) and
             (hp2.name^<>hp2.sym.mangledname) then
            Message2(parser_e_cant_export_var_different_name,hp2.sym.realname,hp2.sym.mangledname)
-         else if not (current_module.is_unit and (target_info.system in systems_linux)) then
+         else if not (CurrentModule.is_unit and (TargetInfo.system in systems_linux)) then
            exportedsymnames.insert(hp2.name^);
        end;
      hp2:=texported_item(hp2.next);

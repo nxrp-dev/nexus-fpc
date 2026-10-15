@@ -32,7 +32,7 @@ interface
        optbase;
 
     type
-       tnodetype = (
+       TNodeType = (
           emptynode,        {No node (returns nil when loading from ppu)}
           addn,             {Represents the + operator}
           muln,             {Represents the * operator}
@@ -113,11 +113,11 @@ interface
           finalizetempsn        { Internal node used to clean up code generator temps (warning: must NOT create additional tepms that may need to be finalised!) }
        );
 
-       tnodetypeset = set of tnodetype;
-       pnodetypeset = ^tnodetypeset;
+       TNodeTypeSet = set of TNodeType;
+       PNodeTypeSet = ^TNodeTypeSet;
 
       const
-        nodetype2str : array[tnodetype] of string[24] = (
+        nodetype2str : array[TNodeType] of string[24] = (
           '<emptynode>',
           'addn',
           'muln',
@@ -207,7 +207,7 @@ interface
 
     type
        { all boolean field of ttree are now collected in flags }
-       tnodeflag = (
+       TNodeFlag = (
          { tbinop operands are swapped    }
          nf_swapped,
 
@@ -253,7 +253,7 @@ interface
          nf_generic_para
        );
 
-       tnodeflags = set of tnodeflag;
+       TNodeFlags = set of TNodeFlag;
 
        TTransientNodeFlag = (
          { general }
@@ -276,24 +276,24 @@ interface
     const
        { contains the flags which must be equal for the equality }
        { of nodes                                                }
-       flagsequal : tnodeflags = [];
+       flagsequal : TNodeFlags = [];
        transientflagsequal : TTransientNodeFlags = [tnf_error];
 
     type
-      tnodelist = class
+      TNodeList = class
       end;
 
-      pnode = ^tnode;
+      PNode = ^TNode;
       { basic class for the intermediated representation fpc uses }
-      tnode = class
+      TNode = class
       private
          fppuidx : longint;
          function getppuidx:longint;
       public
          { type of this node }
-         nodetype : tnodetype;
+         nodetype : TNodeType;
          { type of the current code block, general/const/type }
-         blocktype : tblock_type;
+         blocktype : TBlockType;
          { expected location of the result of this node (pass1) }
          expectloc : tcgloc;
          { the location of the result of this node (pass2) }
@@ -303,21 +303,21 @@ interface
            same for if and case, if this field is nil, the next node is the procedure exit,
            for the last node in a loop this is set to the loop header
            this field is set only for control flow nodes }
-         successor : tnode;
+         successor : TNode;
          { there are some properties about the node stored }
-         flags  : tnodeflags;
+         flags  : TNodeFlags;
          transientflags : TTransientNodeFlags;
          resultdef     : tdef;
          resultdefderef : tderef;
-         fileinfo      : tfileposinfo;
-         localswitches : tlocalswitches;
+         fileinfo      : TFilePosInfo;
+         localswitches : TLocalSwitches;
          verbosity     : longint;
          optinfo : poptinfo;
-         constructor create(t:tnodetype);
+         constructor create(t:TNodeType);
          { this constructor is only for creating copies of class }
          { the fields are copied by getcopy                      }
          constructor createforcopy;
-         constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);virtual;
+         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);virtual;
          destructor destroy;override;
          procedure ppuwrite(ppufile:tcompilerppufile);virtual;
          procedure buildderefimpl;virtual;
@@ -325,19 +325,19 @@ interface
          procedure resolveppuidx;virtual;
 
          { toggles the flag }
-         procedure toggleflag(f : tnodeflag);
+         procedure toggleflag(f : TNodeFlag);
 
          { the 1.1 code generator may override pass_1 }
          { and it need not to implement det_* then    }
          { 1.1: pass_1 returns a value<>0 if the node has been transformed }
          { 2.0: runs pass_typecheck and det_temp                           }
-         function pass_1 : tnode;virtual;abstract;
+         function pass_1 : TNode;virtual;abstract;
          { dermines the resultdef of the node }
-         function pass_typecheck : tnode;virtual;abstract;
+         function pass_typecheck : TNode;virtual;abstract;
 
          { tries to simplify the node, returns a value <>nil if a simplified
            node has been created }
-         function simplify(forinline : boolean) : tnode;virtual;
+         function simplify(forinline : boolean) : TNode;virtual;
 {$ifdef state_tracking}
          { Does optimizations by keeping track of the variable states
            in a procedure }
@@ -353,16 +353,16 @@ interface
          procedure pass_generate_code;virtual;abstract;
 
          { comparing of nodes }
-         function isequal(p : tnode) : boolean;
+         function isequal(p : TNode) : boolean;
          { to implement comparison, override this method }
-         function docompare(p : tnode) : boolean;virtual;
+         function docompare(p : TNode) : boolean;virtual;
          { wrapper for getcopy }
-         function getcopy : tnode;
+         function getcopy : TNode;
 
          { does the real copying of a node }
-         function dogetcopy : tnode;virtual;
+         function dogetcopy : TNode;virtual;
 
-         procedure insertintolist(l : tnodelist);virtual;
+         procedure insertintolist(l : TNodeList);virtual;
          { writes a node for debugging purpose, shouldn't be called }
          { direct, because there is no test for nil, use printnode  }
          { to write a complete tree }
@@ -376,33 +376,33 @@ interface
          procedure XMLPrintNodeData(var T: Text); virtual;
          procedure XMLPrintNodeTree(var T: Text); virtual;
 {$endif DEBUG_NODE_XML}
-         function ischild(p : tnode) : boolean;virtual;
+         function ischild(p : TNode) : boolean;virtual;
 
          { ensures that the optimizer info record is allocated }
          function allocoptinfo : poptinfo;inline;
          property ppuidx:longint read getppuidx;
       end;
 
-      tnodeclass = class of tnode;
+      TNodeClass = class of TNode;
 
-      tnodeclassarray = array[tnodetype] of tnodeclass;
+      tnodeclassarray = array[TNodeType] of TNodeClass;
 
       { this node is the ancestor for all nodes with at least    }
       { one child, you have to use it if you want to use         }
       { true- and current_procinfo.CurrFalseLabel                                     }
       //punarynode = ^tunarynode;
-      tunarynode = class(tnode)
-         left : tnode;
-         constructor create(t:tnodetype;l : tnode);
-         constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+      TUnaryNode = class(TNode)
+         left : TNode;
+         constructor create(t:TNodeType;l : TNode);
+         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
          destructor destroy;override;
          procedure ppuwrite(ppufile:tcompilerppufile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
-         function ischild(p : tnode) : boolean;override;
-         function docompare(p : tnode) : boolean;override;
-         function dogetcopy : tnode;override;
-         procedure insertintolist(l : tnodelist);override;
+         function ischild(p : TNode) : boolean;override;
+         function docompare(p : TNode) : boolean;override;
+         function dogetcopy : TNode;override;
+         procedure insertintolist(l : TNodeList);override;
          procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintNodeData(var T: Text); override;
@@ -413,19 +413,19 @@ interface
       end;
 
       //pbinarynode = ^tbinarynode;
-      tbinarynode = class(tunarynode)
-         right : tnode;
-         constructor create(t:tnodetype;l,r : tnode);
-         constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+      TBinaryNode = class(TUnaryNode)
+         right : TNode;
+         constructor create(t:TNodeType;l,r : TNode);
+         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
          destructor destroy;override;
          procedure ppuwrite(ppufile:tcompilerppufile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
-         function ischild(p : tnode) : boolean;override;
-         function docompare(p : tnode) : boolean;override;
+         function ischild(p : TNode) : boolean;override;
+         function docompare(p : TNode) : boolean;override;
          procedure swapleftright;
-         function dogetcopy : tnode;override;
-         procedure insertintolist(l : tnodelist);override;
+         function dogetcopy : TNode;override;
+         procedure insertintolist(l : TNodeList);override;
          procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintNodeTree(var T: Text); override;
@@ -438,18 +438,18 @@ interface
       end;
 
       //ptertiarynode = ^ttertiarynode;
-      ttertiarynode = class(tbinarynode)
-         third : tnode;
-         constructor create(_t:tnodetype;l,r,t : tnode);
-         constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+      TTertiaryNode = class(TBinaryNode)
+         third : TNode;
+         constructor create(_t:TNodeType;l,r,t : TNode);
+         constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
          destructor destroy;override;
          procedure ppuwrite(ppufile:tcompilerppufile);override;
          procedure buildderefimpl;override;
          procedure derefimpl;override;
-         function ischild(p : tnode) : boolean;override;
-         function docompare(p : tnode) : boolean;override;
-         function dogetcopy : tnode;override;
-         procedure insertintolist(l : tnodelist);override;
+         function ischild(p : TNode) : boolean;override;
+         function docompare(p : TNode) : boolean;override;
+         function dogetcopy : TNode;override;
+         procedure insertintolist(l : TNodeList);override;
          procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintNodeData(var T: Text); override;
@@ -459,9 +459,9 @@ interface
          function PruneKeepThird: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       end;
 
-      tbinopnode = class(tbinarynode)
-         constructor create(t:tnodetype;l,r : tnode);virtual;
-         function docompare(p : tnode) : boolean;override;
+      TBinOpNode = class(TBinaryNode)
+         constructor create(t:TNodeType;l,r : TNode);virtual;
+         function docompare(p : TNode) : boolean;override;
 {$ifdef DEBUG_NODE_XML}
          procedure XMLPrintNodeData(var T: Text); override;
 {$endif DEBUG_NODE_XML}
@@ -471,30 +471,30 @@ interface
       { array with all class types for tnodes }
       nodeclass : tnodeclassarray;
 
-    function nodeppuidxget(i:longint):tnode;
-    function ppuloadnode(ppufile:tcompilerppufile):tnode;
-    procedure ppuwritenode(ppufile:tcompilerppufile;n:tnode);
-    function ppuloadnodetree(ppufile:tcompilerppufile):tnode;
-    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:tnode);
+    function nodeppuidxget(i:longint):TNode;
+    function ppuloadnode(ppufile:tcompilerppufile):TNode;
+    procedure ppuwritenode(ppufile:tcompilerppufile;n:TNode);
+    function ppuloadnodetree(ppufile:tcompilerppufile):TNode;
+    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:TNode);
 
-    procedure printfileinfo(var t:text;pos:tfileposinfo);
-    procedure dprintfileinfo(pos:tfileposinfo);
-    procedure printnode(var t:text;n:tnode);
-    procedure dprintnode(n:tnode);
+    procedure printfileinfo(var t:text;pos:TFilePosInfo);
+    procedure dprintfileinfo(pos:TFilePosInfo);
+    procedure printnode(var t:text;n:TNode);
+    procedure dprintnode(n:TNode);
 {$ifdef DEBUG_NODE_XML}
     procedure XMLPrintNode(var T: Text; N: TNode);
 {$endif DEBUG_NODE_XML}
-    function is_constnode(p : tnode) : boolean;
-    function is_constintnode(p : tnode) : boolean;
-    function is_constcharnode(p : tnode) : boolean;
-    function is_constrealnode(p : tnode) : boolean;
-    function is_constboolnode(p : tnode) : boolean;
-    function is_constenumnode(p : tnode) : boolean;
-    function is_constwidecharnode(p : tnode) : boolean;
-    function is_constpointernode(p : tnode) : boolean;
-    function is_conststringnode(p : tnode) : boolean;
-    function is_constwidestringnode(p : tnode) : boolean;
-    function is_conststring_or_constcharnode(p : tnode) : boolean;
+    function is_constnode(p : TNode) : boolean;
+    function is_constintnode(p : TNode) : boolean;
+    function is_constcharnode(p : TNode) : boolean;
+    function is_constrealnode(p : TNode) : boolean;
+    function is_constboolnode(p : TNode) : boolean;
+    function is_constenumnode(p : TNode) : boolean;
+    function is_constwidecharnode(p : TNode) : boolean;
+    function is_constpointernode(p : TNode) : boolean;
+    function is_conststringnode(p : TNode) : boolean;
+    function is_constwidestringnode(p : TNode) : boolean;
+    function is_conststring_or_constcharnode(p : TNode) : boolean;
 
 
 implementation
@@ -533,11 +533,11 @@ implementation
     procedure nodeppuidxresolve;
       var
         i : longint;
-        n : tnode;
+        n : TNode;
       begin
         for i:=0 to nodeppulist.count-1 do
           begin
-            n:=tnode(nodeppulist[i]);
+            n:=TNode(nodeppulist[i]);
             if assigned(n) then
               n.resolveppuidx;
           end;
@@ -552,7 +552,7 @@ implementation
       end;
 
 
-    procedure nodeppuidxadd(n:tnode);
+    procedure nodeppuidxadd(n:TNode);
       var
         i : longint;
       begin
@@ -567,18 +567,18 @@ implementation
       end;
 
 
-    function nodeppuidxget(i:longint):tnode;
+    function nodeppuidxget(i:longint):TNode;
       begin
         if i<=0 then
           internalerror(200311073);
-        result:=tnode(nodeppulist[i]);
+        result:=TNode(nodeppulist[i]);
       end;
 
 
-    function ppuloadnode(ppufile:tcompilerppufile):tnode;
+    function ppuloadnode(ppufile:tcompilerppufile):TNode;
       var
         b : byte;
-        t : tnodetype;
+        t : TNodeType;
         hppuidx : longint;
       begin
         { marker }
@@ -586,8 +586,8 @@ implementation
         if b<>ppunodemarker then
           internalerror(200208151);
         { load nodetype }
-        t:=tnodetype(ppufile.getbyte);
-        if t>high(tnodetype) then
+        t:=TNodeType(ppufile.getbyte);
+        if t>high(TNodeType) then
           internalerror(200208152);
         if t<>emptynode then
          begin
@@ -605,7 +605,7 @@ implementation
       end;
 
 
-    procedure ppuwritenode(ppufile:tcompilerppufile;n:tnode);
+    procedure ppuwritenode(ppufile:tcompilerppufile;n:TNode);
       begin
         { marker, read by ppuloadnode }
         ppufile.putbyte(ppunodemarker);
@@ -622,7 +622,7 @@ implementation
       end;
 
 
-    function ppuloadnodetree(ppufile:tcompilerppufile):tnode;
+    function ppuloadnodetree(ppufile:tcompilerppufile):TNode;
       begin
         if ppufile.readentry<>ibnodetree then
           Message(unit_f_ppu_read_error);
@@ -633,7 +633,7 @@ implementation
       end;
 
 
-    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:tnode);
+    procedure ppuwritenodetree(ppufile:tcompilerppufile;n:TNode);
       begin
         nodeppuidxcreate;
         ppuwritenode(ppufile,n);
@@ -642,7 +642,7 @@ implementation
       end;
 
 
-    procedure printnode(var t:text;n:tnode);
+    procedure printnode(var t:text;n:TNode);
       begin
         if assigned(n) then
          n.printnodetree(t)
@@ -651,12 +651,12 @@ implementation
       end;
 
 
-    procedure dprintnode(n:tnode);
+    procedure dprintnode(n:TNode);
       begin
         printnode(output,n);
       end;
 
-    procedure printfileinfo(var t:text; pos:tfileposinfo);
+    procedure printfileinfo(var t:text; pos:TFilePosInfo);
       var
 	infile : string;
 	module : tmodule;
@@ -673,7 +673,7 @@ implementation
         write(t,'(',infile,':',pos.line,',',pos.column,')');
       end;
 
-    procedure dprintfileinfo(pos:tfileposinfo);
+    procedure dprintfileinfo(pos:TFilePosInfo);
       begin
         printfileinfo(output,pos);
       end;
@@ -686,54 +686,54 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function is_constnode(p : tnode) : boolean;
+    function is_constnode(p : TNode) : boolean;
       begin
         is_constnode:=(p.nodetype in nodetype_const);
       end;
 
 
-    function is_constintnode(p : tnode) : boolean;
+    function is_constintnode(p : TNode) : boolean;
       begin
          is_constintnode:=(p.nodetype=ordconstn) and is_integer(p.resultdef);
       end;
 
 
-    function is_constcharnode(p : tnode) : boolean;
+    function is_constcharnode(p : TNode) : boolean;
       begin
          is_constcharnode:=(p.nodetype=ordconstn) and is_char(p.resultdef);
       end;
 
 
-    function is_constwidecharnode(p : tnode) : boolean;
+    function is_constwidecharnode(p : TNode) : boolean;
       begin
          is_constwidecharnode:=(p.nodetype=ordconstn) and is_widechar(p.resultdef);
       end;
 
 
-    function is_constrealnode(p : tnode) : boolean;
+    function is_constrealnode(p : TNode) : boolean;
       begin
          is_constrealnode:=(p.nodetype=realconstn);
       end;
 
 
-    function is_constboolnode(p : tnode) : boolean;
+    function is_constboolnode(p : TNode) : boolean;
       begin
          is_constboolnode:=(p.nodetype=ordconstn) and is_boolean(p.resultdef);
       end;
 
 
-    function is_constenumnode(p : tnode) : boolean;
+    function is_constenumnode(p : TNode) : boolean;
       begin
          is_constenumnode:=(p.nodetype=ordconstn) and (p.resultdef.typ=enumdef);
       end;
 
 
-    function is_constpointernode(p : tnode) : boolean;
+    function is_constpointernode(p : TNode) : boolean;
       begin
          is_constpointernode:=(p.nodetype in [pointerconstn,niln]);
       end;
 
-    function is_conststringnode(p : tnode) : boolean;
+    function is_conststringnode(p : TNode) : boolean;
       begin
          is_conststringnode :=
            (p.nodetype = stringconstn) and
@@ -742,7 +742,7 @@ implementation
             is_ansistring(p.resultdef));
       end;
 
-    function is_constwidestringnode(p : tnode) : boolean;
+    function is_constwidestringnode(p : TNode) : boolean;
       begin
          is_constwidestringnode :=
            (p.nodetype = stringconstn) and
@@ -750,7 +750,7 @@ implementation
             is_wide_or_unicode_string(p.resultdef));
       end;
 
-    function is_conststring_or_constcharnode(p : tnode) : boolean;
+    function is_conststring_or_constcharnode(p : TNode) : boolean;
       begin
         is_conststring_or_constcharnode :=
           is_conststringnode(p) or is_constcharnode(p) or
@@ -762,7 +762,7 @@ implementation
                                  TNODE
  ****************************************************************************}
 
-    constructor tnode.create(t:tnodetype);
+    constructor TNode.create(t:TNodeType);
 
       begin
          inherited create;
@@ -773,24 +773,24 @@ implementation
          { updated by secondpass }
          location.loc:=LOC_INVALID;
          { save local info }
-         fileinfo:=current_filepos;
-         localswitches:=current_settings.localswitches;
+         fileinfo:=CurrentFilePos;
+         localswitches:=CurrentSettings.localswitches;
          verbosity:=status.verbosity;
          resultdef:=nil;
          flags:=[];
       end;
 
-    constructor tnode.createforcopy;
+    constructor TNode.createforcopy;
 
       begin
       end;
 
-    constructor tnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor TNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
 
       begin
         nodetype:=t;
         { tnode fields }
-        blocktype:=tblock_type(ppufile.getbyte);
+        blocktype:=TBlockType(ppufile.getbyte);
         ppufile.getposinfo(fileinfo);
         ppufile.getset(tppuset5(localswitches));
         verbosity:=ppufile.getlongint;
@@ -803,7 +803,7 @@ implementation
       end;
 
 
-    procedure tnode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TNode.ppuwrite(ppufile:tcompilerppufile);
       begin
         ppufile.putbyte(byte(blocktype));
         ppufile.putposinfo(fileinfo);
@@ -814,7 +814,7 @@ implementation
       end;
 
 
-    function tnode.getppuidx:longint;
+    function TNode.getppuidx:longint;
       begin
         if fppuidx=0 then
           begin
@@ -825,24 +825,24 @@ implementation
        end;
 
 
-    procedure tnode.resolveppuidx;
+    procedure TNode.resolveppuidx;
       begin
       end;
 
 
-    procedure tnode.buildderefimpl;
+    procedure TNode.buildderefimpl;
       begin
         resultdefderef.build(resultdef);
       end;
 
 
-    procedure tnode.derefimpl;
+    procedure TNode.derefimpl;
       begin
         resultdef:=tdef(resultdefderef.resolve);
       end;
 
 
-    procedure tnode.toggleflag(f : tnodeflag);
+    procedure TNode.toggleflag(f : TNodeFlag);
       begin
          if f in flags then
            exclude(flags,f)
@@ -851,26 +851,26 @@ implementation
       end;
 
 
-    function tnode.simplify(forinline : boolean) : tnode;
+    function TNode.simplify(forinline : boolean) : TNode;
       begin
         result:=nil;
       end;
 
 
-    destructor tnode.destroy;
+    destructor TNode.destroy;
       begin
          if assigned(optinfo) then
            dispose(optinfo);
       end;
 
 
-    function tnode.ischild(p : tnode) : boolean;
+    function TNode.ischild(p : TNode) : boolean;
       begin
          ischild:=false;
       end;
 
 
-    procedure tnode.mark_write;
+    procedure TNode.mark_write;
       begin
 {$ifdef EXTDEBUG}
         Comment(V_Warning,'mark_write not implemented for '+nodetype2str[nodetype]);
@@ -878,9 +878,9 @@ implementation
       end;
 
 
-    procedure tnode.printnodeinfo(var t:text);
+    procedure TNode.printnodeinfo(var t:text);
       var
-        i : tnodeflag;
+        i : TNodeFlag;
         first : boolean;
       begin
         write(t,nodetype2str[nodetype]);
@@ -893,7 +893,7 @@ implementation
                   ', expectloc = ',tcgloc2str[expectloc],
                   ', flags = [');
         first:=true;
-        for i:=low(tnodeflag) to high(tnodeflag) do
+        for i:=low(TNodeFlag) to high(TNodeFlag) do
           if i in flags then
             begin
               if not(first) then
@@ -910,12 +910,12 @@ implementation
       end;
 
 
-    procedure tnode.printnodedata(var t:text);
+    procedure TNode.printnodedata(var t:text);
       begin
       end;
 
 
-    procedure tnode.printnodetree(var t:text);
+    procedure TNode.printnodetree(var t:text);
       begin
          write(t,printnodeindention,'(');
          printnodeinfo(t);
@@ -929,7 +929,7 @@ implementation
 {$ifdef DEBUG_NODE_XML}
     { For writing nodes to XML files - do not call directly, but
       instead call XMLPrintNode to write a complete tree }
-    procedure tnode.XMLPrintNodeInfo(var T: Text);
+    procedure TNode.XMLPrintNodeInfo(var T: Text);
       var
         i_nf: TNodeFlag;
         i_tnf: TTransientNodeFlag;
@@ -969,12 +969,12 @@ implementation
           write(t,' complexity="',node_complexity(self),'"');
       end;
 
-    procedure tnode.XMLPrintNodeData(var T: Text);
+    procedure TNode.XMLPrintNodeData(var T: Text);
       begin
         { Nothing by default }
       end;
 
-    procedure tnode.XMLPrintNodeTree(var T: Text);
+    procedure TNode.XMLPrintNodeTree(var T: Text);
       begin
         Write(T, PrintNodeIndention, '<', nodetype2str[nodetype]);
         XMLPrintNodeInfo(T);
@@ -986,7 +986,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function tnode.isequal(p : tnode) : boolean;
+    function TNode.isequal(p : TNode) : boolean;
       begin
          isequal:=
            (not assigned(self) and not assigned(p)) or
@@ -1001,20 +1001,20 @@ implementation
       end;
 
 {$ifdef state_tracking}
-    function Tnode.track_state_pass(exec_known:boolean):boolean;
+    function TNode.track_state_pass(exec_known:boolean):boolean;
       begin
         track_state_pass:=false;
       end;
 {$endif state_tracking}
 
 
-    function tnode.docompare(p : tnode) : boolean;
+    function TNode.docompare(p : TNode) : boolean;
       begin
          docompare:=true;
       end;
 
 
-    function cleanupcopiedto(var n : tnode;arg : pointer) : foreachnoderesult;
+    function cleanupcopiedto(var n : TNode;arg : pointer) : foreachnoderesult;
       begin
         result:=fen_true;
         if n.nodetype=labeln then
@@ -1022,7 +1022,7 @@ implementation
       end;
 
 
-    function setuplabelnode(var n : tnode;arg : pointer) : foreachnoderesult;
+    function setuplabelnode(var n : TNode;arg : pointer) : foreachnoderesult;
       begin
         result:=fen_true;
         if (n.nodetype=goton) and assigned(tgotonode(n).labelnode) and
@@ -1031,7 +1031,7 @@ implementation
       end;
 
 
-    function tnode.getcopy : tnode;
+    function TNode.getcopy : TNode;
       begin
         result:=dogetcopy;
         foreachnodestatic(pm_postprocess,result,@setuplabelnode,nil);
@@ -1039,13 +1039,13 @@ implementation
       end;
 
 
-    function tnode.dogetcopy : tnode;
+    function TNode.dogetcopy : TNode;
       var
-         p : tnode;
+         p : TNode;
       begin
          { this is quite tricky because we need a node of the current }
          { node type and not one of tnode!                            }
-         p:=tnodeclass(classtype).createforcopy;
+         p:=TNodeClass(classtype).createforcopy;
          p.nodetype:=nodetype;
          p.expectloc:=expectloc;
          p.location:=location;
@@ -1060,13 +1060,13 @@ implementation
       end;
 
 
-    procedure tnode.insertintolist(l : tnodelist);
+    procedure TNode.insertintolist(l : TNodeList);
       begin
       end;
 
 
     { ensures that the optimizer info record is allocated }
-    function tnode.allocoptinfo : poptinfo;inline;
+    function TNode.allocoptinfo : poptinfo;inline;
       begin
         if not(assigned(optinfo)) then
           begin
@@ -1080,7 +1080,7 @@ implementation
                                  TUNARYNODE
  ****************************************************************************}
 
-    constructor tunarynode.create(t:tnodetype;l : tnode);
+    constructor TUnaryNode.create(t:TNodeType;l : TNode);
       begin
          inherited create(t);
          { transfer generic paramater flag }
@@ -1090,14 +1090,14 @@ implementation
       end;
 
 
-    constructor tunarynode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor TUnaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         left:=ppuloadnode(ppufile);
       end;
 
 
-    destructor tunarynode.destroy;
+    destructor TUnaryNode.destroy;
       begin
         left.free;
         left := nil;
@@ -1105,14 +1105,14 @@ implementation
       end;
 
 
-    procedure tunarynode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TUnaryNode.ppuwrite(ppufile:tcompilerppufile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,left);
       end;
 
 
-    procedure tunarynode.buildderefimpl;
+    procedure TUnaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
         if assigned(left) then
@@ -1120,7 +1120,7 @@ implementation
       end;
 
 
-    procedure tunarynode.derefimpl;
+    procedure TUnaryNode.derefimpl;
       begin
         inherited derefimpl;
         if assigned(left) then
@@ -1128,19 +1128,19 @@ implementation
       end;
 
 
-    function tunarynode.docompare(p : tnode) : boolean;
+    function TUnaryNode.docompare(p : TNode) : boolean;
       begin
          docompare:=(inherited docompare(p) and
-           ((left=nil) or left.isequal(tunarynode(p).left))
+           ((left=nil) or left.isequal(TUnaryNode(p).left))
          );
       end;
 
 
-    function tunarynode.dogetcopy : tnode;
+    function TUnaryNode.dogetcopy : TNode;
       var
-         p : tunarynode;
+         p : TUnaryNode;
       begin
-         p:=tunarynode(inherited dogetcopy);
+         p:=TUnaryNode(inherited dogetcopy);
          if assigned(left) then
            p.left:=left.dogetcopy
          else
@@ -1149,12 +1149,12 @@ implementation
       end;
 
 
-    procedure tunarynode.insertintolist(l : tnodelist);
+    procedure TUnaryNode.insertintolist(l : TNodeList);
       begin
       end;
 
 
-    procedure tunarynode.printnodedata(var t:text);
+    procedure TUnaryNode.printnodedata(var t:text);
       begin
          inherited printnodedata(t);
          printnode(t,left);
@@ -1168,7 +1168,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function tunarynode.ischild(p : tnode) : boolean;
+    function TUnaryNode.ischild(p : TNode) : boolean;
       begin
          ischild:=p=left;
       end;
@@ -1176,7 +1176,7 @@ implementation
 
     { Marks the current node for deletion and sets 'left' to nil.
       Returns what 'left' was previously set to }
-    function tunarynode.PruneKeepLeft: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
+    function TUnaryNode.PruneKeepLeft: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
         Result := left;
         left := nil;
@@ -1188,7 +1188,7 @@ implementation
                             TBINARYNODE
  ****************************************************************************}
 
-    constructor tbinarynode.create(t:tnodetype;l,r : tnode);
+    constructor TBinaryNode.create(t:TNodeType;l,r : TNode);
       begin
          inherited create(t,l);
          { transfer generic paramater flag }
@@ -1198,14 +1198,14 @@ implementation
       end;
 
 
-    constructor tbinarynode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor TBinaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         right:=ppuloadnode(ppufile);
       end;
 
 
-    destructor tbinarynode.destroy;
+    destructor TBinaryNode.destroy;
       begin
         right.free;
         right := nil;
@@ -1213,14 +1213,14 @@ implementation
       end;
 
 
-    procedure tbinarynode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TBinaryNode.ppuwrite(ppufile:tcompilerppufile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,right);
       end;
 
 
-    procedure tbinarynode.buildderefimpl;
+    procedure TBinaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
         if assigned(right) then
@@ -1228,7 +1228,7 @@ implementation
       end;
 
 
-    procedure tbinarynode.derefimpl;
+    procedure TBinaryNode.derefimpl;
       begin
         inherited derefimpl;
         if assigned(right) then
@@ -1236,25 +1236,25 @@ implementation
       end;
 
 
-    function tbinarynode.ischild(p : tnode) : boolean;
+    function TBinaryNode.ischild(p : TNode) : boolean;
       begin
          ischild:=(p=right);
       end;
 
 
-    function tbinarynode.docompare(p : tnode) : boolean;
+    function TBinaryNode.docompare(p : TNode) : boolean;
       begin
          docompare:=(inherited docompare(p) and
-             ((right=nil) or right.isequal(tbinarynode(p).right))
+             ((right=nil) or right.isequal(TBinaryNode(p).right))
          );
       end;
 
 
-    function tbinarynode.dogetcopy : tnode;
+    function TBinaryNode.dogetcopy : TNode;
       var
-         p : tbinarynode;
+         p : TBinaryNode;
       begin
-         p:=tbinarynode(inherited dogetcopy);
+         p:=TBinaryNode(inherited dogetcopy);
          if assigned(right) then
            p.right:=right.dogetcopy
          else
@@ -1263,14 +1263,14 @@ implementation
       end;
 
 
-    procedure tbinarynode.insertintolist(l : tnodelist);
+    procedure TBinaryNode.insertintolist(l : TNodeList);
       begin
       end;
 
 
-    procedure tbinarynode.swapleftright;
+    procedure TBinaryNode.swapleftright;
       var
-         swapp : tnode;
+         swapp : TNode;
       begin
          swapp:=right;
          right:=left;
@@ -1282,7 +1282,7 @@ implementation
       end;
 
 
-    procedure tbinarynode.printnodedata(var t:text);
+    procedure TBinaryNode.printnodedata(var t:text);
       begin
          inherited printnodedata(t);
          printnode(t,right);
@@ -1309,9 +1309,9 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    procedure tbinarynode.printnodelist(var t:text);
+    procedure TBinaryNode.printnodelist(var t:text);
       var
-        hp : tbinarynode;
+        hp : TBinaryNode;
       begin
         hp:=self;
         while assigned(hp) do
@@ -1324,14 +1324,14 @@ implementation
            writeln(t);
            printnodeunindent;
            writeln(t,printnodeindention,')');
-           hp:=tbinarynode(hp.right);
+           hp:=TBinaryNode(hp.right);
          end;
       end;
 
 
     { Marks the current node for deletion and sets 'right' to nil.
       Returns what 'right' was previously set to }
-    function tbinarynode.PruneKeepRight: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
+    function TBinaryNode.PruneKeepRight: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
         Result := right;
         right := nil;
@@ -1343,7 +1343,7 @@ implementation
                                  TTERTIARYNODE
  ****************************************************************************}
 
-    constructor ttertiarynode.create(_t:tnodetype;l,r,t : tnode);
+    constructor TTertiaryNode.create(_t:TNodeType;l,r,t : TNode);
       begin
          inherited create(_t,l,r);
          { transfer generic parameter flag }
@@ -1353,14 +1353,14 @@ implementation
       end;
 
 
-    constructor ttertiarynode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor TTertiaryNode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         third:=ppuloadnode(ppufile);
       end;
 
 
-    destructor ttertiarynode.destroy;
+    destructor TTertiaryNode.destroy;
       begin
         third.free;
         third := nil;
@@ -1368,14 +1368,14 @@ implementation
       end;
 
 
-    procedure ttertiarynode.ppuwrite(ppufile:tcompilerppufile);
+    procedure TTertiaryNode.ppuwrite(ppufile:tcompilerppufile);
       begin
         inherited ppuwrite(ppufile);
         ppuwritenode(ppufile,third);
       end;
 
 
-    procedure ttertiarynode.buildderefimpl;
+    procedure TTertiaryNode.buildderefimpl;
       begin
         inherited buildderefimpl;
         if assigned(third) then
@@ -1383,7 +1383,7 @@ implementation
       end;
 
 
-    procedure ttertiarynode.derefimpl;
+    procedure TTertiaryNode.derefimpl;
       begin
         inherited derefimpl;
         if assigned(third) then
@@ -1391,19 +1391,19 @@ implementation
       end;
 
 
-    function ttertiarynode.docompare(p : tnode) : boolean;
+    function TTertiaryNode.docompare(p : TNode) : boolean;
       begin
          docompare:=(inherited docompare(p) and
-           ((third=nil) or third.isequal(ttertiarynode(p).third))
+           ((third=nil) or third.isequal(TTertiaryNode(p).third))
          );
       end;
 
 
-    function ttertiarynode.dogetcopy : tnode;
+    function TTertiaryNode.dogetcopy : TNode;
       var
-         p : ttertiarynode;
+         p : TTertiaryNode;
       begin
-         p:=ttertiarynode(inherited dogetcopy);
+         p:=TTertiaryNode(inherited dogetcopy);
          if assigned(third) then
            p.third:=third.dogetcopy
          else
@@ -1412,12 +1412,12 @@ implementation
       end;
 
 
-    procedure ttertiarynode.insertintolist(l : tnodelist);
+    procedure TTertiaryNode.insertintolist(l : TNodeList);
       begin
       end;
 
 
-    procedure ttertiarynode.printnodedata(var t:text);
+    procedure TTertiaryNode.printnodedata(var t:text);
       begin
          inherited printnodedata(t);
          printnode(t,third);
@@ -1439,7 +1439,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function ttertiarynode.ischild(p : tnode) : boolean;
+    function TTertiaryNode.ischild(p : TNode) : boolean;
       begin
          ischild:=p=third;
       end;
@@ -1447,7 +1447,7 @@ implementation
 
     { Marks the current node for deletion and sets 'third' to nil.
       Returns what 'third' was previously set to }
-    function ttertiarynode.PruneKeepThird: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
+    function TTertiaryNode.PruneKeepThird: TNode; {$IFDEF USEINLINE}inline;{$endif USEINLINE}
       begin
         Result := third;
         third := nil;
@@ -1459,19 +1459,19 @@ implementation
                             TBINOPNODE
  ****************************************************************************}
 
-    constructor tbinopnode.create(t:tnodetype;l,r : tnode);
+    constructor TBinOpNode.create(t:TNodeType;l,r : TNode);
       begin
          inherited create(t,l,r);
       end;
 
 
-    function tbinopnode.docompare(p : tnode) : boolean;
+    function TBinOpNode.docompare(p : TNode) : boolean;
       begin
          docompare:=(inherited docompare(p)) or
            { if that's in the flags, is p then always a tbinopnode (?) (JM) }
            ((tnf_swapable in transientflags) and
-            left.isequal(tbinopnode(p).right) and
-            right.isequal(tbinopnode(p).left));
+            left.isequal(TBinOpNode(p).right) and
+            right.isequal(TBinOpNode(p).left));
       end;
 
 {$ifdef DEBUG_NODE_XML}

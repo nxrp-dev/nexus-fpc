@@ -1493,7 +1493,7 @@ Unit AoptObj;
 
         start := p1;
         if (reg = NR_STACK_POINTER_REG) or
-          (reg = current_procinfo.framepointer) or
+          (reg = CurrentProcInfo.framepointer) or
            not(assigned(p1)) then
           { this happens with registers which are loaded implicitly, outside the  }
           { current block (e.g. esi with self)                                    }
@@ -2519,7 +2519,7 @@ Unit AoptObj;
                     begin
                       if not FindLiveLabel(p1,l) then
                         begin
-                          current_asmdata.getjumplabel(l);
+                          CurrentAsmData.getjumplabel(l);
                           insertllitem(p1,p1.next,tai_label.Create(l));
 
                           ThisLabel.decrefs;
@@ -2658,10 +2658,10 @@ Unit AoptObj;
         PassCount := 0;
 
         { Determine the maximum number of passes allowed based on the compiler switches }
-        if (cs_opt_level3 in current_settings.optimizerswitches) then
+        if (cs_opt_level3 in CurrentSettings.optimizerswitches) then
           { it should never take more than 8 passes, but the limit is finite to protect against faulty optimisations }
           MaxCount := MaxPasses_Pass1[3]
-        else if (cs_opt_level2 in current_settings.optimizerswitches) then
+        else if (cs_opt_level2 in CurrentSettings.optimizerswitches) then
           MaxCount := MaxPasses_Pass1[2] { The original double run of Pass 1 }
         else
           MaxCount := MaxPasses_Pass1[1];
@@ -2766,7 +2766,7 @@ Unit AoptObj;
           if not stoploop then
             NotFirstIteration := True;
 
-        until stoploop or not (cs_opt_level3 in current_settings.optimizerswitches) or (PassCount >= MaxPasses_Pass2);
+        until stoploop or not (cs_opt_level3 in CurrentSettings.optimizerswitches) or (PassCount >= MaxPasses_Pass2);
       end;
 
 

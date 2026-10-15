@@ -97,7 +97,7 @@ implementation
               begin
                 reference_reset_base(href,NR_STACK_POINTER_REG,pop_size,ctempposinvalid,0,[]);
                 { it is better to use lea here }
-                current_asmdata.CurrAsmList.concat(Taicpu.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
+                CurrentAsmData.CurrAsmList.concat(Taicpu.op_ref_reg(A_LEA,TCGSize2OpSize[OS_ADDR],href,NR_ESP));
               end;
             exit;
           end;
@@ -114,8 +114,8 @@ implementation
           it is always the first parameter (apart from hidden parentfp,
           but this one is never put into a register (vs_nonregable set)
           so funcret is always in EAX for register calling }
-        if ((target_info.system = system_i386_win32) and
-            not (target_info.abi=abi_old_win32_gnu)) and
+        if ((TargetInfo.system = system_i386_win32) and
+            not (TargetInfo.abi=abi_old_win32_gnu)) and
             paramanager.ret_in_param(procdefinition.returndef,procdefinition) and
             not ((procdefinition.proccalloption=pocall_register) or
                  ((procdefinition.proccalloption=pocall_internproc) and
@@ -125,24 +125,24 @@ implementation
         { better than an add on all processors }
         if pop_size=4 then
           begin
-            hreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
-            current_asmdata.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+            hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
           end
         { the pentium has two pipes and pop reg is pairable }
         { but the registers must be different!        }
         else
           if (pop_size=8) and
-             not(cs_opt_size in current_settings.optimizerswitches) and
-             (current_settings.optimizecputype=cpu_Pentium) then
+             not(cs_opt_size in CurrentSettings.optimizerswitches) and
+             (CurrentSettings.optimizecputype=cpu_Pentium) then
             begin
-               hreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
-               current_asmdata.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
-               hreg:=cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
-               current_asmdata.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+               hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
+               hreg:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+               CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_POP,S_L,hreg));
             end
         else
           if pop_size<>0 then
-            current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(A_ADD,S_L,pop_size,NR_ESP));
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_ADD,S_L,pop_size,NR_ESP));
       end;
 
 

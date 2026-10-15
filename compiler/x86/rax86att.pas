@@ -130,7 +130,7 @@ Implementation
       begin
         len:=1;
         actasmpattern[len]:='%';
-        c:=current_scanner.asmgetchar;
+        c:=CurrentScanner.asmgetchar;
         { to be a register there must be a letter and not a number }
         if c in ['0'..'9'] then
          begin
@@ -142,25 +142,25 @@ Implementation
             Begin
               inc(len);
               actasmpattern[len]:=c;
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
             end;
            actasmpattern[0]:=chr(len);
            uppervar(actasmpattern);
            if (actasmpattern = '%ST') and (c='(') then
             Begin
               actasmpattern:=actasmpattern+c;
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               if c in ['0'..'9'] then
                actasmpattern:=actasmpattern + c
               else
                Message(asmr_e_invalid_fpu_register);
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               if c <> ')' then
                Message(asmr_e_invalid_fpu_register)
               else
                Begin
                  actasmpattern:=actasmpattern + c;
-                 c:=current_scanner.asmgetchar; { let us point to next character. }
+                 c:=CurrentScanner.asmgetchar; { let us point to next character. }
                end;
             end;
            if is_register(actasmpattern) then
@@ -474,7 +474,7 @@ Implementation
             begin
               { darwin/i386 needs a relsym instead, and we can't }
               { generate this automatically                      }
-              if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) then
+              if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
                 Message(asmr_e_invalid_reference_syntax);
               consume(AS_AT);
               if actasmtoken=AS_ID then
@@ -521,7 +521,7 @@ Implementation
               BuildConstSymbolExpression(true,true,false,l,relsym,asmsymtyp);
               if (relsym<>'') then
                 if not assigned(oper.opr.ref.relsymbol) then
-                  oper.opr.ref.relsymbol:=current_asmdata.RefAsmSymbol(relsym,asmsymtyp)
+                  oper.opr.ref.relsymbol:=CurrentAsmData.RefAsmSymbol(relsym,asmsymtyp)
                 else
                   Message(asmr_e_invalid_reference_syntax)
               else
@@ -608,7 +608,7 @@ Implementation
                     if (oper.opr.val<>0) then
                       Message(asmr_e_wrong_sym_type);
                     oper.opr.typ:=OPR_SYMBOL;
-                    oper.opr.symbol:=current_asmdata.RefAsmSymbol(mangledname,AT_FUNCTION);
+                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(mangledname,AT_FUNCTION);
                   end
                 else
                   inc(oper.opr.val,l);

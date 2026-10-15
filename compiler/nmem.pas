@@ -30,18 +30,18 @@ interface
        symdef,symsym,symtable,symtype;
 
     type
-       tloadvmtaddrnode = class(tunarynode)
+       tloadvmtaddrnode = class(TUnaryNode)
           { unless this is for a call, we have to send the "class" message to
             the objctype because the type information only gets initialized
             after the first message has been sent -> crash if you pass an
             uninitialized type to e.g. class_getInstanceSize() or so. No need
             to save to/restore from ppu. }
           forcall: boolean;
-          constructor create(l : tnode);virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
-          function dogetcopy: tnode; override;
+          constructor create(l : TNode);virtual;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
+          function dogetcopy: TNode; override;
        end;
        tloadvmtaddrnodeclass = class of tloadvmtaddrnode;
 
@@ -52,19 +52,19 @@ interface
            (some parent routine's frame) }
          lpf_forload
        );
-       tloadparentfpnode = class(tunarynode)
+       tloadparentfpnode = class(TUnaryNode)
           parentpd : tprocdef;
           parentpdderef : tderef;
           kind: tloadparentfpkind;
           constructor create(pd: tprocdef; fpkind: tloadparentfpkind);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
-          function dogetcopy : tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
+          function dogetcopy : TNode;override;
        end;
        tloadparentfpnodeclass = class of tloadparentfpnode;
 
@@ -75,14 +75,14 @@ interface
        );
        taddrnodeflags = set of taddrnodeflag;
 
-       taddrnode = class(tunarynode)
+       taddrnode = class(TUnaryNode)
           getprocvardef : tprocvardef;
           getprocvardefderef : tderef;
           addrnodeflags : taddrnodeflags;
-          constructor create(l : tnode);virtual;
-          constructor create_internal(l : tnode); virtual;
-          constructor create_internal_nomark(l : tnode); virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(l : TNode);virtual;
+          constructor create_internal(l : TNode); virtual;
+          constructor create_internal_nomark(l : TNode); virtual;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure mark_write;override;
           procedure buildderefimpl;override;
@@ -91,15 +91,15 @@ interface
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
 {$endif DEBUG_NODE_XML}
-          function docompare(p: tnode): boolean; override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode; override;
+          function docompare(p: TNode): boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode; override;
          protected
           mark_read_written: boolean;
           procedure set_labelsym_resultdef; virtual;
-          function typecheck_non_proc(realsource: tnode; out res: tnode): boolean; virtual;
+          function typecheck_non_proc(realsource: TNode; out res: TNode): boolean; virtual;
        end;
        taddrnodeclass = class of taddrnode;
 
@@ -109,14 +109,14 @@ interface
 
        TDerefNodeFlags = set of TDerefNodeFlag;
 
-       tderefnode = class(tunarynode)
+       tderefnode = class(TUnaryNode)
           derefnodeflags : TDerefNodeFlags;
-          constructor create(l : tnode);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(l : TNode);virtual;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
           procedure mark_write;override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
@@ -124,18 +124,18 @@ interface
        end;
        tderefnodeclass = class of tderefnode;
 
-       tsubscriptnode = class(tunarynode)
+       tsubscriptnode = class(TUnaryNode)
           vs : tfieldvarsym;
           vsderef : tderef;
-          constructor create(varsym : tsym;l : tnode);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(varsym : tsym;l : TNode);virtual;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function docompare(p: tnode): boolean; override;
-          function pass_typecheck:tnode;override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function docompare(p: TNode): boolean; override;
+          function pass_typecheck:TNode;override;
           procedure mark_write;override;
           procedure printnodedata(var T: Text); override;
 {$ifdef DEBUG_NODE_XML}
@@ -152,19 +152,19 @@ interface
 
        TVecNodeFlags = set of TVecNodeFlag;
 
-       tvecnode = class(tbinarynode)
+       tvecnode = class(TBinaryNode)
        protected
-          function first_arraydef : tnode; virtual;
-          function gen_array_rangecheck: tnode; virtual;
+          function first_arraydef : TNode; virtual;
+          function gen_array_rangecheck: TNode; virtual;
        public
           vecnodeflags: TVecNodeFlags;
-          constructor  create(l,r : tnode);virtual;
-          constructor ppuload(t : tnodetype;ppufile : tcompilerppufile);override;
+          constructor  create(l,r : TNode);virtual;
+          constructor ppuload(t : TNodeType;ppufile : tcompilerppufile);override;
           procedure ppuwrite(ppufile : tcompilerppufile);override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode; override;
-          function dogetcopy : tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode; override;
+          function dogetcopy : TNode;override;
           procedure mark_write;override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
@@ -181,7 +181,7 @@ interface
        cvecnode : tvecnodeclass= tvecnode;
        cloadparentfpnode : tloadparentfpnodeclass = tloadparentfpnode;
 
-    function is_big_untyped_addrnode(p: tnode): boolean;
+    function is_big_untyped_addrnode(p: TNode): boolean;
 
 implementation
 
@@ -199,19 +199,19 @@ implementation
                             TLOADVMTADDRNODE
 *****************************************************************************}
 
-    constructor tloadvmtaddrnode.create(l : tnode);
+    constructor tloadvmtaddrnode.create(l : TNode);
       begin
          inherited create(loadvmtaddrn,l);
       end;
 
 
-    function tloadvmtaddrnode.pass_typecheck:tnode;
+    function tloadvmtaddrnode.pass_typecheck:TNode;
       var
         defaultresultdef : boolean;
       begin
         result:=nil;
-        typecheckpass(left);
-        if codegenerror then
+        TypeCheckPass(left);
+        if CodeGenError then
          exit;
 
         case left.resultdef.typ of
@@ -226,12 +226,12 @@ implementation
                   if tstoreddef(left.resultdef).is_generic then
                     begin
                       defaultresultdef:=true;
-                      if assigned(current_structdef) then
+                      if assigned(CurrentStructDef) then
                         begin
-                          if assigned(current_structdef.genericdef) then
-                            if current_structdef.genericdef=left.resultdef then
+                          if assigned(CurrentStructDef.genericdef) then
+                            if CurrentStructDef.genericdef=left.resultdef then
                               begin
-                                resultdef:=cclassrefdef.create(current_structdef);
+                                resultdef:=cclassrefdef.create(CurrentStructDef);
                                 defaultresultdef:=false;
                               end
                             else
@@ -254,7 +254,7 @@ implementation
       end;
 
 
-    function tloadvmtaddrnode.docompare(p: tnode): boolean;
+    function tloadvmtaddrnode.docompare(p: TNode): boolean;
       begin
         result:=inherited docompare(p);
         if result then
@@ -262,14 +262,14 @@ implementation
       end;
 
 
-    function tloadvmtaddrnode.dogetcopy: tnode;
+    function tloadvmtaddrnode.dogetcopy: TNode;
       begin
         result:=inherited dogetcopy;
         tloadvmtaddrnode(result).forcall:=forcall;
       end;
 
 
-    function tloadvmtaddrnode.pass_1 : tnode;
+    function tloadvmtaddrnode.pass_1 : TNode;
       var
         vs: tsym;
       begin
@@ -283,7 +283,7 @@ implementation
                  { on non-fragile ABI platforms, the ISA pointer may be opaque
                    and we must call Object_getClass to obtain the real ISA
                    pointer }
-                 if target_info.system in systems_objc_nfabi then
+                 if TargetInfo.system in systems_objc_nfabi then
                    begin
                      result:=ccallnode.createinternfromunit('OBJC','OBJECT_GETCLASS',ccallparanode.create(left,nil));
                      inserttypeconv_explicit(result,resultdef);
@@ -334,14 +334,14 @@ implementation
         inherited create(loadparentfpn,nil);
         if not assigned(pd) then
           internalerror(200309288);
-        if (pd.parast.symtablelevel>current_procinfo.procdef.parast.symtablelevel) then
+        if (pd.parast.symtablelevel>CurrentProcInfo.procdef.parast.symtablelevel) then
           internalerror(200309284);
         parentpd:=pd;
         kind:=fpkind;
       end;
 
 
-    constructor tloadparentfpnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tloadparentfpnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(parentpdderef);
@@ -371,7 +371,7 @@ implementation
       end;
 
 
-    function tloadparentfpnode.docompare(p: tnode): boolean;
+    function tloadparentfpnode.docompare(p: TNode): boolean;
       begin
         result:=
           inherited docompare(p) and
@@ -380,7 +380,7 @@ implementation
       end;
 
 
-    function tloadparentfpnode.dogetcopy : tnode;
+    function tloadparentfpnode.dogetcopy : TNode;
       var
          p : tloadparentfpnode;
       begin
@@ -391,14 +391,14 @@ implementation
       end;
 
 
-    function tloadparentfpnode.pass_typecheck:tnode;
+    function tloadparentfpnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=parentfpvoidpointertype;
       end;
 
 
-    function tloadparentfpnode.pass_1 : tnode;
+    function tloadparentfpnode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_REGISTER;
@@ -408,7 +408,7 @@ implementation
                              TADDRNODE
 *****************************************************************************}
 
-    constructor taddrnode.create(l : tnode);
+    constructor taddrnode.create(l : TNode);
 
       begin
          inherited create(addrn,l);
@@ -418,21 +418,21 @@ implementation
       end;
 
 
-    constructor taddrnode.create_internal(l : tnode);
+    constructor taddrnode.create_internal(l : TNode);
       begin
         self.create(l);
         include(flags,nf_internal);
       end;
 
 
-    constructor taddrnode.create_internal_nomark(l : tnode);
+    constructor taddrnode.create_internal_nomark(l : TNode);
       begin
         self.create_internal(l);
         mark_read_written := false;
       end;
 
 
-    constructor taddrnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor taddrnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(getprocvardefderef);
@@ -512,7 +512,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function taddrnode.docompare(p: tnode): boolean;
+    function taddrnode.docompare(p: TNode): boolean;
       begin
         result:=
           inherited docompare(p) and
@@ -521,7 +521,7 @@ implementation
       end;
 
 
-    function taddrnode.dogetcopy : tnode;
+    function taddrnode.dogetcopy : TNode;
       var
          p : taddrnode;
       begin
@@ -532,7 +532,7 @@ implementation
       end;
 
 
-    function taddrnode.pass_typecheck:tnode;
+    function taddrnode.pass_typecheck:TNode;
 
       procedure check_mark_read_written;
         begin
@@ -550,14 +550,14 @@ implementation
         end;
 
       var
-         hp : tnode;
+         hp : TNode;
          hsym : tfieldvarsym;
          isprocvar,need_conv_to_voidptr: boolean;
          procpointertype: tdef;
       begin
         result:=nil;
-        typecheckpass(left);
-        if codegenerror then
+        TypeCheckPass(left);
+        if CodeGenError then
          exit;
 
         make_not_regable(left,[ra_addr_regable,ra_addr_taken]);
@@ -582,14 +582,14 @@ implementation
               we can easily get the actual address of a procvar }
             not(nf_internal in flags) and
             (left.resultdef.typ=procvardef) and
-            ((m_tp_procvar in current_settings.modeswitches) or
-             (m_mac_procvar in current_settings.modeswitches))
+            ((m_tp_procvar in CurrentSettings.modeswitches) or
+             (m_mac_procvar in CurrentSettings.modeswitches))
            ) then
           begin
             isprocvar:=(left.resultdef.typ=procvardef);
             need_conv_to_voidptr:=
-              (m_tp_procvar in current_settings.modeswitches) or
-              (m_mac_procvar in current_settings.modeswitches);
+              (m_tp_procvar in CurrentSettings.modeswitches) or
+              (m_mac_procvar in CurrentSettings.modeswitches);
 
             if not isprocvar then
               begin
@@ -599,7 +599,7 @@ implementation
                 if anf_ofs in addrnodeflags then
                   include(ttypeconvnode(left).convnodeflags,tcnf_proc_2_procvar_get_offset_only);
                 left.fileinfo:=fileinfo;
-                typecheckpass(left);
+                TypeCheckPass(left);
               end;
 
             { In tp procvar mode the result is always a voidpointer. Insert
@@ -654,7 +654,7 @@ implementation
           begin
             hp:=left;
             while assigned(hp) and (hp.nodetype in [typeconvn,derefn,subscriptn]) do
-              hp:=tunarynode(hp).left;
+              hp:=TUnaryNode(hp).left;
             if not assigned(hp) then
               internalerror(200412042);
             if typecheck_non_proc(hp,result) then
@@ -673,7 +673,7 @@ implementation
       end;
 
 
-    function taddrnode.simplify(forinline : boolean) : tnode;
+    function taddrnode.simplify(forinline : boolean) : TNode;
 
         function compatible_with_offsetof(res : tdef) : boolean;
           begin
@@ -683,7 +683,7 @@ implementation
 
       var
         hsym : tfieldvarsym;
-        hp : tnode;
+        hp : TNode;
         fieldoffset : asizeint;
         resdef : tdef;
         index : int64;
@@ -782,9 +782,9 @@ implementation
       end;
 
 
-    function taddrnode.typecheck_non_proc(realsource: tnode; out res: tnode): boolean;
+    function taddrnode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
       var
-         hp  : tnode;
+         hp  : TNode;
          hsym : tfieldvarsym;
          offset: asizeint;
       begin
@@ -817,7 +817,7 @@ implementation
                   end
                 else
                   inc(offset,hsym.fieldoffset);
-                hp:=tunarynode(hp).left;
+                hp:=TUnaryNode(hp).left;
               end;
             if anf_typedaddr in addrnodeflags then
               res:=cpointerconstnode.create(offset,cpointerdef.getreusable(left.resultdef))
@@ -837,11 +837,11 @@ implementation
       end;
 
 
-    function taddrnode.pass_1 : tnode;
+    function taddrnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         if codegenerror then
+         FirstPass(left);
+         if CodeGenError then
           exit;
 
          { is this right for object of methods ?? }
@@ -853,13 +853,13 @@ implementation
                              TDEREFNODE
 *****************************************************************************}
 
-    constructor tderefnode.create(l : tnode);
+    constructor tderefnode.create(l : TNode);
       begin
          inherited create(derefn,l);
       end;
 
 
-    constructor tderefnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tderefnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(derefnodeflags));
@@ -873,7 +873,7 @@ implementation
       end;
 
 
-    function tderefnode.dogetcopy : tnode;
+    function tderefnode.dogetcopy : TNode;
       var
         n: TDerefNode;
       begin
@@ -883,12 +883,12 @@ implementation
       end;
 
 
-    function tderefnode.pass_typecheck:tnode;
+    function tderefnode.pass_typecheck:TNode;
       begin
          result:=nil;
-         typecheckpass(left);
+         TypeCheckPass(left);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
           exit;
 
          { tp procvar support }
@@ -911,11 +911,11 @@ implementation
       include(flags,nf_write);
     end;
 
-    function tderefnode.pass_1 : tnode;
+    function tderefnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         if codegenerror then
+         FirstPass(left);
+         if CodeGenError then
           exit;
 
          expectloc:=LOC_REFERENCE;
@@ -948,7 +948,7 @@ implementation
                             TSUBSCRIPTNODE
 *****************************************************************************}
 
-    constructor tsubscriptnode.create(varsym : tsym;l : tnode);
+    constructor tsubscriptnode.create(varsym : tsym;l : TNode);
 
       begin
          inherited create(subscriptn,l);
@@ -956,7 +956,7 @@ implementation
          vs:=tfieldvarsym(varsym);
       end;
 
-    constructor tsubscriptnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tsubscriptnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(vsderef);
@@ -984,7 +984,7 @@ implementation
       end;
 
 
-    function tsubscriptnode.dogetcopy : tnode;
+    function tsubscriptnode.dogetcopy : TNode;
       var
          p : tsubscriptnode;
       begin
@@ -994,10 +994,10 @@ implementation
       end;
 
 
-    function tsubscriptnode.pass_typecheck:tnode;
+    function tsubscriptnode.pass_typecheck:TNode;
       begin
         result:=nil;
-        typecheckpass(left);
+        TypeCheckPass(left);
         { tp procvar support }
         maybe_call_procvar(left,true);
         resultdef:=vs.vardef;
@@ -1022,11 +1022,11 @@ implementation
       end;
 
 
-    function tsubscriptnode.pass_1 : tnode;
+    function tsubscriptnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         if codegenerror then
+         FirstPass(left);
+         if CodeGenError then
           exit;
 
          { several object types must be dereferenced implicitly }
@@ -1060,7 +1060,7 @@ implementation
            end;
       end;
 
-    function tsubscriptnode.docompare(p: tnode): boolean;
+    function tsubscriptnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -1085,14 +1085,14 @@ implementation
                                TVECNODE
 *****************************************************************************}
 
-    constructor tvecnode.create(l,r : tnode);
+    constructor tvecnode.create(l,r : TNode);
       begin
          inherited create(vecn,l,r);
          vecnodeflags:=[];
       end;
 
 
-    constructor tvecnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tvecnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(vecnodeflags));
@@ -1106,7 +1106,7 @@ implementation
       end;
 
 
-    function tvecnode.pass_typecheck:tnode;
+    function tvecnode.pass_typecheck:TNode;
       var
          htype,elementdef,elementptrdef : tdef;
          newordtyp: tordtype;
@@ -1114,8 +1114,8 @@ implementation
          minvalue, maxvalue: Tconstexprint;
       begin
          result:=nil;
-         typecheckpass(left);
-         typecheckpass(right);
+         TypeCheckPass(left);
+         TypeCheckPass(right);
 
          { implicitly convert stringconstant to stringdef,
            see tbs/tb0476.pas for a test }
@@ -1145,7 +1145,7 @@ implementation
          to do anything else here, just like for loadn's
 }
          set_varstate(right,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
           exit;
 
          { maybe type conversion for the index value, but
@@ -1196,7 +1196,7 @@ implementation
                      so do not skip the type conversion in case of range checking
 
                      After all, range checking is a safety mean }
-                     (cs_check_range in current_settings.localswitches)) then
+                     (cs_check_range in CurrentSettings.localswitches)) then
                    {Convert array indexes to low_bound..high_bound.}
                    inserttypeconv(right,cenumdef.create_subrange(tenumdef(right.resultdef),
                                                       asizeint(Tarraydef(left.resultdef).lowrange),
@@ -1256,7 +1256,7 @@ implementation
                    begin
                      inserttypeconv(right,htype);
                      { insert type conversion so cse can pick it up }
-                     if (htype.size<ptrsinttype.size) and is_integer(htype) and not(cs_check_range in current_settings.localswitches) then
+                     if (htype.size<ptrsinttype.size) and is_integer(htype) and not(cs_check_range in CurrentSettings.localswitches) then
                        inserttypeconv_internal(right,ptrsinttype);
                    end;
                end;
@@ -1324,7 +1324,7 @@ implementation
                  (except voidpointer) in delphi/tp7 it's only allowed for pchars. }
                if not is_voidpointer(left.resultdef) and
                   (
-                   (cs_pointermath in current_settings.localswitches) or
+                   (cs_pointermath in CurrentSettings.localswitches) or
                    tpointerdef(left.resultdef).has_pointer_math or
                    is_pchar(left.resultdef) or
                    is_pwidechar(left.resultdef)
@@ -1370,7 +1370,7 @@ implementation
                    if (right.nodetype=ordconstn) and
                       (Tordconstnode(right).value.svalue=0) and
                       not is_shortstring(left.resultdef) and
-                      not(cs_zerobasedstrings in current_settings.localswitches) then
+                      not(cs_zerobasedstrings in CurrentSettings.localswitches) then
                      CGMessage(cg_e_can_access_element_zero);
                    resultdef:=elementdef;
                  end;
@@ -1395,29 +1395,29 @@ implementation
       end;
 
 
-    function tvecnode.pass_1 : tnode;
+    function tvecnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         firstpass(right);
-         if codegenerror then
+         FirstPass(left);
+         FirstPass(right);
+         if CodeGenError then
            exit;
 
          if (vnf_callunique in vecnodeflags) and
             (is_ansistring(left.resultdef) or
              is_unicodestring(left.resultdef) or
-            (is_widestring(left.resultdef) and not(tf_winlikewidestring in target_info.flags))) then
+            (is_widestring(left.resultdef) and not(tf_winlikewidestring in TargetInfo.flags))) then
            begin
              left := ctypeconvnode.create_internal(ccallnode.createintern('fpc_'+tstringdef(left.resultdef).stringtypname+'_unique',
                ccallparanode.create(
                  ctypeconvnode.create_internal(left,voidpointertype),nil)),
                left.resultdef);
-             firstpass(left);
+             FirstPass(left);
              { double resultdef passes somewhere else may cause this to be }
              { reset though :/                                             }
              exclude(vecnodeflags,vnf_callunique);
            end
-         else if is_widestring(left.resultdef) and (tf_winlikewidestring in target_info.flags) then
+         else if is_widestring(left.resultdef) and (tf_winlikewidestring in TargetInfo.flags) then
            exclude(vecnodeflags,vnf_callunique);
 
          { a range node as array index can only appear in function calls, and
@@ -1437,7 +1437,7 @@ implementation
       end;
 
 
-    function tvecnode.simplify(forinline : boolean) : tnode;
+    function tvecnode.simplify(forinline : boolean) : TNode;
       begin
         Result := nil;
         { If left is a string constant and right is an ordinal constant, then
@@ -1484,7 +1484,7 @@ implementation
       end;
 
 
-    function tvecnode.dogetcopy: tnode;
+    function tvecnode.dogetcopy: TNode;
       var
         n: tvecnode;
       begin
@@ -1494,7 +1494,7 @@ implementation
       end;
 
 
-    function tvecnode.first_arraydef: tnode;
+    function tvecnode.first_arraydef: TNode;
       begin
         result:=nil;
         if (not is_packed_array(left.resultdef)) or
@@ -1511,13 +1511,13 @@ implementation
       end;
 
 
-    function tvecnode.gen_array_rangecheck: tnode;
+    function tvecnode.gen_array_rangecheck: TNode;
     var
       htype: tdef;
       temp: ttempcreatenode;
       stat: tstatementnode;
-      indextree: tnode;
-      hightree: tnode;
+      indextree: TNode;
+      hightree: TNode;
     begin
       result:=nil;
 
@@ -1528,7 +1528,7 @@ implementation
         made a regvar in case this is a nested routine relative to the
         array parameter -> generate te check at the node tree level
         rather than in the code generator }
-      if (cs_check_range in current_settings.localswitches) and
+      if (cs_check_range in CurrentSettings.localswitches) and
          (is_open_array(left.resultdef) or
           is_array_of_const(left.resultdef)) and
          (right.nodetype<>rangen) then
@@ -1549,13 +1549,13 @@ implementation
                   temp:=ctempcreatenode.create(right.resultdef,right.resultdef.size,tt_persistent,true);
                   addstatement(stat,temp);
                   { needed so we can typecheck its temprefnodes }
-                  typecheckpass(tnode(temp));
+                  TypeCheckPass(TNode(temp));
                   addstatement(stat,cassignmentnode.create(
                     ctemprefnode.create(temp),right)
                   );
                   right:=ctemprefnode.create(temp);
                   { right.resultdef is used below }
-                  typecheckpass(right);
+                  TypeCheckPass(right);
                 end;
               { range check will be made explicit here }
               exclude(localswitches,cs_check_range);
@@ -1627,7 +1627,7 @@ implementation
 {$endif DEBUG_NODE_XML}
 
 
-    function is_big_untyped_addrnode(p: tnode): boolean;
+    function is_big_untyped_addrnode(p: TNode): boolean;
       begin
         is_big_untyped_addrnode:=(p.nodetype=addrn) and
           not (anf_typedaddr in taddrnode(p).addrnodeflags) and

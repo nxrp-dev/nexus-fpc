@@ -64,39 +64,39 @@ interface
     tmhs_flags = set of tmhs_flag;
     pmhs_flags = ^tmhs_flags;
 
-    foreachnodefunction = function(var n: tnode; arg: pointer): foreachnoderesult of object;
-    staticforeachnodefunction = function(var n: tnode; arg: pointer): foreachnoderesult;
+    foreachnodefunction = function(var n: TNode; arg: pointer): foreachnoderesult of object;
+    staticforeachnodefunction = function(var n: TNode; arg: pointer): foreachnoderesult;
 
-    function foreachnode(var n: tnode; f: foreachnodefunction; arg: pointer): boolean;
-    function foreachnode(procmethod : tforeachprocmethod; var n: tnode; f: foreachnodefunction; arg: pointer): boolean;
-    function foreachnodestatic(var n: tnode; f: staticforeachnodefunction; arg: pointer): boolean;
-    function foreachnodestatic(procmethod : tforeachprocmethod; var n: tnode; f: staticforeachnodefunction; arg: pointer): boolean;
+    function foreachnode(var n: TNode; f: foreachnodefunction; arg: pointer): boolean;
+    function foreachnode(procmethod : tforeachprocmethod; var n: TNode; f: foreachnodefunction; arg: pointer): boolean;
+    function foreachnodestatic(var n: TNode; f: staticforeachnodefunction; arg: pointer): boolean;
+    function foreachnodestatic(procmethod : tforeachprocmethod; var n: TNode; f: staticforeachnodefunction; arg: pointer): boolean;
 
     { checks if the given node tree contains only nodes of the given type,
       if this isn't the case, an ie is thrown
     }
-    procedure checktreenodetypes(n : tnode;typeset : tnodetypeset);
+    procedure checktreenodetypes(n : TNode;typeset : TNodeTypeSet);
 
-    procedure load_procvar_from_calln(var p1:tnode);
+    procedure load_procvar_from_calln(var p1:TNode);
     function get_local_or_para_sym(const aname: string): tabstractvarsym;
-    function maybe_call_procvar(var p1:tnode;tponly:boolean):boolean;
-    function load_high_value_node(vs:tparavarsym):tnode;
-    function load_self_node:tnode;
-    function load_result_node:tnode;
-    function load_safecallresult_node:tnode;
-    function load_self_pointer_node:tnode;
-    function load_vmt_pointer_node:tnode;
-    function is_self_node(p:tnode):boolean;
+    function maybe_call_procvar(var p1:TNode;tponly:boolean):boolean;
+    function load_high_value_node(vs:tparavarsym):TNode;
+    function load_self_node:TNode;
+    function load_result_node:TNode;
+    function load_safecallresult_node:TNode;
+    function load_self_pointer_node:TNode;
+    function load_vmt_pointer_node:TNode;
+    function is_self_node(p:TNode):boolean;
     { create a tree that loads the VMT based on a self-node of an object/class/
       interface }
-    function load_vmt_for_self_node(self_node: tnode): tnode;
+    function load_vmt_for_self_node(self_node: TNode): TNode;
 
-    function node_complexity(p: tnode): cardinal;
-    function node_resources_fpu(p: tnode): cardinal;
-    procedure node_tree_set_filepos(var n:tnode;const filepos:tfileposinfo);
+    function node_complexity(p: TNode): cardinal;
+    function node_resources_fpu(p: TNode): cardinal;
+    procedure node_tree_set_filepos(var n:TNode;const filepos:TFilePosInfo);
 
     { tries to simplify the given node after inlining }
-    procedure doinlinesimplify(var n : tnode);
+    procedure doinlinesimplify(var n : TNode);
 
     { creates an ordinal constant, optionally based on the result from a
       simplify operation: normally the type is the smallest integer type
@@ -104,102 +104,102 @@ interface
       which was determined during an earlier typecheck pass (because the value
       may e.g. be a parameter to a call, which needs to be of the declared
       parameter type) }
-    function create_simplified_ord_const(const value: tconstexprint; def: tdef; forinline, rangecheck: boolean): tnode;
+    function create_simplified_ord_const(const value: tconstexprint; def: tdef; forinline, rangecheck: boolean): TNode;
 
     { returns true if n is only a tree of administrative nodes
       containing no code }
-    function has_no_code(n : tnode) : boolean;
+    function has_no_code(n : TNode) : boolean;
 
-    procedure propaccesslist_to_node(var p1:tnode;st:TSymtable;pl:tpropaccesslist);
-    function node_to_propaccesslist(p1:tnode):tpropaccesslist;
+    procedure propaccesslist_to_node(var p1:TNode;st:TSymtable;pl:tpropaccesslist);
+    function node_to_propaccesslist(p1:TNode):tpropaccesslist;
 
     { checks whether sym is a static field and if so, translates the access
       to the appropriate node tree }
-    function handle_staticfield_access(sym: tsym; var p1: tnode): boolean;
+    function handle_staticfield_access(sym: tsym; var p1: TNode): boolean;
 
     { returns true if n is an array element access of a bitpacked array with
       elements of the which the vitsize mod 8 <> 0, or if is a field access
       with bitsize mod 8 <> 0 or bitoffset mod 8 <> 0 of an element in a
       bitpacked structure }
-    function is_bitpacked_access(n: tnode): boolean;
+    function is_bitpacked_access(n: TNode): boolean;
 
     { creates a load of field 'fieldname' in the record/class/...
       represented by n }
-    function genloadfield(n: tnode; const fieldname: string): tnode;
+    function genloadfield(n: TNode; const fieldname: string): TNode;
 
     { returns true, if the tree given might have side effects }
-    function might_have_sideeffects(n : tnode;const flags : tmhs_flags = []) : boolean;
+    function might_have_sideeffects(n : TNode;const flags : tmhs_flags = []) : boolean;
 
     { returns true, if n contains nodes which might be conditionally executed }
-    function has_conditional_nodes(n : tnode) : boolean;
+    function has_conditional_nodes(n : TNode) : boolean;
 
     { count the number of nodes in the node tree,
       rough estimation how large the tree "node" is
       If more than max nodes, returns max, so node_count(n, 10 + 1) <= 10 answers whether the tree has ≤10 nodes but avoids traversing the remaining 990. }
-    function node_count(node : tnode; max : dword = High(dword)) : dword;
+    function node_count(node : TNode; max : dword = High(dword)) : dword;
 
-    function node_count_weighted(node : tnode; max : dword = High(dword)) : dword;
+    function node_count_weighted(node : TNode; max : dword = High(dword)) : dword;
 
     { returns true, if the value described by node is constant/immutable, this approximation is safe
       if no dirty tricks like buffer overflows or pointer magic are used }
-    function is_const(node : tnode) : boolean;
+    function is_const(node : TNode) : boolean;
 
     { returns a pointer to the real node a node refers to,
       skipping (absolute) equal type conversions. Returning
       a pointer allows the caller to move/remove/replace this
       node
     }
-    function actualtargetnode(n : pnode) : pnode;
+    function actualtargetnode(n : PNode) : PNode;
 
     { moves src into dest, before doing so, right is set to nil and dest is freed.
       Because dest and src are var parameters, this can be done inline in an existing
       node tree }
-    procedure replacenode(var dest,src : tnode);
+    procedure replacenode(var dest,src : TNode);
 
     { strip off deref/addr combinations when looking for a the load node of an open array/array of const
       since there is no possibility to defined a pointer to an open array/array of const, we have not to
       take care of type casts, further, it means also that deref/addr nodes must always appear coupled
     }
-    function get_open_const_array(p : tnode) : tnode;
+    function get_open_const_array(p : TNode) : TNode;
 
     { excludes the flags passed in nf from the node tree passed }
-    procedure node_reset_flags(p : tnode;nf : TNodeFlags; tnf : TTransientNodeFlags);
+    procedure node_reset_flags(p : TNode;nf : TNodeFlags; tnf : TTransientNodeFlags);
 
     { include or exclude cs from p.localswitches }
-    procedure node_change_local_switch(p : tnode;cs : tlocalswitch;enable : boolean);
+    procedure node_change_local_switch(p : TNode;cs : TLocalSwitch;enable : boolean);
 
     { returns true, if p is a node which shall be short boolean evaluated,
       if it is not an orn/andn with boolean operands, the result is undefined }
-    function doshortbooleval(p : tnode) : Boolean;
+    function doshortbooleval(p : TNode) : Boolean;
 
     { returns true if the node has the int value l }
-    function is_constintvalue(p : tnode;l : Tconstexprint) : Boolean;
+    function is_constintvalue(p : TNode;l : Tconstexprint) : Boolean;
 
     { if the node is a constant node which can be an int value, this value is returned }
-    function get_int_value(p : tnode): Tconstexprint;
+    function get_int_value(p : TNode): Tconstexprint;
 
     { returns true if the node is an inline node of type i }
-    function is_inlinefunction(p : tnode;i : tinlinenumber) : Boolean;
+    function is_inlinefunction(p : TNode;i : tinlinenumber) : Boolean;
 
     { checks if p is a series of length(a) statements, if yes, they are returned
       in a and the function returns true }
-    function GetStatements(p : tnode;var a : array of tstatementnode) : Boolean;
+    function GetStatements(p : TNode;var a : array of tstatementnode) : Boolean;
 
     { checks if p is a single statement, if yes, it is returned in s }
-    function IsSingleStatement(p : tnode;var s : tnode) : Boolean;
+    function IsSingleStatement(p : TNode;var s : TNode) : Boolean;
 
     { gets the last statement in a sequence of statements/blocks }
-    function GetLastStatement(p : tnode) : tnode;
+    function GetLastStatement(p : TNode) : TNode;
 
     type
-      TMatchProc2 = function(n1,n2 : tnode) : Boolean is nested;
-      TTransformProc2 = function(n1,n2 : tnode) : tnode is nested;
-      TMatchProc4 = function(n1,n2,n3,n4 : tnode) : Boolean is nested;
-      TTransformProc4 = function(n1,n2,n3,n4 : tnode) : tnode is nested;
+      TMatchProc2 = function(n1,n2 : TNode) : Boolean is nested;
+      TTransformProc2 = function(n1,n2 : TNode) : TNode is nested;
+      TMatchProc4 = function(n1,n2,n3,n4 : TNode) : Boolean is nested;
+      TTransformProc4 = function(n1,n2,n3,n4 : TNode) : TNode is nested;
 
     { calls matchproc with n1 and n2 as parameters, if it returns true, transformproc is called, does the same with the nodes swapped,
       the result of transformproc is assigned to res }
-    function MatchAndTransformNodesCommutative(n1,n2 : tnode;matchproc : TMatchProc2;transformproc : TTransformProc2;var res : tnode) : Boolean;
+    function MatchAndTransformNodesCommutative(n1,n2 : TNode;matchproc : TMatchProc2;transformproc : TTransformProc2;var res : TNode) : Boolean;
 
     { calls matchproc with n1, n2, n3 and n4 as parameters being considered as the leafs of commutative nodes so all 8 possible
       combinations are tested, if it returns true, transformproc is called,
@@ -207,18 +207,18 @@ interface
 
       this allows to find pattern like (3*a)+(3*b) and transform them into 3*(a+b)
     }
-    function MatchAndTransformNodesCommutative(n1,n2,n3,n4 : tnode;matchproc : TMatchProc4;transformproc : TTransformProc4;var res : tnode) : Boolean;
+    function MatchAndTransformNodesCommutative(n1,n2,n3,n4 : TNode;matchproc : TMatchProc4;transformproc : TTransformProc4;var res : TNode) : Boolean;
 
     {
       resets all flags so that nf_write/nf_modify information is regenerated
     }
-    procedure node_reset_pass1_write(n: tnode);
+    procedure node_reset_pass1_write(n: TNode);
 
     { Returns True if n one of its children has a type that appears in TypeList }
     function has_node_of_type(n: TNode; TypeList: TNodeTypeSet): Boolean; {$IFDEF USEINLINE}inline;{$ENDIF USEINLINE}
 
     { returns true if n is guranteed not to return an ordinal zero }
-    function node_not_zero(n : tnode) : Boolean;
+    function node_not_zero(n : TNode) : Boolean;
 
 
 implementation
@@ -237,13 +237,13 @@ implementation
         f: staticforeachnodefunction;
         arg: pointer;
         res: boolean;
-        procedure perform(var n: tnode);
-        procedure process_children(n: tnode);
+        procedure perform(var n: TNode);
+        procedure process_children(n: TNode);
         procedure process_casenode(n: tcasenode);
       end;
 
 
-    procedure ForEachNodeContext.perform(var n: tnode);
+    procedure ForEachNodeContext.perform(var n: TNode);
       var
         fr: foreachnoderesult;
       begin
@@ -269,7 +269,7 @@ implementation
       end;
 
 
-    procedure ForEachNodeContext.process_children(n: tnode);
+    procedure ForEachNodeContext.process_children(n: TNode);
       begin
         case n.nodetype of
           asn:
@@ -280,15 +280,15 @@ implementation
               end;
           calln:
             begin
-              perform(tnode(tcallnode(n).callinitblock));
+              perform(TNode(tcallnode(n).callinitblock));
               perform(tcallnode(n).methodpointer);
               perform(tcallnode(n).funcretnode);
-              perform(tnode(tcallnode(n).vmt_entry));
-              perform(tnode(tcallnode(n).callcleanupblock));
+              perform(TNode(tcallnode(n).vmt_entry));
+              perform(TNode(tcallnode(n).callcleanupblock));
             end;
           callparan:
             begin
-              perform(tnode(tcallparanode(n).fparainit));
+              perform(TNode(tcallparanode(n).fparainit));
               perform(tcallparanode(n).fparacopyback);
             end;
           ifn, whilerepeatn, forn, tryexceptn:
@@ -298,7 +298,7 @@ implementation
             end;
           raisen, tryfinallyn:
             { frame tree/copy of finally code }
-            perform(ttertiarynode(n).third);
+            perform(TTertiaryNode(n).third);
           tempcreaten:
             { temp. initialization code }
             if assigned(ttempcreatenode(n).tempinfo^.tempinitcode) then
@@ -308,14 +308,14 @@ implementation
           else
             ;
         end;
-        if n.inheritsfrom(tbinarynode) then
+        if n.inheritsfrom(TBinaryNode) then
           begin
             { first process the "payload" of statementnodes }
-            perform(tbinarynode(n).left);
-            perform(tbinarynode(n).right);
+            perform(TBinaryNode(n).left);
+            perform(TBinaryNode(n).right);
           end
-        else if n.inheritsfrom(tunarynode) then
-          perform(tunarynode(n).left);
+        else if n.inheritsfrom(TUnaryNode) then
+          perform(TUnaryNode(n).left);
       end;
 
 
@@ -341,7 +341,7 @@ implementation
         arg: pointer;
       end;
 
-    function BoundToStaticForEachNodeAdapter(var n: tnode; arg: pointer): foreachnoderesult;
+    function BoundToStaticForEachNodeAdapter(var n: TNode; arg: pointer): foreachnoderesult;
       var
         adaptCtx: ^BoundToStaticForEachNodeContext absolute arg;
       begin
@@ -349,7 +349,7 @@ implementation
       end;
 
 
-    function foreachnode(procmethod : tforeachprocmethod;var n: tnode; f: foreachnodefunction; arg: pointer): boolean;
+    function foreachnode(procmethod : tforeachprocmethod;var n: TNode; f: foreachnodefunction; arg: pointer): boolean;
       var
         adaptCtx: BoundToStaticForEachNodeContext;
       begin
@@ -359,13 +359,13 @@ implementation
       end;
 
 
-    function foreachnode(var n: tnode; f: foreachnodefunction; arg: pointer): boolean;
+    function foreachnode(var n: TNode; f: foreachnodefunction; arg: pointer): boolean;
       begin
         result:=foreachnode(pm_postprocess,n,f,arg);
       end;
 
 
-    function foreachnodestatic(procmethod : tforeachprocmethod;var n: tnode; f: staticforeachnodefunction; arg: pointer): boolean;
+    function foreachnodestatic(procmethod : tforeachprocmethod;var n: TNode; f: staticforeachnodefunction; arg: pointer): boolean;
       var
         fen: ForEachNodeContext;
       begin
@@ -378,29 +378,29 @@ implementation
       end;
 
 
-    function foreachnodestatic(var n: tnode; f: staticforeachnodefunction; arg: pointer): boolean;
+    function foreachnodestatic(var n: TNode; f: staticforeachnodefunction; arg: pointer): boolean;
       begin
         result:=foreachnodestatic(pm_postprocess,n,f,arg);
       end;
 
 
-    function do_check(var n: tnode; arg: pointer): foreachnoderesult;
+    function do_check(var n: TNode; arg: pointer): foreachnoderesult;
       begin
-        if not(n.nodetype in pnodetypeset(arg)^) then
+        if not(n.nodetype in PNodeTypeSet(arg)^) then
           internalerror(200610141);
         result:=fen_true;
       end;
 
 
-    procedure checktreenodetypes(n : tnode;typeset : tnodetypeset);
+    procedure checktreenodetypes(n : TNode;typeset : TNodeTypeSet);
       begin
         foreachnodestatic(n,@do_check,@typeset);
       end;
 
 
-    procedure load_procvar_from_calln(var p1:tnode);
+    procedure load_procvar_from_calln(var p1:TNode);
       var
-        p2 : tnode;
+        p2 : TNode;
       begin
         if p1.nodetype<>calln then
           internalerror(200212251);
@@ -422,15 +422,15 @@ implementation
                (tcallnode(p1).methodpointer.nodetype<>typen) then
               tloadnode(p2).set_mp(tcallnode(p1).methodpointer.getcopy);
           end;
-        typecheckpass(p2);
+        TypeCheckPass(p2);
         p1.free;
         p1:=p2;
       end;
 
 
-    function maybe_call_procvar(var p1:tnode;tponly:boolean):boolean;
+    function maybe_call_procvar(var p1:TNode;tponly:boolean):boolean;
       var
-        hp : tnode;
+        hp : TNode;
       begin
         result:=false;
         if not (p1.resultdef.typ in [procvardef,objectdef]) or
@@ -446,7 +446,7 @@ implementation
              )
            ) or
            (tponly and
-            not(m_tp_procvar in current_settings.modeswitches)) then
+            not(m_tp_procvar in CurrentSettings.modeswitches)) then
           exit;
         { ignore vecn,subscriptn }
         hp:=p1;
@@ -456,7 +456,7 @@ implementation
             derefn,
             typeconvn,
             subscriptn :
-              hp:=tunarynode(hp).left;
+              hp:=TUnaryNode(hp).left;
             blockn:
               hp:=laststatement(tblocknode(hp)).left
             else
@@ -467,7 +467,7 @@ implementation
         if (hp.nodetype in [calln,loadn,temprefn]) then
           begin
             hp:=ccallnode.create_procvar(nil,p1);
-            typecheckpass(hp);
+            TypeCheckPass(hp);
             p1:=hp;
             result:=true;
           end;
@@ -482,12 +482,12 @@ implementation
         ressym:=nil;
         result:=nil;
         { is not assigned while parsing a property }
-        if not assigned(current_procinfo) then
+        if not assigned(CurrentProcInfo) then
           exit;
         { we can't use searchsym here, because the
           symtablestack is not fully setup when pass1
           is run for nested procedures }
-        pd:=current_procinfo.procdef;
+        pd:=CurrentProcInfo.procdef;
         repeat
           ressym:=tsym(pd.localst.Find(aname));
           if assigned(ressym) then
@@ -510,39 +510,39 @@ implementation
 
 
 
-    function load_high_value_node(vs:tparavarsym):tnode;
+    function load_high_value_node(vs:tparavarsym):TNode;
       begin
         result:=gen_load_var(get_high_value_sym(vs));
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function load_self_node:tnode;
+    function load_self_node:TNode;
       begin
         result:=gen_load_var(get_local_or_para_sym('self'));
         if result.nodetype=loadn then
           include(tloadnode(result).loadnodeflags,loadnf_is_self)
         else if result.nodetype<>errorn then
           internalerror(2020122603);
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function load_result_node:tnode;
+    function load_result_node:TNode;
       begin
         result:=gen_load_var(get_local_or_para_sym('result'));
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function load_safecallresult_node: tnode;
+    function load_safecallresult_node: TNode;
       begin
         result:=gen_load_var(get_local_or_para_sym('safecallresult'));
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function load_self_pointer_node:tnode;
+    function load_self_pointer_node:TNode;
       var
         srsym : tabstractvarsym;
       begin
@@ -556,18 +556,18 @@ implementation
             else if result.nodetype<>errorn then
               internalerror(2020122602);
           end;
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function load_vmt_pointer_node:tnode;
+    function load_vmt_pointer_node:TNode;
       begin
         result:=gen_load_var(get_local_or_para_sym('vmt'));
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function is_self_node(p:tnode):boolean;
+    function is_self_node(p:TNode):boolean;
       begin
         is_self_node:=(p.nodetype=loadn) and
                       (tloadnode(p).symtableentry.typ=paravarsym) and
@@ -575,13 +575,13 @@ implementation
       end;
 
 
-    function load_vmt_for_self_node(self_node: tnode): tnode;
+    function load_vmt_for_self_node(self_node: TNode): TNode;
       var
         self_resultdef: tdef;
         obj_def: tobjectdef;
         self_temp,
         vmt_temp: ttempcreatenode;
-        check_self,n: tnode;
+        check_self,n: TNode;
         stat: tstatementnode;
         block: tblocknode;
         paras: tcallparanode;
@@ -613,7 +613,7 @@ implementation
           not(is_interface(obj_def)) and
           not(is_cppclass(obj_def)) and
           not(is_objc_class_or_protocol(obj_def)) and
-          (([cs_check_object,cs_check_range]*current_settings.localswitches)<>[]);
+          (([cs_check_object,cs_check_range]*CurrentSettings.localswitches)<>[]);
 
         block:=nil;
         stat:=nil;
@@ -679,14 +679,14 @@ implementation
         result:=ctypeconvnode.create_explicit(
           result,
           cpointerdef.getreusable(obj_def.vmt_def));
-        typecheckpass(result);
+        TypeCheckPass(result);
         if docheck then
           begin
             { add a vmt validity check }
             vmt_temp:=ctempcreatenode.create_value(result.resultdef,result.resultdef.size,tt_persistent,true,result);
             addstatement(stat,vmt_temp);
             paras:=ccallparanode.create(ctemprefnode.create(vmt_temp),nil);
-            if cs_check_object in current_settings.localswitches then
+            if cs_check_object in CurrentSettings.localswitches then
               begin
                 paras:=ccallparanode.create(
                   cloadvmtaddrnode.create(ctypenode.create(obj_def)),
@@ -716,7 +716,7 @@ implementation
     { trees containing a call, the rest can be balanced more or less }
     { at will, probably best mainly in terms of required memory      }
     { accesses                                                       }
-    function node_complexity(p: tnode): cardinal;
+    function node_complexity(p: TNode): cardinal;
 
     {$ifdef x86}
       function in_const_set_complexity(cs: tsetconstnode): cardinal;
@@ -726,7 +726,7 @@ implementation
           { maxranges value should match the logic in nx86set.pas:tx86innode.pass_generate_code.analizeset. }
           if is_smallset(cs.resultdef) then
             maxranges:=3
-          else if cs_opt_size in current_settings.optimizerswitches then
+          else if cs_opt_size in CurrentSettings.optimizerswitches then
             maxranges:=8
           else
             maxranges:=5;
@@ -801,32 +801,32 @@ implementation
                 end;
               subscriptn:
                 begin
-                  if is_implicit_pointer_object_type(tunarynode(p).left.resultdef) or
+                  if is_implicit_pointer_object_type(TUnaryNode(p).left.resultdef) or
                     is_bitpacked_access(p) then
                     inc(cv,2)
                   { non-packed, int. regable records cause no extra
                     overhead no overhead if the fields are aligned to register boundaries }
                   else if tstoreddef(p.resultdef).is_intregable and (tsubscriptnode(p).vs.fieldoffset mod sizeof(aint)<>0) then
                     inc(cv,1);
-                  p:=tunarynode(p).left;
+                  p:=TUnaryNode(p).left;
                 end;
               blockn:
-                p:=tunarynode(p).left;
+                p:=TUnaryNode(p).left;
               callparan:
                 begin
                   { call to decr? }
-                  if is_managed_type(tunarynode(p).left.resultdef) and
+                  if is_managed_type(TUnaryNode(p).left.resultdef) and
                      assigned(tcallparanode(p).parasym) and (tcallparanode(p).parasym.varspez=vs_out) then
                     exit;
                   inc(cv);
-                  p:=tunarynode(p).left;
+                  p:=TUnaryNode(p).left;
                 end;
               notn,
               derefn,
               addrn :
                 begin
                   inc(cv);
-                  p:=tunarynode(p).left;
+                  p:=TUnaryNode(p).left;
                 end;
               typeconvn:
                 begin
@@ -834,30 +834,30 @@ implementation
                   if not(ttypeconvnode(p).retains_value_location) and
                     not((ttypeconvnode(p).convtype=tc_pointer_2_array) and (ttypeconvnode(p).left.expectloc in [LOC_CREGISTER,LOC_REGISTER,LOC_CONSTANT])) then
                     inc(cv);
-                  p:=tunarynode(p).left;
+                  p:=TUnaryNode(p).left;
                 end;
               statementn:
                 begin
-                  inc(cv,node_complexity(tbinarynode(p).left));
-                  p:=tbinarynode(p).right;
+                  inc(cv,node_complexity(TBinaryNode(p).left));
+                  p:=TBinaryNode(p).right;
                 end;
               addn,subn,orn,andn,xorn,symdifn,
               shln,shrn,
               equaln,unequaln,gtn,gten,ltn,lten,
               assignn,vecn:
                 begin
-                  inc(cv,node_complexity(tbinarynode(p).left)+1);
-                  p:=tbinarynode(p).right;
+                  inc(cv,node_complexity(TBinaryNode(p).left)+1);
+                  p:=TBinaryNode(p).right;
                 end;
               muln:
                 begin
-                  inc(cv,node_complexity(tbinarynode(p).left)+{$ifdef CPU64BITALU}4{$else}8{$endif});
-                  p:=tbinarynode(p).right;
+                  inc(cv,node_complexity(TBinaryNode(p).left)+{$ifdef CPU64BITALU}4{$else}8{$endif});
+                  p:=TBinaryNode(p).right;
                 end;
               divn,modn,slashn:
                 begin
-                  inc(cv,node_complexity(tbinarynode(p).left)+{$ifdef CPU64BITALU}10{$else}20{$endif});
-                  p:=tbinarynode(p).right;
+                  inc(cv,node_complexity(TBinaryNode(p).left)+{$ifdef CPU64BITALU}10{$else}20{$endif});
+                  p:=TBinaryNode(p).right;
                 end;
               inn:
                 begin
@@ -870,7 +870,7 @@ implementation
                     end;
 {$endif x86}
                   inc(cv,3);
-                  p:=tbinarynode(p).right;
+                  p:=TBinaryNode(p).right;
                 end;
               ordconstn:
                 begin
@@ -916,7 +916,7 @@ implementation
                     in_prefetch_var:
                       begin
                         inc(cv);
-                        p:=tunarynode(p).left;
+                        p:=TUnaryNode(p).left;
                       end;
                     in_cos_real,
                     in_sin_real,
@@ -925,17 +925,17 @@ implementation
                     in_ln_real:
                       begin
                         inc(cv,15);
-                        p:=tunarynode(p).left;
+                        p:=TUnaryNode(p).left;
                       end;
                     in_sqr_real:
                       begin
                         inc(cv,2);
-                        p:=tunarynode(p).left;
+                        p:=TUnaryNode(p).left;
                       end;
                     in_abs_long:
                       begin
                         inc(cv,3);
-                        p:=tunarynode(p).left;
+                        p:=TUnaryNode(p).left;
                       end;
                     in_sizeof_x,
                     in_typeof_x:
@@ -943,7 +943,7 @@ implementation
                         inc(cv);
                         if (tinlinenode(p).left.nodetype<>typen) then
                           { get instance vmt }
-                          p:=tunarynode(p).left
+                          p:=TUnaryNode(p).left
                         else
                           { type vmt = global symbol, result is }
                           { already increased above             }
@@ -976,16 +976,16 @@ implementation
                         { operation (add, sub, or, and }
                         inc(cv);
                         { rox_x has no call para node, so check for this }
-                        if tunarynode(p).left.nodetype=callparan then
+                        if TUnaryNode(p).left.nodetype=callparan then
                           begin
                             { left expression }
-                            inc(cv,node_complexity(tcallparanode(tunarynode(p).left).left));
-                            p:=tcallparanode(tunarynode(p).left).right;
+                            inc(cv,node_complexity(tcallparanode(TUnaryNode(p).left).left));
+                            p:=tcallparanode(TUnaryNode(p).left).right;
                             if assigned(p) then
                               p:=tcallparanode(p).left;
                           end
                         else
-                          p:=tunarynode(p).left;
+                          p:=TUnaryNode(p).left;
                       end;
                     else
                       exit;
@@ -1005,7 +1005,7 @@ implementation
       will be required.
       Note: The algorithms need to be pessimistic to prevent a
       fpu stack overflow on i386 }
-    function node_resources_fpu(p: tnode): cardinal;
+    function node_resources_fpu(p: TNode): cardinal;
       var
         res1,res2,res3 : cardinal;
       begin
@@ -1013,16 +1013,16 @@ implementation
         res1:=0;
         res2:=0;
         res3:=0;
-        if p.inheritsfrom(tunarynode) then
+        if p.inheritsfrom(TUnaryNode) then
           begin
-            if assigned(tunarynode(p).left) then
-              res1:=node_resources_fpu(tunarynode(p).left);
-            if p.inheritsfrom(tbinarynode) then
+            if assigned(TUnaryNode(p).left) then
+              res1:=node_resources_fpu(TUnaryNode(p).left);
+            if p.inheritsfrom(TBinaryNode) then
               begin
-                if assigned(tbinarynode(p).right) then
-                  res2:=node_resources_fpu(tbinarynode(p).right);
-                if p.inheritsfrom(ttertiarynode) and assigned(ttertiarynode(p).third) then
-                  res3:=node_resources_fpu(ttertiarynode(p).third)
+                if assigned(TBinaryNode(p).right) then
+                  res2:=node_resources_fpu(TBinaryNode(p).right);
+                if p.inheritsfrom(TTertiaryNode) and assigned(TTertiaryNode(p).third) then
+                  res3:=node_resources_fpu(TTertiaryNode(p).third)
               end;
           end;
         result:=max(max(res1,res2),res3);
@@ -1041,8 +1041,8 @@ implementation
           addn,subn,muln,slashn,
           equaln,unequaln,gtn,gten,ltn,lten :
             begin
-              if (tbinarynode(p).left.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER]) or
-                 (tbinarynode(p).right.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER])then
+              if (TBinaryNode(p).left.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER]) or
+                 (TBinaryNode(p).right.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER])then
                 result:=max(result,2);
               if(p.expectloc in [LOC_CFPUREGISTER,LOC_FPUREGISTER]) then
                 inc(result);
@@ -1053,22 +1053,22 @@ implementation
       end;
 
 
-    function setnodefilepos(var n: tnode; arg: pointer): foreachnoderesult;
+    function setnodefilepos(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_true;
-        n.fileinfo:=pfileposinfo(arg)^;
+        n.fileinfo:=PFilePosInfo(arg)^;
       end;
 
 
-    procedure node_tree_set_filepos(var n:tnode;const filepos:tfileposinfo);
+    procedure node_tree_set_filepos(var n:TNode;const filepos:TFilePosInfo);
       begin
         foreachnodestatic(n,@setnodefilepos,@filepos);
       end;
 
 
-    function callsimplify(var n: tnode; arg: pointer): foreachnoderesult;
+    function callsimplify(var n: TNode; arg: pointer): foreachnoderesult;
       var
-        hn : tnode;
+        hn : TNode;
         treechanged : ^boolean;
       begin
         result:=fen_false;
@@ -1098,14 +1098,14 @@ implementation
                   internalerror (201008181);
                 n.free;
                 n:=hn;
-                typecheckpass(n);
+                TypeCheckPass(n);
               end;
           end;
       end;
 
 
     { tries to simplify the given node calling the simplify method recursively }
-    procedure doinlinesimplify(var n : tnode);
+    procedure doinlinesimplify(var n : TNode);
       var
         treechanged : boolean;
       begin
@@ -1117,7 +1117,7 @@ implementation
       end;
 
 
-    function create_simplified_ord_const(const value: tconstexprint; def: tdef; forinline, rangecheck: boolean): tnode;
+    function create_simplified_ord_const(const value: tconstexprint; def: tdef; forinline, rangecheck: boolean): TNode;
       begin
         if not forinline then
           result:=genintconstnode(value)
@@ -1126,7 +1126,7 @@ implementation
       end;
 
 
-    procedure propaccesslist_to_node(var p1:tnode;st:TSymtable;pl:tpropaccesslist);
+    procedure propaccesslist_to_node(var p1:TNode;st:TSymtable;pl:tpropaccesslist);
       var
         plist : ppropaccesslistitem;
       begin
@@ -1148,7 +1148,7 @@ implementation
                       begin
                         case st.symtabletype of
                           withsymtable :
-                            p1:=tnode(twithsymtable(st).withrefnode).getcopy;
+                            p1:=TNode(twithsymtable(st).withrefnode).getcopy;
                           ObjectSymtable :
                             p1:=load_self_node;
                           else
@@ -1188,11 +1188,11 @@ implementation
       end;
 
 
-    function node_to_propaccesslist(p1:tnode):tpropaccesslist;
+    function node_to_propaccesslist(p1:TNode):tpropaccesslist;
       var
         sl : tpropaccesslist;
 
-        procedure addnode(p:tnode);
+        procedure addnode(p:TNode);
         begin
           case p.nodetype of
             subscriptn :
@@ -1234,7 +1234,7 @@ implementation
       end;
 
 
-    function handle_staticfield_access(sym: tsym; var p1: tnode): boolean;
+    function handle_staticfield_access(sym: tsym; var p1: TNode): boolean;
 
       function handle_generic_staticfield_access:boolean;
         var
@@ -1251,9 +1251,9 @@ implementation
                   if df_generic in tmp.defoptions then
                     begin
                       p1.free;
-                      if assigned(current_procinfo) then
+                      if assigned(CurrentProcInfo) then
                         begin
-                          pd:=current_procinfo.get_normal_proc.procdef;
+                          pd:=CurrentProcInfo.get_normal_proc.procdef;
                           if assigned(pd) and pd.no_self_node then
                             p1:=cloadvmtaddrnode.create(ctypenode.create(pd.struct))
                           else
@@ -1296,7 +1296,7 @@ implementation
       end;
 
 
-    function is_bitpacked_access(n: tnode): boolean;
+    function is_bitpacked_access(n: TNode): boolean;
       begin
         case n.nodetype of
           vecn:
@@ -1321,12 +1321,12 @@ implementation
       end;
 
 
-    function genloadfield(n: tnode; const fieldname: string): tnode;
+    function genloadfield(n: TNode; const fieldname: string): TNode;
       var
         vs         : tsym;
       begin
         if not assigned(n.resultdef) then
-          typecheckpass(n);
+          TypeCheckPass(n);
         vs:=tsym(tabstractrecorddef(n.resultdef).symtable.find(fieldname));
         if not assigned(vs) or
            (vs.typ<>fieldvarsym) then
@@ -1335,7 +1335,7 @@ implementation
       end;
 
 
-    function has_no_code(n : tnode) : boolean;
+    function has_no_code(n : TNode) : boolean;
       begin
         if n=nil then
           begin
@@ -1367,7 +1367,7 @@ implementation
       end;
 
 
-    function check_for_sideeffect(var n: tnode; arg: pointer): foreachnoderesult;
+    function check_for_sideeffect(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
         if (n.nodetype in [assignn,calln,asmn,finalizetempsn]) or
@@ -1379,7 +1379,7 @@ implementation
              ((n.nodetype=subscriptn) and is_implicit_pointer_object_type(tsubscriptnode(n).left.resultdef)) or
              ((n.nodetype in [addn,subn,muln,unaryminusn]) and (n.localswitches*[cs_check_overflow,cs_check_range]<>[])) or
              { float operations could throw an exception }
-             ((n.nodetype in [addn,subn,muln,slashn,unaryminusn,equaln,unequaln,gten,gtn,lten,ltn]) and is_real_or_cextended(tunarynode(n).left.resultdef))
+             ((n.nodetype in [addn,subn,muln,slashn,unaryminusn,equaln,unequaln,gten,gtn,lten,ltn]) and is_real_or_cextended(TUnaryNode(n).left.resultdef))
             )
            ) or
            ((n.nodetype=loadn) and
@@ -1399,13 +1399,13 @@ implementation
       end;
 
 
-    function might_have_sideeffects(n : tnode; const flags : tmhs_flags) : boolean;
+    function might_have_sideeffects(n : TNode; const flags : tmhs_flags) : boolean;
       begin
         result:=foreachnodestatic(n,@check_for_sideeffect,@flags);
       end;
 
 
-    function check_for_conditional_nodes(var n: tnode; arg: pointer): foreachnoderesult;
+    function check_for_conditional_nodes(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
         { this check is not complete yet, but sufficient to cover the current use case: swapping
@@ -1416,13 +1416,13 @@ implementation
       end;
 
 
-    function has_conditional_nodes(n : tnode) : boolean;
+    function has_conditional_nodes(n : TNode) : boolean;
       begin
         result:=foreachnodestatic(n,@check_for_conditional_nodes,nil);
       end;
 
 
-    function donodecount(var n: tnode; arg: pointer): foreachnoderesult;
+    function donodecount(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         if PDWord(arg)^>0 then
           begin
@@ -1434,7 +1434,7 @@ implementation
       end;
 
 
-    function node_count(node : tnode; max : dword = High(dword)) : dword;
+    function node_count(node : TNode; max : dword = High(dword)) : dword;
       var
         left : dword;
       begin
@@ -1444,7 +1444,7 @@ implementation
       end;
 
 
-    function donodecount_weighted(var n: tnode; arg: pointer): foreachnoderesult;
+    function donodecount_weighted(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         if PDWord(arg)^>0 then
           begin
@@ -1457,7 +1457,7 @@ implementation
       end;
 
 
-    function node_count_weighted(node : tnode; max : dword = High(dword)) : dword;
+    function node_count_weighted(node : TNode; max : dword = High(dword)) : dword;
       var
         left : dword;
       begin
@@ -1467,7 +1467,7 @@ implementation
       end;
 
 
-    function is_const(node : tnode) : boolean;
+    function is_const(node : TNode) : boolean;
       begin
         result:=is_constnode(node) or
           ((node.nodetype=temprefn) and (ti_const in ttemprefnode(node).tempflags)) or
@@ -1475,7 +1475,7 @@ implementation
       end;
 
 
-    function actualtargetnode(n : pnode) : pnode;
+    function actualtargetnode(n : PNode) : PNode;
       begin
         result:=n;
         case n^.nodetype of
@@ -1488,9 +1488,9 @@ implementation
       end;
 
 
-    procedure replacenode(var dest,src : tnode);
+    procedure replacenode(var dest,src : TNode);
       var
-        t : tnode;
+        t : TNode;
       begin
         t:=src;
         { set src nil before free'ing dest because
@@ -1501,7 +1501,7 @@ implementation
       end;
 
 
-    function get_open_const_array(p : tnode) : tnode;
+    function get_open_const_array(p : TNode) : TNode;
       begin
         result:=p;
         if (p.nodetype=derefn) and (tderefnode(p).left.nodetype=addrn) then
@@ -1515,7 +1515,7 @@ implementation
       end;
 
 
-    function do_node_reset_flags(var n: tnode; arg: pointer): foreachnoderesult;
+    function do_node_reset_flags(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
         n.flags:=n.flags-TFlagSet(arg^).nf;
@@ -1523,7 +1523,7 @@ implementation
       end;
 
 
-    procedure node_reset_flags(p : tnode; nf : TNodeFlags; tnf : TTransientNodeFlags);
+    procedure node_reset_flags(p : TNode; nf : TNodeFlags; tnf : TTransientNodeFlags);
       var
         FlagSet: TFlagSet;
       begin
@@ -1534,13 +1534,13 @@ implementation
 
     type
        tlocalswitchchange = record
-         cs : tlocalswitch;
+         cs : TLocalSwitch;
          enable : boolean;
        end;
        plocalswitchchange = ^tlocalswitchchange;
 
 
-    function do_change_local_settings(var p : tnode;plsc : pointer) : foreachnoderesult;
+    function do_change_local_settings(var p : TNode;plsc : pointer) : foreachnoderesult;
       begin
         if plocalswitchchange(plsc)^.enable then
           include(p.localswitches, plocalswitchchange(plsc)^.cs)
@@ -1550,7 +1550,7 @@ implementation
      end;
 
 
-    procedure node_change_local_switch(p : tnode;cs : tlocalswitch;enable : boolean);
+    procedure node_change_local_switch(p : TNode;cs : TLocalSwitch;enable : boolean);
       var
         lsc : tlocalswitchchange;
       begin
@@ -1560,19 +1560,19 @@ implementation
       end;
 
 
-    function doshortbooleval(p : tnode) : Boolean;
+    function doshortbooleval(p : TNode) : Boolean;
       begin
         Result:=(p.nodetype in [orn,andn]) and ((anf_short_bool in taddnode(p).addnodeflags) or not(cs_full_boolean_eval in p.localswitches));
       end;
 
 
-    function is_constintvalue(p: tnode; l: Tconstexprint): Boolean;
+    function is_constintvalue(p: TNode; l: Tconstexprint): Boolean;
       begin
         Result:=is_constintnode(p) and (tordconstnode(p).value=l);
       end;
 
 
-    function get_int_value(p: tnode): Tconstexprint;
+    function get_int_value(p: TNode): Tconstexprint;
       begin
         case p.nodetype of
           ordconstn:
@@ -1587,7 +1587,7 @@ implementation
       end;
 
 
-    function is_inlinefunction(p: tnode; i: tinlinenumber): Boolean;
+    function is_inlinefunction(p: TNode; i: tinlinenumber): Boolean;
       begin
         Result:=(p.nodetype=inlinen) and (tinlinenode(p).inlinenumber=i);
       end;
@@ -1595,7 +1595,7 @@ implementation
 
     { checks if p is a series of length(a) statements, if yes, they are returned
       in a and the function returns true }
-    function GetStatements(p : tnode;var a : array of tstatementnode) : Boolean;
+    function GetStatements(p : TNode;var a : array of tstatementnode) : Boolean;
       var
         i: Integer;
       begin
@@ -1611,7 +1611,7 @@ implementation
       end;
 
 
-    function IsSingleStatement(p: tnode; var s: tnode): Boolean;
+    function IsSingleStatement(p: TNode; var s: TNode): Boolean;
       begin
         Result:=false;
         if assigned(p) then
@@ -1638,7 +1638,7 @@ implementation
 
 
     { gets the last statement in a sequence of statements/blocks }
-    function GetLastStatement(p : tnode) : tnode;
+    function GetLastStatement(p : TNode) : TNode;
       var
         i: Integer;
       begin
@@ -1665,7 +1665,7 @@ implementation
       end;
 
 
-    function MatchAndTransformNodesCommutative(n1,n2 : tnode;matchproc : TMatchProc2;transformproc : TTransformProc2;var res : tnode) : Boolean;
+    function MatchAndTransformNodesCommutative(n1,n2 : TNode;matchproc : TMatchProc2;transformproc : TTransformProc2;var res : TNode) : Boolean;
       begin
         res:=nil;
         result:=true;
@@ -1678,7 +1678,7 @@ implementation
       end;
 
 
-    function MatchAndTransformNodesCommutative(n1,n2,n3,n4 : tnode;matchproc : TMatchProc4;transformproc : TTransformProc4;var res : tnode) : Boolean;
+    function MatchAndTransformNodesCommutative(n1,n2,n3,n4 : TNode;matchproc : TMatchProc4;transformproc : TTransformProc4;var res : TNode) : Boolean;
       begin
         res:=nil;
         result:=true;
@@ -1703,7 +1703,7 @@ implementation
       end;
 
 
-     function _node_reset_pass1_write(var n: tnode; arg: pointer): foreachnoderesult;
+     function _node_reset_pass1_write(var n: TNode; arg: pointer): foreachnoderesult;
        begin
          Result := fen_false;
          n.flags := n.flags - [nf_write,nf_modify];
@@ -1718,13 +1718,13 @@ implementation
        end;
 
 
-     procedure node_reset_pass1_write(n: tnode);
+     procedure node_reset_pass1_write(n: TNode);
        begin
          foreachnodestatic(n,@_node_reset_pass1_write,nil);
        end;
 
 
-     function node_in_list(var n: tnode; arg: pointer): foreachnoderesult;
+     function node_in_list(var n: TNode; arg: pointer): foreachnoderesult;
        begin
          if (n.nodetype in PNodeTypeSet(arg)^) then
            result := fen_norecurse_true
@@ -1739,7 +1739,7 @@ implementation
        end;
 
 
-     function node_not_zero(n: tnode): Boolean;
+     function node_not_zero(n: TNode): Boolean;
        begin
          result:=(is_constintnode(n) and (get_int_value(n)<>0)) or
            ((n.resultdef.typ=orddef) and ((torddef(n.resultdef).low>0) or (torddef(n.resultdef).high<0))) or

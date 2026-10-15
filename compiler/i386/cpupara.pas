@@ -35,15 +35,15 @@ unit cpupara;
        tcpuparamanager = class(tparamanager)
           function param_use_paraloc(const cgpara:tcgpara):boolean;override;
           function ret_in_param(def:tdef;pd:tabstractprocdef):boolean;override;
-          function push_addr_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;override;
-          function get_para_align(calloption : tproccalloption):byte;override;
-          function get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;override;
-          function get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;override;
-          function get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;override;
-          function get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;override;
+          function push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;override;
+          function get_para_align(calloption : TProcCallOption):byte;override;
+          function get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;override;
           function create_paraloc_info(p : tabstractprocdef; side: tcallercallee):longint;override;
           function create_varargs_paraloc_info(p : tabstractprocdef; side: tcallercallee; varargspara:tvarargsparalist):longint;override;
-          procedure createtempparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);override;
+          procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);override;
           function get_funcretloc(p : tabstractprocdef; side: tcallercallee; forcetempdef: tdef): TCGPara;override;
        private
           procedure create_stdcall_paraloc_info(p : tabstractprocdef; side: tcallercallee;paras:tparalist;var parasize:longint);
@@ -93,7 +93,7 @@ unit cpupara;
       begin
         if handle_common_ret_in_param(def,pd,result) then
           exit;
-        case target_info.system of
+        case TargetInfo.system of
           system_i386_win32 :
             begin
               case def.typ of
@@ -152,7 +152,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.push_addr_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;
+    function tcpuparamanager.push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;
       begin
         result:=false;
         { var,out,constref always require address }
@@ -171,7 +171,7 @@ unit cpupara;
                 variants are somethings very delphi/windows specific so do it like
                 windows/delphi (FK)
               }
-              if ((target_info.system=system_i386_win32) and
+              if ((TargetInfo.system=system_i386_win32) and
                  (calloption in [pocall_stdcall,pocall_safecall]) and
                  (varspez=vs_const)) or
                  (calloption=pocall_register) then
@@ -184,7 +184,7 @@ unit cpupara;
           recorddef :
             begin
               { Delphi stdcall passes records on the stack for call by value }
-              if (target_info.system=system_i386_win32) and
+              if (TargetInfo.system=system_i386_win32) and
                  (calloption=pocall_stdcall) and
                  (varspez=vs_value) then
                 result:=false
@@ -227,7 +227,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_para_align(calloption : tproccalloption):byte;
+    function tcpuparamanager.get_para_align(calloption : TProcCallOption):byte;
       begin
         if calloption=pocall_oldfpccall then
           result:=4
@@ -236,7 +236,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
       begin
         case calloption of
           pocall_internproc :
@@ -259,19 +259,19 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[0..first_fpu_imreg-1];
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[0..first_mm_imreg-1];
       end;
 
 
-    function tcpuparamanager.get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;
+    function tcpuparamanager.get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;
       const
         saveregs : tcpuregisterarray = (RS_EBX,RS_ESI,RS_EDI,RS_EBP);
         saveregs_oldfpccall : tcpuregisterarray = (RS_EBP);
@@ -310,7 +310,7 @@ unit cpupara;
           usedef:=forcetempdef;
         { on darwin/i386, if a record has only one field and that field is a
           single or double, it has to be returned like a single/double }
-        if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) and
+        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
            ((usedef.typ=recorddef) or
             is_object(usedef)) and
            tabstractrecordsymtable(tabstractrecorddef(usedef).symtable).has_single_field(fdef) and
@@ -329,7 +329,7 @@ unit cpupara;
 
         { darwin/x86 requires that results < sizeof(aint) are sign/zero
           extended to sizeof(aint) }
-        if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) and
+        if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
            (side=calleeside) and
            (result.intsize>0) and
            (result.intsize<sizeof(aint)) then
@@ -458,7 +458,7 @@ unit cpupara;
             hp.paraloc[side].Alignment:=paraalign;
             { darwin/x86 requires that parameters < sizeof(aint) are sign/ }
             { zero extended to sizeof(aint)                                }
-            if (target_info.system in [system_i386_darwin,system_i386_iphonesim]) and
+            if (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) and
                (side = callerside) and
                (paralen > 0) and
                (paralen < sizeof(aint)) then
@@ -484,11 +484,11 @@ unit cpupara;
                 { read past the end of the heap since the value is only }
                 { 10 bytes long (JM)                                    }
                 if (paracgsize = OS_F80) and
-                   (target_info.system in [system_i386_darwin,system_i386_iphonesim]) then
+                   (TargetInfo.system in [system_i386_darwin,system_i386_iphonesim]) then
                   paralen:=16;
                 paraloc^.reference.offset:=parasize;
                 if side=calleeside then
-                  inc(paraloc^.reference.offset,target_info.first_parm_offset);
+                  inc(paraloc^.reference.offset,TargetInfo.first_parm_offset);
                 parasize:=align(parasize+paralen,varalign);
               end
             else
@@ -531,7 +531,7 @@ unit cpupara;
                     paraloc^.reference.offset:=parasize;
                     if side=calleeside then
                       if not(po_nostackframe in p.procoptions) then
-                        inc(paraloc^.reference.offset,target_info.first_parm_offset)
+                        inc(paraloc^.reference.offset,TargetInfo.first_parm_offset)
                       else
                         { return address }
                         inc(paraloc^.reference.offset,4);
@@ -654,7 +654,7 @@ unit cpupara;
                               varalign:=used_align(size_2_align(paralen),paraalign,paraalign);
                               paraloc^.reference.offset:=parasize;
                               if side=calleeside then
-                                inc(paraloc^.reference.offset,target_info.first_parm_offset);
+                                inc(paraloc^.reference.offset,TargetInfo.first_parm_offset);
                               parasize:=align(parasize+paralen,varalign);
                             end
                           else
@@ -695,7 +695,7 @@ unit cpupara;
                                   varalign:=used_align(size_2_align(l),paraalign,paraalign);
                                   paraloc^.reference.offset:=parasize;
                                   if side=calleeside then
-                                    inc(paraloc^.reference.offset,target_info.first_parm_offset);
+                                    inc(paraloc^.reference.offset,TargetInfo.first_parm_offset);
                                   parasize:=align(parasize+l,varalign);
                                   dec(paralen,l);
                                   firstparaloc:=false;
@@ -770,7 +770,7 @@ unit cpupara;
       end;
 
 
-    procedure tcpuparamanager.createtempparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure tcpuparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
       begin
         { Never a need for temps when value is pushed (calls inside parameters
           will simply allocate even more stack space for their parameters) }

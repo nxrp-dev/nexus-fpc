@@ -116,7 +116,7 @@ implementation
       { Please leave this here, this module should NOT use
         these variables.
         Declaring it as string here results in an error when compiling (PFV) }
-      current_procinfo = 'error';
+      CurrentProcInfo = 'error';
 
     function push_child_hierarchy(obj:tabstractrecorddef):integer;
       var
@@ -211,7 +211,7 @@ implementation
         varspez : Tvarspez;
         defaultvalue : tconstsym;
         defaultrequired : boolean;
-        old_block_type : tblock_type;
+        old_block_type : TBlockType;
         currparast : tparasymtable;
         parseprocvar : tppv;
         locationstr : string;
@@ -225,8 +225,8 @@ implementation
           var
             convpd : tprocdef;
             doconv : tconverttype;
-            nodetype : tnodetype;
-            bt : tblock_type;
+            nodetype : TNodeType;
+            bt : TBlockType;
           begin
             { only allowed for types that can be represented by a
               constant expression }
@@ -290,28 +290,28 @@ implementation
             if try_to_consume(_CONST) then
               varspez:=vs_const
           else
-            if (m_out in current_settings.modeswitches) and
+            if (m_out in CurrentSettings.modeswitches) and
                try_to_consume(_OUT) then
               varspez:=vs_out
           else
            if try_to_consume(_CONSTREF) then
              varspez:=vs_constref
           else
-            if (m_mac in current_settings.modeswitches) and
+            if (m_mac in CurrentSettings.modeswitches) and
                try_to_consume(_POINTPOINTPOINT) then
               begin
                 include(pd.procoptions,po_varargs);
                 break;
               end
           else
-            if (m_nested_procvars in current_settings.modeswitches) and
+            if (m_nested_procvars in CurrentSettings.modeswitches) and
                try_to_consume(_PROCEDURE) then
               begin
                 parseprocvar:=pv_proc;
                 varspez:=vs_const;
               end
           else
-            if (m_nested_procvars in current_settings.modeswitches) and
+            if (m_nested_procvars in CurrentSettings.modeswitches) and
                try_to_consume(_FUNCTION) then
               begin
                 parseprocvar:=pv_func;
@@ -325,7 +325,7 @@ implementation
           sc.clear;
           repeat
             inc(paranr);
-            vs:=cparavarsym.create(current_scanner.orgpattern,paranr*10,varspez,generrordef,[]);
+            vs:=cparavarsym.create(CurrentScanner.orgpattern,paranr*10,varspez,generrordef,[]);
             currparast.insertsym(vs);
             if assigned(vs.owner) then
              sc.add(vs)
@@ -339,7 +339,7 @@ implementation
            begin
              { inline procvar definitions are always nested procvars }
              pv:=cprocvardef.create(normal_function_level+1,true);
-             if current_scanner.token=_LKLAMMER then
+             if CurrentScanner.token=_LKLAMMER then
                parse_parameter_dec(pv);
              if parseprocvar=pv_func then
               begin
@@ -357,19 +357,19 @@ implementation
            end
           else
           { read type declaration, force reading for value paras }
-           if (current_scanner.token=_COLON) or (varspez=vs_value) then
+           if (CurrentScanner.token=_COLON) or (varspez=vs_value) then
            begin
              consume(_COLON);
              { check for an open array }
              need_array:=false;
              { bitpacked open array are not yet supported }
-             if (current_scanner.token=_PACKED) and
-                not(cs_bitpacking in current_settings.localswitches) then
+             if (CurrentScanner.token=_PACKED) and
+                not(cs_bitpacking in CurrentSettings.localswitches) then
                begin
                  consume(_PACKED);
                  need_array:=true;
                end;
-             if (current_scanner.token=_ARRAY) or
+             if (CurrentScanner.token=_ARRAY) or
                 need_array then
               begin
                 consume(_ARRAY);
@@ -377,7 +377,7 @@ implementation
                 { define range and type of range }
                 hdef:=carraydef.create_openarray;
                 { array of const ? }
-                if (current_scanner.token=_CONST) and (m_objpas in current_settings.modeswitches) then
+                if (CurrentScanner.token=_CONST) and (m_objpas in CurrentSettings.modeswitches) then
                  begin
                    consume(_CONST);
                    srsym:=search_system_type('TVARREC');
@@ -387,7 +387,7 @@ implementation
                 else
                  begin
                    { define field type }
-                   if m_delphi in current_settings.modeswitches then
+                   if m_delphi in CurrentSettings.modeswitches then
                      stoptions:=[stoAllowSpecialization]
                    else
                      stoptions:=[];
@@ -399,7 +399,7 @@ implementation
               end
              else
               begin
-                if (m_mac in current_settings.modeswitches) then
+                if (m_mac in CurrentSettings.modeswitches) then
                   is_univ:=try_to_consume(_UNIV);
 
                 { this is not really working and generates internal errors
@@ -420,7 +420,7 @@ implementation
                         begin
                           { not 100% Delphi-compatible: type xstr=string[255] cannot
                             become an openstring there, while here it can }
-                          if (cs_openstring in current_settings.localswitches) and
+                          if (cs_openstring in CurrentSettings.localswitches) and
                              (tstringdef(hdef).len=255) then
                             hdef:=openshortstringtype
                         end;
@@ -441,7 +441,7 @@ implementation
                 locationstr:='';
 
                 { default parameter }
-                if (m_default_para in current_settings.modeswitches) then
+                if (m_default_para in CurrentSettings.modeswitches) then
                   handle_default_para_value;
               end;
            end
@@ -498,7 +498,7 @@ implementation
         checkstack : psymtablestackitem;
         oldfilepos,
         classstartfilepos,
-        procstartfilepos : tfileposinfo;
+        procstartfilepos : TFilePosInfo;
         i,
         index : longint;
         addgendummy,
@@ -524,7 +524,7 @@ implementation
          begin
            if (lasttoken in [first_overloaded..last_overloaded]) then
             begin
-              optoken:=current_scanner.token;
+              optoken:=CurrentScanner.token;
             end
            else
             begin
@@ -542,7 +542,7 @@ implementation
                     _ADDREF:optoken:=_OP_ADDREF;
                     _COPY:optoken:=_OP_COPY;
                     else
-                    if (m_delphi in current_settings.modeswitches) then
+                    if (m_delphi in CurrentSettings.modeswitches) then
                       case lastidtoken of
                         _IMPLICIT:optoken:=_ASSIGNMENT;
                         _NEGATIVE:optoken:=_MINUS;
@@ -591,8 +591,8 @@ implementation
             i : longint;
             sym : ttypesym;
           begin
-            lasttoken:=current_scanner.token;
-            lastidtoken:=current_scanner.idtoken;
+            lasttoken:=CurrentScanner.token;
+            lastidtoken:=CurrentScanner.idtoken;
             if assigned(genericparams) then
               for i:=0 to genericparams.count-1 do
                 begin
@@ -610,27 +610,27 @@ implementation
             hadspecialize:=false;
             if potype=potype_operator then
               optoken:=NOTOKEN;
-            if (potype=potype_operator) and (current_scanner.token<>_ID) then
+            if (potype=potype_operator) and (CurrentScanner.token<>_ID) then
               begin
                 parse_operator_name;
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
               end
             else
               begin
-                sp:=current_scanner.pattern;
-                orgsp:=current_scanner.orgpattern;
+                sp:=CurrentScanner.pattern;
+                orgsp:=CurrentScanner.orgpattern;
                 spnongen:=sp;
                 orgspnongen:=orgsp;
                 if firstpart and
-                    not (m_delphi in current_settings.modeswitches) and
-                    (current_scanner.idtoken=_SPECIALIZE) then
+                    not (m_delphi in CurrentSettings.modeswitches) and
+                    (CurrentScanner.idtoken=_SPECIALIZE) then
                   hadspecialize:=true;
                 consume(_ID);
-                if ((ppf_generic in flags) or (m_delphi in current_settings.modeswitches)) and
-                    (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                if ((ppf_generic in flags) or (m_delphi in CurrentSettings.modeswitches)) and
+                    (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                   begin
-                    consume(current_scanner.token);
-                    if current_scanner.token in [_GT,_RSHARPBRACKET] then
+                    consume(CurrentScanner.token);
+                    if CurrentScanner.token in [_GT,_RSHARPBRACKET] then
                       message(type_e_type_id_expected)
                     else
                       begin
@@ -655,11 +655,11 @@ implementation
 
         function search_object_name(const sp:TIDString;gen_error:boolean):tsym;
           var
-            storepos:tfileposinfo;
+            storepos:TFilePosInfo;
             srsymtable:TSymtable;
           begin
-            storepos:=current_tokenpos;
-            current_tokenpos:=procstartfilepos;
+            storepos:=CurrentTokenPos;
+            CurrentTokenPos:=procstartfilepos;
             searchsym(sp,result,srsymtable);
             if not assigned(result) then
               begin
@@ -667,7 +667,7 @@ implementation
                   identifier_not_found(orgsp);
                 result:=generrorsym;
               end;
-            current_tokenpos:=storepos;
+            CurrentTokenPos:=storepos;
           end;
 
         function handle_generic_interface:boolean;
@@ -749,7 +749,7 @@ implementation
 
         procedure specialize_generic_interface;
           var
-            node : tnode;
+            node : TNode;
           begin
             node:=factor(false,[ef_type_only,ef_had_specialize]);
             if node.nodetype=typen then
@@ -767,7 +767,7 @@ implementation
             implsym : tsym;
             impltype : ttypesym absolute implsym;
             implname : tsymstr;
-            fileinfo : tfileposinfo;
+            fileinfo : TFilePosInfo;
           begin
             result:=true;
             if not assigned(def.genericparas) then
@@ -807,7 +807,7 @@ implementation
         orgspnongen:='';
 
         { Save the position where this procedure really starts }
-        procstartfilepos:=current_tokenpos;
+        procstartfilepos:=CurrentTokenPos;
         old_parse_generic:=parse_generic;
 
         firstpart:=true;
@@ -850,14 +850,14 @@ implementation
                assigned(tobjectdef(astruct).ImplementedInterfaces) and
                (tobjectdef(astruct).ImplementedInterfaces.count>0) and
                (
-                 (current_scanner.token=_POINT) or
+                 (CurrentScanner.token=_POINT) or
                  (
                    hadspecialize and
-                   (current_scanner.token=_ID)
+                   (CurrentScanner.token=_ID)
                  )
                ) then
              begin
-               if hadspecialize and (current_scanner.token=_ID) then
+               if hadspecialize and (CurrentScanner.token=_ID) then
                  specialize_generic_interface;
                consume(_POINT);
                if hadspecialize or not handle_generic_interface then
@@ -888,17 +888,17 @@ implementation
                  Message2(parser_e_implements_no_mapping,ImplIntf.IntfDef.typename,astruct.objrealname^);
                consume(_ID);
                { Create unique name <interface>.<method> }
-               hs:=sp+'.'+current_scanner.pattern;
+               hs:=sp+'.'+CurrentScanner.pattern;
                consume(_EQ);
                if assigned(ImplIntf) and
-                  (current_scanner.token=_ID) then
-                 ImplIntf.AddMapping(hs,current_scanner.pattern);
+                  (CurrentScanner.token=_ID) then
+                 ImplIntf.AddMapping(hs,CurrentScanner.pattern);
                consume(_ID);
                result:=true;
                exit;
              end;
 
-            if assigned(genericparams) and assigned(current_genericdef) then
+            if assigned(genericparams) and assigned(CurrentGenericDef) then
               Message(parser_f_no_generic_inside_generic);
 
             { method  ? }
@@ -912,11 +912,11 @@ implementation
                  searchagain:=false;
 
                  { throw the error at the right location }
-                 oldfilepos:=current_filepos;
-                 current_filepos:=procstartfilepos;
+                 oldfilepos:=CurrentFilePos;
+                 CurrentFilePos:=procstartfilepos;
                  if not assigned(astruct) and not assigned(srsym) then
                    srsym:=search_object_name(sp,true);
-                 current_filepos:=oldfilepos;
+                 CurrentFilePos:=oldfilepos;
 
                  { we need to check whether the names of the generic parameter
                    types match with the one in the declaration of a class/record,
@@ -930,14 +930,14 @@ implementation
                    check_generic_parameters(tstoreddef(ttypesym(srsym).typedef));
 
                  { consume proc name }
-                 procstartfilepos:=current_tokenpos;
+                 procstartfilepos:=CurrentTokenPos;
                  consume_proc_name;
                  { qualifier is class name ? }
                  if (srsym.typ=typesym) and
                     (ttypesym(srsym).typedef.typ in [objectdef,recorddef]) then
                   begin
                     astruct:=tabstractrecorddef(ttypesym(srsym).typedef);
-                    if (current_scanner.token<>_POINT) then
+                    if (CurrentScanner.token<>_POINT) then
                       if (potype in [potype_class_constructor,potype_class_destructor]) then
                         sp:=lower(sp)
                       else
@@ -958,13 +958,13 @@ implementation
                        else
                          begin
                            {  we use a different error message for tp7 so it looks more compatible }
-                           if (m_fpc in current_settings.modeswitches) then
+                           if (m_fpc in CurrentSettings.modeswitches) then
                              Message1(parser_e_overloaded_no_procedure,srsym.realname)
                            else
                              Message(parser_e_methode_id_expected);
                            { rename the name to an unique name to avoid an
                              error when inserting the symbol in the symtable }
-                           orgsp:=orgsp+'$'+tostr(current_filepos.line);
+                           orgsp:=orgsp+'$'+tostr(CurrentFilePos.line);
                          end;
                      end
                     else
@@ -984,7 +984,7 @@ implementation
                if (not parse_only) and
                   ((potype in [potype_constructor,potype_destructor,
                                potype_class_constructor,potype_class_destructor]) or
-                   ((potype=potype_operator) and (m_delphi in current_settings.modeswitches))) then
+                   ((potype=potype_operator) and (m_delphi in CurrentSettings.modeswitches))) then
                  Message(parser_e_only_methods_allowed);
 
                repeat
@@ -996,7 +996,7 @@ implementation
                    break;
 
                  searchagain:=false;
-                 current_tokenpos:=procstartfilepos;
+                 CurrentTokenPos:=procstartfilepos;
 
                  if (potype=potype_operator)and(optoken=NOTOKEN) then
                    parse_operator_name;
@@ -1007,9 +1007,9 @@ implementation
                    the symbol in the localsymtable }
                  if not assigned(srsym) and
                     not(parse_only) and
-                    (symtablestack.top=current_module.localsymtable) and
-                    assigned(current_module.globalsymtable) then
-                   srsym:=tsym(current_module.globalsymtable.Find(sp));
+                    (symtablestack.top=CurrentModule.localsymtable) and
+                    assigned(CurrentModule.globalsymtable) then
+                   srsym:=tsym(CurrentModule.globalsymtable.Find(sp));
 
                  { if the symbol isn't assigned, but we're parsing a class or
                    object then check in the parent types for symbols of the same
@@ -1046,7 +1046,7 @@ implementation
                             searchagain:=true;
                           end
                          else
-                         if (m_delphi in current_settings.modeswitches) and
+                         if (m_delphi in CurrentSettings.modeswitches) and
                             (srsym.typ=absolutevarsym) and
                             ([vo_is_funcret,vo_is_result]*tabstractvarsym(srsym).varoptions=[vo_is_funcret]) then
                            begin
@@ -1068,13 +1068,13 @@ implementation
                          else
                           begin
                             {  we use a different error message for tp7 so it looks more compatible }
-                            if (m_fpc in current_settings.modeswitches) then
+                            if (m_fpc in CurrentSettings.modeswitches) then
                               Message1(parser_e_overloaded_no_procedure,srsym.realname)
                             else
                               Message1(sym_e_duplicate_id,srsym.realname);
                             { rename the name to an unique name to avoid an
                               error when inserting the symbol in the symtable }
-                            orgsp:=orgsp+'$'+tostr(current_filepos.line);
+                            orgsp:=orgsp+'$'+tostr(CurrentFilePos.line);
                           end;
                        end;
                   end;
@@ -1085,7 +1085,7 @@ implementation
             if not assigned(aprocsym) then
               begin
                 { create a new procsym and set the real filepos }
-                current_tokenpos:=procstartfilepos;
+                CurrentTokenPos:=procstartfilepos;
                 { for operator we have only one procsym for each overloaded
                   operation }
                 if (potype=potype_operator) then
@@ -1166,9 +1166,9 @@ implementation
                   begin
                     dummysym:=tsym(insertst.find(spnongen));
                     if not assigned(dummysym) and
-                        (symtablestack.top=current_module.localsymtable) and
-                        assigned(current_module.globalsymtable) then
-                      dummysym:=tsym(current_module.globalsymtable.find(spnongen));
+                        (symtablestack.top=CurrentModule.localsymtable) and
+                        assigned(CurrentModule.globalsymtable) then
+                      dummysym:=tsym(CurrentModule.globalsymtable.find(spnongen));
                   end;
                 if not assigned(dummysym) then
                   begin
@@ -1196,7 +1196,7 @@ implementation
                   tprocsym(dummysym).add_generic_overload(aprocsym);
                 { start token recorder for the declaration }
                 pd.init_genericdecl;
-                current_scanner.startrecordtokens(pd.genericdecltokenbuf);
+                CurrentScanner.startrecordtokens(pd.genericdecltokenbuf);
               end;
           end
         else if assigned(genericdef) then
@@ -1213,7 +1213,7 @@ implementation
               end;
             if (df_specialization in pd.struct.defoptions) then
               begin
-                if assigned(current_specializedef) then
+                if assigned(CurrentSpecializeDef) then
                   begin
                     include(pd.defoptions,df_specialization);
                     { Find corresponding genericdef, we need it later to
@@ -1275,10 +1275,10 @@ implementation
           include(pd.procoptions,po_optional);
 
         { parse parameters }
-        if current_scanner.token=_LKLAMMER then
+        if CurrentScanner.token=_LKLAMMER then
           begin
             old_current_structdef:=nil;
-            old_current_genericdef:=current_genericdef;
+            old_current_genericdef:=CurrentGenericDef;
             old_current_specializedef:=nil;
             { Add ObjectSymtable to be able to find nested type definitions }
             popclass:=0;
@@ -1287,27 +1287,27 @@ implementation
                not(symtablestack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
               begin
                 popclass:=push_nested_hierarchy(pd.struct);
-                old_current_structdef:=current_structdef;
-                old_current_specializedef:=current_specializedef;
-                current_structdef:=pd.struct;
-                if assigned(current_structdef) and (df_generic in current_structdef.defoptions) then
-                  current_genericdef:=current_structdef;
-                if assigned(current_structdef) and (df_specialization in current_structdef.defoptions) then
-                  current_specializedef:=current_structdef;
+                old_current_structdef:=CurrentStructDef;
+                old_current_specializedef:=CurrentSpecializeDef;
+                CurrentStructDef:=pd.struct;
+                if assigned(CurrentStructDef) and (df_generic in CurrentStructDef.defoptions) then
+                  CurrentGenericDef:=CurrentStructDef;
+                if assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.defoptions) then
+                  CurrentSpecializeDef:=CurrentStructDef;
               end;
             if pd.is_generic then
-              current_genericdef:=pd;
+              CurrentGenericDef:=pd;
             { Add parameter symtable }
             if pd.parast.symtabletype<>staticsymtable then
               symtablestack.push(pd.parast);
             parse_parameter_dec(pd);
             if pd.parast.symtabletype<>staticsymtable then
               symtablestack.pop(pd.parast);
-            current_genericdef:=old_current_genericdef;
+            CurrentGenericDef:=old_current_genericdef;
             if popclass>0 then
               begin
-                current_structdef:=old_current_structdef;
-                current_specializedef:=old_current_specializedef;
+                CurrentStructDef:=old_current_structdef;
+                CurrentSpecializeDef:=old_current_specializedef;
                 dec(popclass,pop_nested_hierarchy(pd.struct));
                 if popclass<>0 then
                   internalerror(201011260); // 11 nov 2010 index 0
@@ -1337,33 +1337,33 @@ implementation
             { Add ObjectSymtable to be able to find generic type definitions }
             popclass:=0;
             old_current_structdef:=nil;
-            old_current_genericdef:=current_genericdef;
-            old_current_specializedef:=current_specializedef;
-            current_genericdef:=nil;
-            current_specializedef:=nil;
+            old_current_genericdef:=CurrentGenericDef;
+            old_current_specializedef:=CurrentSpecializeDef;
+            CurrentGenericDef:=nil;
+            CurrentSpecializeDef:=nil;
             if assigned(pd.struct) and
                (pd.parast.symtablelevel>=normal_function_level) and
                not (symtablestack.top.symtabletype in [ObjectSymtable,recordsymtable]) then
               begin
                 popclass:=push_nested_hierarchy(pd.struct);
-                old_current_structdef:=current_structdef;
-                current_structdef:=pd.struct;
+                old_current_structdef:=CurrentStructDef;
+                CurrentStructDef:=pd.struct;
               end;
             if df_generic in pd.defoptions then
               begin
                 if pd.is_generic then
-                  current_genericdef:=pd
+                  CurrentGenericDef:=pd
                 else if assigned(pd.struct) then
-                  current_genericdef:=pd.struct
+                  CurrentGenericDef:=pd.struct
                 else
                   internalerror(2016090202);
               end;
             if df_specialization in pd.defoptions then
               begin
                 if pd.is_specialization then
-                  current_specializedef:=pd
+                  CurrentSpecializeDef:=pd
                 else if assigned(pd.struct) then
-                  current_specializedef:=pd.struct
+                  CurrentSpecializeDef:=pd.struct
                 else
                   internalerror(2016090203);
               end;
@@ -1389,13 +1389,13 @@ implementation
               symtablestack.pop(pd.parast);
             if popclass>0 then
               begin
-                current_structdef:=old_current_structdef;
+                CurrentStructDef:=old_current_structdef;
                 dec(popclass,pop_nested_hierarchy(pd.struct));
                 if popclass<>0 then
                   internalerror(201012020);
               end;
-            current_genericdef:=old_current_genericdef;
-            current_specializedef:=old_current_specializedef;
+            CurrentGenericDef:=old_current_genericdef;
+            CurrentSpecializeDef:=old_current_specializedef;
             parse_generic:=old_parse_generic;
           end;
 
@@ -1415,14 +1415,14 @@ implementation
                   { allow a different result name for anonymous functions (especially
                     for modes without Result modeswitch), but for consistency with
                     operators we allow this in other modes as well }
-                  if current_scanner.token<>_ID then
+                  if CurrentScanner.token<>_ID then
                     begin
-                       if not(m_result in current_settings.modeswitches) then
+                       if not(m_result in CurrentSettings.modeswitches) then
                          consume(_ID);
                     end
                   else
                     begin
-                      pd.resultname:=stringdup(current_scanner.orgpattern);
+                      pd.resultname:=stringdup(CurrentScanner.orgpattern);
                       consume(_ID);
                     end;
                 end;
@@ -1436,7 +1436,7 @@ implementation
                       parse_only and
                       not(is_interface(pd.struct))
                      ) or
-                     (m_repeat_forward in current_settings.modeswitches) then
+                     (m_repeat_forward in CurrentSettings.modeswitches) then
                   begin
                     consume(_COLON);
                     consume_all_until(_SEMICOLON);
@@ -1491,14 +1491,14 @@ implementation
                   { any class operator is also static }
                   include(pd.procoptions,po_staticmethod);
                 end;
-              if current_scanner.token<>_ID then
+              if CurrentScanner.token<>_ID then
                 begin
-                   if not(m_result in current_settings.modeswitches) then
+                   if not(m_result in CurrentSettings.modeswitches) then
                      consume(_ID);
                 end
               else
                 begin
-                  pd.resultname:=stringdup(current_scanner.orgpattern);
+                  pd.resultname:=stringdup(CurrentScanner.orgpattern);
                   consume(_ID);
                 end;
               { operators without result (management operators) }
@@ -1580,7 +1580,7 @@ implementation
         { support procedure proc stdcall export; }
         if not(check_proc_directive(false)) then
           begin
-            if (current_scanner.token=_COLON) and not(Assigned(pd) and is_void(pd.returndef)) then
+            if (CurrentScanner.token=_COLON) and not(Assigned(pd) and is_void(pd.returndef)) then
               begin
                 message(parser_e_field_not_allowed_here);
                 consume_all_until(_SEMICOLON);
@@ -1600,12 +1600,12 @@ implementation
     function parse_proc_dec(flags:tparse_proc_flags;astruct:tabstractrecorddef):tprocdef;
       var
         pd : tprocdef;
-        old_block_type : tblock_type;
+        old_block_type : TBlockType;
         recover : boolean;
 
         procedure finish_intf_mapping;
           begin
-            if current_scanner.token=_COLON then
+            if CurrentScanner.token=_COLON then
               begin
                 message(parser_e_field_not_allowed_here);
                 consume_all_until(_SEMICOLON);
@@ -1616,7 +1616,7 @@ implementation
       begin
         pd:=nil;
         recover:=false;
-        case current_scanner.token of
+        case CurrentScanner.token of
           _FUNCTION :
             begin
               consume(_FUNCTION);
@@ -1674,8 +1674,8 @@ implementation
                 parse_proc_dec_finish(pd,flags,astruct);
             end;
         else
-          if (current_scanner.token=_OPERATOR) or
-             ((ppf_classmethod in flags) and (current_scanner.idtoken=_OPERATOR)) then
+          if (CurrentScanner.token=_OPERATOR) or
+             ((ppf_classmethod in flags) and (CurrentScanner.idtoken=_OPERATOR)) then
             begin
               { we need to set the block type to bt_body, so that operator names
                 like ">", "=>" or "<>" are parsed correctly instead of e.g.
@@ -1700,7 +1700,7 @@ implementation
 
         if recover and not(check_proc_directive(false)) then
           begin
-            if (current_scanner.token=_COLON) and not(Assigned(pd) and is_void(pd.returndef)) then
+            if (CurrentScanner.token=_COLON) and not(Assigned(pd) and is_void(pd.returndef)) then
               begin
                 message(parser_e_field_not_allowed_here);
                 consume_all_until(_SEMICOLON);
@@ -1713,7 +1713,7 @@ implementation
         if assigned(pd) and
             (df_generic in pd.defoptions) and
             assigned(pd.genericdecltokenbuf) then
-          current_scanner.stoprecordtokens;
+          CurrentScanner.stoprecordtokens;
 
         result:=pd;
       end;
@@ -1830,14 +1830,14 @@ procedure pd_asmname(pd:tabstractprocdef);
 begin
   if pd.typ<>procdef then
     internalerror(200304267);
-  if current_scanner.token=_CCHAR then
+  if CurrentScanner.token=_CCHAR then
     begin
-      tprocdef(pd).aliasnames.insert(target_info.Cprefix+current_scanner.pattern);
+      tprocdef(pd).aliasnames.insert(TargetInfo.Cprefix+CurrentScanner.pattern);
       consume(_CCHAR)
     end
   else
     begin
-      tprocdef(pd).aliasnames.insert(target_info.Cprefix+current_scanner.cstringpattern);
+      tprocdef(pd).aliasnames.insert(TargetInfo.Cprefix+CurrentScanner.cstringpattern);
       consume(_CSTRING);
     end;
   { we don't need anything else }
@@ -1910,7 +1910,7 @@ begin
   if pd.typ<>procdef then
     internalerror(200910170);
   if is_objectpascal_helper(tprocdef(pd).struct) and
-      (m_objfpc in current_settings.modeswitches) then
+      (m_objfpc in CurrentSettings.modeswitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_FINAL].str);
   if (po_virtualmethod in pd.procoptions) or
      (is_javaclass(tprocdef(pd).struct) and
@@ -1924,9 +1924,9 @@ procedure pd_enumerator(pd:tabstractprocdef);
 begin
   if pd.typ<>procdef then
     internalerror(200910250);
-  if (current_scanner.token = _ID) then
+  if (CurrentScanner.token = _ID) then
   begin
-    if current_scanner.pattern='MOVENEXT' then
+    if CurrentScanner.pattern='MOVENEXT' then
     begin
       if oo_has_enumerator_movenext in tprocdef(pd).struct.objectoptions then
         message(parser_e_only_one_enumerator_movenext);
@@ -1941,8 +1941,8 @@ begin
         Message(parser_e_enumerator_movenext_is_not_valid)
     end
     else
-      Message1(parser_e_invalid_enumerator_identifier, current_scanner.pattern);
-    consume(current_scanner.token);
+      Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.pattern);
+    consume(CurrentScanner.token);
   end
   else
     Message(parser_e_enumerator_identifier_required);
@@ -1951,7 +1951,7 @@ end;
 procedure pd_virtual(pd:tabstractprocdef);
 {$ifdef WITHDMT}
 var
-  pt : tnode;
+  pt : TNode;
 {$endif WITHDMT}
 begin
   if assigned(pd.owner) and
@@ -1968,7 +1968,7 @@ begin
   if pd.is_generic then
     message(parser_e_genfuncs_cannot_be_virtual);
   if is_objectpascal_helper(tprocdef(pd).struct) and
-      (m_objfpc in current_settings.modeswitches) then
+      (m_objfpc in CurrentSettings.modeswitches) then
     Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_VIRTUAL].str);
 {$ifdef WITHDMT}
   if is_object(tprocdef(pd).struct) and
@@ -1991,7 +1991,7 @@ end;
 
 procedure pd_dispid(pd:tabstractprocdef);
 
-var pt:Tnode;
+var pt:TNode;
 
 begin
   if pd.typ<>procdef then
@@ -2033,7 +2033,7 @@ begin
     internalerror(2003042611);
   if is_objectpascal_helper(tprocdef(pd).struct) then
     begin
-      if m_objfpc in current_settings.modeswitches then
+      if m_objfpc in CurrentSettings.modeswitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_OVERRIDE].str)
     end
   else if not(is_class_or_interface_or_objc_or_java(tprocdef(pd).struct)) then
@@ -2056,14 +2056,14 @@ end;
 
 procedure pd_message(pd:tabstractprocdef);
 var
-  pt : tnode;
+  pt : TNode;
   paracnt : longint;
 begin
   if pd.typ<>procdef then
     internalerror(2003042613);
   if is_objectpascal_helper(tprocdef(pd).struct) then
     begin
-      if m_objfpc in current_settings.modeswitches then
+      if m_objfpc in CurrentSettings.modeswitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_MESSAGE].str);
     end
   else
@@ -2126,7 +2126,7 @@ begin
     internalerror(200401211);
   if is_objectpascal_helper(tprocdef(pd).struct) then
     begin
-      if m_objfpc in current_settings.modeswitches then
+      if m_objfpc in CurrentSettings.modeswitches then
         Message1(parser_e_not_allowed_in_helper, arraytokeninfo[_REINTRODUCE].str);
     end
   else
@@ -2240,17 +2240,17 @@ begin
         so we check if an semicolon follows, else a string constant have to
         follow (FK) }
       if not is_java_external and
-         not(current_scanner.token=_SEMICOLON) and not(current_scanner.idtoken=_NAME) then
+         not(CurrentScanner.token=_SEMICOLON) and not(CurrentScanner.idtoken=_NAME) then
         begin
           { Always add library prefix and suffix to create an uniform name }
           hs:=get_stringconst;
           if ExtractFileExt(hs)='' then
-            hs:=ChangeFileExt(hs,target_info.sharedlibext);
-          if Copy(hs,1,length(target_info.sharedlibprefix))<>target_info.sharedlibprefix then
-            hs:=target_info.sharedlibprefix+hs;
+            hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
+          if Copy(hs,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
+            hs:=TargetInfo.sharedlibprefix+hs;
           import_dll:=stringdup(hs);
           include(procoptions,po_has_importdll);
-          if (current_scanner.idtoken=_NAME) then
+          if (CurrentScanner.idtoken=_NAME) then
            begin
              consume(_NAME);
              import_name:=stringdup(get_stringconst);
@@ -2258,7 +2258,7 @@ begin
              if import_name^='' then
                message(parser_e_empty_import_name);
            end;
-          if (current_scanner.idtoken=_INDEX) then
+          if (CurrentScanner.idtoken=_INDEX) then
            begin
              {After the word index follows the index number in the DLL.}
              consume(_INDEX);
@@ -2268,13 +2268,13 @@ begin
              else
                import_nr:=longint(v.svalue);
            end;
-          if (current_scanner.idtoken=_SUSPENDING) then
+          if (CurrentScanner.idtoken=_SUSPENDING) then
            begin
              message(parser_e_suspending_externals_not_supported_on_current_platform);
              consume(_SUSPENDING);
-             if current_scanner.idtoken=_FIRST then
+             if CurrentScanner.idtoken=_FIRST then
                consume(_FIRST)
-             else if current_scanner.idtoken=_LAST then
+             else if CurrentScanner.idtoken=_LAST then
                consume(_LAST);
            end;
           { default is to used the realname of the procedure }
@@ -2286,7 +2286,7 @@ begin
         end
       else
         begin
-          if (current_scanner.idtoken=_NAME) or
+          if (CurrentScanner.idtoken=_NAME) or
              is_java_external then
            begin
              consume(_NAME);
@@ -2302,7 +2302,7 @@ end;
 
 procedure pd_weakexternal(pd:tabstractprocdef);
 begin
-  if not(target_info.system in systems_weak_linking) then
+  if not(TargetInfo.system in systems_weak_linking) then
     message(parser_e_weak_external_not_supported)
   else
     pd_external(pd);
@@ -2311,7 +2311,7 @@ end;
 
 procedure pd_winapi(pd:tabstractprocdef);
 begin
-  if not(target_info.system in systems_all_windows+[system_i386_nativent]) then
+  if not(TargetInfo.system in systems_all_windows+[system_i386_nativent]) then
     pd.proccalloption:=pocall_cdecl
   else
     pd.proccalloption:=pocall_stdcall;
@@ -2341,9 +2341,9 @@ type
      idtok     : ttoken;
      pd_flags  : tpdflags;
      handler   : pd_handler;
-     pocall    : tproccalloption;
+     pocall    : TProcCallOption;
      pooption  : tprocoptions;
-     mutexclpocall : tproccalloptions;
+     mutexclpocall : TProcCallOptions;
      mutexclpotype : tproctypeoptions;
      mutexclpo     : tprocoptions;
    end;
@@ -2858,12 +2858,12 @@ var
       begin
         result:=false;
         for i:=1 to num_proc_directives do
-         if proc_direcdata[i].idtok=current_scanner.idtoken then
+         if proc_direcdata[i].idtok=CurrentScanner.idtoken then
           begin
             if ((not isprocvar) or
                (pd_procvar in proc_direcdata[i].pd_flags)) and
                { don't eat a public directive in classes }
-               not((current_scanner.idtoken=_PUBLIC) and (symtablestack.top.symtabletype=ObjectSymtable)) then
+               not((CurrentScanner.idtoken=_PUBLIC) and (symtablestack.top.symtabletype=ObjectSymtable)) then
               result:=true;
             exit;
           end;
@@ -2891,22 +2891,22 @@ var
         tokenloc : TFilePosInfo;
       begin
         parse_proc_direc:=false;
-        name:=tokeninfo^[current_scanner.idtoken].str;
+        name:=tokeninfo^[CurrentScanner.idtoken].str;
 
       { Hint directive? Then exit immediately }
-        if (m_hintdirective in current_settings.modeswitches) then
+        if (m_hintdirective in CurrentSettings.modeswitches) then
          begin
-           case current_scanner.idtoken of
+           case CurrentScanner.idtoken of
              _LIBRARY,
              _PLATFORM,
              _UNIMPLEMENTED,
              _EXPERIMENTAL,
              _DEPRECATED :
-               if (m_delphi in current_settings.modeswitches) and (pd.typ=procdef) then
+               if (m_delphi in CurrentSettings.modeswitches) and (pd.typ=procdef) then
                  begin
                    maybe_parse_hint_directives(tprocdef(pd));
                    { could the new token still be a directive? }
-                   if current_scanner.token<>_ID then
+                   if CurrentScanner.token<>_ID then
                      exit;
                  end
                else
@@ -2918,12 +2918,12 @@ var
 
         { C directive is MacPas only, because it breaks too much existing code
           on other platforms (PFV) }
-        if (current_scanner.idtoken=_C) and
-           not(m_mac in current_settings.modeswitches) then
+        if (CurrentScanner.idtoken=_C) and
+           not(m_mac in CurrentSettings.modeswitches) then
           exit;
 
       { retrieve data for directive if found }
-      p:=find_proc_directive_index(current_scanner.idtoken);
+      p:=find_proc_directive_index(CurrentScanner.idtoken);
 
       { Check if the procedure directive is known }
         if p=-1 then
@@ -2931,8 +2931,8 @@ var
             { parsing a procvar type the name can be any
               next variable !! }
             if ((pdflags * [pd_procvar,pd_object,pd_record,pd_objcclass,pd_objcprot])=[]) and
-               not(current_scanner.idtoken in [_PROPERTY,_GENERIC]) then
-              Message1(parser_w_unknown_proc_directive_ignored,current_scanner.pattern);
+               not(CurrentScanner.idtoken in [_PROPERTY,_GENERIC]) then
+              Message1(parser_w_unknown_proc_directive_ignored,CurrentScanner.pattern);
             exit;
          end;
 
@@ -2961,10 +2961,10 @@ var
           exit;
 
         { Keep track of the token's position in the file so it's correctly indicated if an error occurs. }
-        tokenloc := current_tokenpos;
+        tokenloc := CurrentTokenPos;
 
         { consume directive, and turn flag on }
-        consume(current_scanner.token);
+        consume(CurrentScanner.token);
         parse_proc_direc:=true;
 
         { Conflicts between directives? }
@@ -3113,21 +3113,21 @@ var
               pocall_ms_abi_cdecl:
                 begin
                   if assigned(pd.struct) then
-                    result:=target_info.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname
+                    result:=TargetInfo.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname
                   else
-                    result:=target_info.Cprefix+pd.procsym.realname;
+                    result:=TargetInfo.Cprefix+pd.procsym.realname;
                 end;
               pocall_cppdecl :
                 begin
-                  result:=target_info.Cprefix+pd.cplusplusmangledname;
+                  result:=TargetInfo.Cprefix+pd.cplusplusmangledname;
                 end;
               else
                 begin
                   {In MacPas a single "external" has the same effect as "external name 'xxx'" }
                   { but according to MacPas mode description
                     Cprefix should still be used PM }
-                  if (m_mac in current_settings.modeswitches) then
-                    result:=target_info.Cprefix+tprocdef(pd).procsym.realname
+                  if (m_mac in CurrentSettings.modeswitches) then
+                    result:=TargetInfo.Cprefix+tprocdef(pd).procsym.realname
                   else
                     result:=pd.procsym.realname;
 
@@ -3183,20 +3183,20 @@ var
               pocall_ms_abi_cdecl:
                 begin
                   if assigned(pd.struct) then
-                   pd.aliasnames.insert(target_info.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname)
+                   pd.aliasnames.insert(TargetInfo.Cprefix+pd.struct.objrealname^+'_'+pd.procsym.realname)
                   else
                     begin
                       { Export names are not mangled on Windows, see also pexports.pas }
-                      if (target_info.system in systems_all_windows) and
+                      if (TargetInfo.system in systems_all_windows) and
                         (po_exports in pd.procoptions) then
                         pd.aliasnames.insert(pd.procsym.realname)
                       else
-                        pd.aliasnames.insert(target_info.Cprefix+pd.procsym.realname);
+                        pd.aliasnames.insert(TargetInfo.Cprefix+pd.procsym.realname);
                     end;
                 end;
               pocall_cppdecl :
                 begin
-                  pd.aliasnames.insert(target_info.Cprefix+pd.cplusplusmangledname);
+                  pd.aliasnames.insert(TargetInfo.Cprefix+pd.cplusplusmangledname);
                 end;
               else
                 ;
@@ -3216,9 +3216,9 @@ var
         stoprecording,
         res : boolean;
       begin
-        if (m_mac in current_settings.modeswitches) and (cs_externally_visible in current_settings.localswitches) then
+        if (m_mac in CurrentSettings.modeswitches) and (cs_externally_visible in CurrentSettings.localswitches) then
           begin
-            tprocdef(pd).aliasnames.insert(target_info.Cprefix+tprocdef(pd).procsym.realname);
+            tprocdef(pd).aliasnames.insert(TargetInfo.Cprefix+tprocdef(pd).procsym.realname);
             include(pd.procoptions,po_public);
             include(pd.procoptions,po_has_public_name);
             include(pd.procoptions,po_global);
@@ -3245,21 +3245,21 @@ var
         { for a generic routine we also need to record the procedure          }
         { directives, but only if we aren't already recording for a           }
         { surrounding generic                                                 }
-        if pd.is_generic and (pd.typ=procdef) and not current_scanner.is_recording_tokens then
+        if pd.is_generic and (pd.typ=procdef) and not CurrentScanner.is_recording_tokens then
           begin
-            current_scanner.startrecordtokens(tprocdef(pd).genericdecltokenbuf);
+            CurrentScanner.startrecordtokens(tprocdef(pd).genericdecltokenbuf);
             stoprecording:=true;
           end
         else
           stoprecording:=false;
 
-        while (current_scanner.token=_ID) or
+        while (CurrentScanner.token=_ID) or
             (
-              not (m_prefixed_attributes in current_settings.modeswitches) and
-              (current_scanner.token=_LECKKLAMMER)
+              not (m_prefixed_attributes in CurrentSettings.modeswitches) and
+              (CurrentScanner.token=_LECKKLAMMER)
             ) do
          begin
-           if not (m_prefixed_attributes in current_settings.modeswitches) and
+           if not (m_prefixed_attributes in CurrentSettings.modeswitches) and
               try_to_consume(_LECKKLAMMER) then
             begin
               repeat
@@ -3279,7 +3279,7 @@ var
            if res then
             begin
               if (block_type=bt_const_type) and
-                 (current_scanner.token=_EQ) then
+                 (CurrentScanner.token=_EQ) then
                break;
               { support procedure proc;stdcall export; }
               if not(check_proc_directive((pd.typ=procvardef))) then
@@ -3288,15 +3288,15 @@ var
                     "var p : procedure stdcall = nil;" }
                   if (
                       (pd_procvar in pdflags) and
-                       (current_scanner.token in [_END,_RKLAMMER,_EQ])
+                       (CurrentScanner.token in [_END,_RKLAMMER,_EQ])
                     ) or (
                       (po_anonymous in pd.procoptions) and
-                      (current_scanner.token in [_BEGIN,_VAR,_CONST,_TYPE,_LABEL,_FUNCTION,_PROCEDURE,_OPERATOR])
+                      (CurrentScanner.token in [_BEGIN,_VAR,_CONST,_TYPE,_LABEL,_FUNCTION,_PROCEDURE,_OPERATOR])
                     ) then
                     break
                   else
                     begin
-                      if (current_scanner.token=_COLON) then
+                      if (CurrentScanner.token=_COLON) then
                         begin
                           Message(parser_e_field_not_allowed_here);
                           consume_all_until(_SEMICOLON);
@@ -3310,7 +3310,7 @@ var
          end;
 
         if stoprecording then
-          current_scanner.stoprecordtokens;
+          CurrentScanner.stoprecordtokens;
 
          { nostackframe requires assembler, but assembler
            may be specified in the implementation part only,

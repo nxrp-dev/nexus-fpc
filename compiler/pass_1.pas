@@ -28,14 +28,14 @@ interface
     uses
        node;
 
-    procedure typecheckpass(var p : tnode);
-    function  do_typecheckpass(var p : tnode) : boolean;
-    function  do_typecheckpass_changed(var p : tnode; out nodechanged: boolean) : boolean;
+    procedure TypeCheckPass(var p : TNode);
+    function  DoTypeCheckPass(var p : TNode) : boolean;
+    function  DoTypeCheckPassChanged(var p : TNode; out nodechanged: boolean) : boolean;
 
-    procedure firstpass(var p : tnode);
-    function  do_firstpass(var p : tnode) : boolean;
+    procedure FirstPass(var p : TNode);
+    function  DoFirstPass(var p : TNode) : boolean;
 {$ifdef state_tracking}
-    procedure  do_track_state_pass(p:Tnode);
+    procedure  DoTrackStatePass(p:TNode);
 {$endif}
 
 
@@ -60,15 +60,15 @@ implementation
                             Global procedures
 *****************************************************************************}
 
-    procedure typecheckpass_internal_loop(var p : tnode; out node_changed: boolean);
+    procedure TypeCheckPassInternalLoop(var p : TNode; out node_changed: boolean);
       var
-         hp        : tnode;
-         oldflags  : tnodeflags;
+         hp        : TNode;
+         oldflags  : TNodeFlags;
       begin
-        codegenerror:=false;
+        CodeGenError:=false;
         repeat
-          current_filepos:=p.fileinfo;
-          current_settings.localswitches:=p.localswitches;
+          CurrentFilePos:=p.fileinfo;
+          CurrentSettings.localswitches:=p.localswitches;
           status.verbosity:=p.verbosity;
           hp:=p.pass_typecheck;
           { should the node be replaced? }
@@ -85,7 +85,7 @@ implementation
             end;
         until not assigned(hp) or
               assigned(hp.resultdef);
-        if codegenerror then
+        if CodeGenError then
           begin
             include(p.transientflags,tnf_error);
             { default to errortype if no type is set yet }
@@ -94,66 +94,66 @@ implementation
           end;
       end;
 
-    procedure typecheckpass_internal(var p : tnode; out node_changed: boolean);
+    procedure TypeCheckPassInternal(var p : TNode; out node_changed: boolean);
       var
          oldcodegenerror  : boolean;
-         oldlocalswitches : tlocalswitches;
+         oldlocalswitches : TLocalSwitches;
          oldverbosity     : longint;
-         oldpos    : tfileposinfo;
+         oldpos    : TFilePosInfo;
       begin
         node_changed:=false;
         if (p.resultdef=nil) then
           begin
-            oldcodegenerror:=codegenerror;
-            oldpos:=current_filepos;
-            oldlocalswitches:=current_settings.localswitches;
+            oldcodegenerror:=CodeGenError;
+            oldpos:=CurrentFilePos;
+            oldlocalswitches:=CurrentSettings.localswitches;
             oldverbosity:=status.verbosity;
-            typecheckpass_internal_loop(p, node_changed);
-            current_settings.localswitches:=oldlocalswitches;
-            current_filepos:=oldpos;
+            TypeCheckPassInternalLoop(p, node_changed);
+            CurrentSettings.localswitches:=oldlocalswitches;
+            CurrentFilePos:=oldpos;
             status.verbosity:=oldverbosity;
-            codegenerror:=codegenerror or oldcodegenerror;
+            CodeGenError:=CodeGenError or oldcodegenerror;
           end
         else
           begin
             { update the codegenerror boolean with the previous result of this node }
             if (tnf_error in p.transientflags) then
-              codegenerror:=true;
+              CodeGenError:=true;
           end;
       end;
 
 
-    procedure typecheckpass(var p : tnode);
+    procedure TypeCheckPass(var p : TNode);
       var
         node_changed: boolean;
       begin
-        typecheckpass_internal(p,node_changed);
+        TypeCheckPassInternal(p,node_changed);
       end;
 
 
-    function do_typecheckpass_changed(var p : tnode; out nodechanged: boolean) : boolean;
+    function DoTypeCheckPassChanged(var p : TNode; out nodechanged: boolean) : boolean;
       begin
-         codegenerror:=false;
-         typecheckpass_internal(p,nodechanged);
-         do_typecheckpass_changed:=codegenerror;
+         CodeGenError:=false;
+         TypeCheckPassInternal(p,nodechanged);
+         DoTypeCheckPassChanged:=CodeGenError;
       end;
 
 
-    function do_typecheckpass(var p : tnode) : boolean;
+    function DoTypeCheckPass(var p : TNode) : boolean;
       var
         nodechanged: boolean;
       begin
-         result:=do_typecheckpass_changed(p,nodechanged);
+         result:=DoTypeCheckPassChanged(p,nodechanged);
       end;
 
 
-    procedure firstpass(var p : tnode);
+    procedure FirstPass(var p : TNode);
       var
          oldcodegenerror  : boolean;
-         oldlocalswitches : tlocalswitches;
-         oldpos    : tfileposinfo;
+         oldlocalswitches : TLocalSwitches;
+         oldpos    : TFilePosInfo;
          oldverbosity: longint;
-         hp : tnode;
+         hp : TNode;
          nodechanged : boolean;
       begin
          if (tnf_pass1_done in p.transientflags) then
@@ -161,11 +161,11 @@ implementation
 
          if not(tnf_error in p.transientflags) then
            begin
-             oldcodegenerror:=codegenerror;
-             oldpos:=current_filepos;
-             oldlocalswitches:=current_settings.localswitches;
+             oldcodegenerror:=CodeGenError;
+             oldpos:=CurrentFilePos;
+             oldlocalswitches:=CurrentSettings.localswitches;
              oldverbosity:=status.verbosity;
-             codegenerror:=false;
+             CodeGenError:=false;
              repeat
                { The error flag takes precedence over the 'do not execute' flag,
                  as it's assumed the node tree isn't tenable beyond this point }
@@ -173,19 +173,19 @@ implementation
                  InternalError(2022112401);
 
                { checks make always a call }
-               if ([cs_check_range,cs_check_overflow,cs_check_stack] * current_settings.localswitches <> []) then
-                 include(current_procinfo.flags,pi_do_call);
+               if ([cs_check_range,cs_check_overflow,cs_check_stack] * CurrentSettings.localswitches <> []) then
+                 include(CurrentProcInfo.flags,pi_do_call);
                { determine the resultdef if not done }
                if (p.resultdef=nil) then
                  begin
-                   typecheckpass_internal_loop(p,nodechanged);
+                   TypeCheckPassInternalLoop(p,nodechanged);
                  end;
 
                hp:=nil;
                if not(tnf_error in p.transientflags) then
                  begin
-                   current_filepos:=p.fileinfo;
-                   current_settings.localswitches:=p.localswitches;
+                   CurrentFilePos:=p.fileinfo;
+                   CurrentSettings.localswitches:=p.localswitches;
                    status.verbosity:=p.verbosity;
                    { first pass }
                    hp:=p.pass_1;
@@ -200,7 +200,7 @@ implementation
                        { switch to new node }
                        p:=hp;
                      end;
-                   if codegenerror then
+                   if CodeGenError then
                      include(p.transientflags,tnf_error);
                  end;
              until not assigned(hp) or
@@ -213,34 +213,34 @@ implementation
                    Comment(V_Warning,'Expectloc is not set in firstpass: '+nodetype2str[p.nodetype]);
                end;
 {$endif EXTDEBUG}
-             codegenerror:=codegenerror or oldcodegenerror;
-             current_settings.localswitches:=oldlocalswitches;
-             current_filepos:=oldpos;
+             CodeGenError:=CodeGenError or oldcodegenerror;
+             CurrentSettings.localswitches:=oldlocalswitches;
+             CurrentFilePos:=oldpos;
              status.verbosity:=oldverbosity;
            end
          else
-           codegenerror:=true;
+           CodeGenError:=true;
       end;
 
 
-    function do_firstpass(var p : tnode) : boolean;
+    function DoFirstPass(var p : TNode) : boolean;
       begin
-         codegenerror:=false;
-         firstpass(p);
+         CodeGenError:=false;
+         FirstPass(p);
 {$ifdef state_tracking}
          writeln('TRACKSTART');
          writeln('before');
          writenode(p);
-         do_track_state_pass(p);
+         DoTrackStatePass(p);
          writeln('after');
          writenode(p);
          writeln('TRACKDONE');
 {$endif}
-         do_firstpass:=codegenerror;
+         DoFirstPass:=CodeGenError;
       end;
 
 {$ifdef state_tracking}
-     procedure do_track_state_pass(p:Tnode);
+     procedure DoTrackStatePass(p:TNode);
 
      begin
         aktstate:=Tstate_storage.create;

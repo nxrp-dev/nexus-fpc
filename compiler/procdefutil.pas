@@ -42,10 +42,10 @@ function adjust_funcref(var def:tdef;sym,dummysym:tsym):boolean;
 
 function get_or_create_capturer(pd:tprocdef):tsym;
 function capturer_add_anonymous_proc(owner:tprocinfo;pd:tprocdef;out capturer:tsym):tobjectdef;
-function capturer_add_procvar_or_proc(owner:tprocinfo;n:tnode;out capturer:tsym;out capturen:tnode):tobjectdef;
+function capturer_add_procvar_or_proc(owner:tprocinfo;n:TNode;out capturer:tsym;out capturen:TNode):tobjectdef;
 procedure initialize_capturer(ctx:tprocinfo;var stmt:tstatementnode);
 procedure postprocess_capturer(ctx:tprocinfo);
-procedure convert_captured_syms(pd:tprocdef;tree:tnode);
+procedure convert_captured_syms(pd:tprocdef;tree:TNode);
 
 implementation
 
@@ -112,7 +112,7 @@ implementation
     end;
 
 
-  function fileinfo_to_suffix(const fileinfo:tfileposinfo):tsymstr;inline;
+  function fileinfo_to_suffix(const fileinfo:TFilePosInfo):tsymstr;inline;
     begin
       result:=tostr(fileinfo.moduleindex)+'_'+
               tostr(fileinfo.fileindex)+'_'+
@@ -145,7 +145,7 @@ implementation
       if not (po_is_function_ref in tprocvardef(pvdef).procoptions) then
         internalerror(2021022101);
       if n='' then
-        name:=anon_funcref_prefix+fileinfo_to_suffix(current_filepos)
+        name:=anon_funcref_prefix+fileinfo_to_suffix(CurrentFilePos)
       else
         name:=n;
       intfdef:=cobjectdef.create(odt_interfacecom,name,interface_iunknown,true);
@@ -158,16 +158,16 @@ implementation
       intfdef.defoptions:=intfdef.defoptions+pvdef.defoptions*[df_generic,df_specialization];
       { also inherit the general flags from the surrounding structured type or
         function }
-      if assigned(current_structdef) then
+      if assigned(CurrentStructDef) then
         begin
-          intfdef.defoptions:=intfdef.defoptions+current_structdef.defoptions*[df_generic,df_specialization];
+          intfdef.defoptions:=intfdef.defoptions+CurrentStructDef.defoptions*[df_generic,df_specialization];
         end
-      else if assigned(current_procinfo) then
+      else if assigned(CurrentProcInfo) then
         begin
-          intfdef.defoptions:=intfdef.defoptions+current_procinfo.procdef.defoptions*[df_generic,df_specialization];
+          intfdef.defoptions:=intfdef.defoptions+CurrentProcInfo.procdef.defoptions*[df_generic,df_specialization];
         end;
 
-      if cs_generate_rtti in current_settings.localswitches then
+      if cs_generate_rtti in CurrentSettings.localswitches then
         include(intfdef.objectoptions,oo_can_have_published);
 
       oldsymtablestack:=symtablestack;
@@ -181,7 +181,7 @@ implementation
       include(invokedef.procoptions,po_virtualmethod);
 
       invokedef.procsym:=cprocsym.create(method_name_funcref_invoke_decl);
-      if cs_generate_rtti in current_settings.localswitches then
+      if cs_generate_rtti in CurrentSettings.localswitches then
         invokedef.visibility:=vis_published
       else
         invokedef.visibility:=vis_public;
@@ -242,7 +242,7 @@ implementation
 
   function adjust_funcref(var def:tdef;sym,dummysym:tsym):boolean;
     var
-      sympos : tfileposinfo;
+      sympos : TFilePosInfo;
       name : string;
     begin
       result:=false;
@@ -301,7 +301,7 @@ implementation
 
       name:='funcrefintf_'+suffix;
       if pd.owner.symtabletype=globalsymtable then
-        symowner:=current_module.localsymtable
+        symowner:=CurrentModule.localsymtable
       else
         symowner:=pd.owner;
       sym:=tsym(symowner.find(name));
@@ -545,7 +545,7 @@ implementation
     psym_mapping = ^tsym_mapping;
 
 
-  function replace_self_sym(var n:tnode;arg:pointer):foreachnoderesult;
+  function replace_self_sym(var n:TNode;arg:pointer):foreachnoderesult;
     var
       mapping : psym_mapping absolute arg;
       ld : tloadnode;
@@ -564,7 +564,7 @@ implementation
                   ld.left.free;
                   ld.left:=nil;
                 end;
-              typecheckpass(n);
+              TypeCheckPass(n);
             end;
         end;
       result:=fen_true;
@@ -696,7 +696,7 @@ implementation
     end;
 
 
-  function retrieve_sym_for_filepos(var n:tnode;arg:pointer):foreachnoderesult;
+  function retrieve_sym_for_filepos(var n:TNode;arg:pointer):foreachnoderesult;
     var
       sym : ^tsym absolute arg;
     begin
@@ -718,7 +718,7 @@ implementation
     end;
 
 
-  function collect_syms_to_capture(var n:tnode;arg:pointer):foreachnoderesult;
+  function collect_syms_to_capture(var n:TNode;arg:pointer):foreachnoderesult;
     var
       pd : tprocdef absolute arg;
       sym : tsym;
@@ -744,7 +744,7 @@ implementation
     pselfinfo=^tselfinfo;
 
 
-  function find_self_sym(var n:tnode;arg:pointer):foreachnoderesult;
+  function find_self_sym(var n:TNode;arg:pointer):foreachnoderesult;
     var
       info : pselfinfo absolute arg;
     begin
@@ -765,7 +765,7 @@ implementation
     end;
 
 
-  function find_outermost_loaded_sym(var n:tnode;arg:pointer):foreachnoderesult;
+  function find_outermost_loaded_sym(var n:TNode;arg:pointer):foreachnoderesult;
     var
       sym : ^tsym absolute arg;
     begin
@@ -781,7 +781,7 @@ implementation
     end;
 
 
-  function find_procdef(var n:tnode;arg:pointer):foreachnoderesult;
+  function find_procdef(var n:TNode;arg:pointer):foreachnoderesult;
     var
       pd : ^tprocdef absolute arg;
     begin
@@ -795,7 +795,7 @@ implementation
     end;
 
 
-  function capturer_add_procvar_or_proc(owner:tprocinfo;n:tnode;out capturer:tsym;out capturen:tnode):tobjectdef;
+  function capturer_add_procvar_or_proc(owner:tprocinfo;n:TNode;out capturer:tsym;out capturen:TNode):tobjectdef;
 
     function create_paras(pd:tprocdef):tcallparanode;
       var
@@ -878,7 +878,7 @@ implementation
       implintf : TImplementedInterface;
       i : longint;
       stmt : tstatementnode;
-      n1 : tnode;
+      n1 : TNode;
       fieldsym : tfieldvarsym;
       selfinfo : tselfinfo;
     begin
@@ -1130,10 +1130,10 @@ implementation
           if (n.resultdef.typ=procdef) and
               assigned(tprocdef(n.resultdef).struct) and
               not (po_staticmethod in tprocdef(n.resultdef).procoptions) and
-              assigned(current_procinfo.procdef.struct) and
-              def_is_related(current_procinfo.procdef.struct,tprocdef(n.resultdef).struct) then
+              assigned(CurrentProcInfo.procdef.struct) and
+              def_is_related(CurrentProcInfo.procdef.struct,tprocdef(n.resultdef).struct) then
             begin
-              selfinfo.selfsym:=tsym(current_procinfo.procdef.parast.find('self'));
+              selfinfo.selfsym:=tsym(CurrentProcInfo.procdef.parast.find('self'));
               if not assigned(selfinfo.selfsym) then
                 internalerror(2022110601);
             end
@@ -1306,13 +1306,13 @@ implementation
     end;
 
 
-  function load_capturer(capturer:tabstractvarsym):tnode;inline;
+  function load_capturer(capturer:tabstractvarsym):TNode;inline;
     begin
       result:=cloadnode.create(capturer,capturer.owner);
     end;
 
 
-  function instantiate_capturer(capturer_sym:tabstractvarsym):tnode;
+  function instantiate_capturer(capturer_sym:tabstractvarsym):TNode;
     var
       capturer_def : tobjectdef;
       ctor : tprocsym;
@@ -1335,7 +1335,7 @@ implementation
     var
       i : longint;
       psym: tparavarsym;
-      n : tnode;
+      n : TNode;
     begin
       for i:=0 to pd.paras.count-1 do
         begin
@@ -1363,7 +1363,7 @@ implementation
       outeralive,
       outercapturer : tabstractvarsym;
       alivenode,
-      selfnode : tnode;
+      selfnode : TNode;
     begin
       if not ctx.procdef.was_anonymous and
           not (ctx.procdef.owner.symtabletype=localsymtable) then
@@ -1461,19 +1461,19 @@ implementation
       oldsym:tsym;
       newsym:tsym;
       olddef:tdef;
-      selfnode:tnode;
+      selfnode:TNode;
     end;
     pconvert_mapping=^tconvert_mapping;
 
 
-  function convert_captured_sym(var n:tnode;arg:pointer):foreachnoderesult;
+  function convert_captured_sym(var n:TNode;arg:pointer):foreachnoderesult;
     var
       convertarg : pconvert_arg absolute arg;
       mapping : pconvert_mapping;
       i : longint;
-      old_filepos : tfileposinfo;
+      old_filepos : TFilePosInfo;
       loadprocvar : boolean;
-      paras: tnode;
+      paras: TNode;
       cnf : tcallnodeflags;
       paraold,
       paranew : tcallparanode;
@@ -1489,8 +1489,8 @@ implementation
               begin
                 if tloadnode(n).symtableentry<>mapping^.oldsym then
                   continue;
-                old_filepos:=current_filepos;
-                current_filepos:=n.fileinfo;
+                old_filepos:=CurrentFilePos;
+                CurrentFilePos:=n.fileinfo;
                 loadprocvar:=nf_load_procvar in n.flags;
                 n.free;
                 n:=csubscriptnode.create(mapping^.newsym,mapping^.selfnode.getcopy);
@@ -1500,8 +1500,8 @@ implementation
                     (vo_is_self in tparavarsym(mapping^.oldsym).varoptions) and
                     not is_implicit_pointer_object_type(tparavarsym(mapping^.oldsym).vardef) then
                   n:=cderefnode.create(n);
-                typecheckpass(n);
-                current_filepos:=old_filepos;
+                TypeCheckPass(n);
+                CurrentFilePos:=old_filepos;
                 break;
               end;
             calln:
@@ -1512,8 +1512,8 @@ implementation
                   continue;
                 if tcallnode(n).procdefinition<>tprocdef(mapping^.olddef) then
                   continue;
-                old_filepos:=current_filepos;
-                current_filepos:=n.fileinfo;
+                old_filepos:=CurrentFilePos;
+                CurrentFilePos:=n.fileinfo;
                 loadprocvar:=nf_load_procvar in n.flags;
                 paras:=tcallnode(n).left;
                 paraold:=tcallparanode(paras);
@@ -1535,8 +1535,8 @@ implementation
                 n:=ccallnode.create(paranew,tprocsym(mapping^.newsym),mapping^.newsym.owner,mapping^.selfnode.getcopy,cnf,nil);
                 if loadprocvar then
                   include(n.flags,nf_load_procvar);
-                typecheckpass(n);
-                current_filepos:=old_filepos;
+                TypeCheckPass(n);
+                CurrentFilePos:=old_filepos;
                 break;
               end;
             else
@@ -1546,9 +1546,9 @@ implementation
     end;
 
 
-  procedure convert_captured_syms(pd:tprocdef;tree:tnode);
+  procedure convert_captured_syms(pd:tprocdef;tree:TNode);
 
-    function self_tree_for_sym(selfsym:tsym;fieldsym:tsym):tnode;
+    function self_tree_for_sym(selfsym:tsym;fieldsym:tsym):TNode;
       var
         fieldowner : tdef;
         newsym : tsym;

@@ -30,7 +30,7 @@ unit i_android;
 
     const
 
-        system_aarch64_android_info  : tsysteminfo =
+        system_aarch64_android_info  : TSystemInfo =
            (
              system       : system_aarch64_android;
              name         : 'Android for AArch64';
@@ -98,7 +98,7 @@ unit i_android;
              abi : abi_default;
            );
 
-        system_x86_64_android_info : tsysteminfo =
+        system_x86_64_android_info : TSystemInfo =
            (
              system       : system_x86_64_android;
              name         : 'Android for x86-64';
@@ -172,12 +172,12 @@ implementation
 initialization
 {$ifdef CPUX86_64}
   {$ifdef android}
-    set_source_info(system_x86_64_android_info);
+    SetSourceInfo(system_x86_64_android_info);
   {$endif}
 {$endif CPUX86_64}
 {$ifdef CPUAARCH64}
   {$ifdef android}
-    set_source_info(system_aarch64_android_info);
+    SetSourceInfo(system_aarch64_android_info);
   {$endif android}
 {$endif CPUAARCH64}
 end.

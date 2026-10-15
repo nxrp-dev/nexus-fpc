@@ -33,41 +33,41 @@ interface
        symtype;
 
     type
-       tnothingnode = class(tnode)
+       tnothingnode = class(TNode)
           constructor create;virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeTree(var T: Text); override;
 {$endif DEBUG_NODE_XML}
        end;
        tnothingnodeclass = class of tnothingnode;
 
-       terrornode = class(tnode)
+       terrornode = class(TNode)
           constructor create;virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
           procedure mark_write;override;
        end;
        terrornodeclass = class of terrornode;
 
-       tspecializenode = class(tunarynode)
+       tspecializenode = class(TUnaryNode)
           sym:tsym;
           getaddr:boolean;
           inheriteddef:tdef;
           unit_specific:boolean;
-          constructor create(l:tnode;g:boolean;s:tsym;u:boolean);virtual;
-          constructor create_inherited(l:tnode;g:boolean;s:tsym;i:tdef);virtual;
-          function pass_1:tnode;override;
-          function pass_typecheck:tnode;override;
+          constructor create(l:TNode;g:boolean;s:tsym;u:boolean);virtual;
+          constructor create_inherited(l:TNode;g:boolean;s:tsym;i:tdef);virtual;
+          function pass_1:TNode;override;
+          function pass_typecheck:TNode;override;
        end;
        tspecializenodeclass = class of tspecializenode;
 
-       tfinalizetempsnode = class(tnode)
+       tfinalizetempsnode = class(TNode)
           constructor create;virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
        end;
        tfinalizetempsnodeclass = class of tfinalizetempsnode;
 
@@ -79,21 +79,21 @@ interface
 
        TAsmNodeFlags = set of TAsmNodeFlag;
 
-       tasmnode = class(tnode)
+       tasmnode = class(TNode)
           asmnodeflags : TAsmNodeFlags;
           p_asm : TAsmList;
           currenttai : tai;
           constructor create(p : TAsmList);virtual;
           constructor create_get_position;
           destructor destroy;override;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
           procedure XMLPrintNodeData(var T: Text); override;
@@ -106,14 +106,14 @@ interface
        end;
        tasmnodeclass = class of tasmnode;
 
-       tstatementnode = class(tbinarynode)
-          constructor create(l,r : tnode);virtual;
-          function simplify(forinline : boolean) : tnode; override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+       tstatementnode = class(TBinaryNode)
+          constructor create(l,r : TNode);virtual;
+          function simplify(forinline : boolean) : TNode; override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
           procedure printnodetree(var t:text);override;
-          property statement : tnode read left write left;
-          property next : tnode read right write right;
+          property statement : TNode read left write left;
+          property next : TNode read right write right;
        end;
        tstatementnodeclass = class of tstatementnode;
 
@@ -123,23 +123,23 @@ interface
 
        TBlockNodeFlags = set of TBlockNodeFlag;
 
-       tblocknode = class(tunarynode)
+       tblocknode = class(TUnaryNode)
           blocknodeflags : TBlockNodeFlags;
-          constructor create(l : tnode);virtual;
+          constructor create(l : TNode);virtual;
           destructor destroy; override;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
-          function dogetcopy : tnode;override;
-          function simplify(forinline : boolean) : tnode; override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function dogetcopy : TNode;override;
+          function simplify(forinline : boolean) : TNode; override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
 {$ifdef state_tracking}
           function track_state_pass(exec_known:boolean):boolean;override;
 {$endif state_tracking}
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
 {$endif DEBUG_NODE_XML}
-          property statements : tnode read left write left;
+          property statements : TNode read left write left;
        end;
        tblocknodeclass = class of tblocknode;
 
@@ -233,11 +233,11 @@ interface
          hookoncopy                 : ptempinfo;
          typedef                    : tdef;
          typedefderef               : tderef;
-         temptype                   : ttemptype;
+         temptype                   : TTempType;
          owner                      : ttempcreatenode;
-         withnode                   : tnode;
+         withnode                   : TNode;
          location                   : tlocation;
-         tempinitcode               : tnode;
+         tempinitcode               : TNode;
        end;
 
        ttempinfoaccessor = class
@@ -246,7 +246,7 @@ interface
        end;
        ttempinfoaccessorclass = class of ttempinfoaccessor;
 
-       ttempbasenode = class(tnode)
+       ttempbasenode = class(TNode)
         protected
           class var tempinfoaccessor: ttempinfoaccessorclass;
         protected
@@ -267,7 +267,7 @@ interface
        { size (the size is separate to allow creating "void" temps with a custom size) }
        ttempcreatenode = class(ttempbasenode)
           size: tcgint;
-          ftemplvalue : tnode;
+          ftemplvalue : TNode;
           { * persistent temps are used in manually written code where the temp }
           { be usable among different statements and where you can manually say }
           { when the temp has to be freed (using a ttempdeletenode)             }
@@ -275,18 +275,18 @@ interface
           { where the node that receives the temp becomes responsible for       }
           { freeing it. In this last case, you must use only one reference      }
           { to it and *not* generate a ttempdeletenode                          }
-          constructor create(_typedef: tdef; _size: tcgint; _temptype: ttemptype;allowreg:boolean); virtual;
-          constructor create_withnode(_typedef: tdef; _size: tcgint; _temptype: ttemptype; allowreg:boolean; withnode: tnode); virtual;
-          constructor create_value(_typedef:tdef; _size: tcgint; _temptype: ttemptype;allowreg:boolean; templvalue: tnode);
-          constructor create_reference(_typedef:tdef; _size: tcgint; _temptype: ttemptype;allowreg:boolean; templvalue: tnode; readonly: boolean);
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(_typedef: tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean); virtual;
+          constructor create_withnode(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode); virtual;
+          constructor create_value(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
+          constructor create_reference(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode; readonly: boolean);
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy: tnode; override;
-          function pass_1 : tnode; override;
-          function pass_typecheck: tnode; override;
-          function docompare(p: tnode): boolean; override;
+          function dogetcopy: TNode; override;
+          function pass_1 : TNode; override;
+          function pass_typecheck: TNode; override;
+          function docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeData(var T: Text); override;
@@ -297,14 +297,14 @@ interface
         { a node which is a reference to a certain temp }
         ttemprefnode = class(ttempbasenode)
           constructor create(const temp: ttempcreatenode); virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure resolveppuidx;override;
-          function dogetcopy: tnode; override;
-          function pass_1 : tnode; override;
-          function pass_typecheck : tnode; override;
+          function dogetcopy: TNode; override;
+          function pass_1 : TNode; override;
+          function pass_typecheck : TNode; override;
           procedure mark_write;override;
-          function docompare(p: tnode): boolean; override;
+          function docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
          private
           tempidx : longint;
@@ -317,13 +317,13 @@ interface
           { this will convert the persistent temp to a normal temp
             for returning to the other nodes }
           constructor create_normal_temp(const temp: ttempcreatenode);
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure resolveppuidx;override;
-          function dogetcopy: tnode; override;
-          function pass_1: tnode; override;
-          function pass_typecheck: tnode; override;
-          function docompare(p: tnode): boolean; override;
+          function dogetcopy: TNode; override;
+          function pass_1: TNode; override;
+          function pass_typecheck: TNode; override;
+          function docompare(p: TNode): boolean; override;
           destructor destroy; override;
           procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
@@ -353,17 +353,17 @@ interface
          generated internally by the parser }
        function  internalstatements(out laststatement:tstatementnode):tblocknode;
        function  laststatement(block:tblocknode):tstatementnode;
-       procedure addstatement(var laststatement:tstatementnode;n:tnode);
+       procedure addstatement(var laststatement:tstatementnode;n:TNode);
 
        { true if p is a statement expression with anonymous functions as values,
          which still needs to be converted to a procvar or function reference }
-       function is_deferred_stmt_expr(p : tnode) : boolean;
+       function is_deferred_stmt_expr(p : TNode) : boolean;
 
        { if the complexity of n is "high", creates a reference temp to n's
          location and replace n with a ttemprefnode referring to that location }
-       function maybereplacewithtempref(var n: tnode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; readonly: boolean): ttempcreatenode;
+       function maybereplacewithtempref(var n: TNode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; readonly: boolean): ttempcreatenode;
        { same as above, but create a regular temp rather than reference temp }
-       function maybereplacewithtemp(var n: tnode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; allowreg: boolean): ttempcreatenode;
+       function maybereplacewithtemp(var n: TNode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; allowreg: boolean): ttempcreatenode;
 
 implementation
 
@@ -390,7 +390,7 @@ implementation
                                      Helpers
 *****************************************************************************}
 
-    function is_deferred_stmt_expr(p : tnode) : boolean;
+    function is_deferred_stmt_expr(p : TNode) : boolean;
       var
         stmt : tstatementnode;
       begin
@@ -431,7 +431,7 @@ implementation
       end;
 
 
-    procedure addstatement(var laststatement:tstatementnode;n:tnode);
+    procedure addstatement(var laststatement:tstatementnode;n:TNode);
       begin
         if assigned(laststatement.right) then
           internalerror(200204201);
@@ -440,32 +440,32 @@ implementation
       end;
 
 
-    function maybereplacewithtempref(var n: tnode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; readonly: boolean): ttempcreatenode;
+    function maybereplacewithtempref(var n: TNode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; readonly: boolean): ttempcreatenode;
       begin
         result:=nil;
         if (node_complexity(n)>4) or
            might_have_sideeffects(n) then
           begin
             result:=ctempcreatenode.create_reference(n.resultdef,size,tt_persistent,true,n,readonly);
-            typecheckpass(tnode(result));
+            TypeCheckPass(TNode(result));
             n:=ctemprefnode.create(result);
-            typecheckpass(n);
+            TypeCheckPass(n);
             if not assigned(stat) then
               block:=internalstatements(stat);
             addstatement(stat,result)
           end;
       end;
 
-    function maybereplacewithtemp(var n: tnode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; allowreg: boolean): ttempcreatenode;
+    function maybereplacewithtemp(var n: TNode; var block: tblocknode; var stat: tstatementnode; size: ASizeInt; allowreg: boolean): ttempcreatenode;
       begin
         result:=nil;
         if (node_complexity(n)>4) or
            might_have_sideeffects(n) then
           begin
             result:=ctempcreatenode.create_value(n.resultdef,size,tt_persistent,allowreg,n);
-            typecheckpass(tnode(result));
+            TypeCheckPass(TNode(result));
             n:=ctemprefnode.create(result);
-            typecheckpass(n);
+            TypeCheckPass(n);
             if not assigned(stat) then
               block:=internalstatements(stat);
             addstatement(stat,result)
@@ -482,14 +482,14 @@ implementation
       end;
 
 
-    function tnothingnode.pass_typecheck:tnode;
+    function tnothingnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=voidtype;
       end;
 
 
-    function tnothingnode.pass_1 : tnode;
+    function tnothingnode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_VOID;
@@ -516,20 +516,20 @@ implementation
       end;
 
 
-    function terrornode.pass_typecheck:tnode;
+    function terrornode.pass_typecheck:TNode;
       begin
          result:=nil;
          include(transientflags,tnf_error);
-         codegenerror:=true;
+         CodeGenError:=true;
          resultdef:=generrordef;
       end;
 
 
-    function terrornode.pass_1 : tnode;
+    function terrornode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_VOID;
-         codegenerror:=true;
+         CodeGenError:=true;
       end;
 
 
@@ -542,7 +542,7 @@ implementation
                              TSPECIALIZENODE
 *****************************************************************************}
 
-    constructor tspecializenode.create(l:tnode;g:boolean;s:tsym;u:boolean);
+    constructor tspecializenode.create(l:TNode;g:boolean;s:tsym;u:boolean);
       begin
          inherited create(specializen,l);
          sym:=s;
@@ -550,27 +550,27 @@ implementation
          unit_specific:=u;
       end;
 
-    constructor tspecializenode.create_inherited(l:tnode;g:boolean;s:tsym;i:tdef);
+    constructor tspecializenode.create_inherited(l:TNode;g:boolean;s:tsym;i:tdef);
       begin
         create(l,g,s,false);
         inheriteddef:=i;
       end;
 
 
-    function tspecializenode.pass_typecheck:tnode;
+    function tspecializenode.pass_typecheck:TNode;
       begin
          result:=nil;
          resultdef:=cundefinedtype;
       end;
 
 
-    function tspecializenode.pass_1:tnode;
+    function tspecializenode.pass_1:TNode;
       begin
          { such a node should not reach pass_1 }
          internalerror(2015071704);
          result:=nil;
          expectloc:=LOC_VOID;
-         codegenerror:=true;
+         CodeGenError:=true;
       end;
 
 
@@ -583,19 +583,19 @@ implementation
         inherited create(finalizetempsn);
       end;
 
-    function tfinalizetempsnode.pass_1: tnode;
+    function tfinalizetempsnode.pass_1: TNode;
       begin
         result:=nil;
         expectloc:=LOC_VOID;
       end;
 
-    function tfinalizetempsnode.pass_typecheck: tnode;
+    function tfinalizetempsnode.pass_typecheck: TNode;
       begin
         resultdef:=voidtype;
         result:=nil;
       end;
 
-    function tfinalizetempsnode.docompare(p: tnode): boolean;
+    function tfinalizetempsnode.docompare(p: TNode): boolean;
       begin
         { these nodes should never be coalesced }
         result:=false;
@@ -606,14 +606,14 @@ implementation
                             TSTATEMENTNODE
 *****************************************************************************}
 
-    constructor tstatementnode.create(l,r : tnode);
+    constructor tstatementnode.create(l,r : TNode);
 
       begin
          inherited create(statementn,l,r);
       end;
 
 
-    function tstatementnode.simplify(forinline: boolean) : tnode;
+    function tstatementnode.simplify(forinline: boolean) : TNode;
       begin
         result:=nil;
         { these "optimizations" are only to make it more easy to recognise    }
@@ -672,36 +672,36 @@ implementation
       end;
 
 
-    function tstatementnode.pass_typecheck:tnode;
+    function tstatementnode.pass_typecheck:TNode;
       begin
          result:=nil;
          resultdef:=voidtype;
 
          { left is the statement itself calln assignn or a complex one }
-         typecheckpass(left);
-         if codegenerror then
+         TypeCheckPass(left);
+         if CodeGenError then
            exit;
 
          { right is the next statement in the list }
          if assigned(right) then
-           typecheckpass(right);
-         if codegenerror then
+           TypeCheckPass(right);
+         if CodeGenError then
            exit;
       end;
 
 
-    function tstatementnode.pass_1 : tnode;
+    function tstatementnode.pass_1 : TNode;
       begin
          result:=nil;
          { left is the statement itself calln assignn or a complex one }
-         firstpass(left);
-         if codegenerror then
+         FirstPass(left);
+         if CodeGenError then
            exit;
          expectloc:=left.expectloc;
          { right is the next in the list }
          if assigned(right) then
-           firstpass(right);
-         if codegenerror then
+           FirstPass(right);
+         if CodeGenError then
            exit;
       end;
 
@@ -715,7 +715,7 @@ implementation
                              TBLOCKNODE
 *****************************************************************************}
 
-    constructor tblocknode.create(l : tnode);
+    constructor tblocknode.create(l : TNode);
 
       begin
          inherited create(blockn,l);
@@ -740,7 +740,7 @@ implementation
       end;
 
 
-    constructor tblocknode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tblocknode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getset(tppuset1(blocknodeflags));
@@ -754,23 +754,23 @@ implementation
       end;
 
 
-    function tblocknode.dogetcopy : tnode;
+    function tblocknode.dogetcopy : TNode;
       begin
         Result:=inherited dogetcopy;
         TBlockNode(Result).blocknodeflags:=blocknodeflags;
       end;
 
 
-    function NodesEqual(var n: tnode; arg: pointer): foreachnoderesult;
+    function NodesEqual(var n: TNode; arg: pointer): foreachnoderesult;
       begin
-        if n.IsEqual(tnode(arg)) then
+        if n.IsEqual(TNode(arg)) then
           result:=fen_norecurse_true
         else
           result:=fen_false;
       end;
 
 
-    function tblocknode.simplify(forinline : boolean): tnode;
+    function tblocknode.simplify(forinline : boolean): TNode;
       const
         NodeStripTerminators = [labeln, asmn, tempcreaten, tempdeleten];
 
@@ -815,7 +815,7 @@ implementation
                     ;
                 end;
               end
-            else if forinline or (cs_opt_level2 in current_settings.optimizerswitches) then
+            else if forinline or (cs_opt_level2 in CurrentSettings.optimizerswitches) then
               begin
                 n := TStatementNode(left);
                 while Assigned(n) do
@@ -915,16 +915,16 @@ implementation
             tassignmentnode(a[1].left).right:=nil;
             { ensure the node is first passed, so the resultdef does not get changed if the
               the type conv. below is merged }
-            firstpass(result);
+            FirstPass(result);
             result:=ctypeconvnode.create_internal(result,ttemprefnode(a[3].left).resultdef);
-            firstpass(result);
+            FirstPass(result);
             exit;
           end;
 {$endif break_inlining}
       end;
 
 
-    function tblocknode.pass_typecheck:tnode;
+    function tblocknode.pass_typecheck:TNode;
       var
          hp : tstatementnode;
       begin
@@ -936,8 +936,8 @@ implementation
            begin
               if assigned(hp.left) then
                 begin
-                   codegenerror:=false;
-                   typecheckpass(hp.left);
+                   CodeGenError:=false;
+                   TypeCheckPass(hp.left);
                    { the resultdef of the block is the last type that is
                      returned. Normally this is a voidtype. But when the
                      compiler inserts a block of multiple statements then the
@@ -949,7 +949,7 @@ implementation
       end;
 
 
-    function tblocknode.pass_1 : tnode;
+    function tblocknode.pass_1 : TNode;
       var
          php,hp,chp : tstatementnode;
          FirstNode: Boolean;
@@ -976,9 +976,9 @@ implementation
                    { Calling firstpass on a statement node normally causes
                      problems, so we have to be a little bit hacky if we want
                      to remove nothing nodes }
-                   codegenerror:=false;
+                   CodeGenError:=false;
                    chp:=tstatementnode(hp);
-                   firstpass(tnode(hp));
+                   FirstPass(TNode(hp));
                    { If the first node gets deleted, left must be updated,
                      otherwise it will be a dangling pointer }
                    if FirstNode then
@@ -1081,7 +1081,7 @@ implementation
       end;
 
 
-    constructor tasmnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tasmnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       var
         hp : tai;
       begin
@@ -1160,7 +1160,7 @@ implementation
       end;
 
 
-    function tasmnode.dogetcopy: tnode;
+    function tasmnode.dogetcopy: TNode;
       var
         n: tasmnode;
       begin
@@ -1178,23 +1178,23 @@ implementation
       end;
 
 
-    function tasmnode.pass_typecheck:tnode;
+    function tasmnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=voidtype;
         if not(asmnf_get_asm_position in asmnodeflags) then
-          include(current_procinfo.flags,pi_has_assembler_block);
+          include(CurrentProcInfo.flags,pi_has_assembler_block);
       end;
 
 
-    function tasmnode.pass_1 : tnode;
+    function tasmnode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_VOID;
       end;
 
 
-    function tasmnode.docompare(p: tnode): boolean;
+    function tasmnode.docompare(p: TNode): boolean;
       begin
         { comparing of asmlists is not implemented (JM) }
         docompare := false;
@@ -1397,7 +1397,7 @@ implementation
                           TEMPCREATENODE
 *****************************************************************************}
 
-    constructor ttempcreatenode.create(_typedef:tdef; _size: tcgint; _temptype: ttemptype;allowreg:boolean);
+    constructor ttempcreatenode.create(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean);
       begin
         inherited create(tempcreaten);
         size := _size;
@@ -1420,14 +1420,14 @@ implementation
       end;
 
 
-    constructor ttempcreatenode.create_withnode(_typedef: tdef; _size: tcgint; _temptype: ttemptype; allowreg:boolean; withnode: tnode);
+    constructor ttempcreatenode.create_withnode(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg:boolean; withnode: TNode);
       begin
         self.create(_typedef,_size,_temptype,allowreg);
         tempinfo^.withnode:=withnode.getcopy;
       end;
 
 
-    constructor ttempcreatenode.create_value(_typedef:tdef; _size: tcgint; _temptype: ttemptype;allowreg:boolean; templvalue: tnode);
+    constructor ttempcreatenode.create_value(_typedef:tdef; _size: tcgint; _temptype: TTempType;allowreg:boolean; templvalue: TNode);
       begin
         self.create(_typedef,_size,_temptype,allowreg);
         // store in ppuwrite
@@ -1437,7 +1437,7 @@ implementation
       end;
 
 
-     constructor ttempcreatenode.create_reference(_typedef: tdef; _size: tcgint; _temptype: ttemptype; allowreg: boolean; templvalue: tnode; readonly: boolean);
+     constructor ttempcreatenode.create_reference(_typedef: tdef; _size: tcgint; _temptype: TTempType; allowreg: boolean; templvalue: TNode; readonly: boolean);
       begin
         // store in ppuwrite
         self.create(_typedef,_size,_temptype,allowreg);
@@ -1450,7 +1450,7 @@ implementation
       end;
 
 
-    function ttempcreatenode.dogetcopy: tnode;
+    function ttempcreatenode.dogetcopy: TNode;
       var
         n: ttempcreatenode;
       begin
@@ -1488,7 +1488,7 @@ implementation
       end;
 
 
-    constructor ttempcreatenode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor ttempcreatenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
 
@@ -1497,7 +1497,7 @@ implementation
         fillchar(tempinfo^,sizeof(tempinfo^),0);
         ppufile.getset(tppuset2(tempinfo^.flags));
         ppufile.getderef(tempinfo^.typedefderef);
-        tempinfo^.temptype := ttemptype(ppufile.getbyte);
+        tempinfo^.temptype := TTempType(ppufile.getbyte);
         tempinfo^.owner:=self;
         tempinfo^.withnode:=ppuloadnode(ppufile);
         ftemplvalue:=ppuloadnode(ppufile);
@@ -1541,18 +1541,18 @@ implementation
       end;
 
 
-    function ttempcreatenode.pass_1 : tnode;
+    function ttempcreatenode.pass_1 : TNode;
       begin
         result := nil;
         expectloc:=LOC_VOID;
         { temps which are immutable do not need to be initialized/finalized }
         if (tempinfo^.typedef.needs_inittable) and not(ti_const in tempflags) then
-          include(current_procinfo.flags,pi_needs_implicit_finally);
+          include(CurrentProcInfo.flags,pi_needs_implicit_finally);
         if assigned(tempinfo^.withnode) then
-          firstpass(tempinfo^.withnode);
+          FirstPass(tempinfo^.withnode);
         if assigned(tempinfo^.tempinitcode) then
-          firstpass(tempinfo^.tempinitcode);
-        inc(current_procinfo.estimatedtempsize,size);
+          FirstPass(tempinfo^.tempinitcode);
+        inc(CurrentProcInfo.estimatedtempsize,size);
         { if a temp. create node is loaded from a ppu, it could be that the unit was compiled with other settings which
           enabled a certain type to be stored in a register while the current settings do not support this, so correct this here
           if needed
@@ -1562,19 +1562,19 @@ implementation
       end;
 
 
-    function ttempcreatenode.pass_typecheck: tnode;
+    function ttempcreatenode.pass_typecheck: TNode;
       begin
         result := nil;
         { a tempcreatenode doesn't have a resultdef, only temprefnodes do }
         resultdef := voidtype;
         if assigned(tempinfo^.withnode) then
-          typecheckpass(tempinfo^.withnode);
+          TypeCheckPass(tempinfo^.withnode);
         if assigned(tempinfo^.tempinitcode) then
-          typecheckpass(tempinfo^.tempinitcode);
+          TypeCheckPass(tempinfo^.tempinitcode);
       end;
 
 
-    function ttempcreatenode.docompare(p: tnode): boolean;
+    function ttempcreatenode.docompare(p: TNode): boolean;
       begin
         result :=
           inherited docompare(p) and
@@ -1637,7 +1637,7 @@ implementation
       end;
 
 
-    function ttemprefnode.dogetcopy: tnode;
+    function ttemprefnode.dogetcopy: TNode;
       var
         n: ttemprefnode;
       begin
@@ -1670,7 +1670,7 @@ implementation
       end;
 
 
-    constructor ttemprefnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor ttemprefnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         tempidx:=ppufile.getlongint;
@@ -1695,7 +1695,7 @@ implementation
       end;
 
 
-    function ttemprefnode.pass_1 : tnode;
+    function ttemprefnode.pass_1 : TNode;
       begin
         expectloc := LOC_REFERENCE;
         if not tempinfo^.typedef.needs_inittable and
@@ -1726,7 +1726,7 @@ implementation
       end;
 
 
-    function ttemprefnode.pass_typecheck: tnode;
+    function ttemprefnode.pass_typecheck: TNode;
       begin
         { check if the temp is already resultdef passed }
         if not assigned(tempinfo^.typedef) then
@@ -1741,7 +1741,7 @@ implementation
       end;
 
 
-    function ttemprefnode.docompare(p: tnode): boolean;
+    function ttemprefnode.docompare(p: TNode): boolean;
       begin
         result :=
           inherited docompare(p) and
@@ -1797,7 +1797,7 @@ implementation
       end;
 
 
-    function ttempdeletenode.dogetcopy: tnode;
+    function ttempdeletenode.dogetcopy: TNode;
       var
         n: ttempdeletenode;
       begin
@@ -1827,7 +1827,7 @@ implementation
       end;
 
 
-    constructor ttempdeletenode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor ttempdeletenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         tempidx:=ppufile.getlongint;
@@ -1854,19 +1854,19 @@ implementation
       end;
 
 
-    function ttempdeletenode.pass_1 : tnode;
+    function ttempdeletenode.pass_1 : TNode;
       begin
          expectloc:=LOC_VOID;
          result := nil;
       end;
 
-    function ttempdeletenode.pass_typecheck: tnode;
+    function ttempdeletenode.pass_typecheck: TNode;
       begin
         result := nil;
         resultdef := voidtype;
       end;
 
-    function ttempdeletenode.docompare(p: tnode): boolean;
+    function ttempdeletenode.docompare(p: TNode): boolean;
       begin
         result :=
           inherited docompare(p) and

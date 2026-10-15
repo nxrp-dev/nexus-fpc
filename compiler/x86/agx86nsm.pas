@@ -545,7 +545,7 @@ interface
         writer.AsmLn;
         writer.AsmWrite('SECTION ');
         if (atype=sec_threadvar) and
-          (target_info.system in systems_windows) then
+          (TargetInfo.system in systems_windows) then
           writer.AsmWrite('.tls'#9'bss')
         else if (atype=sec_user) then
           writer.AsmWrite(aname)
@@ -572,9 +572,9 @@ interface
 
     procedure TX86NasmAssembler.WriteHiddenSymbolAttribute(sym: TAsmSymbol);
       begin
-        if target_info.system in systems_windows then
+        if TargetInfo.system in systems_windows then
           exit;
-        if target_info.system in systems_darwin then
+        if TargetInfo.system in systems_darwin then
           writer.AsmWrite(':private_extern')
         else
           case sym.typ of
@@ -647,7 +647,7 @@ interface
       prefix, LastSecName  : string;
       LastAlign : LongInt;
       cpu: tcputype;
-      prevfileinfo : tfileposinfo;
+      prevfileinfo : TFilePosInfo;
       previnfile : tinputfile;
       NewObject :  boolean;
     begin
@@ -657,9 +657,9 @@ interface
       NewObject:=true;
 
       { lineinfo is only needed for al_procedures (PFV) }
-      do_line:=(cs_asm_source in current_settings.globalswitches) or
-               ((cs_lineinfo in current_settings.moduleswitches)
-                 and (p=current_asmdata.asmlists[al_procedures]));
+      do_line:=(cs_asm_source in CurrentSettings.globalswitches) or
+               ((cs_lineinfo in CurrentSettings.moduleswitches)
+                 and (p=CurrentAsmData.asmlists[al_procedures]));
       hp:=tai(p.first);
       while assigned(hp) do
        begin
@@ -668,7 +668,7 @@ interface
           begin
             previnfile:=lastinfile;
             prevfileinfo:=lastfileinfo;
-            current_filepos:=tailineinfo(hp).fileinfo;
+            CurrentFilePos:=tailineinfo(hp).fileinfo;
 
             { no line info for inlined code }
             if do_line and (inlinelevel=0) then
@@ -677,7 +677,7 @@ interface
                (previnfile<>lastinfile) then
               begin
                 { +0 postfix means no line increment per assembler instruction }
-                writer.AsmWrite('%LINE '+tostr(current_filepos.line)+'+0');
+                writer.AsmWrite('%LINE '+tostr(CurrentFilePos.line)+'+0');
                 if assigned(lastinfile) and ((previnfile<>lastinfile) or NewObject) then
                   writer.AsmWriteLn(' '+lastinfile.name)
                 else
@@ -703,7 +703,7 @@ interface
                  begin
                    if (LastSecType=sec_bss) or (
                       (LastSecType=sec_threadvar) and
-                      (target_info.system in systems_windows)
+                      (TargetInfo.system in systems_windows)
                      ) then
                       writer.AsmWriteLn(#9'ALIGNB '+tostr(tai_align(hp).aligntype))
                     else if tai_align_abstract(hp).use_op then
@@ -839,7 +839,7 @@ interface
                               end;
                        end; { end for i:=0 to... }
                      if quoted then writer.AsmWrite('"');
-                       writer.AsmWrite(target_info.newline);
+                       writer.AsmWrite(TargetInfo.newline);
                      inc(counter,line_length);
                   end; { end for j:=0 ... }
                 { do last line of lines }
@@ -1213,9 +1213,9 @@ interface
         sym : TAsmSymbol;
         i   : longint;
       begin
-        for i:=0 to current_asmdata.AsmSymbolDict.Count-1 do
+        for i:=0 to CurrentAsmData.AsmSymbolDict.Count-1 do
           begin
-            sym:=TAsmSymbol(current_asmdata.AsmSymbolDict[i]);
+            sym:=TAsmSymbol(CurrentAsmData.AsmSymbolDict[i]);
             if sym.bind in [AB_EXTERNAL,AB_EXTERNAL_INDIRECT] then
               writer.AsmWriteln('EXTERN'#9+ApplyAsmSymbolRestrictions(sym.name));
           end;
@@ -1244,7 +1244,7 @@ interface
         writer.AsmWriteLn('default rel');
         using_relative:=true;
 {$endif}
-        writer.AsmWriteLn('CPU '+nasm_cpu_name[current_settings.cputype]);
+        writer.AsmWriteLn('CPU '+nasm_cpu_name[CurrentSettings.cputype]);
       end;
 
 
@@ -1253,8 +1253,8 @@ interface
       hal : tasmlisttype;
     begin
 {$ifdef EXTDEBUG}
-      if current_module.mainsource<>'' then
-       comment(v_info,'Start writing nasm-styled assembler output for '+current_module.mainsource);
+      if CurrentModule.mainsource<>'' then
+       comment(v_info,'Start writing nasm-styled assembler output for '+CurrentModule.mainsource);
 {$endif}
       ResetSectionsList;
       WriteHeader;
@@ -1264,10 +1264,10 @@ interface
 
       for hal:=low(TasmlistType) to high(TasmlistType) do
         begin
-          if not (current_asmdata.asmlists[hal].empty) then
+          if not (CurrentAsmData.asmlists[hal].empty) then
             begin
               writer.AsmWriteLn(asminfo^.comment+'Begin asmlist '+AsmListTypeStr[hal]);
-              writetree(current_asmdata.asmlists[hal]);
+              writetree(CurrentAsmData.asmlists[hal]);
               writer.AsmWriteLn(asminfo^.comment+'End asmlist '+AsmListTypeStr[hal]);
             end;
         end;
@@ -1280,8 +1280,8 @@ interface
         end;
       WriteGroups;
 {$ifdef EXTDEBUG}
-      if current_module.mainsource<>'' then
-       comment(v_info,'Done writing nasm-styled assembler output for '+current_module.mainsource);
+      if CurrentModule.mainsource<>'' then
+       comment(v_info,'Done writing nasm-styled assembler output for '+CurrentModule.mainsource);
 {$endif EXTDEBUG}
    end;
 
@@ -1292,7 +1292,7 @@ interface
         result:=Inherited MakeCmdLine;
 
 {$ifdef i386}
-        case target_info.system of
+        case TargetInfo.system of
           system_i386_win32:
             FormatName:='win32';
           system_i386_linux:
@@ -1304,7 +1304,7 @@ interface
         end;
 {$endif i386}
 {$ifdef x86_64}
-        case target_info.system of
+        case TargetInfo.system of
           system_x86_64_win64:
             FormatName:='win64';
           system_x86_64_darwin:
@@ -1325,7 +1325,7 @@ interface
 
 {$ifdef i386}
     const
-       as_i386_nasm_info : tasminfo =
+       as_i386_nasm_info : TAsmInfo =
           (
             id           : as_i386_nasm;
             idtxt  : 'NASM';
@@ -1342,7 +1342,7 @@ interface
 {$endif i386}
 {$ifdef x86_64}
     const
-       as_x86_64_nasm_info : tasminfo =
+       as_x86_64_nasm_info : TAsmInfo =
           (
             id           : as_x86_64_nasm;
             idtxt  : 'NASM';
@@ -1356,7 +1356,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_nasmwin64_info : tasminfo =
+       as_x86_64_nasmwin64_info : TAsmInfo =
           (
             id           : as_x86_64_nasmwin64;
             idtxt  : 'NASMWIN64';
@@ -1370,7 +1370,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_nasmelf_info : tasminfo =
+       as_x86_64_nasmelf_info : TAsmInfo =
           (
             id           : as_x86_64_nasmelf;
             idtxt  : 'NASMELF';
@@ -1385,7 +1385,7 @@ interface
           );
 
 
-       as_x86_64_nasmdarwin_info : tasminfo =
+       as_x86_64_nasmdarwin_info : TAsmInfo =
           (
             id           : as_x86_64_nasmdarwin;
             idtxt  : 'NASMDARWIN';

@@ -111,7 +111,7 @@ var
     Entry : PInitFinalEntry;
     i : longint;
 begin
-    if not(tf_init_final_units_by_calls in target_info.flags) then
+    if not(tf_init_final_units_by_calls in TargetInfo.flags) then
     begin
         inherited insert_init_final_table(main,Entries);
         exit;
@@ -127,9 +127,9 @@ begin
     begin
         Entry := PInitFinalEntry(Entries[i]);
         if Entry^.finifunc <> '' then
-            finalList.Concat(taicpu.op_sym(A_BL, current_asmdata.RefAsmSymbol(entry^.finifunc, AT_FUNCTION)));
+            finalList.Concat(taicpu.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.finifunc, AT_FUNCTION)));
         if Entry^.initfunc <> '' then
-            initList.Concat(taicpu.op_sym(A_BL, current_asmdata.RefAsmSymbol(entry^.initfunc, AT_FUNCTION)));
+            initList.Concat(taicpu.op_sym(A_BL, CurrentAsmData.RefAsmSymbol(entry^.initfunc, AT_FUNCTION)));
     end;
 
     GenExit(finalList);
@@ -142,7 +142,7 @@ begin
     InitList.InsertList(Header);
     Header.Free;
 
-    current_asmdata.AsmLists[al_procedures].concatList(initList);
+    CurrentAsmData.AsmLists[al_procedures].concatList(initList);
 
     Header := TAsmList.Create;
     New_Section(Header, Sec_Code, 'FPC_FINALIZE_FUNC_TABLE', 1);
@@ -151,7 +151,7 @@ begin
     FinalList.InsertList(Header);
     Header.Free;
 
-    current_asmdata.AsmLists[al_procedures].concatList(finalList);
+    CurrentAsmData.AsmLists[al_procedures].concatList(finalList);
 
     InitList.Free;
     FinalList.Free;

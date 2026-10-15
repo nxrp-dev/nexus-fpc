@@ -41,8 +41,8 @@ unit optcse;
 
       Further, it could be done probably in a faster way though the complexity can't probably not reduced
     }
-    function do_optcse(var rootnode : tnode) : tnode;
-    function do_consttovar(var rootnode : tnode) : tnode;
+    function do_optcse(var rootnode : TNode) : TNode;
+    function do_consttovar(var rootnode : TNode) : TNode;
 
   implementation
 
@@ -61,13 +61,13 @@ unit optcse;
       optbase;
 
     const
-      cseinvariant : set of tnodetype = [addn,muln,subn,divn,slashn,modn,andn,orn,xorn,notn,vecn,
+      cseinvariant : set of TNodeType = [addn,muln,subn,divn,slashn,modn,andn,orn,xorn,notn,vecn,
         derefn,equaln,unequaln,ltn,gtn,lten,gten,typeconvn,subscriptn,
         inn,symdifn,shrn,shln,ordconstn,realconstn,unaryminusn,pointerconstn,stringconstn,setconstn,niln,
         setelementn,{arrayconstructorn,arrayconstructorrangen,}
         isn,asn,starstarn,nothingn,temprefn,loadparentfpn {,callparan},assignn,addrn];
 
-    function searchsubdomain(var n:tnode; arg: pointer) : foreachnoderesult;
+    function searchsubdomain(var n:TNode; arg: pointer) : foreachnoderesult;
       begin
         if (n.nodetype in cseinvariant) or
           ((n.nodetype=inlinen) and
@@ -108,15 +108,15 @@ unit optcse;
     { collectnodes needs the address of itself to call foreachnodestatic,
       so we need a wrapper because @<func> inside <func doesn't work }
 
-    function collectnodes(var n:tnode; arg: pointer) : foreachnoderesult;forward;
+    function collectnodes(var n:TNode; arg: pointer) : foreachnoderesult;forward;
 
-    function collectnodes2(var n:tnode; arg: pointer) : foreachnoderesult;
+    function collectnodes2(var n:TNode; arg: pointer) : foreachnoderesult;
       begin
         result:=collectnodes(n,arg);
       end;
 
 
-    function collectnodes(var n:tnode; arg: pointer) : foreachnoderesult;
+    function collectnodes(var n:TNode; arg: pointer) : foreachnoderesult;
 
       { when compiling a tree like
             and
@@ -137,21 +137,21 @@ unit optcse;
         firstleftend : longint;
         maybeskipped : TDFASet; { Only valid for the current "collectnodes" invocation }
 
-      procedure recurseintobooleanchain(t : tnodetype;n : tnode);
+      procedure recurseintobooleanchain(t : TNodeType;n : TNode);
         var
           i, rightstart : longint;
         begin
-          if (tbinarynode(n).left.nodetype=t) and is_boolean(tbinarynode(n).left.resultdef) then
-            recurseintobooleanchain(t,tbinarynode(n).left)
+          if (TBinaryNode(n).left.nodetype=t) and is_boolean(TBinaryNode(n).left.resultdef) then
+            recurseintobooleanchain(t,TBinaryNode(n).left)
           else
-            foreachnodestatic(pm_postprocess,tbinarynode(n).left,@collectnodes2,arg);
+            foreachnodestatic(pm_postprocess,TBinaryNode(n).left,@collectnodes2,arg);
 
           rightstart:=plists(arg)^.nodelist.count;
           firstleftend:=min(rightstart,firstleftend);
 
           if doshortbooleval(n) then
             begin
-              foreachnodestatic(pm_postprocess,tbinarynode(n).right,@collectnodes2,arg);
+              foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
 
               { short boolean evaluation might skip the right side of n in nested nodes }
               for i:=rightstart to plists(arg)^.nodelist.count-1 do
@@ -170,7 +170,7 @@ unit optcse;
 
               { We can only collect the right nodes after excluding the left
                 side so newer entries don't reference them }
-              foreachnodestatic(pm_postprocess,tbinarynode(n).right,@collectnodes2,arg);
+              foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@collectnodes2,arg);
             end;
         end;
 
@@ -285,7 +285,7 @@ unit optcse;
 
             for i:=0 to plists(arg)^.nodelist.count-2 do
               begin
-                if tnode(plists(arg)^.nodelist[i]).isequal(n) and DynSetIn(plists(arg)^.avail,i) then
+                if TNode(plists(arg)^.nodelist[i]).isequal(n) and DynSetIn(plists(arg)^.avail,i) then
                   begin
                     { use always the first occurrence }
                     if plists(arg)^.equalto[i]<>pointer(-1) then
@@ -333,7 +333,7 @@ unit optcse;
        end;
 
 
-    function searchcsedomain(var n: tnode; arg: pointer) : foreachnoderesult;
+    function searchcsedomain(var n: TNode; arg: pointer) : foreachnoderesult;
       var
         csedomain : boolean;
         lists : tlists;
@@ -346,7 +346,7 @@ unit optcse;
         deletetemp : ttempdeletenode;
         hp : ttempcreatenode;
         addrstored : boolean;
-        hp2 : tnode;
+        hp2 : TNode;
       begin
         result:=fen_false;
         nodes:=nil;
@@ -375,38 +375,38 @@ unit optcse;
                   Because A could be another tree of this kind, the whole process is done in a while loop
                 }
                 if (n.nodetype in [andn,orn,addn,muln]) and
-                  (n.nodetype=tbinarynode(n).left.nodetype) and
+                  (n.nodetype=TBinaryNode(n).left.nodetype) and
                   { do is optimizations only for integers, reals (no currency!), vectors, sets or booleans }
                   (is_integer(n.resultdef) or is_real(n.resultdef) or is_vector(n.resultdef) or is_set(n.resultdef) or
                    is_boolean(n.resultdef)) and
                   { either if fastmath is on }
-                  ((cs_opt_fastmath in current_settings.optimizerswitches) or
+                  ((cs_opt_fastmath in CurrentSettings.optimizerswitches) or
                    { or for the logical operators, they cannot overflow }
                    (n.nodetype in [andn,orn]) or
                    { or for integers if range checking is off }
                    ((is_integer(n.resultdef) and
                     (n.localswitches*[cs_check_range,cs_check_overflow]=[]) and
-                    (tbinarynode(n).left.localswitches*[cs_check_range,cs_check_overflow]=[]))) or
+                    (TBinaryNode(n).left.localswitches*[cs_check_range,cs_check_overflow]=[]))) or
                    { for sets, we can do this always }
                    (is_set(n.resultdef))
                    ) then
-                  while (n.nodetype=tbinarynode(n).left.nodetype) and
+                  while (n.nodetype=TBinaryNode(n).left.nodetype) and
                     { if not both or none of the nodes is short/full boolean evaluated, we cannot do this optimization as it might change
                       semantics, there are border cases where this might not apply, but so far it is not worth the effort to check }
-                    (not(is_boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (doshortbooleval(n)=doshortbooleval(tbinarynode(n).left))) and
+                    (not(is_boolean(n.resultdef)) or not(n.nodetype in [andn,orn]) or (doshortbooleval(n)=doshortbooleval(TBinaryNode(n).left))) and
                         { the resulttypes of the operands we'll swap must be equal,
                           required in case of a 32x32->64 multiplication, then we
                           cannot swap out one of the 32 bit operands for a 64 bit one
                         }
-                        (tbinarynode(tbinarynode(n).left).left.resultdef=tbinarynode(n).left.resultdef) and
-                        (tbinarynode(n).left.resultdef=tbinarynode(n).right.resultdef) do
+                        (TBinaryNode(TBinaryNode(n).left).left.resultdef=TBinaryNode(n).left.resultdef) and
+                        (TBinaryNode(n).left.resultdef=TBinaryNode(n).right.resultdef) do
                     begin
                       csedomain:=true;
-                      foreachnodestatic(pm_postprocess,tbinarynode(n).right,@searchsubdomain,@csedomain);
+                      foreachnodestatic(pm_postprocess,TBinaryNode(n).right,@searchsubdomain,@csedomain);
                       if csedomain then
                         begin
                           csedomain:=true;
-                          foreachnodestatic(pm_postprocess,tbinarynode(tbinarynode(n).left).right,@searchsubdomain,@csedomain);
+                          foreachnodestatic(pm_postprocess,TBinaryNode(TBinaryNode(n).left).right,@searchsubdomain,@csedomain);
                           if csedomain then
                             begin
                               {
@@ -417,28 +417,28 @@ unit optcse;
                               if not(doshortbooleval(tbinarynode(n).left)) and
                                  doshortbooleval(n) then }
                                 begin
-                                  n.localswitches:=n.localswitches+(tbinarynode(n).left.localswitches*[cs_full_boolean_eval]);
-                                  exclude(tbinarynode(n).left.localswitches,cs_full_boolean_eval);
+                                  n.localswitches:=n.localswitches+(TBinaryNode(n).left.localswitches*[cs_full_boolean_eval]);
+                                  exclude(TBinaryNode(n).left.localswitches,cs_full_boolean_eval);
                                   if (n.nodetype in [orn,andn]) then
                                     begin
-                                      if (tbinarynode(n).left.nodetype in [orn,andn]) then
-                                        taddnode(tbinarynode(n).left).addnodeflags:=taddnode(tbinarynode(n).left).addnodeflags+
+                                      if (TBinaryNode(n).left.nodetype in [orn,andn]) then
+                                        taddnode(TBinaryNode(n).left).addnodeflags:=taddnode(TBinaryNode(n).left).addnodeflags+
                                           (taddnode(n).addnodeflags*[anf_short_bool]);
 
                                       exclude(taddnode(n).addnodeflags,anf_short_bool);
                                     end;
                                 end;
 
-                              hp2:=tbinarynode(tbinarynode(n).left).left;
-                              tbinarynode(tbinarynode(n).left).left:=tbinarynode(tbinarynode(n).left).right;
-                              tbinarynode(tbinarynode(n).left).right:=tbinarynode(n).right;
-                              tbinarynode(n).right:=tbinarynode(n).left;
-                              tbinarynode(n).left:=hp2;
+                              hp2:=TBinaryNode(TBinaryNode(n).left).left;
+                              TBinaryNode(TBinaryNode(n).left).left:=TBinaryNode(TBinaryNode(n).left).right;
+                              TBinaryNode(TBinaryNode(n).left).right:=TBinaryNode(n).right;
+                              TBinaryNode(n).right:=TBinaryNode(n).left;
+                              TBinaryNode(n).left:=hp2;
 
                               { the transformed tree could result in new possibilities to fold constants
                                 so force a firstpass on the root node }
-                              exclude(tbinarynode(n).right.transientflags,tnf_pass1_done);
-                              do_firstpass(tbinarynode(n).right);
+                              exclude(TBinaryNode(n).right.transientflags,tnf_pass1_done);
+                              DoFirstPass(TBinaryNode(n).right);
                             end
                           else
                             break;
@@ -477,17 +477,17 @@ unit optcse;
                             addstatement(statements,internalstatements(creates));
                           end;
 
-                        def:=tstoreddef(tnode(lists.nodelist[i]).resultdef);
+                        def:=tstoreddef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
 
                         if addrstored then
                           templist[i]:=ctempcreatenode.create_value(cpointerdef.getreusable(def),voidpointertype.size,tt_persistent,
-                            true,caddrnode.create_internal(tnode(lists.nodelist[i])))
+                            true,caddrnode.create_internal(TNode(lists.nodelist[i])))
                         else
                           templist[i]:=ctempcreatenode.create_value(def,def.size,tt_persistent,
-                            def.is_intregable or def.is_fpuregable or def.is_const_intregable,tnode(lists.nodelist[i]));
+                            def.is_intregable or def.is_fpuregable or def.is_const_intregable,TNode(lists.nodelist[i]));
 
                         { the value described by the temp. is immutable and the temp. can be always in register
 
@@ -497,9 +497,9 @@ unit optcse;
                         ttempcreatenode(templist[i]).includetempflag(ti_may_be_in_reg);
 
                         { make debugging easier and set temp. location to the original location }
-                        tnode(templist[i]).fileinfo:=tnode(lists.nodelist[i]).fileinfo;
+                        TNode(templist[i]).fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        addstatement(creates,tnode(templist[i]));
+                        addstatement(creates,TNode(templist[i]));
 
                         { the delete node has no semantic use yet, it is just used to clean up memory }
                         deletetemp:=ctempdeletenode.create(ttempcreatenode(templist[i]));
@@ -507,20 +507,20 @@ unit optcse;
                         addstatement(tstatementnode(arg^),deletetemp);
 
                         { make debugging easier and set temp. location to the original location }
-                        creates.fileinfo:=tnode(lists.nodelist[i]).fileinfo;
+                        creates.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
                         hp:=ttempcreatenode(templist[i]);
-                        do_firstpass(tnode(hp));
+                        DoFirstPass(TNode(hp));
                         templist[i]:=hp;
 
                         if addrstored then
-                          pnode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[i])))
+                          PNode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[i])))
                         else
-                          pnode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[i]));
+                          PNode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[i]));
                         { make debugging easier and set temp. location to the original location }
-                        pnode(lists.locationlist[i])^.fileinfo:=tnode(lists.nodelist[i]).fileinfo;
+                        PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        do_firstpass(pnode(lists.locationlist[i])^);
+                        DoFirstPass(PNode(lists.locationlist[i])^);
 {$ifdef csedebug}
                         printnode(output,statements);
 {$endif csedebug}
@@ -528,7 +528,7 @@ unit optcse;
                     { current node reference to another node? }
                     else if lists.equalto[i]<>pointer(-1) then
                       begin
-                        def:=tstoreddef(tnode(lists.nodelist[i]).resultdef);
+                        def:=tstoreddef(TNode(lists.nodelist[i]).resultdef);
                         { we cannot handle register stored records or array in CSE yet
                           but we can store their reference }
                         addrstored:=((def.typ in [arraydef,recorddef]) or is_object(def)) and not(is_dynamic_array(def));
@@ -536,28 +536,28 @@ unit optcse;
 {$if defined(csedebug) or defined(csestats)}
                         writeln;
                         writeln('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                        writeln('Complexity: ',node_complexity(tnode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
-                        printnode(output,tnode(lists.nodelist[i]));
-                        printnode(output,tnode(lists.nodelist[ptrint(lists.equalto[i])]));
+                        writeln('Complexity: ',node_complexity(TNode(lists.nodelist[i])),'  Node ',i,' equals Node ',ptrint(lists.equalto[i]));
+                        printnode(output,TNode(lists.nodelist[i]));
+                        printnode(output,TNode(lists.nodelist[ptrint(lists.equalto[i])]));
                         writeln('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
                         writeln;
 {$endif defined(csedebug) or defined(csestats)}
                         templist[i]:=templist[ptrint(lists.equalto[i])];
                         if addrstored then
-                          pnode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])])))
+                          PNode(lists.locationlist[i])^:=cderefnode.Create(ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])])))
                         else
-                          pnode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])]));
+                          PNode(lists.locationlist[i])^:=ctemprefnode.create(ttempcreatenode(templist[ptrint(lists.equalto[i])]));
 
                         { make debugging easier and set temp. location to the original location }
-                        pnode(lists.locationlist[i])^.fileinfo:=tnode(lists.nodelist[i]).fileinfo;
+                        PNode(lists.locationlist[i])^.fileinfo:=TNode(lists.nodelist[i]).fileinfo;
 
-                        do_firstpass(pnode(lists.locationlist[i])^);
+                        DoFirstPass(PNode(lists.locationlist[i])^);
                       end;
                   end;
                 { clean up unused trees }
                 for i:=0 to lists.nodelist.count-1 do
                   if lists.equalto[i]<>pointer(-1) then
-                    tnode(lists.nodelist[i]).free; // no nil needed
+                    TNode(lists.nodelist[i]).free; // no nil needed
 {$ifdef csedebug}
                 writeln('nodes: ',lists.nodelist.count);
                 writeln('==========================================');
@@ -580,13 +580,13 @@ unit optcse;
                       begin
                         addstatement(statements,tcallparanode(n).left);
                         tcallparanode(n).left:=nodes;
-                        do_firstpass(tcallparanode(n).left);
+                        DoFirstPass(tcallparanode(n).left);
                       end
                     else
                       begin
                         addstatement(statements,n);
                         n:=nodes;
-                        do_firstpass(n);
+                        DoFirstPass(n);
                       end;
 {$ifdef csedebug}
                     printnode(output,nodes);
@@ -597,7 +597,7 @@ unit optcse;
       end;
 
 
-    function do_optcse(var rootnode : tnode) : tnode;
+    function do_optcse(var rootnode : TNode) : TNode;
       var
         deletes,
         statements : tstatementnode;
@@ -618,7 +618,7 @@ unit optcse;
         addstatement(statements,rootnode);
         addstatement(statements,deleteblock);
         rootnode:=rootblock;
-        do_firstpass(rootnode);
+        DoFirstPass(rootnode);
 {$ifdef csedebug}
         writeln('====================================================================================');
         writeln('CSE optimization result');
@@ -632,7 +632,7 @@ unit optcse;
 
     type
       tconstentry = record
-        valuenode : tnode;
+        valuenode : TNode;
         weight : TCGInt;
         temp : ttempcreatenode;
       end;
@@ -642,11 +642,11 @@ unit optcse;
       tconstentries = array of tconstentry;
       pconstentries = ^tconstentries;
 
-    function CSEOnReference(n : tnode) : Boolean;
+    function CSEOnReference(n : TNode) : Boolean;
       begin
         Result:=(n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym)
           and ((vo_is_thread_var in tstaticvarsym(tloadnode(n).symtableentry).varoptions) or
-            (cs_create_pic in current_settings.moduleswitches)
+            (cs_create_pic in CurrentSettings.moduleswitches)
 {$if defined(aarch64)}
             or (not(tabstractvarsym(tloadnode(n).symtableentry).is_regvar(false)))
 {$endif defined(aarch64) or defined(sparc) or defined(sparc64)}
@@ -654,7 +654,7 @@ unit optcse;
       end;
 
 
-    function collectconsts(var n:tnode; arg: pointer) : foreachnoderesult;
+    function collectconsts(var n:TNode; arg: pointer) : foreachnoderesult;
       var
         consts: pconstentries;
         found: Boolean;
@@ -674,7 +674,7 @@ unit optcse;
             i:=0;
             for i:=0 to High(consts^) do
               begin
-                if tnode(consts^[i].valuenode).isequal(n) then
+                if TNode(consts^[i].valuenode).isequal(n) then
                   begin
                     found:=true;
                     break;
@@ -685,7 +685,7 @@ unit optcse;
                 inc(consts^[i].weight);
 
                 { non-sectioned threadvars really hurt so do more aggressive cse on them }
-                if not(tf_section_threadvars in target_info.flags) and (n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in tstaticvarsym(tloadnode(n).symtableentry).varoptions) then
+                if not(tf_section_threadvars in TargetInfo.flags) and (n.nodetype=loadn) and (tloadnode(n).symtableentry.typ=staticvarsym) and (vo_is_thread_var in tstaticvarsym(tloadnode(n).symtableentry).varoptions) then
                   inc(consts^[i].weight);
               end
             else
@@ -694,7 +694,7 @@ unit optcse;
                 with consts^[high(consts^)] do
                   begin
                     valuenode:=n.getcopy;
-                    valuenode.fileinfo:=current_procinfo.entrypos;
+                    valuenode.fileinfo:=CurrentProcInfo.entrypos;
                     weight:=1;
                   end;
               end;
@@ -702,12 +702,12 @@ unit optcse;
       end;
 
 
-    function replaceconsts(var n:tnode; arg: pointer) : foreachnoderesult;
+    function replaceconsts(var n:TNode; arg: pointer) : foreachnoderesult;
       var
-        hp: tnode;
+        hp: TNode;
       begin
         result:=fen_true;
-        if tnode(pconstentry(arg)^.valuenode).isequal(n) then
+        if TNode(pconstentry(arg)^.valuenode).isequal(n) then
           begin
             { shall we take the address? }
             if CSEOnReference(pconstentry(arg)^.valuenode) then
@@ -721,12 +721,12 @@ unit optcse;
             hp.fileinfo:=n.fileinfo;
             n.Free;
             n:=hp;
-            do_firstpass(n);
+            DoFirstPass(n);
           end;
        end;
 
 
-    function do_consttovar(var rootnode : tnode) : tnode;
+    function do_consttovar(var rootnode : TNode) : TNode;
       var
         constentries : tconstentries;
       Procedure QuickSort(L, R : Longint);
@@ -772,7 +772,7 @@ unit optcse;
         rootblock : tblocknode;
         i, max_fpu_regs_assigned, fpu_regs_assigned,
         max_int_regs_assigned, int_regs_assigned: Integer;
-        old_current_filepos: tfileposinfo;
+        old_current_filepos: TFilePosInfo;
       begin
   {$ifdef csedebug}
         writeln('====================================================================================');
@@ -787,8 +787,8 @@ unit optcse;
         deleteblock:=nil;
         rootblock:=nil;
         { estimate how many int registers can be used }
-        if pi_do_call in current_procinfo.flags then
-          max_int_regs_assigned:=length(paramanager.get_saved_registers_int(current_procinfo.procdef.proccalloption))
+        if pi_do_call in CurrentProcInfo.flags then
+          max_int_regs_assigned:=length(paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption))
           { we store only addresses, so take care of the relation between address sizes and register sizes }
             div max(sizeof(PtrUInt) div sizeof(ALUUInt),1)
           { heuristics, just use a quarter of all registers at maximum }
@@ -797,15 +797,15 @@ unit optcse;
           max_int_regs_assigned:=max(first_int_imreg div 4,1);
 {$if defined(x86) or defined(aarch64)}
         { x86, aarch64 and arm (neglecting fpa) use mm registers for floats }
-        if pi_do_call in current_procinfo.flags then
+        if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_mm(current_procinfo.procdef.proccalloption)) div 5
+          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption)) div 5
         else
           max_fpu_regs_assigned:=max(first_mm_imreg div 5,1);
 {$else defined(x86) or defined(aarch64) or defined(arm)}
-        if pi_do_call in current_procinfo.flags then
+        if pi_do_call in CurrentProcInfo.flags then
           { heuristics, just use a fifth of all registers at maximum }
-          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(current_procinfo.procdef.proccalloption)) div 5
+          max_fpu_regs_assigned:=length(paramanager.get_saved_registers_fpu(CurrentProcInfo.procdef.proccalloption)) div 5
         else
           max_fpu_regs_assigned:=max(first_fpu_imreg div 5,1);
 {$endif}
@@ -821,13 +821,13 @@ unit optcse;
                 if (constentries[i].valuenode.nodetype=realconstn) and
                    { if there is a call, we need most likely to save/restore a register }
                   ((constentries[i].weight>3) or
-                  ((constentries[i].weight>1) and not(pi_do_call in current_procinfo.flags)))
+                  ((constentries[i].weight>1) and not(pi_do_call in CurrentProcInfo.flags)))
                 then
                   begin
                     if fpu_regs_assigned>=max_fpu_regs_assigned then
                       break;
-                    old_current_filepos:=current_filepos;
-                    current_filepos:=current_procinfo.entrypos;
+                    old_current_filepos:=CurrentFilePos;
+                    CurrentFilePos:=CurrentProcInfo.entrypos;
                     if not(assigned(createblock)) then
                       begin
                         rootblock:=internalstatements(statements);
@@ -838,20 +838,20 @@ unit optcse;
                        constentries[i].valuenode.resultdef.size,tt_persistent,true);
                      addstatement(creates,constentries[i].temp);
                      addstatement(creates,cassignmentnode.create_internal(ctemprefnode.create(constentries[i].temp),constentries[i].valuenode));
-                     current_filepos:=old_current_filepos;
+                     CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(fpu_regs_assigned);
                   end
                 else if CSEOnReference(constentries[i].valuenode) and
                    { if there is a call, we need most likely to save/restore a register }
                   ((constentries[i].weight>2) or
-                  ((constentries[i].weight>1) and not(pi_do_call in current_procinfo.flags)))
+                  ((constentries[i].weight>1) and not(pi_do_call in CurrentProcInfo.flags)))
                 then
                   begin
                     if int_regs_assigned>=max_int_regs_assigned then
                       break;
-                    old_current_filepos:=current_filepos;
-                    current_filepos:=current_procinfo.entrypos;
+                    old_current_filepos:=CurrentFilePos;
+                    CurrentFilePos:=CurrentProcInfo.entrypos;
                     if not(assigned(createblock)) then
                       begin
                         rootblock:=internalstatements(statements);
@@ -863,7 +863,7 @@ unit optcse;
                      addstatement(creates,constentries[i].temp);
                      addstatement(creates,cassignmentnode.create_internal(ctemprefnode.create(constentries[i].temp),
                        caddrnode.create_internal(constentries[i].valuenode)));
-                     current_filepos:=old_current_filepos;
+                     CurrentFilePos:=old_current_filepos;
                      foreachnodestatic(pm_postprocess,rootnode,@replaceconsts,@constentries[i]);
                      inc(int_regs_assigned);
                   end;
@@ -875,7 +875,7 @@ unit optcse;
             addstatement(statements,rootnode);
             addstatement(statements,deleteblock);
             rootnode:=rootblock;
-            do_firstpass(rootnode);
+            DoFirstPass(rootnode);
           end;
   {$ifdef csedebug}
         writeln('====================================================================================');

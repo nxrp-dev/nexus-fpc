@@ -52,7 +52,7 @@ unit cgexcept;
         texceptionstate = record
           exceptionlabel: TAsmLabel;
           oldflowcontrol,
-          newflowcontrol: tflowcontrol;
+          newflowcontrol: TFlowControl;
           finallycodelabel  : TAsmLabel;
         end;
 
@@ -111,8 +111,8 @@ unit cgexcept;
           catches the exception and returns a value from the function }
         result:=
           (exceptframekind=tek_implicitfinally) and
-          not((tf_safecall_exceptions in target_info.flags) and
-             (current_procinfo.procdef.proccalloption=pocall_safecall));
+          not((tf_safecall_exceptions in TargetInfo.flags) and
+             (CurrentProcInfo.procdef.proccalloption=pocall_safecall));
       end;
 
     {  Allocate the buffers for exception management and setjmp environment.
@@ -153,7 +153,7 @@ unit cgexcept;
         pd: tprocdef;
         tmpresloc: tlocation;
       begin
-        current_asmdata.getjumplabel(exceptstate.exceptionlabel);
+        CurrentAsmData.getjumplabel(exceptstate.exceptionlabel);
         exceptstate.oldflowcontrol:=flowcontrol;
         exceptstate.finallycodelabel:=nil;
 
@@ -259,7 +259,7 @@ unit cgexcept;
       var
          exitlabel: tasmlabel;
       begin
-         current_asmdata.getjumplabel(exitlabel);
+         CurrentAsmData.getjumplabel(exitlabel);
          { add an catch all action clause, at least psabieh needs this }
          catch_all_add(list);
          end_try_block(list,tek_except,t,entrystate,exitlabel);
@@ -292,16 +292,16 @@ unit cgexcept;
         otherunit: boolean;
       begin
         paraloc1.init;
-        otherunit:=findunitsymtable(excepttype.owner).moduleid<>findunitsymtable(current_procinfo.procdef.owner).moduleid;
-        indirect:=(tf_supports_packages in target_info.flags) and
-                    (target_info.system in systems_indirect_var_imports) and
+        otherunit:=findunitsymtable(excepttype.owner).moduleid<>findunitsymtable(CurrentProcInfo.procdef.owner).moduleid;
+        indirect:=(tf_supports_packages in TargetInfo.flags) and
+                    (TargetInfo.system in systems_indirect_var_imports) and
                     otherunit;
 
         { send the vmt parameter }
         pd:=search_system_proc('fpc_catches');
-        reference_reset_symbol(href2, current_asmdata.RefAsmSymbol(excepttype.vmt_mangledname, AT_DATA, indirect), 0, sizeof(pint), []);
+        reference_reset_symbol(href2, CurrentAsmData.RefAsmSymbol(excepttype.vmt_mangledname, AT_DATA, indirect), 0, sizeof(pint), []);
         if otherunit then
-          current_module.add_extern_asmsym(excepttype.vmt_mangledname, AB_EXTERNAL, AT_DATA);
+          CurrentModule.add_extern_asmsym(excepttype.vmt_mangledname, AB_EXTERNAL, AT_DATA);
         paramanager.getcgtempparaloc(list, pd, 1, paraloc1);
         hlcg.a_loadaddr_ref_cgpara(list, excepttype.vmt_def, href2, paraloc1);
         paramanager.freecgpara(list, paraloc1);

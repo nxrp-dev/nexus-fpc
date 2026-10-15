@@ -896,13 +896,13 @@ implementation
 
   function UseAVX: boolean;
     begin
-      Result:=(FPUX86_HAS_AVXUNIT in fpu_capabilities[current_settings.fputype]);
+      Result:=(FPUX86_HAS_AVXUNIT in fpu_capabilities[CurrentSettings.fputype]);
     end;
 
 
   function UseAVX512: boolean;
     begin
-      Result:=UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[current_settings.fputype]);
+      Result:=UseAVX and (FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]);
     end;
 
 

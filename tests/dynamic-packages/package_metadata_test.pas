@@ -77,8 +77,8 @@ var
   P: tpcppackage;
   U: tmodulebase;
 begin
-  set_current_module(tmodule.Create(nil,'Fixture','Fixture.nxpk',false));
-  current_module.setmodulename('Fixture');
+  SetCurrentModule(tmodule.Create(nil,'Fixture','Fixture.nxpk',false));
+  CurrentModule.setmodulename('Fixture');
   P:=tpcppackage.Create('Fixture');
   U:=tmodulebase.Create('UX');
   try
@@ -90,8 +90,8 @@ begin
   finally
     U.Free;
     P.Free;
-    current_module.Free;
-    set_current_module(nil);
+    CurrentModule.Free;
+    SetCurrentModule(nil);
   end;
 end;
 
@@ -102,16 +102,16 @@ begin
   First:=3;
   if ParamStr(1)='building' then
     begin
-      set_current_module(tmodule.Create(nil,ParamStr(3),ParamStr(3)+'.nxpk',false));
-      current_module.setmodulename(ParamStr(3));
-      current_module.ispackage:=true;
+      SetCurrentModule(tmodule.Create(nil,ParamStr(3),ParamStr(3)+'.nxpk',false));
+      CurrentModule.setmodulename(ParamStr(3));
+      CurrentModule.ispackage:=true;
       First:=4;
     end;
   try
     for I:=First to ParamCount do
       add_package(ParamStr(I),true,true);
     if ParamStr(1)='disabled' then
-      Exclude(target_info.flags,tf_supports_packages);
+      Exclude(TargetInfo.flags,tf_supports_packages);
     load_packages;
     if ParamStr(1)='disabled' then
       Check(not Assigned(ppackageentry(packagelist[0])^.package),'disabled loader ran')
@@ -120,8 +120,8 @@ begin
         Check(Assigned(ppackageentry(packagelist[I])^.package),'unloaded requirement');
     WriteLn('PASS graph ',packagelist.Count);
   finally
-    current_module.Free;
-    set_current_module(nil);
+    CurrentModule.Free;
+    SetCurrentModule(nil);
   end;
 end;
 

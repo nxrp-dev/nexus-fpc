@@ -70,32 +70,32 @@ interface
 
           statementlabel : tlabelnode;
           { instructions }
-          statement  : tnode;
+          statement  : TNode;
        end;
 
-       tsetelementnode = class(tbinarynode)
-          constructor create(l,r : tnode);virtual;
-          function pass_typecheck:tnode;override;
-          function pass_1 : tnode;override;
+       tsetelementnode = class(TBinaryNode)
+          constructor create(l,r : TNode);virtual;
+          function pass_typecheck:TNode;override;
+          function pass_1 : TNode;override;
        end;
        tsetelementnodeclass = class of tsetelementnode;
 
-       tinnode = class(tbinopnode)
-          constructor create(l,r : tnode);virtual;reintroduce;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean):tnode;override;
-          function pass_1 : tnode;override;
+       tinnode = class(TBinOpNode)
+          constructor create(l,r : TNode);virtual;reintroduce;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean):TNode;override;
+          function pass_1 : TNode;override;
        end;
        tinnodeclass = class of tinnode;
 
-       trangenode = class(tbinarynode)
-          constructor create(l,r : tnode);virtual;
-          function pass_typecheck:tnode;override;
-          function pass_1 : tnode;override;
+       trangenode = class(TBinaryNode)
+          constructor create(l,r : TNode);virtual;
+          function pass_typecheck:TNode;override;
+          function pass_1 : TNode;override;
        end;
        trangenodeclass = class of trangenode;
 
-       tcasenode = class(tunarynode)
+       tcasenode = class(TUnaryNode)
         strict private
           { Number of labels }
           flabelcnt: cardinal;
@@ -110,28 +110,28 @@ interface
           procedure checkordinalcoverage;
         public
           blocks    : TFPList;
-          elseblock : tnode;
+          elseblock : TNode;
 
-          constructor create(l:tnode);virtual;
+          constructor create(l:TNode);virtual;
           destructor destroy;override;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
+          function dogetcopy : TNode;override;
           procedure printnodetree(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeTree(var t:text); override;
 {$endif DEBUG_NODE_XML}
-          procedure insertintolist(l : tnodelist);override;
-          function pass_typecheck:tnode;override;
-          function pass_1 : tnode;override;
-          function simplify(forinline:boolean):tnode;override;
-          function docompare(p: tnode): boolean; override;
+          procedure insertintolist(l : TNodeList);override;
+          function pass_typecheck:TNode;override;
+          function pass_1 : TNode;override;
+          function simplify(forinline:boolean):TNode;override;
+          function docompare(p: TNode): boolean; override;
           procedure addlabel(blockid:longint;const l,h : TConstExprInt); overload;
           procedure addlabel(blockid:longint;l,h : tstringconstnode); overload;
-          procedure addblock(blockid:longint;instr:tnode);
-          procedure addelseblock(instr:tnode);
+          procedure addblock(blockid:longint;instr:TNode);
+          procedure addelseblock(instr:TNode);
 
           property labelcnt: cardinal read getlabelcnt;
           { returns one less than the covered case range, so that it
@@ -170,35 +170,35 @@ implementation
                            TSETELEMENTNODE
 *****************************************************************************}
 
-    constructor tsetelementnode.create(l,r : tnode);
+    constructor tsetelementnode.create(l,r : TNode);
 
       begin
          inherited create(setelementn,l,r);
       end;
 
 
-    function tsetelementnode.pass_typecheck:tnode;
+    function tsetelementnode.pass_typecheck:TNode;
       begin
          result:=nil;
-         typecheckpass(left);
+         TypeCheckPass(left);
          if assigned(right) then
-          typecheckpass(right);
+          TypeCheckPass(right);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
           exit;
 
          resultdef:=left.resultdef;
       end;
 
 
-    function tsetelementnode.pass_1 : tnode;
+    function tsetelementnode.pass_1 : TNode;
 
       begin
          result:=nil;
-         firstpass(left);
+         FirstPass(left);
          if assigned(right) then
-          firstpass(right);
-         if codegenerror then
+          FirstPass(right);
+         if CodeGenError then
           exit;
 
          expectloc:=left.expectloc;
@@ -209,20 +209,20 @@ implementation
                               TINNODE
 *****************************************************************************}
 
-    constructor tinnode.create(l,r : tnode);
+    constructor tinnode.create(l,r : TNode);
       begin
          inherited create(inn,l,r);
       end;
 
 
-    function tinnode.pass_typecheck:tnode;
+    function tinnode.pass_typecheck:TNode;
 
       var
-        t : tnode;
+        t : TNode;
 
-        function createsetconst(psd : tsetdef) : pconstset;
+        function createsetconst(psd : tsetdef) : PConstSet;
         var
-          pcs : pconstset;
+          pcs : PConstSet;
           i : longint;
         begin
           new(pcs);
@@ -249,22 +249,22 @@ implementation
          result:=nil;
 
          resultdef:=pasbool1type;
-         typecheckpass(right);
+         TypeCheckPass(right);
          set_varstate(right,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
           exit;
 
          { Convert array constructor first to set }
          if is_array_constructor(right.resultdef) then
           begin
             arrayconstructor_to_set(right);
-            if codegenerror then
+            if CodeGenError then
              exit;
           end;
 
-         typecheckpass(left);
+         TypeCheckPass(left);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          if not assigned(left.resultdef) then
@@ -287,7 +287,7 @@ implementation
          if right.resultdef.typ<>setdef then
            CGMessage(sym_e_set_expected);
 
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          if not is_ordinal(left.resultdef) or (left.resultdef.size > u32inttype.size) then
@@ -312,10 +312,10 @@ implementation
          { empty set then return false }
          if not assigned(tsetdef(right.resultdef).elementdef) or
             ((right.nodetype = setconstn) and
-             (tnormalset(tsetconstnode(right).value_set^) = [])) then
+             (TNormalSet(tsetconstnode(right).value_set^) = [])) then
           begin
             t:=cordconstnode.create(0,pasbool1type,false);
-            typecheckpass(t);
+            TypeCheckPass(t);
             result:=t;
             exit;
           end;
@@ -324,9 +324,9 @@ implementation
       end;
 
 
-    function tinnode.simplify(forinline : boolean):tnode;
+    function tinnode.simplify(forinline : boolean):TNode;
       var
-        t : tnode;
+        t : TNode;
       begin
          result:=nil;
 
@@ -346,7 +346,7 @@ implementation
                  else
                    t:=cordconstnode.create(byte(tordconstnode(left).value.uvalue in Tsetconstnode(right).value_set^),
                      pasbool1type,true);
-                 typecheckpass(t);
+                 TypeCheckPass(t);
                  result:=t;
                  exit;
                end
@@ -356,7 +356,7 @@ implementation
                     (Tordconstnode(left).value>int64(Tsetdef(right.resultdef).setmax)) then
                    begin
                      t:=cordconstnode.create(0, pasbool1type, true);
-                     typecheckpass(t);
+                     TypeCheckPass(t);
                      result:=t;
                      exit;
                    end;
@@ -377,7 +377,7 @@ implementation
            not(might_have_sideeffects(left,[mhs_exceptions])) then
            begin
              t:=cordconstnode.create(1, pasbool1type, true);
-             typecheckpass(t);
+             TypeCheckPass(t);
              result:=t;
              exit;
            end
@@ -386,21 +386,21 @@ implementation
            not(might_have_sideeffects(left,[mhs_exceptions])) then
            begin
              t:=cordconstnode.create(1, pasbool1type, false);
-             typecheckpass(t);
+             TypeCheckPass(t);
              result:=t;
              exit;
            end;
       end;
 
 
-    function tinnode.pass_1 : tnode;
+    function tinnode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_REGISTER;
 
-         firstpass(right);
-         firstpass(left);
-         if codegenerror then
+         FirstPass(right);
+         FirstPass(left);
+         if CodeGenError then
            exit;
       end;
 
@@ -409,7 +409,7 @@ implementation
                               TRANGENODE
 *****************************************************************************}
 
-    constructor trangenode.create(l,r : tnode);
+    constructor trangenode.create(l,r : TNode);
       var
         value: string;
       begin
@@ -420,20 +420,20 @@ implementation
              value := char(tordconstnode(r).value.uvalue) + ''#0;
              r.free;
              r := cstringconstnode.createstr(value);
-             do_typecheckpass(r);
+             DoTypeCheckPass(r);
            end;
          inherited create(rangen,l,r);
       end;
 
 
-    function trangenode.pass_typecheck : tnode;
+    function trangenode.pass_typecheck : TNode;
       begin
          result:=nil;
-         typecheckpass(left);
-         typecheckpass(right);
+         TypeCheckPass(left);
+         TypeCheckPass(right);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
          set_varstate(right,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
          { both types must be compatible }
          if not (nf_generic_para in left.flags) and not (nf_generic_para in right.flags) and
@@ -452,12 +452,12 @@ implementation
       end;
 
 
-    function trangenode.pass_1 : tnode;
+    function trangenode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         firstpass(right);
-         if codegenerror then
+         FirstPass(left);
+         FirstPass(right);
+         if CodeGenError then
            exit;
         expectloc:=left.expectloc;
       end;
@@ -609,7 +609,7 @@ implementation
                               TCASENODE
 *****************************************************************************}
 
-    constructor tcasenode.create(l:tnode);
+    constructor tcasenode.create(l:TNode);
       begin
          inherited create(casen,l);
          flabels:=nil;
@@ -638,7 +638,7 @@ implementation
       end;
 
 
-    constructor tcasenode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tcasenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       var
         cnt,i : longint;
       begin
@@ -692,19 +692,19 @@ implementation
       end;
 
 
-    function tcasenode.pass_typecheck : tnode;
+    function tcasenode.pass_typecheck : TNode;
       var
         i : integer;
       begin
         result:=nil;
 
-        do_typecheckpass(left);
+        DoTypeCheckPass(left);
 
         for i:=0 to blocks.count-1 do
-          typecheckpass(pcaseblock(blocks[i])^.statement);
+          TypeCheckPass(pcaseblock(blocks[i])^.statement);
 
         if assigned(elseblock) then
-          typecheckpass(elseblock);
+          TypeCheckPass(elseblock);
 
         resultdef:=voidtype;
         result:=simplify(false);
@@ -724,10 +724,10 @@ implementation
       end;
 
 
-    function tcasenode.pass_1 : tnode;
+    function tcasenode.pass_1 : TNode;
       var
          i: integer;
-         node_thenblock, node_elseblock, if_node,temp_cleanup : tnode;
+         node_thenblock, node_elseblock, if_node,temp_cleanup : TNode;
          tempcaseexpr : ttempcreatenode;
          if_block, init_block: tblocknode;
          stmt: tstatementnode;
@@ -750,7 +750,7 @@ implementation
           add_label_to_blockid_list(result,flabels);
         end;
 
-      function makeifblock(elseblock : tnode): tnode;
+      function makeifblock(elseblock : TNode): TNode;
         var
           i, j: longint;
           check: taddnode;
@@ -793,7 +793,7 @@ implementation
           { will free its elements too because of create(true) }
           blocklist.free;
           blocklist := nil;
-          typecheckpass(result);
+          TypeCheckPass(result);
         end;
 
       begin
@@ -819,9 +819,9 @@ implementation
            end;
 
          { evaluates the case expression }
-         firstpass(left);
+         FirstPass(left);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { Load caseexpr into temp var if complex. }
@@ -835,7 +835,7 @@ implementation
                ctempcreatenode.create(
                  left.resultdef, left.resultdef.size, tt_persistent, true);
              temp_cleanup := ctempdeletenode.create(tempcaseexpr);
-             typecheckpass(tnode(tempcaseexpr));
+             TypeCheckPass(TNode(tempcaseexpr));
 
              addstatement(stmt, tempcaseexpr);
              addstatement(
@@ -843,17 +843,17 @@ implementation
                  ctemprefnode.create(tempcaseexpr), left));
 
              left := ctemprefnode.create(tempcaseexpr);
-             typecheckpass(left);
+             TypeCheckPass(left);
            end;
 
          { first case }
          for i:=0 to blocks.count-1 do
-           firstpass(pcaseblock(blocks[i])^.statement);
+           FirstPass(pcaseblock(blocks[i])^.statement);
 
          { may be handle else tree }
          if assigned(elseblock) then
            begin
-             firstpass(elseblock);
+             FirstPass(elseblock);
 
              { kill case? }
              if blocks.count=0 then
@@ -875,7 +875,7 @@ implementation
              if_node:=makeifblock(elseblock);
 
              if assigned(init_block) then
-               firstpass(tnode(init_block));
+               FirstPass(TNode(init_block));
 
              if_block:=internalstatements(stmt);
 
@@ -965,14 +965,14 @@ implementation
                  tempcaseexpr:=ctempcreatenode.create(
                    left.resultdef,left.resultdef.size,tt_persistent,true);
                  temp_cleanup:=ctempdeletenode.create(tempcaseexpr);
-                 typecheckpass(tnode(tempcaseexpr));
+                 TypeCheckPass(TNode(tempcaseexpr));
 
                  addstatement(stmt,tempcaseexpr);
                  addstatement(stmt,cassignmentnode.create(
                    ctemprefnode.create(tempcaseexpr),left.getcopy));
 
                  left:=ctemprefnode.create(tempcaseexpr);
-                 typecheckpass(left);
+                 TypeCheckPass(left);
 
                  addstatement(stmt,cifnode.create_internal(
                    caddnode.create_internal(andn,
@@ -990,7 +990,7 @@ implementation
         end;
 
 
-    function tcasenode.simplify(forinline:boolean):tnode;
+    function tcasenode.simplify(forinline:boolean):TNode;
       var
         tmp: pcaselabel;
       begin
@@ -1023,7 +1023,7 @@ implementation
               result:=elseblock.getcopy
             else
               begin
-                if ([m_iso,m_extpas]*current_settings.modeswitches)<>[] then
+                if ([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[] then
                   cgmessage1(cg_e_case_missing_value,tostr(tordconstnode(left).value))
                 else
                   cgmessage(cg_w_case_incomplete);
@@ -1034,7 +1034,7 @@ implementation
       end;
 
 
-    function tcasenode.dogetcopy : tnode;
+    function tcasenode.dogetcopy : TNode;
       var
          n : tcasenode;
          i : longint;
@@ -1135,7 +1135,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    procedure tcasenode.insertintolist(l : tnodelist);
+    procedure tcasenode.insertintolist(l : TNodeList);
       begin
       end;
 
@@ -1169,7 +1169,7 @@ implementation
       end;
 
 
-    function tcasenode.docompare(p: tnode): boolean;
+    function tcasenode.docompare(p: TNode): boolean;
       begin
         result :=
           inherited docompare(p) and
@@ -1179,7 +1179,7 @@ implementation
       end;
 
 
-    procedure tcasenode.addblock(blockid:longint;instr:tnode);
+    procedure tcasenode.addblock(blockid:longint;instr:TNode);
       var
         hcaseblock : pcaseblock;
       begin
@@ -1192,7 +1192,7 @@ implementation
       end;
 
 
-    procedure tcasenode.addelseblock(instr:tnode);
+    procedure tcasenode.addelseblock(instr:TNode);
       begin
         elseblock:=instr;
       end;
@@ -1296,7 +1296,7 @@ implementation
           begin
             { unless cs_check_all_case_coverage is set, only check for enums, booleans and
               subrange types different from the default ones }
-            if (cs_check_all_case_coverage in current_settings.localswitches) or
+            if (cs_check_all_case_coverage in CurrentSettings.localswitches) or
                (is_enum(left.resultdef) or
                 is_boolean(left.resultdef) or
                 not orddefspansfullrange(torddef(left.resultdef))) and
@@ -1305,10 +1305,10 @@ implementation
                 { labels for some values of the operand are missing, and no else block is present }
                 cgmessage(cg_w_case_incomplete);
                 { in Standard/Extended Pascal, this is a dynamic violation error if it actually happens }
-                if ([m_extpas,m_iso]*current_settings.modeswitches)<>[] then
+                if ([m_extpas,m_iso]*CurrentSettings.modeswitches)<>[] then
                   begin
                     elseblock:=ccallnode.createintern('fpc_rangeerror',nil);
-                    typecheckpass(elseblock);
+                    TypeCheckPass(elseblock);
                   end;
               end
           end

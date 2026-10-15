@@ -257,7 +257,7 @@ begin
         begin
           if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset>0) then
             begin
-              if current_settings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.asmmode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBW:
@@ -283,14 +283,14 @@ begin
                       internalerror(2019061002);
                   end;
                 end;
-              if current_procinfo.procdef.proccalloption=pocall_register then
+              if CurrentProcInfo.procdef.proccalloption=pocall_register then
                 message1(asmr_w_no_direct_ebp_for_parameter,ErrorRefStr)
               else
                 message1(asmr_w_direct_ebp_for_parameter_regcall,ErrorRefStr);
             end
           else if (getsupreg(opr.ref.base)=RS_EBP) and (opr.ref.offset<0) then
             begin
-              if current_settings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.asmmode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBW:
@@ -321,7 +321,7 @@ begin
           else if ((ins.opcode<>A_LEA) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) or
             ((ins.opcode=A_LEA) and (getsupreg(ins.operands[2].opr.reg)<>RS_ESP) and (getsupreg(opr.ref.base)=RS_ESP) and (getsubreg(opr.ref.base)<>R_SUBW) and (opr.ref.offset<0)) then
             begin
-              if current_settings.asmmode in asmmodes_x86_intel then
+              if CurrentSettings.asmmode in asmmodes_x86_intel then
                 begin
                   case getsubreg(opr.ref.base) of
                     R_SUBD:
@@ -346,7 +346,7 @@ begin
               message1(asmr_w_direct_esp_neg_offset,ErrorRefStr);
             end;
         end;
-      if (cs_create_pic in current_settings.moduleswitches) and
+      if (cs_create_pic in CurrentSettings.moduleswitches) and
          assigned(opr.ref.symbol) and
          not assigned(opr.ref.relsymbol) then
         begin
@@ -1369,7 +1369,7 @@ begin
                           tx86operand(operands[i]).opsize:=opsize
                         else
                          begin
-                           if (m_delphi in current_settings.modeswitches) then
+                           if (m_delphi in CurrentSettings.modeswitches) then
                              Message(asmr_w_unable_to_determine_reference_size_using_dword)
                            else
                              Message(asmr_e_unable_to_determine_reference_size);
@@ -1385,7 +1385,7 @@ begin
                      else if not(NoMemorySizeRequired(opcode) or
                        (opcode=A_JMP) or (opcode=A_JCC) or (opcode=A_CALL) or (opcode=A_LCALL) or (opcode=A_LJMP)) then
                        begin
-                         if (m_delphi in current_settings.modeswitches) then
+                         if (m_delphi in CurrentSettings.modeswitches) then
                            Message(asmr_w_unable_to_determine_reference_size_using_dword)
                          else
                            Message(asmr_e_unable_to_determine_reference_size);
@@ -1635,7 +1635,7 @@ begin
                 if tx86operand(operands[1]).opsize=S_NO then
                   begin
                     tx86operand(operands[1]).opsize:=S_B;
-                    if (m_delphi in current_settings.modeswitches) then
+                    if (m_delphi in CurrentSettings.modeswitches) then
                       Message(asmr_w_unable_to_determine_reference_size_using_byte)
                     else
                       Message(asmr_e_unable_to_determine_reference_size);
@@ -1751,8 +1751,8 @@ begin
   if sizeerr then
    begin
      { if range checks are on then generate an error }
-     if (cs_compilesystem in current_settings.moduleswitches) or
-        not (cs_check_range in current_settings.localswitches) then
+     if (cs_compilesystem in CurrentSettings.moduleswitches) or
+        not (cs_check_range in CurrentSettings.localswitches) then
        Message(asmr_w_size_suffix_and_dest_dont_match)
      else
        Message(asmr_e_size_suffix_and_dest_dont_match);
@@ -2001,7 +2001,7 @@ begin
      if someone uses this in assembler code
      FPC itself does not use it at all PM }
    if (opcode=A_ENTER) and
-      (target_info.system in [system_i386_linux,system_i386_android]) then
+      (TargetInfo.system in [system_i386_linux,system_i386_android]) then
      Message(asmr_w_enter_not_supported_by_linux);
 
   ai:=taicpu.op_none(opcode,siz);
@@ -2051,7 +2051,7 @@ begin
        OPR_REFERENCE:
          begin
 
-           if current_settings.optimizerswitches <> [] then
+           if CurrentSettings.optimizerswitches <> [] then
             if (not(MemRefInfo(opcode).MemRefSize in MemRefSizeInfoVMems)) and (opcode<>A_XLAT) and not is_x86_string_op(opcode) then
              optimize_ref(operands[i].opr.ref,true);
 

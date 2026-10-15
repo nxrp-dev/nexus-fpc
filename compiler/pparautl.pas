@@ -76,7 +76,7 @@ implementation
       const
         name_result='result';
       var
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         vs       : tparavarsym;
         paranr   : word;
       begin
@@ -89,21 +89,21 @@ implementation
            paramanager.ret_in_param(pd.returndef,pd) and
            not assigned(pd.parast.find(name_result)) then
          begin
-           storepos:=current_tokenpos;
+           storepos:=CurrentTokenPos;
            if pd.typ=procdef then
-            current_tokenpos:=tprocdef(pd).fileinfo;
+            CurrentTokenPos:=tprocdef(pd).fileinfo;
 {$if defined(i386)}
            { For left to right add it at the end to be delphi compatible.
              In the case of safecalls with safecal-exceptions support the
              funcret-para is (from the 'c'-point of view) a normal parameter
              which has to be added to the end of the parameter-list }
            if (pd.proccalloption in (pushleftright_pocalls)) or
-              ((tf_safecall_exceptions in target_info.flags) and
+              ((tf_safecall_exceptions in TargetInfo.flags) and
                (pd.proccalloption=pocall_safecall)) then
              paranr:=paranr_result_leftright
            else
 {$elseif defined(SUPPORT_SAFECALL)}
-           if (tf_safecall_exceptions in target_info.flags) and
+           if (tf_safecall_exceptions in TargetInfo.flags) and
               (pd.proccalloption = pocall_safecall)  then
              paranr:=paranr_result_leftright
            else
@@ -119,7 +119,7 @@ implementation
            if pd.typ=procdef then
             tprocdef(pd).funcretsym:=vs;
 
-           current_tokenpos:=storepos;
+           CurrentTokenPos:=storepos;
          end;
       end;
 
@@ -128,21 +128,21 @@ implementation
       const
         name_parentfp='parentfp';
       var
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         vs       : tparavarsym;
         paranr   : longint;
       begin
         if (pd.parast.symtablelevel>normal_function_level) and
            not assigned(pd.parast.find(name_parentfp)) then
           begin
-            storepos:=current_tokenpos;
+            storepos:=CurrentTokenPos;
             if pd.typ=procdef then
-             current_tokenpos:=tprocdef(pd).fileinfo;
+             CurrentTokenPos:=tprocdef(pd).fileinfo;
 
             { if no support for nested procvars is activated, use the old
               calling convention to pass the parent frame pointer for backwards
               compatibility }
-            if not(m_nested_procvars in current_settings.modeswitches) then
+            if not(m_nested_procvars in CurrentSettings.modeswitches) then
               paranr:=paranr_parentfp
             { nested procvars require Delphi-style parentfp passing, see
               po_delphi_nested_cc declaration for more info }
@@ -163,7 +163,7 @@ implementation
             ;
             pd.parast.insertsym(vs);
 
-            current_tokenpos:=storepos;
+            CurrentTokenPos:=storepos;
           end;
       end;
 
@@ -175,7 +175,7 @@ implementation
         name_block_literal='_block_literal';
         name_vmt='vmt';
       var
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         vs       : tparavarsym;
         hdef     : tdef;
         selfdef  : tdef;
@@ -261,8 +261,8 @@ implementation
                 if pd.no_self_node then
                    exit;
 
-                storepos:=current_tokenpos;
-                current_tokenpos:=tprocdef(pd).fileinfo;
+                storepos:=CurrentTokenPos;
+                CurrentTokenPos:=tprocdef(pd).fileinfo;
 
                 { Generate VMT variable for constructor/destructor }
                 if (pd.proctypeoption in [potype_constructor,potype_destructor]) and
@@ -308,7 +308,7 @@ implementation
                     pd.parast.insertsym(vs);
                   end;
 
-                current_tokenpos:=storepos;
+                CurrentTokenPos:=storepos;
               end;
           end;
       end;
@@ -316,14 +316,14 @@ implementation
 
     procedure insert_funcret_local(pd:tprocdef);
       var
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         vs       : tlocalvarsym;
         aliasvs  : tabsolutevarsym;
         sl       : tpropaccesslist;
         hs       : string;
       begin
-        storepos:=current_tokenpos;
-        current_tokenpos:=pd.fileinfo;
+        storepos:=CurrentTokenPos;
+        CurrentTokenPos:=pd.fileinfo;
 
         { The result from constructors and destructors can't be accessed directly }
         if not(pd.proctypeoption in [potype_constructor,potype_destructor]) and
@@ -367,7 +367,7 @@ implementation
              end;
 
            { insert result also if support is on }
-           if (m_result in current_settings.modeswitches) then
+           if (m_result in CurrentSettings.modeswitches) then
             begin
               sl:=tpropaccesslist.create;
               sl.addsym(sl_load,pd.funcretsym);
@@ -396,7 +396,7 @@ implementation
             pd.localst.insertsym(vs);
           end;
 
-        current_tokenpos:=storepos;
+        CurrentTokenPos:=storepos;
       end;
 
 
@@ -428,7 +428,7 @@ implementation
               paramanager.push_addr_param(varspez,vardef,pd.proccalloption) and
               not(is_open_array(vardef) or
                   is_array_of_const(vardef)) and
-              (not(target_info.system in systems_caller_copy_addr_value_para) or
+              (not(TargetInfo.system in systems_caller_copy_addr_value_para) or
                ((pd.proccalloption in cdecl_pocalls) and
                 (vardef.typ=arraydef))) then
              include(varoptions,vo_has_local_copy);
@@ -513,10 +513,10 @@ implementation
       var
         pd: tdef;
         i: longint;
-        oldpos: tfileposinfo;
+        oldpos: TFilePosInfo;
       begin
         // handle calling conventions of record methods
-        oldpos:=current_filepos;
+        oldpos:=CurrentFilePos;
         { don't keep track of procdefs in a separate list, because the
           compiler may add additional procdefs (e.g. property wrappers for
           the jvm backend) }
@@ -525,10 +525,10 @@ implementation
             pd:=tdef(astruct.symtable.deflist[i]);
             if pd.typ<>procdef then
               continue;
-            current_filepos:=tprocdef(pd).fileinfo;
+            CurrentFilePos:=tprocdef(pd).fileinfo;
             handle_calling_convention(tprocdef(pd),[hcc_declaration,hcc_insert_hidden_paras]);
           end;
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
@@ -571,7 +571,7 @@ implementation
                   pd.proccalloption:=pocall_cdecl;
               end
             else if not(po_hascallingconvention in pd.procoptions) then
-              pd.proccalloption:=current_settings.defproccall
+              pd.proccalloption:=CurrentSettings.defproccall
             else
               begin
                 if pd.proccalloption=pocall_none then
@@ -599,11 +599,11 @@ implementation
 
             { Inlining is enabled and supported? }
             if (po_inline in pd.procoptions) and
-               not(cs_do_inline in current_settings.localswitches) then
+               not(cs_do_inline in CurrentSettings.localswitches) then
               begin
                 { Give an error if inline is not supported by the compiler mode,
                   otherwise only give a hint that this procedure will not be inlined }
-                if not(m_default_inline in current_settings.modeswitches) then
+                if not(m_default_inline in CurrentSettings.modeswitches) then
                   Message(parser_e_proc_inline_not_supported)
                 else
                   Message(parser_h_inlining_disabled);
@@ -681,7 +681,7 @@ implementation
           fwsym,
           currsym : tsym;
           currtype : ttypesym absolute currsym;
-          fileinfo : tfileposinfo;
+          fileinfo : TFilePosInfo;
         begin
           result:=true;
           if fwpd.genericparas.count<>currpd.genericparas.count then
@@ -832,7 +832,7 @@ implementation
         forwardfound:=false;
 
         if assigned(currpd.struct) and
-           (currpd.struct.symtable.moduleid<>current_module.moduleid) and
+           (currpd.struct.symtable.moduleid<>CurrentModule.moduleid) and
            not (df_specialization in currpd.defoptions) then
           begin
             result:=false;
@@ -868,7 +868,7 @@ implementation
              But for an overload declared function this is not allowed }
            if { check if empty implementation arguments match is allowed }
               (
-               not(m_repeat_forward in current_settings.modeswitches) and
+               not(m_repeat_forward in CurrentSettings.modeswitches) and
                not(currpd.forwarddef) and
                is_bareprocdef(currpd) and
                not(po_overload in fwpd.procoptions)
@@ -897,7 +897,7 @@ implementation
                  begin
                    forwardfound:=true;
 
-                   if not(m_repeat_forward in current_settings.modeswitches) and
+                   if not(m_repeat_forward in CurrentSettings.modeswitches) and
                       (fwpd.proccalloption<>currpd.proccalloption) then
                      paracompopt:=[cpo_ignorehidden,cpo_comparedefaultvalue,cpo_openequalisexact,cpo_ignoreuniv]
                    else
@@ -910,7 +910,7 @@ implementation
                         convention in the interface or implementation if
                         there was no convention specified in the other
                         part }
-                      if (m_delphi in current_settings.modeswitches) then
+                      if (m_delphi in CurrentSettings.modeswitches) then
                         begin
                           if not(po_hascallingconvention in currpd.procoptions) then
                             currpd.proccalloption:=fwpd.proccalloption
@@ -958,7 +958,7 @@ implementation
                      if the implementation has default parameters, the interface
                      also has them and that if they both have them, that they
                      have the same value }
-                   if ((m_repeat_forward in current_settings.modeswitches) or
+                   if ((m_repeat_forward in CurrentSettings.modeswitches) or
                        not is_bareprocdef(currpd)) and
                        (
                          (
@@ -1000,7 +1000,7 @@ implementation
 
                    { Check procedure options, Delphi requires that class is
                      repeated in the implementation for class methods }
-                   if (m_fpc in current_settings.modeswitches) then
+                   if (m_fpc in CurrentSettings.modeswitches) then
                      po_comp:=[po_classmethod,po_varargs,po_methodpointer,po_interrupt]
                    else
                      po_comp:=[po_classmethod,po_methodpointer];
@@ -1036,7 +1036,7 @@ implementation
                          MessagePos2(currpd.fileinfo,parser_e_proc_dir_conflict,tokeninfo^[_VIRTUAL].str,get_first_proc_str(po_comp));
                      end;
                     { Check parameters }
-                   if (m_repeat_forward in current_settings.modeswitches) or
+                   if (m_repeat_forward in CurrentSettings.modeswitches) or
                       (currpd.minparacount>0) then
                     begin
                       { If mangled names are equal then they have the same amount of arguments }
@@ -1126,14 +1126,14 @@ implementation
                    if po_compilerproc in fwpd.procoptions then
                      begin
                        fwpd.setcompilerprocname;
-                       current_module.add_public_asmsym(fwpd.mangledname,AB_GLOBAL,AT_FUNCTION);
+                       CurrentModule.add_public_asmsym(fwpd.mangledname,AB_GLOBAL,AT_FUNCTION);
                      end;
                    if po_public in fwpd.procoptions then
                      begin
                        item:=fwpd.aliasnames.first;
                        while assigned(item) do
                          begin
-                           current_module.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
+                           CurrentModule.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
                            item:=item.next;
                          end;
                      end;
@@ -1161,7 +1161,7 @@ implementation
              end;
 
            { check for allowing overload directive }
-           if not(m_fpc in current_settings.modeswitches) then
+           if not(m_fpc in CurrentSettings.modeswitches) then
             begin
               { overload directive turns on overloading }
               if ((po_overload in currpd.procoptions) or
@@ -1228,7 +1228,7 @@ implementation
                 item:=currpd.aliasnames.first;
                 while assigned(item) do
                   begin
-                    current_module.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
+                    CurrentModule.add_public_asmsym(TCmdStrListItem(item).str,AB_GLOBAL,AT_FUNCTION);
                     item:=item.next;
                   end;
               end;
@@ -1251,12 +1251,12 @@ implementation
           from the symtable in which it was originally created, so that by itself
           is not enough) }
         old_symtablestack:=symtablestack;
-        symtablestack:=old_symtablestack.getcopyuntil(current_module.localsymtable);
+        symtablestack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
         { create struct to hold local variables and parameters that are
           accessed from within nested routines (start with extra dollar to prevent
           the JVM from thinking this is a nested class in the unit) }
-        nestedvarsst:=trecordsymtable.create('$'+current_module.realmodulename^+'$$_fpc_nestedvars$'+pd.unique_id_str,
-          current_settings.alignment.localalignmax,current_settings.alignment.localalignmin);
+        nestedvarsst:=trecordsymtable.create('$'+CurrentModule.realmodulename^+'$$_fpc_nestedvars$'+pd.unique_id_str,
+          CurrentSettings.alignment.localalignmax,CurrentSettings.alignment.localalignmin);
         nestedvarsdef:=crecorddef.create(nestedvarsst.name^,nestedvarsst);
         symtablestack.free;
         symtablestack:=old_symtablestack.getcopyuntil(pd.localst);

@@ -34,19 +34,19 @@ uses
   node;
 
 type
-  tobjcselectornode = class(tunarynode)
+  tobjcselectornode = class(TUnaryNode)
    public
-    constructor create(formethod: tnode);
-    function pass_typecheck: tnode;override;
-    function pass_1: tnode;override;
+    constructor create(formethod: TNode);
+    function pass_typecheck: TNode;override;
+    function pass_1: TNode;override;
   end;
   tobjcselectornodeclass = class of tobjcselectornode;
 
-  tobjcprotocolnode = class(tunarynode)
+  tobjcprotocolnode = class(TUnaryNode)
    public
-    constructor create(forprotocol: tnode);
-    function pass_typecheck: tnode;override;
-    function pass_1: tnode;override;
+    constructor create(forprotocol: TNode);
+    function pass_typecheck: TNode;override;
+    function pass_1: TNode;override;
   end;
   tobjcprotocolnodeclass = class of tobjcprotocolnode;
 
@@ -69,22 +69,22 @@ uses
                             TOBJCSELECTORNODE
 *****************************************************************************}
 
-constructor tobjcselectornode.create(formethod: tnode);
+constructor tobjcselectornode.create(formethod: TNode);
   begin
     inherited create(objcselectorn,formethod);
   end;
 
 
-function tobjcselectornode.pass_typecheck: tnode;
+function tobjcselectornode.pass_typecheck: TNode;
   var
     len: longint;
     s: shortstring;
   begin
     s:='';
-    if not(m_objectivec1 in current_settings.modeswitches) then
+    if not(m_objectivec1 in CurrentSettings.modeswitches) then
       Message(parser_f_modeswitch_objc_required);
     result:=nil;
-    typecheckpass(left);
+    TypeCheckPass(left);
     { argument can be
        a) an objc method
        b) a pchar, zero-based chararray or ansistring
@@ -122,7 +122,7 @@ function tobjcselectornode.pass_typecheck: tnode;
   end;
 
 
-function tobjcselectornode.pass_1: tnode;
+function tobjcselectornode.pass_1: TNode;
   begin
     result:=nil;
     expectloc:=LOC_CREFERENCE;
@@ -133,18 +133,18 @@ function tobjcselectornode.pass_1: tnode;
                             TOBJPROTOCOLNODE
 *****************************************************************************}
 
-constructor tobjcprotocolnode.create(forprotocol: tnode);
+constructor tobjcprotocolnode.create(forprotocol: TNode);
   begin
     inherited create(objcprotocoln,forprotocol);
   end;
 
 
-function tobjcprotocolnode.pass_typecheck: tnode;
+function tobjcprotocolnode.pass_typecheck: TNode;
   begin
-    if not(m_objectivec1 in current_settings.modeswitches) then
+    if not(m_objectivec1 in CurrentSettings.modeswitches) then
       Message(parser_f_modeswitch_objc_required);
     result:=nil;
-    typecheckpass(left);
+    TypeCheckPass(left);
     if (left.nodetype<>typen) then
       MessagePos(left.fileinfo,type_e_type_id_expected)
     else if not is_objcprotocol(left.resultdef) then
@@ -153,13 +153,13 @@ function tobjcprotocolnode.pass_typecheck: tnode;
   end;
 
 
-function tobjcprotocolnode.pass_1: tnode;
+function tobjcprotocolnode.pass_1: TNode;
   begin
     result:=ccallnode.createinternresfromunit('OBJC','OBJC_GETPROTOCOL',
       ccallparanode.create(cstringconstnode.createstr(tobjectdef(left.resultdef).objextname^),nil),
       resultdef
     );
-    typecheckpass(result);
+    TypeCheckPass(result);
   end;
 
 

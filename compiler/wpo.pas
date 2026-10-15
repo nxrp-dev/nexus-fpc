@@ -61,7 +61,7 @@ implementation
       wpoinfomanager.parseandcheckwpoinfo;
 
       { abort if error }
-      if (codegenerror) then
+      if (CodeGenError) then
         raise ECompilerAbort.Create;
     end;
 

@@ -70,8 +70,8 @@ implementation
     procedure finish(const s: TSymStr; section: TAsmSectiontype);
       begin
         d:=b.end_anonymous_record;
-        current_asmdata.asmlists[al_globals].concatlist(b.get_final_asmlist(
-          current_asmdata.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA,d),d,section,s,8));
+        CurrentAsmData.asmlists[al_globals].concatlist(b.get_final_asmlist(
+          CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA,d),d,section,s,8));
         b.free;
       end;
 
@@ -88,7 +88,7 @@ implementation
     begin
       { Layout matches rtl/inc/fpcpackage.pas. The experimental targets are
         currently 64 bit; every field occupies one native word. }
-      if not (target_info.system in [system_x86_64_win64,system_x86_64_linux]) then exit;
+      if not (TargetInfo.system in [system_x86_64_win64,system_x86_64_linux]) then exit;
       start;
       for i:=1 to 6 do number(0);
       finish('FPC_PACKAGE_CONTEXT',sec_data);
@@ -110,7 +110,7 @@ implementation
       { Retain a valid address even for an empty owned-unit list. }
       if unitcount=0 then number(0);
       finish('FPC_PACKAGE_UNITS',sec_rodata);
-      if target_info.system=system_x86_64_linux then
+      if TargetInfo.system=system_x86_64_linux then
         begin
           { ELF resolves these local slots directly. Keep the descriptor's
             pointer-to-pointer ABI without manufacturing PE import symbols. }
@@ -131,14 +131,14 @@ implementation
           entry:=ppackageentry(packagelist[i]);
           if not entry^.direct then continue;
           name:='FPC_PACKAGE_'+entry^.package.packagename^;
-          if target_info.system=system_x86_64_linux then
+          if TargetInfo.system=system_x86_64_linux then
             b.emit_tai(tai_const.createname('FPC_PACKAGE_DEPENDENCY_SLOTS',depcount*8),voidpointertype)
           else
             begin
-              current_module.addexternalimport(entry^.package.pplfilename,
+              CurrentModule.addexternalimport(entry^.package.pplfilename,
                 name,name+suffix_indirect,0,true,false);
               b.emit_tai(tai_const.create_sym(
-                current_asmdata.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
+                CurrentAsmData.RefAsmSymbol(name,AT_DATA,true)),voidpointertype);
             end;
           inc(depcount);
         end;
@@ -158,9 +158,9 @@ implementation
       number(4);
       number(21*8);
       number(NexusCompilerIdentity(CurrentPPUVersion,wordversion,CurrentPPULongVersion));
-      number(ord(target_info.system));
+      number(ord(TargetInfo.system));
       number(find_module_from_symtable(systemunit).crc);
-      b.emit_pooled_shortstring_const_ref(current_module.modulename^);
+      b.emit_pooled_shortstring_const_ref(CurrentModule.modulename^);
       number(unitcount);
       address('FPC_PACKAGE_UNITS');
       number(depcount);
@@ -175,12 +175,12 @@ implementation
       b.emit_pooled_shortstring_const_ref(package_sdk_identity);
       b.emit_pooled_shortstring_const_ref(current_package_build_identity);
       address('FPC_PACKAGE_DEPENDENCY_IDS');
-      if current_module.ispackage then
-        name:='FPC_PACKAGE_'+current_module.modulename^
+      if CurrentModule.ispackage then
+        name:='FPC_PACKAGE_'+CurrentModule.modulename^
       else
         name:='FPC_PACKAGE_ROOT';
       finish(name,sec_rodata);
-      if current_module.ispackage then
+      if CurrentModule.ispackage then
         begin
           export.exportname(name,[eo_name]);
           start;
@@ -411,7 +411,7 @@ implementation
           varexport(ctai_typedconstbuilder.get_vectorized_dead_strip_section_symbol_end('RESSTR',u.localsymtable,[]).name);
         end;
 
-      if not (target_info.system in systems_indirect_var_imports) then
+      if not (TargetInfo.system in systems_indirect_var_imports) then
         for i:=0 to u.publicasmsyms.count-1 do
           begin
             sym:=tasmsymbol(u.publicasmsyms[i]);
@@ -536,7 +536,7 @@ implementation
                   outppu.putstring(s);
                   outppu.putlongint(m);
                 end;
-               current_module.linkotherofiles.add(s,link_always);
+               CurrentModule.linkotherofiles.add(s,link_always);
              end;
             if not MakeStatic then
              outppu.writeentry(b);
@@ -557,13 +557,13 @@ implementation
     { just add a new entry with the new lib }
       if MakeStatic then
        begin
-         outppu.putstring('imp'+current_module.realmodulename^);
+         outppu.putstring('imp'+CurrentModule.realmodulename^);
          outppu.putlongint(link_static);
          outppu.writeentry(iblinkunitstaticlibs)
        end
       else
        begin
-         outppu.putstring('imp'+current_module.realmodulename^);
+         outppu.putstring('imp'+CurrentModule.realmodulename^);
          outppu.putlongint(link_shared);
          outppu.writeentry(iblinkunitsharedlibs);
        end;
@@ -590,7 +590,7 @@ implementation
                    if ext<>'' then
                      delete(s,length(s)-length(ext)+1,length(ext));
 
-                   current_module.linkOtherSharedLibs.add(s,link_always);
+                   CurrentModule.linkOtherSharedLibs.add(s,link_always);
                  end;
              end
            else
@@ -629,13 +629,13 @@ implementation
         chain : ansistring;
         buildingpackage : boolean;
       begin
-        buildingpackage:=assigned(current_module) and current_module.ispackage;
+        buildingpackage:=assigned(CurrentModule) and CurrentModule.ispackage;
         if (active.IndexOf(entry)>=0) or
-           (buildingpackage and (upper(entry^.realpkgname)=current_module.modulename^)) then
+           (buildingpackage and (upper(entry^.realpkgname)=CurrentModule.modulename^)) then
           begin
             chain:='';
             if buildingpackage then
-              chain:=current_module.realmodulename^+' -> ';
+              chain:=CurrentModule.realmodulename^+' -> ';
             for i:=0 to active.count-1 do
               chain:=chain+ppackageentry(active[i])^.realpkgname+' -> ';
             Comment(V_Fatal,'Circular package dependency: '+chain+entry^.realpkgname);
@@ -666,7 +666,7 @@ implementation
       end;
 
     begin
-      if not (tf_supports_packages in target_info.flags) then
+      if not (tf_supports_packages in TargetInfo.flags) then
         exit;
       active:=TFPList.Create;
       owners:=TFPHashList.Create;
@@ -738,7 +738,7 @@ implementation
       i : longint;
       pkgname : tpathstr;
     begin
-      if target_info.system in systems_indirect_var_imports then
+      if TargetInfo.system in systems_indirect_var_imports then
         { we're using import libraries anyway }
         exit;
       for i:=0 to packagelist.count-1 do
@@ -923,7 +923,7 @@ implementation
                 if cacheentry^.sym.typ=AT_DATA then
                   { import as the $indirect symbol if it as a variable }
                   impname:=symname+suffix_indirect;
-                current_module.addexternalimport(cacheentry^.pkg.pplfilename,symname,impname,0,cacheentry^.sym.typ=at_data,false);
+                CurrentModule.addexternalimport(cacheentry^.pkg.pplfilename,symname,impname,0,cacheentry^.sym.typ=at_data,false);
               end;
           end;
       end;
@@ -936,10 +936,10 @@ implementation
         item := TCmdStrListItem(pd.aliasnames.first);
         if not assigned(item) then
           { at least import the mangled name }
-          current_module.addexternalimport(pkg.pplfilename,pd.mangledname,pd.mangledname,0,false,false);
+          CurrentModule.addexternalimport(pkg.pplfilename,pd.mangledname,pd.mangledname,0,false,false);
         while assigned(item) do
           begin
-            current_module.addexternalimport(pkg.pplfilename,item.str,item.str,0,false,false);
+            CurrentModule.addexternalimport(pkg.pplfilename,item.str,item.str,0,false,false);
             item := TCmdStrListItem(item.next);
           end;
        end;
@@ -999,12 +999,12 @@ implementation
                               if tconstsym(sym).consttyp<>constresourcestring then
                                 internalerror(2016072201);
                               name:=make_mangledname('RESSTR',sym.owner,sym.name);
-                              current_module.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
+                              CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
                             end;
                           staticvarsym:
                             begin
                               name:=tstaticvarsym(sym).mangledname;
-                              current_module.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
+                              CurrentModule.addexternalimport(pkgentry^.package.pplfilename,name,name+suffix_indirect,0,true,false);
                             end;
                           procsym:
                             begin
@@ -1047,7 +1047,7 @@ implementation
         begin
           if not assigned(module.package) then
             processimportedsyms(module.unitimportsyms);
-          if (target_info.system=system_x86_64_linux) and assigned(module.package) then
+          if (TargetInfo.system=system_x86_64_linux) and assigned(module.package) then
             begin
               { Declarations imported from a packaged unit may still reference
                 native libraries. Preserve its $LINKLIB requirements without
@@ -1056,7 +1056,7 @@ implementation
                 begin
                   libname:=module.linkothersharedlibs.GetUseMask(link_always);
                   if libname<>'' then
-                    current_module.linkothersharedlibs.add(libname,link_always);
+                    CurrentModule.linkothersharedlibs.add(libname,link_always);
                 end;
             end;
           module:=tmodule(module.next);

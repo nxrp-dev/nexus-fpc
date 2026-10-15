@@ -1291,7 +1291,7 @@ end;
 
 function tentryfile.getrealbytesize:byte;
 begin
-  if target_info.cpu in [cpu_i386,cpu_x86_64] then
+  if TargetInfo.cpu in [cpu_i386,cpu_x86_64] then
     Result:=10
   else
     Result:=8;

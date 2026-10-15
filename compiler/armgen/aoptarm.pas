@@ -295,7 +295,7 @@ Implementation
           Exit(True);
 
       until not gniResult or
-        not(cs_opt_level3 in current_settings.optimizerswitches) or
+        not(cs_opt_level3 in CurrentSettings.optimizerswitches) or
         (Next.typ<>ait_instruction) or
         is_calljmp(taicpu(Next).opcode)
         ;
@@ -314,7 +314,7 @@ Implementation
         (taicpu(movp).ops=2) and
         MatchOperand(taicpu(movp).oper[1]^, taicpu(p).oper[0]^.reg) and
         { don't mess with moves to fp }
-        (taicpu(movp).oper[0]^.reg<>current_procinfo.framepointer) and
+        (taicpu(movp).oper[0]^.reg<>CurrentProcInfo.framepointer) and
         { the destination register of the mov might not be used between p and movp }
         not(RegUsedBetween(taicpu(movp).oper[0]^.reg,p,movp)) and
         { Take care to only do this for instructions which REALLY load to the first register.
@@ -648,7 +648,7 @@ Implementation
                     end;
 
                   { On low optimisation sections, don't search more than one instruction ahead }
-                  if not(cs_opt_level3 in current_settings.optimizerswitches) or
+                  if not(cs_opt_level3 in CurrentSettings.optimizerswitches) or
                     { Stop at procedure calls and jumps }
                     is_calljmp(taicpu(next_hp).opcode) or
                     { If the read register has changed value, or the MOV
@@ -1820,7 +1820,7 @@ Implementation
                     MatchOperand(taicpu(hp2).oper[3]^, taicpu(p).oper[2]^)
                   ) and
                   (
-                    not (cs_opt_level3 in current_settings.optimizerswitches) or
+                    not (cs_opt_level3 in CurrentSettings.optimizerswitches) or
                     (
                       { Make sure the target register isn't used in between }
                       not RegUsedBetween(taicpu(hp2).oper[0]^.reg, hp1, hp2) and
@@ -1866,7 +1866,7 @@ Implementation
                   MatchOperand(taicpu(hp2).oper[2]^, taicpu(p).oper[2]^)
                 ) and
                 (
-                  not (cs_opt_level3 in current_settings.optimizerswitches) or
+                  not (cs_opt_level3 in CurrentSettings.optimizerswitches) or
                   (
                     { Make sure the flags aren't modified in between }
                     not RegModifiedBetween(NR_DEFAULTFLAGS, hp1, hp2) and
@@ -1986,7 +1986,7 @@ Implementation
                         { Only permit writes to the stack, since we can guarantee alignment with that }
                         (
                           (ThisRef.base = NR_STACK_POINTER_REG) or
-                          (ThisRef.base = current_procinfo.framepointer)
+                          (ThisRef.base = CurrentProcInfo.framepointer)
                         ) then
                         begin
                           case taicpu(hp1).oppostfix of
@@ -2423,7 +2423,7 @@ Implementation
                 { Only permit writes to the stack, since we can guarantee alignment with that }
                 (
                   (ThisRef.base = NR_STACK_POINTER_REG) or
-                  (ThisRef.base = current_procinfo.framepointer)
+                  (ThisRef.base = CurrentProcInfo.framepointer)
                 ) then
                 begin
 

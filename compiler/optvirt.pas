@@ -147,8 +147,8 @@ unit optvirt;
         destructor destroy; override;
 
         class function getwpotype: twpotype; override;
-        class function generatesinfoforwposwitches: twpoptimizerswitches; override;
-        class function performswpoforswitches: twpoptimizerswitches; override;
+        class function generatesinfoforwposwitches: TWPOptimizerSwitches; override;
+        class function performswpoforswitches: TWPOptimizerSwitches; override;
         class function sectionname: shortstring; override;
 
         { information collection }
@@ -756,13 +756,13 @@ unit optvirt;
       end;
 
 
-    class function tprogdevirtinfo.generatesinfoforwposwitches: twpoptimizerswitches;
+    class function tprogdevirtinfo.generatesinfoforwposwitches: TWPOptimizerSwitches;
       begin
         result:=[cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts];
       end;
 
 
-    class function tprogdevirtinfo.performswpoforswitches: twpoptimizerswitches;
+    class function tprogdevirtinfo.performswpoforswitches: TWPOptimizerSwitches;
       begin
         result:=[cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts];
       end;
@@ -799,17 +799,17 @@ unit optvirt;
 
          { add all constructed class/object types to the tree }
 {$IFDEF DEBUG_DEVIRT}
-         writeln('constructed object/class/classreftypes in ',current_module.realmodulename^);
+         writeln('constructed object/class/classreftypes in ',CurrentModule.realmodulename^);
 {$ENDIF}
-         for i := 0 to current_module.wpoinfo.createdobjtypes.count-1 do
+         for i := 0 to CurrentModule.wpoinfo.createdobjtypes.count-1 do
            begin
-             inheritancetree.registerinstantiatedobjdef(tdef(current_module.wpoinfo.createdobjtypes[i]));
+             inheritancetree.registerinstantiatedobjdef(tdef(CurrentModule.wpoinfo.createdobjtypes[i]));
 {$IFDEF DEBUG_DEVIRT}
-             write('  ',tdef(current_module.wpoinfo.createdobjtypes[i]).GetTypeName);
+             write('  ',tdef(CurrentModule.wpoinfo.createdobjtypes[i]).GetTypeName);
 {$ENDIF}
-             case tdef(current_module.wpoinfo.createdobjtypes[i]).typ of
+             case tdef(CurrentModule.wpoinfo.createdobjtypes[i]).typ of
                objectdef:
-                 case tobjectdef(current_module.wpoinfo.createdobjtypes[i]).objecttype of
+                 case tobjectdef(CurrentModule.wpoinfo.createdobjtypes[i]).objecttype of
                    odt_object:
 {$IFDEF DEBUG_DEVIRT}
                      writeln(' (object)')
@@ -829,13 +829,13 @@ unit optvirt;
            end;
 
          { register all instantiated classrefdefs with the tree }
-         for i := 0 to current_module.wpoinfo.createdclassrefobjtypes.count-1 do
+         for i := 0 to CurrentModule.wpoinfo.createdclassrefobjtypes.count-1 do
            begin
-             inheritancetree.registerinstantiatedclassrefdef(tdef(current_module.wpoinfo.createdclassrefobjtypes[i]));
+             inheritancetree.registerinstantiatedclassrefdef(tdef(CurrentModule.wpoinfo.createdclassrefobjtypes[i]));
 {$IFDEF DEBUG_DEVIRT}
-             write('  Class Of ',tdef(current_module.wpoinfo.createdclassrefobjtypes[i]).GetTypeName);
+             write('  Class Of ',tdef(CurrentModule.wpoinfo.createdclassrefobjtypes[i]).GetTypeName);
 {$ENDIF}
-             case tdef(current_module.wpoinfo.createdclassrefobjtypes[i]).typ of
+             case tdef(CurrentModule.wpoinfo.createdclassrefobjtypes[i]).typ of
                objectdef:
 {$IFDEF DEBUG_DEVIRT}
                  writeln(' (classrefdef)')
@@ -852,13 +852,13 @@ unit optvirt;
            classrefdef to the tree (as they can, in theory, all
            be instantiated as well)
          }
-         for i := 0 to current_module.wpoinfo.maybecreatedbyclassrefdeftypes.count-1 do
+         for i := 0 to CurrentModule.wpoinfo.maybecreatedbyclassrefdeftypes.count-1 do
            begin
-             inheritancetree.checkforclassrefinheritance(tdef(current_module.wpoinfo.maybecreatedbyclassrefdeftypes[i]));
+             inheritancetree.checkforclassrefinheritance(tdef(CurrentModule.wpoinfo.maybecreatedbyclassrefdeftypes[i]));
 {$IFDEF DEBUG_DEVIRT}
-             write('  Class Of ',tdef(current_module.wpoinfo.maybecreatedbyclassrefdeftypes[i]).GetTypeName);
+             write('  Class Of ',tdef(CurrentModule.wpoinfo.maybecreatedbyclassrefdeftypes[i]).GetTypeName);
 {$ENDIF}
-             case tdef(current_module.wpoinfo.maybecreatedbyclassrefdeftypes[i]).typ of
+             case tdef(CurrentModule.wpoinfo.maybecreatedbyclassrefdeftypes[i]).typ of
                objectdef:
 {$IFDEF DEBUG_DEVIRT}
                  writeln(' (classrefdef)')

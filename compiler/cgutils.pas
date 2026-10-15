@@ -501,7 +501,7 @@ uses
     function needs_check_for_fpu_exceptions: boolean;
       begin
 {$if defined(AARCH64)}
-        result:=cs_check_fpu_exceptions in current_settings.localswitches;
+        result:=cs_check_fpu_exceptions in CurrentSettings.localswitches;
 {$else}
         result:=false;
 {$endif}

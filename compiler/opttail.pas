@@ -28,7 +28,7 @@ unit opttail;
     uses
       symdef,node;
 
-    procedure do_opttail(var n : tnode;p : tprocdef);
+    procedure do_opttail(var n : TNode;p : tprocdef);
 
   implementation
 
@@ -40,12 +40,12 @@ unit opttail;
       pass_1,
       paramgr;
 
-    procedure do_opttail(var n : tnode;p : tprocdef);
+    procedure do_opttail(var n : TNode;p : tprocdef);
 
       var
         labelnode : tlabelnode;
 
-      function find_and_replace_tailcalls(var n : tnode) : boolean;
+      function find_and_replace_tailcalls(var n : TNode) : boolean;
 
         var
           usedcallnode : tcallnode;
@@ -67,7 +67,7 @@ unit opttail;
               end;
           end;
 
-        function is_optimizable_recursivecall(n : tnode) : boolean;
+        function is_optimizable_recursivecall(n : TNode) : boolean;
           begin
             result:=
               (n.nodetype=calln) and
@@ -81,7 +81,7 @@ unit opttail;
               result:=((n.nodetype=typeconvn) and (ttypeconvnode(n).convtype=tc_equal) and is_optimizable_recursivecall(ttypeconvnode(n).left));
           end;
 
-        function is_resultassignment(n : tnode) : boolean;
+        function is_resultassignment(n : TNode) : boolean;
           begin
             result:=((n.nodetype=loadn) and (tloadnode(n).symtableentry=p.funcretsym)) or
               ((n.nodetype=typeconvn) and (ttypeconvnode(n).convtype=tc_equal) and is_resultassignment(ttypeconvnode(n).left));
@@ -90,14 +90,14 @@ unit opttail;
         var
           calcnodes,
           copynodes,
-          hp : tnode;
+          hp : TNode;
           nodes,
           calcstatements,
           copystatements : tstatementnode;
           paranode : tcallparanode;
           tempnode : ttempcreatenode;
           loadnode : tloadnode;
-          oldnodetree : tnode;
+          oldnodetree : TNode;
           useaddr : boolean;
         begin
           { no tail call found and replaced so far }
@@ -124,8 +124,8 @@ unit opttail;
             assignn:
               begin
                 if ((n.nodetype=calln) and is_optimizable_recursivecall(n) and is_void(n.resultdef)) or
-                   ((n.nodetype=assignn) and is_resultassignment(tbinarynode(n).left) and
-                   is_optimizable_recursivecall(tbinarynode(n).right)) then
+                   ((n.nodetype=assignn) and is_resultassignment(TBinaryNode(n).left) and
+                   is_optimizable_recursivecall(TBinaryNode(n).right)) then
                   begin
                     { found one! }
                     {
@@ -219,7 +219,7 @@ unit opttail;
                     oldnodetree.free;
                     oldnodetree := nil;
 
-                    do_firstpass(n);
+                    DoFirstPass(n);
                     result:=true;
                   end;
               end;
@@ -232,7 +232,7 @@ unit opttail;
 
       var
         s : tstatementnode;
-        oldnodes : tnode;
+        oldnodes : TNode;
         i : longint;
         labelsym : tlabelsym;
       begin

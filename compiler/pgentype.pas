@@ -73,13 +73,13 @@ destructor tspecializationcontext.destroy;
 begin
   paramlist.free;
   paramlist := nil;
-  tfplist.FreeAndNilDisposing(poslist,TypeInfo(tfileposinfo));
+  tfplist.FreeAndNilDisposing(poslist,TypeInfo(TFilePosInfo));
   inherited destroy;
 end;
 
 function tspecializationcontext.getcopy:tspecializationcontext;
 var
-  posinfo : pfileposinfo;
+  posinfo : PFilePosInfo;
   i : longint;
 begin
   result:=tspecializationcontext.create;
@@ -92,7 +92,7 @@ begin
   for i:=0 to poslist.count-1 do
     begin
       new(posinfo);
-      posinfo^:=pfileposinfo(poslist[i])^;
+      posinfo^:=PFilePosInfo(poslist[i])^;
       result.poslist.add(posinfo);
     end;
   result.prettyname:=prettyname;

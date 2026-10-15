@@ -32,8 +32,8 @@ uses
   type
 
    TrefItem = class (TLinkedListItem)
-     refinfo  : tfileposinfo;
-     constructor create(const ARefInfo : tfileposinfo);
+     refinfo  : TFilePosInfo;
+     constructor create(const ARefInfo : TFilePosInfo);
      Function GetCopy:TLinkedListItem;virtual;reintroduce;
    end;
 
@@ -43,7 +43,7 @@ uses
 
 implementation
 
-constructor TRefItem.Create(const ARefInfo : tfileposinfo);
+constructor TRefItem.Create(const ARefInfo : TFilePosInfo);
 begin
   Inherited Create;
   RefInfo:=ARefInfo;

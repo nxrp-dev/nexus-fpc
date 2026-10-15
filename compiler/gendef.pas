@@ -70,7 +70,7 @@ end;
 destructor tdeffile.destroy;
 begin
   if WrittenOnDisk and
-     ([cs_link_nolink,cs_link_deffile]*current_settings.globalswitches=[]) then
+     ([cs_link_nolink,cs_link_deffile]*CurrentSettings.globalswitches=[]) then
     DeleteFile(FName);
   importlist.Free;
   importlist := nil;
@@ -113,7 +113,7 @@ begin
   {$pop}
   if ioresult<>0 then
    exit;
-  case target_info.system of
+  case TargetInfo.system of
     system_i386_win32,
     system_x86_64_win64,
     system_aarch64_win64 :

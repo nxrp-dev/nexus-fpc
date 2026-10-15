@@ -29,7 +29,7 @@ unit i_linux;
        systems,nxartifactid;
 
     const
-       system_i386_linux_info : tsysteminfo =
+       system_i386_linux_info : TSystemInfo =
           (
             system       : system_i386_linux;
             name         : 'Linux for i386';
@@ -98,7 +98,7 @@ unit i_linux;
             abi          : abi_i386_dynalignedstack;
           );
 
-       system_x86_64_linux_info : tsysteminfo =
+       system_x86_64_linux_info : TSystemInfo =
           (
             system       : system_x86_64_LINUX;
             name         : 'Linux for x86-64';
@@ -175,7 +175,7 @@ unit i_linux;
 
 
 
-       system_aarch64_linux_info  : tsysteminfo =
+       system_aarch64_linux_info  : TSystemInfo =
           (
             system       : system_aarch64_linux;
             name         : 'Linux for AArch64';
@@ -260,17 +260,17 @@ unit i_linux;
 initialization
 {$ifdef CPUI386}
   {$ifdef linux}
-    set_source_info(system_i386_linux_info);
+    SetSourceInfo(system_i386_linux_info);
   {$endif linux}
 {$endif CPUI386}
 {$ifdef CPUX86_64}
   {$ifdef linux}
-    set_source_info(system_x86_64_linux_info);
+    SetSourceInfo(system_x86_64_linux_info);
   {$endif linux}
 {$endif CPUX86_64}
 {$ifdef cpuaarch64}
   {$ifdef linux}
-    set_source_info(system_aarch64_linux_info);
+    SetSourceInfo(system_aarch64_linux_info);
   {$endif linux}
 {$endif cpuaarch64}
 end.

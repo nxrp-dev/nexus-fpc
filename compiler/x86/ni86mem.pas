@@ -33,7 +33,7 @@ interface
       ti86addrnode = class(tcgaddrnode)
        protected
         procedure set_absvarsym_resultdef; virtual; abstract;
-        function typecheck_non_proc(realsource: tnode; out res: tnode): boolean; override;
+        function typecheck_non_proc(realsource: TNode; out res: TNode): boolean; override;
       end;
 
 implementation
@@ -49,7 +49,7 @@ implementation
                            TI86ADDRNODE
 *****************************************************************************}
 
-  function ti86addrnode.typecheck_non_proc(realsource: tnode; out res: tnode): boolean;
+  function ti86addrnode.typecheck_non_proc(realsource: TNode; out res: TNode): boolean;
     begin
       res:=nil;
       { if we are getting the address of an absolute sym, check whether it's

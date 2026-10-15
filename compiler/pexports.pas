@@ -58,7 +58,7 @@ implementation
         DefString,
         InternalProcName : string;
         pd         : tprocdef;
-        pt         : tnode;
+        pt         : TNode;
         srsym      : tsym;
         srsymtable : TSymtable;
         hpname     : shortstring;
@@ -82,7 +82,7 @@ implementation
         end;
 
       begin
-         include(current_module.moduleflags,mf_has_exports);
+         include(CurrentModule.moduleflags,mf_has_exports);
          DefString:='';
          InternalProcName:='';
          consume(_EXPORTS);
@@ -90,7 +90,7 @@ implementation
            hpname:='';
            options:=[];
            index:=0;
-           if current_scanner.token=_ID then
+           if CurrentScanner.token=_ID then
              begin
                 consume_sym_orgid(srsym,srsymtable,orgs);
                 { current_scanner.orgpattern is still valid here }
@@ -103,7 +103,7 @@ implementation
                       pd:=tprocdef(tprocsym(srsym).ProcdefList[0]);
                       if (Tprocsym(srsym).ProcdefList.Count>1) or
                          (po_kylixlocal in pd.procoptions) or
-                         ((tf_need_export in target_info.flags) and
+                         ((tf_need_export in TargetInfo.flags) and
                           not(po_exports in pd.procoptions)) then
                         Message(parser_e_illegal_symbol_exported)
                       else
@@ -125,7 +125,7 @@ implementation
                          an underline }
                        if InternalProcName[1]='_' then
                          delete(InternalProcName,1,1)
-                       else if (target_info.system=system_i386_win32) and UseDeffileForExports then
+                       else if (TargetInfo.system=system_i386_win32) and UseDeffileForExports then
                          begin
                            Message(parser_e_dlltool_unit_var_problem);
                            Message(parser_e_dlltool_unit_var_problem2);
@@ -154,7 +154,7 @@ implementation
                        include(options,eo_index);
                        pt.free;
                        pt := nil;
-                       if target_info.system=system_i386_win32 then
+                       if TargetInfo.system=system_i386_win32 then
                         DefString:=srsym.realname+'='+InternalProcName+' @ '+tostr(index)
                        else
                         DefString:=srsym.realname+'='+InternalProcName; {Index ignored!}
@@ -187,7 +187,7 @@ implementation
                     if (DefString<>'') and
                         (
                           UseDeffileForExports or
-                          (cs_link_deffile in current_settings.globalswitches)
+                          (cs_link_deffile in CurrentSettings.globalswitches)
                         ) then
                      DefFile.AddExport(DefString);
                   end;
@@ -214,14 +214,14 @@ implementation
 
                            if not (eo_name in options) then
                              { Export names are not mangled on Windows }
-                             if (target_info.system in systems_all_windows) then
+                             if (TargetInfo.system in systems_all_windows) then
                                hpname:=orgs
                              { Use set mangled name in case of cdecl/cppdecl/mwpascal }
                              { and no name specified                                  }
                              else if (tprocdef(tprocsym(srsym).procdeflist[0]).proccalloption in [pocall_cdecl,pocall_mwpascal]) then
-                               hpname:=target_info.cprefix+tprocsym(srsym).realname
+                               hpname:=TargetInfo.cprefix+tprocsym(srsym).realname
                              else if (tprocdef(tprocsym(srsym).procdeflist[0]).proccalloption in [pocall_cppdecl]) then
-                               hpname:=target_info.cprefix+tprocdef(tprocsym(srsym).procdeflist[0]).cplusplusmangledname
+                               hpname:=TargetInfo.cprefix+tprocdef(tprocsym(srsym).procdeflist[0]).cplusplusmangledname
                              else
                                hpname:=orgs;
 

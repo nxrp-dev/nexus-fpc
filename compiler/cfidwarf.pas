@@ -238,7 +238,7 @@ implementation
     constructor TDwarfAsmCFI.create;
       begin
         inherited;
-        if tf_use_psabieh in target_info.flags then
+        if tf_use_psabieh in TargetInfo.flags then
           datatype:=dt_eh_frame
         else
           { The CFI-information is always generated, regardless of the debug
@@ -349,10 +349,10 @@ implementation
              <...>   start sequence
 
         }
-        current_asmdata.getlabel(cielabel,alt_dbgframe);
+        CurrentAsmData.getlabel(cielabel,alt_dbgframe);
         list.concat(tai_label.create(cielabel));
-        current_asmdata.getlabel(lenstartlabel,alt_dbgframe);
-        current_asmdata.getlabel(lenendlabel,alt_dbgframe);
+        CurrentAsmData.getlabel(lenstartlabel,alt_dbgframe);
+        CurrentAsmData.getlabel(lenendlabel,alt_dbgframe);
         list.concat(tai_const.create_rel_sym(aitconst_32bit,lenstartlabel,lenendlabel));
         list.concat(tai_label.create(lenstartlabel));
         if datatype=dt_eh_frame then
@@ -377,8 +377,8 @@ implementation
         { augmentation data }
         if datatype=dt_eh_frame then
           begin
-            current_asmdata.getlabel(augstartlabel,alt_dbgframe);
-            current_asmdata.getlabel(augendlabel,alt_dbgframe);
+            CurrentAsmData.getlabel(augstartlabel,alt_dbgframe);
+            CurrentAsmData.getlabel(augendlabel,alt_dbgframe);
             { size of augmentation data ('z') }
             list.concat(tai_const.create_rel_sym(aitconst_uleb128bit,augstartlabel,augendlabel));
             list.concat(tai_label.create(augstartlabel));
@@ -418,8 +418,8 @@ implementation
                   if (hp.ops<>1) or
                      (hp.oper[0].typ<>dop_reloffset) then
                     internalerror(200404126);
-                  current_asmdata.getlabel(lenstartlabel,alt_dbgframe);
-                  current_asmdata.getlabel(lenendlabel,alt_dbgframe);
+                  CurrentAsmData.getlabel(lenstartlabel,alt_dbgframe);
+                  CurrentAsmData.getlabel(lenendlabel,alt_dbgframe);
                   { FDE
                      DWORD length
                      DWORD CIE-pointer = cielabel relative to section start
@@ -431,7 +431,7 @@ implementation
                   if datatype=dt_eh_frame then
                     begin
                       { relative offset to the CIE }
-                      current_asmdata.getlabel(fdeofslabel,alt_dbgframe);
+                      CurrentAsmData.getlabel(fdeofslabel,alt_dbgframe);
                       list.concat(tai_label.create(fdeofslabel));
                       list.concat(tai_const.create_rel_sym(aitconst_32bit,cielabel,fdeofslabel));
                     end
@@ -440,12 +440,12 @@ implementation
                       { according to the dwarf (2 to 4) standard, this is an uword being always 32 bit unsigned }
                       tc:=tai_const.create_type_sym(aitconst_32bit,cielabel);
                       { force label offset to secrel32 for windows systems }
-                      if (target_info.system in systems_windows) then
+                      if (TargetInfo.system in systems_windows) then
                         tc.consttype:=aitconst_secrel32_symbol;
                       list.concat(tc);
                     end;
 
-                  current_asmdata.getlabel(curpos,alt_dbgframe);
+                  CurrentAsmData.getlabel(curpos,alt_dbgframe);
                   list.concat(tai_label.create(curpos));
                   list.concat(tai_const.Create_sym(hp.oper[0].beginsym));
                   list.concat(tai_const.create_rel_sym(aitconst_ptr,hp.oper[0].beginsym,hp.oper[0].endsym));
@@ -490,7 +490,7 @@ implementation
       begin
         if datatype=dt_none then
           exit;
-        current_asmdata.getlabel(FFrameEndLabel,alt_dbgframe);
+        CurrentAsmData.getlabel(FFrameEndLabel,alt_dbgframe);
         FLastloclabel:=get_frame_start;
         list.concat(tai_label.create(get_frame_start));
         DwarfList.concat(tdwarfitem.create_reloffset(DW_CFA_start_frame,doe_32bit,get_frame_start,FFrameEndLabel));
@@ -500,7 +500,7 @@ implementation
     function TDwarfAsmCFILowLevel.get_frame_start : TAsmLabel;
       begin
         if not(assigned(FFrameStartLabel)) then
-          current_asmdata.getlabel(FFrameStartLabel,alt_dbgframe);
+          CurrentAsmData.getlabel(FFrameStartLabel,alt_dbgframe);
         Result:=FFrameStartLabel;
       end;
 
@@ -583,7 +583,7 @@ implementation
             hp:=tai(hp.Previous);
           end;
 
-        current_asmdata.getlabel(currloclabel,alt_dbgframe);
+        CurrentAsmData.getlabel(currloclabel,alt_dbgframe);
         list.concat(tai_label.create(currloclabel));
         if dwarfloc=DW_CFA_advance_loc1 then
           DwarfList.concat(tdwarfitem.create_reloffset(DW_CFA_advance_loc1,doe_8bit,FLastloclabel,currloclabel))
@@ -647,7 +647,7 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.generate_code(list: TAsmList);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
@@ -657,12 +657,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.start_frame(list: TAsmList);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_none.create(cfi_startproc));
       end;
@@ -670,12 +670,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.end_frame(list: TAsmList);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_none.create(cfi_endproc));
       end;
@@ -683,12 +683,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.outmost_frame(list: TAsmList);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_reg.create(cfi_undefined,NR_RETURN_ADDRESS_REG));
       end;
@@ -696,12 +696,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.cfa_offset(list: TAsmList; reg: tregister; ofs: longint);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_reg_val.create(cfi_offset,reg,ofs));
       end;
@@ -709,12 +709,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.cfa_restore(list: TAsmList; reg: tregister);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_reg.create(cfi_restore,reg));
       end;
@@ -722,12 +722,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.cfa_def_cfa(list: TAsmList; reg: tregister; ofs: longint);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_reg_val.create(cfi_def_cfa,reg,ofs));
       end;
@@ -735,12 +735,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_register(list: TAsmList; reg: tregister);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_reg.create(cfi_def_cfa_register,reg));
       end;
@@ -748,12 +748,12 @@ implementation
 
     procedure TDwarfAsmCFIHighLevel.cfa_def_cfa_offset(list: TAsmList; ofs: longint);
       begin
-        if not(tf_use_hlcfi in target_info.flags) then
+        if not(tf_use_hlcfi in TargetInfo.flags) then
           begin
             inherited;
             exit;
           end;
-        if not(af_supports_hlcfi in target_asm.flags) then
+        if not(af_supports_hlcfi in TargetAsm.flags) then
           exit;
         list.concat(tai_cfi_op_val.create(cfi_def_cfa_offset,ofs));
       end;

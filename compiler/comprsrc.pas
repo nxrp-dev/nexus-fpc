@@ -96,7 +96,7 @@ end;
 
 function tresourcefile.IsCompiled(const fn: ansistring): boolean;
 begin
-  Result:=CompareText(ExtractFileExt(fn), target_info.resobjext) = 0;
+  Result:=CompareText(ExtractFileExt(fn), TargetInfo.resobjext) = 0;
 end;
 
 procedure tresourcefile.Collect(const fn: ansistring);
@@ -104,7 +104,7 @@ begin
   if fn='' then
     exit;
   fname:=fn;
-  Compile(roOBJ, ChangeFileExt(fn, target_info.resobjext));
+  Compile(roOBJ, ChangeFileExt(fn, TargetInfo.resobjext));
 end;
 
 procedure tresourcefile.EndCollect;
@@ -122,14 +122,14 @@ begin
       if RCForceFPCRes then
         s:=FPCResRCArgs
       else
-        s:=target_res.rccmd;
+        s:=TargetRes.rccmd;
       Replace(s,'$RES',maybequoted(OutName));
       Replace(s,'$RC',maybequoted(fname));
       ObjUsed:=False;
     end
   else
     begin
-      s:=target_res.rescmd;
+      s:=TargetRes.rescmd;
       ObjUsed:=(pos('$OBJ',s)>0);
       Replace(s,'$OBJ',maybequoted(OutName));
       Replace(s,'$RES',maybequoted(fname));
@@ -161,9 +161,9 @@ begin
     if RCForceFPCRes then
       Bin:=SelectBin(RCCompiler,FPCResUtil)
     else
-      Bin:=SelectBin(RCCompiler,target_res.rcbin)
+      Bin:=SelectBin(RCCompiler,TargetRes.rcbin)
   else
-    Bin:=SelectBin(ResCompiler,target_res.resbin);
+    Bin:=SelectBin(ResCompiler,TargetRes.resbin);
   if bin='' then
   begin
     Result:=false;
@@ -171,21 +171,21 @@ begin
   end;
   resfound:=false;
   if utilsdirectory<>'' then
-    resfound:=FindFile(utilsprefix+bin+source_info.exeext,utilsdirectory,false,resbin);
+    resfound:=FindFile(utilsprefix+bin+SourceInfo.exeext,utilsdirectory,false,resbin);
   if not resfound then
     begin
       resfound:=FindExe(utilsprefix+bin,false,resbin);
-      if not resfound and (utilsprefix<>'') and ( (output=roRES) or (Pos('$ARCH', target_res.rescmd)<>0) ) then
+      if not resfound and (utilsprefix<>'') and ( (output=roRES) or (Pos('$ARCH', TargetRes.rescmd)<>0) ) then
         { Search for resource compiler without utilsprefix, if RC->RES compiler is called }
         { or RES->OBJ compiler supports different architectures. }
         resfound:=FindExe(bin,false,resbin);
     end;
   { get also the path to be searched for the windres.h }
   respath:=ExtractFilePath(resbin);
-  if (not resfound) and not(cs_link_nolink in current_settings.globalswitches) then
+  if (not resfound) and not(cs_link_nolink in CurrentSettings.globalswitches) then
    begin
-     Message1(exec_e_res_not_found, utilsprefix+bin+source_info.exeext);
-     current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+     Message1(exec_e_res_not_found, utilsprefix+bin+SourceInfo.exeext);
+     CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
      Result:=false;
    end;
   s:=SetupCompilerArguments(output,OutName,respath,objused);
@@ -199,26 +199,26 @@ begin
      try
        if RequotedExecuteProcess(resbin,s) <> 0 then
        begin
-         if not (cs_link_nolink in current_settings.globalswitches) then
+         if not (cs_link_nolink in CurrentSettings.globalswitches) then
            Message(exec_e_error_while_compiling_resources);
-         current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+         CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
          Result:=false;
        end;
      except
        on E:EOSError do
        begin
-         if not (cs_link_nolink in current_settings.globalswitches) then
+         if not (cs_link_nolink in CurrentSettings.globalswitches) then
            Message1(exec_e_cant_call_resource_compiler, resbin);
-         current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+         CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
          Result:=false;
        end
      end;
     end;
   { Update asmres when externmode is set and resource compiling failed }
-  if (not Result) and (cs_link_nolink in current_settings.globalswitches) then
+  if (not Result) and (cs_link_nolink in CurrentSettings.globalswitches) then
     AsmRes.AddLinkCommand(resbin,s,OutName);
   if Result and (output=roOBJ) and ObjUsed then
-    current_module.linkunitofiles.add(OutName,link_always);
+    CurrentModule.linkunitofiles.add(OutName,link_always);
 end;
 
 constructor TWinLikeResourceFile.Create(const fn : ansistring);
@@ -226,7 +226,7 @@ begin
   inherited Create(fn);
   fResScript:=nil;
   fCollectCount:=0;
-  if (tf_use_8_3 in target_info.flags) then
+  if (tf_use_8_3 in TargetInfo.flags) then
     fScriptName:=ChangeFileExt(fn,'.rls')
   else
     fScriptName:=ChangeFileExt(fn,'.reslst');
@@ -263,14 +263,14 @@ var
   end;
 
 begin
-  srcfilepath:=ExtractFilePath(current_module.mainsource);
+  srcfilepath:=ExtractFilePath(CurrentModule.mainsource);
   if output=roRES then
     begin
       if RCForceFPCRes then
         s:=FPCResRCArgs
       else
-        s:=target_res.rccmd;
-      if (target_res.rcbin = 'windres') and not RCForceFPCRes then
+        s:=TargetRes.rccmd;
+      if (TargetRes.rcbin = 'windres') and not RCForceFPCRes then
         Replace(s,'$RC',WindresFileName(fname))
       else
         Replace(s,'$RC',maybequoted(fname));
@@ -279,17 +279,17 @@ begin
     end
   else
     begin
-      s:=target_res.rescmd;
-      if (res_external_file in target_res.resflags) then
+      s:=TargetRes.rescmd;
+      if (res_external_file in TargetRes.resflags) then
         ObjUsed:=false
       else
         ObjUsed:=(pos('$OBJ',s)>0);
       Replace(s,'$OBJ',maybequoted(OutName));
       subarch:='all';
-      arch:=cpu2str[Ord(target_cpu)];
+      arch:=cpu2str[Ord(TargetCPU)];
       Replace(s,'$ARCH',arch);
       Replace(s,'$SUBARCH',subarch);
-      case target_info.endian of
+      case TargetInfo.endian of
         endian_little : Replace(s,'$ENDIAN','littleendian');
         endian_big : Replace(s,'$ENDIAN','bigendian');
       end;
@@ -307,10 +307,10 @@ begin
   if respath='' then
     respath:='.';
   Replace(s,'$INC',maybequoted(respath));
-  if (output=roRes) and (target_res.rcbin='windres') and not RCForceFPCRes then
+  if (output=roRes) and (TargetRes.rcbin='windres') and not RCForceFPCRes then
   begin
     { try to find a preprocessor }
-    preprocessorbin := respath+'cpp'+source_info.exeext;
+    preprocessorbin := respath+'cpp'+SourceInfo.exeext;
     if FileExists(preprocessorbin,true) then
       s:='--preprocessor='+preprocessorbin+' '+s;
     if (srcfilepath<>'') then
@@ -342,7 +342,7 @@ var
   ext : shortstring;
 begin
   ext:=lower(ExtractFileExt(fn));
-  Result:=CompareText(ext, target_info.resext) = 0;
+  Result:=CompareText(ext, TargetInfo.resext) = 0;
   if not Result then
     for i:=1 to high(knownexts) do
     begin
@@ -383,7 +383,7 @@ begin
   begin
     fResScript.WriteToDisk;
     FreeAndNil(fResScript);
-    Compile(roOBJ,ChangeFileExt(fname,target_info.resobjext));
+    Compile(roOBJ,ChangeFileExt(fname,TargetInfo.resobjext));
   end;
 end;
 
@@ -398,14 +398,14 @@ begin
   if CStreamError<>0 then
     begin
       Message1(exec_e_cant_open_resource_file, src.FileName);
-      Include(current_settings.globalswitches, cs_link_nolink);
+      Include(CurrentSettings.globalswitches, cs_link_nolink);
       exit;
     end;
-  dst:=CFileStreamClass.Create(current_module.outputpath+outf,fmCreate);
+  dst:=CFileStreamClass.Create(CurrentModule.outputpath+outf,fmCreate);
   if CStreamError<>0 then
     begin
       Message1(exec_e_cant_write_resource_file, dst.FileName);
-      Include(current_settings.globalswitches, cs_link_nolink);
+      Include(CurrentSettings.globalswitches, cs_link_nolink);
       exit;
     end;
   dst.CopyFrom(src,src.Size);
@@ -425,15 +425,15 @@ var
 begin
   { Don't do anything for systems supporting resources without using resource
     file classes (e.g. Mac OS). They process resources elsewhere. }
-  if ((target_info.res<>res_none) and (target_res.resourcefileclass=nil)) or
-     (res_no_compile in target_res.resflags) then
+  if ((TargetInfo.res<>res_none) and (TargetRes.resourcefileclass=nil)) or
+     (res_no_compile in TargetRes.resflags) then
     exit;
 
-  p:=ExtractFilePath(ExpandFileName(current_module.mainsource));
-  res:=TCmdStrListItem(current_module.ResourceFiles.First);
+  p:=ExtractFilePath(ExpandFileName(CurrentModule.mainsource));
+  res:=TCmdStrListItem(CurrentModule.ResourceFiles.First);
   while res<>nil do
     begin
-      if target_info.res=res_none then
+      if TargetInfo.res=res_none then
         Message(scan_e_resourcefiles_not_supported);
       s:=res.FPStr;
       if not path_absolute(s) then
@@ -441,15 +441,15 @@ begin
       if not FileExists(s, True) then
         begin
           Message1(exec_e_cant_open_resource_file, s);
-          Include(current_settings.globalswitches, cs_link_nolink);
+          Include(CurrentSettings.globalswitches, cs_link_nolink);
           exit;
         end;
-      resourcefile:=TResourceFile(resinfos[target_info.res]^.resourcefileclass.create(s));
+      resourcefile:=TResourceFile(resinfos[TargetInfo.res]^.resourcefileclass.create(s));
       if resourcefile.IsCompiled(s) then
         begin
           resourcefile.free;
           resourcefile := nil;
-          if AnsiCompareFileName(IncludeTrailingPathDelimiter(ExpandFileName(current_module.outputpath)), p) <> 0 then
+          if AnsiCompareFileName(IncludeTrailingPathDelimiter(ExpandFileName(CurrentModule.outputpath)), p) <> 0 then
             begin
               { Copy .res file to units output dir. Otherwise .res file will not be found
                 when only compiled units path is available }
@@ -460,18 +460,18 @@ begin
       else
         begin
           res.FPStr:=ExtractFileName(res.FPStr);
-          if (target_res.rcbin='') and (RCCompiler='') then
+          if (TargetRes.rcbin='') and (RCCompiler='') then
             begin
               { if target does not have .rc to .res compiler, create obj }
               outfmt:=roOBJ;
-              res.FPStr:=ChangeFileExt(res.FPStr,target_info.resobjext);
+              res.FPStr:=ChangeFileExt(res.FPStr,TargetInfo.resobjext);
             end
           else
             begin
               outfmt:=roRES;
-              res.FPStr:=ChangeFileExt(res.FPStr,target_info.resext);
+              res.FPStr:=ChangeFileExt(res.FPStr,TargetInfo.resext);
             end;
-          resourcefile.compile(outfmt, current_module.outputpath+res.FPStr);
+          resourcefile.compile(outfmt, CurrentModule.outputpath+res.FPStr);
           resourcefile.free;
           resourcefile := nil;
         end;
@@ -511,22 +511,22 @@ var
   hp : tused_unit;
   s : TCmdStr;
 begin
-  if (target_info.res=res_none) or ((target_res.resbin='')
+  if (TargetInfo.res=res_none) or ((TargetRes.resbin='')
     and (ResCompiler='')) then
       exit;
 //  if cs_link_nolink in current_settings.globalswitches then
 //    exit;
-  s:=ChangeFileExt(current_module.ppufilename,target_info.resobjext);
-  if (res_arch_in_file_name in target_res.resflags) then
-    s:=ChangeFileExt(s,'.'+cpu2str[Ord(target_cpu)]+target_info.resobjext);
-  resourcefile:=TResourceFile(resinfos[target_info.res]^.resourcefileclass.create(s));
+  s:=ChangeFileExt(CurrentModule.ppufilename,TargetInfo.resobjext);
+  if (res_arch_in_file_name in TargetRes.resflags) then
+    s:=ChangeFileExt(s,'.'+cpu2str[Ord(TargetCPU)]+TargetInfo.resobjext);
+  resourcefile:=TResourceFile(resinfos[TargetInfo.res]^.resourcefileclass.create(s));
   hp:=tused_unit(usedunits.first);
   while assigned(hp) do
     begin
       ProcessModule(hp.u);
       hp:=tused_unit(hp.next);
     end;
-  ProcessModule(current_module);
+  ProcessModule(CurrentModule);
   { Finish collection }
   resourcefile.EndCollect;
   resourcefile.free;

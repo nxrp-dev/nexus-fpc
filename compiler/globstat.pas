@@ -49,8 +49,8 @@ type
   tglobalstate = class
     reload: boolean;
   { scanner }
-    oldtokenpos    : tfileposinfo;
-    old_block_type : tblock_type;
+    oldtokenpos    : TFilePosInfo;
+    old_block_type : TBlockType;
   { symtable }
     oldsymtablestack,
     oldmacrosymtablestack : TSymtablestack;
@@ -58,10 +58,10 @@ type
   { cg }
     oldparse_only  : boolean;
   { akt.. things }
-    oldcurrent_filepos      : tfileposinfo;
+    oldcurrent_filepos      : TFilePosInfo;
     old_current_module : tmodule;
     oldcurrent_procinfo : tprocinfo;
-    old_settings : tsettings;
+    old_settings : TSettings;
     old_switchesstatestack : tswitchesstatestack;
     old_switchesstatestackpos : Integer;
     old_verbosity : longint;
@@ -152,10 +152,10 @@ var
 
     begin
       reload:=for_module_switch;
-      old_current_module:=current_module;
+      old_current_module:=CurrentModule;
 
       { save symtable state }
-      if current_module.fromppu then
+      if CurrentModule.fromppu then
         begin
           { a ppu does not use the symbolstacks
             they might have been set by a pas module loading this ppu
@@ -175,11 +175,11 @@ var
           if for_module_switch then
             save_symtable_stack(oldmacrosymtablestack,stsk_macro);
         end;
-      oldcurrent_procinfo:=current_procinfo;
+      oldcurrent_procinfo:=CurrentProcInfo;
 
       { save scanner state }
       old_block_type:=block_type;
-      oldtokenpos:=current_tokenpos;
+      oldtokenpos:=CurrentTokenPos;
       {
         consuming the semicolon after a uses clause can add to the
         pending state if the first directives change warning state.
@@ -196,14 +196,14 @@ var
 
       { save akt... state }
       { handle the postponed case first }
-      oldcurrent_filepos:=current_filepos;
-      old_settings:=current_settings;
+      oldcurrent_filepos:=CurrentFilePos;
+      old_settings:=CurrentSettings;
       old_verbosity:=status.verbosity;
 
-      old_asmdata:=current_asmdata;
-      old_debuginfo:=current_debuginfo;
+      old_asmdata:=CurrentAsmData;
+      old_debuginfo:=CurrentDebugInfo;
       old_parser_file:=parser_current_file;
-      old_scanner:=current_scanner;
+      old_scanner:=CurrentScanner;
     end;
 
   procedure tglobalstate.save_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
@@ -219,25 +219,25 @@ var
         begin
           id:=item^.symtable.moduleid;
           item^.saved_moduleid:=id;
-          if (id<>current_module.moduleid) and (id>0) then
+          if (id<>CurrentModule.moduleid) and (id>0) then
             begin
               m:=get_module(id);
               if m=nil then
                 begin
-                  writeln('tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' ',kind,' unknown moduleid: ',id);
+                  writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' ',kind,' unknown moduleid: ',id);
                   Internalerror(2026030103);
                 end;
               case kind of
                 stsk_global:
                   if m.globalsymtable<>item^.symtable then
                     begin
-                      writeln('tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' globalsymstack: item is not globalsymtable of ', m.modulename^,' ',m.statestr);
+                      writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' globalsymstack: item is not globalsymtable of ', m.modulename^,' ',m.statestr);
                       Internalerror(2026030101);
                     end;
                 stsk_macro:
                   if m.globalmacrosymtable<>item^.symtable then
                     begin
-                      writeln('tglobalstate.save_symtable_stack ',current_module.modulename^,' ',current_module.statestr,' globalmacrosymstack: item is not globalmacrosymtable of ', m.modulename^,' ',m.statestr);
+                      writeln('tglobalstate.save_symtable_stack ',CurrentModule.modulename^,' ',CurrentModule.statestr,' globalmacrosymstack: item is not globalmacrosymtable of ', m.modulename^,' ',m.statestr);
                       Internalerror(2026030102);
                     end;
               end;
@@ -249,10 +249,10 @@ var
   procedure tglobalstate.restore;
 
     begin
-      set_current_module(old_current_module);
+      SetCurrentModule(old_current_module);
 
       { restore scanner }
-      current_tokenpos:=oldtokenpos;
+      CurrentTokenPos:=oldtokenpos;
       block_type:=old_block_type;
       switchesstatestack:=old_switchesstatestack;
       switchesstatestackpos:=old_switchesstatestackpos;
@@ -267,17 +267,17 @@ var
       macrosymtablestack:=oldmacrosymtablestack;
       if reload then
         reload_symtable_stack(macrosymtablestack,stsk_macro);
-      current_procinfo:=oldcurrent_procinfo;
-      current_filepos:=oldcurrent_filepos;
-      current_settings:=old_settings;
+      CurrentProcInfo:=oldcurrent_procinfo;
+      CurrentFilePos:=oldcurrent_filepos;
+      CurrentSettings:=old_settings;
       status.verbosity:=old_verbosity;
 
       { restore message settings which were recorded prior to unit switch }
-      RestoreLocalVerbosity(current_settings.pmessage);
+      RestoreLocalVerbosity(CurrentSettings.pmessage);
 
       // These can be different
-      current_asmdata:=old_asmdata;
-      current_debuginfo:=old_debuginfo;
+      CurrentAsmData:=old_asmdata;
+      CurrentDebugInfo:=old_debuginfo;
     end;
 
   procedure tglobalstate.reload_symtable_stack(stack: TSymtablestack; kind: TSymTableStackKind);
@@ -313,7 +313,7 @@ var
     begin
       symtablestack:=nil;
       macrosymtablestack:=nil;
-      current_procinfo:=nil;
+      CurrentProcInfo:=nil;
 
       block_type:=bt_none;
       flushpendingswitchesstate;
@@ -323,8 +323,8 @@ var
       // keep "current_settings"
 
       parse_only:=false;
-      current_asmdata:=nil;
-      current_debuginfo:=nil;
+      CurrentAsmData:=nil;
+      CurrentDebugInfo:=nil;
 
       parser_current_file:='';
       set_current_scanner(nil);
@@ -348,7 +348,7 @@ var
 
   begin
     old_scanner:=nil;
-    oldtokenpos:=Default(tfileposinfo);
+    oldtokenpos:=Default(TFilePosInfo);
     old_block_type:=bt_none;
   end;
 

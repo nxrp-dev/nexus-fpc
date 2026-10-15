@@ -316,7 +316,7 @@ interface
          { multimedia values }
          1,  2,  4,  8, 16, 32, 64);
 
-       tfloat2tcgsize: array[tfloattype] of tcgsize =
+       tfloat2tcgsize: array[TFloatType] of tcgsize =
          (OS_F32,OS_F64,OS_F80,OS_F80,OS_C64,OS_C64);
 
        tvarregable2tcgloc : array[tvarregable] of tcgloc = (LOC_VOID,

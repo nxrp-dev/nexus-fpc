@@ -28,16 +28,16 @@ interface
 uses
   globtype;
 
-function tripletcpustr(tripletstyle: ttripletstyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
 
 implementation
 
 uses
   globals, systems, cpuinfo;
 
-function tripletcpustr(tripletstyle: ttripletstyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
   begin
-    if target_info.system in systems_darwin then
+    if TargetInfo.system in systems_darwin then
       result:='arm64'
     else
       result:='aarch64'

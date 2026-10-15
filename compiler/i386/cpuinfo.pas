@@ -103,7 +103,7 @@ Const
 
 var
    { calling conventions supported by the code generator }
-   supported_calling_conventions : tproccalloptions = [
+   supported_calling_conventions : TProcCallOptions = [
      pocall_internproc,
      pocall_register,
      pocall_safecall,

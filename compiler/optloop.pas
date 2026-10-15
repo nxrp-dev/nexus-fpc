@@ -29,10 +29,10 @@ unit optloop;
     uses
       node;
 
-    function unroll_loop(node : tnode) : tnode;
-    function OptimizeInductionVariables(node : tnode) : boolean;
-    function optimize_record_writes(var n: tnode): boolean;
-    function OptimizeForLoop(var node : tnode) : boolean;
+    function unroll_loop(node : TNode) : TNode;
+    function OptimizeInductionVariables(node : TNode) : boolean;
+    function optimize_record_writes(var n: TNode): boolean;
+    function OptimizeForLoop(var node : TNode) : boolean;
 
   implementation
 
@@ -52,7 +52,7 @@ unit optloop;
       optbase,optutils,
       procinfo;
 
-    function number_unrolls(node : tnode) : cardinal;
+    function number_unrolls(node : TNode) : cardinal;
       var
         nodeCount : cardinal;
       begin
@@ -62,7 +62,7 @@ unit optloop;
           the counter management takes more time in this case. }
 {$ifdef i386}
         { multiply by 2 for CPUs with a long pipeline }
-        if current_settings.optimizecputype in [cpu_Pentium4] then
+        if CurrentSettings.optimizecputype in [cpu_Pentium4] then
           begin
             { See the common branch below for an explanation. }
             nodeCount:=node_count_weighted(node,41);
@@ -86,12 +86,12 @@ unit optloop;
 
     type
       treplaceinfo = record
-        node : tnode;
+        node : TNode;
         value : Tconstexprint;
       end;
       preplaceinfo = ^treplaceinfo;
 
-    function checkcontrollflowstatements(var n:tnode; arg: pointer): foreachnoderesult;
+    function checkcontrollflowstatements(var n:TNode; arg: pointer): foreachnoderesult;
       begin
         if n.nodetype in [breakn,continuen,goton,labeln,exitn,raisen] then
           result:=fen_norecurse_true
@@ -100,7 +100,7 @@ unit optloop;
       end;
 
 
-    function replaceloadnodes(var n: tnode; arg: pointer): foreachnoderesult;
+    function replaceloadnodes(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         if n.isequal(preplaceinfo(arg)^.node) then
           begin
@@ -108,13 +108,13 @@ unit optloop;
               internalerror(2012090402);
             n.free;
             n:=cordconstnode.create(preplaceinfo(arg)^.value,preplaceinfo(arg)^.node.resultdef,false);
-            do_firstpass(n);
+            DoFirstPass(n);
           end;
         result:=fen_false;
       end;
 
 
-    function unroll_loop(node : tnode) : tnode;
+    function unroll_loop(node : TNode) : TNode;
       var
         unrolls,i : cardinal;
         counts : qword;
@@ -125,7 +125,7 @@ unit optloop;
         hascontrollflowstatements : boolean;
       begin
         result:=nil;
-        if (cs_opt_size in current_settings.optimizerswitches) then
+        if (cs_opt_size in CurrentSettings.optimizerswitches) then
           exit;
         if ErrorCount<>0 then
           exit;
@@ -165,7 +165,7 @@ unit optloop;
                 { can we get rid completly of the for ? }
                 getridoffor:=(unrolls=counts) and not(hascontrollflowstatements) and
                   { Macpas allows assignments to the for-variables, so we cannot get rid of the for }
-                  not(m_mac in current_settings.modeswitches);
+                  not(m_mac in CurrentSettings.modeswitches);
 
                 if getridoffor then
                   begin
@@ -193,7 +193,7 @@ unit optloop;
 
                     if getridoffor then
                       begin
-                        foreachnodestatic(tnode(unrollstatement),@replaceloadnodes,@replaceinfo);
+                        foreachnodestatic(TNode(unrollstatement),@replaceloadnodes,@replaceinfo);
                         if lnf_backward in tfornode(node).loopflags then
                           replaceinfo.value:=replaceinfo.value-1
                         else
@@ -262,7 +262,7 @@ unit optloop;
       end;
 
 
-    function checkcontinue(var n:tnode; arg: pointer): foreachnoderesult;
+    function checkcontinue(var n:TNode; arg: pointer): foreachnoderesult;
       begin
         if n.nodetype=continuen then
           result:=fen_norecurse_true
@@ -271,13 +271,13 @@ unit optloop;
       end;
 
 
-    function is_loop_invariant(loop : tnode;expr : tnode) : boolean;
+    function is_loop_invariant(loop : TNode;expr : TNode) : boolean;
       begin
         result:=is_constnode(expr);
         case expr.nodetype of
           loadn:
             begin
-              if (pi_dfaavailable in current_procinfo.flags) and
+              if (pi_dfaavailable in CurrentProcInfo.flags) and
                 assigned(loop.optinfo) and
                 assigned(expr.optinfo) and
                 not(expr.isequal(tfornode(loop).left)) then
@@ -313,22 +313,22 @@ unit optloop;
         ninductions : sizeint;
         inductions : array of record
           temp : ttempcreatenode;
-          expr : tnode;
+          expr : TNode;
         end;
         changedforloop,
         containsnestedforloop,
         docalcatend : boolean;
-        function findpreviousstrengthreduction(var n: tnode): boolean;
-        procedure addinduction(temp : ttempcreatenode; expr : tnode);
-        function dostrengthreductiontest(var n: tnode): foreachnoderesult;
-        procedure optimizeinductionvariablessingleforloop(var n: tnode);
+        function findpreviousstrengthreduction(var n: TNode): boolean;
+        procedure addinduction(temp : ttempcreatenode; expr : TNode);
+        function dostrengthreductiontest(var n: TNode): foreachnoderesult;
+        procedure optimizeinductionvariablessingleforloop(var n: TNode);
       end;
 
 
-    function toptimizeinductionvariablescontext.findpreviousstrengthreduction(var n: tnode): boolean;
+    function toptimizeinductionvariablescontext.findpreviousstrengthreduction(var n: TNode): boolean;
       var
         i : longint;
-        hp : tnode;
+        hp : TNode;
       begin
         result:=false;
         for i:=0 to ninductions-1 do
@@ -352,7 +352,7 @@ unit optloop;
       end;
 
 
-    procedure toptimizeinductionvariablescontext.addinduction(temp : ttempcreatenode; expr : tnode);
+    procedure toptimizeinductionvariablescontext.addinduction(temp : ttempcreatenode; expr : TNode);
       begin
         if not assigned(initcode) then
           begin
@@ -371,13 +371,13 @@ unit optloop;
 
 
     { checks if the strength of n can be reduced, currforloop is the tforloop being considered }
-    function toptimizeinductionvariablescontext.dostrengthreductiontest(var n: tnode): foreachnoderesult;
+    function toptimizeinductionvariablescontext.dostrengthreductiontest(var n: TNode): foreachnoderesult;
       var
         tempnode,startvaltemp : ttempcreatenode;
         dummy : longint;
-        nn : tnode;
-        nt : tnodetype;
-        nflags : tnodeflags;
+        nn : TNode;
+        nt : TNodeType;
+        nflags : TNodeFlags;
       begin
         result:=fen_false;
         nflags:=n.flags;
@@ -445,7 +445,7 @@ unit optloop;
                       addstatement(deletecodestatements,ctempdeletenode.create(tempnode));
                     end;
                   { set types }
-                  do_firstpass(n);
+                  DoFirstPass(n);
                   result:=fen_norecurse_false;
                 end;
             end;
@@ -529,7 +529,7 @@ unit optloop;
                       ttypeconvnode(n).left.flags:=ttypeconvnode(n).left.flags+nflags*[nf_write,nf_modify];
                     end;
                   { set types }
-                  do_firstpass(n);
+                  DoFirstPass(n);
                   result:=fen_norecurse_false;
                 end;
             end;
@@ -539,21 +539,21 @@ unit optloop;
       end;
 
 
-    function dostrengthreductiontest_callback(var n: tnode; arg: pointer): foreachnoderesult;
+    function dostrengthreductiontest_callback(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=toptimizeinductionvariablescontext(arg^).dostrengthreductiontest(n);
       end;
 
 
-    procedure toptimizeinductionvariablescontext.optimizeinductionvariablessingleforloop(var n: tnode);
+    procedure toptimizeinductionvariablescontext.optimizeinductionvariablessingleforloop(var n: TNode);
       var
         loopcode : tblocknode;
         loopcodestatements,
         newcodestatements : tstatementnode;
-        newfor,oldn : tnode;
+        newfor,oldn : TNode;
       begin
         { do we have DFA available? }
-        if pi_dfaavailable in current_procinfo.flags then
+        if pi_dfaavailable in CurrentProcInfo.flags then
           begin
             CalcDefSum(tfornode(n).t2);
           end;
@@ -573,9 +573,9 @@ unit optloop;
         { clue everything together }
         if assigned(initcode) then
           begin
-            do_firstpass(tnode(initcode));
-            do_firstpass(tnode(calccode));
-            do_firstpass(tnode(deletecode));
+            DoFirstPass(TNode(initcode));
+            DoFirstPass(TNode(calccode));
+            DoFirstPass(TNode(deletecode));
             { create a new for node, the old one will be released by the compiler }
             oldn:=n;
             newfor:=cfornode.create(tfornode(oldn).left,tfornode(oldn).right,tfornode(oldn).t1,tfornode(oldn).t2,lnf_backward in tfornode(oldn).loopflags);
@@ -591,7 +591,7 @@ unit optloop;
             if docalcatend then
               addstatement(loopcodestatements,calccode);
             tfornode(newfor).t2:=loopcode;
-            do_firstpass(newfor);
+            DoFirstPass(newfor);
 
             n:=internalstatements(newcodestatements);
             oldn.Free;
@@ -603,7 +603,7 @@ unit optloop;
       end;
 
 
-    function optimizeinductionvariablessingleforloop_static(var n: tnode; arg: pointer): foreachnoderesult;
+    function optimizeinductionvariablessingleforloop_static(var n: TNode; arg: pointer): foreachnoderesult;
       var
         ctx : ^toptimizeinductionvariablescontext absolute arg;
       begin
@@ -618,12 +618,12 @@ unit optloop;
       end;
 
 
-    function OptimizeInductionVariables(node : tnode) : boolean;
+    function OptimizeInductionVariables(node : TNode) : boolean;
       var
         ctx : toptimizeinductionvariablescontext;
       begin
         Result:=false;
-        if not(pi_dfaavailable in current_procinfo.flags) then
+        if not(pi_dfaavailable in CurrentProcInfo.flags) then
           exit;
         ctx.changedforloop:=false;
         foreachnodestatic(pm_postprocess,node,@optimizeinductionvariablessingleforloop_static,@ctx);
@@ -631,7 +631,7 @@ unit optloop;
       end;
 
 
-    function recorddirectaccess(var n: tnode; arg: pointer): foreachnoderesult;
+    function recorddirectaccess(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
         case n.nodetype of
@@ -668,15 +668,15 @@ unit optloop;
         Depth: Integer;
       end;
 
-    function recordloopfindrefs(var n: tnode; arg: pointer): foreachnoderesult; forward;
+    function recordloopfindrefs(var n: TNode; arg: pointer): foreachnoderesult; forward;
 
     { Needed as we can't reference recordloopfindrefs directly within itself }
-    function recordloopfindrefs_recursive(var n: tnode; arg: pointer): foreachnoderesult;
+    function recordloopfindrefs_recursive(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=recordloopfindrefs(n, arg);
       end;
 
-    function recordloopfindrefs(var n: tnode; arg: pointer): foreachnoderesult;
+    function recordloopfindrefs(var n: TNode; arg: pointer): foreachnoderesult;
       var
         ThisTemp: TFieldTempPair;
       begin
@@ -767,7 +767,7 @@ unit optloop;
       end;
 
 
-    function recordloopreplacerefs(var n: tnode; arg: pointer): foreachnoderesult;
+    function recordloopreplacerefs(var n: TNode; arg: pointer): foreachnoderesult;
       var
         ThisTemp: TFieldTempPair;
         NewNode: TNode;
@@ -821,7 +821,7 @@ unit optloop;
       RECORD_TEMP_LIMIT = 7;
 {$endif}
 
-    function discount_temprefs(var n:tnode; arg: pointer): foreachnoderesult;
+    function discount_temprefs(var n:TNode; arg: pointer): foreachnoderesult;
       begin
         if n.nodetype=temprefn then
           begin
@@ -833,7 +833,7 @@ unit optloop;
       end;
 
 
-    function _optimize_record_writes(var n:tnode; arg: pointer): foreachnoderesult;
+    function _optimize_record_writes(var n:TNode; arg: pointer): foreachnoderesult;
       var
         X, Y, SymCount: Integer;
         MinScore: LongInt;
@@ -861,13 +861,13 @@ unit optloop;
             RecordData.Fields:=nil;
             { Check to see if local record-types can have individual fields
               promoted to registers }
-            if current_procinfo.procdef.localst.symtabletype = localsymtable then
+            if CurrentProcInfo.procdef.localst.symtabletype = localsymtable then
               begin
                 RecordData.Fields:=TLinkedList.Create;
-                SymCount:=current_procinfo.procdef.localst.SymList.Count-1;
+                SymCount:=CurrentProcInfo.procdef.localst.SymList.Count-1;
                 for X:=0 to SymCount do
                   begin
-                    CurrentSym:=TSym(current_procinfo.procdef.localst.SymList[X]);
+                    CurrentSym:=TSym(CurrentProcInfo.procdef.localst.SymList[X]);
                     if (CurrentSym.typ=localvarsym) and
                       { Don't optimise records whose address has been taken,
                         since there may be some multithreaded access going on }
@@ -892,10 +892,10 @@ unit optloop;
                             { Make sure an absolute variable doesn't alias to it }
                             for Y:=0 to SymCount do
                               if (X<>Y) and
-                                (TSym(current_procinfo.procdef.localst.SymList[X]).typ=absolutevarsym) and
-                                (TAbsoluteVarSym(current_procinfo.procdef.localst.SymList[X]).abstyp=tovar) and
-                                (TAbsoluteVarSym(current_procinfo.procdef.localst.SymList[X]).ref.firstsym^.sltype=sl_load) and
-                                (TAbsoluteVarSym(current_procinfo.procdef.localst.SymList[X]).ref.firstsym^.sym=CurrentSym) then
+                                (TSym(CurrentProcInfo.procdef.localst.SymList[X]).typ=absolutevarsym) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).abstyp=tovar) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).ref.firstsym^.sltype=sl_load) and
+                                (TAbsoluteVarSym(CurrentProcInfo.procdef.localst.SymList[X]).ref.firstsym^.sym=CurrentSym) then
                                 begin
                                   { Don't take any chances }
                                   AbortRecord:=True;
@@ -987,7 +987,7 @@ unit optloop;
                                   ),
                                   csubscriptnode.create(
                                     ThisTemp.Field,
-                                    cloadnode.create(ThisTemp.BaseSymbol,current_procinfo.procdef.localst)
+                                    cloadnode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.localst)
                                   )
                                 );
                                 NewNode.fileinfo:=n.fileinfo;
@@ -1015,7 +1015,7 @@ unit optloop;
                                 NewNode:=cassignmentnode.create(
                                   csubscriptnode.create(
                                     ThisTemp.Field,
-                                    cloadnode.create(ThisTemp.BaseSymbol,current_procinfo.procdef.localst)
+                                    cloadnode.create(ThisTemp.BaseSymbol,CurrentProcInfo.procdef.localst)
                                   ),
                                   ctemprefnode.create(
                                     ThisTemp.TempCreate
@@ -1050,7 +1050,7 @@ unit optloop;
           end;
       end;
 
-    function optimize_record_writes(var n: tnode): boolean;
+    function optimize_record_writes(var n: TNode): boolean;
       begin
         Result:=foreachnodestatic(pm_preprocess,n,@_optimize_record_writes,nil);
       end;
@@ -1061,7 +1061,7 @@ unit optloop;
         changedforloop : boolean;
       end;
 
-    function OptimizeForLoop_iterforloops(var n: tnode; arg: pointer): foreachnoderesult;
+    function OptimizeForLoop_iterforloops(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         Result:=fen_false;
         if (n.nodetype=forn) and
@@ -1075,7 +1075,7 @@ unit optloop;
             not(tabstractvarsym(tloadnode(tfornode(n).left).symtableentry).different_scope)) then
           begin
             { do we have DFA available? }
-            if pi_dfaavailable in current_procinfo.flags then
+            if pi_dfaavailable in CurrentProcInfo.flags then
               begin
                 CalcUseSum(tfornode(n).t2);
                 CalcDefSum(tfornode(n).t2);
@@ -1098,19 +1098,19 @@ unit optloop;
                 tfornode(n).t1:=cordconstnode.create(1,tfornode(n).left.resultdef,false);
                 include(tfornode(n).loopflags,lnf_counter_not_used);
                 exclude(n.transientflags,tnf_pass1_done);
-                do_firstpass(n);
+                DoFirstPass(n);
                 toptimizeforloopcontext(arg^).changedforloop:=true;
               end;
           end;
       end;
 
 
-    function OptimizeForLoop(var node : tnode) : boolean;
+    function OptimizeForLoop(var node : TNode) : boolean;
       var
         ctx : toptimizeforloopcontext;
       begin
         ctx.changedforloop:=false;
-        if pi_dfaavailable in current_procinfo.flags then
+        if pi_dfaavailable in CurrentProcInfo.flags then
           foreachnodestatic(pm_postprocess,node,@OptimizeForLoop_iterforloops,@ctx);
         Result:=ctx.changedforloop;
       end;

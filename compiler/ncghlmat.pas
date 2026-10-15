@@ -32,7 +32,7 @@ uses
 type
 
   tcghlnotnode = class(tcgnotnode)
-    function pass_1: tnode; override;
+    function pass_1: TNode; override;
    protected
     procedure second_boolean; override;
   end;
@@ -49,7 +49,7 @@ uses
                                tcghlnotnode
 *****************************************************************************}
 
-function tcghlnotnode.pass_1: tnode;
+function tcghlnotnode.pass_1: TNode;
   begin
     result:=inherited;
     if not assigned(result) and
@@ -60,8 +60,8 @@ function tcghlnotnode.pass_1: tnode;
 
 procedure tcghlnotnode.second_boolean;
   begin
-    secondpass(left);
-    hlcg.maketojumpbool(current_asmdata.CurrAsmList,left);
+    SecondPass(left);
+    hlcg.maketojumpbool(CurrentAsmData.CurrAsmList,left);
     { switch true and false labels to invert result }
     location_reset_jump(location,left.location.falselabel,left.location.truelabel);
   end;

@@ -692,7 +692,7 @@ implementation
       );
 
 
-    as_x86_64_elf64_info : tasminfo =
+    as_x86_64_elf64_info : TAsmInfo =
       (
         id     : as_x86_64_elf64;
         idtxt  : 'ELF';

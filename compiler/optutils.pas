@@ -34,32 +34,32 @@ unit optutils;
       { this implementation should be really improved,
         its purpose is to find equal nodes }
       TIndexedNodeSet = class(TFPList)
-        function Add(node : tnode) : boolean;
-        function Includes(node : tnode) : tnode;
-        function Remove(node : tnode) : boolean;
+        function Add(node : TNode) : boolean;
+        function Includes(node : TNode) : TNode;
+        function Remove(node : TNode) : boolean;
       end;
 
-    procedure SetNodeSucessors(p,last : tnode);
-    procedure PrintDFAInfo(var f : text;p : tnode);
+    procedure SetNodeSucessors(p,last : TNode);
+    procedure PrintDFAInfo(var f : text;p : TNode);
     procedure PrintIndexedNodeSet(var f : text;s : TIndexedNodeSet);
 
     { determines the optinfo.defsum field for the given node
       this field contains a sum of all expressions defined by
       all child expressions reachable through p
     }
-    procedure CalcDefSum(p : tnode);
+    procedure CalcDefSum(p : TNode);
 
     { calculates/estimates the field execution weight of optinfo }
-    procedure CalcExecutionWeights(p : tnode;Initial : longint = 100);
+    procedure CalcExecutionWeights(p : TNode;Initial : longint = 100);
 
     { determines the optinfo.defsum field for the given node
       this field contains a sum of all expressions defined by
       all child expressions reachable through p
     }
-    procedure CalcUseSum(p : tnode);
+    procedure CalcUseSum(p : TNode);
 
     { returns true, if n is a valid node and has life info }
-    function has_life_info(n : tnode) : boolean;
+    function has_life_info(n : TNode) : boolean;
 
   implementation
 
@@ -69,10 +69,10 @@ unit optutils;
       optbase,
       ncal,nbas,nflw,nutils,nset,ncon;
 
-    function TIndexedNodeSet.Add(node : tnode) : boolean;
+    function TIndexedNodeSet.Add(node : TNode) : boolean;
       var
         i : Integer;
-        p : tnode;
+        p : TNode;
       begin
         node.allocoptinfo;
         p:=Includes(node);
@@ -90,23 +90,23 @@ unit optutils;
       end;
 
 
-    function TIndexedNodeSet.Includes(node : tnode) : tnode;
+    function TIndexedNodeSet.Includes(node : TNode) : TNode;
       var
         i : longint;
       begin
         for i:=0 to Count-1 do
-          if tnode(List[i]).isequal(node) then
+          if TNode(List[i]).isequal(node) then
             begin
-              result:=tnode(List[i]);
+              result:=TNode(List[i]);
               exit;
             end;
         result:=nil;
       end;
 
 
-    function TIndexedNodeSet.Remove(node : tnode) : boolean;
+    function TIndexedNodeSet.Remove(node : TNode) : boolean;
       var
-        p : tnode;
+        p : TNode;
       begin
         result:=false;
         p:=Includes(node);
@@ -125,13 +125,13 @@ unit optutils;
         for i:=0 to s.count-1 do
           begin
             writeln(f,'=============================== Node ',i,' ===============================');
-            printnode(f,tnode(s[i]));
+            printnode(f,TNode(s[i]));
             writeln(f);
           end;
       end;
 
 
-    function PrintNodeDFA(var n: tnode; arg: pointer): foreachnoderesult;
+    function PrintNodeDFA(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         if assigned(n.optinfo) and ((n.optinfo^.life<>nil) or (n.optinfo^.use<>nil) or (n.optinfo^.def<>nil)) then
           begin
@@ -153,7 +153,7 @@ unit optutils;
       end;
 
 
-    procedure PrintDFAInfo(var f : text;p : tnode);
+    procedure PrintDFAInfo(var f : text;p : TNode);
       begin
         foreachnodestatic(pm_postprocess,p,@PrintNodeDFA,@f);
       end;
@@ -165,7 +165,7 @@ unit optutils;
         { successor node for a break statement in the current loop }
         brk,
         { successor node for a continue statement in the current loop }
-        cont : tnode;
+        cont : TNode;
         next : PBreakContinueStackNode;
       end;
 
@@ -175,7 +175,7 @@ unit optutils;
         top: PBreakContinueStackNode;
         constructor Init;
         destructor Done;
-        procedure Push(brk,cont : tnode);
+        procedure Push(brk,cont : TNode);
         procedure Pop;
       end;
 
@@ -196,7 +196,7 @@ unit optutils;
       end;
 
 
-    procedure TBreakContinueStack.Push(brk,cont : tnode);
+    procedure TBreakContinueStack.Push(brk,cont : TNode);
       var
         n : PBreakContinueStackNode;
       begin
@@ -218,15 +218,15 @@ unit optutils;
       end;
 
 
-    procedure SetNodeSucessors(p,last : tnode);
+    procedure SetNodeSucessors(p,last : TNode);
       var
         BreakContinueStack : TBreakContinueStack;
         Exitsuccessor: TNode;
       { sets the successor nodes of a node tree block
         returns the first node of the tree if it's a control flow node }
-      function DoSet(p : tnode;succ : tnode) : tnode;
+      function DoSet(p : TNode;succ : TNode) : TNode;
         var
-          hp1,hp2, oldexitsuccessor: tnode;
+          hp1,hp2, oldexitsuccessor: TNode;
           i : longint;
         begin
           result:=nil;
@@ -397,7 +397,7 @@ unit optutils;
       end;
 
 
-    function adddef(var n: tnode; arg: pointer): foreachnoderesult;
+    function adddef(var n: TNode; arg: pointer): foreachnoderesult;
       var
         defsum : PDFASet absolute arg;
       begin
@@ -414,7 +414,7 @@ unit optutils;
       end;
 
 
-    procedure CalcDefSum(p : tnode);
+    procedure CalcDefSum(p : TNode);
       var
         defsum : PDFASet;
       begin
@@ -425,7 +425,7 @@ unit optutils;
       end;
 
 
-    function SetExecutionWeight(var n: tnode; arg: pointer): foreachnoderesult;
+    function SetExecutionWeight(var n: TNode; arg: pointer): foreachnoderesult;
       var
         Weight, CaseWeight : longint;
         i : Integer;
@@ -464,14 +464,14 @@ unit optutils;
       end;
 
 
-    procedure CalcExecutionWeights(p : tnode;Initial : longint = 100);
+    procedure CalcExecutionWeights(p : TNode;Initial : longint = 100);
       begin
         if assigned(p) then
           foreachnodestatic(pm_postprocess,p,@SetExecutionWeight,Pointer(@Initial));
       end;
 
 
-    function adduse(var n: tnode; arg: pointer): foreachnoderesult;
+    function adduse(var n: TNode; arg: pointer): foreachnoderesult;
       var
         usesum : PDFASet absolute arg;
       begin
@@ -481,7 +481,7 @@ unit optutils;
       end;
 
 
-    procedure CalcUseSum(p : tnode);
+    procedure CalcUseSum(p : TNode);
       var
         usesum : PDFASet;
       begin
@@ -492,7 +492,7 @@ unit optutils;
       end;
 
 
-    function has_life_info(n : tnode) : boolean;
+    function has_life_info(n : TNode) : boolean;
       begin
         result:=assigned(n) and assigned(n.optinfo) and
           assigned(n.optinfo^.life);

@@ -117,11 +117,11 @@ implementation
         srsym  : tsym;
         srsymtable : TSymtable;
         hs : string;
-        fileinfo : tfileposinfo;
+        fileinfo : TFilePosInfo;
       begin
-        for i:=0 to current_module.checkforwarddefs.Count-1 do
+        for i:=0 to CurrentModule.checkforwarddefs.Count-1 do
           begin
-            def:=tdef(current_module.checkforwarddefs[i]);
+            def:=tdef(CurrentModule.checkforwarddefs[i]);
             case def.typ of
               pointerdef,
               classrefdef :
@@ -216,7 +216,7 @@ implementation
                 begin
                   { give an error as the implementation may follow in an
                     other type block which is allowed by FPC modes }
-                  if not(m_fpc in current_settings.modeswitches) and
+                  if not(m_fpc in CurrentSettings.modeswitches) and
                      (oo_is_forward in tobjectdef(def).objectoptions) then
                     MessagePos1(def.typesym.fileinfo,type_e_type_is_not_completly_defined,def.typename);
                   { generate specializations for generic forwarddefs }
@@ -228,7 +228,7 @@ implementation
                 internalerror(200811071);
             end;
           end;
-        current_module.checkforwarddefs.clear;
+        CurrentModule.checkforwarddefs.clear;
       end;
 
 
@@ -260,7 +260,7 @@ implementation
         else
           structstackindex:=-1;
         { handle types inside classes, e.g. TNode.TLongint }
-        while (current_scanner.token=_POINT) do
+        while (CurrentScanner.token=_POINT) do
           begin
              if is_class_or_object(def) or is_record(def) or is_java_class_or_interface(def) then
                begin
@@ -268,7 +268,7 @@ implementation
                    def:=find_real_class_definition(tobjectdef(def),false);
                  consume(_POINT);
                  if (structstackindex>=0) and
-                    (tabstractrecorddef(currentstructstack[structstackindex]).objname^=current_scanner.pattern) then
+                    (tabstractrecorddef(currentstructstack[structstackindex]).objname^=CurrentScanner.pattern) then
                    begin
                      def:=tdef(currentstructstack[structstackindex]);
                      dec(structstackindex);
@@ -287,8 +287,8 @@ implementation
                      symtablestack:=oldsymtablestack;
                      if isspecialize or
                          (
-                           (m_delphi in current_settings.modeswitches) and
-                           (current_scanner.token=_LSHARPBRACKET)
+                           (m_delphi in CurrentSettings.modeswitches) and
+                           (CurrentScanner.token=_LSHARPBRACKET)
                          ) then
                        begin
                          if not allowspecialization then
@@ -316,7 +316,7 @@ implementation
          structdefstack:=nil;
          while assigned(structdef) and (structdef.typ in [objectdef,recorddef]) do
            begin
-             if (tabstractrecorddef(structdef).objname^=current_scanner.pattern) then
+             if (tabstractrecorddef(structdef).objname^=CurrentScanner.pattern) then
                begin
                  consume(_ID);
                  def:=structdef;
@@ -346,7 +346,7 @@ implementation
     { the type to allow name mangling          }
       var
         not_a_type : boolean;
-        pos : tfileposinfo;
+        pos : TFilePosInfo;
         s,sorg : TIDString;
         t : ttoken;
       begin
@@ -354,21 +354,21 @@ implementation
          srsymtable:=nil;
          is_specialize:=false;
          is_unit_specific:=false;
-         s:=current_scanner.pattern;
-         sorg:=current_scanner.orgpattern;
-         pos:=current_tokenpos;
+         s:=CurrentScanner.pattern;
+         sorg:=CurrentScanner.orgpattern;
+         pos:=CurrentTokenPos;
          { use of current parsed object:
            classes, objects, records can be used also in themself }
          if checkcurrentrecdef and
-            try_parse_structdef_nested_type(def,current_structdef,isforwarddef) then
+            try_parse_structdef_nested_type(def,CurrentStructDef,isforwarddef) then
            exit;
-         if not allowunitsym and not (m_delphi in current_settings.modeswitches) and (current_scanner.idtoken=_SPECIALIZE) then
+         if not allowunitsym and not (m_delphi in CurrentSettings.modeswitches) and (CurrentScanner.idtoken=_SPECIALIZE) then
            begin
              consume(_ID);
              is_specialize:=true;
-             s:=current_scanner.pattern;
-             sorg:=current_scanner.orgpattern;
-             pos:=current_tokenpos;
+             s:=CurrentScanner.pattern;
+             sorg:=CurrentScanner.orgpattern;
+             pos:=CurrentTokenPos;
            end;
          { Use the special searchsym_type that search only types }
          if not searchsym_type(s,srsym,srsymtable) then
@@ -444,12 +444,12 @@ implementation
            we need to check by name as the link from the dummy symbol to the
            current type is not yet established }
          if (sp_generic_dummy in srsym.symoptions) and
-             assigned(current_structdef) and
-             (df_generic in current_structdef.defoptions) and
+             assigned(CurrentStructDef) and
+             (df_generic in CurrentStructDef.defoptions) and
              (ttypesym(srsym).typedef.typ=undefineddef) and
-             not (m_delphi in current_settings.modeswitches) then
+             not (m_delphi in CurrentSettings.modeswitches) then
            begin
-             def:=get_generic_in_hierarchy_by_name(srsym,current_structdef);
+             def:=get_generic_in_hierarchy_by_name(srsym,CurrentStructDef);
              if assigned(def) then
                exit;
            end;
@@ -489,13 +489,13 @@ implementation
          srsym:=nil;
          repeat
            again:=false;
-             case current_scanner.token of
+             case CurrentScanner.token of
                _STRING:
                  string_dec(def,stoAllowTypeDef in options);
                _FILE:
                  begin
                     consume(_FILE);
-                    if (current_scanner.token=_OF) then
+                    if (CurrentScanner.token=_OF) then
                       begin
                          if not(stoAllowTypeDef in options) then
                            Message(parser_e_no_local_para_def);
@@ -511,15 +511,15 @@ implementation
 
                _ID:
                  begin
-                   if not (m_delphi in current_settings.modeswitches) and try_to_consume(_SPECIALIZE) then
+                   if not (m_delphi in CurrentSettings.modeswitches) and try_to_consume(_SPECIALIZE) then
                      begin
                        if ([stoAllowSpecialization,stoAllowTypeDef] * options = []) then
                          begin
                            Message(parser_e_no_local_para_def);
 
                            { try to recover }
-                           while current_scanner.token<>_SEMICOLON do
-                             consume(current_scanner.token);
+                           while CurrentScanner.token<>_SEMICOLON do
+                             consume(CurrentScanner.token);
                            def:=generrordef;
                          end
                        else
@@ -547,8 +547,8 @@ implementation
             end;
         until not again;
         if ([stoAllowSpecialization,stoAllowTypeDef] * options <> []) and
-           (m_delphi in current_settings.modeswitches) then
-          dospecialize:=current_scanner.token in [_LSHARPBRACKET,_LT];
+           (m_delphi in CurrentSettings.modeswitches) then
+          dospecialize:=CurrentScanner.token in [_LSHARPBRACKET,_LT];
         if dospecialize and
             (def.typ=forwarddef) then
           begin
@@ -562,8 +562,8 @@ implementation
         { recover from error? }
         if def.typ=errordef then
           begin
-            while (current_scanner.token<>_SEMICOLON) and (current_scanner.token<>_RKLAMMER) do
-              consume(current_scanner.token);
+            while (CurrentScanner.token<>_SEMICOLON) and (CurrentScanner.token<>_RKLAMMER) do
+              consume(CurrentScanner.token);
           end
         else if dospecialize then
           begin
@@ -591,22 +591,22 @@ implementation
           end
         else
           begin
-            if assigned(current_specializedef) and (def=current_specializedef.genericdef) then
+            if assigned(CurrentSpecializeDef) and (def=CurrentSpecializeDef.genericdef) then
               begin
-                def:=current_specializedef
+                def:=CurrentSpecializeDef
               end
-            else if (def=current_genericdef) then
+            else if (def=CurrentGenericDef) then
               begin
-                def:=current_genericdef
+                def:=CurrentGenericDef
               end
             { when parsing a nested specialization in non-Delphi mode it might
               use the name of the topmost generic without type paramaters, thus
               def will contain the generic definition, but we need a reference
               to the specialization of that generic }
             { TODO : only in non-Delphi modes? }
-            else if assigned(current_structdef) and
-                (df_specialization in current_structdef.defoptions) and
-                return_specialization_of_generic(current_structdef,def,t2) then
+            else if assigned(CurrentStructDef) and
+                (df_specialization in CurrentStructDef.defoptions) and
+                return_specialization_of_generic(CurrentStructDef,def,t2) then
               begin
                 def:=t2
               end
@@ -619,14 +619,14 @@ implementation
                         a valid usage of a generic }
                       (sp_generic_para in srsym.symoptions) or
                       (
-                        (current_genericdef.typ in [recorddef,objectdef]) and
+                        (CurrentGenericDef.typ in [recorddef,objectdef]) and
                         (
                           { if both defs belong to the same generic (e.g. both are
                             subtypes) then we must allow the usage }
-                          defs_belong_to_same_generic(def,current_genericdef) or
+                          defs_belong_to_same_generic(def,CurrentGenericDef) or
                           { this is needed to correctly resolve "type Foo=SomeGeneric<T>"
                             declarations inside a generic }
-                          sym_is_owned_by(srsym,tabstractrecorddef(current_genericdef).symtable)
+                          sym_is_owned_by(srsym,tabstractrecorddef(CurrentGenericDef).symtable)
                         )
                       )
                     )
@@ -639,15 +639,15 @@ implementation
                 (sp_generic_dummy in srsym.symoptions) then
               begin
                 if parse_generic and
-                    (current_genericdef.typ in [recorddef,objectdef]) and
-                    (Pos(upper(srsym.realname),tabstractrecorddef(current_genericdef).objname^)=1) then
+                    (CurrentGenericDef.typ in [recorddef,objectdef]) and
+                    (Pos(upper(srsym.realname),tabstractrecorddef(CurrentGenericDef).objname^)=1) then
                   begin
-                    if m_delphi in current_settings.modeswitches then
+                    if m_delphi in CurrentSettings.modeswitches then
                       begin
                         def:=handle_dummysym(srsym);
                       end
                     else
-                      def:=current_genericdef;
+                      def:=CurrentGenericDef;
                   end
                 else
                   begin
@@ -676,14 +676,14 @@ implementation
 
       function IsAnonOrLocal: Boolean;
         begin
-          result:=(current_structdef.objname^='') or
+          result:=(CurrentStructDef.objname^='') or
                   not(symtablestack.stack^.next^.symtable.symtabletype in [globalsymtable,staticsymtable,objectsymtable,recordsymtable]);
         end;
 
       var
         pd : tprocdef;
         oldparse_only: boolean;
-        member_blocktype : tblock_type;
+        member_blocktype : TBlockType;
         hadgeneric,
         fields_allowed, is_classdef, classfields, threadvarfields: boolean;
         vdoptions: tvar_dec_options;
@@ -701,10 +701,10 @@ implementation
 
       begin
         { empty record declaration ? }
-        if (current_scanner.token=_SEMICOLON) then
+        if (CurrentScanner.token=_SEMICOLON) then
           Exit;
 
-        current_structdef.symtable.currentvisibility:=vis_public;
+        CurrentStructDef.symtable.currentvisibility:=vis_public;
         fields_allowed:=true;
         is_classdef:=false;
         hadgeneric:=false;
@@ -713,7 +713,7 @@ implementation
         member_blocktype:=bt_general;
         rtti_attrs_def := nil;
         repeat
-          case current_scanner.token of
+          case CurrentScanner.token of
             _TYPE :
               begin
                 check_unbound_attributes;
@@ -762,13 +762,13 @@ implementation
               end;
             _ID, _CASE, _OPERATOR :
               begin
-                case current_scanner.idtoken of
+                case CurrentScanner.idtoken of
                   _PRIVATE :
                     begin
                       check_unbound_attributes;
                        consume(_PRIVATE);
-                       current_structdef.symtable.currentvisibility:=vis_private;
-                       include(current_structdef.objectoptions,oo_has_private);
+                       CurrentStructDef.symtable.currentvisibility:=vis_private;
+                       include(CurrentStructDef.objectoptions,oo_has_private);
                        fields_allowed:=true;
                        is_classdef:=false;
                        classfields:=false;
@@ -780,8 +780,8 @@ implementation
                        check_unbound_attributes;
                        Message1(parser_e_not_allowed_in_record,tokeninfo^[_PROTECTED].str);
                        consume(_PROTECTED);
-                       current_structdef.symtable.currentvisibility:=vis_protected;
-                       include(current_structdef.objectoptions,oo_has_protected);
+                       CurrentStructDef.symtable.currentvisibility:=vis_protected;
+                       include(CurrentStructDef.objectoptions,oo_has_protected);
                        fields_allowed:=true;
                        is_classdef:=false;
                        classfields:=false;
@@ -792,7 +792,7 @@ implementation
                      begin
                        check_unbound_attributes;
                        consume(_PUBLIC);
-                       current_structdef.symtable.currentvisibility:=vis_public;
+                       CurrentStructDef.symtable.currentvisibility:=vis_public;
                        fields_allowed:=true;
                        is_classdef:=false;
                        classfields:=false;
@@ -804,7 +804,7 @@ implementation
                        check_unbound_attributes;
                        Message(parser_e_no_record_published);
                        consume(_PUBLISHED);
-                       current_structdef.symtable.currentvisibility:=vis_published;
+                       CurrentStructDef.symtable.currentvisibility:=vis_published;
                        fields_allowed:=true;
                        is_classdef:=false;
                        classfields:=false;
@@ -814,22 +814,22 @@ implementation
                    _STRICT :
                      begin
                         consume(_STRICT);
-                        if current_scanner.token=_ID then
+                        if CurrentScanner.token=_ID then
                           begin
-                            case current_scanner.idtoken of
+                            case CurrentScanner.idtoken of
                               _PRIVATE:
                                 begin
                                   consume(_PRIVATE);
-                                  current_structdef.symtable.currentvisibility:=vis_strictprivate;
-                                  include(current_structdef.objectoptions,oo_has_strictprivate);
+                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprivate;
+                                  include(CurrentStructDef.objectoptions,oo_has_strictprivate);
                                 end;
                               _PROTECTED:
                                 begin
                                   { "strict protected" is not allowed for records }
                                   Message1(parser_e_not_allowed_in_record,tokeninfo^[_STRICT].str+' '+tokeninfo^[_PROTECTED].str);
                                   consume(_PROTECTED);
-                                  current_structdef.symtable.currentvisibility:=vis_strictprotected;
-                                  include(current_structdef.objectoptions,oo_has_strictprotected);
+                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprotected;
+                                  include(CurrentStructDef.objectoptions,oo_has_strictprotected);
                                 end;
                               else
                                 message(parser_e_protected_or_private_expected);
@@ -844,10 +844,10 @@ implementation
                         member_blocktype:=bt_general;
                      end
                     else
-                    if is_classdef and (current_scanner.idtoken=_OPERATOR) then
+                    if is_classdef and (CurrentScanner.idtoken=_OPERATOR) then
                       begin
                         check_unbound_attributes;
-                        pd:=parse_record_method_dec(current_structdef,is_classdef,false);
+                        pd:=parse_record_method_dec(CurrentStructDef,is_classdef,false);
                         fields_allowed:=false;
                         is_classdef:=false;
                       end
@@ -855,29 +855,29 @@ implementation
                       begin
                         if member_blocktype=bt_general then
                           begin
-                            if (current_scanner.idtoken=_GENERIC) and
-                                not (m_delphi in current_settings.modeswitches) and
+                            if (CurrentScanner.idtoken=_GENERIC) and
+                                not (m_delphi in CurrentSettings.modeswitches) and
                                 not fields_allowed then
                               begin
                                 if hadgeneric then
                                   Message(parser_e_procedure_or_function_expected);
                                 consume(_ID);
                                 hadgeneric:=true;
-                                if not (current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+                                if not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
                                   Message(parser_e_procedure_or_function_expected);
                               end
                             else
                               begin
-                                if (not fields_allowed)and(current_scanner.idtoken<>_CASE) then
+                                if (not fields_allowed)and(CurrentScanner.idtoken<>_CASE) then
                                   Message(parser_e_field_not_allowed_here);
                                 vdoptions:=[vd_record];
                                 if classfields then
                                   include(vdoptions,vd_class);
-                                if not (m_delphi in current_settings.modeswitches) then
+                                if not (m_delphi in CurrentSettings.modeswitches) then
                                   include(vdoptions,vd_check_generic);
                                 if threadvarfields then
                                   include(vdoptions,vd_threadvar);
-                                fldCount:=current_structdef.symtable.SymList.Count;
+                                fldCount:=CurrentStructDef.symtable.SymList.Count;
                                 read_record_fields(vdoptions,nil,nil,hadgeneric,attr_element_count);
                                 {
                                   attr_element_count returns the number of fields to which the attribute must be applied.
@@ -895,12 +895,12 @@ implementation
                                   begin
                                   While (attr_element_count>1) do
                                     begin
-                                    trtti_attribute_list.copyandbind(rtti_attrs_def,(current_structdef.symtable.SymList[fldCount] as tfieldvarsym).rtti_attribute_list);
+                                    trtti_attribute_list.copyandbind(rtti_attrs_def,(CurrentStructDef.symtable.SymList[fldCount] as tfieldvarsym).rtti_attribute_list);
                                     inc(fldcount);
                                     dec(attr_element_count);
                                     end;
-                                  if fldCount<current_structdef.symtable.SymList.Count then
-                                    trtti_attribute_list.bind(rtti_attrs_def,(current_structdef.symtable.SymList[fldCount] as tfieldvarsym).rtti_attribute_list);
+                                  if fldCount<CurrentStructDef.symtable.SymList.Count then
+                                    trtti_attribute_list.bind(rtti_attrs_def,(CurrentStructDef.symtable.SymList[fldCount] as tfieldvarsym).rtti_attribute_list);
                                   end;
                               end;
                           end
@@ -929,9 +929,9 @@ implementation
                 consume(_CLASS);
                 { class modifier is only allowed for procedures, functions, }
                 { constructors, destructors, fields and properties          }
-                if (hadgeneric and not (current_scanner.token in [_FUNCTION,_PROCEDURE])) or
-                    (not hadgeneric and (not ((current_scanner.token in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_OPERATOR,_THREADVAR]) or (current_scanner.token=_CONSTRUCTOR)) and
-                   not((current_scanner.token=_ID) and (current_scanner.idtoken=_OPERATOR)))) then
+                if (hadgeneric and not (CurrentScanner.token in [_FUNCTION,_PROCEDURE])) or
+                    (not hadgeneric and (not ((CurrentScanner.token in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_OPERATOR,_THREADVAR]) or (CurrentScanner.token=_CONSTRUCTOR)) and
+                   not((CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_OPERATOR)))) then
                   Message(parser_e_procedure_or_function_expected);
 
                 if IsAnonOrLocal then
@@ -944,7 +944,7 @@ implementation
               begin
                 if IsAnonOrLocal then
                   Message(parser_e_no_methods_in_local_anonymous_records);
-                pd:=parse_record_method_dec(current_structdef,is_classdef,hadgeneric);
+                pd:=parse_record_method_dec(CurrentStructDef,is_classdef,hadgeneric);
                 if assigned(rtti_attrs_def) then
                   begin
                   trtti_attribute_list.bind(rtti_attrs_def,pd.rtti_attribute_list);
@@ -959,17 +959,17 @@ implementation
                 check_unbound_attributes;
                 if IsAnonOrLocal then
                   Message(parser_e_no_methods_in_local_anonymous_records);
-                if not is_classdef and (current_structdef.symtable.currentvisibility <> vis_public) then
+                if not is_classdef and (CurrentStructDef.symtable.currentvisibility <> vis_public) then
                   Message(parser_w_constructor_should_be_public);
 
                 { only 1 class constructor is allowed }
-                if is_classdef and (oo_has_class_constructor in current_structdef.objectoptions) then
-                  Message1(parser_e_only_one_class_constructor_allowed, current_structdef.objrealname^);
+                if is_classdef and (oo_has_class_constructor in CurrentStructDef.objectoptions) then
+                  Message1(parser_e_only_one_class_constructor_allowed, CurrentStructDef.objrealname^);
 
                 oldparse_only:=parse_only;
                 parse_only:=true;
                 if is_classdef then
-                  pd:=class_constructor_head(current_structdef)
+                  pd:=class_constructor_head(CurrentStructDef)
                 else
                   begin
                     pd:=constructor_head;
@@ -990,13 +990,13 @@ implementation
                   Message(parser_e_no_destructor_in_records);
 
                 { only 1 class destructor is allowed }
-                if is_classdef and (oo_has_class_destructor in current_structdef.objectoptions) then
-                  Message1(parser_e_only_one_class_destructor_allowed, current_structdef.objrealname^);
+                if is_classdef and (oo_has_class_destructor in CurrentStructDef.objectoptions) then
+                  Message1(parser_e_only_one_class_destructor_allowed, CurrentStructDef.objrealname^);
 
                 oldparse_only:=parse_only;
                 parse_only:=true;
                 if is_classdef then
-                  pd:=class_destructor_head(current_structdef)
+                  pd:=class_destructor_head(CurrentStructDef)
                 else
                   pd:=destructor_head;
 
@@ -1006,7 +1006,7 @@ implementation
               end;
             _LECKKLAMMER:
               begin
-                if m_prefixed_attributes in current_settings.modeswitches then
+                if m_prefixed_attributes in CurrentSettings.modeswitches then
                   parse_rttiattributes(rtti_attrs_def)
                 else
                   consume(_ID);
@@ -1031,20 +1031,20 @@ implementation
         begin
           if not assigned(recsym) then
             exit;
-          if ttypesym(recsym).typedef=current_structdef then
+          if ttypesym(recsym).typedef=CurrentStructDef then
             exit;
-          ttypesym(recsym).typedef:=current_structdef;
-          current_structdef.typesym:=recsym;
+          ttypesym(recsym).typedef:=CurrentStructDef;
+          CurrentStructDef.typesym:=recsym;
         end;
 
       procedure reset_typesym;
         begin
           if not assigned(recsym) then
             exit;
-          if ttypesym(recsym).typedef<>current_structdef then
+          if ttypesym(recsym).typedef<>CurrentStructDef then
             exit;
           ttypesym(recsym).typedef:=olddef;
-          current_structdef.typesym:=nil;
+          CurrentStructDef.typesym:=nil;
         end;
 
       var
@@ -1057,50 +1057,50 @@ implementation
          alignment: Integer;
          dummyattrelcount : Integer;
       begin
-         old_current_structdef:=current_structdef;
-         old_current_genericdef:=current_genericdef;
-         old_current_specializedef:=current_specializedef;
+         old_current_structdef:=CurrentStructDef;
+         old_current_genericdef:=CurrentGenericDef;
+         old_current_specializedef:=CurrentSpecializeDef;
          old_parse_generic:=parse_generic;
 
-         current_genericdef:=nil;
-         current_specializedef:=nil;
+         CurrentGenericDef:=nil;
+         CurrentSpecializeDef:=nil;
          { create recdef }
-         recst:=trecordsymtable.create(n,current_settings.packrecords,current_settings.alignment.recordalignmin);
+         recst:=trecordsymtable.create(n,CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
          { can't use recst.realname^ instead of n, because recst.realname is
            nil in case of an empty name }
-         current_structdef:=crecorddef.create(n,recst);
-         result:=current_structdef;
+         CurrentStructDef:=crecorddef.create(n,recst);
+         result:=CurrentStructDef;
          { insert in symtablestack }
          symtablestack.push(recst);
 
          { usage of specialized type inside its generic template }
          if assigned(genericdef) then
-           current_specializedef:=current_structdef
+           CurrentSpecializeDef:=CurrentStructDef
          { reject declaration of generic class inside generic class }
          else if assigned(genericlist) then
-           current_genericdef:=current_structdef;
+           CurrentGenericDef:=CurrentStructDef;
 
          { nested types of specializations are specializations as well }
          if assigned(old_current_structdef) and
              (df_specialization in old_current_structdef.defoptions) then
-           include(current_structdef.defoptions,df_specialization);
+           include(CurrentStructDef.defoptions,df_specialization);
          if assigned(old_current_structdef) and
              (df_generic in old_current_structdef.defoptions) then
-           include(current_structdef.defoptions,df_generic);
+           include(CurrentStructDef.defoptions,df_generic);
 
-         insert_generic_parameter_types(current_structdef,genericdef,genericlist,false);
+         insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,false);
          { when we are parsing a generic already then this is a generic as
            well }
          if old_parse_generic then
-           include(current_structdef.defoptions, df_generic);
-         parse_generic:=(df_generic in current_structdef.defoptions);
-         if parse_generic and not assigned(current_genericdef) then
-           current_genericdef:=current_structdef;
+           include(CurrentStructDef.defoptions, df_generic);
+         parse_generic:=(df_generic in CurrentStructDef.defoptions);
+         if parse_generic and not assigned(CurrentGenericDef) then
+           CurrentGenericDef:=CurrentStructDef;
          { in non-Delphi modes we need a strict private symbol without type
            count and type parameters in the name to simply resolving }
          maybe_insert_generic_rename_symbol(n,genericlist);
          { apply $RTTI directive to current object }
-         current_structdef.apply_rtti_directive(current_module.rtti_directive);
+         CurrentStructDef.apply_rtti_directive(CurrentModule.rtti_directive);
 
          { the correct typesym<->def relationship is needed for example when
            parsing parameters that are specializations of the record, when
@@ -1112,7 +1112,7 @@ implementation
            olddef:=nil;
          set_typesym;
 
-         if m_advanced_records in current_settings.modeswitches then
+         if m_advanced_records in CurrentSettings.modeswitches then
            begin
              parse_record_members(recsym);
            end
@@ -1124,7 +1124,7 @@ implementation
 
          reset_typesym;
 
-         if (current_scanner.token=_ID) and (current_scanner.pattern='ALIGN') then
+         if (CurrentScanner.token=_ID) and (CurrentScanner.pattern='ALIGN') then
            begin
              consume(_ID);
              alignment:=get_intconst.svalue;
@@ -1144,16 +1144,16 @@ implementation
          { don't keep track of procdefs in a separate list, because the
            compiler may add additional procdefs (e.g. property wrappers for
            the jvm backend) }
-         insert_struct_hidden_paras(trecorddef(current_structdef));
+         insert_struct_hidden_paras(trecorddef(CurrentStructDef));
          { restore symtable stack }
          symtablestack.pop(recst);
-         if trecorddef(current_structdef).is_packed and is_managed_type(current_structdef) then
+         if trecorddef(CurrentStructDef).is_packed and is_managed_type(CurrentStructDef) then
            Message(type_e_no_packed_inittable);
          { restore old state }
          parse_generic:=old_parse_generic;
-         current_structdef:=old_current_structdef;
-         current_genericdef:=old_current_genericdef;
-         current_specializedef:=old_current_specializedef;
+         CurrentStructDef:=old_current_structdef;
+         CurrentGenericDef:=old_current_genericdef;
+         CurrentSpecializeDef:=old_current_specializedef;
       end;
 
 
@@ -1162,20 +1162,20 @@ implementation
       const
         SingleTypeOptionsInTypeBlock:array[Boolean] of TSingleTypeOptions = ([],[stoIsForwardDef]);
       var
-        pt : tnode;
+        pt : TNode;
         tt2 : tdef;
         aktenumdef : tenumdef;
         s : TIDString;
         l,v : TConstExprInt;
         oldpackrecords : longint;
-        defpos,storepos : tfileposinfo;
+        defpos,storepos : TFilePosInfo;
         name: TIDString;
 
         procedure expr_type;
         var
-           pt1,pt2 : tnode;
+           pt1,pt2 : TNode;
            lv,hv   : TConstExprInt;
-           old_block_type : tblock_type;
+           old_block_type : TBlockType;
            dospecialize : boolean;
            newdef  : tdef;
            sym     : tsym;
@@ -1186,8 +1186,8 @@ implementation
            dospecialize:=false;
            { use of current parsed object:
              classes, objects, records can be used also in themself }
-           if (current_scanner.token=_ID) then
-             if try_parse_structdef_nested_type(def,current_structdef,false) then
+           if (CurrentScanner.token=_ID) then
+             if try_parse_structdef_nested_type(def,CurrentStructDef,false) then
                exit;
            { we can't accept a equal in type }
            pt1:=comp_expr([ef_type_only]);
@@ -1247,8 +1247,8 @@ implementation
                  begin
                    def:=ttypenode(pt1).resultdef;
                    { Delphi mode specialization? }
-                   if (m_delphi in current_settings.modeswitches) then
-                     dospecialize:=current_scanner.token=_LSHARPBRACKET
+                   if (m_delphi in CurrentSettings.modeswitches) then
+                     dospecialize:=CurrentScanner.token=_LSHARPBRACKET
                    else
                      begin
                        dospecialize:=false;
@@ -1261,21 +1261,21 @@ implementation
                        assigned(ttypenode(pt1).typesym) and
                        (ttypenode(pt1).typesym.typ=typesym) and
                        (sp_generic_dummy in ttypenode(pt1).typesym.symoptions) and
-                       assigned(current_structdef) and
+                       assigned(CurrentStructDef) and
                        (
                          (
-                           not (m_delphi in current_settings.modeswitches) and
+                           not (m_delphi in CurrentSettings.modeswitches) and
                            (ttypesym(ttypenode(pt1).typesym).typedef.typ=undefineddef) and
-                           (df_generic in current_structdef.defoptions) and
-                           (ttypesym(ttypenode(pt1).typesym).typedef.owner=current_structdef.owner) and
-                           (upper(ttypenode(pt1).typesym.realname)=copy(current_structdef.objname^,1,pos('$',current_structdef.objname^)-1))
+                           (df_generic in CurrentStructDef.defoptions) and
+                           (ttypesym(ttypenode(pt1).typesym).typedef.owner=CurrentStructDef.owner) and
+                           (upper(ttypenode(pt1).typesym.realname)=copy(CurrentStructDef.objname^,1,pos('$',CurrentStructDef.objname^)-1))
                          ) or (
                            { this could be a nested specialization which uses
                              the type name of a surrounding generic to
                              reference the specialization of said surrounding
                              class }
-                           (df_specialization in current_structdef.defoptions) and
-                           return_specialization_of_generic(current_structdef,ttypesym(ttypenode(pt1).typesym).typedef,newdef)
+                           (df_specialization in CurrentStructDef.defoptions) and
+                           return_specialization_of_generic(CurrentStructDef,ttypesym(ttypenode(pt1).typesym).typedef,newdef)
                          )
                        )
                        then
@@ -1283,7 +1283,7 @@ implementation
                        if assigned(newdef) then
                          def:=newdef
                        else
-                         def:=current_structdef;
+                         def:=CurrentStructDef;
                        if assigned(def) then
                          { handle nested types }
                          post_comp_expr_gendef(def)
@@ -1301,30 +1301,30 @@ implementation
                      end
                    else
                      begin
-                       if assigned(current_specializedef) and (def=current_specializedef.genericdef) then
+                       if assigned(CurrentSpecializeDef) and (def=CurrentSpecializeDef.genericdef) then
                          begin
-                           def:=current_specializedef
+                           def:=CurrentSpecializeDef
                          end
-                       else if (def=current_genericdef) then
+                       else if (def=CurrentGenericDef) then
                          begin
-                           def:=current_genericdef
+                           def:=CurrentGenericDef
                          end
                        else if tstoreddef(def).is_generic and
                            { TODO : check once nested generics are allowed }
                            not
                              (
                                parse_generic and
-                               (current_genericdef.typ in [recorddef,objectdef]) and
+                               (CurrentGenericDef.typ in [recorddef,objectdef]) and
                                (def.typ in [recorddef,objectdef]) and
                                (
                                  { if both defs belong to the same generic (e.g. both are
                                    subtypes) then we must allow the usage }
-                                 defs_belong_to_same_generic(def,current_genericdef) or
+                                 defs_belong_to_same_generic(def,CurrentGenericDef) or
                                  { this is needed to correctly resolve "type Foo=SomeGeneric<T>"
                                    declarations inside a generic }
                                  (
                                    (ttypenode(pt1).typesym<>nil) and
-                                   sym_is_owned_by(ttypenode(pt1).typesym,tabstractrecorddef(current_genericdef).symtable)
+                                   sym_is_owned_by(ttypenode(pt1).typesym,tabstractrecorddef(CurrentGenericDef).symtable)
                                  )
                                )
                              )
@@ -1387,7 +1387,7 @@ implementation
                  begin
                    if (torddef(tt2).ordtype=uwidechar) then
                      begin
-                     if (m_default_unicodestring in current_settings.modeswitches) then
+                     if (m_default_unicodestring in CurrentSettings.modeswitches) then
                        begin
                          Message(parser_w_widechar_set_reduced);
                          def:=csetdef.create(cansichartype,torddef(cansichartype).low.svalue,torddef(cansichartype).high.svalue,true);
@@ -1445,7 +1445,7 @@ implementation
             declaration (-> must create new typedef) }
           def:=cpointerdef.create(tt2);
           if tt2.typ=forwarddef then
-            current_module.checkforwarddefs.add(def);
+            CurrentModule.checkforwarddefs.add(def);
         end;
 
 
@@ -1465,7 +1465,7 @@ implementation
                 begin
                   lowval:=tenumdef(def).min;
                   highval:=tenumdef(def).max;
-                  if (m_fpc in current_settings.modeswitches) and
+                  if (m_fpc in CurrentSettings.modeswitches) and
                      (tenumdef(def).has_jumps) then
                    Message(type_e_array_index_enums_with_assign_not_possible);
                   indexdef:=def;
@@ -1511,22 +1511,22 @@ implementation
           first,
           old_parse_generic: boolean;
         begin
-           old_current_genericdef:=current_genericdef;
-           old_current_specializedef:=current_specializedef;
+           old_current_genericdef:=CurrentGenericDef;
+           old_current_specializedef:=CurrentSpecializeDef;
            old_parse_generic:=parse_generic;
 
-           current_genericdef:=nil;
-           current_specializedef:=nil;
+           CurrentGenericDef:=nil;
+           CurrentSpecializeDef:=nil;
            first:=true;
            arrdef:=carraydef.create(0,0,s32inttype);
            consume(_ARRAY);
 
            { usage of specialized type inside its generic template }
            if assigned(genericdef) then
-             current_specializedef:=arrdef
+             CurrentSpecializeDef:=arrdef
            { reject declaration of generic class inside generic class }
            else if assigned(genericlist) then
-             current_genericdef:=arrdef;
+             CurrentGenericDef:=arrdef;
            symtablestack.push(arrdef.symtable);
            insert_generic_parameter_types(arrdef,genericdef,genericlist,false);
            { there are two possibilities for the following to be true:
@@ -1538,8 +1538,8 @@ implementation
            if old_parse_generic then
              include(arrdef.defoptions,df_generic);
            parse_generic:=(df_generic in arrdef.defoptions);
-           if parse_generic and not assigned(current_genericdef) then
-             current_genericdef:=old_current_genericdef;
+           if parse_generic and not assigned(CurrentGenericDef) then
+             CurrentGenericDef:=old_current_genericdef;
 
            { open array? }
            if try_to_consume(_LECKKLAMMER) then
@@ -1554,7 +1554,7 @@ implementation
                   { read the expression and check it, check apart if the
                     declaration is an enum declaration because that needs to
                     be parsed by readtype (PFV) }
-                  if current_scanner.token=_LKLAMMER then
+                  if CurrentScanner.token=_LKLAMMER then
                    begin
                      read_anon_type(hdef,true,nil);
                      setdefdecl(hdef);
@@ -1645,7 +1645,7 @@ implementation
                   if isgeneric then
                     include(arrdef.arrayoptions,ado_IsGeneric);
 
-                  if current_scanner.token=_COMMA then
+                  if CurrentScanner.token=_COMMA then
                     consume(_COMMA)
                   else
                     break;
@@ -1675,8 +1675,8 @@ implementation
              end;
            { restore old state }
            parse_generic:=old_parse_generic;
-           current_genericdef:=old_current_genericdef;
-           current_specializedef:=old_current_specializedef;
+           CurrentGenericDef:=old_current_genericdef;
+           CurrentSpecializeDef:=old_current_specializedef;
         end;
 
 
@@ -1689,17 +1689,17 @@ implementation
             old_parse_generic: boolean;
             olddef : tdef;
           begin
-            old_current_genericdef:=current_genericdef;
-            old_current_specializedef:=current_specializedef;
+            old_current_genericdef:=CurrentGenericDef;
+            old_current_specializedef:=CurrentSpecializeDef;
             old_parse_generic:=parse_generic;
 
-            current_genericdef:=nil;
-            current_specializedef:=nil;
+            CurrentGenericDef:=nil;
+            CurrentSpecializeDef:=nil;
             olddef:=nil;
 
-            is_func:=(current_scanner.token=_FUNCTION);
-            if current_scanner.token in [_FUNCTION,_PROCEDURE] then
-              consume(current_scanner.token)
+            is_func:=(CurrentScanner.token=_FUNCTION);
+            if CurrentScanner.token in [_FUNCTION,_PROCEDURE] then
+              consume(CurrentScanner.token)
             else
               consume(_FUNCTION);
             pd:=cprocvardef.create(normal_function_level,doregister);
@@ -1713,10 +1713,10 @@ implementation
 
             { usage of specialized type inside its generic template }
             if assigned(genericdef) then
-              current_specializedef:=pd
+              CurrentSpecializeDef:=pd
             { reject declaration of generic class inside generic class }
             else if assigned(genericlist) then
-              current_genericdef:=pd;
+              CurrentGenericDef:=pd;
             symtablestack.push(pd.parast);
             insert_generic_parameter_types(pd,genericdef,genericlist,false);
             { there are two possibilities for the following to be true:
@@ -1728,10 +1728,10 @@ implementation
             if old_parse_generic then
               include(pd.defoptions,df_generic);
             parse_generic:=(df_generic in pd.defoptions);
-            if parse_generic and not assigned(current_genericdef) then
-              current_genericdef:=old_current_genericdef;
+            if parse_generic and not assigned(CurrentGenericDef) then
+              CurrentGenericDef:=old_current_genericdef;
 
-            if current_scanner.token=_LKLAMMER then
+            if CurrentScanner.token=_LKLAMMER then
               parse_parameter_dec(pd);
             if is_func then
               begin
@@ -1746,7 +1746,7 @@ implementation
                 consume(_OBJECT);
                 include(pd.procoptions,po_methodpointer);
               end
-            else if (m_nested_procvars in current_settings.modeswitches) and
+            else if (m_nested_procvars in CurrentSettings.modeswitches) and
                     try_to_consume(_IS) then
               begin
                 consume(_NESTED);
@@ -1764,8 +1764,8 @@ implementation
               end;
             { restore old state }
             parse_generic:=old_parse_generic;
-            current_genericdef:=old_current_genericdef;
-            current_specializedef:=old_current_specializedef;
+            CurrentGenericDef:=old_current_genericdef;
+            CurrentSpecializeDef:=old_current_specializedef;
 
             if assigned(sym) then
               begin
@@ -1777,10 +1777,10 @@ implementation
           end;
 
       var
-        p  : tnode;
+        p  : TNode;
         hdef : tdef;
         enumdupmsg, first, is_specialize : boolean;
-        oldlocalswitches : tlocalswitches;
+        oldlocalswitches : TLocalSwitches;
         bitpacking: boolean;
         stitem: psymtablestackitem;
         sym: tsym;
@@ -1796,15 +1796,15 @@ implementation
          { type a = type ..,; syntax is allowed only with type syms and apparently helpers, see below }
          if hadtypetoken and
              (
-               (current_scanner.token<>_ID) or
+               (CurrentScanner.token<>_ID) or
                (
-                 (m_function_references in current_settings.modeswitches) and
-                 (current_scanner.idtoken=_REFERENCE)
+                 (m_function_references in CurrentSettings.modeswitches) and
+                 (CurrentScanner.idtoken=_REFERENCE)
                )
              ) and
-             (current_scanner.token<>_STRING) and (current_scanner.token<>_FILE) then
+             (CurrentScanner.token<>_STRING) and (CurrentScanner.token<>_FILE) then
            consume(_ID);
-         case current_scanner.token of
+         case CurrentScanner.token of
             _STRING,_FILE:
               begin
                 if hadtypetoken then
@@ -1844,28 +1844,28 @@ implementation
                     and get the member owner instead of just created enumdef }
                   if not assigned(aktenumdef) then
                     begin
-                      if not searchsym(current_scanner.pattern,sym,st) then
+                      if not searchsym(CurrentScanner.pattern,sym,st) then
                         internalerror(202504121)
                       else if sym.typ=enumsym then
                         aktenumdef:=tenumsym(sym).definition
                       else
                         internalerror(201101021);
                     end;
-                  s:=current_scanner.orgpattern;
-                  defpos:=current_tokenpos;
+                  s:=CurrentScanner.orgpattern;
+                  defpos:=CurrentTokenPos;
                   consume(_ID);
                   { allow assigning specific numbers }
                   if
                       { in fpc mode also allow := to be compatible
                         with previous 1.0.x versions }
-                      ((m_fpc in current_settings.modeswitches) and
+                      ((m_fpc in CurrentSettings.modeswitches) and
                        try_to_consume(_ASSIGNMENT)) or
                       try_to_consume(_EQ) then
                     begin
-                       oldlocalswitches:=current_settings.localswitches;
-                       include(current_settings.localswitches,cs_allow_enum_calc);
+                       oldlocalswitches:=CurrentSettings.localswitches;
+                       include(CurrentSettings.localswitches,cs_allow_enum_calc);
                        p:=comp_expr([ef_accept_equal]);
-                       current_settings.localswitches:=oldlocalswitches;
+                       CurrentSettings.localswitches:=oldlocalswitches;
                        if (p.nodetype=ordconstn) then
                         begin
                           { we expect an integer or an enum of the
@@ -1896,19 +1896,19 @@ implementation
                   { don't generate enum members if this is a specialization because aktenumdef is copied from the generic type }
                   if not is_specialize then
                     begin
-                      storepos:=current_tokenpos;
-                      current_tokenpos:=defpos;
+                      storepos:=CurrentTokenPos;
+                      CurrentTokenPos:=defpos;
                       if (l.svalue<low(longint)) or (l.svalue>high(longint)) then
-                        if m_delphi in current_settings.modeswitches then
+                        if m_delphi in CurrentSettings.modeswitches then
                           Message(parser_w_enumeration_out_of_range)
                         else
                           Message(parser_e_enumeration_out_of_range);
                       tenumsymtable(aktenumdef.symtable).insertsym(cenumsym.create(s,aktenumdef,longint(l.svalue)));
-                      if not (cs_scopedenums in current_settings.localswitches) or
+                      if not (cs_scopedenums in CurrentSettings.localswitches) or
                           { also provide the global symbol for anonymous enums }
                           not assigned(newsym) then
                         tstoredsymtable(aktenumdef.owner).insertsym(cenumsym.create(s,aktenumdef,longint(l.svalue)));
-                      current_tokenpos:=storepos;
+                      CurrentTokenPos:=storepos;
                     end;
                 until not try_to_consume(_COMMA);
                 def:=aktenumdef;
@@ -1922,8 +1922,8 @@ implementation
               pointer_dec;
             _RECORD:
               begin
-                consume(current_scanner.token);
-                if (current_scanner.idtoken=_HELPER) and (m_advanced_records in current_settings.modeswitches) then
+                consume(CurrentScanner.token);
+                if (CurrentScanner.idtoken=_HELPER) and (m_advanced_records in CurrentSettings.modeswitches) then
                   begin
                     consume(_HELPER);
                     def:=object_dec(odt_helper,name,newsym,genericdef,genericlist,nil,ht_record);
@@ -1935,24 +1935,24 @@ implementation
             _BITPACKED:
               begin
                 bitpacking :=
-                  (cs_bitpacking in current_settings.localswitches) or
-                  (current_scanner.token = _BITPACKED);
-                consume(current_scanner.token);
-                if current_scanner.token=_ARRAY then
+                  (cs_bitpacking in CurrentSettings.localswitches) or
+                  (CurrentScanner.token = _BITPACKED);
+                consume(CurrentScanner.token);
+                if CurrentScanner.token=_ARRAY then
                   array_dec(bitpacking,genericdef,genericlist)
-                else if current_scanner.token=_SET then
+                else if CurrentScanner.token=_SET then
                   set_dec
-                else if current_scanner.token=_FILE then
+                else if CurrentScanner.token=_FILE then
                   single_type(def,[stoAllowTypeDef])
                 else
                   begin
-                    oldpackrecords:=current_settings.packrecords;
+                    oldpackrecords:=CurrentSettings.packrecords;
                     if (not bitpacking) or
-                       (current_scanner.token in [_CLASS,_OBJECT]) then
-                      current_settings.packrecords:=1
+                       (CurrentScanner.token in [_CLASS,_OBJECT]) then
+                      CurrentSettings.packrecords:=1
                     else
-                      current_settings.packrecords:=bit_alignment;
-                    case current_scanner.token of
+                      CurrentSettings.packrecords:=bit_alignment;
+                    case CurrentScanner.token of
                       _CLASS :
                         begin
                           consume(_CLASS);
@@ -1968,25 +1968,25 @@ implementation
                         def:=record_dec(name,newsym,genericdef,genericlist);
                       end;
                     end;
-                    current_settings.packrecords:=oldpackrecords;
+                    CurrentSettings.packrecords:=oldpackrecords;
                   end;
               end;
             _DISPINTERFACE :
               begin
                 { need extra check here since interface is a keyword
                   in all pascal modes }
-                if not(m_class in current_settings.modeswitches) then
+                if not(m_class in CurrentSettings.modeswitches) then
                   Message(parser_f_need_objfpc_or_delphi_mode);
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_dispinterface,name,newsym,genericdef,genericlist,nil,ht_none);
               end;
             _CLASS :
               begin
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 { Delphi only allows class of in type blocks }
-                if (current_scanner.token=_OF) and
+                if (CurrentScanner.token=_OF) and
                    (
-                    not(m_delphi in current_settings.modeswitches) or
+                    not(m_delphi in CurrentSettings.modeswitches) or
                     (block_type=bt_type)
                    ) then
                   begin
@@ -2000,13 +2000,13 @@ implementation
                       if hdef.typ=forwarddef then
                         begin
                           def:=cclassrefdef.create(hdef);
-                          current_module.checkforwarddefs.add(def);
+                          CurrentModule.checkforwarddefs.add(def);
                         end
                     else
                       Message1(type_e_class_or_objcclass_type_expected,hdef.typename);
                   end
                 else
-                if (current_scanner.idtoken=_HELPER) then
+                if (CurrentScanner.idtoken=_HELPER) then
                   begin
                     consume(_HELPER);
                     def:=object_dec(odt_helper,name,newsym,genericdef,genericlist,nil,ht_class);
@@ -2016,25 +2016,25 @@ implementation
               end;
             _CPPCLASS :
               begin
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_cppclass,name,newsym,genericdef,genericlist,nil,ht_none);
               end;
             _OBJCCLASS :
               begin
-                if not(m_objectivec1 in current_settings.modeswitches) then
+                if not(m_objectivec1 in CurrentSettings.modeswitches) then
                   Message(parser_f_need_objc);
 
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_objcclass,name,newsym,genericdef,genericlist,nil,ht_none);
               end;
             _INTERFACE :
               begin
                 { need extra check here since interface is a keyword
                   in all pascal modes }
-                if not(m_class in current_settings.modeswitches) then
+                if not(m_class in CurrentSettings.modeswitches) then
                   Message(parser_f_need_objfpc_or_delphi_mode);
-                consume(current_scanner.token);
-                case current_settings.interfacetype of
+                consume(CurrentScanner.token);
+                case CurrentSettings.interfacetype of
                   it_interfacecom:
                     def:=object_dec(odt_interfacecom,name,newsym,genericdef,genericlist,nil,ht_none);
                   it_interfacecorba:
@@ -2045,23 +2045,23 @@ implementation
               end;
             _OBJCPROTOCOL :
                begin
-                if not(m_objectivec1 in current_settings.modeswitches) then
+                if not(m_objectivec1 in CurrentSettings.modeswitches) then
                   Message(parser_f_need_objc);
 
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_objcprotocol,name,newsym,genericdef,genericlist,nil,ht_none);
                end;
             _OBJCCATEGORY :
                begin
-                if not(m_objectivec1 in current_settings.modeswitches) then
+                if not(m_objectivec1 in CurrentSettings.modeswitches) then
                   Message(parser_f_need_objc);
 
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_objccategory,name,newsym,genericdef,genericlist,nil,ht_none);
                end;
             _OBJECT :
               begin
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
                 def:=object_dec(odt_object,name,newsym,genericdef,genericlist,nil,ht_none);
               end;
             _PROCEDURE,
@@ -2071,11 +2071,11 @@ implementation
               end;
             _ID:
               begin
-                case current_scanner.idtoken of
+                case CurrentScanner.idtoken of
                   _HELPER:
                     begin
                       if hadtypetoken and
-                         (m_type_helpers in current_settings.modeswitches) then
+                         (m_type_helpers in CurrentSettings.modeswitches) then
                         begin
                           { reset hadtypetoken, so that calling code knows that it should not be handled
                             as a "unique" type }
@@ -2088,7 +2088,7 @@ implementation
                     end;
                   _REFERENCE:
                     begin
-                      if current_settings.modeswitches*[m_blocks,m_function_references]<>[] then
+                      if CurrentSettings.modeswitches*[m_blocks,m_function_references]<>[] then
                         begin
                           consume(_REFERENCE);
                           consume(_TO);
@@ -2110,13 +2110,13 @@ implementation
                 end;
               end
             else
-              if (current_scanner.token=_KLAMMERAFFE) and (([m_iso,m_extpas]*current_settings.modeswitches)<>[]) then
+              if (CurrentScanner.token=_KLAMMERAFFE) and (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) then
                 begin
                   consume(_KLAMMERAFFE);
                   single_type(tt2,SingleTypeOptionsInTypeBlock[block_type=bt_type]);
                   def:=cpointerdef.create(tt2);
                   if tt2.typ=forwarddef then
-                    current_module.checkforwarddefs.add(def);
+                    CurrentModule.checkforwarddefs.add(def);
                 end
               else
                 expr_type;

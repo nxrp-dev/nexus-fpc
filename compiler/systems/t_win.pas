@@ -99,7 +99,7 @@ implementation
 
 
   const
-    res_gnu_windres_info : tresinfo =
+    res_gnu_windres_info : TResInfo =
         (
           id     : res_gnu_windres;
           resbin : 'fpcres';
@@ -110,7 +110,7 @@ implementation
           resflags : [];
         );
 {$ifdef x86_64}
-    res_win64_gorc_info : tresinfo =
+    res_win64_gorc_info : TResInfo =
         (
           id     : res_win64_gorc;
           resbin : 'fpcres';
@@ -128,7 +128,7 @@ implementation
       hp           : tmodule;
       linkcygwin : boolean;
     begin
-      if target_info.system=system_i386_win32 then
+      if TargetInfo.system=system_i386_win32 then
         begin
           linkcygwin := false;
           hp:=tmodule(loaded_units.first);
@@ -144,7 +144,7 @@ implementation
           else
             linker.sysinitunit:='sysinitpas';
         end
-      else if target_info.system in [system_x86_64_win64,system_aarch64_win64] then
+      else if TargetInfo.system in [system_x86_64_win64,system_aarch64_win64] then
         linker.sysinitunit:='sysinit';
     end;
 
@@ -180,7 +180,7 @@ implementation
               s:=asmprefix+tostr(SmartHeaderCount)+'t';
           end;
           inc(SmartFilesCount);
-          result:=ObjOutput.NewObjData(FixFileName(s+tostr(SmartFilesCount)+target_info.objext));
+          result:=ObjOutput.NewObjData(FixFileName(s+tostr(SmartFilesCount)+TargetInfo.objext));
           ObjOutput.startobjectfile(Result.Name);
         end;
 
@@ -244,12 +244,12 @@ implementation
           { idata4 }
           objdata.SetSection(idata4objsection);
           objdata.writebytes(emptyint,sizeof(emptyint));
-          if target_info.system in systems_peoptplus then
+          if TargetInfo.system in systems_peoptplus then
             objdata.writebytes(emptyint,sizeof(emptyint));
           { idata5 }
           objdata.SetSection(idata5objsection);
           objdata.writebytes(emptyint,sizeof(emptyint));
-          if target_info.system in systems_peoptplus then
+          if TargetInfo.system in systems_peoptplus then
             objdata.writebytes(emptyint,sizeof(emptyint));
           { idata7 }
           objdata.SetSection(idata7objsection);
@@ -303,14 +303,14 @@ implementation
               begin
                 { import by name }
                 objdata.writereloc(0,sizeof(longint),idata6label,RELOC_RVA);
-                if target_info.system in systems_peoptplus then
+                if TargetInfo.system in systems_peoptplus then
                   objdata.writebytes(emptyint,sizeof(emptyint));
               end
             else
               begin
                 { import by ordinal }
                 ordint:=ordnr;
-                if target_info.system in systems_peoptplus then
+                if TargetInfo.system in systems_peoptplus then
                   begin
                     objdata.writeUInt32LE(ordint);
                     ordint:=$80000000;
@@ -389,16 +389,16 @@ implementation
         ImportLibrary : TImportLibrary;
         ImportSymbol  : TImportSymbol;
       begin
-        AsmPrefix:='imp'+Lower(current_module.modulename^);
+        AsmPrefix:='imp'+Lower(CurrentModule.modulename^);
         idatalabnr:=0;
         SmartFilesCount:=0;
         SmartHeaderCount:=0;
-        current_module.linkotherstaticlibs.add(current_module.importlibfilename,link_always);
-        ObjWriter:=TARObjectWriter.CreateAr(current_module.importlibfilename);
+        CurrentModule.linkotherstaticlibs.add(CurrentModule.importlibfilename,link_always);
+        ObjWriter:=TARObjectWriter.CreateAr(CurrentModule.importlibfilename);
         ObjOutput:=TPECoffObjOutput.Create(ObjWriter);
-        for i:=0 to current_module.ImportLibraryList.Count-1 do
+        for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
-            ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
+            ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
             StartImport(ImportLibrary.Name);
             for j:=0 to ImportLibrary.ImportSymbolList.Count-1 do
               begin
@@ -426,35 +426,35 @@ implementation
          ImportSymbol  : TImportSymbol;
          ImportLabels  : TFPList;
       begin
-        if current_asmdata.asmlists[al_imports]=nil then
-          current_asmdata.asmlists[al_imports]:=TAsmList.create;
+        if CurrentAsmData.asmlists[al_imports]=nil then
+          CurrentAsmData.asmlists[al_imports]:=TAsmList.create;
 
-        for i:=0 to current_module.ImportLibraryList.Count-1 do
+        for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
-            ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
+            ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
             { align al_procedures for the jumps }
-            new_section(current_asmdata.asmlists[al_imports],sec_code,'',sizeof(aint));
+            new_section(CurrentAsmData.asmlists[al_imports],sec_code,'',sizeof(aint));
             { Get labels for the sections }
-            current_asmdata.getjumplabel(l1);
-            current_asmdata.getjumplabel(l2);
-            current_asmdata.getjumplabel(l3);
-            new_section(current_asmdata.asmlists[al_imports],sec_idata2,'',0);
+            CurrentAsmData.getjumplabel(l1);
+            CurrentAsmData.getjumplabel(l2);
+            CurrentAsmData.getjumplabel(l3);
+            new_section(CurrentAsmData.asmlists[al_imports],sec_idata2,'',0);
             { pointer to procedure names }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l2));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l2));
             { two empty entries follow }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
             { pointer to dll name }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l1));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l1));
             { pointer to fixups }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l3));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_rva_sym(l3));
 
             { only create one section for each else it will
               create a lot of idata* }
 
             { first write the name references }
-            new_section(current_asmdata.asmlists[al_imports],sec_idata4,'',0);
-            current_asmdata.asmlists[al_imports].concat(Tai_label.Create(l2));
+            new_section(CurrentAsmData.asmlists[al_imports],sec_idata4,'',0);
+            CurrentAsmData.asmlists[al_imports].concat(Tai_label.Create(l2));
 
             ImportLabels:=TFPList.Create;
             ImportLabels.Count:=ImportLibrary.ImportSymbolList.Count;
@@ -462,45 +462,45 @@ implementation
               begin
                 ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[j]);
 
-                current_asmdata.getjumplabel(templab);
+                CurrentAsmData.getjumplabel(templab);
                 ImportLabels[j]:=templab;
                 if ImportSymbol.Name<>'' then
                   begin
-                    current_asmdata.asmlists[al_imports].concat(Tai_const.Create_rva_sym(TAsmLabel(ImportLabels[j])));
-                    if target_info.system in systems_peoptplus then
-                      current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+                    CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_rva_sym(TAsmLabel(ImportLabels[j])));
+                    if TargetInfo.system in systems_peoptplus then
+                      CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
                   end
                 else
                   begin
-                    if target_info.system in systems_peoptplus then
-                      current_asmdata.asmlists[al_imports].concat(Tai_const.Create_64bit(int64($8000000000000000) or ImportSymbol.ordnr))
+                    if TargetInfo.system in systems_peoptplus then
+                      CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_64bit(int64($8000000000000000) or ImportSymbol.ordnr))
                     else
-                      current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(longint($80000000) or ImportSymbol.ordnr));
+                      CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(longint($80000000) or ImportSymbol.ordnr));
                   end;
               end;
             { finalize the names ... }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
-            if target_info.system in systems_peoptplus then
-              current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            if TargetInfo.system in systems_peoptplus then
+              CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
 
             { then the addresses and create also the indirect jump }
-            new_section(current_asmdata.asmlists[al_imports],sec_idata5,'',0);
-            current_asmdata.asmlists[al_imports].concat(Tai_label.Create(l3));
+            new_section(CurrentAsmData.asmlists[al_imports],sec_idata5,'',0);
+            CurrentAsmData.asmlists[al_imports].concat(Tai_label.Create(l3));
 
             for j:=0 to ImportLibrary.ImportSymbolList.Count-1 do
               begin
                 ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[j]);
                 if not ImportSymbol.IsVar then
                   begin
-                    current_asmdata.getjumplabel(l4);
+                    CurrentAsmData.getjumplabel(l4);
                     { create indirect jump and }
                     { place jump in al_procedures }
-                    new_section(current_asmdata.asmlists[al_imports],sec_code,'',0);
+                    new_section(CurrentAsmData.asmlists[al_imports],sec_code,'',0);
                     if ImportSymbol.Name <> '' then
-                      current_asmdata.asmlists[al_imports].concat(Tai_symbol.Createname_global(ImportSymbol.MangledName,AT_FUNCTION,0,voidcodepointertype))
+                      CurrentAsmData.asmlists[al_imports].concat(Tai_symbol.Createname_global(ImportSymbol.MangledName,AT_FUNCTION,0,voidcodepointertype))
                     else
-                      current_asmdata.asmlists[al_imports].concat(Tai_symbol.Createname_global(ExtractFileName(ImportLibrary.Name)+'_index_'+tostr(ImportSymbol.ordnr),AT_FUNCTION,0,voidcodepointertype));
-                    current_asmdata.asmlists[al_imports].concat(tai_function_name.create(''));
+                      CurrentAsmData.asmlists[al_imports].concat(Tai_symbol.Createname_global(ExtractFileName(ImportLibrary.Name)+'_index_'+tostr(ImportSymbol.ordnr),AT_FUNCTION,0,voidcodepointertype));
+                    CurrentAsmData.asmlists[al_imports].concat(tai_function_name.create(''));
                   {$if defined(AARCH64)}
                     { ToDo }
                     internalerror(2020033001);
@@ -510,64 +510,64 @@ implementation
                     href.base:=NR_RIP;
 {$endif X86_64}
 
-                    current_asmdata.asmlists[al_imports].concat(Taicpu.Op_ref(A_JMP,S_NO,href));
-                    current_asmdata.asmlists[al_imports].concat(Tai_align.Create_op(4,$90));
+                    CurrentAsmData.asmlists[al_imports].concat(Taicpu.Op_ref(A_JMP,S_NO,href));
+                    CurrentAsmData.asmlists[al_imports].concat(Tai_align.Create_op(4,$90));
                   {$endif}
                     { add jump field to al_imports }
-                    new_section(current_asmdata.asmlists[al_imports],sec_idata5,'',0);
-                    if (cs_debuginfo in current_settings.moduleswitches) then
+                    new_section(CurrentAsmData.asmlists[al_imports],sec_idata5,'',0);
+                    if (cs_debuginfo in CurrentSettings.moduleswitches) then
                       begin
                         if ImportSymbol.MangledName<>'' then
                           begin
                             importname:='__imp_'+ImportSymbol.MangledName;
                             suffix:=0;
-                            while assigned(current_asmdata.getasmsymbol(importname)) do
+                            while assigned(CurrentAsmData.getasmsymbol(importname)) do
                               begin
                                 inc(suffix);
                                 importname:='__imp_'+ImportSymbol.MangledName+'_'+tostr(suffix);
                               end;
-                            current_asmdata.asmlists[al_imports].concat(tai_symbol.createname(importname,AT_FUNCTION,4,voidcodepointertype));
+                            CurrentAsmData.asmlists[al_imports].concat(tai_symbol.createname(importname,AT_FUNCTION,4,voidcodepointertype));
                           end
                         else
                           begin
                             importname:='__imp_by_ordinal'+tostr(ImportSymbol.ordnr);
                             suffix:=0;
-                            while assigned(current_asmdata.getasmsymbol(importname)) do
+                            while assigned(CurrentAsmData.getasmsymbol(importname)) do
                               begin
                                 inc(suffix);
                                 importname:='__imp_by_ordinal'+tostr(ImportSymbol.ordnr)+'_'+tostr(suffix);
                               end;
-                            current_asmdata.asmlists[al_imports].concat(tai_symbol.createname(importname,AT_FUNCTION,4,voidcodepointertype));
+                            CurrentAsmData.asmlists[al_imports].concat(tai_symbol.createname(importname,AT_FUNCTION,4,voidcodepointertype));
                           end;
                       end;
-                     current_asmdata.asmlists[al_imports].concat(Tai_label.Create(l4));
+                     CurrentAsmData.asmlists[al_imports].concat(Tai_label.Create(l4));
                   end
                 else
-                  current_asmdata.asmlists[al_imports].concat(Tai_symbol.Createname_global(ImportSymbol.MangledName,AT_DATA,0,voidpointertype));
-                current_asmdata.asmlists[al_imports].concat(Tai_const.Create_rva_sym(TAsmLabel(Importlabels[j])));
-                if target_info.system in systems_peoptplus then
-                  current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+                  CurrentAsmData.asmlists[al_imports].concat(Tai_symbol.Createname_global(ImportSymbol.MangledName,AT_DATA,0,voidpointertype));
+                CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_rva_sym(TAsmLabel(Importlabels[j])));
+                if TargetInfo.system in systems_peoptplus then
+                  CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
               end;
             { finalize the addresses }
-            current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
-            if target_info.system in systems_peoptplus then
-              current_asmdata.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
+            if TargetInfo.system in systems_peoptplus then
+              CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_32bit(0));
 
             { finally the import information }
-            new_section(current_asmdata.asmlists[al_imports],sec_idata6,'',0);
+            new_section(CurrentAsmData.asmlists[al_imports],sec_idata6,'',0);
             for j:=0 to ImportLibrary.ImportSymbolList.Count-1 do
               begin
                 ImportSymbol:=TImportSymbol(ImportLibrary.ImportSymbolList[j]);
-                current_asmdata.asmlists[al_imports].concat(Tai_label.Create(TAsmLabel(ImportLabels[j])));
+                CurrentAsmData.asmlists[al_imports].concat(Tai_label.Create(TAsmLabel(ImportLabels[j])));
                 { the ordinal number }
-                current_asmdata.asmlists[al_imports].concat(Tai_const.Create_16bit(ImportSymbol.ordnr));
-                current_asmdata.asmlists[al_imports].concat(Tai_string.Create(ImportSymbol.Name+#0));
-                current_asmdata.asmlists[al_imports].concat(Tai_align.Create_op(2,0));
+                CurrentAsmData.asmlists[al_imports].concat(Tai_const.Create_16bit(ImportSymbol.ordnr));
+                CurrentAsmData.asmlists[al_imports].concat(Tai_string.Create(ImportSymbol.Name+#0));
+                CurrentAsmData.asmlists[al_imports].concat(Tai_align.Create_op(2,0));
               end;
             { create import dll name }
-            new_section(current_asmdata.asmlists[al_imports],sec_idata7,'',0);
-            current_asmdata.asmlists[al_imports].concat(Tai_label.Create(l1));
-            current_asmdata.asmlists[al_imports].concat(Tai_string.Create(ImportLibrary.Name+#0));
+            new_section(CurrentAsmData.asmlists[al_imports],sec_idata7,'',0);
+            CurrentAsmData.asmlists[al_imports].concat(Tai_label.Create(l1));
+            CurrentAsmData.asmlists[al_imports].concat(Tai_string.Create(ImportLibrary.Name+#0));
             ImportLabels.Free;
             ImportLabels:=nil;
           end;
@@ -597,8 +597,8 @@ implementation
 
     procedure TExportLibWin.preparelib(const s:string);
       begin
-         if current_asmdata.asmlists[al_exports]=nil then
-           current_asmdata.asmlists[al_exports]:=TAsmList.create;
+         if CurrentAsmData.asmlists[al_exports]=nil then
+           CurrentAsmData.asmlists[al_exports]:=TAsmList.create;
          if EList_indexed=nil then
            EList_indexed:=tFPList.Create;
          if EList_nonindexed=nil then
@@ -651,9 +651,9 @@ implementation
           end;
         { Unit cleanup may release the implementation-only symbol. }
         hp.sym:=nil;
-        if current_module.is_unit then
+        if CurrentModule.is_unit then
           begin
-            current_module._exports.concat(hp);
+            CurrentModule._exports.concat(hp);
             exit;
           end;
         if eo_index in hp.options then
@@ -669,13 +669,13 @@ implementation
       var
         hp2 : texported_item;
       begin
-        hp2:=texported_item(current_module._exports.first);
+        hp2:=texported_item(CurrentModule._exports.first);
         while assigned(hp2) and
            (hp.name^>hp2.name^) do
           hp2:=texported_item(hp2.next);
         { insert hp there !! }
         if hp2=nil then
-          current_module._exports.concat(hp)
+          CurrentModule._exports.concat(hp)
         else
           begin
             if hp2.name^=hp.name^ then
@@ -685,7 +685,7 @@ implementation
                 hp.free;
                 exit;
               end;
-            current_module._exports.insertbefore(hp,hp2);
+            CurrentModule._exports.insertbefore(hp,hp2);
           end;
       end;
 
@@ -766,7 +766,7 @@ implementation
            exportfromlist(texported_item(EList_indexed.Items[i]));
          FreeAndNil(EList_indexed);
 
-         hp:=texported_item(current_module._exports.first);
+         hp:=texported_item(CurrentModule._exports.first);
          if not assigned(hp) then
            exit;
 
@@ -774,10 +774,10 @@ implementation
          ordinal_min:=$7FFFFFFF;
          entries:=0;
          named_entries:=0;
-         current_asmdata.getjumplabel(dll_name_label);
-         current_asmdata.getjumplabel(export_address_table);
-         current_asmdata.getjumplabel(export_name_table_pointers);
-         current_asmdata.getjumplabel(export_ordinal_table);
+         CurrentAsmData.getjumplabel(dll_name_label);
+         CurrentAsmData.getjumplabel(export_address_table);
+         CurrentAsmData.getjumplabel(export_name_table_pointers);
+         CurrentAsmData.getjumplabel(export_ordinal_table);
 
          { count entries }
          while assigned(hp) do
@@ -798,38 +798,38 @@ implementation
          { we must also count the holes !! }
          entries:=ordinal_max-ordinal_base+1;
 
-         new_section(current_asmdata.asmlists[al_exports],sec_edata,'',0);
+         new_section(CurrentAsmData.asmlists[al_exports],sec_edata,'',0);
          { create label to reference from main so smartlink will include
            the .edata section }
-         current_asmdata.asmlists[al_exports].concat(Tai_symbol.Createname_global(make_mangledname('EDATA',current_module.localsymtable,''),AT_METADATA,0,voidpointertype));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_symbol.Createname_global(make_mangledname('EDATA',CurrentModule.localsymtable,''),AT_METADATA,0,voidpointertype));
          { export flags }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_32bit(0));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_32bit(0));
          { date/time stamp }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_32bit(0));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_32bit(0));
          { major version }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_16bit(0));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_16bit(0));
          { minor version }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_16bit(0));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_16bit(0));
          { pointer to dll name }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_rva_sym(dll_name_label));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_rva_sym(dll_name_label));
          { ordinal base normally set to 1 }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_32bit(ordinal_base));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_32bit(ordinal_base));
          { number of entries }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_32bit(entries));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_32bit(entries));
          { number of named entries }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_32bit(named_entries));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_32bit(named_entries));
          { address of export address table }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_address_table));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_address_table));
          { address of name pointer pointers }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_name_table_pointers));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_name_table_pointers));
          { address of ordinal number pointers }
-         current_asmdata.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_ordinal_table));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_const.Create_rva_sym(export_ordinal_table));
          { the name }
-         current_asmdata.asmlists[al_exports].concat(Tai_label.Create(dll_name_label));
+         CurrentAsmData.asmlists[al_exports].concat(Tai_label.Create(dll_name_label));
          if st='' then
-           current_asmdata.asmlists[al_exports].concat(Tai_string.Create(current_module.modulename^+target_info.sharedlibext+#0))
+           CurrentAsmData.asmlists[al_exports].concat(Tai_string.Create(CurrentModule.modulename^+TargetInfo.sharedlibext+#0))
          else
-           current_asmdata.asmlists[al_exports].concat(Tai_string.Create(st+target_info.sharedlibext+#0));
+           CurrentAsmData.asmlists[al_exports].concat(Tai_string.Create(st+TargetInfo.sharedlibext+#0));
 
          {  export address table }
          address_table:=TAsmList.create;
@@ -844,12 +844,12 @@ implementation
          name_table:=TAsmList.Create;
          name_table.concat(Tai_align.Create_op(4,0));
          { write each address }
-         hp:=texported_item(current_module._exports.first);
+         hp:=texported_item(CurrentModule._exports.first);
          while assigned(hp) do
            begin
               if eo_name in hp.options then
                 begin
-                   current_asmdata.getjumplabel(name_label);
+                   CurrentAsmData.getjumplabel(name_label);
                    name_table_pointers.concat(Tai_const.Create_rva_sym(name_label));
                    ordinal_table.concat(Tai_const.Create_16bit(hp.index-ordinal_base));
                    name_table.concat(Tai_align.Create_op(2,0));
@@ -861,10 +861,10 @@ implementation
          { order in increasing ordinal values }
          { into temtexport list }
          temtexport:=TLinkedList.Create;
-         hp:=texported_item(current_module._exports.first);
+         hp:=texported_item(CurrentModule._exports.first);
          while assigned(hp) do
            begin
-              current_module._exports.remove(hp);
+              CurrentModule._exports.remove(hp);
               hp2:=texported_item(temtexport.first);
               while assigned(hp2) and (hp.index>hp2.index) do
                 hp2:=texported_item(hp2.next);
@@ -872,7 +872,7 @@ implementation
                 temtexport.concat(hp)
               else
                 temtexport.insertbefore(hp,hp2);
-              hp:=texported_item(current_module._exports.first);
+              hp:=texported_item(CurrentModule._exports.first);
            end;
 
          { write the export adress table }
@@ -890,21 +890,21 @@ implementation
               if hp.internalname<>'' then
                 begin
                   if hp.is_var then
-                    asmsym:=current_asmdata.RefAsmSymbol(hp.internalname,AT_DATA)
+                    asmsym:=CurrentAsmData.RefAsmSymbol(hp.internalname,AT_DATA)
                   else
-                    asmsym:=current_asmdata.RefAsmSymbol(hp.internalname,AT_FUNCTION);
+                    asmsym:=CurrentAsmData.RefAsmSymbol(hp.internalname,AT_FUNCTION);
                 end
               else
-                asmsym:=current_asmdata.RefAsmSymbol(hp.name^,AT_DATA);
+                asmsym:=CurrentAsmData.RefAsmSymbol(hp.name^,AT_DATA);
               address_table.concat(Tai_const.Create_rva_sym(asmsym));
               inc(current_index);
               hp:=texported_item(hp.next);
            end;
 
-         current_asmdata.asmlists[al_exports].concatlist(address_table);
-         current_asmdata.asmlists[al_exports].concatlist(name_table_pointers);
-         current_asmdata.asmlists[al_exports].concatlist(ordinal_table);
-         current_asmdata.asmlists[al_exports].concatlist(name_table);
+         CurrentAsmData.asmlists[al_exports].concatlist(address_table);
+         CurrentAsmData.asmlists[al_exports].concatlist(name_table_pointers);
+         CurrentAsmData.asmlists[al_exports].concatlist(ordinal_table);
+         CurrentAsmData.asmlists[al_exports].concatlist(name_table);
          address_table.Free;
          name_table_pointers.free;
          ordinal_table.free;
@@ -912,7 +912,7 @@ implementation
 
          { the package support needs this data later on
            to create the import library }
-         current_module._exports.concatlist(temtexport);
+         CurrentModule._exports.concatlist(temtexport);
          temtexport.free;
       end;
 
@@ -943,7 +943,7 @@ implementation
         LinkRes:=TLinkRes.Create(outputexedir+Info.ResName,true);
         with LinkRes do
           begin
-            case target_info.system of
+            case TargetInfo.system of
               system_i386_win32:
                 begin
                   Add('/machine:x86');
@@ -964,7 +964,7 @@ implementation
               begin
                 Add('/dll');
                 Add('/noimplib');
-                if target_info.system=system_i386_win32 then
+                if TargetInfo.system=system_i386_win32 then
                   begin
                     if apptype=app_gui then
                       Add('/entry:DLLWinMainCRTStartup')
@@ -977,7 +977,7 @@ implementation
                 else
                   Add('/entry:_DLLMainCRTStartup');
               end
-            else if target_info.system=system_i386_win32 then
+            else if TargetInfo.system=system_i386_win32 then
               begin
                 if apptype=app_gui then
                   Add('/entry:WinMainCRTStartup')
@@ -1005,9 +1005,9 @@ implementation
               Add('/opt:ref,noicf')
             else
               Add('/opt:noref,noicf');
-            if cs_link_strip in current_settings.globalswitches then
+            if cs_link_strip in CurrentSettings.globalswitches then
               Add('/debug:none')
-            else if cs_debuginfo in current_settings.moduleswitches then
+            else if cs_debuginfo in CurrentSettings.moduleswitches then
               Add('/debug:dwarf');
             if RelocSection then
               Add('/fixed:no')
@@ -1034,10 +1034,10 @@ implementation
                 Add('/stack:'+tostr(StackReserve)+','+tostr(minstacksize))
               else
                 Add('/stack:'+tostr(StackReserve));
-            if cs_link_map in current_settings.globalswitches then
+            if cs_link_map in CurrentSettings.globalswitches then
               Add('/map:'+MaybeQuoted(ChangeFileExt(OutputFile,'.map')));
 
-            HPath:=TCmdStrListItem(current_module.locallibrarysearchpath.First);
+            HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
             while assigned(HPath) do
               begin
                 { A trailing backslash would escape the closing response-file quote. }
@@ -1066,16 +1066,16 @@ implementation
             while not SharedLibFiles.Empty do
               begin
                 S:=SharedLibFiles.GetFirst;
-                if FindLibraryFile(S,target_info.staticClibprefix,target_info.staticClibext,S2) then
+                if FindLibraryFile(S,TargetInfo.staticClibprefix,TargetInfo.staticClibext,S2) then
                   AddFileName(MaybeQuoted(S2))
                 else
                   begin
-                    if Pos(target_info.sharedlibprefix,S)=1 then
-                      Delete(S,1,Length(target_info.sharedlibprefix));
-                    I:=Pos(target_info.sharedlibext,S);
+                    if Pos(TargetInfo.sharedlibprefix,S)=1 then
+                      Delete(S,1,Length(TargetInfo.sharedlibprefix));
+                    I:=Pos(TargetInfo.sharedlibext,S);
                     if I>0 then
-                      Delete(S,I,Length(target_info.sharedlibext));
-                    AddFileName(MaybeQuoted(target_info.staticClibprefix+S+target_info.staticClibext));
+                      Delete(S,I,Length(TargetInfo.sharedlibext));
+                    AddFileName(MaybeQuoted(TargetInfo.staticClibprefix+S+TargetInfo.staticClibext));
                   end;
               end;
             if not DefFile.Empty then
@@ -1094,27 +1094,27 @@ implementation
       var
         CmdStr : TCmdStr;
       begin
-        if not(cs_link_nolink in current_settings.globalswitches) then
+        if not(cs_link_nolink in CurrentSettings.globalswitches) then
           Message1(exec_i_linking,OutputFile);
         if not WriteLLDResponseFile(OutputFile,IsDLL) then
           exit(false);
         CmdStr:='@'+MaybeQuoted(outputexedir+Info.ResName);
         DoLLDLink:=DoExec(FindUtil('lld-link'),CmdStr,true,false);
         if DoLLDLink and
-           not(cs_link_nolink in current_settings.globalswitches) then
+           not(cs_link_nolink in CurrentSettings.globalswitches) then
           DeleteFile(outputexedir+Info.ResName);
       end;
 
 
     function TExternalLinkerWin64LLD.MakeExecutable:boolean;
       begin
-        MakeExecutable:=DoLLDLink(current_module.exefilename,false);
+        MakeExecutable:=DoLLDLink(CurrentModule.exefilename,false);
       end;
 
 
     function TExternalLinkerWin64LLD.MakeSharedLibrary:boolean;
       begin
-        MakeSharedLibrary:=DoLLDLink(current_module.sharedlibfilename,true);
+        MakeSharedLibrary:=DoLLDLink(CurrentModule.sharedlibfilename,true);
       end;
 
 
@@ -1136,14 +1136,14 @@ implementation
         i : longint;
         ExtName : string;
       begin
-        for i:=0 to current_module.dllscannerinputlist.count-1 do
+        for i:=0 to CurrentModule.dllscannerinputlist.count-1 do
           begin
-            ExtName:=current_module.dllscannerinputlist.NameOfIndex(i);
+            ExtName:=CurrentModule.dllscannerinputlist.NameOfIndex(i);
             if (ExtName=funcname) then
               begin
-                current_module.AddExternalImport(dllname,funcname,funcname,0,false,false);
+                CurrentModule.AddExternalImport(dllname,funcname,funcname,0,false,false);
                 importfound:=true;
-                current_module.dllscannerinputlist.Delete(i);
+                CurrentModule.dllscannerinputlist.Delete(i);
                 exit;
               end;
           end;
@@ -1157,18 +1157,18 @@ implementation
       begin
         result:=false;
         { is there already an import library the we will use that one }
-        if FindLibraryFile(binname,target_info.staticClibprefix,target_info.staticClibext,hs) then
+        if FindLibraryFile(binname,TargetInfo.staticClibprefix,TargetInfo.staticClibext,hs) then
           exit;
         { check if we can find the dll }
         hs:=binname;
         if ExtractFileExt(hs)='' then
-          hs:=ChangeFileExt(hs,target_info.sharedlibext);
+          hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
         if not FindDll(hs,dllname) then
           exit;
         importfound:=false;
         ReadDLLImports(dllname,@CheckDLLFunc);
         if importfound then
-          current_module.dllscannerinputlist.Pack;
+          CurrentModule.dllscannerinputlist.Pack;
         result:=importfound;
       end;
 

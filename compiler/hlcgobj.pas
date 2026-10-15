@@ -631,16 +631,16 @@ unit hlcgobj;
 
           { if p is a boolean expression, turns p.location into a LOC_JUMP with
             jumps to generated true and false labels; otherwise internalerrors }
-          procedure maketojumpbool(list: TAsmList; p: tnode);
+          procedure maketojumpbool(list: TAsmList; p: TNode);
           { same as above, but using predefined true/false labels instead of
             by generating new ones }
-          procedure maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel);virtual;
+          procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel);virtual;
           { if the result of n is a LOC_C(..)REGISTER, try to find the corresponding
             loadn and change its location to a new register (= SSA). In case reload
             is true, transfer the old to the new register                            }
-          procedure maybe_change_load_node_reg(list: TAsmList; var n: tnode; reload: boolean); virtual;
+          procedure maybe_change_load_node_reg(list: TAsmList; var n: TNode; reload: boolean); virtual;
          private
-          function do_replace_node_regs(var n: tnode; para: pointer): foreachnoderesult; virtual;
+          function do_replace_node_regs(var n: TNode; para: pointer): foreachnoderesult; virtual;
          public
 
           procedure gen_proc_symbol(list:TAsmList);
@@ -768,20 +768,20 @@ implementation
         item: TCmdStrListItem;
         global: boolean;
       begin
-        item:=TCmdStrListItem(current_procinfo.procdef.aliasnames.first);
+        item:=TCmdStrListItem(CurrentProcInfo.procdef.aliasnames.first);
         firstitem:=item;
-        global:=current_procinfo.procdef.needsglobalasmsym;
+        global:=CurrentProcInfo.procdef.needsglobalasmsym;
         while assigned(item) do
           begin
             { Record emitted entry points, rather than declarations: generic
               templates can have assembler names without executable bodies. }
-            if global and (tf_supports_packages in target_info.flags) then
-              current_module.add_public_asmsym(item.str,AB_GLOBAL,AT_FUNCTION);
+            if global and (tf_supports_packages in TargetInfo.flags) then
+              CurrentModule.add_public_asmsym(item.str,AB_GLOBAL,AT_FUNCTION);
             { alias procedure entry symbols via ".set" on Darwin, otherwise
               they can be interpreted as all different starting symbols of
               subsections and be reordered }
             if (item<>firstitem) and
-               (target_info.system in systems_darwin) then
+               (TargetInfo.system in systems_darwin) then
               begin
                 { the .set already defines the symbol, so can't emit a tai_symbol as that will redefine it }
                 if global then
@@ -796,15 +796,15 @@ implementation
             else
               begin
                 if global then
-                  list.concat(Tai_symbol.createname_global(item.str,AT_FUNCTION,0,current_procinfo.procdef))
+                  list.concat(Tai_symbol.createname_global(item.str,AT_FUNCTION,0,CurrentProcInfo.procdef))
                 else
-                  list.concat(Tai_symbol.Createname_hidden(item.str,AT_FUNCTION,0,current_procinfo.procdef));
-                if not(af_stabs_use_function_absolute_addresses in target_asm.flags) then
+                  list.concat(Tai_symbol.Createname_hidden(item.str,AT_FUNCTION,0,CurrentProcInfo.procdef));
+                if not(af_stabs_use_function_absolute_addresses in TargetAsm.flags) then
                   list.concat(Tai_function_name.create(item.str));
               end;
             item:=TCmdStrListItem(item.next);
           end;
-        current_procinfo.procdef.procstarttai:=tai(list.last);
+        CurrentProcInfo.procdef.procstarttai:=tai(list.last);
       end;
 
     class procedure thlcgobjhelpers.record_generated_code_for_procdef(pd: tprocdef; code, data: TAsmList);
@@ -818,28 +818,28 @@ implementation
         else
           alt:=al_pure_assembler;
         { add the procedure to the al_procedures }
-        maybe_new_object_file(current_asmdata.asmlists[alt]);
+        maybe_new_object_file(CurrentAsmData.asmlists[alt]);
   {$ifdef symansistr}
         if pd.section<>'' then
-          procsection:=new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section),getprocalign)
+          procsection:=new_proc_section(CurrentAsmData.asmlists[alt],sec_user,lower(pd.section),getprocalign)
   {$else symansistr}
         if assigned(pd.section) then
-          procsection:=new_proc_section(current_asmdata.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
+          procsection:=new_proc_section(CurrentAsmData.asmlists[alt],sec_user,lower(pd.section^),getprocalign)
   {$endif symansistr}
         else
-          procsection:=new_section(current_asmdata.asmlists[alt],sec_code,lower(pd.mangledname),getprocalign);
-        if assigned(current_procinfo) and (current_procinfo.procdef=pd) then
+          procsection:=new_section(CurrentAsmData.asmlists[alt],sec_code,lower(pd.mangledname),getprocalign);
+        if assigned(CurrentProcInfo) and (CurrentProcInfo.procdef=pd) then
           begin
             if not assigned(procsection) then
-              procsection:=tai_section(current_asmdata.asmlists[alt].last);
-            if assigned(current_procinfo.nexus_profile_section) then
-              current_procinfo.nexus_profile_section.AssociativeSection:=procsection;
+              procsection:=tai_section(CurrentAsmData.asmlists[alt].last);
+            if assigned(CurrentProcInfo.nexus_profile_section) then
+              CurrentProcInfo.nexus_profile_section.AssociativeSection:=procsection;
           end;
-        current_asmdata.asmlists[alt].concatlist(code);
+        CurrentAsmData.asmlists[alt].concatlist(code);
         { save local data (castable) also in the same file }
         if assigned(data) and
            (not data.empty) then
-          current_asmdata.asmlists[alt].concatlist(data);
+          CurrentAsmData.asmlists[alt].concatlist(data);
       end;
 
 
@@ -1169,7 +1169,7 @@ implementation
                        begin
                          a_load_ref_reg(list,u32inttype,location^.def,tmpref,location^.register);
                          dec(sizeleft,4);
-                         if target_info.endian=endian_big then
+                         if TargetInfo.endian=endian_big then
                            a_op_const_reg(list,OP_SHL,location^.def,sizeleft*8,location^.register);
                          inc(tmpref.offset,4);
                          reghasvalue:=true;
@@ -1182,7 +1182,7 @@ implementation
                          dec(sizeleft,2);
                          if reghasvalue then
                            begin
-                             if target_info.endian=endian_big then
+                             if TargetInfo.endian=endian_big then
                                a_op_const_reg(list,OP_SHL,location^.def,sizeleft*8,tmpreg)
                              else
                                a_op_const_reg(list,OP_SHL,location^.def,(orgsizeleft-(sizeleft+2))*8,tmpreg);
@@ -1190,7 +1190,7 @@ implementation
                            end
                          else
                            begin
-                             if target_info.endian=endian_big then
+                             if TargetInfo.endian=endian_big then
                                a_op_const_reg_reg(list,OP_SHL,location^.def,sizeleft*8,tmpreg,location^.register)
                              else
                                a_load_reg_reg(list,location^.def,location^.def,tmpreg,location^.register);
@@ -1205,7 +1205,7 @@ implementation
                          dec(sizeleft,1);
                          if reghasvalue then
                            begin
-                             if target_info.endian=endian_little then
+                             if TargetInfo.endian=endian_little then
                                a_op_const_reg(list,OP_SHL,location^.def,(orgsizeleft-(sizeleft+1))*8,tmpreg);
                              a_op_reg_reg(list,OP_OR,location^.def,tmpreg,location^.register)
                            end
@@ -1637,7 +1637,7 @@ implementation
           { can't use a_load_reg_subsetreg to merge the results, as that one
             does not support sizes > AIntBits either }
           tmpreg:=hlcg.getintregister(list,tosize);
-          if target_info.endian=endian_big then
+          if TargetInfo.endian=endian_big then
             begin
               a_op_const_reg_reg(list,OP_SHL,tosize,sref.bitlen-AIntBits,valuereg,tmpreg);
               if is_signed(fromsubsetsize) then
@@ -1684,7 +1684,7 @@ implementation
               tosreg.subsetreg:=valuereg;
               tosreg.subsetregsize:=def_cgsize(aluuinttype);
               { subsetregs always count bits from right to left }
-              if (target_info.endian=endian_big) then
+              if (TargetInfo.endian=endian_big) then
                 tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
               else
                 tosreg.startbit:=sref.startbit;
@@ -1696,7 +1696,7 @@ implementation
             begin
               if (sref.startbit<>0) then
                 internalerror(2006081510);
-              if (target_info.endian=endian_big) then
+              if (TargetInfo.endian=endian_big) then
                 begin
                   a_op_reg_reg(list,OP_SHL,aluuinttype,sref.bitindexreg,valuereg);
                   if is_signed(fromsubsetsize) then
@@ -1770,12 +1770,12 @@ implementation
           tmpsref.bitlen:=AIntBits;
           fromreg1:=hlcg.getintregister(list,aluuinttype);
           a_load_reg_reg(list,fromsize,aluuinttype,fromreg,fromreg1);
-          if target_info.endian=endian_big then
+          if TargetInfo.endian=endian_big then
             begin
               inc(tmpsref.ref.offset,sref.bitlen-AIntBits);
             end;
           a_load_reg_subsetref(list,aluuinttype,aluuinttype,fromreg1,tmpsref);
-          if target_info.endian=endian_big then
+          if TargetInfo.endian=endian_big then
             begin
               tmpsref.ref.offset:=sref.ref.offset;
             end
@@ -1831,12 +1831,12 @@ implementation
             internalerror(2019052902);
           tmpsref:=sref;
           tmpsref.bitlen:=AIntBits;
-          if target_info.endian=endian_big then
+          if TargetInfo.endian=endian_big then
             begin
               inc(tmpsref.ref.offset,sref.bitlen-AIntBits);
             end;
           a_load_const_subsetref(list,tosubsetsize,aint(a),tmpsref);
-          if target_info.endian=endian_big then
+          if TargetInfo.endian=endian_big then
             begin
               tmpsref.ref.offset:=sref.ref.offset;
             end
@@ -1912,7 +1912,7 @@ implementation
     begin
       tmpvalue:=getintregister(list,valuesize);
 
-      if (target_info.endian=endian_little) then
+      if (TargetInfo.endian=endian_little) then
         begin
           { rotate value register "bitnumber" bits to the right }
           a_op_reg_reg_reg(list,OP_SHR,valuesize,bitnumber,value,tmpvalue);
@@ -2025,7 +2025,7 @@ implementation
     begin
       tmpvalue:=getintregister(list,destsize);
 
-      if (target_info.endian=endian_little) then
+      if (TargetInfo.endian=endian_little) then
         begin
           a_load_const_reg(list,destsize,1,tmpvalue);
           { rotate bit "bitnumber" bits to the left }
@@ -2225,7 +2225,7 @@ implementation
     var
       restbits: byte;
     begin
-      if (target_info.endian=endian_big) then
+      if (TargetInfo.endian=endian_big) then
         begin
           { valuereg contains the upper bits, extra_value_reg the lower }
           restbits:=(sref.bitlen-(loadbitsize-sref.startbit));
@@ -2277,7 +2277,7 @@ implementation
       inc(tmpref.offset,loadbitsize div 8);
       extra_value_reg:=getintregister(list,aluuinttype);
 
-      if (target_info.endian=endian_big) then
+      if (TargetInfo.endian=endian_big) then
         begin
           { since this is a dynamic index, it's possible that the value   }
           { is entirely in valuereg.                                      }
@@ -2299,7 +2299,7 @@ implementation
           tmpreg := getintregister(list,aluuinttype);
 
           { ensure we don't load anything past the end of the array }
-          current_asmdata.getjumplabel(hl);
+          CurrentAsmData.getjumplabel(hl);
           a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
           { the bits in extra_value_reg (if any) start at the most significant bit =>         }
@@ -2325,7 +2325,7 @@ implementation
           a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,valuereg);
 
           { ensure we don't load anything past the end of the array }
-          current_asmdata.getjumplabel(hl);
+          CurrentAsmData.getjumplabel(hl);
           a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
           { Y-x = -(Y-x) }
@@ -2382,7 +2382,7 @@ implementation
               tosreg.subsetreg:=valuereg;
               tosreg.subsetregsize:=def_cgsize(aluuinttype);
               { subsetregs always count bits from right to left }
-              if (target_info.endian=endian_big) then
+              if (TargetInfo.endian=endian_big) then
                 tosreg.startbit:=loadbitsize-(sref.startbit+sref.bitlen)
               else
                 tosreg.startbit:=sref.startbit;
@@ -2401,7 +2401,7 @@ implementation
               { zero the bits we have to insert }
               if (slopt<>SL_SETMAX) then
                 begin
-                  if (slopt=SL_SETZERO) and (sref.bitlen=1) and (target_info.endian=endian_little) then
+                  if (slopt=SL_SETZERO) and (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
                     begin
                       a_bit_set_reg_reg(list,false,aluuinttype,aluuinttype,sref.bitindexreg,valuereg);
 
@@ -2414,7 +2414,7 @@ implementation
                   else
                     begin
                       maskreg:=getintregister(list,aluuinttype);
-                      if (target_info.endian = endian_big) then
+                      if (TargetInfo.endian = endian_big) then
                         begin
                           a_load_const_reg(list,aluuinttype,tcgint((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen),maskreg);
                           a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,maskreg);
@@ -2437,7 +2437,7 @@ implementation
                     a_load_reg_reg(list,fromsize,aluuinttype,fromreg,tmpreg)
                   { setting of a single bit?
                     then we might take advantage of the CPU's bit set instruction }
-                  else if (sref.bitlen=1) and (target_info.endian=endian_little) then
+                  else if (sref.bitlen=1) and (TargetInfo.endian=endian_little) then
                     begin
                       a_bit_set_reg_reg(list,true,aluuinttype,aluuinttype,sref.bitindexreg,valuereg);
 
@@ -2451,7 +2451,7 @@ implementation
                     a_load_const_reg(list,aluuinttype,tcgint((aword(1) shl sref.bitlen)-1), tmpreg)
                   else
                     a_load_const_reg(list,aluuinttype,-1,tmpreg);
-                  if (target_info.endian=endian_big) then
+                  if (TargetInfo.endian=endian_big) then
                     begin
                       a_op_const_reg(list,OP_SHL,aluuinttype,loadbitsize-sref.bitlen,tmpreg);
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
@@ -2500,7 +2500,7 @@ implementation
               { transfer first part }
               fromsreg.bitlen:=loadbitsize-sref.startbit;
               tosreg.bitlen:=fromsreg.bitlen;
-              if (target_info.endian=endian_big) then
+              if (TargetInfo.endian=endian_big) then
                 begin
                   { valuereg must contain the upper bits of the value at bits [0..loadbitsize-startbit] }
 
@@ -2535,7 +2535,7 @@ implementation
 {$endif}
 
               { transfer second part }
-              if (target_info.endian = endian_big) then
+              if (TargetInfo.endian = endian_big) then
                 begin
                   { extra_value_reg must contain the lower bits of the value at bits  }
                   { [(loadbitsize-(bitlen-(loadbitsize-startbit)))..loadbitsize]  }
@@ -2581,7 +2581,7 @@ implementation
               if (slopt <> SL_SETMAX) then
                 begin
                   maskreg := getintregister(list,aluuinttype);
-                  if (target_info.endian = endian_big) then
+                  if (TargetInfo.endian = endian_big) then
                     begin
                       a_load_const_reg(list,aluuinttype,tcgint(((aword(1) shl sref.bitlen)-1) shl (loadbitsize-sref.bitlen)),maskreg);
                       a_op_reg_reg(list,OP_SHR,aluuinttype,sref.bitindexreg,maskreg);
@@ -2606,7 +2606,7 @@ implementation
                     a_load_const_reg(list,aluuinttype,tcgint((aword(1) shl sref.bitlen) - 1), tmpreg)
                   else
                     a_load_const_reg(list,aluuinttype,-1,tmpreg);
-                  if (target_info.endian = endian_big) then
+                  if (TargetInfo.endian = endian_big) then
                     begin
                       a_op_const_reg(list,OP_SHL,aluuinttype,loadbitsize-sref.bitlen,tmpreg);
                       if not(slopt in [SL_REGNOSRCMASK,SL_SETMAX]) then
@@ -2628,7 +2628,7 @@ implementation
               a_load_reg_ref(list,loadsize,loadsize,tmpreg,sref.ref);
 
               { make sure we do not read/write past the end of the array }
-              current_asmdata.getjumplabel(hl);
+              CurrentAsmData.getjumplabel(hl);
               a_cmp_const_reg_label(list,aluuinttype,OC_BE,loadbitsize-sref.bitlen,sref.bitindexreg,hl);
 
               a_load_ref_reg(list,loadsize,aluuinttype,tmpref,extra_value_reg);
@@ -2650,7 +2650,7 @@ implementation
               if (slopt<>SL_SETMAX) then
                 begin
                   maskreg:=getintregister(list,aluuinttype);
-                  if (target_info.endian=endian_big) then
+                  if (TargetInfo.endian=endian_big) then
                     begin
                       a_op_const_reg_reg(list,OP_ADD,aluuinttype,sref.bitlen-2*loadbitsize,sref.bitindexreg,tmpindexreg);
                       a_op_reg_reg(list,OP_NEG,aluuinttype,tmpindexreg,tmpindexreg);
@@ -2672,7 +2672,7 @@ implementation
 
               if (slopt<>SL_SETZERO) then
                 begin
-                  if (target_info.endian=endian_big) then
+                  if (TargetInfo.endian=endian_big) then
                     a_op_reg_reg(list,OP_SHL,aluuinttype,tmpindexreg,tmpreg)
                   else
                     begin
@@ -2767,7 +2767,7 @@ implementation
       result.subsetreg:=setreg;
       result.subsetregsize:=def_cgsize(setregsize);
       { subsetregs always count from the least significant to the most significant bit }
-      if (target_info.endian=endian_big) then
+      if (TargetInfo.endian=endian_big) then
         result.startbit:=(setregsize.size*8)-bitnumber-1
       else
         result.startbit:=bitnumber;
@@ -3603,7 +3603,7 @@ implementation
             { division by 1 returns result }
             if a = 1 then
               op:=OP_NONE
-            else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in current_settings.localswitches) then
+            else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.localswitches) then
               begin
                 a := powerval;
                 op:= OP_SHR;
@@ -3621,7 +3621,7 @@ implementation
              else
                if a=0 then
                  op:=OP_MOVE
-             else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in current_settings.localswitches)  then
+             else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.localswitches)  then
                begin
                  a := powerval;
                  op:= OP_SHL;
@@ -3700,11 +3700,11 @@ implementation
       cgpara1 : TCGPara;
       pd      : tprocdef;
     begin
-      if (cs_check_object in current_settings.localswitches) or
-         (cs_check_range in current_settings.localswitches) then
+      if (cs_check_object in CurrentSettings.localswitches) or
+         (cs_check_range in CurrentSettings.localswitches) then
        begin
          pd:=search_system_proc('fpc_handleerror');
-         current_asmdata.getjumplabel(oklabel);
+         CurrentAsmData.getjumplabel(oklabel);
          a_cmp_const_reg_label(list,selftype,OC_NE,0,reg,oklabel);
          cgpara1.init;
          paramanager.getcgtempparaloc(list,pd,1,cgpara1);
@@ -4018,9 +4018,9 @@ implementation
 
   function thlcgobj.def_needs_indirect(t:tdef):boolean;
     begin
-      result:=(tf_supports_packages in target_info.flags) and
-                (target_info.system in systems_indirect_var_imports) and
-                (findunitsymtable(t.owner).moduleid<>current_module.moduleid);
+      result:=(tf_supports_packages in TargetInfo.flags) and
+                (TargetInfo.system in systems_indirect_var_imports) and
+                (findunitsymtable(t.owner).moduleid<>CurrentModule.moduleid);
     end;
 
   procedure thlcgobj.g_rangecheck(list: TAsmList; const l: tlocation; fromdef, todef: tdef);
@@ -4041,7 +4041,7 @@ implementation
       from_signed, to_signed: boolean;
     begin
       { range checking on and range checkable value? }
-      if not(cs_check_range in current_settings.localswitches) or
+      if not(cs_check_range in CurrentSettings.localswitches) or
          not(fromdef.typ in [orddef,enumdef]) or
          { C-style booleans can't really fail range checks, }
          { all values are always valid                      }
@@ -4217,7 +4217,7 @@ implementation
       hreg:=getintregister(list,maxdef);
       a_load_loc_reg(list,fromdef,maxdef,l,hreg);
       a_op_const_reg(list,OP_SUB,maxdef,tcgint(int64(lto)),hreg);
-      current_asmdata.getjumplabel(neglabel);
+      CurrentAsmData.getjumplabel(neglabel);
       {
       if from_signed then
         a_cmp_const_reg_label(list,OS_INT,OC_GTE,aint(hto-lto),hreg,neglabel)
@@ -4245,7 +4245,7 @@ implementation
       { because some abis don't support dynamic stack allocation properly
         open array value parameters are copied onto the heap
       }
-      include(current_procinfo.flags, pi_has_open_array_parameter);
+      include(CurrentProcInfo.flags, pi_has_open_array_parameter);
 
       { calculate necessary memory }
 
@@ -4341,15 +4341,15 @@ implementation
       sym: tasmsymbol;
     begin
       maybe_new_object_file(list);
-      new_section(list,sec_code,wrappername,target_info.alignment.procalign);
+      new_section(list,sec_code,wrappername,TargetInfo.alignment.procalign);
       if global then
         begin
-          sym:=current_asmdata.DefineAsmSymbol(wrappername,AB_GLOBAL,AT_FUNCTION,procdef);
+          sym:=CurrentAsmData.DefineAsmSymbol(wrappername,AB_GLOBAL,AT_FUNCTION,procdef);
           list.concat(Tai_symbol.Create_global(sym,0));
         end
       else
         begin
-          sym:=current_asmdata.DefineAsmSymbol(wrappername,AB_PRIVATE_EXTERN,AT_FUNCTION,procdef);
+          sym:=CurrentAsmData.DefineAsmSymbol(wrappername,AB_PRIVATE_EXTERN,AT_FUNCTION,procdef);
           list.concat(Tai_symbol.Create(sym,0));
         end;
       a_jmp_external_name(list,externalname);
@@ -4408,11 +4408,11 @@ implementation
         LOC_REFERENCE:
           begin
             if (fromloc.reference.base<>NR_NO) and
-               (fromloc.reference.base<>current_procinfo.framepointer) and
+               (fromloc.reference.base<>CurrentProcInfo.framepointer) and
                (fromloc.reference.base<>NR_STACK_POINTER_REG) then
               handle_reg_move(voidpointertype,fromloc.reference.base,toloc.reference.base,getregtype(fromloc.reference.base));
             if (fromloc.reference.index<>NR_NO) and
-               (fromloc.reference.index<>current_procinfo.framepointer) and
+               (fromloc.reference.index<>CurrentProcInfo.framepointer) and
                (fromloc.reference.index<>NR_STACK_POINTER_REG) then
               handle_reg_move(voidpointertype,fromloc.reference.index,toloc.reference.index,getregtype(fromloc.reference.index));
           end;
@@ -4525,7 +4525,7 @@ implementation
               a_load_const_reg(list,dst_size,-1,hregister)
             else
               a_load_const_reg(list,dst_size,1,hregister);
-            current_asmdata.getjumplabel(hl);
+            CurrentAsmData.getjumplabel(hl);
             a_jmp_always(list,hl);
             a_label(list,l.falselabel);
             a_load_const_reg(list,dst_size,0,hregister);
@@ -4626,7 +4626,7 @@ implementation
               a_load_const_ref(list,size,-1,r)
             else
               a_load_const_ref(list,size,1,r);
-            current_asmdata.getjumplabel(hl);
+            CurrentAsmData.getjumplabel(hl);
             a_jmp_always(list,hl);
             a_label(list,l.falselabel);
             a_load_const_ref(list,size,0,r);
@@ -4741,15 +4741,15 @@ implementation
       end;
 
 
-  procedure thlcgobj.maketojumpbool(list: TAsmList; p: tnode);
+  procedure thlcgobj.maketojumpbool(list: TAsmList; p: TNode);
     var
       truelabel,
       falselabel: tasmlabel;
     begin
        if p.location.loc<>LOC_JUMP then
          begin
-           current_asmdata.getjumplabel(truelabel);
-           current_asmdata.getjumplabel(falselabel);
+           CurrentAsmData.getjumplabel(truelabel);
+           CurrentAsmData.getjumplabel(falselabel);
          end
        else
          begin
@@ -4760,14 +4760,14 @@ implementation
     end;
 
 
-  procedure thlcgobj.maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel);
+  procedure thlcgobj.maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel);
     var
-      storepos : tfileposinfo;
+      storepos : TFilePosInfo;
     begin
        if tnf_error in p.transientflags then
          exit;
-       storepos:=current_filepos;
-       current_filepos:=p.fileinfo;
+       storepos:=CurrentFilePos;
+       CurrentFilePos:=p.fileinfo;
        if is_boolean(p.resultdef) then
          begin
             if is_constboolnode(p) then
@@ -4819,11 +4819,11 @@ implementation
          end
        else
          internalerror(2011010419);
-       current_filepos:=storepos;
+       CurrentFilePos:=storepos;
     end;
 
 
-  procedure thlcgobj.maybe_change_load_node_reg(list: TAsmList; var n: tnode; reload: boolean);
+  procedure thlcgobj.maybe_change_load_node_reg(list: TAsmList; var n: TNode; reload: boolean);
     var
       rr: treplaceregrec;
       varloc : tai_varloc;
@@ -4842,32 +4842,32 @@ implementation
             if (n.location.size in [OS_128,OS_S128]) then
               begin
                 rr.oldhi := n.location.register128.reghi;
-                rr.new := cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
-                rr.newhi := cg.getintregister(current_asmdata.CurrAsmList,OS_INT);
+                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
+                rr.newhi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_INT);
               end
             else
 {$else cpu64bitalu}
             if (n.location.size in [OS_64,OS_S64]) then
               begin
                 rr.oldhi := n.location.register64.reghi;
-                rr.new := cg.getintregister(current_asmdata.CurrAsmList,OS_32);
-                rr.newhi := cg.getintregister(current_asmdata.CurrAsmList,OS_32);
+                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
+                rr.newhi := cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
               end
             else
 {$endif cpu64bitalu}
               if getregtype(rr.old)=R_ADDRESSREGISTER then
-                rr.new := hlcg.getaddressregister(current_asmdata.CurrAsmList,n.resultdef)
+                rr.new := hlcg.getaddressregister(CurrentAsmData.CurrAsmList,n.resultdef)
               else
-                rr.new := cg.getintregister(current_asmdata.CurrAsmList,n.location.size);
+                rr.new := cg.getintregister(CurrentAsmData.CurrAsmList,n.location.size);
           end;
         LOC_CFPUREGISTER:
-          rr.new := cg.getfpuregister(current_asmdata.CurrAsmList,n.location.size);
+          rr.new := cg.getfpuregister(CurrentAsmData.CurrAsmList,n.location.size);
 {$ifdef SUPPORT_MMX}
         LOC_CMMXREGISTER:
-          rr.new := tcgx86(cg).getmmxregister(current_asmdata.CurrAsmList);
+          rr.new := tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
 {$endif SUPPORT_MMX}
         LOC_CMMREGISTER:
-          rr.new := cg.getmmregister(current_asmdata.CurrAsmList,n.location.size);
+          rr.new := cg.getmmregister(CurrentAsmData.CurrAsmList,n.location.size);
         else
           exit;
       end;
@@ -4875,12 +4875,12 @@ implementation
       { self is implicitly returned from constructors, even if there are no
         references to it; additionally, funcretsym is not set for constructor
         procdefs }
-      if (current_procinfo.procdef.proctypeoption=potype_constructor) then
-        rr.ressym:=tsym(current_procinfo.procdef.parast.Find('self'))
-      else if not is_void(current_procinfo.procdef.returndef) and
-         assigned(current_procinfo.procdef.funcretsym) and
-         (tabstractvarsym(current_procinfo.procdef.funcretsym).refs <> 0) then
-        rr.ressym:=current_procinfo.procdef.funcretsym;
+      if (CurrentProcInfo.procdef.proctypeoption=potype_constructor) then
+        rr.ressym:=tsym(CurrentProcInfo.procdef.parast.Find('self'))
+      else if not is_void(CurrentProcInfo.procdef.returndef) and
+         assigned(CurrentProcInfo.procdef.funcretsym) and
+         (tabstractvarsym(CurrentProcInfo.procdef.funcretsym).refs <> 0) then
+        rr.ressym:=CurrentProcInfo.procdef.funcretsym;
 
       if not foreachnode(n,@do_replace_node_regs,@rr) then
         exit;
@@ -4949,7 +4949,7 @@ implementation
     end;
 
 
-  function thlcgobj.do_replace_node_regs(var n: tnode; para: pointer): foreachnoderesult;
+  function thlcgobj.do_replace_node_regs(var n: TNode; para: pointer): foreachnoderesult;
     var
       rr: preplaceregrec absolute para;
     begin
@@ -5045,20 +5045,20 @@ implementation
 
   procedure thlcgobj.gen_proc_symbol_end(list: TAsmList);
     begin
-      if nexus_profile_proc_eligible(current_procinfo) then
+      if nexus_profile_proc_eligible(CurrentProcInfo) then
         begin
-          if not assigned(current_procinfo.nexus_profile_endlabel) then
-            current_asmdata.getjumplabel(current_procinfo.nexus_profile_endlabel);
-          list.concat(tai_label.create(current_procinfo.nexus_profile_endlabel));
+          if not assigned(CurrentProcInfo.nexus_profile_endlabel) then
+            CurrentAsmData.getjumplabel(CurrentProcInfo.nexus_profile_endlabel);
+          list.concat(tai_label.create(CurrentProcInfo.nexus_profile_endlabel));
           emit_nexus_profile_descriptor;
         end;
-      if (current_procinfo.procdef.proctypeoption=potype_proginit) and
-         (cs_nexus_profile in current_settings.moduleswitches) and
-         (target_info.system=system_x86_64_win64) and
-         not current_module.islibrary then
+      if (CurrentProcInfo.procdef.proctypeoption=potype_proginit) and
+         (cs_nexus_profile in CurrentSettings.moduleswitches) and
+         (TargetInfo.system=system_x86_64_win64) and
+         not CurrentModule.islibrary then
         emit_nexus_profile_module_data;
-      list.concat(Tai_symbol_end.Createname(current_procinfo.procdef.mangledname));
-      current_procinfo.procdef.procendtai:=tai(list.last);
+      list.concat(Tai_symbol_end.Createname(CurrentProcInfo.procdef.mangledname));
+      CurrentProcInfo.procdef.procendtai:=tai(list.last);
     end;
 
 
@@ -5091,17 +5091,17 @@ implementation
   procedure thlcgobj.gen_initialize_code(list: TAsmList);
     begin
       { initialize global register variables }
-      case current_procinfo.procdef.proctypeoption of
+      case CurrentProcInfo.procdef.proctypeoption of
         potype_unitinit,
         potype_proginit:
-          TSymtable(current_module.localsymtable).SymList.ForEachCall(@initialize_regvars,list);
+          TSymtable(CurrentModule.localsymtable).SymList.ForEachCall(@initialize_regvars,list);
         else
           ;
       end;
 
       { initialises temp. ansi/wide string data }
-      if (current_procinfo.procdef.proctypeoption<>potype_exceptfilter) or
-         (target_info.system=system_aarch64_win64) then
+      if (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) or
+         (TargetInfo.system=system_aarch64_win64) then
         inittempvariables(list);
     end;
 
@@ -5110,30 +5110,30 @@ implementation
       old_current_procinfo: tprocinfo;
       for_finalization: boolean;
     begin
-      old_current_procinfo:=current_procinfo;
+      old_current_procinfo:=CurrentProcInfo;
       for_finalization:=false;
-      if (current_procinfo.procdef.proctypeoption=potype_exceptfilter) then
+      if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
         begin
-          if (current_procinfo.parent.finalize_procinfo<>current_procinfo) then
+          if (CurrentProcInfo.parent.finalize_procinfo<>CurrentProcInfo) then
             exit;
-          current_procinfo:=current_procinfo.parent;
+          CurrentProcInfo:=CurrentProcInfo.parent;
           for_finalization:=true;
         end;
 
       { finalize paras data }
-      if assigned(current_procinfo.procdef.parast) and
-         not(po_assembler in current_procinfo.procdef.procoptions) then
-        current_procinfo.procdef.parast.SymList.ForEachCall(@final_paras,list);
+      if assigned(CurrentProcInfo.procdef.parast) and
+         not(po_assembler in CurrentProcInfo.procdef.procoptions) then
+        CurrentProcInfo.procdef.parast.SymList.ForEachCall(@final_paras,list);
 
       { finalize temporary data }
       finalizetempvariables(list,for_finalization);
 
-      current_procinfo:=old_current_procinfo;
+      CurrentProcInfo:=old_current_procinfo;
     end;
 
   procedure thlcgobj.varsym_set_localloc(list: TAsmList; vs: tabstractnormalvarsym);
     begin
-      if cs_asm_source in current_settings.globalswitches then
+      if cs_asm_source in CurrentSettings.globalswitches then
         begin
           case vs.initialloc.loc of
             LOC_REFERENCE :
@@ -5160,14 +5160,14 @@ implementation
   procedure thlcgobj.gen_entry_code(list: TAsmList);
     begin
       { call startup helpers from main program }
-      if (current_procinfo.procdef.proctypeoption=potype_proginit) then
+      if (CurrentProcInfo.procdef.proctypeoption=potype_proginit) then
        begin
-         if cs_nexus_profile in current_settings.moduleswitches then
+         if cs_nexus_profile in CurrentSettings.moduleswitches then
            gen_nexus_profile_module_call(list,'nxp_module_register');
          { initialize units }
-         if not(current_module.islibrary) then
+         if not(CurrentModule.islibrary) then
            begin
-             if tf_init_final_units_by_calls in target_info.flags then
+             if tf_init_final_units_by_calls in TargetInfo.flags then
                begin
                  { Only insert call if there are init functions }
                  if cnodeutils.has_init_list then
@@ -5182,7 +5182,7 @@ implementation
 
       { The program body starts after its units. The image was already
         registered before unit initialization. }
-      if nexus_profile_proc_eligible(current_procinfo) then
+      if nexus_profile_proc_eligible(CurrentProcInfo) then
         gen_nexus_profile_call(list,'nxp_enter');
 
       list.concat(Tai_force_line.Create);
@@ -5193,12 +5193,12 @@ implementation
       { TODO: create high level version (create compilerproc in system unit,
           look up procdef, use hlcgobj.a_call_name()) }
 
-      if nexus_profile_proc_eligible(current_procinfo) then
+      if nexus_profile_proc_eligible(CurrentProcInfo) then
         gen_nexus_profile_call(list,'nxp_leave');
 
       { call __EXIT for main program }
-      if (not current_module.islibrary) and
-         (current_procinfo.procdef.proctypeoption=potype_proginit) then
+      if (not CurrentModule.islibrary) and
+         (CurrentProcInfo.procdef.proctypeoption=potype_proginit) then
         g_call_system_proc(list,'fpc_do_exit',[],nil).resetiftemp;
     end;
 
@@ -5220,11 +5220,11 @@ implementation
     var
       symname: string;
     begin
-      if assigned(current_procinfo.nexus_profile_descsym) then
+      if assigned(CurrentProcInfo.nexus_profile_descsym) then
         exit;
-      symname:='NXP_DESC_'+current_module.modulename^+'_'+
-        current_procinfo.procdef.unique_id_str;
-      current_procinfo.nexus_profile_descsym:=current_asmdata.DefineAsmSymbol(
+      symname:='NXP_DESC_'+CurrentModule.modulename^+'_'+
+        CurrentProcInfo.procdef.unique_id_str;
+      CurrentProcInfo.nexus_profile_descsym:=CurrentAsmData.DefineAsmSymbol(
         symname,AB_LOCAL,AT_DATA,voidpointertype);
     end;
 
@@ -5236,7 +5236,7 @@ implementation
     begin
       ensure_nexus_profile_descriptor_symbol;
 {$ifdef x86_64}
-      current_module.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      CurrentModule.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
       para.init;
       para.def:=voidpointertype;
       para.size:=OS_ADDR;
@@ -5246,7 +5246,7 @@ implementation
       paraloc^.size:=OS_ADDR;
       paraloc^.loc:=LOC_REGISTER;
       paraloc^.register:=NR_RCX;
-      reference_reset_symbol(href,current_procinfo.nexus_profile_descsym,0,
+      reference_reset_symbol(href,CurrentProcInfo.nexus_profile_descsym,0,
         sizeof(pint),[]);
       a_loadaddr_ref_cgpara(list,voidpointertype,href,para);
       allocallcpuregisters(list);
@@ -5267,8 +5267,8 @@ implementation
       modulesym: TAsmSymbol;
     begin
 {$ifdef x86_64}
-      current_module.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
-      modulesym:=current_asmdata.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
+      CurrentModule.add_extern_asmsym(hookname,AB_EXTERNAL,AT_FUNCTION);
+      modulesym:=CurrentAsmData.RefAsmSymbol('__NXP_module_descriptor',AT_DATA);
       para.init;
       para.def:=voidpointertype;
       para.size:=OS_ADDR;
@@ -5304,11 +5304,11 @@ implementation
       tcb: ttai_typedconstbuilder;
     begin
       ensure_nexus_profile_descriptor_symbol;
-      pd:=current_procinfo.procdef;
+      pd:=CurrentProcInfo.procdef;
       name:=pd.fullprocname(true);
-      profunitname:=current_module.realmodulename^;
-      sourcefile:=get_source_file(current_procinfo.entrypos.moduleindex,
-        current_procinfo.entrypos.fileindex);
+      profunitname:=CurrentModule.realmodulename^;
+      sourcefile:=get_source_file(CurrentProcInfo.entrypos.moduleindex,
+        CurrentProcInfo.entrypos.fileindex);
       if assigned(sourcefile) then
         source:=sourcefile.path+sourcefile.name
       else
@@ -5317,49 +5317,49 @@ implementation
       stableid:=nexus_profile_hash64(key);
       tcb:=ctai_typedconstbuilder.create([]);
       if name='' then
-        namelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           nil,0,getansistringcodepage)
       else
-        namelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        namelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           @name[1],length(name),getansistringcodepage);
       if profunitname='' then
-        unitlabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           nil,0,getansistringcodepage)
       else
-        unitlabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        unitlabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           @profunitname[1],length(profunitname),getansistringcodepage);
       if source='' then
-        sourcelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           nil,0,getansistringcodepage)
       else
-        sourcelabel:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],
+        sourcelabel:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],
           @source[1],length(source),getansistringcodepage);
       tcb.free;
-      section:=new_section(current_procinfo.aktlocaldata,sec_user,
+      section:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$M_'+hexstr(int64(stableid),16),3);
-      current_procinfo.nexus_profile_section:=section;
-      current_procinfo.aktlocaldata.concat(tai_symbol.create(
-        current_procinfo.nexus_profile_descsym,NXP_DESC_SIZE));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(NXP_DESC_MAGIC));
-      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(NXP_DESC_ABI));
-      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(int64(stableid)));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym(
-        current_asmdata.RefAsmSymbol(pd.mangledname,AT_FUNCTION)));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym(
-        current_procinfo.nexus_profile_endlabel));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+      CurrentProcInfo.nexus_profile_section:=section;
+      CurrentProcInfo.aktlocaldata.concat(tai_symbol.create(
+        CurrentProcInfo.nexus_profile_descsym,NXP_DESC_SIZE));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(NXP_DESC_MAGIC));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_16bit(NXP_DESC_ABI));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_16bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_64bit(int64(stableid)));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym(
+        CurrentAsmData.RefAsmSymbol(pd.mangledname,AT_FUNCTION)));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym(
+        CurrentProcInfo.nexus_profile_endlabel));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym_offset(
         namelabel.lab,namelabel.ofs));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym_offset(
         unitlabel.lab,unitlabel.ofs));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym_offset(
         sourcelabel.lab,sourcelabel.ofs));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
-        current_procinfo.entrypos.line));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
-        current_procinfo.entrypos.column));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(
+        CurrentProcInfo.entrypos.line));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(
+        CurrentProcInfo.entrypos.column));
     end;
 
   procedure thlcgobj.emit_nexus_profile_module_data;
@@ -5371,39 +5371,39 @@ implementation
       startsection,endsection,modulesection: tai_section;
       startsym,endsym,modulesym: TAsmSymbol;
     begin
-      startsym:=current_asmdata.DefineAsmSymbol('__NXP_descriptor_start',
+      startsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_start',
         AB_GLOBAL,AT_DATA,voidpointertype);
-      endsym:=current_asmdata.DefineAsmSymbol('__NXP_descriptor_end',
+      endsym:=CurrentAsmData.DefineAsmSymbol('__NXP_descriptor_end',
         AB_GLOBAL,AT_DATA,voidpointertype);
-      modulesym:=current_asmdata.DefineAsmSymbol('__NXP_module_descriptor',
+      modulesym:=CurrentAsmData.DefineAsmSymbol('__NXP_module_descriptor',
         AB_GLOBAL,AT_DATA,voidpointertype);
 
-      modulesection:=new_section(current_procinfo.aktlocaldata,sec_user,
+      modulesection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$0',3);
-      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(modulesym,
+      CurrentProcInfo.aktlocaldata.concat(tai_symbol.create_global(modulesym,
         NXP_MODULE_SIZE));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(
         NXP_MODULE_MAGIC));
-      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_16bit(
         NXP_MODULE_ABI));
-      current_procinfo.aktlocaldata.concat(tai_const.create_16bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_32bit(0));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym_offset(
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_16bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_32bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym_offset(
         startsym,sizeof(QWord)));
-      current_procinfo.aktlocaldata.concat(tai_const.create_sym(endsym));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_sym(endsym));
 
-      startsection:=new_section(current_procinfo.aktlocaldata,sec_user,
+      startsection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$A',3);
-      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(startsym,
+      CurrentProcInfo.aktlocaldata.concat(tai_symbol.create_global(startsym,
         sizeof(QWord)));
-      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_64bit(0));
 
-      endsection:=new_section(current_procinfo.aktlocaldata,sec_user,
+      endsection:=new_section(CurrentProcInfo.aktlocaldata,sec_user,
         '.nxprof$Z',3);
-      current_procinfo.aktlocaldata.concat(tai_symbol.create_global(endsym,
+      CurrentProcInfo.aktlocaldata.concat(tai_symbol.create_global(endsym,
         sizeof(QWord)));
-      current_procinfo.aktlocaldata.concat(tai_const.create_64bit(0));
+      CurrentProcInfo.aktlocaldata.concat(tai_const.create_64bit(0));
       { Keep the locals assigned so builds with internal consistency checks can
         verify all three explicit sections were created. }
       if not assigned(modulesection) or not assigned(startsection) or
@@ -5429,10 +5429,10 @@ implementation
               initialised by the parent; only handler-local temps need zeroing.
               adjust_exceptfilter_ref converts parent temps to FP-relative,
               so if the base changed from the framepointer it is a parent temp. }
-            if (current_procinfo.procdef.proctypeoption=potype_exceptfilter) then
+            if (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
               begin
                 cg.adjust_exceptfilter_ref(href,false);
-                if href.base<>current_procinfo.framepointer then
+                if href.base<>CurrentProcInfo.framepointer then
                   begin
                     hp:=hp^.next;
                     continue;
@@ -5456,7 +5456,7 @@ implementation
             assigned(hp^.def) and
             is_managed_type(hp^.def) then
           begin
-            include(current_procinfo.flags,pi_needs_implicit_finally);
+            include(CurrentProcInfo.flags,pi_needs_implicit_finally);
             tg.temp_to_ref(hp,href);
             if for_finalization then
               cg.adjust_exceptfilter_ref(href,true);
@@ -5502,7 +5502,7 @@ implementation
              begin
                { initialize fpu regvar by loading from memory }
                reference_reset_symbol(href,
-                 current_asmdata.RefAsmSymbol(tstaticvarsym(p).mangledname,AT_DATA), 0,
+                 CurrentAsmData.RefAsmSymbol(tstaticvarsym(p).mangledname,AT_DATA), 0,
                  var_align(tstaticvarsym(p).vardef.alignment),[]);
                a_loadfpu_ref_reg(TAsmList(arg), tstaticvarsym(p).vardef,
                  tstaticvarsym(p).vardef, href, tstaticvarsym(p).initialloc.register);
@@ -5530,23 +5530,23 @@ implementation
        begin
          if (tparavarsym(p).varspez=vs_value) then
           begin
-            include(current_procinfo.flags,pi_needs_implicit_finally);
+            include(CurrentProcInfo.flags,pi_needs_implicit_finally);
             location_get_data_ref(list,tparavarsym(p).vardef,tparavarsym(p).localloc,href,
               is_open_array(tparavarsym(p).vardef) or
-              ((target_info.system in systems_caller_copy_addr_value_para) and
-               paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption)),
+              ((TargetInfo.system in systems_caller_copy_addr_value_para) and
+               paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
               sizeof(pint));
             if is_open_array(tparavarsym(p).vardef) then
               begin
-                if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption) then
+                if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
                   begin
                     hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
                     if not assigned(hsym) then
                       internalerror(201003032);
                     highloc:=hsym.initialloc;
                     { adjust high bound reference for exceptfilter finalization }
-                    if assigned(current_procinfo.finalize_procinfo) and
-                       (current_procinfo.finalize_procinfo.procdef.proctypeoption=potype_exceptfilter) and
+                    if assigned(CurrentProcInfo.finalize_procinfo) and
+                       (CurrentProcInfo.finalize_procinfo.procdef.proctypeoption=potype_exceptfilter) and
                        (highloc.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                       cg.adjust_exceptfilter_ref(highloc.reference,true);
                   end
@@ -5561,14 +5561,14 @@ implementation
           end;
        end;
       { open arrays can contain elements requiring init/final code, so the else has been removed here }
-      if not(target_info.system in systems_caller_copy_addr_value_para) and
+      if not(TargetInfo.system in systems_caller_copy_addr_value_para) and
          (tparavarsym(p).varspez=vs_value) and
          (is_open_array(tparavarsym(p).vardef) or
           is_array_of_const(tparavarsym(p).vardef)) then
         begin
           { cdecl functions don't have a high pointer so it is not possible to generate
             a local copy }
-          if not(current_procinfo.procdef.proccalloption in cdecl_pocalls) then
+          if not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
             g_releasevaluepara_openarray(list,tarraydef(tparavarsym(p).vardef),tparavarsym(p).localloc);
         end;
     end;
@@ -5598,16 +5598,16 @@ implementation
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
                  if not((tparavarsym(p).vardef.typ=variantdef) and
-                   paramanager.push_addr_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption)) then
+                   paramanager.push_addr_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)) then
                    begin
                      location_get_data_ref(list,tparavarsym(p).vardef,tparavarsym(p).initialloc,href,
                        is_open_array(tparavarsym(p).vardef) or
-                       ((target_info.system in systems_caller_copy_addr_value_para) and
-                        paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption)),
+                       ((TargetInfo.system in systems_caller_copy_addr_value_para) and
+                        paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
                        sizeof(pint));
                      if is_open_array(tparavarsym(p).vardef) then
                        begin
-                         if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption) then
+                         if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
                            begin
                              hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
                              if not assigned(hsym) then
@@ -5638,7 +5638,7 @@ implementation
                      begin
                        if is_open_array(tparavarsym(p).vardef) then
                          begin
-                           if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption) then
+                           if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
                              begin
                                hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
                                if not assigned(hsym) then
@@ -5667,16 +5667,16 @@ implementation
       i: longint;
       currpara: tparavarsym;
     begin
-      if (po_assembler in current_procinfo.procdef.procoptions) or
+      if (po_assembler in CurrentProcInfo.procdef.procoptions) or
       { exceptfilters have a single hidden 'parentfp' parameter, which
         is handled by tcg.g_proc_entry. }
-         (current_procinfo.procdef.proctypeoption=potype_exceptfilter) then
+         (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
         exit;
 
       { Copy parameters to local references/registers }
-      for i:=0 to current_procinfo.procdef.paras.count-1 do
+      for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
         begin
-          currpara:=tparavarsym(current_procinfo.procdef.paras[i]);
+          currpara:=tparavarsym(CurrentProcInfo.procdef.paras[i]);
           if not currpara.is_used then
             continue;
           { don't use currpara.vardef, as this will be wrong in case of
@@ -5687,9 +5687,9 @@ implementation
       { generate copies of call by value parameters, must be done before
         the initialization and body is parsed because the refcounts are
         incremented using the local copies }
-      current_procinfo.procdef.parast.SymList.ForEachCall(@g_copyvalueparas,list);
+      CurrentProcInfo.procdef.parast.SymList.ForEachCall(@g_copyvalueparas,list);
 
-      if not(po_assembler in current_procinfo.procdef.procoptions) then
+      if not(po_assembler in CurrentProcInfo.procdef.procoptions) then
         begin
           { initialize refcounted paras, and trash others. Needed here
             instead of in gen_initialize_code, because when a reference is
@@ -5697,7 +5697,7 @@ implementation
             in a regvar, we add a register move and that one again has to
             come after the parameter loading code as far as the register
             allocator is concerned }
-          current_procinfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
+          CurrentProcInfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
         end;
     end;
 
@@ -5715,7 +5715,7 @@ implementation
       if (tsym(p).typ=paravarsym) and
          (tparavarsym(p).is_used) and
          ((vo_has_local_copy in tparavarsym(p).varoptions) or
-          (not(target_info.system in systems_caller_copy_addr_value_para) and
+          (not(TargetInfo.system in systems_caller_copy_addr_value_para) and
            (is_open_array(tparavarsym(p).vardef) or
             is_array_of_const(tparavarsym(p).vardef)) and
            (tparavarsym(p).varspez=vs_value))) then
@@ -5727,9 +5727,9 @@ implementation
             begin
               { cdecl functions don't have a high pointer so it is not possible to generate
                 a local copy }
-              if not(current_procinfo.procdef.proccalloption in cdecl_pocalls) then
+              if not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
                 begin
-                  if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption) then
+                  if paramanager.push_high_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption) then
                     begin
                       hsym:=tparavarsym(get_high_value_sym(tparavarsym(p)));
                       if not assigned(hsym) then
@@ -5760,7 +5760,7 @@ implementation
                   { this code is only executed before the code for the body and the entry/exit code is generated
                     so we're allowed to include pi_do_call here; after pass1 is run, this isn't allowed anymore
                   }
-                  include(current_procinfo.flags,pi_do_call);
+                  include(CurrentProcInfo.flags,pi_do_call);
                   g_copyshortstring(list,href,localcopyloc.reference,tstringdef(tparavarsym(p).vardef))
                 end
               else if tparavarsym(p).vardef.typ=variantdef then
@@ -5768,7 +5768,7 @@ implementation
                   { this code is only executed before the code for the body and the entry/exit code is generated
                     so we're allowed to include pi_do_call here; after pass1 is run, this isn't allowed anymore
                   }
-                  include(current_procinfo.flags,pi_do_call);
+                  include(CurrentProcInfo.flags,pi_do_call);
                   g_copyvariant(list,href,localcopyloc.reference,tvariantdef(tparavarsym(p).vardef))
                 end
               else
@@ -5883,11 +5883,11 @@ implementation
     var
       safecallretpara: tcgpara;
     begin
-      if not current_procinfo.procdef.generate_safecall_wrapper then
-        gen_load_loc_cgpara(list,vardef,l,current_procinfo.procdef.funcretloc[calleeside])
+      if not CurrentProcInfo.procdef.generate_safecall_wrapper then
+        gen_load_loc_cgpara(list,vardef,l,CurrentProcInfo.procdef.funcretloc[calleeside])
       else
         begin
-          safecallretpara:=paramanager.get_safecallresult_funcretloc(current_procinfo.procdef,calleeside);
+          safecallretpara:=paramanager.get_safecallresult_funcretloc(CurrentProcInfo.procdef,calleeside);
           gen_load_loc_cgpara(list,vardef,l,safecallretpara);
           safecallretpara.resetiftemp;
         end;
@@ -5991,43 +5991,43 @@ implementation
       retdef : tdef;
     begin
       { Is the loading needed? }
-      if (is_void(current_procinfo.procdef.returndef) and
-          not current_procinfo.procdef.generate_safecall_wrapper) or
+      if (is_void(CurrentProcInfo.procdef.returndef) and
+          not CurrentProcInfo.procdef.generate_safecall_wrapper) or
          (
-          (po_assembler in current_procinfo.procdef.procoptions) and
-          (current_procinfo.procdef.generate_safecall_wrapper or
-           not assigned(current_procinfo.procdef.funcretsym) or
-           (tabstractvarsym(current_procinfo.procdef.funcretsym).refs=0) or
-           (po_nostackframe in current_procinfo.procdef.procoptions)
+          (po_assembler in CurrentProcInfo.procdef.procoptions) and
+          (CurrentProcInfo.procdef.generate_safecall_wrapper or
+           not assigned(CurrentProcInfo.procdef.funcretsym) or
+           (tabstractvarsym(CurrentProcInfo.procdef.funcretsym).refs=0) or
+           (po_nostackframe in CurrentProcInfo.procdef.procoptions)
           )
          ) then
         begin
-          ressym:=current_procinfo.procdef.funcretsym;
+          ressym:=CurrentProcInfo.procdef.funcretsym;
           if not assigned(ressym) then
             exit;
         end
       else
         begin
           { constructors return self }
-          if current_procinfo.procdef.generate_safecall_wrapper then
+          if CurrentProcInfo.procdef.generate_safecall_wrapper then
             begin
-              if not current_procinfo.procdef.get_safecall_funcretsym_info(ressym,retdef) then
+              if not CurrentProcInfo.procdef.get_safecall_funcretsym_info(ressym,retdef) then
                 internalerror(2019112402);
               gen_load_loc_function_result(list,retdef,tabstractnormalvarsym(ressym).localloc);
             end
           else
             begin
-              if not current_procinfo.procdef.get_funcretsym_info(ressym,retdef) then
+              if not CurrentProcInfo.procdef.get_funcretsym_info(ressym,retdef) then
                 internalerror(2018122501);
               if (ressym.refs>0) or
                  is_managed_type(retdef) then
                 begin
                   { was: don't do anything if funcretloc.loc in [LOC_INVALID,LOC_REFERENCE] }
-                  if not paramanager.ret_in_param(current_procinfo.procdef.returndef,current_procinfo.procdef) then
+                  if not paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef) then
                     gen_load_loc_function_result(list,retdef,tabstractnormalvarsym(ressym).localloc);
                 end
               else
-                gen_load_uninitialized_function_result(list,current_procinfo.procdef,retdef,current_procinfo.procdef.funcretloc[calleeside]);
+                gen_load_uninitialized_function_result(list,CurrentProcInfo.procdef,retdef,CurrentProcInfo.procdef.funcretloc[calleeside]);
             end;
         end;
 
@@ -6042,8 +6042,8 @@ implementation
     begin
       pd:=search_system_proc('fpc_stackcheck');
       paraloc1.init;
-      paramanager.getcgtempparaloc(current_asmdata.CurrAsmList,pd,1,paraloc1);
-      hlcg.a_load_const_cgpara(list,paraloc1.def,current_procinfo.calc_stackframe_size,paraloc1);
+      paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
+      hlcg.a_load_const_cgpara(list,paraloc1.def,CurrentProcInfo.calc_stackframe_size,paraloc1);
       paramanager.freecgpara(list,paraloc1);
       paraloc1.done;
     end;
@@ -6075,8 +6075,8 @@ implementation
     begin
       pd:=search_system_proc(procname);
       pd.init_paraloc_info(callerside);
-      if systemunit<>current_module.globalsymtable then
-        current_module.addimportedsym(pd.procsym);
+      if systemunit<>CurrentModule.globalsymtable then
+        CurrentModule.addimportedsym(pd.procsym);
       result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
     end;
 
@@ -6086,8 +6086,8 @@ implementation
         override, if any, is g_call_system_proc_intern (and that none of
         the g_call_system_proc variants should be made virtual) }
       pd.init_paraloc_info(callerside);
-      if systemunit<>current_module.globalsymtable then
-        current_module.addimportedsym(pd.procsym);
+      if systemunit<>CurrentModule.globalsymtable then
+        CurrentModule.addimportedsym(pd.procsym);
       result:=g_call_system_proc_intern(list,pd,paras,forceresdef);
     end;
 

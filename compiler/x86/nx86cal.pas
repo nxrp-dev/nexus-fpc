@@ -93,7 +93,7 @@ implementation
       save_all_regs=[];
 {$endif}
     begin
-      tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
+      tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
       { do not use a ref. for calling conventions which allocate all registers, the reg. allocator cannot handle this, see
         also issue #28639, I were not able to create a simple example though to cause the resulting endless spilling }
       result:=((getsupreg(ref.base)<first_int_imreg) and (getsupreg(ref.index)<first_int_imreg)) or
@@ -103,7 +103,7 @@ implementation
 
   function tx86callnode.do_call_ref(ref: treference): tcgpara;
     begin
-      current_asmdata.CurrAsmList.concat(taicpu.op_ref(A_CALL,S_NO,ref));
+      CurrentAsmData.CurrAsmList.concat(taicpu.op_ref(A_CALL,S_NO,ref));
       result:=hlcg.get_call_result_cgpara(procdefinition,typedef)
     end;
 

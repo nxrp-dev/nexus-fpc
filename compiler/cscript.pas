@@ -105,7 +105,7 @@ uses
 
     Function ScriptFixFileName(const s:TCmdStr):TCmdStr;
      begin
-       if cs_link_on_target in current_settings.globalswitches then
+       if cs_link_on_target in CurrentSettings.globalswitches then
          ScriptFixFileName:=TargetFixFileName(s)
        else
          ScriptFixFileName:=FixFileName(s);
@@ -126,10 +126,10 @@ end;
 constructor TScript.CreateExec(const s:TCmdStr);
 begin
   fn:=FixFileName(s);
-  if cs_link_on_target in current_settings.globalswitches then
-    fn:=ChangeFileExt(fn,target_info.scriptext)
+  if cs_link_on_target in CurrentSettings.globalswitches then
+    fn:=ChangeFileExt(fn,TargetInfo.scriptext)
   else
-    fn:=ChangeFileExt(fn,source_info.scriptext);
+    fn:=ChangeFileExt(fn,SourceInfo.scriptext);
   executable:=true;
   data:=TCmdStrList.Create;
 end;
@@ -168,10 +168,10 @@ var
 
 begin
   Assign(t,fn);
-  if cs_link_on_target in current_settings.globalswitches then
-    le:= target_info.newline
+  if cs_link_on_target in CurrentSettings.globalswitches then
+    le:= TargetInfo.newline
   else
-    le:= source_info.newline;
+    le:= SourceInfo.newline;
 
   {$push}{$I-}
   Rewrite(t,1);
@@ -325,10 +325,10 @@ function GenerateScript(const st: TCmdStr): TAsmScript;
   var
     scripttyp : tscripttype;
   begin
-    if cs_link_on_target in current_settings.globalswitches then
-      scripttyp := target_info.script
+    if cs_link_on_target in CurrentSettings.globalswitches then
+      scripttyp := TargetInfo.script
     else
-      scripttyp := source_info.script;
+      scripttyp := SourceInfo.script;
     case scripttyp of
       script_unix :
         Result:=TAsmScriptUnix.Create(st);
@@ -373,24 +373,24 @@ begin
      if fForceUseForwardSlash then
        { Fix separator }
        for i:=1 to length(ls) do
-         if (ls[i]=source_info.dirsep) then
+         if (ls[i]=SourceInfo.dirsep) then
            ls[i]:='/';
      { GNU ld only supports double quotes in the response file. }
      if fRealResponseFile and
         (ls[1]='''') and
-        (((cs_link_on_target in current_settings.globalswitches) and
-          (target_info.script=script_unix)) or
-         (not(cs_link_on_target in current_settings.globalswitches) and
-          (source_info.script=script_unix))) then
+        (((cs_link_on_target in CurrentSettings.globalswitches) and
+          (TargetInfo.script=script_unix)) or
+         (not(cs_link_on_target in CurrentSettings.globalswitches) and
+          (SourceInfo.script=script_unix))) then
        inherited add(UnixRequoteWithDoubleQuotes(s))
      else if not(ls[1] in ['a'..'z','A'..'Z','/','\','.','"']) then
       begin
         if fForceUseForwardSlash then
           inherited Add('./'+ls)
-        else if (cs_link_on_target in current_settings.globalswitches) then
-          inherited Add('.'+target_info.DirSep+ls)
+        else if (cs_link_on_target in CurrentSettings.globalswitches) then
+          inherited Add('.'+TargetInfo.DirSep+ls)
         else
-          inherited Add('.'+source_info.DirSep+ls);
+          inherited Add('.'+SourceInfo.DirSep+ls);
       end
      else
       inherited Add(ls);

@@ -95,7 +95,7 @@ implementation
              else
                equal_constsym:=pbestreal(sym1.value.valueptr)^=pbestreal(sym2.value.valueptr)^;
            constset :
-             equal_constsym:=(pnormalset(sym1.value.valueptr)^=pnormalset(sym2.value.valueptr)^);
+             equal_constsym:=(PNormalSet(sym1.value.valueptr)^=PNormalSet(sym2.value.valueptr)^);
            constnil :
              equal_constsym:=true;
            else

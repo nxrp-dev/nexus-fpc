@@ -42,11 +42,11 @@ interface
          procedure generate_nested_access(vs: tsym);override;
          function  keep_param_address_in_nested_struct: boolean; virtual;
         public
-         function  pass_typecheck: tnode; override;
-         function  pass_1:tnode;override;
-         function  dogetcopy: tnode; override;
-         function  docompare(p: tnode): boolean; override;
-         constructor ppuload(t: tnodetype; ppufile: tcompilerppufile); override;
+         function  pass_typecheck: TNode; override;
+         function  pass_1:TNode;override;
+         function  dogetcopy: TNode; override;
+         function  docompare(p: TNode): boolean; override;
+         constructor ppuload(t: TNodeType; ppufile: tcompilerppufile); override;
          procedure ppuwrite(ppufile: tcompilerppufile); override;
          procedure buildderefimpl; override;
          procedure derefimpl; override;
@@ -75,7 +75,7 @@ implementation
           parentfpstruct (via tcgnestloadparentfpnode.pass_1). In case it is a
           var/out/constref parameter, that "copy" will have been a copy of the
           address so the normal handling of such parameters in ncgld is ok) }
-        secondpass(left);
+        SecondPass(left);
         location:=left.location;
       end;
 
@@ -86,14 +86,14 @@ implementation
       end;
 
 
-    function tcgnestloadnode.pass_typecheck: tnode;
+    function tcgnestloadnode.pass_typecheck: TNode;
       var
         nestedvars: tsym;
       begin
         result:=inherited pass_typecheck;
         if assigned(result) or
-           (assigned(current_procinfo) and
-            (df_generic in current_procinfo.procdef.defoptions)) then
+           (assigned(CurrentProcInfo) and
+            (df_generic in CurrentProcInfo.procdef.defoptions)) then
           exit;
         case symtableentry.typ of
           paravarsym,
@@ -101,9 +101,9 @@ implementation
             begin
               { Nested variable? Then we have to move it to a structure that
                 can be passed by reference to nested routines }
-              if assigned(current_procinfo) and
+              if assigned(CurrentProcInfo) and
                  (symtable.symtabletype in [localsymtable,parasymtable]) and
-                 ((symtable.symtablelevel<>current_procinfo.procdef.parast.symtablelevel) or
+                 ((symtable.symtablelevel<>CurrentProcInfo.procdef.parast.symtablelevel) or
                   { also redirect loads of locals/paras that have been moved to
                      the parentfpstruct inside the routine in which they were
                      originally declared, except in the initialisation code for
@@ -133,7 +133,7 @@ implementation
                       left:=caddrnode.create_internal(cloadnode.create(tprocdef(symtableentry.owner.defowner).parentfpstruct,tprocdef(symtableentry.owner.defowner).parentfpstruct.owner));
                       include(taddrnode(left).addrnodeflags,anf_typedaddr);
                     end;
-                  typecheckpass(left);
+                  TypeCheckPass(left);
                 end;
             end;
           else
@@ -142,7 +142,7 @@ implementation
       end;
 
 
-    function tcgnestloadnode.pass_1:tnode;
+    function tcgnestloadnode.pass_1:TNode;
       var
         thissym,
         nestedvars: tsym;
@@ -177,12 +177,12 @@ implementation
                     a load of the appropriate parentfpstruct }
                   if not assigned(left) then
                     internalerror(2011060104);
-                  firstpass(left);
+                  FirstPass(left);
                   if left.resultdef.typ<>pointerdef then
                     internalerror(2015122801);
                   { subscript it to get the variable }
                   left:=csubscriptnode.create(thissym,cderefnode.create(left));
-                  firstpass(left);
+                  FirstPass(left);
                   include(flags,nf_internal);
                 end;
             end;
@@ -192,14 +192,14 @@ implementation
       end;
 
 
-    function tcgnestloadnode.dogetcopy: tnode;
+    function tcgnestloadnode.dogetcopy: TNode;
       begin
         result:=inherited dogetcopy;
         tcgnestloadnode(result).nestsym:=nestsym;
       end;
 
 
-    function tcgnestloadnode.docompare(p: tnode): boolean;
+    function tcgnestloadnode.docompare(p: TNode): boolean;
       begin
         result:=
           inherited docompare(p) and
@@ -207,7 +207,7 @@ implementation
       end;
 
 
-    constructor tcgnestloadnode.ppuload(t: tnodetype; ppufile: tcompilerppufile);
+    constructor tcgnestloadnode.ppuload(t: TNodeType; ppufile: tcompilerppufile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getderef(nestsymderef);

@@ -228,8 +228,8 @@ Implementation
          so there is no object files to look for at
          the host. Look for the corresponding assembler file instead,
          because it will be assembled to object file on the target.}
-        if isunit and (cs_assemble_on_target in current_settings.globalswitches) then
-          s:=ChangeFileExt(s,target_info.asmext);
+        if isunit and (cs_assemble_on_target in CurrentSettings.globalswitches) then
+          s:=ChangeFileExt(s,TargetInfo.asmext);
 
         { when it does not belong to the unit then check if
           the specified file exists without searching any paths }
@@ -242,7 +242,7 @@ Implementation
             end;
          end;
         if pos('.',s)=0 then
-         s:=s+target_info.objext;
+         s:=s+TargetInfo.objext;
         { find object file
            1. output unit path
            2. output exe path
@@ -262,21 +262,21 @@ Implementation
         if (not found) and (unitpath<>'') then
          found:=FindFile(s,unitpath,false,foundfile);
         if (not found) then
-         found:=FindFile(s, CurDirRelPath(source_info),false,foundfile);
+         found:=FindFile(s, CurDirRelPath(SourceInfo),false,foundfile);
         if (not found) then
          found:=UnitSearchPath.FindFile(s,false,foundfile);
         if (not found) then
-         found:=current_module.localobjectsearchpath.FindFile(s,false,foundfile);
+         found:=CurrentModule.localobjectsearchpath.FindFile(s,false,foundfile);
         if (not found) then
          found:=objectsearchpath.FindFile(s,false,foundfile);
-        if not(cs_link_on_target in current_settings.globalswitches) and (not found) then
+        if not(cs_link_on_target in CurrentSettings.globalswitches) and (not found) then
          found:=FindFile(s,exepath,false,foundfile);
-        if not(cs_link_nolink in current_settings.globalswitches) and (not found) then
+        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
          Message1(exec_w_objfile_not_found,s);
 
         {Restore file extension}
-        if isunit and (cs_assemble_on_target in current_settings.globalswitches) then
-          foundfile:= ChangeFileExt(foundfile,target_info.objext);
+        if isunit and (cs_assemble_on_target in CurrentSettings.globalswitches) then
+          foundfile:= ChangeFileExt(foundfile,TargetInfo.objext);
 
         findobjectfile:=ScriptFixFileName(foundfile);
       end;
@@ -293,15 +293,15 @@ Implementation
           1. Current dir
           2. Library Path
           3. windir,windir/system,windir/system32 }
-        Found:=FindFile(s,'.'+source_info.DirSep,false,founddll);
+        Found:=FindFile(s,'.'+SourceInfo.DirSep,false,founddll);
         if (not found) then
          Found:=librarysearchpath.FindFile(s,false,founddll);
 
         { when cross compiling, it is pretty useless to search windir etc. for dlls }
-        if (not found) and (source_info.system=target_info.system) then
+        if (not found) and (SourceInfo.system=TargetInfo.system) then
          begin
            sysdir:=FixPath(GetEnvironmentVariable('windir'),false);
-           Found:=FindFile(s,sysdir+';'+sysdir+'system'+source_info.DirSep+';'+sysdir+'system32'+source_info.DirSep,false,founddll);
+           Found:=FindFile(s,sysdir+';'+sysdir+'system'+SourceInfo.DirSep+';'+sysdir+'system32'+SourceInfo.DirSep,false,founddll);
          end;
         if (not found) then
          begin
@@ -345,14 +345,14 @@ Implementation
            3. global libary dir
            4. exe path of the compiler (not when linking on target)
           for all searches don't use the directory cache }
-        found:=FindFile(s, CurDirRelPath(source_info), false,foundfile);
-        if (not found) and (current_module.outputpath<>'') then
-         found:=FindFile(s,current_module.outputpath,false,foundfile);
+        found:=FindFile(s, CurDirRelPath(SourceInfo), false,foundfile);
+        if (not found) and (CurrentModule.outputpath<>'') then
+         found:=FindFile(s,CurrentModule.outputpath,false,foundfile);
         if (not found) then
-         found:=current_module.locallibrarysearchpath.FindFile(s,false,foundfile);
+         found:=CurrentModule.locallibrarysearchpath.FindFile(s,false,foundfile);
         if (not found) then
          found:=librarysearchpath.FindFile(s,false,foundfile);
-        if not(cs_link_on_target in current_settings.globalswitches) and (not found) then
+        if not(cs_link_on_target in CurrentSettings.globalswitches) and (not found) then
          found:=FindFile(s,exepath,false,foundfile);
         foundfile:=ScriptFixFileName(foundfile);
         findlibraryfile:=found;
@@ -409,9 +409,9 @@ Implementation
               { create mask which unit files need linking }
               mask:=link_always;
               { lto linking ?}
-              if (cs_lto in current_settings.moduleswitches) and
+              if (cs_lto in CurrentSettings.moduleswitches) and
                  ((headerflags and uf_lto_linked)<>0) and
-                 (not(cs_lto_nosystem in init_settings.globalswitches) or
+                 (not(cs_lto_nosystem in InitSettings.globalswitches) or
                   (hp.modulename^<>'SYSTEM')) then
                 begin
                   mask:=mask or link_lto;
@@ -419,7 +419,7 @@ Implementation
               else
                 begin
                   { static linking ? }
-                  if (cs_link_static in current_settings.globalswitches) then
+                  if (cs_link_static in CurrentSettings.globalswitches) then
                    begin
                      if (headerflags and uf_static_linked)=0 then
                       begin
@@ -436,7 +436,7 @@ Implementation
                        mask:=mask or link_static;
                    end;
                   { smart linking ? }
-                  if (cs_link_smart in current_settings.globalswitches) then
+                  if (cs_link_smart in CurrentSettings.globalswitches) then
                    begin
                      if (headerflags and uf_smart_linked)=0 then
                       begin
@@ -457,7 +457,7 @@ Implementation
                       mask:=mask or link_smart;
                    end;
                   { shared linking }
-                  if (cs_link_shared in current_settings.globalswitches) then
+                  if (cs_link_shared in CurrentSettings.globalswitches) then
                    begin
                      if (headerflags and uf_shared_linked)=0 then
                       begin
@@ -525,11 +525,11 @@ Implementation
         if s='' then
           exit;
         { remove prefix 'lib' }
-        if Copy(s,1,length(target_info.sharedlibprefix))=target_info.sharedlibprefix then
-          Delete(s,1,length(target_info.sharedlibprefix));
+        if Copy(s,1,length(TargetInfo.sharedlibprefix))=TargetInfo.sharedlibprefix then
+          Delete(s,1,length(TargetInfo.sharedlibprefix));
         { remove extension if any }
-        if Copy(s,length(s)-length(target_info.sharedlibext)+1,length(target_info.sharedlibext))=target_info.sharedlibext then
-          Delete(s,length(s)-length(target_info.sharedlibext)+1,length(target_info.sharedlibext)+1);
+        if Copy(s,length(s)-length(TargetInfo.sharedlibext)+1,length(TargetInfo.sharedlibext))=TargetInfo.sharedlibext then
+          Delete(s,length(s)-length(TargetInfo.sharedlibext)+1,length(TargetInfo.sharedlibext)+1);
         { ready to be added }
         SharedLibFiles.Concat(S);
       end;
@@ -542,8 +542,8 @@ Implementation
       begin
         if s='' then
           exit;
-        found:=FindLibraryFile(s,target_info.staticlibprefix,target_info.staticlibext,ns);
-        if not(cs_link_nolink in current_settings.globalswitches) and (not found) then
+        found:=FindLibraryFile(s,TargetInfo.staticlibprefix,TargetInfo.staticlibext,ns);
+        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
           Message1(exec_w_libfile_not_found,s);
         StaticLibFiles.Concat(ns);
       end;
@@ -554,11 +554,11 @@ Implementation
         if s='' then
           exit;
         { remove prefix 'lib' }
-        if Copy(s,1,length(target_info.sharedclibprefix))=target_info.sharedclibprefix then
-          Delete(s,1,length(target_info.sharedclibprefix));
+        if Copy(s,1,length(TargetInfo.sharedclibprefix))=TargetInfo.sharedclibprefix then
+          Delete(s,1,length(TargetInfo.sharedclibprefix));
         { remove extension if any }
-        if Copy(s,length(s)-length(target_info.sharedclibext)+1,length(target_info.sharedclibext))=target_info.sharedclibext then
-          Delete(s,length(s)-length(target_info.sharedclibext)+1,length(target_info.sharedclibext)+1);
+        if Copy(s,length(s)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext))=TargetInfo.sharedclibext then
+          Delete(s,length(s)-length(TargetInfo.sharedclibext)+1,length(TargetInfo.sharedclibext)+1);
         { ready to be added }
         SharedLibFiles.Concat(S);
       end;
@@ -586,8 +586,8 @@ Implementation
       begin
         if s='' then
          exit;
-        found:=FindLibraryFile(s,target_info.staticclibprefix,target_info.staticclibext,ns);
-        if not(cs_link_nolink in current_settings.globalswitches) and (not found) then
+        found:=FindLibraryFile(s,TargetInfo.staticclibprefix,TargetInfo.staticclibext,ns);
+        if not(cs_link_nolink in CurrentSettings.globalswitches) and (not found) then
          Message1(exec_w_libfile_not_found,s);
         StaticLibFiles.Concat(ns);
       end;
@@ -672,7 +672,7 @@ Implementation
         { only for darwin for now; can also enable for other platforms when using
           the LLVM linker }
         if (OrderedSymbols.Empty) or
-           not(tf_supports_symbolorderfile in target_info.flags) then
+           not(tf_supports_symbolorderfile in TargetInfo.flags) then
           exit;
         symfile:=TScript.Create(outputexedir+UniqueName('symbol_order')+'.fpc');
         item:=TCmdStrListItem(OrderedSymbols.First);
@@ -690,17 +690,17 @@ Implementation
 
     Function TExternalLinker.GetSanitizerLibName(const basename: TCmdStr; withArch: boolean): TCmdStr;
       begin
-        result:=target_info.sharedClibprefix+'clang_rt.'+basename;
-        if target_info.system in systems_darwin then
+        result:=TargetInfo.sharedClibprefix+'clang_rt.'+basename;
+        if TargetInfo.system in systems_darwin then
           begin
             { Darwin never adds the arch, it uses fat binaries. But it has the
               extra '_dynamic' for some reason, and also adds the platform type
             }
-            if target_info.system in systems_macosx then
+            if TargetInfo.system in systems_macosx then
               result:=result+'_osx_dynamic'
-            else if target_info.system in systems_ios then
+            else if TargetInfo.system in systems_ios then
               result:='_ios_dynamic'
-            else if target_info.system in systems_iphonesim then
+            else if TargetInfo.system in systems_iphonesim then
               result:='_iossim_dynamic'
             else
               internalerror(2022071010);
@@ -710,11 +710,11 @@ Implementation
             if withArch then
               begin
                 result:=result+'-'+tripletcpustr(triplet_llvmrt);
-                if target_info.system in systems_android then
+                if TargetInfo.system in systems_android then
                   result:=result+'-android';
               end;
           end;
-        result:=result+target_info.sharedClibext;
+        result:=result+TargetInfo.sharedClibext;
       end;
 
 
@@ -733,8 +733,8 @@ Implementation
       begin
         sanitizerlibraryfiles:=TCmdStrList.Create;
         result:=false;
-        if (cs_sanitize_address in current_settings.moduleswitches) and
-           not(cs_link_on_target in current_settings.globalswitches) then
+        if (cs_sanitize_address in CurrentSettings.moduleswitches) and
+           not(cs_link_on_target in CurrentSettings.globalswitches) then
           begin
           { ask clang }
           clang:=FindUtil('clang'+llvmutilssuffix);
@@ -787,7 +787,7 @@ Implementation
         inherited Create;
         { set generic defaults }
         FillChar(Info,sizeof(Info),0);
-        if cs_link_on_target in current_settings.globalswitches then
+        if cs_link_on_target in CurrentSettings.globalswitches then
           begin
             Info.ResName:=ChangeFileExt(inputfilename,'_link.res');
             Info.ScriptName:=ChangeFileExt(inputfilename,'_script.res');
@@ -827,21 +827,21 @@ Implementation
         FoundBin : TCmdStr;
         UtilExe  : TCmdStr;
       begin
-        if cs_link_on_target in current_settings.globalswitches then
+        if cs_link_on_target in CurrentSettings.globalswitches then
           begin
             { If linking on target, don't add any path PM }
             { change extension only on platforms that use an exe extension, otherwise on OpenBSD 'ld.bfd' gets
               converted to 'ld' }
-            if target_info.exeext<>'' then
-              FindUtil:=ChangeFileExt(s,target_info.exeext)
+            if TargetInfo.exeext<>'' then
+              FindUtil:=ChangeFileExt(s,TargetInfo.exeext)
             else
               FindUtil:=s;
             exit;
           end;
         { change extension only on platforms that use an exe extension, otherwise on OpenBSD 'ld.bfd' gets converted
           to 'ld' }
-        if source_info.exeext<>'' then
-          UtilExe:=ChangeFileExt(s,source_info.exeext)
+        if SourceInfo.exeext<>'' then
+          UtilExe:=ChangeFileExt(s,SourceInfo.exeext)
         else
           UtilExe:=s;
         FoundBin:='';
@@ -850,10 +850,10 @@ Implementation
          Found:=FindFile(utilexe,utilsdirectory,false,Foundbin);
         if (not Found) then
          Found:=FindExe(utilexe,false,Foundbin);
-        if throwerror and (not Found) and not(cs_link_nolink in current_settings.globalswitches) then
+        if throwerror and (not Found) and not(cs_link_nolink in CurrentSettings.globalswitches) then
          begin
            Message1(exec_e_util_not_found,utilexe);
-           current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+           CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
          end;
         if (FoundBin<>'') then
          Message1(exec_t_using_util,FoundBin);
@@ -867,8 +867,8 @@ Implementation
         f : text;
         st : TCmdStr;
       begin
-        if not (tf_no_backquote_support in source_info.flags) or
-           (cs_link_on_target in current_settings.globalswitches) then
+        if not (tf_no_backquote_support in SourceInfo.flags) or
+           (cs_link_on_target in CurrentSettings.globalswitches) then
            begin
              CatFileContent:='`cat '+MaybeQuoted(para)+'`';
              Exit;
@@ -900,7 +900,7 @@ Implementation
         exitcode: longint;
       begin
         DoExec:=true;
-        if not(cs_link_nolink in current_settings.globalswitches) then
+        if not(cs_link_nolink in CurrentSettings.globalswitches) then
          begin
            FlushOutput;
            if useshell then
@@ -911,26 +911,26 @@ Implementation
              except on E:EOSError do
                begin
                  Message1(exec_e_cant_call_linker,e.Message);
-                 current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+                 CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
                  DoExec:=false;
                end;
              end;
            if (exitcode<>0) then
              begin
                Message(exec_e_error_while_linking);
-               current_settings.globalswitches:=current_settings.globalswitches+[cs_link_nolink];
+               CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_link_nolink];
                DoExec:=false;
              end;
          end;
       { Update asmres when externmode is set }
-        if cs_link_nolink in current_settings.globalswitches then
+        if cs_link_nolink in CurrentSettings.globalswitches then
          begin
            if showinfo then
              begin
-               if current_module.islibrary then
-                 AsmRes.AddLinkCommand(Command,Para,current_module.sharedlibfilename)
+               if CurrentModule.islibrary then
+                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.sharedlibfilename)
                else
-                 AsmRes.AddLinkCommand(Command,Para,current_module.exefilename);
+                 AsmRes.AddLinkCommand(Command,Para,CurrentModule.exefilename);
              end
            else
             AsmRes.AddLinkCommand(Command,Para,'');
@@ -961,7 +961,7 @@ Implementation
                   system.close(fs);
                   system.inc(total_size,align(ItemSize,16));
                 end;
-              if (cs_link_nolink in current_settings.globalswitches) or
+              if (cs_link_nolink in CurrentSettings.globalswitches) or
                  (ItemExists and (ItemSize>0)) then
                 result := result + ' ' + addfilecmd + item.str;
               item := TCmdStrListItem(item.next);
@@ -999,14 +999,14 @@ Implementation
         MakeStaticLibrary:=false;
 	total_size:=0;
       { remove the library, to be sure that it is rewritten }
-        DeleteFile(current_module.staticlibfilename);
+        DeleteFile(CurrentModule.staticlibfilename);
       { Call AR }
-        smartpath:=FixPath(ChangeFileExt(current_module.asmfilename,target_info.smartext),false);
-        SplitBinCmd(target_ar.arcmd,binstr,cmdstr);
+        smartpath:=FixPath(ChangeFileExt(CurrentModule.asmfilename,TargetInfo.smartext),false);
+        SplitBinCmd(TargetAr.arcmd,binstr,cmdstr);
         binstr := FindUtil(utilsprefix + binstr);
-        if target_ar.arfirstcmd<>'' then
+        if TargetAr.arfirstcmd<>'' then
           begin
-            SplitBinCmd(target_ar.arfirstcmd,firstbinstr,firstcmd);
+            SplitBinCmd(TargetAr.arfirstcmd,firstbinstr,firstcmd);
             firstbinstr := FindUtil(utilsprefix + firstbinstr);
           end
         else
@@ -1016,9 +1016,9 @@ Implementation
           end;
 
 
-        scripted_ar:=(target_ar.id=ar_gnu_ar_scripted) or
-                     (target_ar.id=ar_watcom_wlib_omf_scripted) or
-                     (target_ar.id=ar_sdcc_sdar_scripted);
+        scripted_ar:=(TargetAr.id=ar_gnu_ar_scripted) or
+                     (TargetAr.id=ar_watcom_wlib_omf_scripted) or
+                     (TargetAr.id=ar_sdcc_sdar_scripted);
 
         if scripted_ar then
           begin
@@ -1027,21 +1027,21 @@ Implementation
             Assign(script, scriptfile);
             Rewrite(script);
             try
-              if (target_ar.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
-                writeln(script, 'CREATE ' + current_module.staticlibfilename)
+              if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
+                writeln(script, 'CREATE ' + CurrentModule.staticlibfilename)
               else { wlib case }
                 writeln(script,'-q -p=',get_wlib_record_size,' -fo -c -b '+
-                  maybequoted(current_module.staticlibfilename));
+                  maybequoted(CurrentModule.staticlibfilename));
               current := TCmdStrListItem(SmartLinkOFiles.First);
               while current <> nil do
                 begin
-                  if (target_ar.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
+                  if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
                   writeln(script, 'ADDMOD ' + current.str)
                   else
                     writeln(script,'+' + current.str);
                   current := TCmdStrListItem(current.next);
                 end;
-              if (target_ar.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
+              if (TargetAr.id in [ar_gnu_ar_scripted,ar_sdcc_sdar_scripted]) then
                 begin
                   writeln(script, 'SAVE');
                   writeln(script, 'END');
@@ -1054,11 +1054,11 @@ Implementation
         else
           begin
             ar_creates_different_output_file:=(Pos('$OUTPUTLIB',cmdstr)>0) or (Pos('$OUTPUTLIB',firstcmd)>0);
-            Replace(cmdstr,'$LIB',maybequoted(current_module.staticlibfilename));
-            Replace(firstcmd,'$LIB',maybequoted(current_module.staticlibfilename));
-            Replace(cmdstr,'$OUTPUTLIB',maybequoted(current_module.staticlibfilename+'.tmp'));
-            Replace(firstcmd,'$OUTPUTLIB',maybequoted(current_module.staticlibfilename+'.tmp'));
-            if target_ar.id=ar_watcom_wlib_omf then
+            Replace(cmdstr,'$LIB',maybequoted(CurrentModule.staticlibfilename));
+            Replace(firstcmd,'$LIB',maybequoted(CurrentModule.staticlibfilename));
+            Replace(cmdstr,'$OUTPUTLIB',maybequoted(CurrentModule.staticlibfilename+'.tmp'));
+            Replace(firstcmd,'$OUTPUTLIB',maybequoted(CurrentModule.staticlibfilename+'.tmp'));
+            if TargetAr.id=ar_watcom_wlib_omf then
               begin
                 Replace(cmdstr,'$RECSIZE','-p='+IntToStr(get_wlib_record_size));
                 Replace(firstcmd,'$RECSIZE','-p='+IntToStr(get_wlib_record_size));
@@ -1072,33 +1072,33 @@ Implementation
                 nextcmd := firstcmd
               else
                 nextcmd := cmdstr;
-              Replace(nextcmd,'$FILES',GetNextFiles(2047, current, target_ar.addfilecmd));
+              Replace(nextcmd,'$FILES',GetNextFiles(2047, current, TargetAr.addfilecmd));
               if first then
                 success:=DoExec(firstbinstr,nextcmd,false,true)
               else
                 success:=DoExec(binstr,nextcmd,false,true);
               if ar_creates_different_output_file then
                 begin
-                  if FileExists(current_module.staticlibfilename,false) then
-                    DeleteFile(current_module.staticlibfilename);
-                  if FileExists(current_module.staticlibfilename+'.tmp',false) then
-                    RenameFile(current_module.staticlibfilename+'.tmp',current_module.staticlibfilename);
+                  if FileExists(CurrentModule.staticlibfilename,false) then
+                    DeleteFile(CurrentModule.staticlibfilename);
+                  if FileExists(CurrentModule.staticlibfilename+'.tmp',false) then
+                    RenameFile(CurrentModule.staticlibfilename+'.tmp',CurrentModule.staticlibfilename);
                 end;
               first := false;
             until (not assigned(current)) or (not success);
           end;
 
-        if (target_ar.arfinishcmd <> '') then
+        if (TargetAr.arfinishcmd <> '') then
           begin
-            SplitBinCmd(target_ar.arfinishcmd,binstr,cmdstr);
+            SplitBinCmd(TargetAr.arfinishcmd,binstr,cmdstr);
             binstr := FindUtil(utilsprefix + binstr);
-            Replace(cmdstr,'$LIB',maybequoted(current_module.staticlibfilename));
+            Replace(cmdstr,'$LIB',maybequoted(CurrentModule.staticlibfilename));
             success:=DoExec(binstr,cmdstr,false,true);
           end;
 
         { Clean up }
-        if not(cs_asm_leave in current_settings.globalswitches) then
-         if not(cs_link_nolink in current_settings.globalswitches) then
+        if not(cs_asm_leave in CurrentSettings.globalswitches) then
+         if not(cs_link_nolink in CurrentSettings.globalswitches) then
           begin
             while not SmartLinkOFiles.Empty do
               DeleteFile(SmartLinkOFiles.GetFirst);
@@ -1208,7 +1208,7 @@ Implementation
       function MayBeSwapHeader(h : telf32header) : telf32header;
         begin
           result:=h;
-          if source_info.endian<>target_info.endian then
+          if SourceInfo.endian<>TargetInfo.endian then
             with h do
               begin
                 result.e_type:=swapendian(e_type);
@@ -1231,7 +1231,7 @@ Implementation
       function MayBeSwapHeader(h : telf64header) : telf64header;
         begin
           result:=h;
-          if source_info.endian<>target_info.endian then
+          if SourceInfo.endian<>TargetInfo.endian then
             with h do
               begin
                 result.e_type:=swapendian(e_type);
@@ -1254,7 +1254,7 @@ Implementation
       function MaybeSwapSecHeader(h : telf32sechdr) : telf32sechdr;
         begin
           result:=h;
-          if source_info.endian<>target_info.endian then
+          if SourceInfo.endian<>TargetInfo.endian then
             with h do
               begin
                 result.sh_name:=swapendian(sh_name);
@@ -1274,7 +1274,7 @@ Implementation
       function MaybeSwapSecHeader(h : telf64sechdr) : telf64sechdr;
         begin
           result:=h;
-          if source_info.endian<>target_info.endian then
+          if SourceInfo.endian<>TargetInfo.endian then
             with h do
               begin
                 result.sh_name:=swapendian(sh_name);
@@ -1599,7 +1599,7 @@ Implementation
         while not SharedLibFiles.Empty do
           begin
             S:=SharedLibFiles.GetFirst;
-            if FindLibraryFile(s,target_info.staticClibprefix,target_info.staticClibext,s2) then
+            if FindLibraryFile(s,TargetInfo.staticClibprefix,TargetInfo.staticClibext,s2) then
               LinkScript.Concat('READSTATICLIBRARY '+MaybeQuoted(s2))
             else
               Comment(V_Error,'Import library not found for '+S);
@@ -2082,8 +2082,8 @@ Implementation
 { TODO: Load custom linker script}
         DefaultLinkScript;
 
-        if (cs_link_map in current_settings.globalswitches) then
-          exemap:=texemap.create(current_module.mapfilename);
+        if (cs_link_map in CurrentSettings.globalswitches) then
+          exemap:=texemap.create(CurrentModule.mapfilename);
 
         PrintLinkerScript;
 
@@ -2124,7 +2124,7 @@ Implementation
         if ErrorCount>0 then
           goto myexit;
 
-        if cs_link_separate_dbg_file in current_settings.globalswitches then
+        if cs_link_separate_dbg_file in CurrentSettings.globalswitches then
           begin
             { create debuginfo, which is an executable without data on disk }
             dbgname:=ChangeFileExt(outputname,'.dbg');
@@ -2177,13 +2177,13 @@ Implementation
 
     function TInternalLinker.ExecutableFilename:String;
       begin
-        result:=current_module.exefilename;
+        result:=CurrentModule.exefilename;
       end;
 
 
     function TInternalLinker.SharedLibFilename:String;
       begin
-        result:=current_module.sharedlibfilename;
+        result:=CurrentModule.sharedlibfilename;
       end;
 
 
@@ -2192,7 +2192,7 @@ Implementation
         IsSharedLibrary:=false;
         result:=RunLinkScript(ExecutableFilename);
 {$ifdef hasUnix}
-        fpchmod(current_module.exefilename,493);
+        fpchmod(CurrentModule.exefilename,493);
 {$endif hasUnix}
       end;
 
@@ -2230,15 +2230,15 @@ Implementation
 
     procedure InitLinker;
       begin
-        if (cs_link_extern in current_settings.globalswitches) and
-           assigned(CLinker[target_info.linkextern]) then
+        if (cs_link_extern in CurrentSettings.globalswitches) and
+           assigned(CLinker[TargetInfo.linkextern]) then
           begin
-            linker:=CLinker[target_info.linkextern].Create;
+            linker:=CLinker[TargetInfo.linkextern].Create;
           end
         else
-          if assigned(CLinker[target_info.link]) then
+          if assigned(CLinker[TargetInfo.link]) then
             begin
-              linker:=CLinker[target_info.link].Create;
+              linker:=CLinker[TargetInfo.link].Create;
             end
         else
           linker:=Tlinker.Create;
@@ -2258,7 +2258,7 @@ Implementation
 *****************************************************************************}
 
     const
-      ar_gnu_ar_info : tarinfo =
+      ar_gnu_ar_info : TArInfo =
           (
             id          : ar_gnu_ar;
             addfilecmd  : '';
@@ -2267,7 +2267,7 @@ Implementation
             arfinishcmd : 'ar s $LIB'
           );
 
-      ar_gnu_ar_scripted_info : tarinfo =
+      ar_gnu_ar_scripted_info : TArInfo =
           (
             id    : ar_gnu_ar_scripted;
             addfilecmd  : '';
@@ -2276,7 +2276,7 @@ Implementation
             arfinishcmd : ''
           );
 
-      ar_gnu_gar_info : tarinfo =
+      ar_gnu_gar_info : TArInfo =
           ( id          : ar_gnu_gar;
             addfilecmd  : '';
             arfirstcmd  : '';
@@ -2284,7 +2284,7 @@ Implementation
             arfinishcmd : 'gar s $LIB'
           );
 
-      ar_watcom_wlib_omf_info : tarinfo =
+      ar_watcom_wlib_omf_info : TArInfo =
           ( id          : ar_watcom_wlib_omf;
             addfilecmd  : '+';
             arfirstcmd  : 'wlib -q $RECSIZE -fo -c -b -n -o=$OUTPUTLIB $LIB $FILES';
@@ -2292,7 +2292,7 @@ Implementation
             arfinishcmd : ''
           );
 
-      ar_watcom_wlib_omf_scripted_info : tarinfo =
+      ar_watcom_wlib_omf_scripted_info : TArInfo =
           (
             id    : ar_watcom_wlib_omf_scripted;
             addfilecmd  : '+';
@@ -2301,7 +2301,7 @@ Implementation
             arfinishcmd : ''
           );
 
-      ar_sdcc_sdar_info : tarinfo =
+      ar_sdcc_sdar_info : TArInfo =
           ( id          : ar_sdcc_sdar;
           addfilecmd  : '';
           arfirstcmd  : '';
@@ -2309,7 +2309,7 @@ Implementation
           arfinishcmd : 'sdar s $LIB'
           );
 
-      ar_sdcc_sdar_scripted_info : tarinfo =
+      ar_sdcc_sdar_scripted_info : TArInfo =
           (
             id    : ar_sdcc_sdar_scripted;
             addfilecmd  : '';

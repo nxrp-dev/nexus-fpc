@@ -35,7 +35,7 @@ interface
 
       ti386shlshrnode = class(tx86shlshrnode)
          procedure second_64bit;override;
-         function first_shlshr64bitint: tnode; override;
+         function first_shlshr64bitint: TNode; override;
       end;
 
       ti386unaryminusnode = class(tx86unaryminusnode)
@@ -76,28 +76,28 @@ implementation
         if (nodetype=divn) and (right.nodetype=ordconstn) and
           is_signed(left.resultdef) and
           ispowerof2(tordconstnode(right).value.svalue,power) and
-          ((current_settings.optimizecputype = cpu_386) or
-           (cs_opt_size in current_settings.optimizerswitches)) then
+          ((CurrentSettings.optimizecputype = cpu_386) or
+           (cs_opt_size in CurrentSettings.optimizerswitches)) then
           begin
             { signed divide-by-power-of-two optimized for size }
-            secondpass(left);
-            if codegenerror then
+            SecondPass(left);
+            if CodeGenError then
               exit;
-            secondpass(right);
-            if codegenerror then
+            SecondPass(right);
+            if CodeGenError then
               exit;
-            hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
+            hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,resultdef,false);
             hreg1:=left.location.register;
-            cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+            cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             emit_reg_reg(A_TEST,S_L,hreg1,hreg1);
-            current_asmdata.getjumplabel(hl);
-            cg.a_jmp_flags(current_asmdata.CurrAsmList,F_NS,hl);
-            cg.a_reg_dealloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+            CurrentAsmData.getjumplabel(hl);
+            cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NS,hl);
+            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             if power=1 then
               emit_reg(A_INC,S_L,hreg1)
             else
               emit_const_reg(A_ADD,S_L,tordconstnode(right).value.svalue-1,hreg1);
-            cg.a_label(current_asmdata.CurrAsmList,hl);
+            cg.a_label(CurrentAsmData.CurrAsmList,hl);
             emit_const_reg(A_SAR,S_L,power,hreg1);
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
             location.register:=hreg1;
@@ -112,7 +112,7 @@ implementation
 *****************************************************************************}
 
 
-    function ti386shlshrnode.first_shlshr64bitint: tnode;
+    function ti386shlshrnode.first_shlshr64bitint: TNode;
       begin
         result := nil;
       end;
@@ -131,7 +131,7 @@ implementation
             { load left operator in a register }
             if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) or
               ((left.location.loc=LOC_CREGISTER) and ((v.svalue and 31)<>0)) then
-              hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,resultdef,false);
             hreg64hi:=left.location.register64.reghi;
             hreg64lo:=left.location.register64.reglo;
 
@@ -140,14 +140,14 @@ implementation
               begin
                 if nodetype=shln then
                   begin
-                    hreg64hi:=cg.getintregister(current_asmdata.CurrAsmList,OS_32);
+                    hreg64hi:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
                     emit_reg_reg(A_XOR,S_L,hreg64hi,hreg64hi);
                     if ((v and 31) <> 0) then
                       emit_const_reg(A_SHL,S_L,v.svalue and 31,hreg64lo);
                   end
                 else
                   begin
-                    hreg64lo:=cg.getintregister(current_asmdata.CurrAsmList,OS_32);
+                    hreg64lo:=cg.getintregister(CurrentAsmData.CurrAsmList,OS_32);
                     emit_reg_reg(A_XOR,S_L,hreg64lo,hreg64lo);
                     if ((v and 31) <> 0) then
                       emit_const_reg(A_SHR,S_L,v.svalue and 31,hreg64hi);
@@ -179,14 +179,14 @@ implementation
             location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
 
             { load left operator in a register }
-            hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,resultdef,false);
+            hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,resultdef,false);
 
             hreg64hi:=left.location.register64.reghi;
             hreg64lo:=left.location.register64.reglo;
 
             { load right operators in a register }
-            cg.getcpuregister(current_asmdata.CurrAsmList,NR_ECX);
-            hlcg.a_load_loc_reg(current_asmdata.CurrAsmList,right.resultdef,u32inttype,right.location,NR_ECX);
+            cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_ECX);
+            hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,u32inttype,right.location,NR_ECX);
 
             { left operator is already in a register }
             { hence are both in a register }
@@ -194,19 +194,19 @@ implementation
 
             { the damned shift instructions work only til a count of 32 }
             { so we've to do some tricks here                           }
-            current_asmdata.getjumplabel(l2);
-            current_asmdata.getjumplabel(l3);
-            cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+            CurrentAsmData.getjumplabel(l2);
+            CurrentAsmData.getjumplabel(l3);
+            cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             emit_const_reg(A_TEST,S_B,32,NR_CL);
-            cg.a_jmp_flags(current_asmdata.CurrAsmList,F_E,l2);
-            cg.a_reg_dealloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+            cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_E,l2);
+            cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
             if nodetype=shln then
               begin
                 emit_reg_reg(A_SHL,S_L,NR_CL,hreg64lo);
                 emit_reg_reg(A_MOV,S_L,hreg64lo,hreg64hi);
                 emit_reg_reg(A_XOR,S_L,hreg64lo,hreg64lo);
-                cg.a_jmp_always(current_asmdata.CurrAsmList,l3);
-                cg.a_label(current_asmdata.CurrAsmList,l2);
+                cg.a_jmp_always(CurrentAsmData.CurrAsmList,l3);
+                cg.a_label(CurrentAsmData.CurrAsmList,l2);
                 emit_reg_reg_reg(A_SHLD,S_L,NR_CL,hreg64lo,hreg64hi);
                 emit_reg_reg(A_SHL,S_L,NR_CL,hreg64lo);
               end
@@ -215,14 +215,14 @@ implementation
                 emit_reg_reg(A_SHR,S_L,NR_CL,hreg64hi);
                 emit_reg_reg(A_MOV,S_L,hreg64hi,hreg64lo);
                 emit_reg_reg(A_XOR,S_L,hreg64hi,hreg64hi);
-                cg.a_jmp_always(current_asmdata.CurrAsmList,l3);
-                cg.a_label(current_asmdata.CurrAsmList,l2);
+                cg.a_jmp_always(CurrentAsmData.CurrAsmList,l3);
+                cg.a_label(CurrentAsmData.CurrAsmList,l2);
                 emit_reg_reg_reg(A_SHRD,S_L,NR_CL,hreg64hi,hreg64lo);
                 emit_reg_reg(A_SHR,S_L,NR_CL,hreg64hi);
               end;
-            cg.a_label(current_asmdata.CurrAsmList,l3);
+            cg.a_label(CurrentAsmData.CurrAsmList,l3);
 
-            cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_ECX);
+            cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_ECX);
             location.register64.reglo:=hreg64lo;
             location.register64.reghi:=hreg64hi;
           end;

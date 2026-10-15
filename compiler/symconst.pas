@@ -877,8 +877,8 @@ type
     x86pt_near_es, x86pt_near_fs, x86pt_near_gs, x86pt_far, x86pt_huge);
 
 var
-  clearstack_pocalls : tproccalloptions;
-  cdecl_pocalls      : tproccalloptions;
+  clearstack_pocalls : TProcCallOptions;
+  cdecl_pocalls      : TProcCallOptions;
 
 const
    inherited_objectoptions : tobjectoptions = [oo_has_virtual,oo_has_private,oo_has_protected,
@@ -889,7 +889,7 @@ const
    { we only take this into account on i8086 and i386, on other platforms we always
      push in the same order
    }
-   pushleftright_pocalls : tproccalloptions = [pocall_register,pocall_pascal];
+   pushleftright_pocalls : TProcCallOptions = [pocall_register,pocall_pascal];
 {$endif}
 
      SymTypeName : array[tsymtyp] of string[14] = (

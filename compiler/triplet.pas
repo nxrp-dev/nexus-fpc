@@ -28,7 +28,7 @@ interface
 uses
   globtype;
 
-function targettriplet(tripletstyle: ttripletstyle): ansistring;
+function targettriplet(tripletstyle: TTripletStyle): ansistring;
 
 implementation
 
@@ -36,24 +36,24 @@ uses
   globals,systems,
   cpuinfo,tripletcpu;
 
-  function targettriplet(tripletstyle: ttripletstyle): ansistring;
+  function targettriplet(tripletstyle: TTripletStyle): ansistring;
     begin
       { architecture }
       result:=tripletcpustr(tripletstyle);
       { vendor and/or OS }
-      if target_info.system in systems_darwin then
+      if TargetInfo.system in systems_darwin then
         begin
           result:=result+'-apple';
-          if target_info.system in systems_macosx then
+          if TargetInfo.system in systems_macosx then
             result:=result+'-macosx'+MacOSXVersionMin.str
-          else if target_info.system = system_aarch64_iphonesim then
+          else if TargetInfo.system = system_aarch64_iphonesim then
             result:=result+'-ios-simulator'+iPhoneOSVersionMin.str
           else
             result:=result+'-ios'+iPhoneOSVersionMin.str;
         end
-      else if target_info.system in (systems_linux+systems_android) then
+      else if TargetInfo.system in (systems_linux+systems_android) then
         result:=result+'-unknown-linux'
-      else if target_info.system in systems_all_windows then
+      else if TargetInfo.system in systems_all_windows then
         begin
           result:=result+'-pc';
           result:=result+'-windows-msvc19'
@@ -62,10 +62,10 @@ uses
         result:=result+'-unknown';
 
       { environment/ABI }
-      if target_info.system in systems_android then
+      if TargetInfo.system in systems_android then
         result:=result+'-android'
       else
-      if target_info.system in systems_linux then
+      if TargetInfo.system in systems_linux then
         result:=result+'-gnu';
     end;
 

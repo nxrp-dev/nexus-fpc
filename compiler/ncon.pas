@@ -33,7 +33,7 @@ interface
       symconst,symtype,symdef,symsym;
 
     type
-       tconstnode = class abstract(tnode)
+       tconstnode = class abstract(TNode)
          { directly emit a node's constant data as a constant and return the
            amount of data written }
          function emit_data(tcb:ttai_typedconstbuilder):sizeint;virtual;abstract;
@@ -54,15 +54,15 @@ interface
           procedure SetCurrencyValue(const AValue: bestreal);
           procedure SetCurrencyLiteral(const AText: ShortString);
           procedure NegateValue;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
-          function docompare(p: tnode) : boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
+          function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t:text);override;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
 {$ifdef DEBUG_NODE_XML}
@@ -82,14 +82,14 @@ interface
           }
           constructor create(const v : tconstexprint;def:tdef; _rangecheck : boolean);virtual;
           constructor create_currency_scalar(def:tdef);
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode) : boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t:text);override;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
 {$ifdef DEBUG_NODE_XML}
@@ -104,14 +104,14 @@ interface
           typedefderef : tderef;
           value   : TConstPtrUInt;
           constructor create(v : TConstPtrUInt;def:tdef);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode) : boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode) : boolean; override;
           procedure printnodedata(var t : text); override;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
 {$ifdef DEBUG_NODE_XML}
@@ -142,16 +142,16 @@ interface
           constructor createstr(const s : string);virtual;
           constructor createpchar(s: pchar; l: longint; def: tdef);virtual;
           constructor createunistr(w : tcompilerwidestring);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           destructor destroy;override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
           function getpcharcopy : pchar;
-          function docompare(p: tnode) : boolean; override;
+          function docompare(p: TNode) : boolean; override;
           procedure changestringtype(def:tdef);
           function fullcompare(p: tstringconstnode): longint;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
@@ -167,22 +167,22 @@ interface
        end;
        tstringconstnodeclass = class of tstringconstnode;
 
-       tsetconstnode = class(tunarynode)
+       tsetconstnode = class(TUnaryNode)
           typedef : tdef;
           typedefderef : tderef;
-          value_set : pconstset;
+          value_set : PConstSet;
           lab_set : tasmsymbol;
-          constructor create(s : pconstset;def:tdef);virtual;
+          constructor create(s : PConstSet;def:tdef);virtual;
           destructor destroy;override;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
           procedure adjustforsetbase;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode) : boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode) : boolean; override;
           function elements : AInt;
           function low : AInt;
           function high : AInt;
@@ -192,8 +192,8 @@ interface
 
        tnilnode = class(tconstnode)
           constructor create;virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
        end;
        tnilnodeclass = class of tnilnode;
@@ -202,12 +202,12 @@ interface
           value : tguid;
           lab_set : tasmsymbol;
           constructor create(const g:tguid);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode) : boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode) : boolean; override;
           function emit_data(tcb:ttai_typedconstbuilder):sizeint; override;
        end;
        tguidconstnodeclass = class of tguidconstnode;
@@ -228,13 +228,13 @@ interface
     function genenumnode(v : tenumsym) : tordconstnode;
 
     { some helper routines }
-    function get_ordinal_value(p : tnode) : TConstExprInt;
-    function get_string_value(p : tnode; def: tstringdef) : tstringconstnode;
-    function is_constresourcestringnode(p : tnode) : boolean;
-    function is_emptyset(p : tnode):boolean;
-    function genconstsymtree(p : tconstsym) : tnode;
+    function get_ordinal_value(p : TNode) : TConstExprInt;
+    function get_string_value(p : TNode; def: tstringdef) : tstringconstnode;
+    function is_constresourcestringnode(p : TNode) : boolean;
+    function is_emptyset(p : TNode):boolean;
+    function genconstsymtree(p : tconstsym) : TNode;
 
-    function getbooleanvalue(p : tnode) : boolean;
+    function getbooleanvalue(p : TNode) : boolean;
 
 implementation
 
@@ -275,7 +275,7 @@ implementation
       end;
 
 
-    function get_ordinal_value(p : tnode) : TConstExprInt;
+    function get_ordinal_value(p : TNode) : TConstExprInt;
       begin
         get_ordinal_value:=0;
         if is_constnode(p) then
@@ -289,7 +289,7 @@ implementation
           Message(type_e_constant_expr_expected);
       end;
 
-    function get_string_value(p: tnode; def: tstringdef): tstringconstnode;
+    function get_string_value(p: TNode; def: tstringdef): tstringconstnode;
       var
         stringVal: string;
         pWideStringVal: tcompilerwidestring;
@@ -319,7 +319,7 @@ implementation
       end;
 
 
-    function is_constresourcestringnode(p : tnode) : boolean;
+    function is_constresourcestringnode(p : TNode) : boolean;
       begin
         is_constresourcestringnode:=(p.nodetype=loadn) and
           (tloadnode(p).symtableentry.typ=constsym) and
@@ -327,19 +327,19 @@ implementation
       end;
 
 
-    function is_emptyset(p : tnode):boolean;
+    function is_emptyset(p : TNode):boolean;
       begin
         is_emptyset:=(p.nodetype=setconstn) and
                      (Tsetconstnode(p).value_set^=[]);
       end;
 
 
-    function genconstsymtree(p : tconstsym) : tnode;
+    function genconstsymtree(p : tconstsym) : TNode;
       var
-        p1  : tnode;
+        p1  : TNode;
         len : longint;
         pc  : pchar;
-        value_set : pconstset;
+        value_set : PConstSet;
       begin
         p1:=nil;
         case p.consttyp of
@@ -354,7 +354,7 @@ implementation
           conststring :
             begin
               len:=p.value.len;
-              if not(cs_refcountedstrings in current_settings.localswitches) and (len>255) then
+              if not(cs_refcountedstrings in CurrentSettings.localswitches) and (len>255) then
                 begin
                   message(parser_e_string_const_too_long);
                   len:=255;
@@ -379,7 +379,7 @@ implementation
               if sp_generic_const in p.symoptions then
                 begin
                   new(value_set);
-                  value_set^:=pconstset(p.value.valueptr)^;
+                  value_set^:=PConstSet(p.value.valueptr)^;
                   p1:=csetconstnode.create(value_set,p.constdef);
                 end
               else if sp_generic_para in p.symoptions then
@@ -388,7 +388,7 @@ implementation
                   p1:=csetconstnode.create(value_set,p.constdef);
                 end
               else
-                p1:=csetconstnode.create(pconstset(p.value.valueptr),p.constdef);
+                p1:=csetconstnode.create(PConstSet(p.value.valueptr),p.constdef);
             end;
           constpointer :
             begin
@@ -422,7 +422,7 @@ implementation
       end;
 
 
-    function getbooleanvalue(p : tnode) : boolean;
+    function getbooleanvalue(p : TNode) : boolean;
       begin
         if is_constboolnode(p) then
           result:=tordconstnode(p).value<>0
@@ -439,7 +439,7 @@ implementation
     {   i386           }
     constructor trealconstnode.create(v : bestreal;def:tdef);
       begin
-         if current_settings.fputype=fpu_none then
+         if CurrentSettings.fputype=fpu_none then
             internalerror(2008022401);
          if def.typ<>floatdef then
            InternalError(2002022402);
@@ -548,7 +548,7 @@ implementation
         Move(lRaw,value_currency,SizeOf(lRaw));
       end;
 
-    constructor trealconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor trealconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       var
         i : int64;
       begin
@@ -591,7 +591,7 @@ implementation
       end;
 
 
-    function trealconstnode.dogetcopy : tnode;
+    function trealconstnode.dogetcopy : TNode;
       var
          n : trealconstnode;
       begin
@@ -605,7 +605,7 @@ implementation
       end;
 
 
-    function trealconstnode.pass_typecheck:tnode;
+    function trealconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=typedef;
@@ -648,14 +648,14 @@ implementation
       end;
 
 
-    function trealconstnode.pass_1 : tnode;
+    function trealconstnode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_CREFERENCE;
       end;
 
 
-    function trealconstnode.simplify(forinline : boolean) : tnode;
+    function trealconstnode.simplify(forinline : boolean) : TNode;
       begin
         result:=nil;
         if (Frac(value_real)<>0.0) and is_currency(resultdef) and not (nf_is_currency in flags) then
@@ -670,7 +670,7 @@ implementation
       end;
 
 
-    function trealconstnode.docompare(p: tnode): boolean;
+    function trealconstnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -688,7 +688,7 @@ implementation
             (value_real=trealconstnode(p).value_real) and
             (
               { Make sure 0.0 and -0.0 are not equated unless fastmath is enabled }
-              (cs_opt_fastmath in current_settings.optimizerswitches) or
+              (cs_opt_fastmath in CurrentSettings.optimizerswitches) or
               not (
                 (
                   IsPosZero(value_real) and
@@ -769,7 +769,7 @@ implementation
       end;
 
 
-    constructor tordconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tordconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -803,7 +803,7 @@ implementation
       end;
 
 
-    function tordconstnode.dogetcopy : tnode;
+    function tordconstnode.dogetcopy : TNode;
 
       var
          n : tordconstnode;
@@ -815,7 +815,7 @@ implementation
          dogetcopy:=n;
       end;
 
-    function tordconstnode.pass_typecheck:tnode;
+    function tordconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=typedef;
@@ -825,13 +825,13 @@ implementation
           adaptrange(resultdef,value,nf_internal in flags,not rangecheck,rangecheck)
       end;
 
-    function tordconstnode.pass_1 : tnode;
+    function tordconstnode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_CONSTANT;
       end;
 
-    function tordconstnode.docompare(p: tnode): boolean;
+    function tordconstnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -880,7 +880,7 @@ implementation
       end;
 
 
-    constructor tpointerconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tpointerconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -910,7 +910,7 @@ implementation
       end;
 
 
-    function tpointerconstnode.dogetcopy : tnode;
+    function tpointerconstnode.dogetcopy : TNode;
       var
          n : tpointerconstnode;
       begin
@@ -921,7 +921,7 @@ implementation
       end;
 
 
-    function tpointerconstnode.pass_typecheck:tnode;
+    function tpointerconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=typedef;
@@ -930,14 +930,14 @@ implementation
       end;
 
 
-    function tpointerconstnode.pass_1 : tnode;
+    function tpointerconstnode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_CONSTANT;
       end;
 
 
-    function tpointerconstnode.docompare(p: tnode): boolean;
+    function tpointerconstnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -1030,7 +1030,7 @@ implementation
       end;
 
 
-    constructor tstringconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tstringconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       var
         i : longint;
       begin
@@ -1092,7 +1092,7 @@ implementation
       end;
 
 
-    function tstringconstnode.dogetcopy : tnode;
+    function tstringconstnode.dogetcopy : TNode;
 
       var
          n : tstringconstnode;
@@ -1119,7 +1119,7 @@ implementation
       end;
 
 
-    function tstringconstnode.pass_typecheck:tnode;
+    function tstringconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         case cst_type of
@@ -1147,7 +1147,7 @@ implementation
       end;
 
 
-    function tstringconstnode.pass_1 : tnode;
+    function tstringconstnode.pass_1 : TNode;
       begin
         result:=nil;
         if (cst_type in [cst_ansistring,cst_widestring,cst_unicodestring]) then
@@ -1176,7 +1176,7 @@ implementation
          getpcharcopy:=pc;
       end;
 
-    function tstringconstnode.docompare(p: tnode): boolean;
+    function tstringconstnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -1198,8 +1198,8 @@ implementation
       var
         pw : tcompilerwidestring;
         pc : pchar;
-        cp1 : tstringencoding;
-        cp2 : tstringencoding;
+        cp1 : TStringEncoding;
+        cp2 : TStringEncoding;
         l,l2 : longint;
       begin
         if def.typ<>stringdef then
@@ -1209,7 +1209,7 @@ implementation
            not(cst_type in [cst_widestring,cst_unicodestring]) then
           begin
             initwidestring(valuews);
-            ascii2unicode(asconstpchar,len,current_settings.sourcecodepage,valuews);
+            ascii2unicode(asconstpchar,len,CurrentSettings.sourcecodepage,valuews);
           end
         else
           { convert unicode 2 ascii }
@@ -1218,7 +1218,7 @@ implementation
             begin
               cp1:=tstringdef(def).encoding;
               if (cp1=globals.CP_NONE) or (cp1=0) then
-                cp1:=current_settings.sourcecodepage;
+                cp1:=CurrentSettings.sourcecodepage;
               if (cp1=CP_UTF8) then
                 begin
                   l2:=len;
@@ -1244,15 +1244,15 @@ implementation
             begin
               cp1:=tstringdef(def).encoding;
               if cp1=0 then
-                cp1:=current_settings.sourcecodepage;
+                cp1:=CurrentSettings.sourcecodepage;
               if (cst_type = cst_ansistring) then
                 begin
                   cp2:=tstringdef(resultdef).encoding;
                   if cp2=0 then
-                    cp2:=current_settings.sourcecodepage;
+                    cp2:=CurrentSettings.sourcecodepage;
                 end
               else if (cst_type in [cst_shortstring,cst_conststring,cst_longstring]) then
-                cp2:=current_settings.sourcecodepage
+                cp2:=CurrentSettings.sourcecodepage
               else
                 internalerror(2013112916);
               { don't change string if codepages are equal or string length is 0 }
@@ -1354,15 +1354,15 @@ implementation
             internalerror(2019070801);
           st_ansistring:
             begin
-              labofs:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
+              labofs:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
               tcb.emit_string_offset(labofs,len,tstringdef(resultdef).stringtype,false,charpointertype);
               result:=voidpointertype.size;
             end;
           st_widestring,
           st_unicodestring:
             begin
-              winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in target_info.flags);
-              labofs:=tcb.emit_unicodestring_const(current_asmdata.asmlists[al_typedconsts],valuews,tstringdef(resultdef).encoding,winlikewidestring);
+              winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
+              labofs:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_typedconsts],valuews,tstringdef(resultdef).encoding,winlikewidestring);
               tcb.emit_string_offset(labofs,len,tstringdef(resultdef).stringtype,false,widecharpointertype);
               result:=voidpointertype.size;
             end;
@@ -1460,7 +1460,7 @@ implementation
                              TSETCONSTNODE
 *****************************************************************************}
 
-    constructor tsetconstnode.create(s : pconstset;def:tdef);
+    constructor tsetconstnode.create(s : PConstSet;def:tdef);
 
       begin
          inherited create(setconstn,nil);
@@ -1483,7 +1483,7 @@ implementation
       end;
 
 
-    constructor tsetconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tsetconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -1544,7 +1544,7 @@ implementation
       end;
 
 
-    function tsetconstnode.dogetcopy : tnode;
+    function tsetconstnode.dogetcopy : TNode;
       var
          n : tsetconstnode;
       begin
@@ -1562,14 +1562,14 @@ implementation
       end;
 
 
-    function tsetconstnode.pass_typecheck:tnode;
+    function tsetconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=typedef;
       end;
 
 
-    function tsetconstnode.pass_1 : tnode;
+    function tsetconstnode.pass_1 : TNode;
       begin
          result:=nil;
          if is_smallset(resultdef) then
@@ -1579,7 +1579,7 @@ implementation
       end;
 
 
-    function tsetconstnode.docompare(p: tnode): boolean;
+    function tsetconstnode.docompare(p: TNode): boolean;
       begin
         docompare:=(inherited docompare(p)) and
                    (value_set^=Tsetconstnode(p).value_set^);
@@ -1648,7 +1648,7 @@ implementation
       begin
         if is_smallset(resultdef) then
           begin
-            if (source_info.endian=target_info.endian) then
+            if (SourceInfo.endian=TargetInfo.endian) then
               begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
@@ -1660,7 +1660,7 @@ implementation
               begin
                 setval:=aint(reverse_longword(Pcardinal(value_set)^));
               end;
-            if (target_info.endian=endian_big) then
+            if (TargetInfo.endian=endian_big) then
               setval:=setval shr (32-resultdef.size*8);
             case resultdef.size of
               1:
@@ -1677,7 +1677,7 @@ implementation
           end
         else
           begin
-            if (source_info.endian=target_info.endian) then
+            if (SourceInfo.endian=TargetInfo.endian) then
               for i:=0 to resultdef.size-1 do
                 tcb.emit_tai(tai_const.create_8bit(Psetbytes(value_set)^[i]),u8inttype)
             else
@@ -1698,7 +1698,7 @@ implementation
         inherited create(niln);
       end;
 
-    function tnilnode.pass_typecheck:tnode;
+    function tnilnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=voidpointertype;
@@ -1713,7 +1713,7 @@ implementation
         result:=resultdef.size;
       end;
 
-    function tnilnode.pass_1 : tnode;
+    function tnilnode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_CONSTANT;
@@ -1730,7 +1730,7 @@ implementation
          value:=g;
       end;
 
-    constructor tguidconstnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tguidconstnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getguid(value);
@@ -1744,7 +1744,7 @@ implementation
       end;
 
 
-    function tguidconstnode.dogetcopy : tnode;
+    function tguidconstnode.dogetcopy : TNode;
       var
          n : tguidconstnode;
       begin
@@ -1755,21 +1755,21 @@ implementation
       end;
 
 
-    function tguidconstnode.pass_typecheck:tnode;
+    function tguidconstnode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=rec_tguid;
       end;
 
 
-    function tguidconstnode.pass_1 : tnode;
+    function tguidconstnode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_CREFERENCE;
       end;
 
 
-    function tguidconstnode.docompare(p: tnode): boolean;
+    function tguidconstnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and

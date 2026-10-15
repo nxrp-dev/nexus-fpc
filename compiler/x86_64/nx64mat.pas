@@ -61,8 +61,8 @@ implementation
         opsize : tcgsize;
         mask : aint;
       begin
-        secondpass(left);
-        secondpass(right);
+        SecondPass(left);
+        SecondPass(right);
 
         { determine operator }
         if nodetype=shln then
@@ -77,13 +77,13 @@ implementation
         if not(left.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
           { location_force_reg can be also used to change the size of a register }
           (left.location.size<>opsize) then
-          hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,cgsize_orddef(opsize),true);
+          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,cgsize_orddef(opsize),true);
         location_reset(location,LOC_REGISTER,opsize);
-        location.register:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
+        location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
 
         { shifting by a constant directly coded: }
         if (right.nodetype=ordconstn) then
-          cg.a_op_const_reg_reg(current_asmdata.CurrAsmList,op,location.size,
+          cg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
             tordconstnode(right).value.uvalue and mask,left.location.register,location.register)
         else
           begin
@@ -94,9 +94,9 @@ implementation
             if not(right.location.loc in [LOC_CREGISTER,LOC_REGISTER]) or
                { location_force_reg can be also used to change the size of a register }
               (right.location.size<>opsize) then
-              hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,cgsize_orddef(opsize),true);
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,cgsize_orddef(opsize),true);
 
-            cg.a_op_reg_reg_reg(current_asmdata.CurrAsmList,op,opsize,right.location.register,left.location.register,location.register);
+            cg.a_op_reg_reg_reg(CurrentAsmData.CurrAsmList,op,opsize,right.location.register,left.location.register,location.register);
           end;
       end;
 

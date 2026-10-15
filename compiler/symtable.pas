@@ -457,10 +457,10 @@ implementation
       begin
         inherited create(s);
         { Note: this happens for the initial macro symtable, so no error here }
-        if not assigned(current_module) then
+        if not assigned(CurrentModule) then
           comment(v_debug,'Current module not available for module id')
         else
-          moduleid:=current_module.moduleid;
+          moduleid:=CurrentModule.moduleid;
       end;
 
 
@@ -728,8 +728,8 @@ implementation
             or inlined routines in the static symbtable }
 
           { current number of registered defs/syms }
-          defidmax:=current_module.deflist.count;
-          symidmax:=current_module.symlist.count;
+          defidmax:=CurrentModule.deflist.count;
+          symidmax:=CurrentModule.symlist.count;
           changed:=false;
 
           { build the derefs for the registered defs we haven't processed yet }
@@ -775,8 +775,8 @@ implementation
           the currently registered ones (defs/syms get added to the module's
           deflist/symlist when they are registered) }
         until not changed and
-          (defidmax=current_module.deflist.count) and
-          (symidmax=current_module.symlist.count);
+          (defidmax=CurrentModule.deflist.count) and
+          (symidmax=CurrentModule.symlist.count);
       end;
 
 
@@ -937,7 +937,7 @@ implementation
                      if ((tsym(sym).owner.symtabletype<>localsymtable) or
                         (tprocdef(tsym(sym).owner.defowner).proctypeoption<>potype_constructor)) and
                         not (po_noreturn in tprocdef(tsym(sym).owner.defowner).procoptions) and
-                        not(cs_opt_nodedfa in current_settings.optimizerswitches) then
+                        not(cs_opt_nodedfa in CurrentSettings.optimizerswitches) then
                        MessagePos(tsym(sym).fileinfo,sym_w_function_result_not_set)
                    end
                  else if (tsym(sym).owner.symtabletype=parasymtable) then
@@ -994,7 +994,7 @@ implementation
                  (
                   (tsym(sym).typ<>procsym) or
                   ((tsym(sym).owner.symtabletype=staticsymtable) and
-                   not current_module.is_unit)
+                   not CurrentModule.is_unit)
                  ) and
                  { don't complain about alias for hidden _cmd parameter to
                    obj-c methods }
@@ -1241,7 +1241,7 @@ implementation
       begin
         case usefieldalignment of
           C_alignment:
-            varalignrecord:=used_align(varalign,recordalignmin,current_settings.alignment.maxCrecordalign);
+            varalignrecord:=used_align(varalign,recordalignmin,CurrentSettings.alignment.maxCrecordalign);
           mac68k_alignment:
             varalignrecord:=2;
           else
@@ -1358,7 +1358,7 @@ implementation
         changed: boolean;
       begin
         if maybereorder and
-           (cs_opt_reorder_fields in current_settings.optimizerswitches) and
+           (cs_opt_reorder_fields in CurrentSettings.optimizerswitches) and
            (list.count>1) then
           begin
             { assign dummy field offsets so we can know their order in the
@@ -1771,7 +1771,7 @@ implementation
                 Message1(sym_w_wrong_C_pack,vardef.typename);
               if varalign=0 then
                 varalign:=l;
-              if (globalfieldalignment<current_settings.alignment.maxCrecordalign) then
+              if (globalfieldalignment<CurrentSettings.alignment.maxCrecordalign) then
                 begin
                   if (varalign>16) and (globalfieldalignment<32) then
                     globalfieldalignment:=32
@@ -1787,7 +1787,7 @@ implementation
                   else if (varalign>1) and (globalfieldalignment<2) then
                     globalfieldalignment:=2;
                 end;
-              globalfieldalignment:=min(globalfieldalignment,current_settings.alignment.maxCrecordalign);
+              globalfieldalignment:=min(globalfieldalignment,CurrentSettings.alignment.maxCrecordalign);
             end;
           mac68k_alignment:
             begin
@@ -1812,7 +1812,7 @@ implementation
 
     function tabstractrecordsymtable.iscurrentunit: boolean;
       begin
-        Result:=assigned(current_module)and(current_module.moduleid=moduleid);
+        Result:=assigned(CurrentModule)and(CurrentModule.moduleid=moduleid);
       end;
 
 {****************************************************************************
@@ -1975,14 +1975,14 @@ implementation
               if assigned(hsym) and
                  (
                   (
-                   not(m_delphi in current_settings.modeswitches) and
+                   not(m_delphi in CurrentSettings.modeswitches) and
                    is_visible_for_object(hsym,tobjectdef(defowner))
                   ) or
                   (
                    { In Delphi, you can repeat members of a parent class. You can't }
                    { do this for objects however, and you (obviously) can't         }
                    { declare two fields with the same name in a single class        }
-                   (m_delphi in current_settings.modeswitches) and
+                   (m_delphi in CurrentSettings.modeswitches) and
                    (
                     is_object(tdef(defowner)) or
                     (hsym.owner = self)
@@ -2041,7 +2041,7 @@ implementation
             sym:=tsym(SymList[i]);
             { Count only varsyms, but ignore the funcretsym }
             if (tsym(sym).typ in [localvarsym,paravarsym]) and
-               (tsym(sym)<>current_procinfo.procdef.funcretsym) and
+               (tsym(sym)<>CurrentProcInfo.procdef.funcretsym) and
                (not(vo_is_parentfp in tabstractvarsym(sym).varoptions) or
                 (tstoredsym(sym).refs>0)) then
               inc(result);
@@ -2083,10 +2083,10 @@ implementation
           begin
             { a local and the function can have the same
               name in TP and Delphi, but RESULT not }
-            if (m_duplicate_names in current_settings.modeswitches) and
+            if (m_duplicate_names in CurrentSettings.modeswitches) and
                (hsym.typ in [absolutevarsym,localvarsym]) and
                (vo_is_funcret in tabstractvarsym(hsym).varoptions) and
-               not((m_result in current_settings.modeswitches) and
+               not((m_result in CurrentSettings.modeswitches) and
                    (vo_is_result in tabstractvarsym(hsym).varoptions)) then
               HideSym(hsym)
             else
@@ -2103,10 +2103,10 @@ implementation
           begin
             { a local and the function can have the same
               name in TP and Delphi, but RESULT not }
-            if (m_duplicate_names in current_settings.modeswitches) and
+            if (m_duplicate_names in CurrentSettings.modeswitches) and
                (sym.typ in [absolutevarsym,localvarsym]) and
                (vo_is_funcret in tabstractvarsym(sym).varoptions) and
-               not((m_result in current_settings.modeswitches) and
+               not((m_result in CurrentSettings.modeswitches) and
                    (vo_is_result in tabstractvarsym(sym).varoptions)) then
               Hidesym(sym)
             else
@@ -2123,7 +2123,7 @@ implementation
            assigned(tprocdef(defowner).struct) and
            (tprocdef(defowner).owner.defowner=tprocdef(defowner).struct) and
            (
-            not(m_duplicate_names in current_settings.modeswitches) or
+            not(m_duplicate_names in CurrentSettings.modeswitches) or
             is_object(tprocdef(defowner).struct)
            ) then
           result:=tprocdef(defowner).struct.symtable.checkduplicate(hashedid,sym);
@@ -2148,13 +2148,13 @@ implementation
         result:=inherited checkduplicate(hashedid,sym);
         if result then
           exit;
-        if not(m_duplicate_names in current_settings.modeswitches) and
+        if not(m_duplicate_names in CurrentSettings.modeswitches) and
            assigned(defowner) and (defowner.typ=procdef) and
            assigned(tprocdef(defowner).struct) and
            assigned(tprocdef(defowner).owner) and
            (tprocdef(defowner).owner.defowner=tprocdef(defowner).struct) and
            (
-            not(m_delphi in current_settings.modeswitches) or
+            not(m_delphi in CurrentSettings.modeswitches) or
             is_object(tprocdef(defowner).struct)
            ) then
           result:=tprocdef(defowner).struct.symtable.checkduplicate(hashedid,sym);
@@ -2201,7 +2201,7 @@ implementation
               <unit>.<id>, so we can hide the symbol.
               Do the same if we add a namespace and there is a unit with the same name }
             if (hsym.typ=symconst.unitsym) and
-               ((m_delphi in current_settings.modeswitches) or (sym.typ=symconst.namespacesym)) then
+               ((m_delphi in CurrentSettings.modeswitches) or (sym.typ=symconst.namespacesym)) then
               begin
                 HideSym(hsym);
                 if sym.typ=symconst.namespacesym then
@@ -2209,13 +2209,13 @@ implementation
               end
             { iso mode program parameters: staticvarsyms might have the same name as a program parameters,
               in this case, copy the isoindex and make the original symbol invisible }
-            else if (m_isolike_program_para in current_settings.modeswitches) and (hsym.typ=programparasym) and (sym.typ=staticvarsym)
+            else if (m_isolike_program_para in CurrentSettings.modeswitches) and (hsym.typ=programparasym) and (sym.typ=staticvarsym)
               and (tprogramparasym(hsym).isoindex<>0) then
               begin
                 HideSym(hsym);
                 tstaticvarsym(sym).isoindex:=tprogramparasym(hsym).isoindex;
               end
-            else if (m_iso in current_settings.modeswitches) and (hsym.typ=unitsym) then
+            else if (m_iso in CurrentSettings.modeswitches) and (hsym.typ=unitsym) then
               HideSym(hsym)
             else
               DuplicateSym(hashedid,sym,hsym,false);
@@ -2233,10 +2233,10 @@ implementation
 
     function tabstractuniTSymtable.iscurrentunit:boolean;
       begin
-        result:=assigned(current_module) and
+        result:=assigned(CurrentModule) and
                 (
-                 (current_module.globalsymtable=self) or
-                 (current_module.localsymtable=self)
+                 (CurrentModule.globalsymtable=self) or
+                 (CurrentModule.localsymtable=self)
                 );
       end;
 
@@ -2340,18 +2340,18 @@ implementation
         result:=inherited checkduplicate(hashedid,sym);
 
         if not result and
-           (current_module.localsymtable=self) and
-           assigned(current_module.globalsymtable) then
-          result:=tglobalsymtable(current_module.globalsymtable).checkduplicate(hashedid,sym);
+           (CurrentModule.localsymtable=self) and
+           assigned(CurrentModule.globalsymtable) then
+          result:=tglobalsymtable(CurrentModule.globalsymtable).checkduplicate(hashedid,sym);
       end;
 
     function tstaticsymtable.findnamespace(const n:string):TSymEntry;
       begin
         result:=inherited findnamespace(n);
         if not assigned(result) and
-           (current_module.localsymtable=self) and
-           assigned(current_module.globalsymtable) then
-          result:=tglobalsymtable(current_module.globalsymtable).findnamespace(n);
+           (CurrentModule.localsymtable=self) and
+           assigned(CurrentModule.globalsymtable) then
+          result:=tglobalsymtable(CurrentModule.globalsymtable).findnamespace(n);
      end;
 
 
@@ -2623,7 +2623,7 @@ implementation
             if assigned(st) and
                (st.symtabletype=globalsymtable) and
                st.iscurrentunit then
-              Message2(sym_h_duplicate_id_where,current_module.sourcefiles.get_file_name(fileindex),tostr(line))
+              Message2(sym_h_duplicate_id_where,CurrentModule.sourcefiles.get_file_name(fileindex),tostr(line))
             else if assigned(st.name) then
               begin
                 filename:=find_module_from_symtable(st).sourcefiles.get_file_name(fileindex);
@@ -2654,7 +2654,7 @@ implementation
           symbol }
         if (sp_generic_dummy in tstoredsym(sym).symoptions) and
             (sym.typ=typesym) and (ttypesym(sym).typedef.typ=undefineddef) and
-            (m_delphi in current_settings.modeswitches) then
+            (m_delphi in CurrentSettings.modeswitches) then
           begin
             inc(dupnr);
             sym.Owner.SymList.Rename(upper(sym.realname),'dup_'+tostr(dupnr)+sym.realname);
@@ -2693,33 +2693,33 @@ implementation
        begin
          { for symbols used in preprocessor expressions, we don't want to
            increase references count (for smaller final binaries) }
-         if not assigned(current_scanner) then
+         if not assigned(CurrentScanner) then
            internalerror(2017050601);
-         if current_scanner.in_preproc_comp_expr then
+         if CurrentScanner.in_preproc_comp_expr then
            exit;
          { symbol uses count }
          sym.IncRefCount;
          owner:=sym.owner;
          while owner.symtabletype in [objectsymtable,recordsymtable,enumsymtable] do
            owner:=tdef(owner.defowner).owner;
-         if assigned(current_module) and
+         if assigned(CurrentModule) and
             (owner.symtabletype=globalsymtable) then
              begin
-               if tglobalsymtable(owner).moduleid>=current_module.unitmapsize then
+               if tglobalsymtable(owner).moduleid>=CurrentModule.unitmapsize then
                  internalerror(200501152);
                { unit uses count }
-               inc(current_module.unitmap[tglobalsymtable(owner).moduleid].refs);
+               inc(CurrentModule.unitmap[tglobalsymtable(owner).moduleid].refs);
                { Note: don't check the symtable directly as owner might be
                        a specialize symtable which is a globalsymtable as well }
                if (
-                     assigned(current_module.globalsymtable) and
-                     (current_module.globalsymtable.moduleid<>owner.moduleid)
+                     assigned(CurrentModule.globalsymtable) and
+                     (CurrentModule.globalsymtable.moduleid<>owner.moduleid)
                   ) or (
-                     assigned(current_module.localsymtable) and
-                     (current_module.localsymtable.moduleid<>owner.moduleid)
+                     assigned(CurrentModule.localsymtable) and
+                     (CurrentModule.localsymtable.moduleid<>owner.moduleid)
                   ) then
                  { symbol is imported from another unit }
-                 current_module.addimportedsym(sym);
+                 CurrentModule.addimportedsym(sym);
              end;
          { static symbols that are used in public functions must be exported
            for packages as well }
@@ -2728,9 +2728,9 @@ implementation
          if (sym.typ=procsym) and assigned(def) and
             (def.typ=procdef) and (def.owner.symtabletype=staticsymtable) then
            owner:=def.owner;
-         if ([tf_supports_packages,tf_supports_hidden_symbols]<=target_info.flags) and
+         if ([tf_supports_packages,tf_supports_hidden_symbols]<=TargetInfo.flags) and
              (owner.symtabletype=staticsymtable) and
-             assigned(current_procinfo) and
+             assigned(CurrentProcInfo) and
              (
                (
                  (sym.typ=staticvarsym) and
@@ -2748,17 +2748,17 @@ implementation
                )
              ) then
            begin
-             procowner:=current_procinfo.procdef.owner;
+             procowner:=CurrentProcInfo.procdef.owner;
              while procowner.symtabletype in [objectsymtable,recordsymtable] do
                procowner:=tdef(procowner.defowner).owner;
              if procowner.symtabletype=globalsymtable then
                begin
                  if sym.typ=procsym then
-                   current_procinfo.add_local_ref_def(def)
+                   CurrentProcInfo.add_local_ref_def(def)
                  else if sym.typ=staticvarsym then
-                   current_procinfo.add_local_ref_sym(sym)
+                   CurrentProcInfo.add_local_ref_sym(sym)
                  else
-                   current_procinfo.add_local_ref_sym(tlocalvarsym(sym).defaultconstsym);
+                   CurrentProcInfo.add_local_ref_sym(tlocalvarsym(sym).defaultconstsym);
                end;
            end;
        end;
@@ -2992,26 +2992,26 @@ implementation
             orgcontextobjdef:=contextobjdef;
             contextobjdef:=tabstractrecorddef(contextobjdef.genericdef);
           end;
-        if assigned(current_structdef) and (df_specialization in current_structdef.defoptions) then
+        if assigned(CurrentStructDef) and (df_specialization in CurrentStructDef.defoptions) then
           begin
-            if not assigned(current_structdef.genericdef) then
+            if not assigned(CurrentStructDef.genericdef) then
               internalerror(2024041203);
-            if not (current_structdef.genericdef.typ in [objectdef,recorddef]) then
+            if not (CurrentStructDef.genericdef.typ in [objectdef,recorddef]) then
               internalerror(2024030903);
-            curstruct:=tabstractrecorddef(current_structdef.genericdef)
+            curstruct:=tabstractrecorddef(CurrentStructDef.genericdef)
           end
         else
-          curstruct:=current_structdef;
+          curstruct:=CurrentStructDef;
         { specializations might belong to a localsymtable or parasymtable }
         nonlocalst:=symownerdef.owner;
         if tstoreddef(symownerdef).is_specialization then
           while nonlocalst.symtabletype in [localsymtable,parasymtable] do
             nonlocalst:=nonlocalst.defowner.owner;
         isspezproc:=false;
-        if assigned(current_procinfo) then
+        if assigned(CurrentProcInfo) then
           begin
-            if current_procinfo.procdef.is_specialization and
-                assigned(current_procinfo.procdef.struct) then
+            if CurrentProcInfo.procdef.is_specialization and
+                assigned(CurrentProcInfo.procdef.struct) then
               isspezproc:=true;
           end;
         case symvisibility of
@@ -3041,7 +3041,7 @@ implementation
                          but that is specialized elsewhere }
                        (
                          isspezproc and
-                         (current_procinfo.procdef.struct=curstruct)
+                         (CurrentProcInfo.procdef.struct=curstruct)
                        ) or
                        { specializations may access private symbols that their
                          generics are allowed to access }
@@ -3109,7 +3109,7 @@ implementation
                          but that is specialized elsewhere }
                        (
                          isspezproc and
-                         (current_procinfo.procdef.struct=curstruct)
+                         (CurrentProcInfo.procdef.struct=curstruct)
                        ) or
                        { specializations may access private symbols that their
                          generics are allowed to access }
@@ -3238,11 +3238,11 @@ implementation
                    (
                      not(srsym.typ in [unitsym,namespacesym]) or
                      srsymtable.iscurrentunit or
-                     (assigned(current_specializedef)and(current_specializedef.genericdef.owner.moduleid=srsymtable.moduleid)) or
+                     (assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.genericdef.owner.moduleid=srsymtable.moduleid)) or
                      (
-                       assigned(current_procinfo) and
-                       (df_specialization in current_procinfo.procdef.defoptions) and
-                       (current_procinfo.procdef.genericdef.owner.moduleid=srsymtable.moduleid)
+                       assigned(CurrentProcInfo) and
+                       (df_specialization in CurrentProcInfo.procdef.defoptions) and
+                       (CurrentProcInfo.procdef.genericdef.owner.moduleid=srsymtable.moduleid)
                      )
                    ) and
                    (not (ssf_search_option in flags) or (option in srsym.symoptions))then
@@ -3256,16 +3256,16 @@ implementation
                        (srsymtable.defowner.owner.iscurrentunit) then
                       contextstructdef:=tabstractrecorddef(srsymtable.defowner)
                     else
-                      contextstructdef:=current_structdef;
+                      contextstructdef:=CurrentStructDef;
                     if not(srsym.owner.symtabletype in [objectsymtable,recordsymtable]) or
                        is_visible_for_object(srsym,contextstructdef) then
                       begin
                         { we need to know if a procedure references symbols
                           in the static symtable, because then it can't be
                           inlined from outside this unit }
-                        if assigned(current_procinfo) and
+                        if assigned(CurrentProcInfo) and
                            (srsym.owner.symtabletype=staticsymtable) then
-                          include(current_procinfo.flags,pi_uses_static_symtable);
+                          include(CurrentProcInfo.flags,pi_uses_static_symtable);
                         if not (ssf_no_addsymref in flags) then
                           addsymref(srsym);
                         result:=true;
@@ -3312,7 +3312,7 @@ implementation
                     srsym:=tsym(srsymtable.FindWithHash(hashedid));
                      if assigned(srsym) and
                         not(srsym.typ in [fieldvarsym,paravarsym,propertysym,procsym,labelsym]) and
-                        is_visible_for_object(srsym,current_structdef) then
+                        is_visible_for_object(srsym,CurrentStructDef) then
                        begin
                         addsymref(srsym);
                         result:=true;
@@ -3328,17 +3328,17 @@ implementation
                    (
                      not(srsym.typ in [unitsym,namespacesym]) or
                      srsymtable.iscurrentunit or
-                     (assigned(current_specializedef)and(current_specializedef.genericdef.owner.moduleid=srsymtable.moduleid))
+                     (assigned(CurrentSpecializeDef)and(CurrentSpecializeDef.genericdef.owner.moduleid=srsymtable.moduleid))
                    ) and
                    not(srsym.typ in [fieldvarsym,paravarsym,propertysym,procsym,labelsym]) and
-                   (not (srsym.owner.symtabletype in [objectsymtable,recordsymtable]) or is_visible_for_object(srsym,current_structdef)) then
+                   (not (srsym.owner.symtabletype in [objectsymtable,recordsymtable]) or is_visible_for_object(srsym,CurrentStructDef)) then
                   begin
                     { we need to know if a procedure references symbols
                       in the static symtable, because then it can't be
                       inlined from outside this unit }
-                    if assigned(current_procinfo) and
+                    if assigned(CurrentProcInfo) and
                        (srsym.owner.symtabletype=staticsymtable) then
-                      include(current_procinfo.flags,pi_uses_static_symtable);
+                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
                     addsymref(srsym);
                     result:=true;
                     exit;
@@ -3372,7 +3372,7 @@ implementation
           end;
         { If the module is the current unit we also need
           to search the local symtable }
-        if (pmod=current_module) and
+        if (pmod=CurrentModule) and
            assigned(pmod.localsymtable) then
           begin
             srsym:=tsym(pmod.localsymtable.Find(s));
@@ -3412,10 +3412,10 @@ implementation
 
         { If the module is the current unit we also need
           to search the local symtable }
-        if assigned(current_module.localsymtable) and
-           (current_module.localsymtable.name^=unitname) then
+        if assigned(CurrentModule.localsymtable) and
+           (CurrentModule.localsymtable.name^=unitname) then
           begin
-            srsymtable:=current_module.localsymtable;
+            srsymtable:=CurrentModule.localsymtable;
             srsym:=tsym(srsymtable.find(symname));
             if assigned(srsym) then
               begin
@@ -3507,9 +3507,9 @@ implementation
                           end;
                       end;
                     result:=tobjectdef(ttypesym(srsym).typedef);
-                    if assigned(current_procinfo) and
+                    if assigned(CurrentProcInfo) and
                        (srsym.owner.symtabletype=staticsymtable) then
-                      include(current_procinfo.flags,pi_uses_static_symtable);
+                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
                     addsymref(srsym);
                     exit;
                   end;
@@ -3786,9 +3786,9 @@ implementation
               exit;
           end;
         { now search all helpers using the extendeddef as the starting point }
-        if (m_multi_helpers in current_settings.modeswitches) and
+        if (m_multi_helpers in CurrentSettings.modeswitches) and
             (
-              (current_structdef<>classh) or
+              (CurrentStructDef<>classh) or
               assigned(classh.extendeddef)
             ) then
           begin
@@ -4000,7 +4000,7 @@ implementation
         srsymtable: tsymtable;
         srsym: tsym;
       begin
-        found:=searchsym_in_module(current_module,tsymtable.maybe_adjust_symname(s),srsym,srsymtable);
+        found:=searchsym_in_module(CurrentModule,tsymtable.maybe_adjust_symname(s),srsym,srsymtable);
         if found then
           begin
             if (srsym.typ<>typesym) then
@@ -4019,7 +4019,7 @@ implementation
         check_systemunit_loaded;
         srsym:=tsym(systemunit.find(s));
         if not assigned(srsym) and
-           (cs_compilesystem in current_settings.moduleswitches) then
+           (cs_compilesystem in CurrentSettings.moduleswitches) then
           srsym:=tsym(systemunit.Find(upper(s)));
         if not assigned(srsym) or
            (srsym.typ<>procsym) then
@@ -4111,7 +4111,7 @@ implementation
         result:=nil;
         { when there are no helpers active currently then we don't need to do
           anything }
-        if current_module.extendeddefs.count=0 then
+        if CurrentModule.extendeddefs.count=0 then
           exit;
         if (df_genconstraint in pd.defoptions) then
           begin
@@ -4141,7 +4141,7 @@ implementation
           exit;
         { the mangled name is used as the key for tmodule.extendeddefs }
         s:=generate_objectpascal_helper_key(pd);
-        result:=TFPObjectList(current_module.extendeddefs.Find(s));
+        result:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
       end;
 
     function search_best_objectpascal_helper(const name: string;pd : tdef;contextclassh : tabstractrecorddef;out srsym: tsym;out srsymtable: tsymtable):boolean;
@@ -4197,7 +4197,7 @@ implementation
 
         { if there is no class helper for the class then there is no need to
           search further }
-        if m_multi_helpers in current_settings.modeswitches then
+        if m_multi_helpers in CurrentSettings.modeswitches then
           result:=search_best_objectpascal_helper(s,pd,contextclassh,srsym,srsymtable)
         else
           begin
@@ -4212,9 +4212,9 @@ implementation
               in the static symtable, because then it can't be
               inlined from outside this unit }
             if (srsym.typ=procsym) and
-               assigned(current_procinfo) and
+               assigned(CurrentProcInfo) and
                (srsym.owner.symtabletype=staticsymtable) then
-              include(current_procinfo.flags,pi_uses_static_symtable);
+              include(CurrentProcInfo.flags,pi_uses_static_symtable);
             addsymref(srsym);
           end
         else
@@ -4266,9 +4266,9 @@ implementation
                         { we need to know if a procedure references symbols
                           in the static symtable, because then it can't be
                           inlined from outside this unit }
-                        if assigned(current_procinfo) and
+                        if assigned(CurrentProcInfo) and
                            (searchsym.owner.symtabletype=staticsymtable) then
-                          include(current_procinfo.flags,pi_uses_static_symtable);
+                          include(CurrentProcInfo.flags,pi_uses_static_symtable);
                         { Stop looking if this is a category that extends the specified
                           class itself. There might be other categories that extend this,
                           but that doesn't matter. If it extens a parent, keep looking
@@ -4325,9 +4325,9 @@ implementation
                     { we need to know if a procedure references symbols
                       in the static symtable, because then it can't be
                       inlined from outside this unit }
-                    if assigned(current_procinfo) and
+                    if assigned(CurrentProcInfo) and
                        (srsym.owner.symtabletype=staticsymtable) then
-                      include(current_procinfo.flags,pi_uses_static_symtable);
+                      include(CurrentProcInfo.flags,pi_uses_static_symtable);
                     { no need to keep looking. There might be other
                       methods with the same name, but that doesn't matter
                       as far as the basic procsym is concerned.
@@ -4422,9 +4422,9 @@ implementation
 
         { First search the localmacrosymtable before searching the
           global macrosymtables from the units }
-        if assigned(current_module) then
+        if assigned(CurrentModule) then
           begin
-            srsym:=tsym(current_module.localmacrosymtable.FindWithHash(hashedid));
+            srsym:=tsym(CurrentModule.localmacrosymtable.FindWithHash(hashedid));
             if assigned(srsym) then
               begin
                 result:= srsym;
@@ -4518,8 +4518,8 @@ implementation
          if not assigned(mac) then
            begin
              mac:=tmacro.create(s);
-             if assigned(current_module) then
-               current_module.localmacrosymtable.insertsym(mac)
+             if assigned(CurrentModule) then
+               CurrentModule.localmacrosymtable.insertsym(mac)
              else
                initialmacrosymtable.insertsym(mac);
            end;
@@ -4540,8 +4540,8 @@ implementation
          if not assigned(mac) then
            begin
              mac:=tmacro.create(s);
-             if assigned(current_module) then
-               current_module.localmacrosymtable.insertsym(mac)
+             if assigned(CurrentModule) then
+               CurrentModule.localmacrosymtable.insertsym(mac)
              else
                initialmacrosymtable.insertsym(mac);
            end
@@ -4570,8 +4570,8 @@ implementation
            begin
              mac:=tmacro.create(s);
              mac.is_compiler_var:=true;
-             if assigned(current_module) then
-               current_module.localmacrosymtable.insertsym(mac)
+             if assigned(CurrentModule) then
+               CurrentModule.localmacrosymtable.insertsym(mac)
              else
                initialmacrosymtable.insertsym(mac);
            end

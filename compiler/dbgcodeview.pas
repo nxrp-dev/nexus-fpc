@@ -202,7 +202,7 @@ implementation
     procedure InsertLineInfo_OMF_LINNUM_MsLink(list: TAsmList);
       var
         currfileinfo,
-        lastfileinfo : tfileposinfo;
+        lastfileinfo : TFilePosInfo;
         nolineinfolevel : Integer;
         currfuncname : pshortstring;
         hp : tai;
@@ -270,7 +270,7 @@ implementation
 {****************************************************************************
 ****************************************************************************}
     const
-      dbg_codeview_info : tdbginfo =
+      dbg_codeview_info : TDbgInfo =
          (
            id     : dbg_codeview;
            idtxt  : 'CODEVIEW';

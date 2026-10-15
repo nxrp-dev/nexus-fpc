@@ -111,8 +111,8 @@ end;
 
 procedure InitImport;
 begin
-  if assigned(CImportLib[Ord(target_info.system)]) then
-   importlib:=CImportLib[Ord(target_info.system)].Create
+  if assigned(CImportLib[Ord(TargetInfo.system)]) then
+   importlib:=CImportLib[Ord(TargetInfo.system)].Create
   else
    importlib:=TImportLib.Create;
 end;

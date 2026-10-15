@@ -105,13 +105,13 @@ implementation
       begin
         lv:=0;
         hv:=0;
-        if not(target_info.system in systems_darwin) then
+        if not(TargetInfo.system in systems_darwin) then
           jtitemconsttype:=aitconst_32bit
         else
           { see https://gmplib.org/list-archives/gmp-bugs/2012-December/002836.html }
           jtitemconsttype:=aitconst_darwin_dwarf_delta32;
 
-        jtlist := current_asmdata.CurrAsmList;
+        jtlist := CurrentAsmData.CurrAsmList;
         last:=min_;
         opcgsize:=def_cgsize(opsize);
 
@@ -124,7 +124,7 @@ implementation
             getrange(left.resultdef,lv,hv);
             Range := aint(max_)-aint(min_);
 
-            if (cs_opt_size in current_settings.optimizerswitches) then
+            if (cs_opt_size in CurrentSettings.optimizerswitches) then
               { Limit size of jump tables for small enumerations so they have
                 to be at least two-thirds full before being considered for the
                 "almost exhaustive" treatment }
@@ -154,7 +154,7 @@ implementation
           end;
 
         { local label in order to avoid using GOT }
-        current_asmdata.getlabel(tablelabel,alt_data);
+        CurrentAsmData.getlabel(tablelabel,alt_data);
         indexreg:=cg.makeregsize(jtlist,hregister,OS_ADDR);
         cg.a_load_reg_reg(jtlist,opcgsize,OS_ADDR,hregister,indexreg);
         { load table address }
@@ -175,7 +175,7 @@ implementation
         { and finally jump }
         emit_reg(A_JMP,S_NO,jumpreg);
         { generate jump table }
-        if not(target_info.system in systems_darwin) then
+        if not(TargetInfo.system in systems_darwin) then
           sectype:=sec_rodata
         else
           { on Mac OS X, dead code stripping ("smart linking") happens based on
@@ -191,8 +191,8 @@ implementation
             same subsection that contains the routine's code }
           sectype:=sec_code;
 
-        jtlist := current_procinfo.aktlocaldata;
-        new_section(jtlist,sectype,current_procinfo.procdef.mangledname,4);
+        jtlist := CurrentProcInfo.aktlocaldata;
+        new_section(jtlist,sectype,CurrentProcInfo.procdef.mangledname,4);
         jtlist.concat(Tai_label.Create(tablelabel));
 
         if AlmostExhaustive then

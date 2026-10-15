@@ -31,11 +31,11 @@ interface
       globtype,
       systems;
 
-     function UpdateAlignmentStr(s:ShortString;var a:talignmentinfo):boolean;
-     function UpdateOptimizerStr(s:ShortString;var a:toptimizerswitches):boolean;
-     function UpdateWpoStr(s: ShortString; var a: twpoptimizerswitches): boolean;
-     function UpdateDebugStr(s:ShortString;var a:tdebugswitches):boolean;
-     function UpdateTargetSwitchStr(s: ShortString; var a: ttargetswitches; global: boolean): boolean;
+     function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
+     function UpdateOptimizerStr(s:ShortString;var a:TOptimizerSwitches):boolean;
+     function UpdateWpoStr(s: ShortString; var a: TWPOptimizerSwitches): boolean;
+     function UpdateDebugStr(s:ShortString;var a:TDebugSwitches):boolean;
+     function UpdateTargetSwitchStr(s: ShortString; var a: TTargetSwitches; global: boolean): boolean;
 
 implementation
 
@@ -44,13 +44,13 @@ implementation
       cutils,
       symtable;
 
-     function UpdateAlignmentStr(s:ShortString;var a:talignmentinfo):boolean;
+     function UpdateAlignmentStr(s:ShortString;var a:TAlignmentInfo):boolean;
       var
          tok  : ShortString;
          vstr : ShortString;
         l    : longint;
         code : integer;
-        b    : talignmentinfo;
+        b    : TAlignmentInfo;
       begin
         UpdateAlignmentStr:=true;
         uppervar(s);
@@ -112,12 +112,12 @@ implementation
       end;
 
 
-     function UpdateOptimizerStr(s:ShortString;var a:toptimizerswitches):boolean;
+     function UpdateOptimizerStr(s:ShortString;var a:TOptimizerSwitches):boolean;
       var
          tok   : ShortString;
         doset,
         found : boolean;
-        opt   : toptimizerswitch;
+        opt   : TOptimizerSwitch;
       begin
         result:=true;
         uppervar(s);
@@ -133,7 +133,7 @@ implementation
           else
             doset:=true;
           found:=false;
-          for opt:=low(toptimizerswitch) to high(toptimizerswitch) do
+          for opt:=low(TOptimizerSwitch) to high(TOptimizerSwitch) do
             begin
               if OptimizerSwitchStr[opt]=tok then
                 begin
@@ -154,12 +154,12 @@ implementation
       end;
 
 
-     function UpdateWpoStr(s: ShortString; var a: twpoptimizerswitches): boolean;
+     function UpdateWpoStr(s: ShortString; var a: TWPOptimizerSwitches): boolean;
       var
          tok   : ShortString;
         doset,
         found : boolean;
-        opt   : twpoptimizerswitch;
+        opt   : TWPOptimizerSwitch;
       begin
         result:=true;
         uppervar(s);
@@ -177,7 +177,7 @@ implementation
           found:=false;
           if (tok = 'ALL') then
             begin
-              for opt:=low(twpoptimizerswitch) to high(twpoptimizerswitch) do
+              for opt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
                 if doset then
                   include(a,opt)
                 else
@@ -185,7 +185,7 @@ implementation
             end
           else
             begin
-              for opt:=low(twpoptimizerswitch) to high(twpoptimizerswitch) do
+              for opt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
                 begin
                   if WPOptimizerSwitchStr[opt]=tok then
                     begin
@@ -207,12 +207,12 @@ implementation
       end;
 
 
-     function UpdateDebugStr(s:ShortString;var a:tdebugswitches):boolean;
+     function UpdateDebugStr(s:ShortString;var a:TDebugSwitches):boolean;
       var
          tok   : ShortString;
         doset,
         found : boolean;
-        opt   : tdebugswitch;
+        opt   : TDebugSwitch;
       begin
         result:=true;
         uppervar(s);
@@ -228,7 +228,7 @@ implementation
           else
             doset:=true;
           found:=false;
-          for opt:=low(tdebugswitch) to high(tdebugswitch) do
+          for opt:=low(TDebugSwitch) to high(TDebugSwitch) do
             begin
               if DebugSwitchStr[opt]=tok then
                 begin
@@ -249,7 +249,7 @@ implementation
       end;
 
 
-     function UpdateTargetSwitchStr(s: ShortString; var a: ttargetswitches; global: boolean): boolean;
+     function UpdateTargetSwitchStr(s: ShortString; var a: TTargetSwitches; global: boolean): boolean;
       var
         tok,
          value : ShortString;
@@ -258,7 +258,7 @@ implementation
         doset,
         gotvalue,
         found : boolean;
-        opt   : ttargetswitch;
+        opt   : TTargetSwitch;
       begin
         result:=true;
         value:='';
@@ -285,7 +285,7 @@ implementation
             end;
           found:=false;
           uppervar(tok);
-          for opt:=low(ttargetswitch) to high(ttargetswitch) do
+          for opt:=low(TTargetSwitch) to high(TTargetSwitch) do
             begin
               if TargetSwitchStr[opt].name=tok then
                 begin

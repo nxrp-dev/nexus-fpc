@@ -39,9 +39,9 @@ interface
        TAbstractResourceFileClass = class of TAbstractResourceFile;
 
 
-       palignmentinfo = ^talignmentinfo;
+       PAlignmentInfo = ^TAlignmentInfo;
        { this is written to ppus during token recording for generics so it must be packed }
-       talignmentinfo = packed record
+       TAlignmentInfo = packed record
          procalign,
          loopalign,
          { alignment for labels after unconditional jumps, this must be a power of two }
@@ -67,7 +67,7 @@ interface
          maxCrecordalign : longint;
        end;
 
-       tasmflags = (af_none
+       TAsmFlags = (af_none
          ,af_outputbinary
          ,af_needar
          ,af_smartlink_sections
@@ -81,14 +81,14 @@ interface
          ,af_supports_hlcfi
        );
 
-       pasminfo = ^tasminfo;
-       tasminfo = record
+       PAsmInfo = ^TAsmInfo;
+       TAsmInfo = record
           id          : tasm;
           idtxt       : string[17];
           asmbin      : string[16];
           asmcmd      : string[154];
           supported_targets : set of TSystem;
-          flags        : set of tasmflags;
+          flags        : set of TAsmFlags;
           labelprefix : string[3];
           labelmaxlen : integer;
           comment     : string[3];
@@ -97,8 +97,8 @@ interface
           dollarsign  : char;
        end;
 
-       parinfo = ^tarinfo;
-       tarinfo = record
+       PArInfo = ^TArInfo;
+       TArInfo = record
           id          : tar;
           addfilecmd  : string[10];
           arfirstcmd  : string[60];
@@ -106,8 +106,8 @@ interface
           arfinishcmd : string[11];
        end;
 
-       presinfo = ^tresinfo;
-       tresinfo = record
+       PResInfo = ^TResInfo;
+       TResInfo = record
           id      : tres;
           { Compiler for resource (.rc or .res) to obj }
           resbin  : string[10];
@@ -120,13 +120,13 @@ interface
           resflags : set of tresinfoflags;
        end;
 
-       pdbginfo = ^tdbginfo;
-       tdbginfo = record
+       PDbgInfo = ^TDbgInfo;
+       TDbgInfo = record
           id      : tdbg;
           idtxt   : string[12];
        end;
 
-       tsystemflags = (tf_none,
+       TSystemFlags = (tf_none,
             tf_under_development,
             tf_need_export,
             tf_needs_isconsole,
@@ -181,13 +181,13 @@ interface
               executables }
             tf_init_final_units_by_calls
        );
-       psysteminfo = ^tsysteminfo;
+       PSystemInfo = ^TSystemInfo;
        { using packed causes bus errors on processors which require alignment }
-       tsysteminfo = record
+       TSystemInfo = record
           system       : TSystem;
           name         : string[88];
           shortname    : string[14];
-          flags        : set of tsystemflags;
+          flags        : set of TSystemFlags;
           cpu          : TSystemCPU;
           unit_env     : string[16];
           extradefines : string[40];
@@ -223,7 +223,7 @@ interface
           dbg          : tdbg;
           script       : tscripttype;
           endian       : tendian;
-          alignment    : talignmentinfo;
+          alignment    : TAlignmentInfo;
           {
             Offset from the argument pointer register to the first
             argument's address. On some machines it may depend on
@@ -237,7 +237,7 @@ interface
           abi          : tabi;
        end;
 
-    tabiinfo = record
+    TABIInfo = record
       name: string[13];
       supported: boolean;
     end;
@@ -332,7 +332,7 @@ interface
              'aarch64', 'wasm32', 'sparc64', 'riscv32', 'riscv64', 'xtensa',
              'obsolete-z80', 'mips64', 'mips64el', 'loongarch64');
 
-       abiinfo : array[tabi] of tabiinfo = (
+       abiinfo : array[tabi] of TABIInfo = (
          (name: 'DEFAULT'; supported: true),
          (name: 'SYSV'   ; supported:false),
          (name: 'AIX'    ; supported:false),
@@ -391,40 +391,40 @@ interface
 {$pop}
 
     var
-       targetinfos   : array[0..MaxStoredSystemId] of psysteminfo;
-       arinfos       : array[tar] of parinfo;
-       resinfos      : array[tres] of presinfo;
-       asminfos      : array[tasm] of pasminfo;
-       dbginfos      : array[tdbg] of pdbginfo;
+       targetinfos   : array[0..MaxStoredSystemId] of PSystemInfo;
+       arinfos       : array[tar] of PArInfo;
+       resinfos      : array[tres] of PResInfo;
+       asminfos      : array[tasm] of PAsmInfo;
+       dbginfos      : array[tdbg] of PDbgInfo;
 
-       source_info : tsysteminfo;
-       target_cpu  : TSystemCPU;
-       target_info : tsysteminfo;
-       target_asm  : tasminfo;
-       target_ar   : tarinfo;
-       target_res  : tresinfo;
-       target_dbg  : tdbginfo;
-       target_cpu_string,
-       target_os_string   : string[14]; { for rtl/<X>/,fcl/<X>/, etc. }
-       target_full_string : string[28];
+       SourceInfo : TSystemInfo;
+       TargetCPU  : TSystemCPU;
+       TargetInfo : TSystemInfo;
+       TargetAsm  : TAsmInfo;
+       TargetAr   : TArInfo;
+       TargetRes  : TResInfo;
+       TargetDbg  : TDbgInfo;
+       TargetCPUString,
+       TargetOSString   : string[14]; { for rtl/<X>/,fcl/<X>/, etc. }
+       TargetFullString : string[28];
 
-    function set_target(t:TSystem):boolean;
-    function set_target_asm(t:tasm):boolean;
-    function set_target_ar(t:tar):boolean;
-    function set_target_res(t:tres):boolean;
-    function set_target_dbg(t:tdbg):boolean;
+    function SetTarget(t:TSystem):boolean;
+    function SetTargetAsm(t:tasm):boolean;
+    function SetTargetAr(t:tar):boolean;
+    function SetTargetRes(t:tres):boolean;
+    function SetTargetDbg(t:tdbg):boolean;
 
-    function find_system_by_string(const s : string) : TSystem;
-    function find_asm_by_string(const s : string) : tasm;
-    function find_dbg_by_string(const s : string) : tdbg;
+    function FindSystemByString(const s : string) : TSystem;
+    function FindAsmByString(const s : string) : tasm;
+    function FindDbgByString(const s : string) : tdbg;
 
-    procedure set_source_info(const ti : tsysteminfo);
+    procedure SetSourceInfo(const ti : TSystemInfo);
 
-    function UpdateAlignment(var d:talignmentinfo;const s:talignmentinfo) : boolean;
+    function UpdateAlignment(var d:TAlignmentInfo;const s:TAlignmentInfo) : boolean;
 
-    procedure RegisterTarget(const r:tsysteminfo);
-    procedure RegisterRes(const r:tresinfo; rcf : TAbstractResourceFileClass);
-    procedure RegisterAr(const r:tarinfo);
+    procedure RegisterTarget(const r:TSystemInfo);
+    procedure RegisterRes(const r:TResInfo; rcf : TAbstractResourceFileClass);
+    procedure RegisterAr(const r:TArInfo);
 
     procedure InitSystems;
 
@@ -438,80 +438,80 @@ implementation
                               Target setting
 ****************************************************************************}
 
-function set_target(t:TSystem):boolean;
+function SetTarget(t:TSystem):boolean;
 begin
-  set_target:=false;
+  SetTarget:=false;
   if assigned(targetinfos[Ord(t)]) then
    begin
-     target_info:=targetinfos[Ord(t)]^;
-     set_target_asm(target_info.assem);
-     set_target_ar(target_info.ar);
-     set_target_res(target_info.res);
-     set_target_dbg(target_info.dbg);
-     target_cpu:=target_info.cpu;
-     target_os_string:=lower(target_info.shortname);
-     target_cpu_string:=cpu2str[Ord(target_cpu)];
-     target_full_string:=target_cpu_string+'-'+target_os_string;
-     set_target:=true;
+     TargetInfo:=targetinfos[Ord(t)]^;
+     SetTargetAsm(TargetInfo.assem);
+     SetTargetAr(TargetInfo.ar);
+     SetTargetRes(TargetInfo.res);
+     SetTargetDbg(TargetInfo.dbg);
+     TargetCPU:=TargetInfo.cpu;
+     TargetOSString:=lower(TargetInfo.shortname);
+     TargetCPUString:=cpu2str[Ord(TargetCPU)];
+     TargetFullString:=TargetCPUString+'-'+TargetOSString;
+     SetTarget:=true;
      exit;
    end;
 end;
 
 
-function set_target_asm(t:tasm):boolean;
+function SetTargetAsm(t:tasm):boolean;
 begin
-  set_target_asm:=false;
+  SetTargetAsm:=false;
   if assigned(asminfos[t]) and
-    ((target_info.system in asminfos[t]^.supported_targets) or
+    ((TargetInfo.system in asminfos[t]^.supported_targets) or
      (system_any in asminfos[t]^.supported_targets)) then
    begin
-     target_asm:=asminfos[t]^;
-     set_target_asm:=true;
+     TargetAsm:=asminfos[t]^;
+     SetTargetAsm:=true;
      exit;
    end;
 end;
 
 
-function set_target_ar(t:tar):boolean;
+function SetTargetAr(t:tar):boolean;
 begin
   result:=false;
   if assigned(arinfos[t]) then
    begin
-     target_ar:=arinfos[t]^;
+     TargetAr:=arinfos[t]^;
      result:=true;
      exit;
    end;
 end;
 
 
-function set_target_res(t:tres):boolean;
+function SetTargetRes(t:tres):boolean;
 begin
   result:=false;
   if assigned(resinfos[t]) then
    begin
-     target_res:=resinfos[t]^;
+     TargetRes:=resinfos[t]^;
      result:=true;
      exit;
    end
   else
-   FillByte(target_res,sizeof(target_res),0);
+   FillByte(TargetRes,sizeof(TargetRes),0);
 end;
 
 
-function set_target_dbg(t:tdbg):boolean;
+function SetTargetDbg(t:tdbg):boolean;
 begin
   result:=false;
 { no debugging support for llvm yet }
   if assigned(dbginfos[t]) then
    begin
-     target_dbg:=dbginfos[t]^;
+     TargetDbg:=dbginfos[t]^;
      result:=true;
      exit;
    end;
 end;
 
 
-function find_system_by_string(const s : string) : TSystem;
+function FindSystemByString(const s : string) : TSystem;
 var
   hs : string;
   t  : TSystem;
@@ -528,7 +528,7 @@ begin
 end;
 
 
-function find_asm_by_string(const s : string) : tasm;
+function FindAsmByString(const s : string) : tasm;
 var
   hs : string;
   t  : tasm;
@@ -545,7 +545,7 @@ begin
 end;
 
 
-function find_dbg_by_string(const s : string) : tdbg;
+function FindDbgByString(const s : string) : tdbg;
 var
   hs : string;
   t  : tdbg;
@@ -562,7 +562,7 @@ begin
 end;
 
 
-function UpdateAlignment(var d:talignmentinfo;const s:talignmentinfo) : boolean;
+function UpdateAlignment(var d:TAlignmentInfo;const s:TAlignmentInfo) : boolean;
 begin
   result:=true;
   with d do
@@ -621,7 +621,7 @@ end;
                               Target registration
 ****************************************************************************}
 
-procedure RegisterTarget(const r:tsysteminfo);
+procedure RegisterTarget(const r:TSystemInfo);
 var
   t : TSystem;
 begin
@@ -634,7 +634,7 @@ begin
 end;
 
 
-procedure RegisterRes(const r:tresinfo; rcf : TAbstractResourceFileClass);
+procedure RegisterRes(const r:TResInfo; rcf : TAbstractResourceFileClass);
 var
   t : tres;
 begin
@@ -646,7 +646,7 @@ begin
 end;
 
 
-procedure RegisterAr(const r:tarinfo);
+procedure RegisterAr(const r:TArInfo);
 var
   t : tar;
 begin
@@ -671,31 +671,31 @@ begin
   for target:=low(TSystem) to high(TSystem) do
    if assigned(targetinfos[Ord(target)]) then
     begin
-      freemem(targetinfos[Ord(target)],sizeof(tsysteminfo));
+      freemem(targetinfos[Ord(target)],sizeof(TSystemInfo));
       targetinfos[Ord(target)]:=nil;
     end;
   for assem:=low(tasm) to high(tasm) do
    if assigned(asminfos[assem]) then
     begin
-      freemem(asminfos[assem],sizeof(tasminfo));
+      freemem(asminfos[assem],sizeof(TAsmInfo));
       asminfos[assem]:=nil;
     end;
   for ar:=low(tar) to high(tar) do
    if assigned(arinfos[ar]) then
     begin
-      freemem(arinfos[ar],sizeof(tarinfo));
+      freemem(arinfos[ar],sizeof(TArInfo));
       arinfos[ar]:=nil;
     end;
   for res:=low(tres) to high(tres) do
    if assigned(resinfos[res]) then
     begin
-      freemem(resinfos[res],sizeof(tresinfo));
+      freemem(resinfos[res],sizeof(TResInfo));
       resinfos[res]:=nil;
     end;
   for dbg:=low(tdbg) to high(tdbg) do
    if assigned(dbginfos[dbg]) then
     begin
-      freemem(dbginfos[dbg],sizeof(tdbginfo));
+      freemem(dbginfos[dbg],sizeof(TDbgInfo));
       dbginfos[dbg]:=nil;
     end;
 end;
@@ -707,18 +707,18 @@ end;
 
 procedure default_target(t:TSystem);
 begin
-  set_target(t);
-  if source_info.name='' then
-    source_info:=target_info;
+  SetTarget(t);
+  if SourceInfo.name='' then
+    SourceInfo:=TargetInfo;
 end;
 
 
-procedure set_source_info(const ti : tsysteminfo);
+procedure SetSourceInfo(const ti : TSystemInfo);
 begin
 { can't use message() here (PFV) }
-  if source_info.name<>'' then
+  if SourceInfo.name<>'' then
     Writeln('Warning: Source OS Redefined!');
-  source_info:=ti;
+  SourceInfo:=ti;
 end;
 
 
@@ -730,7 +730,7 @@ begin
 
 {$ifdef i386}
   {$ifdef cpui386}
-    default_target(source_info.system);
+    default_target(SourceInfo.system);
     {$define default_target_set}
   {$else cpui386}
     {$ifdef MSWindows}
@@ -750,7 +750,7 @@ begin
 
 {$ifdef x86_64}
   {$ifdef cpux86_64}
-    default_target(source_info.system);
+    default_target(SourceInfo.system);
     {$define default_target_set}
   {$else cpux86_64}
    {$ifdef MSWindows}
@@ -784,7 +784,7 @@ begin
 
 {$ifdef aarch64}
   {$ifdef cpuaarch64}
-    default_target(source_info.system);
+    default_target(SourceInfo.system);
   {$else cpuaarch64}
     {$if defined(ios)}
       {$define default_target_set}
@@ -819,7 +819,7 @@ end;
 
 
 initialization
-   source_info.name:='';
+   SourceInfo.name:='';
 finalization
   DeregisterInfos;
 end.

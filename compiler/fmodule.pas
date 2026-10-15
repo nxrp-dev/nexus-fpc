@@ -150,7 +150,7 @@ interface
         { generate pic helper which loads eip in ebx (for non leave procedures) }
         requires_ebx_pic_helper : boolean;
         interface_only: boolean; { interface-only macpas unit; flag does not need saving/restoring to ppu }
-        mainfilepos   : tfileposinfo;
+        mainfilepos   : TFilePosInfo;
         recompile_reason : trecompile_reason;  { the reason why the unit should be recompiled }
         crc_final: boolean;
         crc,                       { valid when crc_final=true }
@@ -158,7 +158,7 @@ interface
         indirect_crc  : cardinal;  { valid when interface_compiled=true }
         headerflags   : cardinal;  { the PPU header flags }
         longversion   : cardinal;  { longer version than what fits in the ppu header }
-        moduleflags   : tmoduleflags; { ppu flags that do not need to be known by just reading the ppu header }
+        moduleflags   : TModuleFlags; { ppu flags that do not need to be known by just reading the ppu header }
         islibrary     : boolean;  { if it is a library (win32 dll) }
         IsPackage     : boolean;
         change_endian : boolean;  { if the unit is loaded on a system with a different endianess than it was compiled on }
@@ -281,7 +281,7 @@ interface
         tcinitcode     : tobject;
 
         { the current extended rtti directive }
-        rtti_directive : trtti_directive;
+        rtti_directive : TRTTIDirective;
 
         {create creates a new module which name is stored in 's'. LoadedFrom
         points to the module calling it. It is nil for the first compiled
@@ -331,7 +331,7 @@ interface
 
     var
        main_module       : tmodule;     { Main module of the program }
-       current_module    : tmodule;     { Current module which is compiled or loaded }
+       CurrentModule    : tmodule;     { Current module which is compiled or loaded }
        usedunits         : tlinkedlist; { Used units for this program }
        loaded_units      : tlinkedlist; { All loaded units, excluding main_module }
        unloaded_units    : tlinkedlist; { Units removed from loaded_units, to be freed }
@@ -340,7 +340,7 @@ interface
                                           used to delete them after linking }
 
 
-    procedure set_current_module(p:tmodule);
+    procedure SetCurrentModule(p:tmodule);
     function get_module(moduleindex : longint) : tmodule;
     function get_source_file(moduleindex,fileindex : longint) : tinputfile;
     procedure addloadedunit(hp:tmodule);
@@ -369,39 +369,39 @@ implementation
         result:=get_module(st.moduleid);
       end;
 
-    procedure set_current_module(p:tmodule);
+    procedure SetCurrentModule(p:tmodule);
 
       begin
         { save the state of the scanner }
-        if assigned(current_scanner) then
-          current_scanner.tempcloseinputfile;
+        if assigned(CurrentScanner) then
+          CurrentScanner.tempcloseinputfile;
         { set new module }
-        current_module:=p;
+        CurrentModule:=p;
         { restore previous module settings }
-        Fillchar(current_filepos,sizeof(current_filepos),0);
-        if assigned(current_module) then
+        Fillchar(CurrentFilePos,sizeof(CurrentFilePos),0);
+        if assigned(CurrentModule) then
           begin
-            current_asmdata:=tasmdata(current_module.asmdata);
-            current_debuginfo:=tdebuginfo(current_module.debuginfo);
+            CurrentAsmData:=tasmdata(CurrentModule.asmdata);
+            CurrentDebugInfo:=tdebuginfo(CurrentModule.debuginfo);
             { restore scanner and file positions }
-            set_current_scanner(tscannerfile(current_module.scanner));
-            if assigned(current_scanner) then
+            set_current_scanner(tscannerfile(CurrentModule.scanner));
+            if assigned(CurrentScanner) then
               begin
-                current_scanner.tempopeninputfile;
-                current_scanner.gettokenpos;
-                parser_current_file:=current_scanner.inputfile.name;
+                CurrentScanner.tempopeninputfile;
+                CurrentScanner.gettokenpos;
+                parser_current_file:=CurrentScanner.inputfile.name;
               end
             else
               begin
-                current_filepos.moduleindex:=current_module.moduleid;
+                CurrentFilePos.moduleindex:=CurrentModule.moduleid;
                 parser_current_file:='';
               end;
           end
         else
           begin
-            current_asmdata:=nil;
+            CurrentAsmData:=nil;
             set_current_scanner(nil);
-            current_debuginfo:=nil;
+            CurrentDebugInfo:=nil;
           end;
       end;
 
@@ -719,25 +719,25 @@ implementation
           begin
             { also update current_scanner if it was pointing
               to this module }
-            if current_scanner=tscannerfile(scanner) then
+            if CurrentScanner=tscannerfile(scanner) then
               set_current_scanner(nil);
             freeandnil(scanner);
           end;
         if assigned(asmdata) then
           begin
-            if current_asmdata=asmdata then
-              current_asmdata:=nil;
+            if CurrentAsmData=asmdata then
+              CurrentAsmData:=nil;
              asmdata.free;
              asmdata := nil;
           end;
         if assigned(procinfo) then
           begin
-            if current_procinfo=tprocinfo(procinfo) then
+            if CurrentProcInfo=tprocinfo(procinfo) then
               begin
-                current_procinfo:=nil;
-                current_structdef:=nil;
-                current_genericdef:=nil;
-                current_specializedef:=nil;
+                CurrentProcInfo:=nil;
+                CurrentStructDef:=nil;
+                CurrentGenericDef:=nil;
+                CurrentSpecializeDef:=nil;
               end;
             { release procinfo tree }
             tprocinfo(procinfo).destroy_tree;
@@ -863,26 +863,26 @@ implementation
           begin
             { also update current_scanner if it was pointing
               to this module }
-            if current_scanner=tscannerfile(scanner) then
+            if CurrentScanner=tscannerfile(scanner) then
               set_current_scanner(nil);
             freeandnil(scanner);
           end;
         if assigned(procinfo) then
           begin
-            if current_procinfo=tprocinfo(procinfo) then
+            if CurrentProcInfo=tprocinfo(procinfo) then
               begin
-                current_procinfo:=nil;
-                current_structdef:=nil;
-                current_genericdef:=nil;
-                current_specializedef:=nil;
+                CurrentProcInfo:=nil;
+                CurrentStructDef:=nil;
+                CurrentGenericDef:=nil;
+                CurrentSpecializeDef:=nil;
               end;
             { release procinfo tree }
             tprocinfo(procinfo).destroy_tree;
           end;
         if assigned(asmdata) then
           begin
-            if current_asmdata=asmdata then
-              current_asmdata:=nil;
+            if CurrentAsmData=asmdata then
+              CurrentAsmData:=nil;
             asmdata.free;
             asmdata:=nil;
           end;
@@ -935,8 +935,8 @@ implementation
         sourcefiles.free;
         sourcefiles:=tinputfilemanager.create;
         asmdata:=casmdata.create(modulename);
-        if current_module=self then
-          current_asmdata:=TAsmData(asmdata);
+        if CurrentModule=self then
+          CurrentAsmData:=TAsmData(asmdata);
         InitDebugInfo(self,current_debuginfo_reset);
         _exports.free;
         _exports:=tlinkedlist.create;
@@ -1057,7 +1057,7 @@ implementation
             end;
           premodule_namespacelist.Clear;
           end;
-        current_namespacelist:=localnamespacelist;
+        CurrentNamespaceList:=localnamespacelist;
       end;
 
 
@@ -1541,7 +1541,7 @@ implementation
         { free scanner }
         if assigned(scanner) then
           begin
-            if current_scanner=tscannerfile(scanner) then
+            if CurrentScanner=tscannerfile(scanner) then
               set_current_scanner(nil);
             FreeAndNil(scanner);
             scanner:=nil;
@@ -1593,7 +1593,7 @@ implementation
         modulename:=stringdup(upper(s));
         realmodulename:=stringdup(s);
         { also update asmlibrary names }
-        current_asmdata.name:=modulename;
+        CurrentAsmData.name:=modulename;
       end;
 
 

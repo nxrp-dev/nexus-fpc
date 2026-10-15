@@ -46,7 +46,7 @@ interface
       TAssembler=class(TObject)
       public
       {assembler info}
-        asminfo     : pasminfo;
+        asminfo     : PAsmInfo;
       {filenames}
         path        : TPathStr;
         name        : string;
@@ -57,7 +57,7 @@ interface
         SmartAsm     : boolean;
         SmartFilesCount,
         SmartHeaderCount : longint;
-        Constructor Create(info: pasminfo; smart:boolean);virtual;
+        Constructor Create(info: PAsmInfo; smart:boolean);virtual;
         Destructor Destroy;override;
         procedure NextSmartName(place:tcutplace);
         procedure MakeObject;virtual;abstract;
@@ -146,7 +146,7 @@ interface
         procedure CreateSmartLinkPath(const s:TPathStr);
       protected
       {input source info}
-        lastfileinfo : tfileposinfo;
+        lastfileinfo : TFilePosInfo;
         infile,
         lastinfile   : tinputfile;
       {last section type written}
@@ -195,8 +195,8 @@ interface
         {# Constructs the command line for calling the assembler }
         function MakeCmdLine: TCmdStr; virtual;
       public
-        Constructor Create(info: pasminfo; smart: boolean); override; final;
-        Constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); virtual;
+        Constructor Create(info: PAsmInfo; smart: boolean); override; final;
+        Constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); virtual;
         procedure MakeObject;override;
         destructor Destroy; override;
 
@@ -230,7 +230,7 @@ interface
         property CObjOutput:TObjOutputclass read FCObjOutput write FCObjOutput;
         property CInternalAr : TObjectWriterClass read FCInternalAr write FCInternalAr;
       public
-        constructor Create(info: pasminfo; smart: boolean);override;
+        constructor Create(info: PAsmInfo; smart: boolean);override;
         destructor  destroy;override;
         procedure MakeObject;override;
       end;
@@ -242,11 +242,11 @@ interface
     { get an instance of an external GNU-style assembler that is compatible
       with the current target, reusing an existing writer. Used by the LLVM
       target to write inline assembler }
-    function GetExternalGnuAssemblerWithAsmInfoWriter(info: pasminfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
+    function GetExternalGnuAssemblerWithAsmInfoWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
 
     function DrainClangAssemblerQueue: Boolean;
 
-    procedure RegisterAssembler(const r:tasminfo;c:TAssemblerClass);
+    procedure RegisterAssembler(const r:TAsmInfo;c:TAssemblerClass);
 
 
 Implementation
@@ -295,19 +295,19 @@ Implementation
                                    TAssembler
 *****************************************************************************}
 
-    Constructor TAssembler.Create(info: pasminfo; smart: boolean);
+    Constructor TAssembler.Create(info: PAsmInfo; smart: boolean);
       begin
         asminfo:=info;
       { load start values }
-        AsmFileName:=current_module.AsmFilename;
-        ObjFileName:=current_module.ObjFileName;
-        name:=Lower(current_module.modulename^);
-        path:=current_module.outputpath;
-        asmprefix := current_module.asmprefix^;
-        if current_module.outputpath = '' then
+        AsmFileName:=CurrentModule.AsmFilename;
+        ObjFileName:=CurrentModule.ObjFileName;
+        name:=Lower(CurrentModule.modulename^);
+        path:=CurrentModule.outputpath;
+        asmprefix := CurrentModule.asmprefix^;
+        if CurrentModule.outputpath = '' then
           ppufilename := ''
         else
-          ppufilename := current_module.ppufilename;
+          ppufilename := CurrentModule.ppufilename;
         SmartAsm:=smart;
         SmartFilesCount:=0;
         SmartHeaderCount:=0;
@@ -338,8 +338,8 @@ Implementation
           cut_end :
             s:=asmprefix+tostr(SmartHeaderCount)+'t';
         end;
-        AsmFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+target_info.asmext);
-        ObjFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+target_info.objext);
+        AsmFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+TargetInfo.asmext);
+        ObjFileName:=Path+FixFileName(s+tostr(SmartFilesCount)+TargetInfo.objext);
         { insert in container so it can be cleared after the linking }
         SmartLinkOFiles.Insert(ObjFileName);
       end;
@@ -355,9 +355,9 @@ Implementation
       var
         g : file;
       begin
-        if cs_asm_leave in current_settings.globalswitches then
+        if cs_asm_leave in CurrentSettings.globalswitches then
          exit;
-        if cs_asm_extern in current_settings.globalswitches then
+        if cs_asm_extern in CurrentSettings.globalswitches then
          AsmRes.AddDeleteCommand(owner.AsmFileName)
         else
          begin
@@ -588,10 +588,10 @@ Implementation
         index: longint;
       begin
         MaybeAddLinePostfix;
-        if (cs_assemble_on_target in current_settings.globalswitches) then
-          newline:=@target_info.newline
+        if (cs_assemble_on_target in CurrentSettings.globalswitches) then
+          newline:=@TargetInfo.newline
         else
-          newline:=@source_info.newline;
+          newline:=@SourceInfo.newline;
         if assigned(decorator) then
           begin
             newlineres:=decorator.LineEnding(newline^);
@@ -743,8 +743,8 @@ Implementation
     Function TExternalAssembler.DoPipe:boolean;
       begin
 {$ifdef hasunix}
-        DoPipe:=(cs_asm_pipe in current_settings.globalswitches) and
-                (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * current_settings.globalswitches) = []) and
+        DoPipe:=(cs_asm_pipe in CurrentSettings.globalswitches) and
+                (([cs_asm_extern,cs_asm_leave,cs_assemble_on_target] * CurrentSettings.globalswitches) = []) and
                 ((asminfo^.id in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin]));
 {$else hasunix}
         DoPipe:=false;
@@ -758,20 +758,20 @@ Implementation
       end;
 
 
-    Constructor TExternalAssembler.Create(info: pasminfo; smart: boolean);
+    Constructor TExternalAssembler.Create(info: PAsmInfo; smart: boolean);
       begin
         CreateWithWriter(info,CreateNewAsmWriter,true,smart);
       end;
 
 
-    constructor TExternalAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter,smart: boolean);
+    constructor TExternalAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter,smart: boolean);
       begin
         inherited Create(info,smart);
         fwriter:=wr;
         ffreewriter:=freewriter;
         if SmartAsm then
           begin
-            path:=FixPath(ChangeFileExt(AsmFileName,target_info.smartext),false);
+            path:=FixPath(ChangeFileExt(AsmFileName,TargetInfo.smartext),false);
             CreateSmartLinkPath(path);
           end;
       end;
@@ -786,7 +786,7 @@ Implementation
           if findfirst(FixPath(s,false)+'*'+AExt,faAnyFile,dir) = 0 then
             begin
               repeat
-                DeleteFile(s+source_info.dirsep+dir.name);
+                DeleteFile(s+SourceInfo.dirsep+dir.name);
               until findnext(dir) <> 0;
             end;
           findclose(dir);
@@ -798,8 +798,8 @@ Implementation
         if PathExists(s,false) then
          begin
            { the path exists, now we clean only all the .o and .s files }
-           DeleteFilesWithExt(target_info.objext);
-           DeleteFilesWithExt(target_info.asmext);
+           DeleteFilesWithExt(TargetInfo.objext);
+           DeleteFilesWithExt(TargetInfo.asmext);
          end
         else
          begin
@@ -827,14 +827,14 @@ Implementation
         asmbin:=asminfo^.asmbin;
         if (af_llvm in asminfo^.flags) then
           asmbin:=asmbin+llvmutilssuffix;
-        if cs_assemble_on_target in current_settings.globalswitches then
+        if cs_assemble_on_target in CurrentSettings.globalswitches then
          begin
            { If assembling on target, don't add any path PM }
-           FindAssembler:=utilsprefix+ChangeFileExt(asmbin,target_info.exeext);
+           FindAssembler:=utilsprefix+ChangeFileExt(asmbin,TargetInfo.exeext);
            exit;
          end
         else
-         UtilExe:=utilsprefix+ChangeFileExt(asmbin,source_info.exeext);
+         UtilExe:=utilsprefix+ChangeFileExt(asmbin,SourceInfo.exeext);
         if lastas<>ord(asminfo^.id) then
          begin
            lastas:=ord(asminfo^.id);
@@ -843,10 +843,10 @@ Implementation
              asfound:=FindFile(UtilExe,utilsdirectory,false,LastASBin);
            if not AsFound then
              asfound:=FindExe(UtilExe,false,LastASBin);
-           if (not asfound) and not(cs_asm_extern in current_settings.globalswitches) then
+           if (not asfound) and not(cs_asm_extern in CurrentSettings.globalswitches) then
             begin
               Message1(exec_e_assembler_not_found,LastASBin);
-              current_settings.globalswitches:=current_settings.globalswitches+[cs_asm_extern];
+              CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_asm_extern];
             end;
            if asfound then
             Message1(exec_t_using_assembler,LastASBin);
@@ -860,7 +860,7 @@ Implementation
         DosExitCode : Integer;
       begin
         result:=true;
-        if (cs_asm_extern in current_settings.globalswitches) then
+        if (cs_asm_extern in CurrentSettings.globalswitches) then
           begin
             if SmartAsm then
               AsmRes.AddAsmCommand(command,para,Name+'('+TosTr(SmartFilesCount)+')')
@@ -879,7 +879,7 @@ Implementation
         except on E:EOSError do
           begin
             Message1(exec_e_cant_call_assembler,tostr(E.ErrorCode));
-            current_settings.globalswitches:=current_settings.globalswitches+[cs_asm_extern];
+            CurrentSettings.globalswitches:=CurrentSettings.globalswitches+[cs_asm_extern];
             result:=false;
           end;
         end;
@@ -894,7 +894,7 @@ Implementation
         result:=true;
         if DoPipe then
          exit;
-        if not(cs_asm_extern in current_settings.globalswitches) then
+        if not(cs_asm_extern in CurrentSettings.globalswitches) then
          begin
            if SmartAsm then
             begin
@@ -906,8 +906,8 @@ Implementation
          end;
 
         if (asminfo^.id in [as_clang_gas,as_clang_asdarwin]) and
-           not(cs_asm_extern in current_settings.globalswitches) and
-           not(cs_assemble_on_target in current_settings.globalswitches) then
+           not(cs_asm_extern in CurrentSettings.globalswitches) and
+           not(cs_assemble_on_target in CurrentSettings.globalswitches) then
           begin
             command:=FindAssembler;
             para:=MakeCmdLine;
@@ -917,7 +917,7 @@ Implementation
             FlushOutput;
             try
               result:=NXQueueClangAssembly(command,para,AsmFileName,
-                not(cs_asm_leave in current_settings.globalswitches));
+                not(cs_asm_leave in CurrentSettings.globalswitches));
               if not result and not ClangAssemblerFailureReported then
                 Message1(exec_e_error_while_assembling,
                   tostr(NXClangAssemblyExitCode));
@@ -967,7 +967,7 @@ Implementation
         begin
           result:=0;
           for alt:=low(tasmlisttype) to high(tasmlisttype) do
-            result:=result+current_asmdata.asmlists[alt].section_count;
+            result:=result+CurrentAsmData.asmlists[alt].section_count;
         end;
 
       const
@@ -975,9 +975,9 @@ Implementation
 
       begin
         result:=asminfo^.asmcmd;
-        if af_llvm in target_asm.flags then
+        if af_llvm in TargetAsm.flags then
           Replace(result,'$TRIPLET',targettriplet(triplet_llvm));
-        if (cs_assemble_on_target in current_settings.globalswitches) then
+        if (cs_assemble_on_target in CurrentSettings.globalswitches) then
          begin
            Replace(result,'$ASM',maybequoted(ScriptFixFileName(AsmFileName)));
            Replace(result,'$OBJ',maybequoted(ScriptFixFileName(ObjFileName)));
@@ -996,24 +996,24 @@ Implementation
            Replace(result,'$OBJ',maybequoted(ObjFileName));
          end;
 
-         if (cs_create_pic in current_settings.moduleswitches) then
+         if (cs_create_pic in CurrentSettings.moduleswitches) then
            Replace(result,'$PIC','-KPIC')
          else
            Replace(result,'$PIC','');
 
-         if (cs_asm_source in current_settings.globalswitches) then
+         if (cs_asm_source in CurrentSettings.globalswitches) then
            Replace(result,'$NOWARN','')
          else
            Replace(result,'$NOWARN','-W');
 
-         if target_info.endian=endian_little then
+         if TargetInfo.endian=endian_little then
            Replace(result,'$ENDIAN','-mlittle')
          else
            Replace(result,'$ENDIAN','-mbig');
 
          { as we don't keep track of the amount of sections we created we simply
            enable Big Obj COFF files always for targets that need them }
-         if not (target_info.system in systems_all_windows) or
+         if not (TargetInfo.system in systems_all_windows) or
             (section_high_bound<min_big_obj_section_count) then
            Replace(result,'$BIGOBJ','')
          else
@@ -1057,8 +1057,8 @@ Implementation
             (lastfileinfo.fileindex<>hp.fileinfo.fileindex) then
           begin
             { in case of a generic the module can be different }
-            if current_module.moduleid=hp.fileinfo.moduleindex then
-              module:=current_module
+            if CurrentModule.moduleid=hp.fileinfo.moduleindex then
+              module:=CurrentModule
             else
               module:=get_module(hp.fileinfo.moduleindex);
             { during the compilation of the system unit there are cases when
@@ -1070,7 +1070,7 @@ Implementation
             if assigned(infile) then
               begin
                 { open only if needed !! }
-                if (cs_asm_source in current_settings.globalswitches) then
+                if (cs_asm_source in CurrentSettings.globalswitches) then
                   infile.open;
               end;
             { avoid unnecessary reopens of the same file !! }
@@ -1080,7 +1080,7 @@ Implementation
             lastfileinfo.line:=-1;
           end;
         { write source }
-        if (cs_asm_source in current_settings.globalswitches) and
+        if (cs_asm_source in CurrentSettings.globalswitches) and
           assigned(infile) then
           begin
             if (infile<>lastinfile) then
@@ -1171,7 +1171,7 @@ Implementation
         real_byte_count:=tai_realconst(hp).datasize;
         { write bytes in inverse order if source and target endianess don't
           match }
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             { go from back to front }
 
@@ -1211,7 +1211,7 @@ Implementation
 
           ait_regalloc :
             begin
-              if (cs_asm_regalloc in current_settings.globalswitches) then
+              if (cs_asm_regalloc in CurrentSettings.globalswitches) then
                 begin
                   writer.AsmWrite(#9+asminfo^.comment+'Register ');
                   repeat
@@ -1230,7 +1230,7 @@ Implementation
 
           ait_tempalloc :
             begin
-              if (cs_asm_tempalloc in current_settings.globalswitches) then
+              if (cs_asm_tempalloc in CurrentSettings.globalswitches) then
                 WriteTempalloc(tai_tempalloc(hp));
             end;
 
@@ -1286,7 +1286,7 @@ Implementation
                                   TInternalAssembler
 *****************************************************************************}
 
-    constructor TInternalAssembler.Create(info: pasminfo; smart: boolean);
+    constructor TInternalAssembler.Create(info: PAsmInfo; smart: boolean);
       begin
         inherited;
         ObjOutput:=nil;
@@ -1622,7 +1622,7 @@ Implementation
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             current_filepos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=tailineinfo(hp).fileinfo;
 {$endif DEBUG}
             case hp.typ of
              ait_align :
@@ -1806,7 +1806,7 @@ Implementation
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             current_filepos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=tailineinfo(hp).fileinfo;
 {$endif DEBUG}
            case hp.typ of
              ait_align :
@@ -2022,7 +2022,7 @@ Implementation
          begin
 {$ifdef DEBUG}
            if not(hp.typ in SkipLineInfo) then
-             current_filepos:=tailineinfo(hp).fileinfo;
+             CurrentFilePos:=tailineinfo(hp).fileinfo;
 {$endif DEBUG}
            case hp.typ of
              ait_align :
@@ -2088,7 +2088,7 @@ Implementation
                        pdata:=@ccomp;
                      end;
                  end;
-                 if source_info.endian<>target_info.endian then
+                 if SourceInfo.endian<>TargetInfo.endian then
                    begin
                      for index:=0 to real_byte_count-1 do
                        lebbuf[index]:=pbyte(pdata)[real_byte_count-1-index];
@@ -2148,7 +2148,7 @@ Implementation
                        else if relative_reloc then
                          ObjData.writereloc(ObjData.CurrObjSec.size+tai_const(hp).size-objsym.address+tai_const(hp).symofs,tai_const(hp).size,objsymend,RELOC_RELATIVE)
                        else
-                         if source_info.endian<>target_info.endian then
+                         if SourceInfo.endian<>TargetInfo.endian then
                            begin
                              case tai_const(hp).size of
                                 1 : begin
@@ -2180,7 +2180,7 @@ Implementation
                    aitconst_rva_symbol :
                      begin
                        { PE32+? }
-                       if target_info.system in systems_peoptplus then
+                       if TargetInfo.system in systems_peoptplus then
                          ObjData.writereloc(Tai_const(hp).symofs,sizeof(longint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_RVA)
                        else
                          ObjData.writereloc(Tai_const(hp).symofs,sizeof(pint),Objdata.SymbolRef(tai_const(hp).sym),RELOC_RVA);
@@ -2300,7 +2300,7 @@ Implementation
                      s:='A';
                      eabi_section.write(s[1],1);
                      ddword:=eabi_section.Size-1;
-                     if source_info.endian<>target_info.endian then
+                     if SourceInfo.endian<>TargetInfo.endian then
                        ddword:=SwapEndian(ddword);
                      eabi_section.write(ddword,4);
                      s:='aeabi'#0;
@@ -2308,7 +2308,7 @@ Implementation
                      s:=#1;
                      eabi_section.write(s[1],1);
                      ddword:=eabi_section.Size-1-4-6-1;
-                     if source_info.endian<>target_info.endian then
+                     if SourceInfo.endian<>TargetInfo.endian then
                        ddword:=SwapEndian(ddword);
                      eabi_section.write(ddword,4);
                    end;
@@ -2337,12 +2337,12 @@ Implementation
                  TmpDataPos:=eabi_section.Data.Pos;
                  eabi_section.Data.seek(1);
                  ddword:=eabi_section.Size-1;
-                 if source_info.endian<>target_info.endian then
+                 if SourceInfo.endian<>TargetInfo.endian then
                    ddword:=SwapEndian(ddword);
                  eabi_section.Data.write(ddword,4);
                  eabi_section.Data.seek(12);
                  ddword:=eabi_section.Size-1-4-6;
-                 if source_info.endian<>target_info.endian then
+                 if SourceInfo.endian<>TargetInfo.endian then
                    ddword:=SwapEndian(ddword);
                  eabi_section.Data.write(ddword,4);
                  eabi_section.Data.Seek(TmpDataPos);
@@ -2449,9 +2449,9 @@ Implementation
         startsecname: String;
         startsecorder: TAsmSectionOrder;
       begin
-        if not(cs_asm_leave in current_settings.globalswitches) and
+        if not(cs_asm_leave in CurrentSettings.globalswitches) and
            not(af_needar in asminfo^.flags) then
-          ObjWriter:=CInternalAr.CreateAr(current_module.staticlibfilename)
+          ObjWriter:=CInternalAr.CreateAr(CurrentModule.staticlibfilename)
         else
           ObjWriter:=TObjectwriter.create;
 
@@ -2571,12 +2571,12 @@ Implementation
         to_do:=[low(Tasmlisttype)..high(Tasmlisttype)];
         if usedeffileforexports then
           exclude(to_do,al_exports);
-        if not(tf_section_threadvars in target_info.flags) then
+        if not(tf_section_threadvars in TargetInfo.flags) then
           exclude(to_do,al_threadvars);
         for i:=low(TasmlistType) to high(TasmlistType) do
-          if (i in to_do) and (current_asmdata.asmlists[i]<>nil) and
-             (not current_asmdata.asmlists[i].empty) then
-            addlist(current_asmdata.asmlists[i]);
+          if (i in to_do) and (CurrentAsmData.asmlists[i]<>nil) and
+             (not CurrentAsmData.asmlists[i].empty) then
+            addlist(CurrentAsmData.asmlists[i]);
 
         if SmartAsm then
           writetreesmart
@@ -2593,22 +2593,22 @@ Implementation
       var
         a : TAssembler;
       begin
-        if not assigned(CAssembler[target_asm.id]) then
+        if not assigned(CAssembler[TargetAsm.id]) then
           Message(asmw_f_assembler_output_not_supported);
-        a:=CAssembler[target_asm.id].Create(@target_asm,smart);
+        a:=CAssembler[TargetAsm.id].Create(@TargetAsm,smart);
         a.MakeObject;
         a.Free;
         a := nil;
       end;
 
 
-    function GetExternalGnuAssemblerWithAsmInfoWriter(info: pasminfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
+    function GetExternalGnuAssemblerWithAsmInfoWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile): TExternalAssembler;
       var
         asmkind: tasm;
       begin
         for asmkind in [as_gas,as_darwin,as_clang_gas,as_clang_asdarwin] do
           if assigned(asminfos[asmkind]) and
-             (target_info.system in asminfos[asmkind]^.supported_targets) then
+             (TargetInfo.system in asminfos[asmkind]^.supported_targets) then
             begin
               result:=TExternalAssemblerClass(CAssembler[asmkind]).CreateWithWriter(asminfos[asmkind],wr,false,false);
               exit;
@@ -2620,7 +2620,7 @@ Implementation
                                  Init/Done
 *****************************************************************************}
 
-    procedure RegisterAssembler(const r:tasminfo;c:TAssemblerClass);
+    procedure RegisterAssembler(const r:TAsmInfo;c:TAssemblerClass);
       var
         t : tasm;
       begin

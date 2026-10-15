@@ -274,8 +274,8 @@ end;
 
 procedure InitExport;
 begin
-  if assigned(CExportLib[Ord(target_info.system)]) then
-   exportlib:=CExportLib[Ord(target_info.system)].Create
+  if assigned(CExportLib[Ord(TargetInfo.system)]) then
+   exportlib:=CExportLib[Ord(TargetInfo.system)].Create
   else
    exportlib:=TExportLib.Create;
 end;

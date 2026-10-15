@@ -38,7 +38,7 @@ unit procinfo;
       aasmbase,aasmtai,aasmdata;
 
     const
-      inherited_inlining_flags : tprocinfoflags =
+      inherited_inlining_flags : TProcInfoFlags =
         [pi_do_call,
          { the stack frame can't be removed in this case }
          pi_has_assembler_block,
@@ -66,13 +66,13 @@ unit procinfo;
             exception handling }
           finalize_procinfo : tprocinfo;
           { file location of begin of procedure }
-          entrypos  : tfileposinfo;
+          entrypos  : TFilePosInfo;
           { file location of end of procedure }
-          exitpos   : tfileposinfo;
+          exitpos   : TFilePosInfo;
           { local switches at begin of procedure }
-          entryswitches : tlocalswitches;
+          entryswitches : TLocalSwitches;
           { local switches at end of procedure }
-          exitswitches  : tlocalswitches;
+          exitswitches  : TLocalSwitches;
 
           { Size of the parameters on the stack }
           para_stack_size : pint;
@@ -83,7 +83,7 @@ unit procinfo;
           { some collected informations about the procedure
             see pi_xxxx constants above
           }
-          flags : tprocinfoflags;
+          flags : TProcInfoFlags;
 
           { register used as frame pointer }
           framepointer : tregister;
@@ -193,9 +193,9 @@ unit procinfo;
           procedure add_local_ref_def(def:tdef);
           procedure export_local_ref_defs;
 
-          procedure add_captured_sym(sym:tsym;def:tdef;const fileinfo:tfileposinfo);
+          procedure add_captured_sym(sym:tsym;def:tdef;const fileinfo:TFilePosInfo);
 
-          function create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: tnode): tprocinfo;
+          function create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: TNode): tprocinfo;
 
           { Add to parent's list of nested procedures even if parent is a 'main' procedure }
           procedure force_nested;
@@ -227,7 +227,7 @@ unit procinfo;
     var
        cprocinfo : tcprocinfo;
        { information about the current sub routine being parsed (@var(pprocinfo))}
-       current_procinfo : tprocinfo;
+       CurrentProcInfo : tprocinfo;
 
     function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
 
@@ -240,13 +240,13 @@ implementation
     function nexus_profile_proc_eligible(pi: tprocinfo): boolean;
       begin
         result:=assigned(pi) and assigned(pi.procdef) and
-          (target_info.system=system_x86_64_win64) and
-          (cs_nexus_profile in current_settings.moduleswitches) and
-          assigned(current_module) and
+          (TargetInfo.system=system_x86_64_win64) and
+          (cs_nexus_profile in CurrentSettings.moduleswitches) and
+          assigned(CurrentModule) and
           assigned(main_module) and
           not main_module.islibrary and
-          (current_module.modulename^<>'NXPROFILE') and
-          (current_module.modulename^<>'NXPROFILERRUNTIME') and
+          (CurrentModule.modulename^<>'NXPROFILE') and
+          (CurrentModule.modulename^<>'NXPROFILERRUNTIME') and
           not(po_assembler in pi.procdef.procoptions) and
           not(po_nostackframe in pi.procdef.procoptions) and
           not(po_interrupt in pi.procdef.procoptions) and
@@ -262,7 +262,7 @@ implementation
         parent:=aparent;
         procdef:=nil;
         para_stack_size:=0;
-        fstackalignment:=target_info.stackalign;
+        fstackalignment:=TargetInfo.stackalign;
         flags:=[];
         init_framepointer;
         framepointer:=NR_FRAME_POINTER_REG;
@@ -275,8 +275,8 @@ implementation
         nexus_profile_section:=nil;
         reference_reset(save_regs_ref,sizeof(aint),[]);
         { labels }
-        current_asmdata.getjumplabel(CurrExitLabel);
-        current_asmdata.getjumplabel(CurrGOTLabel);
+        CurrentAsmData.getjumplabel(CurrExitLabel);
+        CurrentAsmData.getjumplabel(CurrGOTLabel);
         CurrBreakLabel:=nil;
         CurrContinueLabel:=nil;
         if Assigned(parent) and (parent.procdef.parast.symtablelevel>=normal_function_level) then
@@ -415,31 +415,31 @@ implementation
                not (po_external in tprocdef(def).procoptions) and
                (tprocdef(def).proccalloption<>pocall_internproc) then
               begin
-                current_module.add_public_asmsym(tprocdef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
+                CurrentModule.add_public_asmsym(tprocdef(def).mangledname,AB_GLOBAL,AT_FUNCTION);
                 lAlias:=TCmdStrListItem(tprocdef(def).aliasnames.first);
                 while assigned(lAlias) do
                   begin
-                    current_module.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
+                    CurrentModule.add_public_asmsym(lAlias.str,AB_GLOBAL,AT_FUNCTION);
                     lAlias:=TCmdStrListItem(lAlias.next);
                   end;
               end;
           end;
       end;
 
-    procedure tprocinfo.add_captured_sym(sym:tsym;def:tdef;const fileinfo:tfileposinfo);
+    procedure tprocinfo.add_captured_sym(sym:tsym;def:tdef;const fileinfo:TFilePosInfo);
       begin
         procdef.add_captured_sym(sym,def,fileinfo);
       end;
 
-    function tprocinfo.create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: tnode): tprocinfo;
+    function tprocinfo.create_for_outlining(const basesymname: string; astruct: tabstractrecorddef; potype: tproctypeoption; resultdef: tdef; entrynodeinfo: TNode): tprocinfo;
       begin
         result:=cprocinfo.create(self);
         result.force_nested;
         result.procdef:=create_outline_procdef(basesymname,astruct,potype,resultdef);
         result.entrypos:=entrynodeinfo.fileinfo;
         result.entryswitches:=entrynodeinfo.localswitches;
-        result.exitpos:=current_filepos; // filepos of last node?
-        result.exitswitches:=current_settings.localswitches; // localswitches of last node?
+        result.exitpos:=CurrentFilePos; // filepos of last node?
+        result.exitswitches:=CurrentSettings.localswitches; // localswitches of last node?
       end;
 
     procedure tprocinfo.allocate_push_parasize(size:longint);

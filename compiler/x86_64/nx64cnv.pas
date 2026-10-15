@@ -32,7 +32,7 @@ interface
     type
        tx8664typeconvnode = class(tx86typeconvnode)
          protected
-         function first_nothing : tnode;override;
+         function first_nothing : TNode;override;
          { procedure second_int_to_int;override; }
          { procedure second_string_to_string;override; }
          { procedure second_cstring_to_pchar;override; }
@@ -42,7 +42,7 @@ interface
          { procedure second_chararray_to_string;override; }
          { procedure second_char_to_string;override; }
          { function first_int_to_real: tnode; override; }
-         function first_int_to_real : tnode;override;
+         function first_int_to_real : TNode;override;
          procedure second_int_to_real;override;
          { procedure second_real_to_real;override; }
          { procedure second_cord_to_pointer;override; }
@@ -69,7 +69,7 @@ implementation
       cgutils,cgobj,hlcgobj,cgx86;
 
 
-    function tx8664typeconvnode.first_nothing : tnode;
+    function tx8664typeconvnode.first_nothing : TNode;
       begin
         result:=nil;
         { If typecasting between a Single or Double and a record of equal size,
@@ -87,15 +87,15 @@ implementation
       end;
 
 
-    function tx8664typeconvnode.first_int_to_real : tnode;
+    function tx8664typeconvnode.first_int_to_real : TNode;
       begin
         result:=nil;
         if use_vectorfpu(resultdef) and
            (torddef(left.resultdef).ordtype=u32bit) and
-           not(FPUX86_HAS_AVX512F in fpu_capabilities[current_settings.fputype]) then
+           not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) then
           begin
             inserttypeconv(left,s64inttype);
-            firstpass(left);
+            FirstPass(left);
           end
         else
           result:=inherited first_int_to_real;
@@ -110,7 +110,7 @@ implementation
          l1,l2 : tasmlabel;
          op : tasmop;
       begin
-        if use_vectorfpu(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[current_settings.fputype]) then
+        if use_vectorfpu(resultdef) and not(FPUX86_HAS_AVX512F in fpu_capabilities[CurrentSettings.fputype]) then
           begin
             if is_double(resultdef) then
               op:=A_CVTSI2SD
@@ -120,7 +120,7 @@ implementation
               internalerror(200506061);
 
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
 
             case torddef(left.resultdef).ordtype of
               u64bit:
@@ -129,59 +129,59 @@ implementation
                      we load bits 0..62 and then check bit 63:
                      if it is 1 then we add $80000000 000000000
                      as double                                  }
-                   current_asmdata.getdatalabel(l1);
-                   current_asmdata.getjumplabel(l2);
+                   CurrentAsmData.getdatalabel(l1);
+                   CurrentAsmData.getjumplabel(l2);
 
                    { Get sign bit }
                    if not(left.location.loc in [LOC_REGISTER,LOC_REFERENCE]) then
-                     hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
+                     hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false);
                    case left.location.loc of
                      LOC_REGISTER :
                        begin
-                         cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                          emit_const_reg(A_BT,S_Q,63,left.location.register);
-                         current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,S_Q,left.location.register,location.register));
+                         CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_Q,left.location.register,location.register));
                        end;
                      LOC_REFERENCE :
                        begin
                          href:=left.location.reference;
-                         tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,href);
+                         tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
                          inc(href.offset,4);
-                         cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+                         cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
                          emit_const_ref(A_BT,S_L,31,href);
                          dec(href.offset,4);
-                         current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(op,S_Q,href,location.register));
+                         CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_Q,href,location.register));
                        end;
                      else
                        internalerror(200710181);
                    end;
 
-                   cg.a_jmp_flags(current_asmdata.CurrAsmList,F_NC,l2);
-                   cg.a_reg_dealloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
-                   new_section(current_asmdata.asmlists[al_typedconsts],sec_rodata_norel,l1.name,const_align(sizeof(pint)));
-                   current_asmdata.asmlists[al_typedconsts].concat(Tai_label.Create(l1));
+                   cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NC,l2);
+                   cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
+                   new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,l1.name,const_align(sizeof(pint)));
+                   CurrentAsmData.asmlists[al_typedconsts].concat(Tai_label.Create(l1));
                    reference_reset_symbol(href,l1,0,4,[]);
                    { simplify for PIC }
-                   tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,href);
+                   tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
 
                    { I got these constant from a test program (FK) }
                    if is_double(resultdef) then
                      begin
                        { double (2^64) }
-                       current_asmdata.asmlists[al_typedconsts].concat(Tai_const.Create_32bit(0));
-                       current_asmdata.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($43f00000));
-                       tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,href);
-                       current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSD,S_NO,href,location.register));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit(0));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($43f00000));
+                       tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,href);
+                       CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSD,S_NO,href,location.register));
                      end
                    else if is_single(resultdef) then
                      begin
                        { single(2^64) }
-                       current_asmdata.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($5f800000));
-                       current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSS,S_NO,href,location.register));
+                       CurrentAsmData.asmlists[al_typedconsts].concat(Tai_const.Create_32bit($5f800000));
+                       CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_ADDSS,S_NO,href,location.register));
                      end
                    else
                      internalerror(200506071);
-                   cg.a_label(current_asmdata.CurrAsmList,l2);
+                   cg.a_label(CurrentAsmData.CurrAsmList,l2);
                 end
               else
                 inherited second_int_to_real;

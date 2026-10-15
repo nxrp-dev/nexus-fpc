@@ -35,7 +35,7 @@ interface
       TSupportedOpOverload = (op_unary, op_binary);
       Ttok2nodeRec=record
         tok : ttoken;
-        nod : tnodetype;
+        nod : TNodeType;
         inr : tinlinenumber;
         supported_op_overloads: set of TSupportedOpOverload;
       end;
@@ -76,7 +76,7 @@ interface
         FCandidateProcs    : pcandidate;
         FIgnoredCandidateProcs : tfplist;
         FProcCnt    : integer;
-        FParaNode   : tnode;
+        FParaNode   : TNode;
         FParaLength : smallint;
         FAllowVariant : boolean;
         FParaAnonSyms : tfplist;
@@ -86,8 +86,8 @@ interface
         procedure calc_distance(st_root:tsymtable;flags:tcallcandidatesflags);
         function  proc_add(st:tsymtable;pd:tprocdef):pcandidate;
       public
-        constructor init(sym:tprocsym;st:TSymtable;ppn:tnode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
-        constructor init_operator(op:ttoken;ppn:tnode);
+        constructor init(sym:tprocsym;st:TSymtable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+        constructor init_operator(op:ttoken;ppn:TNode);
         destructor done;
         procedure list(all:boolean);
 {$ifdef EXTDEBUG}
@@ -156,7 +156,7 @@ interface
         (tok:_OP_COPY      ; managementoperator: mop_copy)
       );
 
-    function node2opstr(nt:tnodetype):string;
+    function node2opstr(nt:TNodeType):string;
     function token2managementoperator(optoken:ttoken):tmanagementoperator;
 
     { check operator args and result type }
@@ -172,50 +172,50 @@ interface
       );
       toverload_check_flags = set of toverload_check_flag;
 
-    function isbinaryoperatoroverloadable(treetyp:tnodetype;ld:tdef;lt:tnodetype;rd:tdef;rt:tnodetype) : boolean;
+    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType) : boolean;
     function isoperatoracceptable(pf : tprocdef; optoken : ttoken) : boolean;
-    function isunaryoverloaded(var t : tnode;ocf:toverload_check_flags) : boolean;
-    function isbinaryoverloaded(var t : tnode;ocf:toverload_check_flags) : boolean;
+    function isunaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
+    function isbinaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
 
     { Register Allocation }
-    procedure make_not_regable(p : tnode; how: tregableinfoflags);
+    procedure make_not_regable(p : TNode; how: tregableinfoflags);
 
     { procvar handling }
-    function  is_proc2procvar_load(p:tnode;out realprocdef:tprocdef):boolean;
+    function  is_proc2procvar_load(p:TNode;out realprocdef:tprocdef):boolean;
     { returns whether a node represents a load of the function result node via
       the function name (so it could also be a recursive call to the function
       in case there or no parameters, or the function could be passed as
       procvar }
-    function  is_ambiguous_funcret_load(p: tnode; out owningprocdef: tprocdef): boolean;
+    function  is_ambiguous_funcret_load(p: TNode; out owningprocdef: tprocdef): boolean;
     procedure test_local_to_procvar(from_def:tprocvardef;to_def:tdef);
 
     { sets varsym varstate field correctly }
     type
       tvarstateflag = (vsf_must_be_valid,vsf_use_hints,vsf_use_hint_for_string_result);
       tvarstateflags = set of tvarstateflag;
-    procedure set_varstate(p:tnode;newstate:tvarstate;varstateflags:tvarstateflags);
+    procedure set_varstate(p:TNode;newstate:tvarstate;varstateflags:tvarstateflags);
 
     { sets the callunique flag, if the node is a vecn, }
     { takes care of type casts etc.                 }
-    procedure set_unique(p : tnode);
+    procedure set_unique(p : TNode);
 
-    function  valid_for_formal_var(p : tnode; report_errors: boolean) : boolean;
-    function  valid_for_formal_constref(p : tnode; report_errors: boolean) : boolean;
-    function  valid_for_formal_const(p : tnode; report_errors: boolean) : boolean;
-    function  valid_for_var(p:tnode; report_errors: boolean):boolean;
-    function  valid_for_assignment(p:tnode; report_errors: boolean):boolean;
-    function  valid_for_loopvar(p:tnode; report_errors: boolean):boolean;
-    function  valid_for_addr(p : tnode; report_errors: boolean) : boolean;
+    function  valid_for_formal_var(p : TNode; report_errors: boolean) : boolean;
+    function  valid_for_formal_constref(p : TNode; report_errors: boolean) : boolean;
+    function  valid_for_formal_const(p : TNode; report_errors: boolean) : boolean;
+    function  valid_for_var(p:TNode; report_errors: boolean):boolean;
+    function  valid_for_assignment(p:TNode; report_errors: boolean):boolean;
+    function  valid_for_loopvar(p:TNode; report_errors: boolean):boolean;
+    function  valid_for_addr(p : TNode; report_errors: boolean) : boolean;
 
-    function allowenumop(nt:tnodetype):boolean;
+    function allowenumop(nt:TNodeType):boolean;
 
-    procedure check_ranges(const location: tfileposinfo; source: tnode; destdef: tdef);
+    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: tdef);
 
     { returns whether the def may be used in the Default() intrinsic; static
       arrays, records and objects are checked recursively }
     function is_valid_for_default(def:tdef):boolean;
 
-    procedure UninitializedVariableMessage(pos : tfileposinfo;warning,local,managed : boolean;name : TMsgStr);
+    procedure UninitializedVariableMessage(pos : TFilePosInfo;warning,local,managed : boolean;name : TMsgStr);
 
 implementation
 
@@ -239,7 +239,7 @@ implementation
       non_commutative_op_nodes=[shln,shrn,divn,modn,starstarn,slashn,subn];
 
 
-    function node2opstr(nt:tnodetype):string;
+    function node2opstr(nt:TNodeType):string;
       var
         i : integer;
       begin
@@ -267,9 +267,9 @@ implementation
       end;
 
 
-    function isbinaryoperatoroverloadable(treetyp:tnodetype;ld:tdef;lt:tnodetype;rd:tdef;rt:tnodetype) : boolean;
+    function isbinaryoperatoroverloadable(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType) : boolean;
 
-        function internal_check(treetyp:tnodetype;ld:tdef;lt:tnodetype;rd:tdef;rt:tnodetype;var allowed:boolean):boolean;
+        function internal_check(treetyp:TNodeType;ld:tdef;lt:TNodeType;rd:tdef;rt:TNodeType;var allowed:boolean):boolean;
         const
           identity_operators=[equaln,unequaln];
           order_theoretic_operators=identity_operators+[ltn,lten,gtn,gten];
@@ -339,7 +339,7 @@ implementation
                              (treetyp in order_theoretic_operators)
                            ) or
                            (
-                             (m_mac in current_settings.modeswitches) and
+                             (m_mac in CurrentSettings.modeswitches) and
                              is_stringlike(rd) and
                              (ld.typ=orddef) and
                              (treetyp in string_comparison_operators)) or
@@ -479,9 +479,9 @@ implementation
             arraydef :
               begin
                 { not vector/mmx }
-                if ((cs_mmx in current_settings.localswitches) and
+                if ((cs_mmx in CurrentSettings.localswitches) and
                    is_mmx_able_array(ld)) or
-                   ((cs_support_vectors in current_settings.globalswitches) and
+                   ((cs_support_vectors in CurrentSettings.globalswitches) and
                    is_vector(ld)) then
                  begin
                    allowed:=false;
@@ -526,7 +526,7 @@ implementation
                     end;
 
                  { <dyn. array> + <dyn. array> is handled by the compiler }
-                 if (m_array_operators in current_settings.modeswitches) and
+                 if (m_array_operators in CurrentSettings.modeswitches) and
                      (treetyp=addn) and
                      (is_dynamic_array(ld) or is_array_constructor(ld)) and
                      (is_dynamic_array(rd) or is_array_constructor(rd)) then
@@ -578,7 +578,7 @@ implementation
       end;
 
 
-    function isunaryoperatoroverloadable(treetyp:tnodetype;inlinenumber:tinlinenumber;ld:tdef) : boolean;
+    function isunaryoperatoroverloadable(treetyp:TNodeType;inlinenumber:tinlinenumber;ld:tdef) : boolean;
       begin
         result:=false;
         case treetyp of
@@ -594,7 +594,7 @@ implementation
                 exit;
 
 {$ifdef SUPPORT_MMX}
-              if (cs_mmx in current_settings.localswitches) and
+              if (cs_mmx in CurrentSettings.localswitches) and
                  is_mmx_able_array(ld) then
                 exit;
 {$endif SUPPORT_MMX}
@@ -607,7 +607,7 @@ implementation
               if ld.typ = orddef then exit;
 
 {$ifdef SUPPORT_MMX}
-              if (cs_mmx in current_settings.localswitches) and
+              if (cs_mmx in CurrentSettings.localswitches) and
                  is_mmx_able_array(ld) then
                 exit;
 {$endif SUPPORT_MMX}
@@ -733,7 +733,7 @@ implementation
       end;
 
 
-    function isunaryoverloaded(var t : tnode;ocf:toverload_check_flags) : boolean;
+    function isunaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
       var
         ld      : tdef;
         optoken : ttoken;
@@ -747,7 +747,7 @@ implementation
         operpd:=nil;
 
         { load easier access variables }
-        ld:=tunarynode(t).left.resultdef;
+        ld:=TUnaryNode(t).left.resultdef;
 
         { if we are dealing with inline function then get the function }
         if t.nodetype=inlinen then
@@ -797,7 +797,7 @@ implementation
           ppn:=tcallparanode(tinlinenode(t).left.getcopy)
         else
           begin
-            ppn:=ccallparanode.create(tunarynode(t).left.getcopy,nil);
+            ppn:=ccallparanode.create(TUnaryNode(t).left.getcopy,nil);
             ppn.get_paratype;
           end;
         candidates.init_operator(optoken,ppn);
@@ -872,12 +872,12 @@ implementation
       end;
 
 
-    function isbinaryoverloaded(var t : tnode;ocf:toverload_check_flags) : boolean;
+    function isbinaryoverloaded(var t : TNode;ocf:toverload_check_flags) : boolean;
       var
         rd,ld   : tdef;
         optoken : ttoken;
         operpd  : tprocdef;
-        ht      : tnode;
+        ht      : TNode;
         ppn     : tcallparanode;
         i,cand_cnt : sizeint;
 
@@ -886,7 +886,7 @@ implementation
             candidates : tcallcandidates;
           begin
             { generate parameter nodes }
-            ppn:=ccallparanode.create(tbinarynode(t).right.getcopy,ccallparanode.create(tbinarynode(t).left.getcopy,nil));
+            ppn:=ccallparanode.create(TBinaryNode(t).right.getcopy,ccallparanode.create(TBinaryNode(t).left.getcopy,nil));
             ppn.get_paratype;
             candidates.init_operator(optoken,ppn);
 
@@ -965,10 +965,10 @@ implementation
         ppn:=nil;
 
         { load easier access variables }
-        ld:=tbinarynode(t).left.resultdef;
-        rd:=tbinarynode(t).right.resultdef;
+        ld:=TBinaryNode(t).left.resultdef;
+        rd:=TBinaryNode(t).right.resultdef;
         if not (ocf_check_non_overloadable in ocf) and
-            not isbinaryoperatoroverloadable(t.nodetype,ld,tbinarynode(t).left.nodetype,rd,tbinarynode(t).right.nodetype) then
+            not isbinaryoperatoroverloadable(t.nodetype,ld,TBinaryNode(t).left.nodetype,rd,TBinaryNode(t).right.nodetype) then
           exit;
 
         { operator overload is possible }
@@ -1045,7 +1045,7 @@ implementation
 ****************************************************************************}
 
     { marks an lvalue as "unregable" }
-    procedure make_not_regable_intern(p : tnode; how: tregableinfoflags; records_only: boolean);
+    procedure make_not_regable_intern(p : TNode; how: tregableinfoflags; records_only: boolean);
       var
         lHighSym: tabstractvarsym;
       begin
@@ -1127,7 +1127,7 @@ implementation
         until false;
       end;
 
-    procedure make_not_regable(p : tnode; how: tregableinfoflags);
+    procedure make_not_regable(p : TNode; how: tregableinfoflags);
       begin
         make_not_regable_intern(p,how,false);
       end;
@@ -1137,15 +1137,15 @@ implementation
                           Subroutine Handling
 ****************************************************************************}
 
-    function is_proc2procvar_load(p:tnode;out realprocdef:tprocdef):boolean;
+    function is_proc2procvar_load(p:TNode;out realprocdef:tprocdef):boolean;
       begin
         result:=false;
         { remove voidpointer typecast for tp procvars }
-        if ((m_tp_procvar in current_settings.modeswitches) or
-            (m_mac_procvar in current_settings.modeswitches)) and
+        if ((m_tp_procvar in CurrentSettings.modeswitches) or
+            (m_mac_procvar in CurrentSettings.modeswitches)) and
            (p.nodetype=typeconvn) and
            is_voidpointer(p.resultdef) then
-          p:=tunarynode(p).left;
+          p:=TUnaryNode(p).left;
         result:=(p.nodetype=typeconvn) and
                 (ttypeconvnode(p).convtype=tc_proc_2_procvar);
         if result then
@@ -1153,7 +1153,7 @@ implementation
       end;
 
 
-    function is_ambiguous_funcret_load(p: tnode; out owningprocdef: tprocdef): boolean;
+    function is_ambiguous_funcret_load(p: TNode; out owningprocdef: tprocdef): boolean;
       begin
         result:=false;
         { the funcret is an absolutevarsym, which gets converted into a type
@@ -1175,7 +1175,7 @@ implementation
     { local routines can't be assigned to procvars }
     procedure test_local_to_procvar(from_def:tprocvardef;to_def:tdef);
       begin
-         if not(m_nested_procvars in current_settings.modeswitches) and
+         if not(m_nested_procvars in CurrentSettings.modeswitches) and
             (from_def.parast.symtablelevel>normal_function_level) and
             not (po_anonymous in from_def.procoptions) and
             (to_def.typ=procvardef) and
@@ -1184,7 +1184,7 @@ implementation
       end;
 
 
-    procedure UninitializedVariableMessage(pos : tfileposinfo;warning,local,managed : boolean;name : TMsgStr);
+    procedure UninitializedVariableMessage(pos : TFilePosInfo;warning,local,managed : boolean;name : TMsgStr);
       const
         msg : array[false..true,false..true,false..true] of dword = (
             (
@@ -1201,7 +1201,7 @@ implementation
       end;
 
 
-    procedure set_varstate(p:tnode;newstate:tvarstate;varstateflags:tvarstateflags);
+    procedure set_varstate(p:TNode;newstate:tvarstate;varstateflags:tvarstateflags);
       const
         vstrans: array[tvarstate,tvarstate] of tvarstate = (
           { vs_none -> ... }
@@ -1257,26 +1257,26 @@ implementation
                    else
                      ;
                end;
-                 p:=tunarynode(p).left;
+                 p:=TUnaryNode(p).left;
                end;
              subscriptn :
                begin
-                 if is_implicit_pointer_object_type(tunarynode(p).left.resultdef) then
+                 if is_implicit_pointer_object_type(TUnaryNode(p).left.resultdef) then
                    newstate := vs_read;
-                 p:=tunarynode(p).left;
+                 p:=TUnaryNode(p).left;
                end;
              vecn:
                begin
-                 set_varstate(tbinarynode(p).right,vs_read,[vsf_must_be_valid]);
+                 set_varstate(TBinaryNode(p).right,vs_read,[vsf_must_be_valid]);
                  { dyn. arrays and dyn. strings are read }
-                 if is_implicit_array_pointer(tunarynode(p).left.resultdef) then
+                 if is_implicit_array_pointer(TUnaryNode(p).left.resultdef) then
                    newstate:=vs_read;
                  if (newstate in [vs_read,vs_readwritten]) or
-                    not(tunarynode(p).left.resultdef.typ in [stringdef,arraydef]) then
+                    not(TUnaryNode(p).left.resultdef.typ in [stringdef,arraydef]) then
                    include(varstateflags,vsf_must_be_valid)
                  else if (newstate = vs_written) then
                    exclude(varstateflags,vsf_must_be_valid);
-                 p:=tunarynode(p).left;
+                 p:=TUnaryNode(p).left;
                end;
              { do not parse calln }
              calln :
@@ -1284,8 +1284,8 @@ implementation
              loadn :
                begin
                  { the methodpointer/framepointer is read }
-                 if assigned(tunarynode(p).left) then
-                   set_varstate(tunarynode(p).left,vs_read,[vsf_must_be_valid]);
+                 if assigned(TUnaryNode(p).left) then
+                   set_varstate(TUnaryNode(p).left,vs_read,[vsf_must_be_valid]);
                  if (tloadnode(p).symtableentry.typ in [localvarsym,paravarsym,staticvarsym]) then
                    begin
                      hsym:=tabstractvarsym(tloadnode(p).symtableentry);
@@ -1301,12 +1301,12 @@ implementation
                          if assigned(hsym.owner) and
                             not(vo_is_external in hsym.varoptions) and
                             (hsym.owner.symtabletype in [parasymtable,localsymtable,staticsymtable]) and
-                            ((hsym.owner=current_procinfo.procdef.localst) or
-                             (hsym.owner=current_procinfo.procdef.parast)) then
+                            ((hsym.owner=CurrentProcInfo.procdef.localst) or
+                             (hsym.owner=CurrentProcInfo.procdef.parast)) then
                            begin
                              if vsf_use_hints in varstateflags then
                                include(tloadnode(p).loadnodeflags,loadnf_only_uninitialized_hint);
-                             if not(cs_opt_nodedfa in current_settings.optimizerswitches) then
+                             if not(cs_opt_nodedfa in CurrentSettings.optimizerswitches) then
                                begin
                                  if (vo_is_funcret in hsym.varoptions) then
                                    begin
@@ -1377,7 +1377,7 @@ implementation
       end;
 
 
-    procedure set_unique(p : tnode);
+    procedure set_unique(p : TNode);
       begin
         while assigned(p) do
          begin
@@ -1390,7 +1390,7 @@ implementation
              typeconvn,
              subscriptn,
              derefn:
-               p:=tunarynode(p).left;
+               p:=TUnaryNode(p).left;
              else
                break;
            end;
@@ -1398,11 +1398,11 @@ implementation
       end;
 
 
-    function  valid_for_assign(p:tnode;opts:TValidAssigns; report_errors: boolean):boolean;
+    function  valid_for_assign(p:TNode;opts:TValidAssigns; report_errors: boolean):boolean;
       var
         typeconvs: tfpobjectlist;
         hp2,
-        hp : tnode;
+        hp : TNode;
         gotstring,
         gotsubscript,
         gotrecord,
@@ -1425,11 +1425,11 @@ implementation
               class in which they have been declared (not in descendent constructors) }
             else if vs.varspez=vs_final then
               begin
-                if (current_procinfo.procdef.owner=vs.owner) then
+                if (CurrentProcInfo.procdef.owner=vs.owner) then
                   if vs.typ=staticvarsym then
-                    result:=current_procinfo.procdef.proctypeoption=potype_class_constructor
+                    result:=CurrentProcInfo.procdef.proctypeoption=potype_class_constructor
                   else
-                    result:=current_procinfo.procdef.proctypeoption=potype_constructor;
+                    result:=CurrentProcInfo.procdef.proctypeoption=potype_constructor;
                 if not result and
                    report_errors then
                   CGMessagePos(hp.fileinfo,type_e_invalid_final_assignment);
@@ -1650,13 +1650,13 @@ implementation
                       returned by a function can also be changed, or you can
                       assign the dynamic array to a variable and then change
                       its elements anyway }
-                 if is_dynamic_array(tunarynode(hp).left.resultdef) then
+                 if is_dynamic_array(TUnaryNode(hp).left.resultdef) then
                    begin
                      result:=true;
                      mayberesettypeconvs;
                      exit;
                    end;
-                 hp:=tunarynode(hp).left;
+                 hp:=TUnaryNode(hp).left;
                end;
              asn :
                begin
@@ -1669,7 +1669,7 @@ implementation
                      mayberesettypeconvs;
                      exit;
                    end;
-                 hp:=tunarynode(hp).left;
+                 hp:=TUnaryNode(hp).left;
                end;
              subscriptn :
                begin
@@ -1737,7 +1737,7 @@ implementation
                begin
                  { Temp strings are stored in memory, for compatibility with
                    delphi only }
-                 if (m_delphi in current_settings.modeswitches) and
+                 if (m_delphi in CurrentSettings.modeswitches) and
                     ((valid_addr in opts) or
                      (valid_const in opts)) and
                     (hp.resultdef.typ=stringdef) then
@@ -1802,7 +1802,7 @@ implementation
                    begin
                      { Temp strings are stored in memory, for compatibility with
                        delphi only }
-                     if (m_delphi in current_settings.modeswitches) and
+                     if (m_delphi in CurrentSettings.modeswitches) and
                         (valid_addr in opts) and
                         (hp.resultdef.typ=stringdef) then
                        result:=true
@@ -1862,7 +1862,7 @@ implementation
              nothingn :
                begin
                  { generics can generate nothing nodes, just allow everything }
-                 if df_generic in current_procinfo.procdef.defoptions then
+                 if df_generic in CurrentProcInfo.procdef.defoptions then
                    result:=true
                  else if report_errors then
                    CGMessagePos(hp.fileinfo,type_e_variable_id_expected);
@@ -1951,51 +1951,51 @@ implementation
       end;
 
 
-    function  valid_for_var(p:tnode; report_errors: boolean):boolean;
+    function  valid_for_var(p:TNode; report_errors: boolean):boolean;
       begin
         valid_for_var:=valid_for_assign(p,[valid_range],report_errors);
       end;
 
 
-    function  valid_for_formal_var(p : tnode; report_errors: boolean) : boolean;
+    function  valid_for_formal_var(p : TNode; report_errors: boolean) : boolean;
       begin
         valid_for_formal_var:=valid_for_assign(p,[valid_void,valid_range],report_errors);
       end;
 
 
-    function  valid_for_formal_constref(p : tnode; report_errors: boolean) : boolean;
+    function  valid_for_formal_constref(p : TNode; report_errors: boolean) : boolean;
       begin
         valid_for_formal_constref:=(p.resultdef.typ=formaldef) or
           valid_for_assign(p,[valid_void,valid_range],report_errors);
       end;
 
 
-    function  valid_for_formal_const(p : tnode; report_errors: boolean) : boolean;
+    function  valid_for_formal_const(p : TNode; report_errors: boolean) : boolean;
       begin
         valid_for_formal_const:=(p.resultdef.typ=formaldef) or
           valid_for_assign(p,[valid_void,valid_const,valid_property,valid_range],report_errors);
       end;
 
 
-    function  valid_for_assignment(p:tnode; report_errors: boolean):boolean;
+    function  valid_for_assignment(p:TNode; report_errors: boolean):boolean;
       begin
         valid_for_assignment:=valid_for_assign(p,[valid_property,valid_packed],report_errors);
       end;
 
 
-    function  valid_for_loopvar(p:tnode; report_errors: boolean):boolean;
+    function  valid_for_loopvar(p:TNode; report_errors: boolean):boolean;
       begin
         valid_for_loopvar:=valid_for_assign(p,[valid_property],report_errors);
       end;
 
 
-    function  valid_for_addr(p : tnode; report_errors: boolean) : boolean;
+    function  valid_for_addr(p : TNode; report_errors: boolean) : boolean;
       begin
         result:=valid_for_assign(p,[valid_const,valid_addr,valid_void],report_errors);
       end;
 
 
-    procedure var_para_allowed(var eq:tequaltype;def_from,def_to:Tdef; fromnode: tnode);
+    procedure var_para_allowed(var eq:tequaltype;def_from,def_to:Tdef; fromnode: TNode);
       begin
         { Note: eq must be already valid, it will only be updated! }
         case def_to.typ of
@@ -2093,16 +2093,16 @@ implementation
             begin
               tmpeq:=te_incompatible;
               { in tp/macpas mode proc -> procvar is allowed }
-              if ((m_tp_procvar in current_settings.modeswitches) or
-                  (m_mac_procvar in current_settings.modeswitches)) and
+              if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                  (m_mac_procvar in CurrentSettings.modeswitches)) and
                  (p.left.nodetype=calln) then
                 tmpeq:=proc_to_procvar_equal(tprocdef(tcallnode(p.left).procdefinition),tprocvardef(def_to),false);
               if (tmpeq=te_incompatible) and
-                 (m_nested_procvars in current_settings.modeswitches) and
+                 (m_nested_procvars in CurrentSettings.modeswitches) and
                  is_proc2procvar_load(p.left,realprocdef) then
                 tmpeq:=proc_to_procvar_equal(realprocdef,tprocvardef(def_to),false);
               if (tmpeq=te_incompatible) and
-                 (m_mac in current_settings.modeswitches) and
+                 (m_mac in CurrentSettings.modeswitches) and
                  is_ambiguous_funcret_load(p.left,realprocdef) then
                 tmpeq:=proc_to_procvar_equal(realprocdef,tprocvardef(def_to),false);
               if tmpeq<>te_incompatible then
@@ -2112,8 +2112,8 @@ implementation
             begin
               tmpeq:=te_incompatible;
               { in tp/macpas mode proc -> funcref is allowed }
-              if ((m_tp_procvar in current_settings.modeswitches) or
-                  (m_mac_procvar in current_settings.modeswitches)) and
+              if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                  (m_mac_procvar in CurrentSettings.modeswitches)) and
                  (p.left.nodetype=calln) and
                  is_invokable(def_to) then
                 tmpeq:=proc_to_funcref_conv(tprocdef(tcallnode(p.left).procdefinition),tobjectdef(def_to));
@@ -2124,8 +2124,8 @@ implementation
             begin
               { an arrayconstructor of proccalls may have to be converted to
                 an array of procvars }
-              if ((m_tp_procvar in current_settings.modeswitches) or
-                  (m_mac_procvar in current_settings.modeswitches)) and
+              if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                  (m_mac_procvar in CurrentSettings.modeswitches)) and
                  (tarraydef(def_to).elementdef.typ=procvardef) and
                  is_array_constructor(p.resultdef) and
                  not is_variant_array(p.resultdef) then
@@ -2154,10 +2154,10 @@ implementation
       end;
 
 
-    function allowenumop(nt:tnodetype):boolean;
+    function allowenumop(nt:TNodeType):boolean;
       begin
         result:=(nt in [equaln,unequaln,ltn,lten,gtn,gten]) or
-                ((cs_allow_enum_calc in current_settings.localswitches) and
+                ((cs_allow_enum_calc in CurrentSettings.localswitches) and
                  (nt in [addn,subn]));
       end;
 
@@ -2174,7 +2174,7 @@ implementation
                            TCallCandidates
 ****************************************************************************}
 
-    constructor tcallcandidates.init(sym:tprocsym;st:TSymtable;ppn:tnode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
+    constructor tcallcandidates.init(sym:tprocsym;st:TSymtable;ppn:TNode;flags:tcallcandidatesflags;spezcontext:tspecializationcontext);
       begin
         if not assigned(sym) then
           internalerror(200411015);
@@ -2186,7 +2186,7 @@ implementation
       end;
 
 
-    constructor tcallcandidates.init_operator(op:ttoken;ppn:tnode);
+    constructor tcallcandidates.init_operator(op:ttoken;ppn:TNode);
       begin
         FOperator:=op;
         FProcsym:=nil;
@@ -2267,19 +2267,19 @@ implementation
                 the presence of a messagestr/int, in which case those have to
                 match exactly }
               if cc_anoninherited in flags then
-                if po_msgint in current_procinfo.procdef.procoptions then
+                if po_msgint in CurrentProcInfo.procdef.procoptions then
                   begin
                     if not(po_msgint in pd.procoptions) or
-                       (pd.messageinf.i<>current_procinfo.procdef.messageinf.i) then
+                       (pd.messageinf.i<>CurrentProcInfo.procdef.messageinf.i) then
                       continue
                   end
-                else if po_msgstr in current_procinfo.procdef.procoptions then
+                else if po_msgstr in CurrentProcInfo.procdef.procoptions then
                   begin
                     if not(po_msgstr in pd.procoptions) or
-                       (pd.messageinf.str^<>current_procinfo.procdef.messageinf.str^) then
+                       (pd.messageinf.str^<>CurrentProcInfo.procdef.messageinf.str^) then
                       continue
                   end
-                else if (compare_paras(current_procinfo.procdef.paras,pd.paras,cp_all,[cpo_ignorehidden])<te_equal) then
+                else if (compare_paras(CurrentProcInfo.procdef.paras,pd.paras,cp_all,[cpo_ignorehidden])<te_equal) then
                   continue;
               foundanything:=true;
               { Store first procsym found }
@@ -2349,7 +2349,7 @@ implementation
                )
                and (cc_searchhelpers in flags) then
              begin
-               if m_multi_helpers in current_settings.modeswitches then
+               if m_multi_helpers in CurrentSettings.modeswitches then
                  begin
                    helperlist:=get_objectpascal_helpers(structdef);
                    if assigned(helperlist) and (helperlist.count>0) then
@@ -2582,7 +2582,7 @@ implementation
            FProcSymtable.defowner.owner.iscurrentunit then
           contextstructdef:=tabstractrecorddef(FProcSymtable.defowner)
         else
-          contextstructdef:=current_structdef;
+          contextstructdef:=CurrentStructDef;
 
         { symtable is needed later to calculate the distance }
         if assigned(FProcsym) then
@@ -2892,7 +2892,7 @@ implementation
         pdoper   : tprocdef;
         releasecurrpt, check_valid_var : boolean;
         cdoptions : tcompare_defs_options;
-        n : tnode;
+        n : TNode;
 
         function fp_precision_score(def: tdef): integer;
           begin
@@ -3238,7 +3238,7 @@ implementation
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_boolformal,tve_boolformal,tve_boolformal,tve_boolformal,
            tve_chari64,tve_chari64,tve_dblcurrency,tve_incompatible);
-        variantfloatdef_cl: array[tfloattype] of tvariantequaltype =
+        variantfloatdef_cl: array[TFloatType] of tvariantequaltype =
           (tve_single,tve_dblcurrency,tve_extended,tve_extended,
            tve_dblcurrency,tve_dblcurrency);
         variantstringdef_cl: array[tstringtype] of tvariantequaltype =
@@ -3329,7 +3329,7 @@ implementation
           exit;
         { if a specialization is better than a non-specialization then
           the non-generic always wins }
-        if m_implicit_function_specialization in current_settings.modeswitches then
+        if m_implicit_function_specialization in CurrentSettings.modeswitches then
           begin
             is_better_candidate:=ord(bestpd^.data.is_specialization)-ord(currpd^.data.is_specialization); { 1 if bestpd^.data.is_specialization and not currpd^.data.is_specialization, -1 if the reverse, 0 if same is_specialization. }
             if is_better_candidate<>0 then
@@ -3615,7 +3615,7 @@ implementation
         { for implicit specializations non-generics should take precedence so
           when comparing a specialization to a non-specialization mark as undecided
           and it will be re-evaluated in is_better_candidate }
-        if (m_implicit_function_specialization in current_settings.modeswitches)
+        if (m_implicit_function_specialization in CurrentSettings.modeswitches)
           and (pd^.data.is_specialization <> bestpd^.data.is_specialization) then
           compare_by_old_sortout_check:=0;
      end;
@@ -3872,9 +3872,9 @@ implementation
       end;
 
 
-    procedure check_ranges(const location: tfileposinfo; source: tnode; destdef: tdef);
+    procedure check_ranges(const location: TFilePosInfo; source: TNode; destdef: tdef);
       begin
-        if not(cs_check_ordinal_size in current_settings.localswitches) then
+        if not(cs_check_ordinal_size in CurrentSettings.localswitches) then
           exit;
         { check if the assignment may cause a range check error }
         { if its not explicit, and only if the values are       }
@@ -3899,7 +3899,7 @@ implementation
                (source.resultdef.typ<>floatdef) and
                not is_in_limit(source.resultdef,destdef)) then
              begin
-               if (cs_check_range in current_settings.localswitches) then
+               if (cs_check_range in CurrentSettings.localswitches) then
                  MessagePos(location,type_w_smaller_possible_range_check)
                else
                  MessagePos(location,type_h_smaller_possible_range_check);

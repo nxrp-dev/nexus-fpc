@@ -255,11 +255,11 @@ interface
        end;
 
        TDJCoffAssembler = class(tinternalassembler)
-         constructor create(info: pasminfo; smart:boolean);override;
+         constructor create(info: PAsmInfo; smart:boolean);override;
        end;
 
        TPECoffassembler = class(tinternalassembler)
-         constructor create(info: pasminfo; smart:boolean);override;
+         constructor create(info: PAsmInfo; smart:boolean);override;
        end;
 
 
@@ -568,7 +568,7 @@ implementation
        end; }
    procedure MaybeSwap(var v : tcoffpedatadir);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.vaddr:=SwapEndian(v.vaddr);
             v.size:=SwapEndian(v.size);
@@ -586,7 +586,7 @@ implementation
        end; *)
    procedure MaybeSwap(var v : tcoffheader);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.mach:=SwapEndian(v.mach);
             v.nsects:=SwapEndian(v.nsects);
@@ -612,7 +612,7 @@ implementation
        end; *)
    procedure MaybeSwap(var v : tcoffbigobjheader);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.Sig1:=SwapEndian(v.Sig1);
             v.Sig2:=SwapEndian(v.Sig2);
@@ -666,7 +666,7 @@ implementation
       var
         i : longint;
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.Magic:=SwapEndian(v.Magic);
             v.tsize:=SwapEndian(v.tsize);
@@ -718,7 +718,7 @@ implementation
        end; *)
     procedure MaybeSwap(var v : tcoffsechdr);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.vsize:=SwapEndian(v.vsize);
             v.rvaofs:=SwapEndian(v.rvaofs);
@@ -744,7 +744,7 @@ implementation
        end; *)
     procedure MaybeSwap(var v : coffdjoptheader);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.magic:=SwapEndian(v.magic);
             v.vstamp:=SwapEndian(v.vstamp);
@@ -768,7 +768,7 @@ implementation
        end; *)
     procedure MaybeSwap(var v : coffsectionrec);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.len:=SwapEndian(v.len);
             v.nrelocs:=SwapEndian(v.nrelocs);
@@ -786,7 +786,7 @@ implementation
        end; *)
     procedure MaybeSwap(var v : coffreloc);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.address:=SwapEndian(v.address);
             v.sym:=SwapEndian(v.sym);
@@ -800,7 +800,7 @@ implementation
        end;*)
     procedure MaybeSwap(var v : strtableoffset);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.Zeroes:=SwapEndian(v.Zeroes);
             v.Offset:=SwapEndian(v.Offset);
@@ -818,7 +818,7 @@ implementation
        end; *)
     procedure MaybeSwap(var v : coffsymbol);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             if v.name[0]=#0 then
               v.strpos:=SwapEndian(v.strpos);
@@ -843,7 +843,7 @@ implementation
 
     procedure MaybeSwap(var v : coffbigobjsymbol);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             if (true) then
               MaybeSwap(v.Name.Offset);
@@ -863,7 +863,7 @@ implementation
      *)
     procedure MaybeSwap(var v : tlsdirectory);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.data_start:=SwapEndian(v.data_start);
             v.data_end:=SwapEndian(v.data_end);
@@ -890,7 +890,7 @@ implementation
      *)
     procedure MaybeSwap(var v : TPECoffExpDir);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.flag:=SwapEndian(v.flag);
             v.stamp:=SwapEndian(v.stamp);
@@ -1558,7 +1558,7 @@ const pemagic : array[0..3] of byte = (
           begin
             { non-PECOFF targets lack rodata support }
             if (atype in [sec_rodata,sec_rodata_norel]) and
-               not (target_info.system in systems_all_windows) then
+               not (TargetInfo.system in systems_all_windows) then
               atype:=sec_data;
             secname:=coffsecnames[atype];
             if create_smartlink_sections and
@@ -1566,17 +1566,17 @@ const pemagic : array[0..3] of byte = (
               begin
                 case aorder of
                   secorder_begin :
-                    if target_info.system=system_x86_64_win64 then
+                    if TargetInfo.system=system_x86_64_win64 then
                       sep:='$B_'
                     else
                       sep:='.b_';
                   secorder_end :
-                    if target_info.system=system_x86_64_win64 then
+                    if TargetInfo.system=system_x86_64_win64 then
                       sep:='$Y_'
                     else
                       sep:='.z_';
                   else
-                    if target_info.system=system_x86_64_win64 then
+                    if TargetInfo.system=system_x86_64_win64 then
                       sep:='$N_'
                     else
                       sep:='.n_';
@@ -1592,7 +1592,7 @@ const pemagic : array[0..3] of byte = (
     function TCoffObjData.createsection(atype:TAsmSectionType;const aname:string;aorder:TAsmSectionOrder):TObjSection;
       begin
         result:=inherited createsection(atype,aname,aorder);
-        if (target_info.system=system_x86_64_win64) and
+        if (TargetInfo.system=system_x86_64_win64) and
            create_smartlink_sections and
            (aname<>'') and
            not (atype in [sec_user,sec_fpc,sec_pdata]) then
@@ -1606,7 +1606,7 @@ const pemagic : array[0..3] of byte = (
     function TCoffObjData.createsection(atype:TAsmSectionType;secflags:TSectionFlags;aprogbits:TSectionProgbits;const aname:string;aorder:TAsmSectionOrder):TObjSection;
       begin
         result:=inherited createsection(atype,secflags,aprogbits,aname,aorder);
-        if (target_info.system=system_x86_64_win64) and
+        if (TargetInfo.system=system_x86_64_win64) and
            create_smartlink_sections and
            (aname<>'') and
            not (atype in [sec_user,sec_fpc,sec_pdata]) then
@@ -1619,7 +1619,7 @@ const pemagic : array[0..3] of byte = (
 
     procedure TCoffObjData.CreateDebugSections;
       begin
-        if target_dbg.id=dbg_stabs then
+        if TargetDbg.id=dbg_stabs then
           begin
             stabssec:=createsection(sec_stab);
             stabstrsec:=createsection(sec_stabstr);
@@ -1716,7 +1716,7 @@ const pemagic : array[0..3] of byte = (
             if reloctype=RELOC_RVA then
               internalerror(200603033);
           end;
-        if target_info.endian<>source_info.endian then
+        if TargetInfo.endian<>SourceInfo.endian then
           begin
             ba.q:=0;
             if (len<=sizeof(data)) then
@@ -1897,7 +1897,7 @@ const pemagic : array[0..3] of byte = (
               begin
                 if ComdatSelection=oscs_none then
                   { NODUPLICATES smartlink sections need a unique key. }
-                  comdatkey:='$fpc$comdat$'+lower(current_module.modulename^)+'$'+tostr(index)
+                  comdatkey:='$fpc$comdat$'+lower(CurrentModule.modulename^)+'$'+tostr(index)
                 else
                   { Other selection modes coalesce sections with the same
                     stable section-based key. }
@@ -2034,7 +2034,7 @@ const pemagic : array[0..3] of byte = (
            { The `.file' record, and the file name auxiliary record }
            write_symbol('.file', 0, -2, COFF_SYM_FILE, 1);
            fillchar(filename,sizeof(filename),0);
-           filename:=ExtractFileName(current_module.mainsource);
+           filename:=ExtractFileName(CurrentModule.mainsource);
            inc(symidx);
            if bigobj then
              filenamelen:=sizeof(coffbigobjsymbol)
@@ -2231,7 +2231,7 @@ const pemagic : array[0..3] of byte = (
            FWriter.writearray(FCoffSyms);
            { Strings }
            i:=FCoffStrs.size+4;
-           if source_info.endian<>target_info.endian then
+           if SourceInfo.endian<>TargetInfo.endian then
              i:=SwapEndian(i);
            FWriter.write(i,4);
            FWriter.writearray(FCoffStrs);
@@ -2646,8 +2646,8 @@ const pemagic : array[0..3] of byte = (
           begin
             { Skip debug sections }
             if (oso_debug in secoptions)  and
-               (cs_link_strip in current_settings.globalswitches) and
-               not(cs_link_separate_dbg_file in current_settings.globalswitches) then
+               (cs_link_strip in CurrentSettings.globalswitches) and
+               not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
               exit;
 
             if coffrelocs>0 then
@@ -2881,7 +2881,7 @@ const pemagic : array[0..3] of byte = (
       begin
         inherited create;
         win32:=awin32;
-        if target_info.system in [system_x86_64_win64,system_aarch64_win64] then
+        if TargetInfo.system in [system_x86_64_win64,system_aarch64_win64] then
           MaxMemPos:=$FFFFFFFF
         else
           MaxMemPos:=$7FFFFFFF;
@@ -3152,7 +3152,7 @@ const pemagic : array[0..3] of byte = (
             asm symbol into PE_DATADIR_TLS with the correct
             size of this table (different for win32/win64 }
           tlsexesymbol:=texesymbol(ExeSymbolList.Find(
-            target_info.Cprefix+'_tls_used'));
+            TargetInfo.Cprefix+'_tls_used'));
           if assigned(tlsexesymbol) then
             begin
               tlssymbol:=tlsexesymbol.ObjSymbol;
@@ -3187,9 +3187,9 @@ const pemagic : array[0..3] of byte = (
         hassymbols:=(ExeWriteMode=ewm_dbgonly) or
                     (
                      (ExeWriteMode=ewm_exefull) and
-                     not(cs_link_strip in current_settings.globalswitches)
+                     not(cs_link_strip in CurrentSettings.globalswitches)
                     );
-        writeDbgStrings:=hassymbols or ((ExeWriteMode=ewm_exeonly) and (cs_link_separate_dbg_file in current_settings.globalswitches));
+        writeDbgStrings:=hassymbols or ((ExeWriteMode=ewm_exeonly) and (cs_link_separate_dbg_file in CurrentSettings.globalswitches));
         { Stub }
         if win32 then
           begin
@@ -3213,7 +3213,7 @@ const pemagic : array[0..3] of byte = (
         if win32 then
           begin
             header.flag:=PE_FILE_EXECUTABLE_IMAGE or PE_FILE_LINE_NUMS_STRIPPED;
-            if target_info.system in [system_x86_64_win64,system_aarch64_win64] then
+            if TargetInfo.system in [system_x86_64_win64,system_aarch64_win64] then
               header.flag:=header.flag or PE_FILE_LARGE_ADDRESS_AWARE
             else
               header.flag:=header.flag or PE_FILE_32BIT_MACHINE;
@@ -3292,7 +3292,7 @@ const pemagic : array[0..3] of byte = (
             else
               peoptheader.Subsystem:=PE_SUBSYSTEM_WINDOWS_CUI;
 
-            if target_info.system in [system_aarch64_win64] then
+            if TargetInfo.system in [system_aarch64_win64] then
               peoptheader.DllCharacteristics:=PE_DLLCHARACTERISTICS_DYNAMIC_BASE or
                                               PE_DLLCHARACTERISTICS_NX_COMPAT or
                                               PE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA
@@ -3351,7 +3351,7 @@ const pemagic : array[0..3] of byte = (
           begin
             { Strings }
             i:=FCoffStrs.size+4;
-            if source_info.endian<>target_info.endian then
+            if SourceInfo.endian<>TargetInfo.endian then
               i:=SwapEndian(i);
             FWriter.write(i,4);
             FWriter.writearray(FCoffStrs);
@@ -3411,7 +3411,7 @@ const pemagic : array[0..3] of byte = (
         objreloc:TObjRelocation;
         i,j:longint;
       begin
-        if not (target_info.system in [system_x86_64_win64,system_aarch64_win64]) then
+        if not (TargetInfo.system in [system_x86_64_win64,system_aarch64_win64]) then
           exit;
         exesec:=FindExeSection('.pdata');
         if exesec=nil then
@@ -3441,7 +3441,7 @@ const pemagic : array[0..3] of byte = (
                         .eh_frame sections. }
                     break;
                   end;
-                if target_info.system=system_aarch64_win64 then
+                if TargetInfo.system=system_aarch64_win64 then
                   inc(j,2)
                 else
                   inc(j,3);
@@ -3475,11 +3475,11 @@ const pemagic : array[0..3] of byte = (
         begin
           { idata4 }
           idata4objsection.writezeros(sizeof(longint));
-          if target_info.system in systems_peoptplus then
+          if TargetInfo.system in systems_peoptplus then
             idata4objsection.writezeros(sizeof(longint));
           { idata5 }
           idata5objsection.writezeros(sizeof(longint));
-          if target_info.system in systems_peoptplus then
+          if TargetInfo.system in systems_peoptplus then
             idata5objsection.writezeros(sizeof(longint));
         end;
 
@@ -3508,27 +3508,27 @@ const pemagic : array[0..3] of byte = (
             if AOrdNr <= 0 then
               begin
                 objsec.writereloc_internal(idata6objsection,idata6objsection.size,sizeof(longint),RELOC_RVA);
-                if target_info.system in systems_peoptplus then
+                if TargetInfo.system in systems_peoptplus then
                   objsec.writezeros(sizeof(longint));
               end
             else
               begin
                 { import by ordinal }
                 ordint:=AOrdNr;
-                if target_info.system in systems_peoptplus then
+                if TargetInfo.system in systems_peoptplus then
                   begin
-                    if source_info.endian<>target_info.endian then
+                    if SourceInfo.endian<>TargetInfo.endian then
                       ordint:=SwapEndian(ordint);
                     objsec.write(ordint,4);
                     ordint:=$80000000;
-                    if source_info.endian<>target_info.endian then
+                    if SourceInfo.endian<>TargetInfo.endian then
                       ordint:=SwapEndian(ordint);
                     objsec.write(ordint,4);
                   end
                 else
                   begin
                     ordint:=ordint or $80000000;
-                    if source_info.endian<>target_info.endian then
+                    if SourceInfo.endian<>TargetInfo.endian then
                       ordint:=SwapEndian(ordint);
                     objsec.write(ordint,4);
                   end;
@@ -3573,7 +3573,7 @@ const pemagic : array[0..3] of byte = (
             begin
               { index hint, function name, null terminator and align }
               word_ordint:=abs(AOrdNr);
-              if source_info.endian<>target_info.endian then
+              if SourceInfo.endian<>TargetInfo.endian then
                       word_ordint:=SwapEndian(word_ordint);
               idata6objsection.write(word_ordint,2);
               idata6objsection.writestr(afuncname);
@@ -3669,7 +3669,7 @@ const pemagic : array[0..3] of byte = (
         p:=internalObjData.CurrObjSec.Data.Pos;
         internalObjData.CurrObjSec.Data.seek(hdrpos+4);
         len:=p-hdrpos;
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           len:=SwapEndian(len);
         internalObjData.CurrObjSec.Data.write(len,4);
         internalObjData.CurrObjSec.Data.seek(p);
@@ -3715,7 +3715,7 @@ const pemagic : array[0..3] of byte = (
                         FinishBlock;
                         pgaddr:=(offset div 4096)*4096;
                         hdrpos:=internalObjData.CurrObjSec.Data.Pos;
-                        if source_info.endian<>target_info.endian then
+                        if SourceInfo.endian<>TargetInfo.endian then
                           pgaddr:=SwapEndian(pgaddr);
                         internalObjData.writebytes(pgaddr,4);
                         { Reserving space for block size. The size will be written later in FinishBlock }
@@ -3728,7 +3728,7 @@ const pemagic : array[0..3] of byte = (
 {$endif cpu64bitaddr}
                       w:=IMAGE_REL_BASED_HIGHLOW;
                     w:=(w shl 12) or (offset-pgaddr);
-                    if source_info.endian<>target_info.endian then
+                    if SourceInfo.endian<>TargetInfo.endian then
                       w:=SwapEndian(w);
                     internalObjData.writebytes(w,2);
                   end;
@@ -3767,7 +3767,7 @@ const pemagic : array[0..3] of byte = (
                                  TDJCoffAssembler
 ****************************************************************************}
 
-    constructor TDJCoffAssembler.Create(info: pasminfo; smart:boolean);
+    constructor TDJCoffAssembler.Create(info: PAsmInfo; smart:boolean);
       begin
         inherited;
         CObjOutput:=TDJCoffObjOutput;
@@ -3779,7 +3779,7 @@ const pemagic : array[0..3] of byte = (
                                TPECoffAssembler
 ****************************************************************************}
 
-    constructor TPECoffAssembler.Create(info: pasminfo; smart:boolean);
+    constructor TPECoffAssembler.Create(info: PAsmInfo; smart:boolean);
       begin
         inherited;
         CObjOutput:=TPECoffObjOutput;
@@ -3819,14 +3819,14 @@ const pemagic : array[0..3] of byte = (
         result:=false;
         fillchar(sechdr,sizeof(sechdr),0);
 {$ifdef win32}
-        if (target_info.system=system_x86_64_win64) and
+        if (TargetInfo.system=system_x86_64_win64) and
           assigned(Wow64DisableWow64FsRedirection) then
           Wow64DisableWow64FsRedirection(p);
 {$endif win32}
         DLLReader:=TObjectReader.Create;
         DLLReader.OpenFile(dllname);
 {$ifdef win32}
-        if (target_info.system=system_x86_64_win64) and
+        if (TargetInfo.system=system_x86_64_win64) and
           assigned(Wow64RevertWow64FsRedirection) then
           Wow64RevertWow64FsRedirection(p);
 {$endif win32}
@@ -3911,7 +3911,7 @@ const pemagic : array[0..3] of byte = (
 
 {$ifdef i386}
     const
-       as_i386_pecoff_info : tasminfo =
+       as_i386_pecoff_info : TAsmInfo =
           (
             id     : as_i386_pecoff;
             idtxt  : 'PECOFF';
@@ -3928,7 +3928,7 @@ const pemagic : array[0..3] of byte = (
 {$endif i386}
 {$ifdef x86_64}
     const
-       as_x86_64_pecoff_info : tasminfo =
+       as_x86_64_pecoff_info : TAsmInfo =
           (
             id     : as_x86_64_pecoff;
             idtxt  : 'PECOFF';

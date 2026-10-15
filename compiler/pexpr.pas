@@ -42,20 +42,20 @@ interface
       texprflags = set of texprflag;
 
     { reads a whole expression }
-    function expr(dotypecheck:boolean) : tnode;
+    function expr(dotypecheck:boolean) : TNode;
 
     { reads an expression without assignments and .. }
-    function comp_expr(flags:texprflags):tnode;
+    function comp_expr(flags:texprflags):TNode;
 
     { reads a single factor }
-    function factor(getaddr:boolean;flags:texprflags) : tnode;
+    function factor(getaddr:boolean;flags:texprflags) : TNode;
 
     procedure string_dec(var def: tdef; allowtypedef: boolean);
 
-    function parse_paras(__colon,__namedpara : boolean;end_of_paras : ttoken) : tnode;
+    function parse_paras(__colon,__namedpara : boolean;end_of_paras : ttoken) : TNode;
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:tnode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
 
     function get_intconst:TConstExprInt;
     function get_stringconst:string;
@@ -84,7 +84,7 @@ implementation
        pbase,pinline,ptype,pgenutil,psub,procinfo,cpuinfo
        ;
 
-    function sub_expr(pred_level:Toperator_precedence;flags:texprflags;factornode:tnode):tnode;forward;
+    function sub_expr(pred_level:Toperator_precedence;flags:texprflags;factornode:TNode):TNode;forward;
 
     var
        { true, if the inherited call is anonymous }
@@ -96,14 +96,14 @@ implementation
        { last symbol found while parsing the argument of NameOf }
        nameof_sym : tsym = nil;
        { position of the token following nameof_sym }
-       nameof_nextpos : tfileposinfo;
+       nameof_nextpos : TFilePosInfo;
 
     procedure nameof_record_sym(sym:tsym);
       begin
         if not nameof_active or not assigned(sym) then
           exit;
         nameof_sym:=sym;
-        nameof_nextpos:=current_filepos;
+        nameof_nextpos:=CurrentFilePos;
       end;
 
     { returns the declared name of sym without generic parameters }
@@ -141,11 +141,11 @@ implementation
     { and returns a pointer to the string      }
     { definition                               }
       var
-         p : tnode;
+         p : TNode;
       begin
          def:=cshortstringtype;
          consume(_STRING);
-         if current_scanner.token=_LECKKLAMMER then
+         if CurrentScanner.token=_LECKKLAMMER then
            begin
              if not(allowtypedef) then
                Message(parser_e_no_local_para_def);
@@ -188,11 +188,11 @@ implementation
           else
             begin
              // string[x] is allowed in system unit since it is a shortstring.
-             if cs_compilesystem in current_settings.moduleswitches then
+             if cs_compilesystem in CurrentSettings.moduleswitches then
                Message(parser_e_nostringaliasinsystem);
-              if cs_refcountedstrings in current_settings.localswitches then
+              if cs_refcountedstrings in CurrentSettings.localswitches then
                 begin
-                  if m_default_unicodestring in current_settings.modeswitches then
+                  if m_default_unicodestring in CurrentSettings.modeswitches then
                     def:=cunicodestringtype
                   else
                     def:=cansistringtype
@@ -203,13 +203,13 @@ implementation
        end;
 
 
-    function parse_paras(__colon,__namedpara : boolean;end_of_paras : ttoken) : tnode;
+    function parse_paras(__colon,__namedpara : boolean;end_of_paras : ttoken) : TNode;
       var
-         p1,p2,argname : tnode;
+         p1,p2,argname : TNode;
          prev_in_args,
          old_named_args_allowed : boolean;
       begin
-         if current_scanner.token=end_of_paras then
+         if CurrentScanner.token=end_of_paras then
            begin
               parse_paras:=nil;
               exit;
@@ -224,7 +224,7 @@ implementation
          repeat
            if __namedpara then
              begin
-               if current_scanner.token=_COMMA then
+               if CurrentScanner.token=_COMMA then
                  begin
                    { empty parameter }
                    p2:=ccallparanode.create(cnothingnode.create,p2);
@@ -252,7 +252,7 @@ implementation
                p2:=ccallparanode.create(p1,p2);
              end;
            { it's for the str(l:5,s); }
-           if __colon and (current_scanner.token=_COLON) then
+           if __colon and (CurrentScanner.token=_COLON) then
              begin
                consume(_COLON);
                p1:=comp_expr([ef_accept_equal]);
@@ -272,7 +272,7 @@ implementation
       end;
 
 
-     function gen_c_style_operator(ntyp:tnodetype;p1,p2:tnode) : tnode;
+     function gen_c_style_operator(ntyp:TNodeType;p1,p2:TNode) : TNode;
        var
          hdef  : tdef;
          temp  : ttempcreatenode;
@@ -290,7 +290,7 @@ implementation
 
          if might_have_sideeffects(p1,[]) then
            begin
-             typecheckpass(p1);
+             TypeCheckPass(p1);
              result:=internalstatements(newstatement);
              hdef:=cpointerdef.getreusable(p1.resultdef);
              temp:=ctempcreatenode.create(hdef,sizeof(pint),tt_persistent,false);
@@ -308,9 +308,9 @@ implementation
        end;
 
 
-     function statement_syssym(l : tinlinenumber) : tnode;
+     function statement_syssym(l : tinlinenumber) : TNode;
       var
-        p1,p2,paras  : tnode;
+        p1,p2,paras  : TNode;
         err,
         prev_in_args : boolean;
         def : tdef;
@@ -318,7 +318,7 @@ implementation
         old_nameof_active,
         nameof_ok : boolean;
         old_nameof_sym : tsym;
-        old_nameof_nextpos : tfileposinfo;
+        old_nameof_nextpos : TFilePosInfo;
       begin
         prev_in_args:=in_args;
         case l of
@@ -352,15 +352,15 @@ implementation
               statement_syssym:=nil;
               if try_to_consume(_LKLAMMER) then
                 begin
-                  if not (m_mac in current_settings.modeswitches) then
+                  if not (m_mac in CurrentSettings.modeswitches) then
                     begin
                       if not(try_to_consume(_RKLAMMER)) then
                         begin
                           p1:=comp_expr([ef_accept_equal]);
                           consume(_RKLAMMER);
-                          if not assigned(current_procinfo) or
-                             (current_procinfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
-                             is_void(current_procinfo.procdef.returndef) then
+                          if not assigned(CurrentProcInfo) or
+                             (CurrentProcInfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
+                             is_void(CurrentProcInfo.procdef.returndef) then
                             begin
                               Message(parser_e_void_function);
                               { recovery }
@@ -374,12 +374,12 @@ implementation
                   else
                     begin
                       { non local exit ? }
-                      if current_procinfo.procdef.procsym.name<>current_scanner.pattern then
+                      if CurrentProcInfo.procdef.procsym.name<>CurrentScanner.pattern then
                         begin
-                          exit_procinfo:=current_procinfo.parent;
+                          exit_procinfo:=CurrentProcInfo.parent;
                           while assigned(exit_procinfo) do
                             begin
-                              if exit_procinfo.procdef.procsym.name=current_scanner.pattern then
+                              if exit_procinfo.procdef.procsym.name=CurrentScanner.pattern then
                                 break;
                               exit_procinfo:=exit_procinfo.parent;
                             end;
@@ -387,10 +387,10 @@ implementation
                             begin
                               if not(assigned(exit_procinfo.nestedexitlabel)) then
                                 begin
-                                  include(current_procinfo.flags,pi_has_nested_exit);
-                                  exclude(current_procinfo.procdef.procoptions,po_inline);
-                                  if is_nested_pd(current_procinfo.procdef) then
-                                    current_procinfo.set_needs_parentfp(exit_procinfo.procdef.parast.symtablelevel);
+                                  include(CurrentProcInfo.flags,pi_has_nested_exit);
+                                  exclude(CurrentProcInfo.procdef.procoptions,po_inline);
+                                  if is_nested_pd(CurrentProcInfo.procdef) then
+                                    CurrentProcInfo.set_needs_parentfp(exit_procinfo.procdef.parast.symtablelevel);
 
                                   exit_procinfo.nestedexitlabel:=clabelsym.create('$nestedexit');
 
@@ -432,22 +432,22 @@ implementation
 
           in_leave :
             begin
-              if m_mac in current_settings.modeswitches then
+              if m_mac in CurrentSettings.modeswitches then
                 statement_syssym:=cbreaknode.create
               else
                 begin
-                  Message1(sym_e_id_not_found, current_scanner.orgpattern);
+                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
                   statement_syssym:=cerrornode.create;
                 end;
             end;
 
           in_cycle :
             begin
-              if m_mac in current_settings.modeswitches then
+              if m_mac in CurrentSettings.modeswitches then
                 statement_syssym:=ccontinuenode.create
               else
                 begin
-                  Message1(sym_e_id_not_found, current_scanner.orgpattern);
+                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
                   statement_syssym:=cerrornode.create;
                 end;
             end;
@@ -465,9 +465,9 @@ implementation
               if not(is_objc_class_or_protocol(p1.resultdef)) and
                  not(is_java_class_or_interface(p1.resultdef)) and
                  ((p1.resultdef.typ = objectdef) or
-                  (assigned(current_procinfo) and
-                   ((po_classmethod in current_procinfo.procdef.procoptions) or
-                    (po_staticmethod in current_procinfo.procdef.procoptions)) and
+                  (assigned(CurrentProcInfo) and
+                   ((po_classmethod in CurrentProcInfo.procdef.procoptions) or
+                    (po_staticmethod in CurrentProcInfo.procdef.procoptions)) and
                    (p1.resultdef.typ=classrefdef))) then
                statement_syssym:=geninlinenode(in_typeof_x,false,p1)
               else
@@ -539,7 +539,7 @@ implementation
           in_ismanagedtype_x:
             begin
               if (l in [in_typeinfo_x,in_gettypekind_x,in_ismanagedtype_x]) or
-                 (m_objectivec1 in current_settings.modeswitches) then
+                 (m_objectivec1 in CurrentSettings.modeswitches) then
                 begin
                   consume(_LKLAMMER);
                   in_args:=true;
@@ -572,7 +572,7 @@ implementation
                 end
               else
                 begin
-                  Message1(sym_e_id_not_found, current_scanner.orgpattern);
+                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
                   statement_syssym:=cerrornode.create;
                 end;
             end;
@@ -616,7 +616,7 @@ implementation
                   p1.free;
                   p1:=p2;
                 end;
-              if not codegenerror then
+              if not CodeGenError then
                begin
                  case p1.resultdef.typ of
                    procdef, { procvar }
@@ -666,7 +666,7 @@ implementation
               got_addrn:=true;
               p1:=factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if current_scanner.token<>_RKLAMMER then
+              if CurrentScanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
               got_addrn:=false;
@@ -682,7 +682,7 @@ implementation
               got_addrn:=true;
               p1:=factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if current_scanner.token<>_RKLAMMER then
+              if CurrentScanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=caddrnode.create(p1);
               include(taddrnode(p1).addrnodeflags,anf_ofs);
@@ -699,7 +699,7 @@ implementation
               got_addrn:=true;
               p1:=factor(true,[]);
               { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-              if current_scanner.token<>_RKLAMMER then
+              if CurrentScanner.token<>_RKLAMMER then
                 p1:=sub_expr(opcompare,[ef_accept_equal],p1);
               p1:=geninlinenode(in_seg_x,false,p1);
               got_addrn:=false;
@@ -763,7 +763,7 @@ implementation
                   in_args:=true;
                   p1:=comp_expr([ef_accept_equal]);
                   Consume(_COMMA);
-                  if not(codegenerror) then
+                  if not(CodeGenError) then
                     p2:=ccallparanode.create(comp_expr([ef_accept_equal]),nil)
                   else
                     p2:=cerrornode.create;
@@ -815,7 +815,7 @@ implementation
 
           in_objc_selector_x:
             begin
-              if (m_objectivec1 in current_settings.modeswitches) then
+              if (m_objectivec1 in CurrentSettings.modeswitches) then
                 begin
                   consume(_LKLAMMER);
                   in_args:=true;
@@ -827,7 +827,7 @@ implementation
                 end
               else
                 begin
-                  Message1(sym_e_id_not_found, current_scanner.orgpattern);
+                  Message1(sym_e_id_not_found, CurrentScanner.orgpattern);
                   statement_syssym:=cerrornode.create;
                 end;
             end;
@@ -973,14 +973,14 @@ implementation
               nameof_active:=true;
               nameof_sym:=nil;
               { only an identifier or a dotted identifier chain is allowed }
-              nameof_ok:=current_scanner.token=_ID;
-              if current_scanner.token=_RKLAMMER then
+              nameof_ok:=CurrentScanner.token=_ID;
+              if CurrentScanner.token=_RKLAMMER then
                 { NameOf() }
                 p1:=cnothingnode.create
               else
                 { getaddr: do not turn a procedure into a call }
                 p1:=factor(true,[]);
-              if current_scanner.token<>_RKLAMMER then
+              if CurrentScanner.token<>_RKLAMMER then
                 begin
                   { e.g. inline specialization TBird<Boolean> }
                   p1:=sub_expr(opcompare,[ef_accept_equal],p1);
@@ -993,10 +993,10 @@ implementation
               nameof_ok:=nameof_ok and
                 assigned(nameof_sym) and
                 (nameof_sym.typ<>errorsym) and
-                (nameof_nextpos.line=current_filepos.line) and
-                (nameof_nextpos.column=current_filepos.column) and
-                (nameof_nextpos.fileindex=current_filepos.fileindex) and
-                (nameof_nextpos.moduleindex=current_filepos.moduleindex);
+                (nameof_nextpos.line=CurrentFilePos.line) and
+                (nameof_nextpos.column=CurrentFilePos.column) and
+                (nameof_nextpos.fileindex=CurrentFilePos.fileindex) and
+                (nameof_nextpos.moduleindex=CurrentFilePos.moduleindex);
               if nameof_ok then
                 statement_syssym:=cstringconstnode.createstr(nameof_symname(nameof_sym))
               else
@@ -1088,7 +1088,7 @@ implementation
       end;
 
 
-    function maybe_load_methodpointer(st:TSymtable;var p1:tnode):boolean;
+    function maybe_load_methodpointer(st:TSymtable;var p1:TNode):boolean;
       var
         pd: tprocdef;
       begin
@@ -1099,15 +1099,15 @@ implementation
              withsymtable :
                begin
                  if (st.defowner.typ=objectdef) then
-                   p1:=tnode(twithsymtable(st).withrefnode).getcopy;
+                   p1:=TNode(twithsymtable(st).withrefnode).getcopy;
                end;
              ObjectSymtable,
              recordsymtable:
                begin
                  { Escape nested procedures }
-                 if assigned(current_procinfo) then
+                 if assigned(CurrentProcInfo) then
                    begin
-                     pd:=current_procinfo.get_normal_proc.procdef;
+                     pd:=CurrentProcInfo.get_normal_proc.procdef;
                      { We are calling from the static class method which has no self node }
                      if assigned(pd) and pd.no_self_node then
                        if st.symtabletype=recordsymtable then
@@ -1133,12 +1133,12 @@ implementation
 
 
     { reads the parameter for a subroutine call }
-    procedure do_proc_call(sym:tsym;st:TSymtable;obj:tabstractrecorddef;getaddr:boolean;var again : boolean;var p1:tnode;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_proc_call(sym:tsym;st:TSymtable;obj:tabstractrecorddef;getaddr:boolean;var again : boolean;var p1:TNode;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
       var
          membercall,
          prevafterassn : boolean;
          i        : integer;
-         para,p2  : tnode;
+         para,p2  : TNode;
          currpara : tparavarsym;
          aprocdef : tprocdef;
       begin
@@ -1166,9 +1166,9 @@ implementation
                getaddr:=true;
              end
             else
-             if ((m_tp_procvar in current_settings.modeswitches) or
-                 (m_mac_procvar in current_settings.modeswitches)) and
-                not(current_scanner.token in [_CARET,_POINT,_LKLAMMER]) then
+             if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                 (m_mac_procvar in CurrentSettings.modeswitches)) and
+                not(CurrentScanner.token in [_CARET,_POINT,_LKLAMMER]) then
               begin
                 if assigned(getfuncrefdef) then
                   aprocdef:=Tprocsym(sym).Find_procdef_byfuncrefdef(getfuncrefdef)
@@ -1183,7 +1183,7 @@ implementation
            in the case of opening parenthesis is possible to get pointer to
            function result (lack of checking for token was the reason of
            tw10933.pas test failure) }
-         if getaddr and (current_scanner.token<>_LKLAMMER) then
+         if getaddr and (CurrentScanner.token<>_LKLAMMER) then
            begin
              { for now we don't support pointers to generic functions, but since
                this is only temporary we use a non translated message }
@@ -1212,12 +1212,12 @@ implementation
                aprocdef:=Tprocsym(sym).Find_procdef_byfuncrefdef(getfuncrefdef);
 
              { ensure that the correct function is considered as captured }
-             if assigned(current_procinfo) and
+             if assigned(CurrentProcInfo) and
                  assigned(aprocdef) and
-                 (aprocdef.parast.symtablelevel<=current_procinfo.procdef.parast.symtablelevel) and
+                 (aprocdef.parast.symtablelevel<=CurrentProcInfo.procdef.parast.symtablelevel) and
                  (aprocdef.parast.symtablelevel>normal_function_level) and
-                 (current_procinfo.procdef.parast.symtablelevel>normal_function_level) then
-               current_procinfo.add_captured_sym(sym,aprocdef,current_filepos);
+                 (CurrentProcInfo.procdef.parast.symtablelevel>normal_function_level) then
+               CurrentProcInfo.add_captured_sym(sym,aprocdef,CurrentFilePos);
 
              { generate a methodcallnode or proccallnode }
              { we shouldn't convert things like @tcollection.load }
@@ -1237,7 +1237,7 @@ implementation
                   tloadnode(p2).set_mp(p1)
                 else
                   begin
-                    typecheckpass(p1);
+                    TypeCheckPass(p1);
                     if (p1.resultdef.typ=classrefdef) and
                        (
                          assigned(getprocvardef) or
@@ -1265,11 +1265,11 @@ implementation
              para:=nil;
              if anon_inherited then
               begin
-                if not assigned(current_procinfo) then
+                if not assigned(CurrentProcInfo) then
                   internalerror(200305054);
-                for i:=0 to current_procinfo.procdef.paras.count-1 do
+                for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
                   begin
-                    currpara:=tparavarsym(current_procinfo.procdef.paras[i]);
+                    currpara:=tparavarsym(CurrentProcInfo.procdef.paras[i]);
                     if not(vo_is_hidden_para in currpara.varoptions) then
                       begin
                         { inheritance by msgint? }
@@ -1314,16 +1314,16 @@ implementation
       end;
 
 
-    procedure handle_procvar(pv : tprocvardef;var p2 : tnode);
+    procedure handle_procvar(pv : tprocvardef;var p2 : TNode);
       var
-        hp,hp2 : tnode;
-        hpp    : ^tnode;
+        hp,hp2 : TNode;
+        hpp    : ^TNode;
         currprocdef : tprocdef;
       begin
         if not assigned(pv) then
          internalerror(200301121);
-        if (m_tp_procvar in current_settings.modeswitches) or
-           (m_mac_procvar in current_settings.modeswitches) then
+        if (m_tp_procvar in CurrentSettings.modeswitches) or
+           (m_mac_procvar in CurrentSettings.modeswitches) then
          begin
            hp:=p2;
            hpp:=@p2;
@@ -1354,18 +1354,18 @@ implementation
       end;
 
 
-    procedure handle_funcref(fr:tobjectdef;var p2:tnode);
+    procedure handle_funcref(fr:tobjectdef;var p2:TNode);
       var
-        hp,hp2 : tnode;
-        hpp    : ^tnode;
+        hp,hp2 : TNode;
+        hpp    : ^TNode;
         currprocdef : tprocdef;
       begin
         if not assigned(fr) then
           internalerror(2022032401);
         if not is_invokable(fr) then
           internalerror(2022032402);
-        if (m_tp_procvar in current_settings.modeswitches) or
-           (m_mac_procvar in current_settings.modeswitches) then
+        if (m_tp_procvar in CurrentSettings.modeswitches) or
+           (m_mac_procvar in CurrentSettings.modeswitches) then
          begin
            hp:=p2;
            hpp:=@p2;
@@ -1395,17 +1395,17 @@ implementation
 
 
     { the following procedure handles the access to a property symbol }
-    procedure handle_propertysym(propsym : tpropertysym;st : TSymtable;var p1 : tnode);
+    procedure handle_propertysym(propsym : tpropertysym;st : TSymtable;var p1 : TNode);
       var
-         paras : tnode;
-         p2    : tnode;
+         paras : TNode;
+         p2    : TNode;
          membercall : boolean;
          callflags  : tcallnodeflags;
          propaccesslist : tpropaccesslist;
          sym: tsym;
       begin
          { NameOf(property) needs neither parameters nor read access }
-         if nameof_active and (current_scanner.token=_RKLAMMER) then
+         if nameof_active and (CurrentScanner.token=_RKLAMMER) then
            begin
              p1.free;
              p1:=cnothingnode.create;
@@ -1430,7 +1430,7 @@ implementation
            end;
          { we need only a write property if a := follows }
          { if not(afterassignment) and not(in_args) then }
-         if current_scanner.token=_ASSIGNMENT then
+         if CurrentScanner.token=_ASSIGNMENT then
            begin
               if propsym.getpropaccesslist(palt_write,propaccesslist) then
                 begin
@@ -1545,7 +1545,7 @@ implementation
 
 
     { the ID token has to be consumed before calling this function }
-    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:tnode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
+    procedure do_member_read(structh:tabstractrecorddef;getaddr:boolean;sym:tsym;var p1:TNode;var again:boolean;callflags:tcallnodeflags;spezcontext:tspecializationcontext);
       var
         isclassref:boolean;
         isrecordtype:boolean;
@@ -1556,7 +1556,7 @@ implementation
            begin
               { current_scanner.pattern is still valid unless
               there is another ID just after the ID of sym }
-              Message1(sym_e_id_no_member,current_scanner.orgpattern);
+              Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
               p1.free;
               p1:=cerrornode.create;
               { try to clean up }
@@ -1570,7 +1570,7 @@ implementation
               if assigned(p1) then
                begin
                  if not assigned(p1.resultdef) then
-                   do_typecheckpass(p1);
+                   DoTypeCheckPass(p1);
                  isclassref:=(p1.resultdef.typ=classrefdef);
                  isrecordtype:=(p1.nodetype=typen) and (p1.resultdef.typ=recorddef);
                  isobjecttype:=(p1.nodetype=typen) and is_object(p1.resultdef);
@@ -1597,10 +1597,10 @@ implementation
                  procsym:
                    begin
                       do_proc_call(sym,sym.owner,structh,
-                                   (getaddr and not(current_scanner.token in [_CARET,_POINT])),
+                                   (getaddr and not(CurrentScanner.token in [_CARET,_POINT])),
                                    again,p1,callflags,spezcontext);
                       { we need to know which procedure is called }
-                      do_typecheckpass(p1);
+                      DoTypeCheckPass(p1);
 
                       { We are loading... }
                       if p1.nodetype=loadn then
@@ -1660,8 +1660,8 @@ implementation
                               }
                               if (tcallnode(p1).procdefinition.proctypeoption<>potype_constructor) and
                                  not(po_staticmethod in tcallnode(p1).procdefinition.procoptions) and
-                                 (not assigned(current_structdef) or
-                                  not def_is_related(current_structdef,structh)) then
+                                 (not assigned(CurrentStructDef) or
+                                  not def_is_related(CurrentStructDef,structh)) then
                                 begin
                                   p1.free;
                                   p1:=cerrornode.create;
@@ -1698,8 +1698,8 @@ implementation
                             if assigned(p1) and
                               (
                                 is_self_node(p1) or
-                                (assigned(current_procinfo) and (current_procinfo.get_normal_proc.procdef.no_self_node) and
-                                (current_procinfo.procdef.struct=structh))) then
+                                (assigned(CurrentProcInfo) and (CurrentProcInfo.get_normal_proc.procdef.no_self_node) and
+                                (CurrentProcInfo.procdef.struct=structh))) then
                               Message(parser_e_only_class_members)
                             else
                               Message(parser_e_only_class_members_via_class_ref);
@@ -1765,7 +1765,7 @@ implementation
         spezcontext:=nil;
         srsymtable:=nil;
         if not assigned(srsym) then
-          message1(sym_e_id_no_member,current_scanner.orgpattern)
+          message1(sym_e_id_no_member,CurrentScanner.orgpattern)
         else
           if not (srsym.typ in [typesym,procsym]) then
             message(type_e_type_id_expected)
@@ -1826,14 +1826,14 @@ implementation
       end;
 
 
-    function handle_factor_typenode(hdef:tdef;getaddr:boolean;var again:boolean;sym:tsym;typeonly:boolean):tnode;
+    function handle_factor_typenode(hdef:tdef;getaddr:boolean;var again:boolean;sym:tsym;typeonly:boolean):TNode;
       var
         srsym : tsym;
         srsymtable : tsymtable;
         erroroutresult,
         isspecialize : boolean;
         spezcontext : tspecializationcontext;
-        savedfilepos : tfileposinfo;
+        savedfilepos : TFilePosInfo;
       begin
          spezcontext:=nil;
          if sym=nil then
@@ -1859,32 +1859,32 @@ implementation
               end;
           end
          { not LKLAMMER }
-         else if (current_scanner.token=_POINT) and
+         else if (CurrentScanner.token=_POINT) and
             (is_object(hdef) or is_record(hdef)) then
            begin
              consume(_POINT);
              { handles calling methods declared in parent objects
                using "parentobject.methodname()" }
-             if assigned(current_structdef) and
+             if assigned(CurrentStructDef) and
                 not(getaddr) and
-                def_is_related(current_structdef,hdef) then
+                def_is_related(CurrentStructDef,hdef) then
                begin
                  result:=ctypenode.create(hdef);
                  ttypenode(result).typesym:=sym;
-                 if not (m_delphi in current_settings.modeswitches) and
+                 if not (m_delphi in CurrentSettings.modeswitches) and
                      (block_type in inline_specialization_block_types) and
-                     (current_scanner.token=_ID) and
-                     (current_scanner.idtoken=_SPECIALIZE) then
+                     (CurrentScanner.token=_ID) and
+                     (CurrentScanner.idtoken=_SPECIALIZE) then
                    begin
                      consume(_ID);
-                     if current_scanner.token<>_ID then
+                     if CurrentScanner.token<>_ID then
                        message(type_e_type_id_expected);
                      isspecialize:=true;
                    end
                  else
                    isspecialize:=false;
                  { search also in inherited methods }
-                 searchsym_in_class(tobjectdef(hdef),tobjectdef(current_structdef),current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                 searchsym_in_class(tobjectdef(hdef),tobjectdef(CurrentStructDef),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                  if isspecialize then
                    begin
                      consume(_ID);
@@ -1914,13 +1914,13 @@ implementation
                     * static methods and variables }
                 result:=ctypenode.create(hdef);
                 ttypenode(result).typesym:=sym;
-                if not (m_delphi in current_settings.modeswitches) and
+                if not (m_delphi in CurrentSettings.modeswitches) and
                     (block_type in inline_specialization_block_types) and
-                    (current_scanner.token=_ID) and
-                    (current_scanner.idtoken=_SPECIALIZE) then
+                    (CurrentScanner.token=_ID) and
+                    (CurrentScanner.idtoken=_SPECIALIZE) then
                   begin
                     consume(_ID);
-                    if current_scanner.token<>_ID then
+                    if CurrentScanner.token<>_ID then
                       message(type_e_type_id_expected);
                     isspecialize:=true;
                   end
@@ -1929,7 +1929,7 @@ implementation
                 erroroutresult:=true;
                 { TP allows also @TMenu.Load if Load is only }
                 { defined in an ancestor class               }
-                srsym:=search_struct_member(tabstractrecorddef(hdef),current_scanner.pattern);
+                srsym:=search_struct_member(tabstractrecorddef(hdef),CurrentScanner.pattern);
                 if isspecialize and assigned(srsym) then
                   begin
                     consume(_ID);
@@ -1940,17 +1940,17 @@ implementation
                   begin
                     if assigned(srsym) then
                       begin
-                        savedfilepos:=current_filepos;
+                        savedfilepos:=CurrentFilePos;
                         consume(_ID);
                         if not (sp_generic_dummy in srsym.symoptions) or
-                            not (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                            not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                           check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,savedfilepos)
                         else
                           result:=cspecializenode.create(result,getaddr,srsym,false);
                         erroroutresult:=false;
                       end
                     else
-                      Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                      Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                   end;
                 if erroroutresult then
                   begin
@@ -1977,7 +1977,7 @@ implementation
                  e.g. for expressions such as JLClass(intftype) }
                is_java_class_or_interface(hdef) then
              begin
-               if getaddr and (current_scanner.token=_POINT) and
+               if getaddr and (CurrentScanner.token=_POINT) and
                   not is_javainterface(hdef) then
                 begin
                   consume(_POINT);
@@ -1987,7 +1987,7 @@ implementation
                   ttypenode(result).typesym:=sym;
                   { TP allows also @TMenu.Load if Load is only }
                   { defined in an ancestor class               }
-                  srsym:=search_struct_member(tobjectdef(hdef),current_scanner.pattern);
+                  srsym:=search_struct_member(tobjectdef(hdef),CurrentScanner.pattern);
                   if assigned(srsym) then
                    begin
                      check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
@@ -1999,13 +1999,13 @@ implementation
                        mantis #24844) }
                      if not(block_type in [bt_type,bt_const_type,bt_var_type]) and
                         (srsym.typ=procsym) and
-                        (current_scanner.token in [_CARET,_POINT]) then
+                        (CurrentScanner.token in [_CARET,_POINT]) then
                        result:=cloadvmtaddrnode.create(result);
                      do_member_read(tabstractrecorddef(hdef),getaddr,srsym,result,again,[],nil);
                    end
                   else
                    begin
-                     Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                     Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                      consume(_ID);
                    end;
                 end
@@ -2033,7 +2033,7 @@ implementation
 ****************************************************************************}
 
 {$push} {$R-}{$Q-} { Need to protect against integer overflows }
-    function real_const_node_from_pattern(const s:string):tnode;
+    function real_const_node_from_pattern(const s:string):TNode;
       var
         d : bestreal;
         code : integer;
@@ -2044,16 +2044,16 @@ implementation
            Message(parser_e_error_in_real);
            d:=1.0;
          end;
-        if current_settings.fputype=fpu_none then
+        if CurrentSettings.fputype=fpu_none then
           begin
             Message(parser_e_unsupported_real);
             result:=cerrornode.create;
             exit;
           end;
-        if (current_settings.minfpconstprec=s32real) and
+        if (CurrentSettings.minfpconstprec=s32real) and
            (d = Single(d)) then
           result:=crealconstnode.create(d,s32floattype)
-        else if (current_settings.minfpconstprec=s64real) and
+        else if (CurrentSettings.minfpconstprec=s64real) and
                 (d = Double(d)) then
           result:=crealconstnode.create(d,s64floattype)
         else
@@ -2067,7 +2067,7 @@ implementation
 ---------------------------------------------}
 
     { returns whether or not p1 has been changed }
-    function postfixoperators(var p1:tnode;var again:boolean;getaddr:boolean): boolean;
+    function postfixoperators(var p1:TNode;var again:boolean;getaddr:boolean): boolean;
 
       { tries to avoid syntax errors after invalid qualifiers }
       procedure recoverconsume_postfixops;
@@ -2098,12 +2098,12 @@ implementation
 
       procedure handle_variantarray;
        var
-         p4 : tnode;
+         p4 : TNode;
          newstatement : tstatementnode;
          tempresultvariant,
          temp    : ttempcreatenode;
          paras : tcallparanode;
-         newblock : tnode;
+         newblock : TNode;
          countindices : longint;
          elements: tfplist;
          arraydef: tdef;
@@ -2131,7 +2131,7 @@ implementation
                    ctemprefnode.create(temp),
                    genintconstnode(countindices)
                  ),
-                 tnode(elements[countindices])
+                 TNode(elements[countindices])
                )
              );
            end;
@@ -2142,7 +2142,7 @@ implementation
          consume(_RECKKLAMMER);
 
          { we need only a write access if a := follows }
-         if current_scanner.token=_ASSIGNMENT then
+         if CurrentScanner.token=_ASSIGNMENT then
            begin
              consume(_ASSIGNMENT);
              p4:=comp_expr([ef_accept_equal]);
@@ -2187,12 +2187,12 @@ implementation
          p1:=newblock;
        end;
 
-      function parse_array_constructor(arrdef:tarraydef): tnode;
+      function parse_array_constructor(arrdef:tarraydef): TNode;
         var
           newstatement,assstatement:tstatementnode;
           arrnode:ttempcreatenode;
           temp2:ttempcreatenode;
-          assnode:tnode;
+          assnode:TNode;
           paracount:integer;
         begin
           result:=internalstatements(newstatement);
@@ -2255,17 +2255,17 @@ implementation
           addstatement(newstatement,ctemprefnode.create(arrnode));
         end;
 
-      function try_type_helper(var node:tnode;def:tdef):boolean;
+      function try_type_helper(var node:TNode;def:tdef):boolean;
         var
           srsym : tsym;
           srsymtable : tsymtable;
-          n : tnode;
+          n : TNode;
           newstatement : tstatementnode;
           temp : ttempcreatenode;
           extdef : tdef;
         begin
           result:=false;
-          if (current_scanner.token=_ID) and (block_type in [bt_body,bt_general,bt_except,bt_const]) then
+          if (CurrentScanner.token=_ID) and (block_type in [bt_body,bt_general,bt_except,bt_const]) then
             begin
               if not assigned(def) then
                 if node.nodetype=addrn then
@@ -2274,7 +2274,7 @@ implementation
                   def:=voidpointertype
                 else
                   def:=node.resultdef;
-              result:=search_objectpascal_helper(def,nil,current_scanner.pattern,srsym,srsymtable);
+              result:=search_objectpascal_helper(def,nil,CurrentScanner.pattern,srsym,srsymtable);
               if result then
                 begin
                   if not (srsymtable.symtabletype=objectsymtable) or
@@ -2292,7 +2292,7 @@ implementation
                       addstatement(newstatement,ctempdeletenode.create_normal_temp(temp));
                       addstatement(newstatement,ctemprefnode.create(temp));
                       node:=n;
-                      do_typecheckpass(node)
+                      DoTypeCheckPass(node)
                     end;
                   check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
                   consume(_ID);
@@ -2303,7 +2303,7 @@ implementation
 
     var
      protsym  : tpropertysym;
-     p2,p3  : tnode;
+     p2,p3  : TNode;
      srsym  : tsym;
      srsymtable : TSymtable;
      structh    : tabstractrecorddef;
@@ -2323,7 +2323,7 @@ implementation
      code : integer;
      strdef : tdef;
      spezcontext : tspecializationcontext;
-     old_current_filepos : tfileposinfo;
+     old_current_filepos : TFilePosInfo;
     label
      skipreckklammercheck,
      skippointdefcheck;
@@ -2334,46 +2334,46 @@ implementation
       begin
         spezcontext:=nil;
         { we need the resultdef }
-        do_typecheckpass_changed(p1,nodechanged);
+        DoTypeCheckPassChanged(p1,nodechanged);
         result:=result or nodechanged;
 
-        if codegenerror then
+        if CodeGenError then
          begin
            recoverconsume_postfixops;
            exit;
          end;
         { handle token }
-        case current_scanner.token of
+        case CurrentScanner.token of
           _CARET:
              begin
                consume(_CARET);
 
                { support in tp/mac procvar mode procvar^ if the procvar returns a
                  pointer type }
-               if ((m_tp_procvar in current_settings.modeswitches) or
-                   (m_mac_procvar in current_settings.modeswitches)) and
+               if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                   (m_mac_procvar in CurrentSettings.modeswitches)) and
                   (p1.resultdef.typ=procvardef) and
                   (tprocvardef(p1.resultdef).returndef.typ=pointerdef) then
                  begin
                    p1:=ccallnode.create_procvar(nil,p1);
-                   typecheckpass(p1);
+                   TypeCheckPass(p1);
                  end;
 
                { iso file buf access? }
-               if (m_isolike_io in current_settings.modeswitches) and
+               if (m_isolike_io in CurrentSettings.modeswitches) and
                  (p1.resultdef.typ=filedef) then
                  begin
                    case tfiledef(p1.resultdef).filetyp of
                      ft_text:
                        begin
                          p1:=cderefnode.create(ccallnode.createintern('fpc_getbuf_text',ccallparanode.create(p1,nil)));
-                         typecheckpass(p1);
+                         TypeCheckPass(p1);
                        end;
                      ft_typed:
                        begin
                          p1:=cderefnode.create(ctypeconvnode.create_internal(ccallnode.createintern('fpc_getbuf_typedfile',ccallparanode.create(p1,nil)),
                            cpointerdef.getreusable(tfiledef(p1.resultdef).typedfiledef)));
-                         typecheckpass(p1);
+                         TypeCheckPass(p1);
                        end;
                      else
                        internalerror(2019050530);
@@ -2396,13 +2396,13 @@ implementation
              begin
                { support in tp/mac procvar mode procvar[] if the procvar returns an
                  array type }
-               if ((m_tp_procvar in current_settings.modeswitches) or
-                   (m_mac_procvar in current_settings.modeswitches)) and
+               if ((m_tp_procvar in CurrentSettings.modeswitches) or
+                   (m_mac_procvar in CurrentSettings.modeswitches)) and
                   (p1.resultdef.typ=procvardef) and
                   (tprocvardef(p1.resultdef).returndef.typ=arraydef) then
                  begin
                    p1:=ccallnode.create_procvar(nil,p1);
-                   typecheckpass(p1);
+                   TypeCheckPass(p1);
                  end;
 
                if is_class_or_interface_or_object(p1.resultdef) or
@@ -2436,7 +2436,7 @@ implementation
                          begin
                             { support delphi autoderef }
                             if (tpointerdef(p1.resultdef).pointeddef.typ=arraydef) and
-                               (m_autoderef in current_settings.modeswitches) then
+                               (m_autoderef in CurrentSettings.modeswitches) then
                               p1:=cderefnode.create(p1);
                             p2:=comp_expr([ef_accept_equal]);
                             { Support Pbytevar[0..9] which returns array [0..9].}
@@ -2476,7 +2476,7 @@ implementation
                            again:=false;
                          end;
                      end;
-                     do_typecheckpass(p1);
+                     DoTypeCheckPass(p1);
                    until not try_to_consume(_COMMA);
                    consume(_RECKKLAMMER);
                    { handle_variantarray eats the RECKKLAMMER and jumps here }
@@ -2487,8 +2487,8 @@ implementation
           _POINT :
              begin
                consume(_POINT);
-               allowspecialize:=not (m_delphi in current_settings.modeswitches) and (block_type in inline_specialization_block_types);
-               if allowspecialize and (current_scanner.token=_ID) and (current_scanner.idtoken=_SPECIALIZE) then
+               allowspecialize:=not (m_delphi in CurrentSettings.modeswitches) and (block_type in inline_specialization_block_types);
+               if allowspecialize and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_SPECIALIZE) then
                  begin
                    //consume(_ID);
                    isspecialize:=true;
@@ -2497,13 +2497,13 @@ implementation
                  isspecialize:=false;
                autoderef:=false;
                if (p1.resultdef.typ=pointerdef) and
-                  (m_autoderef in current_settings.modeswitches) and
+                  (m_autoderef in CurrentSettings.modeswitches) and
                   { don't auto-deref objc.id, because then the code
                     below for supporting id.anyobjcmethod isn't triggered }
                   (p1.resultdef<>objc_idtype) then
                  begin
                    p1:=cderefnode.create(p1);
-                   do_typecheckpass(p1);
+                   DoTypeCheckPass(p1);
                    autoderef:=true;
                  end;
                { procvar.<something> can never mean anything so always
@@ -2515,16 +2515,16 @@ implementation
                    not is_enum(p1.resultdef) then
                  begin
                    { type helpers are checked first }
-                   if (current_scanner.token=_ID) and try_type_helper(p1,nil) then
+                   if (CurrentScanner.token=_ID) and try_type_helper(p1,nil) then
                      goto skippointdefcheck;
                    { only an "e" or "E" can follow an intconst with a ".", the
                      other case (another intconst) is handled by the scanner }
-                   if (current_scanner.token=_ID) and (current_scanner.pattern[1]='E') then
+                   if (CurrentScanner.token=_ID) and (CurrentScanner.pattern[1]='E') then
                      begin
                        haderror:=false;
-                       if length(current_scanner.pattern)>1 then
+                       if length(CurrentScanner.pattern)>1 then
                          begin
-                           expstr:=copy(current_scanner.pattern,2,length(current_scanner.pattern)-1);
+                           expstr:=copy(CurrentScanner.pattern,2,length(CurrentScanner.pattern)-1);
                            val(expstr,intval,code);
                            if code<>0 then
                              begin
@@ -2534,39 +2534,39 @@ implementation
                          end
                        else
                          expstr:='';
-                       consume(current_scanner.token);
+                       consume(CurrentScanner.token);
                        if tordconstnode(p1).value.signed then
                          str(tordconstnode(p1).value.svalue,valstr)
                        else
                          str(tordconstnode(p1).value.uvalue,valstr);
                        valstr:=valstr+'.0E';
                        if expstr='' then
-                         case current_scanner.token of
+                         case CurrentScanner.token of
                            _MINUS:
                              begin
-                               consume(current_scanner.token);
-                               if current_scanner.token=_INTCONST then
+                               consume(CurrentScanner.token);
+                               if CurrentScanner.token=_INTCONST then
                                  begin
-                                   valstr:=valstr+'-'+current_scanner.pattern;
-                                   consume(current_scanner.token);
+                                   valstr:=valstr+'-'+CurrentScanner.pattern;
+                                   consume(CurrentScanner.token);
                                  end
                                else
                                  haderror:=true;
                              end;
                            _PLUS:
                              begin
-                               consume(current_scanner.token);
-                               if current_scanner.token=_INTCONST then
+                               consume(CurrentScanner.token);
+                               if CurrentScanner.token=_INTCONST then
                                  begin
-                                   valstr:=valstr+current_scanner.pattern;
-                                   consume(current_scanner.token);
+                                   valstr:=valstr+CurrentScanner.pattern;
+                                   consume(CurrentScanner.token);
                                  end
                                else
                                  haderror:=true;
                              end;
                            _INTCONST:
                              begin
-                               valstr:=valstr+current_scanner.pattern;
+                               valstr:=valstr+CurrentScanner.pattern;
                                consume(_INTCONST);
                              end;
                            else
@@ -2597,14 +2597,14 @@ implementation
                      end;
                  end;
 
-               if (p1.nodetype=stringconstn) and (current_scanner.token=_ID) then
+               if (p1.nodetype=stringconstn) and (CurrentScanner.token=_ID) then
                  begin
                    strdef:=nil;
                    { the def of a string const is an array }
                    case tstringconstnode(p1).cst_type of
                      cst_conststring:
-                       if cs_refcountedstrings in current_settings.localswitches then
-                         if m_default_unicodestring in current_settings.modeswitches then
+                       if cs_refcountedstrings in CurrentSettings.localswitches then
+                         if m_default_unicodestring in CurrentSettings.modeswitches then
                            strdef:=cunicodestringtype
                          else
                            strdef:=cansistringtype
@@ -2631,7 +2631,7 @@ implementation
                case p1.resultdef.typ of
                  recorddef:
                    begin
-                     if isspecialize or (current_scanner.token=_ID) then
+                     if isspecialize or (CurrentScanner.token=_ID) then
                        begin
                          erroroutp1:=true;
                          srsym:=nil;
@@ -2640,11 +2640,11 @@ implementation
                            begin
                              { consume the specialize }
                              consume(_ID);
-                             if current_scanner.token<>_ID then
+                             if CurrentScanner.token<>_ID then
                                consume(_ID)
                              else
                                begin
-                                 searchsym_in_record(structh,current_scanner.pattern,srsym,srsymtable);
+                                 searchsym_in_record(structh,CurrentScanner.pattern,srsym,srsymtable);
                                  consume(_ID);
                                  if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                    erroroutp1:=false;
@@ -2652,13 +2652,13 @@ implementation
                            end
                          else
                            begin
-                             searchsym_in_record(structh,current_scanner.pattern,srsym,srsymtable);
+                             searchsym_in_record(structh,CurrentScanner.pattern,srsym,srsymtable);
                              if assigned(srsym) then
                                begin
-                                 old_current_filepos:=current_filepos;
+                                 old_current_filepos:=CurrentFilePos;
                                  consume(_ID);
                                  if not (sp_generic_dummy in srsym.symoptions) or
-                                     not (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                                     not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                                    check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
                                  else
                                    p1:=cspecializenode.create(p1,getaddr,srsym,false);
@@ -2666,7 +2666,7 @@ implementation
                                end
                              else
                                begin
-                                 Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                                 Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                                  { try to clean up }
                                  consume(_ID);
                                end;
@@ -2685,9 +2685,9 @@ implementation
                    end;
                  enumdef:
                    begin
-                     if current_scanner.token=_ID then
+                     if CurrentScanner.token=_ID then
                        begin
-                         srsym:=tsym(tenumdef(p1.resultdef).symtable.Find(current_scanner.pattern));
+                         srsym:=tsym(tenumdef(p1.resultdef).symtable.Find(CurrentScanner.pattern));
                          if assigned(srsym) and (srsym.typ=enumsym) and (p1.nodetype=typen) then
                            begin
                              p1.free;
@@ -2700,7 +2700,7 @@ implementation
                            if not try_type_helper(p1,nil) then
                              begin
                                p1.free;
-                               Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                               Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                                p1:=cerrornode.create;
                                consume(_ID);
                              end;
@@ -2716,13 +2716,13 @@ implementation
                    begin
                      if is_dynamic_array(p1.resultdef) then
                        begin
-                         if current_scanner.token=_ID then
+                         if CurrentScanner.token=_ID then
                            begin
                              if not try_type_helper(p1,nil) then
                                begin
                                  if p1.nodetype=typen then
                                    begin
-                                     if current_scanner.pattern='CREATE' then
+                                     if CurrentScanner.pattern='CREATE' then
                                        begin
                                          consume(_ID);
                                          p2:=parse_array_constructor(tarraydef(p1.resultdef));
@@ -2731,7 +2731,7 @@ implementation
                                        end
                                      else
                                        begin
-                                         Message2(scan_f_syn_expected,'CREATE',current_scanner.pattern);
+                                         Message2(scan_f_syn_expected,'CREATE',CurrentScanner.pattern);
                                          p1.free;
                                          p1:=cerrornode.create;
                                          consume(_ID);
@@ -2755,7 +2755,7 @@ implementation
                            end;
                        end
                      else
-                       if (current_scanner.token<>_ID) or not try_type_helper(p1,nil) then
+                       if (CurrentScanner.token<>_ID) or not try_type_helper(p1,nil) then
                          begin
                            Message(parser_e_invalid_qualifier);
                            p1.free;
@@ -2770,11 +2770,11 @@ implementation
                         lhs := v.ident(parameters) -> method call
                         v.ident[parameters] := rhs -> property put
                         v.ident(parameters) := rhs -> also property put }
-                      if current_scanner.token=_ID then
+                      if CurrentScanner.token=_ID then
                         begin
                           if not try_type_helper(p1,nil) then
                             begin
-                              dispatchstring:=current_scanner.orgpattern;
+                              dispatchstring:=CurrentScanner.orgpattern;
                               consume(_ID);
                               calltype:=dct_method;
                               if try_to_consume(_LKLAMMER) then
@@ -2791,7 +2791,7 @@ implementation
                               else
                                 p2:=nil;
                               { property setter? }
-                              if (current_scanner.token=_ASSIGNMENT) and not(afterassignment) then
+                              if (CurrentScanner.token=_ASSIGNMENT) and not(afterassignment) then
                                 begin
                                   consume(_ASSIGNMENT);
                                   { read the expression }
@@ -2803,7 +2803,7 @@ implementation
                               else
                               { this is only an approximation
                                 setting useresult if not necessary is only a waste of time, no more, no less (FK) }
-                              if afterassignment or in_args or (current_scanner.token<>_SEMICOLON) then
+                              if afterassignment or in_args or (CurrentScanner.token<>_SEMICOLON) then
                                 p1:=translate_disp_call(p1,p2,calltype,dispatchstring,0,cvarianttype)
                               else
                                 p1:=translate_disp_call(p1,p2,calltype,dispatchstring,0,voidtype);
@@ -2815,7 +2815,7 @@ implementation
                   classrefdef:
                     begin
                       erroroutp1:=true;
-                      if current_scanner.token=_ID then
+                      if CurrentScanner.token=_ID then
                         begin
                           srsym:=nil;
                           structh:=tobjectdef(tclassrefdef(p1.resultdef).pointeddef);
@@ -2823,11 +2823,11 @@ implementation
                             begin
                               { consume the specialize }
                               consume(_ID);
-                              if current_scanner.token<>_ID then
+                              if CurrentScanner.token<>_ID then
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2835,13 +2835,13 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if assigned(srsym) then
                                 begin
-                                  old_current_filepos:=current_filepos;
+                                  old_current_filepos:=CurrentFilePos;
                                   consume(_ID);
                                   if not (sp_generic_dummy in srsym.symoptions) or
-                                      not (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                                      not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                                     check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
                                   else
                                     p1:=cspecializenode.create(p1,getaddr,srsym,false);
@@ -2849,7 +2849,7 @@ implementation
                                 end
                               else
                                 begin
-                                  Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                                  Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                                   { try to clean up }
                                   consume(_ID);
                                 end;
@@ -2868,7 +2868,7 @@ implementation
                     end;
                   objectdef:
                     begin
-                      if isspecialize or (current_scanner.token=_ID) then
+                      if isspecialize or (CurrentScanner.token=_ID) then
                         begin
                           erroroutp1:=true;
                           srsym:=nil;
@@ -2877,11 +2877,11 @@ implementation
                             begin
                               { consume the "specialize" }
                               consume(_ID);
-                              if current_scanner.token<>_ID then
+                              if CurrentScanner.token<>_ID then
                                 consume(_ID)
                               else
                                 begin
-                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                                  searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                                   consume(_ID);
                                   if handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
                                     erroroutp1:=false;
@@ -2889,13 +2889,13 @@ implementation
                             end
                           else
                             begin
-                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+                              searchsym_in_class(tobjectdef(structh),tobjectdef(structh),CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
                               if assigned(srsym) then
                                 begin
-                                   old_current_filepos:=current_filepos;
+                                   old_current_filepos:=CurrentFilePos;
                                    consume(_ID);
                                    if not (sp_generic_dummy in srsym.symoptions) or
-                                       not (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                                       not (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                                      check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,old_current_filepos)
                                    else
                                      p1:=cspecializenode.create(p1,getaddr,srsym,false);
@@ -2903,7 +2903,7 @@ implementation
                                 end
                               else
                                 begin
-                                   Message1(sym_e_id_no_member,current_scanner.orgpattern);
+                                   Message1(sym_e_id_no_member,CurrentScanner.orgpattern);
                                    { try to clean up }
                                    consume(_ID);
                                 end;
@@ -2927,14 +2927,14 @@ implementation
                           { objc's id type can be used to call any
                             Objective-C method of any Objective-C class
                             type that's currently in scope }
-                          if search_objc_method(current_scanner.pattern,srsym,srsymtable) then
+                          if search_objc_method(CurrentScanner.pattern,srsym,srsymtable) then
                             begin
                               consume(_ID);
                               do_proc_call(srsym,srsymtable,nil,
-                                (getaddr and not(current_scanner.token in [_CARET,_POINT])),
+                                (getaddr and not(CurrentScanner.token in [_CARET,_POINT])),
                                 again,p1,[cnf_objc_id_call],nil);
                               { we need to know which procedure is called }
-                              do_typecheckpass(p1);
+                              DoTypeCheckPass(p1);
                             end
                           else
                             begin
@@ -2987,7 +2987,7 @@ implementation
             begin
               { is this a procedure variable ? }
               if is_invokable(p1.resultdef) and
-                  (current_scanner.token=_LKLAMMER) then
+                  (CurrentScanner.token=_LKLAMMER) then
                 begin
                   if not searchsym_in_class(tobjectdef(p1.resultdef),tobjectdef(p1.resultdef),method_name_funcref_invoke_find,srsym,srsymtable,[]) then
                     internalerror(2021040202);
@@ -3025,7 +3025,7 @@ implementation
                           consume(_RKLAMMER);
                           p1:=ccallnode.create_procvar(p2,p1);
                           { proc():= is never possible }
-                          if current_scanner.token=_ASSIGNMENT then
+                          if CurrentScanner.token=_ASSIGNMENT then
                             begin
                               Message(parser_e_illegal_expression);
                               p1.free;
@@ -3049,7 +3049,7 @@ implementation
       end; { while again }
     end;
 
-    function is_member_read(sym: tsym; st: tsymtable; var p1: tnode;
+    function is_member_read(sym: tsym; st: tsymtable; var p1: TNode;
                             out memberparentdef: tdef): boolean;
       var
         hdef : tdef;
@@ -3069,8 +3069,8 @@ implementation
               if assigned(p1) then
                internalerror(2007012002);
 
-              hdef:=tnode(twithsymtable(st).withrefnode).resultdef;
-              p1:=tnode(twithsymtable(st).withrefnode).getcopy;
+              hdef:=TNode(twithsymtable(st).withrefnode).resultdef;
+              p1:=TNode(twithsymtable(st).withrefnode).getcopy;
 
               if not(hdef.typ in [objectdef,classrefdef]) then
                 exit;
@@ -3087,7 +3087,7 @@ implementation
   {$maxfpuregisters 0}
 
 
-    function factor_handle_sym(srsym:tsym;srsymtable:tsymtable;var again:boolean;getaddr:boolean;unit_found:boolean;flags:texprflags;var spezcontext:tspecializationcontext):tnode;
+    function factor_handle_sym(srsym:tsym;srsymtable:tsymtable;var again:boolean;getaddr:boolean;unit_found:boolean;flags:texprflags;var spezcontext:tspecializationcontext):TNode;
       var
         hdef : tdef;
         pd : tprocdef;
@@ -3132,8 +3132,8 @@ implementation
                   if (srsymtable.symtabletype in [ObjectSymtable,recordsymtable]) then
                     { if we are accessing a owner procsym from the nested }
                     { class we need to call it as a class member          }
-                    if assigned(current_structdef) and
-                        (((current_structdef<>hdef) and is_owned_by(current_structdef,hdef)) or
+                    if assigned(CurrentStructDef) and
+                        (((CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef)) or
                          (sp_static in srsym.symoptions)) then
                       if srsymtable.symtabletype=recordsymtable then
                         result:=ctypenode.create(hdef)
@@ -3141,9 +3141,9 @@ implementation
                         result:=cloadvmtaddrnode.create(ctypenode.create(hdef))
                     else
                       begin
-                        if assigned(current_procinfo) then
+                        if assigned(CurrentProcInfo) then
                           begin
-                            pd:=current_procinfo.get_normal_proc.procdef;
+                            pd:=CurrentProcInfo.get_normal_proc.procdef;
                             if assigned(pd) and pd.no_self_node then
                               result:=cloadvmtaddrnode.create(ctypenode.create(pd.struct))
                             else
@@ -3181,9 +3181,9 @@ implementation
                end
               else
                begin
-                 if (m_delphi in current_settings.modeswitches) and
+                 if (m_delphi in CurrentSettings.modeswitches) and
                      (sp_generic_dummy in srsym.symoptions) and
-                     (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                     (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                    begin
                      if block_type in [bt_type,bt_const_type,bt_var_type] then
                        begin
@@ -3213,8 +3213,8 @@ implementation
                    begin
                      { We need to know if this unit uses Variants }
                      if ((hdef=cvarianttype) or (hdef=colevarianttype)) and
-                        not(cs_compilesystem in current_settings.moduleswitches) then
-                       include(current_module.moduleflags,mf_uses_variants);
+                        not(cs_compilesystem in CurrentSettings.moduleswitches) then
+                       include(CurrentModule.moduleflags,mf_uses_variants);
                      result:=handle_factor_typenode(hdef,getaddr,again,srsym,ef_type_only in flags);
                    end;
                end;
@@ -3230,7 +3230,7 @@ implementation
               if tconstsym(srsym).consttyp in [constresourcestring,constwresourcestring]then
                 begin
                   result:=cloadnode.create(srsym,srsymtable);
-                  do_typecheckpass(result);
+                  DoTypeCheckPass(result);
                   if is_systemunit_unicode then
                     result.resultdef:=cstringdef.createunicode(true)
                   else
@@ -3243,9 +3243,9 @@ implementation
           procsym :
             begin
               result:=nil;
-              if (m_delphi in current_settings.modeswitches) and
+              if (m_delphi in CurrentSettings.modeswitches) and
                   (sp_generic_dummy in srsym.symoptions) and
-                  (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                  (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                 begin
                   result:=cspecializenode.create(nil,getaddr,srsym,unit_found)
                 end
@@ -3255,7 +3255,7 @@ implementation
                   { if we are accessing a owner procsym from the nested }
                   { class we need to call it as a class member          }
                   if (srsymtable.symtabletype in [ObjectSymtable,recordsymtable]) and
-                    assigned(current_structdef) and (current_structdef<>hdef) and is_owned_by(current_structdef,hdef) then
+                    assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef) then
                     result:=cloadvmtaddrnode.create(ctypenode.create(hdef));
                   { not srsymtable.symtabletype since that can be }
                   { withsymtable as well                          }
@@ -3277,10 +3277,10 @@ implementation
                     callflags:=[cnf_unit_specified];
                   { TP7 ugliness: @proc^ is parsed as (@proc)^,
                     but @notproc^ is parsed as @(notproc^) }
-                  if m_tp_procvar in current_settings.modeswitches then
-                    tmpgetaddr:=getaddr and not(current_scanner.token in [_POINT,_LECKKLAMMER])
+                  if m_tp_procvar in CurrentSettings.modeswitches then
+                    tmpgetaddr:=getaddr and not(CurrentScanner.token in [_POINT,_LECKKLAMMER])
                   else
-                    tmpgetaddr:=getaddr and not(current_scanner.token in [_CARET,_POINT,_LECKKLAMMER]);
+                    tmpgetaddr:=getaddr and not(CurrentScanner.token in [_CARET,_POINT,_LECKKLAMMER]);
                   do_proc_call(srsym,srsymtable,nil,tmpgetaddr,
                                again,result,callflags,spezcontext);
                   spezcontext:=nil;
@@ -3297,8 +3297,8 @@ implementation
                     { if we are accessing a owner procsym from the nested }
                     { class or from a static class method we need to call }
                     { it as a class member                                }
-                    if (assigned(current_structdef) and (current_structdef<>hdef) and is_owned_by(current_structdef,hdef)) or
-                       (assigned(current_procinfo) and current_procinfo.get_normal_proc.procdef.no_self_node) then
+                    if (assigned(CurrentStructDef) and (CurrentStructDef<>hdef) and is_owned_by(CurrentStructDef,hdef)) or
+                       (assigned(CurrentProcInfo) and CurrentProcInfo.get_normal_proc.procdef.no_self_node) then
                       begin
                         result:=ctypenode.create(hdef);
                         if not is_record(hdef) then
@@ -3326,7 +3326,7 @@ implementation
               { Support @label }
               if getaddr then
                 begin
-                  if srsym.owner<>current_procinfo.procdef.localst then
+                  if srsym.owner<>CurrentProcInfo.procdef.localst then
                     CGMessage(parser_e_label_outside_proc);
                   result:=cloadnode.create(srsym,srsym.owner)
                 end
@@ -3337,8 +3337,8 @@ implementation
                     Message(sym_e_label_already_defined);
                   if symtablestack.top.symtablelevel<>srsymtable.symtablelevel then
                     begin
-                      include(current_procinfo.flags,pi_has_interproclabel);
-                      if (current_procinfo.procdef.proctypeoption in [potype_unitinit,potype_unitfinalize]) then
+                      include(CurrentProcInfo.flags,pi_has_interproclabel);
+                      if (CurrentProcInfo.procdef.proctypeoption in [potype_unitinit,potype_unitfinalize]) then
                         Message(sym_e_interprocgoto_into_init_final_code_not_allowed);
                     end;
                   tlabelsym(srsym).defined:=true;
@@ -3388,13 +3388,13 @@ implementation
       end;
 
 
-    function factor(getaddr:boolean;flags:texprflags) : tnode;
+    function factor(getaddr:boolean;flags:texprflags) : TNode;
 
          {---------------------------------------------
                          Factor_read_id
          ---------------------------------------------}
 
-       procedure factor_read_id(out p1:tnode;out again:boolean);
+       procedure factor_read_id(out p1:TNode;out again:boolean);
 
          function findwithsymtable : boolean;
            var
@@ -3424,7 +3424,7 @@ implementation
            isspecialize,
            unit_found : boolean;
            dummypos,
-           tokenpos: tfileposinfo;
+           tokenpos: TFilePosInfo;
            spezcontext : tspecializationcontext;
            cufflags : tconsume_unitsym_flags;
          begin
@@ -3432,17 +3432,17 @@ implementation
            again:=true;
 
            { preinitalize tokenpos }
-           tokenpos:=current_filepos;
+           tokenpos:=CurrentFilePos;
            p1:=nil;
            spezcontext:=nil;
 
            { avoid warning }
            fillchar(dummypos,sizeof(dummypos),0);
 
-           allowspecialize:=not (m_delphi in current_settings.modeswitches) and
+           allowspecialize:=not (m_delphi in CurrentSettings.modeswitches) and
                             not (ef_had_specialize in flags) and
                             (block_type in inline_specialization_block_types);
-           if allowspecialize and (current_scanner.token=_ID) and (current_scanner.idtoken=_SPECIALIZE) then
+           if allowspecialize and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_SPECIALIZE) then
              begin
                consume(_ID);
                isspecialize:=true;
@@ -3451,7 +3451,7 @@ implementation
              isspecialize:=ef_had_specialize in flags;
 
            { first check for identifier }
-           if current_scanner.token<>_ID then
+           if CurrentScanner.token<>_ID then
              begin
                srsym:=generrorsym;
                srsymtable:=nil;
@@ -3460,10 +3460,10 @@ implementation
              end
            else
              begin
-               storedpattern:=current_scanner.pattern;
-               orgstoredpattern:=current_scanner.orgpattern;
+               storedpattern:=CurrentScanner.pattern;
+               orgstoredpattern:=CurrentScanner.orgpattern;
                { store the position of the token before consuming it }
-               tokenpos:=current_filepos;
+               tokenpos:=CurrentFilePos;
                consumeid:=true;
                srsym:=nil;
                if ef_check_attr_suffix in flags then
@@ -3472,7 +3472,7 @@ implementation
                      internalerror(2019063001);
                    consume(_ID);
                    consumeid:=false;
-                   if current_scanner.token<>_POINT then
+                   if CurrentScanner.token<>_POINT then
                      searchsym_type(storedpattern+custom_attribute_suffix,srsym,srsymtable);
                  end;
                if not assigned(srsym) then
@@ -3494,7 +3494,7 @@ implementation
                      include(cufflags,cuf_check_attr_suffix);
                    if nameof_active then
                      include(cufflags,cuf_allow_unit_only);
-                   unit_found:=try_consume_unitsym(srsym,srsymtable,t,cufflags,isspecialize,current_scanner.pattern);
+                   unit_found:=try_consume_unitsym(srsym,srsymtable,t,cufflags,isspecialize,CurrentScanner.pattern);
                    if unit_found then
                      consumeid:=true;
                  end
@@ -3506,10 +3506,10 @@ implementation
                { NOTOKEN: NameOf(unitname), the unit name is already consumed }
                if consumeid and (t<>NOTOKEN) then
                  begin
-                   storedpattern:=current_scanner.pattern;
-                   orgstoredpattern:=current_scanner.orgpattern;
+                   storedpattern:=CurrentScanner.pattern;
+                   orgstoredpattern:=CurrentScanner.orgpattern;
                    { store the position of the token before consuming it }
-                   tokenpos:=current_filepos;
+                   tokenpos:=CurrentFilePos;
                    consume(t);
                  end;
                { named parameter support }
@@ -3518,7 +3518,7 @@ implementation
                if not(unit_found) and
                    not isspecialize and
                   named_args_allowed and
-                  (current_scanner.token=_ASSIGNMENT) then
+                  (CurrentScanner.token=_ASSIGNMENT) then
                   begin
                     found_arg_name:=true;
                     p1:=cstringconstnode.createstr(orgstoredpattern);
@@ -3590,8 +3590,8 @@ implementation
                    (srsym.typ in [procsym,typesym]) and
                    (
                      (
-                       (m_delphi in current_settings.modeswitches) and
-                       not (current_scanner.token in [_LT, _LSHARPBRACKET]) and
+                       (m_delphi in CurrentSettings.modeswitches) and
+                       not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                        (
                          (
                            (srsym.typ=typesym) and
@@ -3604,13 +3604,13 @@ implementation
                      )
                      or
                      (
-                       not (m_delphi in current_settings.modeswitches) and
+                       not (m_delphi in CurrentSettings.modeswitches) and
                        not isspecialize and
                        (
                          not parse_generic or
                          not (
-                           assigned(current_structdef) and
-                           assigned(get_generic_in_hierarchy_by_name(srsym,current_structdef))
+                           assigned(CurrentStructDef) and
+                           assigned(get_generic_in_hierarchy_by_name(srsym,CurrentStructDef))
                          )
                        )
                      )
@@ -3639,7 +3639,7 @@ implementation
                        )
                      ) and
                      not (sp_generic_para in srsym.symoptions) and
-                     (current_scanner.token in [_LT, _LSHARPBRACKET])
+                     (CurrentScanner.token in [_LT, _LSHARPBRACKET])
                    ) then
                  check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg,tokenpos);
 
@@ -3650,16 +3650,16 @@ implementation
                    assigned(ttypesym(srsym).typedef) and
                    (ttypesym(srsym).typedef.typ=undefineddef) and
                    not (sp_generic_para in srsym.symoptions) and
-                   not (current_scanner.token in [_LT, _LSHARPBRACKET]) and
+                   not (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                    not (
                      { in non-Delphi modes the generic class' name without a
                        "specialization" or "<T>" may be used to identify the
                        current class }
                      (sp_generic_dummy in srsym.symoptions) and
-                     assigned(current_structdef) and
-                     (df_generic in current_structdef.defoptions) and
-                     not (m_delphi in current_settings.modeswitches) and
-                     assigned(get_generic_in_hierarchy_by_name(srsym,current_structdef))
+                     assigned(CurrentStructDef) and
+                     (df_generic in CurrentStructDef.defoptions) and
+                     not (m_delphi in CurrentSettings.modeswitches) and
+                     assigned(get_generic_in_hierarchy_by_name(srsym,CurrentStructDef))
                    )) and
                    { it could be a rename of a generic para }
                    { Note: if this generates false positives we'll need to
@@ -3669,7 +3669,7 @@ implementation
                  begin
                    { if a generic is parsed and when we are inside an with block,
                      a symbol might not be defined }
-                   if assigned(current_procinfo) and (df_generic in current_procinfo.procdef.defoptions) and
+                   if assigned(CurrentProcInfo) and (df_generic in CurrentProcInfo.procdef.defoptions) and
                       findwithsymtable then
                      begin
                        { create dummy symbol, it will be freed later on }
@@ -3694,9 +3694,9 @@ implementation
               { result(x) is not allowed }
               not(vo_is_result in tabstractvarsym(srsym).varoptions) and
               (
-               (current_scanner.token=_LKLAMMER) or
+               (CurrentScanner.token=_LKLAMMER) or
                (
-                (([m_delphi,m_mac,m_iso,m_extpas] * current_settings.modeswitches) <> []) and
+                (([m_delphi,m_mac,m_iso,m_extpas] * CurrentSettings.modeswitches) <> []) and
                 (afterassignment or in_args)
                )
               ) then
@@ -3730,9 +3730,9 @@ implementation
          ---------------------------------------------}
 
          { Read a set between [] }
-         function factor_read_set:tnode;
+         function factor_read_set:TNode;
          var
-           p1,p2 : tnode;
+           p1,p2 : TNode;
            lastp,
            buildp : tarrayconstructornode;
          begin
@@ -3740,7 +3740,7 @@ implementation
            lastp:=nil;
          { be sure that a least one arrayconstructn is used, also for an
            empty [] }
-           if current_scanner.token=_RECKKLAMMER then
+           if CurrentScanner.token=_RECKKLAMMER then
              buildp:=carrayconstructornode.create(nil,buildp)
            else
             repeat
@@ -3772,10 +3772,10 @@ implementation
          begin
            result:=false;
            if (block_type in [bt_const,bt_type,bt_const_type,bt_var_type]) or
-              not assigned(current_structdef) or
-              not assigned(current_procinfo) then
+              not assigned(CurrentStructDef) or
+              not assigned(CurrentProcInfo) then
              exit;
-           result:=not current_procinfo.get_normal_proc.procdef.no_self_node;
+           result:=not CurrentProcInfo.get_normal_proc.procdef.no_self_node;
          end;
 
 
@@ -3787,7 +3787,7 @@ implementation
          l          : longint;
          ic         : int64;
          qc         : qword;
-         p1         : tnode;
+         p1         : TNode;
          code       : integer;
          srsym      : tsym;
          srsymtable : TSymtable;
@@ -3796,7 +3796,7 @@ implementation
          d          : bestreal;
          hs,hsorg   : string;
          hdef       : tdef;
-         filepos    : tfileposinfo;
+         filepos    : TFilePosInfo;
          callflags  : tcallnodeflags;
          idstr      : tidstring;
          spezcontext : tspecializationcontext;
@@ -3815,15 +3815,15 @@ implementation
         dopostfix:=true;
         updatefpos:=false;
         p1:=nil;
-        filepos:=current_tokenpos;
+        filepos:=CurrentTokenPos;
         again:=false;
         pd:=nil;
         isspecialize:=false;
-        if current_scanner.token=_ID then
+        if CurrentScanner.token=_ID then
          begin
            again:=true;
            { Handle references to self }
-           if (current_scanner.idtoken=_SELF) and can_load_self_node then
+           if (CurrentScanner.idtoken=_SELF) and can_load_self_node then
              begin
                p1:=load_self_node;
                consume(_ID);
@@ -3838,16 +3838,16 @@ implementation
                 and in case of _SELF the filepos will already be the
                 same as filepos (so setting it again doesn't hurt).  }
               p1.fileinfo:=filepos;
-              filepos:=current_tokenpos;
+              filepos:=CurrentTokenPos;
             end;
            { handle post fix operators }
            if (p1.nodetype=specializen) then
              { post fix operators are handled after specialization }
              dopostfix:=false
            else
-             if (m_delphi in current_settings.modeswitches) and
+             if (m_delphi in CurrentSettings.modeswitches) and
                  (block_type in inline_specialization_block_types) and
-                 (current_scanner.token in [_LT,_LSHARPBRACKET]) then
+                 (CurrentScanner.token in [_LT,_LSHARPBRACKET]) then
                begin
                  idstr:='';
                  case p1.nodetype of
@@ -3869,7 +3869,7 @@ implementation
                end;
            { TP7 ugliness: @proc^ is parsed as (@proc)^, but @notproc^ is parsed
              as @(notproc^) }
-           if (m_tp_procvar in current_settings.modeswitches) and (current_scanner.token=_CARET) and
+           if (m_tp_procvar in CurrentSettings.modeswitches) and (CurrentScanner.token=_CARET) and
               getaddr and (p1.nodetype=loadn) and (tloadnode(p1).symtableentry.typ=procsym) then
              dopostfix:=false;
            { maybe an additional parameter instead of misusing hadspezialize? }
@@ -3879,17 +3879,17 @@ implementation
         else
          begin
            updatefpos:=true;
-           case current_scanner.token of
+           case CurrentScanner.token of
              _RETURN :
                 begin
                   consume(_RETURN);
                   p1:=nil;
-                  if not(current_scanner.token in [_SEMICOLON,_ELSE,_END]) then
+                  if not(CurrentScanner.token in [_SEMICOLON,_ELSE,_END]) then
                     begin
                       p1:=comp_expr([ef_accept_equal]);
-                      if not assigned(current_procinfo) or
-                         (current_procinfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
-                         is_void(current_procinfo.procdef.returndef) then
+                      if not assigned(CurrentProcInfo) or
+                         (CurrentProcInfo.procdef.proctypeoption in [potype_constructor,potype_destructor]) or
+                         is_void(CurrentProcInfo.procdef.returndef) then
                         begin
                           Message(parser_e_void_function);
                           { recovery }
@@ -3903,34 +3903,34 @@ implementation
                begin
                  again:=true;
                  consume(_INHERITED);
-                 if assigned(current_procinfo) and
-                    assigned(current_structdef) and
-                    (current_structdef.typ=objectdef) then
+                 if assigned(CurrentProcInfo) and
+                    assigned(CurrentStructDef) and
+                    (CurrentStructDef.typ=objectdef) then
                   begin
                     { for record helpers in mode Delphi "inherited" is not
                       allowed }
-                    if is_objectpascal_helper(current_structdef) and
-                        (m_delphi in current_settings.modeswitches) and
-                        (tobjectdef(current_structdef).helpertype=ht_record) then
+                    if is_objectpascal_helper(CurrentStructDef) and
+                        (m_delphi in CurrentSettings.modeswitches) and
+                        (tobjectdef(CurrentStructDef).helpertype=ht_record) then
                       Message(parser_e_inherited_not_in_record);
-                    hclassdef:=tobjectdef(current_structdef).childof;
+                    hclassdef:=tobjectdef(CurrentStructDef).childof;
                     { Objective-C categories *replace* methods in the class
                       they extend, or add methods to it. So calling an
                       inherited method always calls the method inherited from
                       the parent of the extended class }
-                    if is_objccategory(current_structdef) then
+                    if is_objccategory(CurrentStructDef) then
                       hclassdef:=hclassdef.childof;
                     spezcontext:=nil;
                     { if inherited; only then we need the method with
                       the same name }
-                    if current_scanner.token <> _ID then
+                    if CurrentScanner.token <> _ID then
                      begin
-                       hs:=current_procinfo.procdef.procsym.name;
-                       hsorg:=current_procinfo.procdef.procsym.realname;
+                       hs:=CurrentProcInfo.procdef.procsym.name;
+                       hsorg:=CurrentProcInfo.procdef.procsym.realname;
                        anon_inherited:=true;
                        { For message methods we need to search using the message
                          number or string }
-                       pd:=tprocdef(tprocsym(current_procinfo.procdef.procsym).ProcdefList[0]);
+                       pd:=tprocdef(tprocsym(CurrentProcInfo.procdef.procsym).ProcdefList[0]);
                        srdef:=nil;
                        if (po_msgint in pd.procoptions) then
                          searchsym_in_class_by_msgint(hclassdef,pd.messageinf.i,srdef,srsym,srsymtable)
@@ -3939,34 +3939,34 @@ implementation
                           searchsym_in_class_by_msgstr(hclassdef,pd.messageinf.str^,srsym,srsymtable)
                        else
                        { helpers have their own ways of dealing with inherited }
-                       if is_objectpascal_helper(current_structdef) then
-                         searchsym_in_helper(tobjectdef(current_structdef),tobjectdef(current_structdef),hs,srsym,srsymtable,[ssf_has_inherited])
+                       if is_objectpascal_helper(CurrentStructDef) then
+                         searchsym_in_helper(tobjectdef(CurrentStructDef),tobjectdef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
-                         searchsym_in_class(hclassdef,current_structdef,hs,srsym,srsymtable,[ssf_search_helper]);
+                         searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                      end
                     else
                      begin
-                       if not (m_delphi in current_settings.modeswitches) and
+                       if not (m_delphi in CurrentSettings.modeswitches) and
                            (block_type in inline_specialization_block_types) and
-                           (current_scanner.token=_ID) and
-                           (current_scanner.idtoken=_SPECIALIZE) then
+                           (CurrentScanner.token=_ID) and
+                           (CurrentScanner.idtoken=_SPECIALIZE) then
                          begin
                            consume(_ID);
-                           if current_scanner.token<>_ID then
+                           if CurrentScanner.token<>_ID then
                              message(parser_e_methode_id_expected);
                            isspecialize:=true;
                          end
                        else
                          isspecialize:=false;
-                       hs:=current_scanner.pattern;
-                       hsorg:=current_scanner.orgpattern;
+                       hs:=CurrentScanner.pattern;
+                       hsorg:=CurrentScanner.orgpattern;
                        consume(_ID);
                        anon_inherited:=false;
                        { helpers have their own ways of dealing with inherited }
-                       if is_objectpascal_helper(current_structdef) then
-                         searchsym_in_helper(tobjectdef(current_structdef),tobjectdef(current_structdef),hs,srsym,srsymtable,[ssf_has_inherited])
+                       if is_objectpascal_helper(CurrentStructDef) then
+                         searchsym_in_helper(tobjectdef(CurrentStructDef),tobjectdef(CurrentStructDef),hs,srsym,srsymtable,[ssf_has_inherited])
                        else
-                         searchsym_in_class(hclassdef,current_structdef,hs,srsym,srsymtable,[ssf_search_helper]);
+                         searchsym_in_class(hclassdef,CurrentStructDef,hs,srsym,srsymtable,[ssf_search_helper]);
                        if isspecialize and assigned(srsym) then
                          begin
                            if not handle_specialize_inline_specialization(srsym,false,srsymtable,spezcontext) then
@@ -3975,8 +3975,8 @@ implementation
                      end;
                     if assigned(srsym) then
                      begin
-                       mightbegeneric:=(m_delphi in current_settings.modeswitches) and
-                                         (current_scanner.token in [_LT,_LSHARPBRACKET]) and
+                       mightbegeneric:=(m_delphi in CurrentSettings.modeswitches) and
+                                         (CurrentScanner.token in [_LT,_LSHARPBRACKET]) and
                                          (sp_generic_dummy in srsym.symoptions);
                        { load the procdef from the inherited class and
                          not from self }
@@ -3994,7 +3994,7 @@ implementation
                              else
                                begin
                                  useself:=false;
-                                 if is_objectpascal_helper(current_structdef) then
+                                 if is_objectpascal_helper(CurrentStructDef) then
                                    begin
                                      { for a helper load the procdef either from the
                                        extended type, from the parent helper or from
@@ -4003,9 +4003,9 @@ implementation
                                        to }
                                      if (srsym.Owner.defowner.typ=objectdef) and
                                          is_objectpascal_helper(tobjectdef(srsym.Owner.defowner)) then
-                                       if def_is_related(current_structdef,tdef(srsym.Owner.defowner)) and
-                                           assigned(tobjectdef(current_structdef).childof) then
-                                         hdef:=tobjectdef(current_structdef).childof
+                                       if def_is_related(CurrentStructDef,tdef(srsym.Owner.defowner)) and
+                                           assigned(tobjectdef(CurrentStructDef).childof) then
+                                         hdef:=tobjectdef(CurrentStructDef).childof
                                        else
                                          begin
                                            hdef:=tobjectdef(srsym.Owner.defowner).extendeddef;
@@ -4019,8 +4019,8 @@ implementation
                                    end
                                  else
                                    hdef:=hclassdef;
-                                 if (po_classmethod in current_procinfo.procdef.procoptions) or
-                                    (po_staticmethod in current_procinfo.procdef.procoptions) then
+                                 if (po_classmethod in CurrentProcInfo.procdef.procoptions) or
+                                    (po_staticmethod in CurrentProcInfo.procdef.procoptions) then
                                    hdef:=cclassrefdef.create(hdef);
                                  if useself then
                                    begin
@@ -4051,7 +4051,7 @@ implementation
                            if not isspecialize then
                              check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg);
                            callflags:=[cnf_inherited];
-                           include(current_procinfo.flags,pi_has_inherited);
+                           include(CurrentProcInfo.flags,pi_has_inherited);
                            if anon_inherited then
                              include(callflags,cnf_anon_inherited);
                            do_member_read(hclassdef,getaddr,srsym,p1,again,callflags,spezcontext);
@@ -4096,8 +4096,8 @@ implementation
                  else
                    begin
                      { in case of records we use a more clear error message }
-                     if assigned(current_structdef) and
-                         (current_structdef.typ=recorddef) then
+                     if assigned(CurrentStructDef) and
+                         (CurrentStructDef.typ=recorddef) then
                        Message(parser_e_inherited_not_in_record)
                      else
                        Message(parser_e_generic_methods_only_in_methods);
@@ -4111,7 +4111,7 @@ implementation
              _INTCONST :
                begin
                  {Try first wether the value fits in an int64.}
-                 val(current_scanner.pattern,ic,code);
+                 val(CurrentScanner.pattern,ic,code);
                  if code=0 then
                    begin
                       consume(_INTCONST);
@@ -4121,7 +4121,7 @@ implementation
                  else
                    begin
                      { try qword next }
-                     val(current_scanner.pattern,qc,code);
+                     val(CurrentScanner.pattern,qc,code);
                      if code=0 then
                        begin
                           consume(_INTCONST);
@@ -4132,7 +4132,7 @@ implementation
                  if code<>0 then
                    begin
                      { finally float }
-                     Val(current_scanner.pattern,d,code);
+                     Val(CurrentScanner.pattern,d,code);
                      if code<>0 then
                        begin
                           Message(parser_e_invalid_integer);
@@ -4149,7 +4149,7 @@ implementation
                  else
                    { the necessary range checking has already been done by val }
                    tordconstnode(p1).rangecheck:=false;
-                 if current_scanner.token=_POINT then
+                 if CurrentScanner.token=_POINT then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4158,9 +4158,9 @@ implementation
 
              _REALNUMBER :
                begin
-                 p1:=real_const_node_from_pattern(current_scanner.pattern);
+                 p1:=real_const_node_from_pattern(CurrentScanner.pattern);
                  consume(_REALNUMBER);
-                 if current_scanner.token=_POINT then
+                 if CurrentScanner.token=_POINT then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4169,7 +4169,7 @@ implementation
 
              _STRING :
                begin
-                 if cs_compilesystem in current_settings.moduleswitches then
+                 if cs_compilesystem in CurrentSettings.moduleswitches then
                    Message(parser_e_nostringaliasinsystem);
                  string_dec(hdef,true);
                  { STRING can be also a type cast }
@@ -4185,7 +4185,7 @@ implementation
                  else
                    begin
                      p1:=ctypenode.create(hdef);
-                     if current_scanner.token=_POINT then
+                     if CurrentScanner.token=_POINT then
                        begin
                          again:=true;
                          { handle type helpers here }
@@ -4216,9 +4216,9 @@ implementation
 
              _CSTRING :
                begin
-                 p1:=cstringconstnode.createpchar(pchar(current_scanner.cstringpattern),length(current_scanner.cstringpattern),nil);
+                 p1:=cstringconstnode.createpchar(pchar(CurrentScanner.cstringpattern),length(CurrentScanner.cstringpattern),nil);
                  consume(_CSTRING);
-                 if current_scanner.token in postfixoperator_tokens then
+                 if CurrentScanner.token in postfixoperator_tokens then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4227,9 +4227,9 @@ implementation
 
              _CCHAR :
                begin
-                 p1:=cordconstnode.create(ord(current_scanner.pattern[1]),cansichartype,true);
+                 p1:=cordconstnode.create(ord(CurrentScanner.pattern[1]),cansichartype,true);
                  consume(_CCHAR);
-                 if current_scanner.token=_POINT then
+                 if CurrentScanner.token=_POINT then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4238,12 +4238,12 @@ implementation
 
              _CWSTRING:
                begin
-                 if getlengthwidestring(current_scanner.patternw)=1 then
-                   p1:=cordconstnode.create(ord(getcharwidestring(current_scanner.patternw,0)),cwidechartype,true)
+                 if getlengthwidestring(CurrentScanner.patternw)=1 then
+                   p1:=cordconstnode.create(ord(getcharwidestring(CurrentScanner.patternw,0)),cwidechartype,true)
                  else
-                   p1:=cstringconstnode.createunistr(current_scanner.patternw);
+                   p1:=cstringconstnode.createunistr(CurrentScanner.patternw);
                  consume(_CWSTRING);
-                 if current_scanner.token in postfixoperator_tokens then
+                 if CurrentScanner.token in postfixoperator_tokens then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4252,9 +4252,9 @@ implementation
 
              _CWCHAR:
                begin
-                 p1:=cordconstnode.create(ord(getcharwidestring(current_scanner.patternw,0)),cwidechartype,true);
+                 p1:=cordconstnode.create(ord(getcharwidestring(CurrentScanner.patternw,0)),cwidechartype,true);
                  consume(_CWCHAR);
-                 if current_scanner.token=_POINT then
+                 if CurrentScanner.token=_POINT then
                    begin
                      again:=true;
                      postfixoperators(p1,again,getaddr);
@@ -4270,19 +4270,19 @@ implementation
                   begin
                     p1:=factor(true,[]);
                     { inside parentheses a full expression is allowed, see also tests\tbs\tb27517.pas }
-                    if current_scanner.token<>_RKLAMMER then
+                    if CurrentScanner.token<>_RKLAMMER then
                       p1:=sub_expr(opcompare,[ef_accept_equal],p1);
                     consume(_RKLAMMER);
                   end
                  else
                   p1:=factor(true,[]);
-                 if (current_scanner.token in postfixoperator_tokens) and
+                 if (CurrentScanner.token in postfixoperator_tokens) and
                    { TP7 ugliness: @proc^ is parsed as (@proc)^, but @notproc^
                      is parsed as @(notproc^) }
                     not
                     (
-                     (m_tp_procvar in current_settings.modeswitches) and
-                     (current_scanner.token=_CARET) and (p1.nodetype=loadn) and (tloadnode(p1).symtableentry.typ=procsym)
+                     (m_tp_procvar in CurrentSettings.modeswitches) and
+                     (CurrentScanner.token=_CARET) and (p1.nodetype=loadn) and (tloadnode(p1).symtableentry.typ=procsym)
                     )
                    then
                   begin
@@ -4292,7 +4292,7 @@ implementation
                  got_addrn:=false;
                  p1:=caddrnode.create(p1);
                  p1.fileinfo:=filepos;
-                 if cs_typed_addresses in current_settings.localswitches then
+                 if cs_typed_addresses in CurrentSettings.localswitches then
                    include(taddrnode(p1).addrnodeflags,anf_typedaddr);
                  { Store the procvar that we are expecting, the
                    addrn will use the information to find the correct
@@ -4300,7 +4300,7 @@ implementation
                  if assigned(getprocvardef) and
                     (taddrnode(p1).left.nodetype = loadn) then
                    taddrnode(p1).getprocvardef:=getprocvardef;
-                 if (current_scanner.token in postfixoperator_tokens) then
+                 if (CurrentScanner.token in postfixoperator_tokens) then
                   begin
                     again:=true;
                     postfixoperators(p1,again,getaddr);
@@ -4314,7 +4314,7 @@ implementation
                  consume(_RKLAMMER);
                  { it's not a good solution
                    but (a+b)^ makes some problems  }
-                 if current_scanner.token in postfixoperator_tokens then
+                 if CurrentScanner.token in postfixoperator_tokens then
                   begin
                     again:=true;
                     postfixoperators(p1,again,getaddr);
@@ -4338,25 +4338,25 @@ implementation
              _MINUS :
                begin
                  consume(_MINUS);
-                 if (current_scanner.token = _INTCONST) and not(m_isolike_unary_minus in current_settings.modeswitches) then
+                 if (CurrentScanner.token = _INTCONST) and not(m_isolike_unary_minus in CurrentSettings.modeswitches) then
                     begin
                       { ugly hack, but necessary to be able to parse }
                       { -9223372036854775808 as int64 (JM)           }
-                      current_scanner.pattern := '-'+current_scanner.pattern;
+                      CurrentScanner.pattern := '-'+CurrentScanner.pattern;
                       p1:=sub_expr(oppower,[],nil);
                       {  -1 ** 4 should be - (1 ** 4) and not
                          (-1) ** 4
                          This was the reason of tw0869.pas test failure PM }
                       if p1.nodetype=starstarn then
                         begin
-                          if tbinarynode(p1).left.nodetype=ordconstn then
+                          if TBinaryNode(p1).left.nodetype=ordconstn then
                             begin
-                              tordconstnode(tbinarynode(p1).left).value:=-tordconstnode(tbinarynode(p1).left).value;
+                              tordconstnode(TBinaryNode(p1).left).value:=-tordconstnode(TBinaryNode(p1).left).value;
                               p1:=cunaryminusnode.create(p1);
                             end
-                          else if tbinarynode(p1).left.nodetype=realconstn then
+                          else if TBinaryNode(p1).left.nodetype=realconstn then
                             begin
-                              trealconstnode(tbinarynode(p1).left).NegateValue;
+                              trealconstnode(TBinaryNode(p1).left).NegateValue;
                               p1:=cunaryminusnode.create(p1);
                             end
                           else
@@ -4365,7 +4365,7 @@ implementation
                     end
                  else
                    begin
-                     if m_isolike_unary_minus in current_settings.modeswitches then
+                     if m_isolike_unary_minus in CurrentSettings.modeswitches then
                        p1:=sub_expr(opmultiply,[],nil)
                      else
                        p1:=sub_expr(oppower,[],nil);
@@ -4386,7 +4386,7 @@ implementation
                  consume(_NIL);
                  p1:=cnilnode.create;
                  { It's really ugly code nil^, but delphi allows it }
-                 if current_scanner.token in [_CARET,_POINT] then
+                 if CurrentScanner.token in [_CARET,_POINT] then
                   begin
                     again:=true;
                     postfixoperators(p1,again,getaddr);
@@ -4412,9 +4412,9 @@ implementation
              _FUNCTION:
                begin
                  if (block_type=bt_body) and
-                     (m_anonymous_functions in current_settings.modeswitches) then
+                     (m_anonymous_functions in CurrentSettings.modeswitches) then
                    begin
-                     filepos:=current_filepos;
+                     filepos:=CurrentFilePos;
                      oldprocvardef:=getprocvardef;
                      oldfuncrefdef:=getfuncrefdef;
                      getprocvardef:=nil;
@@ -4424,7 +4424,7 @@ implementation
                      getfuncrefdef:=oldfuncrefdef;
                      { assume that we try to get the address except if certain
                        tokens follow that indicate a call }
-                     do_proc_call(pd.procsym,pd.owner,nil,not (current_scanner.token in [_POINT,_CARET,_LECKKLAMMER]),
+                     do_proc_call(pd.procsym,pd.owner,nil,not (CurrentScanner.token in [_POINT,_CARET,_LECKKLAMMER]),
                                   again,p1,[],nil);
                      { don't allow @<anon func>, but keep the parsing for recovery }
                      if (p1.nodetype<>errorn) and getaddr then
@@ -4439,7 +4439,7 @@ implementation
                      Message(parser_e_illegal_expression);
                      p1:=cerrornode.create;
                      { recover }
-                     consume(current_scanner.token);
+                     consume(CurrentScanner.token);
                    end;
                end
 
@@ -4448,7 +4448,7 @@ implementation
                  Message(parser_e_illegal_expression);
                  p1:=cerrornode.create;
                  { recover }
-                 consume(current_scanner.token);
+                 consume(CurrentScanner.token);
                end;
            end;
         end;
@@ -4466,7 +4466,7 @@ implementation
         { get the resultdef for the node if nothing stops us }
         if (not assigned(p1.resultdef)) and dopostfix then
           begin
-            do_typecheckpass_changed(p1,nodechanged);
+            DoTypeCheckPassChanged(p1,nodechanged);
             updatefpos:=updatefpos or nodechanged;
           end;
 
@@ -4479,7 +4479,7 @@ implementation
 
     procedure post_comp_expr_gendef(var def: tdef);
       var
-        p1 : tnode;
+        p1 : TNode;
         again : boolean;
       begin
         if not assigned(def) then
@@ -4498,12 +4498,12 @@ implementation
 {****************************************************************************
                              Sub_Expr
 ****************************************************************************}
-    function sub_expr(pred_level:Toperator_precedence;flags:texprflags;factornode:tnode):tnode;
+    function sub_expr(pred_level:Toperator_precedence;flags:texprflags;factornode:TNode):TNode;
     {Reads a subexpression while the operators are of the current precedence
      level, or any higher level. Replaces the old term, simple_expr and
      simpl2_expr.}
 
-      function istypenode(n:tnode):boolean;inline;
+      function istypenode(n:TNode):boolean;inline;
       { Checks whether the given node is a type node or a VMT node containing a
         typenode. This is used in the code for inline specializations in the
         _LT branch below }
@@ -4518,7 +4518,7 @@ implementation
                     );
         end;
 
-      function gettypedef(n:tnode):tdef;inline;
+      function gettypedef(n:TNode):tdef;inline;
       { This returns the typedef that belongs to the given typenode or
         loadvmtaddrnode. n must not be Nil! }
         begin
@@ -4542,7 +4542,7 @@ implementation
           end;
         end;
 
-      function getgenericsym(n:tnode;out srsym:tsym):boolean;
+      function getgenericsym(n:TNode;out srsym:tsym):boolean;
         var
           srsymtable : tsymtable;
         begin
@@ -4566,12 +4566,12 @@ implementation
           result:=assigned(srsym);
         end;
 
-      function generate_inline_specialization(gendef:tdef;n:tnode;filepos:tfileposinfo;parseddef:tdef;gensym:tsym;p2:tnode):tnode;
+      function generate_inline_specialization(gendef:tdef;n:TNode;filepos:TFilePosInfo;parseddef:tdef;gensym:tsym;p2:TNode):TNode;
         var
           again,
           getaddr,
           unitspecific : boolean;
-          pload : tnode;
+          pload : TNode;
           spezcontext : tspecializationcontext;
           orggensym : tsym;
           structdef,
@@ -4648,7 +4648,7 @@ implementation
           if assigned(pload) then
             begin
               result:=pload;
-              typecheckpass(result);
+              TypeCheckPass(result);
               structdef:=inheriteddef;
               if not assigned(structdef) then
                 case result.resultdef.typ of
@@ -4669,7 +4669,7 @@ implementation
               if assigned(inheriteddef) then
                 begin
                   callflags:=[cnf_inherited];
-                  include(current_procinfo.flags,pi_has_inherited);
+                  include(CurrentProcInfo.flags,pi_has_inherited);
                 end
               else
                 callflags:=[];
@@ -4687,7 +4687,7 @@ implementation
                       { if we are accessing a owner procsym from the nested }
                       { class we need to call it as a class member }
                       if (gensym.owner.symtabletype in [ObjectSymtable,recordsymtable]) and
-                          assigned(current_structdef) and (current_structdef<>parseddef) and is_owned_by(current_structdef,parseddef) then
+                          assigned(CurrentStructDef) and (CurrentStructDef<>parseddef) and is_owned_by(CurrentStructDef,parseddef) then
                         result:=cloadvmtaddrnode.create(ctypenode.create(parseddef));
                       { not srsymtable.symtabletype since that can be }
                       { withsymtable as well                          }
@@ -4704,7 +4704,7 @@ implementation
                     begin
                       { regular procedure/function call }
                       do_proc_call(gensym,gensym.owner,nil,
-                                   (getaddr and not(current_scanner.token in [_CARET,_POINT,_LECKKLAMMER])),
+                                   (getaddr and not(CurrentScanner.token in [_CARET,_POINT,_LECKKLAMMER])),
                                    again,result,[],spezcontext);
                       spezcontext:=nil;
                     end;
@@ -4725,12 +4725,12 @@ implementation
           spezcontext := nil;
         end;
 
-      function maybe_handle_specialization(var p1,p2:tnode;filepos:tfileposinfo):boolean;
+      function maybe_handle_specialization(var p1,p2:TNode;filepos:TFilePosInfo):boolean;
         var
           gensym : tsym;
           parseddef,
           gendef : tdef;
-          ptmp : tnode;
+          ptmp : TNode;
         begin
           result:=false;
           { we need to decide whether we have an inline specialization
@@ -4744,9 +4744,9 @@ implementation
              { Attention: when nested specializations are supported
                           p2 could be a loadn if a "<" follows }
              istypenode(p2) and
-              (m_delphi in current_settings.modeswitches) and
+              (m_delphi in CurrentSettings.modeswitches) and
               { TODO : add _LT, _LSHARPBRACKET for nested specializations }
-              (current_scanner.token in [_GT,_RSHARPBRACKET,_COMMA]) then
+              (CurrentScanner.token in [_GT,_RSHARPBRACKET,_COMMA]) then
             begin
               { this is an inline specialization }
 
@@ -4776,9 +4776,9 @@ implementation
       label
         SubExprStart;
       var
-        p1,p2,ptmp : tnode;
+        p1,p2,ptmp : TNode;
         oldt    : Ttoken;
-        filepos : tfileposinfo;
+        filepos : TFilePosInfo;
         gendef : tdef;
         gensym : tsym;
         genlist : tfpobjectlist;
@@ -4796,13 +4796,13 @@ implementation
         else
           p1:=sub_expr(succ(pred_level),flags+[ef_accept_equal],factornode);
         repeat
-          if (current_scanner.token in [NOTOKEN..last_operator]) and
-             (current_scanner.token in operator_levels[pred_level]) and
-             ((current_scanner.token<>_EQ) or (ef_accept_equal in flags)) then
+          if (CurrentScanner.token in [NOTOKEN..last_operator]) and
+             (CurrentScanner.token in operator_levels[pred_level]) and
+             ((CurrentScanner.token<>_EQ) or (ef_accept_equal in flags)) then
            begin
-             oldt:=current_scanner.token;
-             filepos:=current_tokenpos;
-             consume(current_scanner.token);
+             oldt:=CurrentScanner.token;
+             filepos:=CurrentTokenPos;
+             consume(CurrentScanner.token);
              if pred_level=highest_precedence then
                p2:=factor(false,[])
              else
@@ -4842,7 +4842,7 @@ implementation
 
                        if p1.nodetype=specializen then
                          begin
-                           genlist:=tfpobjectlist(current_module.genericdummysyms.find(tspecializenode(p1).sym.name));
+                           genlist:=tfpobjectlist(CurrentModule.genericdummysyms.find(tspecializenode(p1).sym.name));
                            if assigned(genlist) and (genlist.count>0) then
                              begin
                                gensym:=tgenericdummyentry(genlist.last).resolvedsym;
@@ -4875,7 +4875,7 @@ implementation
 
                        { a) might not have their resultdef set }
                        if not assigned(p1.resultdef) then
-                         do_typecheckpass(p1);
+                         DoTypeCheckPass(p1);
 
                        { b) are not checked whether they are an undefined def,
                             but not a generic parameter }
@@ -4922,8 +4922,8 @@ implementation
                _OP_AS,
                _OP_IS :
                  begin
-                   if (m_delphi in current_settings.modeswitches) and
-                       (current_scanner.token in [_LT, _LSHARPBRACKET]) and
+                   if (m_delphi in CurrentSettings.modeswitches) and
+                       (CurrentScanner.token in [_LT, _LSHARPBRACKET]) and
                        getgenericsym(p2,gensym) then
                      begin
                        { for now we're handling this as a generic declaration;
@@ -4981,7 +4981,7 @@ implementation
                _OP_MOD :
                  begin
                    p1:=cmoddivnode.create(modn,p1,p2);
-                   if m_isolike_mod in current_settings.modeswitches then
+                   if m_isolike_mod in CurrentSettings.modeswitches then
                      include(tmoddivnode(p1).moddivnodeflags,mdnf_isomod);
                  end;
                _OP_SHL :
@@ -5003,11 +5003,11 @@ implementation
            break;
         until false;
         if (p1.nodetype=specializen) and
-            (current_scanner.token=_LSHARPBRACKET) and
-            (m_delphi in current_settings.modeswitches) then
+            (CurrentScanner.token=_LSHARPBRACKET) and
+            (m_delphi in CurrentSettings.modeswitches) then
           begin
-            filepos:=current_tokenpos;
-            consume(current_scanner.token);
+            filepos:=CurrentTokenPos;
+            consume(CurrentScanner.token);
             p2:=factor(false,[]);
             if maybe_handle_specialization(p1,p2,filepos) then
               begin
@@ -5027,42 +5027,42 @@ implementation
       end;
 
 
-    function comp_expr(flags:texprflags):tnode;
+    function comp_expr(flags:texprflags):TNode;
       var
          oldafterassignment : boolean;
-         p1 : tnode;
+         p1 : TNode;
       begin
          oldafterassignment:=afterassignment;
          afterassignment:=true;
          p1:=sub_expr(opcompare,flags,nil);
          { get the resultdef for this expression }
          if not assigned(p1.resultdef) then
-          do_typecheckpass(p1);
+          DoTypeCheckPass(p1);
          afterassignment:=oldafterassignment;
          comp_expr:=p1;
       end;
 
 
-    function expr(dotypecheck : boolean) : tnode;
+    function expr(dotypecheck : boolean) : TNode;
 
       var
-         p1,p2 : tnode;
-         filepos : tfileposinfo;
+         p1,p2 : TNode;
+         filepos : TFilePosInfo;
          oldafterassignment,
          updatefpos          : boolean;
-         oldflags : tnodeflags;
+         oldflags : TNodeFlags;
       begin
          oldafterassignment:=afterassignment;
          p1:=sub_expr(opcompare,[ef_accept_equal],nil);
          { get the resultdef for this expression }
          if not assigned(p1.resultdef) and
             dotypecheck then
-          do_typecheckpass(p1);
-         filepos:=current_tokenpos;
-         if current_scanner.token in [_ASSIGNMENT,_PLUSASN,_MINUSASN,_STARASN,_SLASHASN] then
+          DoTypeCheckPass(p1);
+         filepos:=CurrentTokenPos;
+         if CurrentScanner.token in [_ASSIGNMENT,_PLUSASN,_MINUSASN,_STARASN,_SLASHASN] then
            afterassignment:=true;
          updatefpos:=true;
-         case current_scanner.token of
+         case CurrentScanner.token of
            _POINTPOINT :
              begin
                 consume(_POINTPOINT);
@@ -5088,7 +5088,7 @@ implementation
              end;
            _PLUSASN :
              begin
-               if not(cs_support_c_operators in current_settings.moduleswitches) then
+               if not(cs_support_c_operators in CurrentSettings.moduleswitches) then
                  Message(parser_e_coperators_off);
                consume(_PLUSASN);
                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
@@ -5096,7 +5096,7 @@ implementation
             end;
           _MINUSASN :
             begin
-               if not(cs_support_c_operators in current_settings.moduleswitches) then
+               if not(cs_support_c_operators in CurrentSettings.moduleswitches) then
                  Message(parser_e_coperators_off);
                consume(_MINUSASN);
                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
@@ -5104,7 +5104,7 @@ implementation
             end;
           _STARASN :
             begin
-               if not(cs_support_c_operators in current_settings.moduleswitches) then
+               if not(cs_support_c_operators in CurrentSettings.moduleswitches) then
                  Message(parser_e_coperators_off);
                consume(_STARASN  );
                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
@@ -5112,7 +5112,7 @@ implementation
             end;
           _SLASHASN :
             begin
-               if not(cs_support_c_operators in current_settings.moduleswitches) then
+               if not(cs_support_c_operators in CurrentSettings.moduleswitches) then
                  Message(parser_e_coperators_off);
                consume(_SLASHASN  );
                p2:=sub_expr(opcompare,[ef_accept_equal],nil);
@@ -5125,7 +5125,7 @@ implementation
          { get the resultdef for this expression }
          if not assigned(p1.resultdef) and
             dotypecheck then
-          do_typecheckpass(p1);
+          DoTypeCheckPass(p1);
          { transfer generic parameter flag }
          if nf_generic_para in oldflags then
            include(p1.flags,nf_generic_para);
@@ -5139,11 +5139,11 @@ implementation
     {Reads an expression, tries to evaluate it and check if it is an integer
      constant. Then the constant is returned.}
     var
-      p:tnode;
+      p:TNode;
     begin
       result:=0;
       p:=comp_expr([ef_accept_equal]);
-      if not codegenerror then
+      if not CodeGenError then
        begin
          if (p.nodetype<>ordconstn) or
             not(is_integer(p.resultdef)) then
@@ -5160,7 +5160,7 @@ implementation
     {Reads an expression, tries to evaluate it and checks if it is a string
      constant. Then the constant is returned.}
     var
-      p:tnode;
+      p:TNode;
       snode : tstringconstnode absolute p;
       pw : tcompilerwidestring;
       pc : pansichar;
@@ -5182,7 +5182,7 @@ implementation
            len:=getlengthwidestring(pw);
            pc:=getmem(Len+1);
            pc[len]:=#0;
-           unicode2ascii(pw,pc,current_settings.sourcecodepage);
+           unicode2ascii(pw,pc,CurrentSettings.sourcecodepage);
            get_stringconst:=strpas(pc);
            freemem(pc);
          end

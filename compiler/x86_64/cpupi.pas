@@ -49,7 +49,7 @@ interface
          destructor destroy;override;
        end;
 
-    function x86_64_use_ms_abi(proccall: tproccalloption): boolean;
+    function x86_64_use_ms_abi(proccall: TProcCallOption): boolean;
 
 implementation
 
@@ -70,7 +70,7 @@ implementation
 
     procedure tcpuprocinfo.set_first_temp_offset;
       begin
-        if target_info.system=system_x86_64_win64 then
+        if TargetInfo.system=system_x86_64_win64 then
           begin
             { Compiler-injected profiler hooks are physical calls and need the
               normal Win64 shadow space and unwind description. }
@@ -95,14 +95,14 @@ implementation
     procedure tcpuprocinfo.generate_parameter_info;
       begin
         inherited generate_parameter_info;
-        if target_info.system=system_x86_64_win64 then
+        if TargetInfo.system=system_x86_64_win64 then
           para_stack_size:=0;
       end;
 
 
     function tcpuprocinfo.calc_stackframe_size:longint;
       begin
-        maxpushedparasize:=align(maxpushedparasize,max(current_settings.alignment.localalignmin,16));
+        maxpushedparasize:=align(maxpushedparasize,max(CurrentSettings.alignment.localalignmin,16));
         { Note 1: when tg.direction>0, tg.lasttemp is already offset by maxpushedparasize
                   (because tg.setfirsttemp also sets lasttemp)
           Note 2: Align to 8 bytes here. The final 16-byte alignment is handled in
@@ -159,15 +159,15 @@ implementation
         if profiled then
           begin
             hdir:=cai_seh_directive.create_name(ash_handler,'__NXP_specific_handler');
-            current_module.add_extern_asmsym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
-            current_module.add_extern_asmsym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
+            CurrentModule.add_extern_asmsym('__NXP_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+            CurrentModule.add_extern_asmsym('nxp_unwind',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags or 2;
           end
         else
           begin
             hdir:=cai_seh_directive.create_name(ash_handler,'__FPC_specific_handler');
             if not systemunit.iscurrentunit then
-              current_module.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
+              CurrentModule.add_extern_asmsym('__FPC_specific_handler',AB_EXTERNAL,AT_FUNCTION);
             hdir.data.flags:=unwindflags;
           end;
         list.concat(hdir);
@@ -183,7 +183,7 @@ implementation
             list.concat(tai_const.create_32bit(1));
             list.concat(tai_const.create_sym(nexus_profile_descsym));
             list.concat(tai_const.create_sym(
-              current_asmdata.RefAsmSymbol('nxp_unwind',AT_FUNCTION)));
+              CurrentAsmData.RefAsmSymbol('nxp_unwind',AT_FUNCTION)));
           end;
         { return to text, required for GAS compatibility }
         { This creates a tai_align which is redundant here (although harmless) }
@@ -197,10 +197,10 @@ implementation
       end;
 
 
-    function x86_64_use_ms_abi(proccall: tproccalloption): boolean;
+    function x86_64_use_ms_abi(proccall: TProcCallOption): boolean;
       begin
         result:=
-          ((target_info.system=system_x86_64_win64) and
+          ((TargetInfo.system=system_x86_64_win64) and
             not(proccall in [pocall_sysv_abi_default,pocall_sysv_abi_cdecl])) or
           (proccall in [pocall_ms_abi_default,pocall_ms_abi_cdecl]);
       end;

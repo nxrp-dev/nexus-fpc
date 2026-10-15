@@ -63,41 +63,41 @@ implementation
 
     procedure emit_none(i : tasmop;s : topsize);
       begin
-         current_asmdata.CurrAsmList.concat(Taicpu.Op_none(i,s));
+         CurrentAsmData.CurrAsmList.concat(Taicpu.Op_none(i,s));
       end;
 
     procedure emit_reg(i : tasmop;s : topsize;reg : tregister);
       begin
-         current_asmdata.CurrAsmList.concat(Taicpu.Op_reg(i,s,reg));
+         CurrentAsmData.CurrAsmList.concat(Taicpu.Op_reg(i,s,reg));
       end;
 
     procedure emit_ref(i : tasmop;s : topsize;ref : treference);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_ref(i,s,ref));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_ref(i,s,ref));
       end;
 
     procedure emit_const_reg(i : tasmop;s : topsize;c : aint;reg : tregister);
       begin
-         current_asmdata.CurrAsmList.concat(Taicpu.Op_const_reg(i,s,c,reg));
+         CurrentAsmData.CurrAsmList.concat(Taicpu.Op_const_reg(i,s,c,reg));
       end;
 
     procedure emit_const_ref(i : tasmop;s : topsize;c : aint;ref : treference);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_const_ref(i,s,c,ref));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_const_ref(i,s,c,ref));
       end;
 
     procedure emit_ref_reg(i : tasmop;s : topsize;ref : treference;reg : tregister);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_ref_reg(i,s,ref,reg));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_ref_reg(i,s,ref,reg));
       end;
 
     procedure emit_reg_ref(i : tasmop;s : topsize;reg : tregister;ref : treference);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_reg_ref(i,s,reg,ref));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_reg_ref(i,s,reg,ref));
       end;
 
     procedure emit_reg_reg(i : tasmop;s : topsize;reg1,reg2 : tregister);
@@ -108,7 +108,7 @@ implementation
       if not ((reg1=reg2) and (i=A_MOV)) then
         begin
           instr:=Taicpu.op_reg_reg(i,s,reg1,reg2);
-          current_asmdata.CurrAsmList.concat(instr);
+          CurrentAsmData.CurrAsmList.concat(instr);
           if i=A_MOV then
             cg.add_move_instruction(instr);
         end;
@@ -116,29 +116,29 @@ implementation
 
     procedure emit_const_reg_reg(i : tasmop;s : topsize;c : longint;reg1,reg2 : tregister);
       begin
-         current_asmdata.CurrAsmList.concat(Taicpu.Op_const_reg_reg(i,s,c,reg1,reg2));
+         CurrentAsmData.CurrAsmList.concat(Taicpu.Op_const_reg_reg(i,s,c,reg1,reg2));
       end;
 
     procedure emit_reg_reg_reg(i : tasmop;s : topsize;reg1,reg2,reg3 : tregister);
       begin
-         current_asmdata.CurrAsmList.concat(Taicpu.Op_reg_reg_reg(i,s,reg1,reg2,reg3));
+         CurrentAsmData.CurrAsmList.concat(Taicpu.Op_reg_reg_reg(i,s,reg1,reg2,reg3));
       end;
 
     procedure emit_ref_reg_reg(i : tasmop;s : topsize;ref : treference;reg1,reg2 : tregister);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_ref_reg_reg(i,s,ref,reg1,reg2));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_ref_reg_reg(i,s,ref,reg1,reg2));
       end;
 
     procedure emit_reg_ref_reg(i : tasmop;s : topsize; reg1 : tregister; ref : treference; reg2 : tregister);
       begin
-        tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,ref);
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_reg_ref_reg(i,s,reg1,ref,reg2));
+        tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,ref);
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_reg_ref_reg(i,s,reg1,ref,reg2));
       end;
 
     procedure emit_sym(i : tasmop;s : topsize;op : tasmsymbol);
       begin
-        current_asmdata.CurrAsmList.concat(Taicpu.Op_sym(i,s,op));
+        CurrentAsmData.CurrAsmList.concat(Taicpu.Op_sym(i,s,op));
       end;
 
 end.

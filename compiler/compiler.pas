@@ -143,7 +143,7 @@ begin
 { this is needed here for the IDE
   in case of compilation failure
   at the previous compile }
-  set_current_module(nil);
+  SetCurrentModule(nil);
 { read the arguments }
   read_arguments(cmd);
 { inits which depend on arguments }
@@ -201,12 +201,12 @@ begin
 
        { apply global messages/verbosity }
        flushpendingswitchesstate;
-       FreeLocalVerbosity(current_settings.pmessage);
+       FreeLocalVerbosity(CurrentSettings.pmessage);
 
        { show some info }
        Message1(general_t_compilername,FixFileName(system.paramstr(0)));
-       Message1(general_d_sourceos,source_info.name);
-       Message1(general_i_targetos,target_info.name);
+       Message1(general_d_sourceos,SourceInfo.name);
+       Message1(general_i_targetos,TargetInfo.name);
        Message1(general_t_exepath,exepath);
        WriteCmdStrList(general_t_unitpath,unitsearchpath);
        WriteCmdStrList(general_t_includepath,includesearchpath);

@@ -779,7 +779,7 @@ implementation
 
     procedure MaybeSwapStab(var v:TObjStabEntry);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           begin
             v.strpos:=SwapEndian(v.strpos);
             v.nvalue:=SwapEndian(v.nvalue);
@@ -1480,20 +1480,20 @@ implementation
           {note} [oso_Data,oso_note]
         );
       begin
-        if target_asm.id in asms_int_coff then
+        if TargetAsm.id in asms_int_coff then
           begin
             if (aType in [sec_rodata,sec_rodata_norel]) then
               begin
-                if (target_info.system in systems_all_windows) then
+                if (TargetInfo.system in systems_all_windows) then
                   aType:=sec_rodata_norel
                 else
                   aType:=sec_data;
               end;
           end;
         result:=secoptions[atype];
-        if (atype=sec_rodata) and (target_info.system=system_x86_64_linux) and
-           (tf_supports_packages in target_info.flags) and
-           (cs_create_pic in current_settings.moduleswitches) then
+        if (atype=sec_rodata) and (TargetInfo.system=system_x86_64_linux) and
+           (tf_supports_packages in TargetInfo.flags) and
+           (cs_create_pic in CurrentSettings.moduleswitches) then
           include(result,oso_write);
 {$ifdef OMFOBJSUPPORT}
         { in the huge memory model, BSS data is actually written in the regular
@@ -1907,7 +1907,7 @@ implementation
 
     procedure TObjData.beforealloc;
       begin
-        FCPUType:=current_settings.cputype;
+        FCPUType:=CurrentSettings.cputype;
         { create stabs sections if debugging }
         if assigned(StabsSec) then
           begin
@@ -1919,7 +1919,7 @@ implementation
 
     procedure TObjData.beforewrite;
       begin
-        FCPUType:=current_settings.cputype;
+        FCPUType:=CurrentSettings.cputype;
         { create stabs sections if debugging }
         if assigned(StabsSec) then
          begin
@@ -1999,8 +1999,8 @@ implementation
     function TObjOutput.newObjData(const n:string):TObjData;
       begin
         result:=CObjData.create(n);
-        if (cs_use_lineinfo in current_settings.globalswitches) or
-           (cs_debuginfo in current_settings.moduleswitches) then
+        if (cs_use_lineinfo in CurrentSettings.globalswitches) or
+           (cs_debuginfo in CurrentSettings.moduleswitches) then
           result.CreateDebugSections;
       end;
 
@@ -2293,7 +2293,7 @@ implementation
         FMangledName:=AMangledName;
         { Replace ? and @ in import name, since GNU AS does not allow these characters in symbol names. }
         { This allows to import VC++ mangled names from DLLs. }
-        if target_info.system in systems_all_windows then
+        if TargetInfo.system in systems_all_windows then
           begin
             Replace(FMangledName,'?','__q$$');
           end;
@@ -2669,7 +2669,7 @@ implementation
                 begin
                   if (indexpos<MAXVAL) then
                     begin
-                      if source_info.endian<>target_info.endian then
+                      if SourceInfo.endian<>TargetInfo.endian then
                         swapendian(anumval);
                       { No range checking here }
 
@@ -2922,7 +2922,7 @@ implementation
                 VTENTRY and VTINHERIT symbols }
               if objsym.bind=AB_LOCAL then
                 begin
-                  if cs_link_opt_vtable in current_settings.globalswitches then
+                  if cs_link_opt_vtable in CurrentSettings.globalswitches then
                     begin
                       hs:=objsym.name;
                       if (hs[1]='V') then
@@ -3266,7 +3266,7 @@ implementation
           end;
 
         { Generate VTable tree }
-        if cs_link_opt_vtable in current_settings.globalswitches then
+        if cs_link_opt_vtable in CurrentSettings.globalswitches then
           BuildVTableTree(VTInheritList,VTEntryList);
         VTInheritList.Free;
         VTInheritList := nil;
@@ -3294,7 +3294,7 @@ implementation
         move(dbgname[1],debuglink[len],length(dbgname));
         inc(len,length(dbgname)+1);
         len:=align(len,4);
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           SwapEndian(dbgcrc);
         move(dbgcrc,debuglink[len],sizeof(cardinal));
         inc(len,4);
@@ -3671,8 +3671,8 @@ implementation
                 (
                  (exesec.ObjSectionlist.count=0) or
                  (
-                  (cs_link_strip in current_settings.globalswitches) and
-                  not(cs_link_separate_dbg_file in current_settings.globalswitches) and
+                  (cs_link_strip in CurrentSettings.globalswitches) and
+                  not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) and
                   (oso_debug in exesec.SecOptions)
                  )
                 );
@@ -3835,7 +3835,7 @@ implementation
                 DoReloc(TObjRelocation(objsec.ObjRelocations[i]));
 
               { Process Virtual Entry calls }
-              if cs_link_opt_vtable in current_settings.globalswitches then
+              if cs_link_opt_vtable in CurrentSettings.globalswitches then
                 begin
                   for i:=0 to objsec.VTRefList.count-1 do
                     begin
@@ -3986,7 +3986,7 @@ implementation
     procedure TExeOutput.SetCurrMemPos(const AValue: qword);
       begin
         if AValue>MaxMemPos then
-          Message1(link_f_executable_too_big, target_os_string);
+          Message1(link_f_executable_too_big, TargetOSString);
         FCurrMemPos:=AValue;
       end;
 
@@ -4080,8 +4080,8 @@ implementation
             sec:=TObjSection(Data.ObjSectionList[i]);
             { Skip debug sections }
             if (oso_debug in sec.SecOptions) and
-               (cs_link_strip in current_settings.globalswitches) and
-               not(cs_link_separate_dbg_file in current_settings.globalswitches) then
+               (cs_link_strip in CurrentSettings.globalswitches) and
+               not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
               continue;
 
             if assigned(sec.Data) then

@@ -53,18 +53,18 @@ unit widestr;
     procedure copywidestring(s,d : tcompilerwidestring);
     function asciichar2unicode(c : char) : tcompilerwidechar;
     function unicode2asciichar(c : tcompilerwidechar) : char;
-    procedure ascii2unicode(p : pchar;l : SizeInt;cp : tstringencoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
-    procedure unicode2ascii(r : tcompilerwidestring;p : pchar;cp : tstringencoding);
-    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : tstringencoding);
+    procedure ascii2unicode(p : pchar;l : SizeInt;cp : TStringEncoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
+    procedure unicode2ascii(r : tcompilerwidestring;p : pchar;cp : TStringEncoding);
+    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : TStringEncoding);
     function hasnonasciichars(const p: tcompilerwidestring): boolean;
     function getcharwidestring(r : tcompilerwidestring;l : SizeInt) : tcompilerwidechar;
     function cpavailable(const s: string) : boolean;
     function cpavailable(cp: word) : boolean;
     procedure changecodepage(
-      s : pchar; l : SizeInt; scp : tstringencoding;
-      d : pchar; dcp : tstringencoding
+      s : pchar; l : SizeInt; scp : TStringEncoding;
+      d : pchar; dcp : TStringEncoding
     );
-    function codepagebyname(const s : string) : tstringencoding;
+    function codepagebyname(const s : string) : TStringEncoding;
     function charlength(p: pchar; len: sizeint): sizeint;
     function charlength(const s: string): sizeint;
 
@@ -181,9 +181,9 @@ unit widestr;
       var
          m : punicodemap;
       begin
-         if (current_settings.sourcecodepage <> CP_UTF8) then
+         if (CurrentSettings.sourcecodepage <> CP_UTF8) then
            begin
-             m:=getmap(current_settings.sourcecodepage);
+             m:=getmap(CurrentSettings.sourcecodepage);
              asciichar2unicode:=getunicode(c,m);
            end
          else
@@ -198,11 +198,11 @@ unit widestr;
           unicode2asciichar:='?';
       end;}
       begin
-         Result := getascii(c,getmap(current_settings.sourcecodepage))[1];
+         Result := getascii(c,getmap(CurrentSettings.sourcecodepage))[1];
       end;
 
 
-    procedure ascii2unicode(p : pchar;l : SizeInt;cp : tstringencoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
+    procedure ascii2unicode(p : pchar;l : SizeInt;cp : TStringEncoding;r : tcompilerwidestring;codepagetranslation : boolean = true);
       var
          source : pchar;
          dest   : tcompilerwidecharptr;
@@ -245,14 +245,14 @@ unit widestr;
       end;
 
 
-    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : tstringencoding);
+    procedure unicode2ascii(r : tcompilerwidestring;arr:TAnsiCharDynArray;cp : TStringEncoding);
     begin
       if (r.len=0) or (length(arr)=0) then
         exit;
       unicode2ascii(r,Pchar(@arr[0]),cp);
     end;
 
-    procedure unicode2ascii(r : tcompilerwidestring;p:pchar;cp : tstringencoding);
+    procedure unicode2ascii(r : tcompilerwidestring;p:pchar;cp : TStringEncoding);
       var
         m : punicodemap;
         source : tcompilerwidecharptr;
@@ -265,7 +265,7 @@ unit widestr;
           internalerrorproc(2015092701);
 
         if (cp = 0) or (cp=CP_NONE) then
-          m:=getmap(current_settings.sourcecodepage)
+          m:=getmap(CurrentSettings.sourcecodepage)
         else
           m:=getmap(cp);
         source:=tcompilerwidecharptr(r.data);
@@ -311,8 +311,8 @@ unit widestr;
       end;
 
     procedure changecodepage(
-      s : pchar; l : SizeInt; scp : tstringencoding;
-      d : pchar; dcp : tstringencoding
+      s : pchar; l : SizeInt; scp : TStringEncoding;
+      d : pchar; dcp : TStringEncoding
     );
       var
         ms, md : punicodemap;
@@ -332,7 +332,7 @@ unit widestr;
          end;
       end;
 
-    function codepagebyname(const s : string) : tstringencoding;
+    function codepagebyname(const s : string) : TStringEncoding;
       var
         p : punicodemap;
       begin

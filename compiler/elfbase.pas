@@ -451,7 +451,7 @@ implementation
 
     procedure MayBeSwapHeader(var h : telf32header);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               e_type:=swapendian(e_type);
@@ -473,7 +473,7 @@ implementation
 
     procedure MayBeSwapHeader(var h : telf64header);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               e_type:=swapendian(e_type);
@@ -495,7 +495,7 @@ implementation
 
     procedure MayBeSwapHeader(var h : telf32proghdr);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               p_align:=swapendian(p_align);
@@ -512,7 +512,7 @@ implementation
 
     procedure MayBeSwapHeader(var h : telf64proghdr);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               p_align:=swapendian(p_align);
@@ -529,7 +529,7 @@ implementation
 
     procedure MaybeSwapSecHeader(var h : telf32sechdr);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               sh_name:=swapendian(sh_name);
@@ -548,7 +548,7 @@ implementation
 
     procedure MaybeSwapSecHeader(var h : telf64sechdr);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               sh_name:=swapendian(sh_name);
@@ -567,7 +567,7 @@ implementation
 
     procedure MaybeSwapElfSymbol(var h : telf32symbol);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               st_name:=swapendian(st_name);
@@ -580,7 +580,7 @@ implementation
 
     procedure MaybeSwapElfSymbol(var h : telf64symbol);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               st_name:=swapendian(st_name);
@@ -593,7 +593,7 @@ implementation
 
     procedure MaybeSwapElfReloc(var h : telf32reloc);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               address:=swapendian(address);
@@ -605,7 +605,7 @@ implementation
 
     procedure MaybeSwapElfReloc(var h : telf64reloc);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               address:=swapendian(address);
@@ -617,7 +617,7 @@ implementation
 
     procedure MaybeSwapElfDyn(var h : telf32dyn);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               d_tag:=swapendian(d_tag);
@@ -628,7 +628,7 @@ implementation
 
     procedure MaybeSwapElfDyn(var h : telf64dyn);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               d_tag:=swapendian(d_tag);
@@ -639,7 +639,7 @@ implementation
 
     procedure MaybeSwapElfverdef(var h: TElfverdef);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               vd_version:=swapendian(vd_version);
@@ -655,7 +655,7 @@ implementation
 
     procedure MaybeSwapElfverdaux(var h: TElfverdaux);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               vda_name:=swapendian(vda_name);
@@ -666,7 +666,7 @@ implementation
 
     procedure MaybeSwapElfverneed(var h: TElfverneed);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               vn_version:=swapendian(vn_version);
@@ -680,7 +680,7 @@ implementation
 
     procedure MaybeSwapElfvernaux(var h: TElfvernaux);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               vna_hash:=swapendian(vna_hash);

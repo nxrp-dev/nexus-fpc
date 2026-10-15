@@ -37,8 +37,8 @@ interface
     tscannerstate = record
       new_scanner: tscannerfile;
       old_scanner: tscannerfile;
-      old_filepos: tfileposinfo;
-      old_modeswitches: tmodeswitches;
+      old_filepos: TFilePosInfo;
+      old_modeswitches: TModeSwitches;
       valid: boolean;
     end;
 
@@ -120,7 +120,7 @@ interface
     to this new procedure }
   procedure call_through_new_name(orgpd: tprocdef; const newname: TSymStr);
 
-  function generate_pkg_stub(pd:tprocdef):tnode;
+  function generate_pkg_stub(pd:tprocdef):TNode;
   procedure generate_attr_constrs(attrs:tfpobjectlist);
 
   { Generate the hidden thunk class for interfaces,
@@ -142,16 +142,16 @@ implementation
 
   procedure replace_scanner(const tempname: string; out sstate: tscannerstate);
     var
-      old_block_type: tblock_type;
+      old_block_type: TBlockType;
     begin
       { would require saving of cstringpattern, patternw }
-      if (current_scanner.token=_CSTRING) or
-         (current_scanner.token=_CWCHAR) or
-         (current_scanner.token=_CWSTRING) then
+      if (CurrentScanner.token=_CSTRING) or
+         (CurrentScanner.token=_CWCHAR) or
+         (CurrentScanner.token=_CWSTRING) then
         internalerror(2011032201);
-      sstate.old_scanner:=current_scanner;
-      sstate.old_filepos:=current_filepos;
-      sstate.old_modeswitches:=current_settings.modeswitches;
+      sstate.old_scanner:=CurrentScanner;
+      sstate.old_filepos:=CurrentFilePos;
+      sstate.old_modeswitches:=CurrentSettings.modeswitches;
       sstate.valid:=true;
       { creating a new scanner resets the block type, while we want to continue
         in the current one }
@@ -161,7 +161,7 @@ implementation
       block_type:=old_block_type;
       { required for e.g. FpcDeepCopy record method (uses "out" parameter; field
         names are escaped via &, so should not cause conflicts }
-      current_settings.modeswitches:=objfpcmodeswitches+
+      CurrentSettings.modeswitches:=objfpcmodeswitches+
         (sstate.old_modeswitches*[m_default_ansistring,m_default_unicodestring]);
     end;
 
@@ -172,8 +172,8 @@ implementation
         begin
           sstate.new_scanner.free; // no nil needed
           set_current_scanner(sstate.old_scanner);
-          current_filepos:=sstate.old_filepos;
-          current_settings.modeswitches:=sstate.old_modeswitches;
+          CurrentFilePos:=sstate.old_filepos;
+          CurrentSettings.modeswitches:=sstate.old_modeswitches;
         end;
     end;
 
@@ -188,13 +188,13 @@ implementation
       result:=false;
       { in case multiple strings are injected, make sure to always close the
         previous macro inputfile to prevent memory leaks }
-      if assigned(current_scanner.inputfile) and
-         not(current_scanner.inputfile.closed) then
-        current_scanner.closeinputfile;
+      if assigned(CurrentScanner.inputfile) and
+         not(CurrentScanner.inputfile.closed) then
+        CurrentScanner.closeinputfile;
       { inject the string in the scanner }
       str:=str+'end;';
-      current_scanner.substitutemacro('meth_head_macro',@str[1],length(str),current_scanner.line_no,current_scanner.inputfile.ref_index,true);
-      current_scanner.readtoken(false);
+      CurrentScanner.substitutemacro('meth_head_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.ref_index,true);
+      CurrentScanner.readtoken(false);
       { and parse it... }
       case potype of
         potype_class_constructor:
@@ -215,9 +215,9 @@ implementation
         result:=true;
       parse_only:=oldparse_only;
       { remove the temporary macro input file again }
-      current_scanner.closeinputfile;
-      current_scanner.nextfile;
-      current_scanner.tempopeninputfile;
+      CurrentScanner.closeinputfile;
+      CurrentScanner.nextfile;
+      CurrentScanner.tempopeninputfile;
     end;
 
 
@@ -246,8 +246,8 @@ implementation
       { "const" starts a new kind of block and hence makes the scanner return }
       str:=str+'const;';
       { inject the string in the scanner }
-      current_scanner.substitutemacro('meth_impl_macro',@str[1],length(str),lineno,fileno,true);
-      current_scanner.readtoken(false);
+      CurrentScanner.substitutemacro('meth_impl_macro',@str[1],length(str),lineno,fileno,true);
+      CurrentScanner.readtoken(false);
       { and parse it... }
       flags:=[];
       if is_classdef then
@@ -255,9 +255,9 @@ implementation
       result_procdef:=read_proc(flags,usefwpd);
       parse_only:=oldparse_only;
       { remove the temporary macro input file again }
-      current_scanner.closeinputfile;
-      current_scanner.nextfile;
-      current_scanner.tempopeninputfile;
+      CurrentScanner.closeinputfile;
+      CurrentScanner.nextfile;
+      CurrentScanner.tempopeninputfile;
       result:=true;
      end;
 
@@ -266,19 +266,19 @@ implementation
     var
       tmpproc: tprocdef;
     begin
-      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, current_scanner.inputfile.ref_index, current_scanner.line_no, is_classdef, tmpproc);
+      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.ref_index, CurrentScanner.line_no, is_classdef, tmpproc);
     end;
 
 
   function str_parse_method_impl(const str: ansistring; usefwpd: tprocdef; is_classdef: boolean; out result_procdef: tprocdef):boolean;
     begin
-      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, current_scanner.inputfile.ref_index, current_scanner.line_no, is_classdef, result_procdef);
+      result:=str_parse_method_impl_with_fileinfo(str, usefwpd, CurrentScanner.inputfile.ref_index, CurrentScanner.line_no, is_classdef, result_procdef);
     end;
 
 
   procedure str_parse_typedconst(list: TAsmList; str: ansistring; ssym: tstaticvarsym);
     var
-      old_block_type: tblock_type;
+      old_block_type: TBlockType;
       old_parse_only: boolean;
     begin
       Message1(parser_d_internal_parser_string,str);
@@ -289,15 +289,15 @@ implementation
       old_block_type:=block_type;
       parse_only:=true;
       block_type:=bt_const;
-      current_scanner.substitutemacro('typed_const_macro',@str[1],length(str),current_scanner.line_no,current_scanner.inputfile.ref_index,true);
-      current_scanner.readtoken(false);
+      CurrentScanner.substitutemacro('typed_const_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.ref_index,true);
+      CurrentScanner.readtoken(false);
       read_typed_const(list,ssym,ssym.owner.symtabletype in [recordsymtable,objectsymtable]);
       parse_only:=old_parse_only;
       block_type:=old_block_type;
       { remove the temporary macro input file again }
-      current_scanner.closeinputfile;
-      current_scanner.nextfile;
-      current_scanner.tempopeninputfile;
+      CurrentScanner.closeinputfile;
+      CurrentScanner.nextfile;
+      CurrentScanner.tempopeninputfile;
     end;
 
     function str_parse_objecttypedef(typename : shortstring;str: ansistring): tobjectdef;
@@ -317,14 +317,14 @@ implementation
       str:=str+'const;';
       block_type:=bt_type;
       { inject the string in the scanner }
-      current_scanner.substitutemacro('hidden_interface_class_macro',@str[1],length(str),current_scanner.line_no,current_scanner.inputfile.ref_index,true);
-      current_scanner.readtoken(false);
+      CurrentScanner.substitutemacro('hidden_interface_class_macro',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.ref_index,true);
+      CurrentScanner.readtoken(false);
       type_dec(b);
       // In the interface part, the object def is not necessarily the last one, the methods also generate defs.
-      i:=current_module.DefList.count-1;
+      i:=CurrentModule.DefList.count-1;
       While (result=nil) and (i>=0) do
         begin
-        O:=current_module.DefList[i];
+        O:=CurrentModule.DefList[i];
         if (o is tobjectdef) then
            if (tobjectdef(o).GetTypeName=typename) then
              result:=tobjectdef(o);
@@ -334,9 +334,9 @@ implementation
         internalerror(2024050401);
       parse_only:=oldparse_only;
       { remove the temporary macro input file again }
-      current_scanner.closeinputfile;
-      current_scanner.nextfile;
-      current_scanner.tempopeninputfile;
+      CurrentScanner.closeinputfile;
+      CurrentScanner.nextfile;
+      CurrentScanner.tempopeninputfile;
      end;
 
 
@@ -711,7 +711,7 @@ implementation
       wrapperinfo: pskpara_interface_wrapper;
       callthroughpd, tmpproc: tprocdef;
       str: ansistring;
-      fileinfo: tfileposinfo;
+      fileinfo: TFilePosInfo;
     begin
       wrapperinfo:=pskpara_interface_wrapper(pd.skpara);
       if not assigned(wrapperinfo) then
@@ -732,7 +732,7 @@ implementation
         fileinfo:=pd.fileinfo
       else
         begin
-          fileinfo.moduleindex:=current_module.moduleid;
+          fileinfo.moduleindex:=CurrentModule.moduleid;
           fileinfo.fileindex:=1;
           fileinfo.line:=1;
           fileinfo.column:=1;
@@ -1162,17 +1162,17 @@ implementation
     str:=str+'const;';
     block_type:=bt_none;
     { inject the string in the scanner }
-    oldallow:=current_scanner.allowgenericid;
-    current_scanner.allowgenericid:=allowgenericid;
-    current_scanner.substitutemacro('hidden_interface_method',@str[1],length(str),current_scanner.line_no,current_scanner.inputfile.ref_index,true);
-    current_scanner.readtoken(false);
+    oldallow:=CurrentScanner.allowgenericid;
+    CurrentScanner.allowgenericid:=allowgenericid;
+    CurrentScanner.substitutemacro('hidden_interface_method',@str[1],length(str),CurrentScanner.line_no,CurrentScanner.inputfile.ref_index,true);
+    CurrentScanner.readtoken(false);
     Result:=read_proc([],Nil);
     parse_only:=oldparse_only;
     { remove the temporary macro input file again }
-    current_scanner.closeinputfile;
-    current_scanner.nextfile;
-    current_scanner.tempopeninputfile;
-    current_scanner.allowgenericid:=oldallow;
+    CurrentScanner.closeinputfile;
+    CurrentScanner.nextfile;
+    CurrentScanner.tempopeninputfile;
+    CurrentScanner.allowgenericid:=oldallow;
    end;
 
 
@@ -1320,20 +1320,20 @@ implementation
     sstate: tscannerstate;
     cn : shortstring;
     isDelphiMode : boolean;
-    oldsettings: tmodeswitches;
+    oldsettings: TModeSwitches;
 
   begin
     { skip if any errors have occurred, since then this can only cause more
       errors }
     if ErrorCount<>0 then
       exit;
-    isDelphiMode:=(m_delphi in current_settings.modeswitches);
+    isDelphiMode:=(m_delphi in CurrentSettings.modeswitches);
     replace_scanner('hiddenclass_impl',sstate);
     sstate.new_scanner.allowgenericid:=true;
     if isDelphiMode then
       begin
-      oldsettings:=current_settings.modeswitches;
-      current_settings.modeswitches:=current_settings.modeswitches+[m_delphi]-[m_objfpc];
+      oldsettings:=CurrentSettings.modeswitches;
+      CurrentSettings.modeswitches:=CurrentSettings.modeswitches+[m_delphi]-[m_objfpc];
       end;
     for i:=0 to st.deflist.count-1 do
       begin
@@ -1358,7 +1358,7 @@ implementation
       def:=tdef(st.deflist[i]);
       if (def.typ=objectdef) and (objdef.objecttype=odt_class) then
         add_synthetic_interface_classes_for_st(objdef.symtable,gen_intf,gen_impl)
-      else if (def.typ=recorddef) and (m_advanced_records in current_settings.modeswitches) then
+      else if (def.typ=recorddef) and (m_advanced_records in CurrentSettings.modeswitches) then
         add_synthetic_interface_classes_for_st(recdef.symtable,gen_intf,gen_impl);
       end;
   end;
@@ -1490,8 +1490,8 @@ implementation
       fieldvardef,
       nestedvarsdef: tdef;
       nestedvarsst: tsymtable;
-      initcode: tnode;
-      old_filepos: tfileposinfo;
+      initcode: TNode;
+      old_filepos: TFilePosInfo;
       symname,
       symrealname: TSymStr;
       highsym: tabstractvarsym;
@@ -1529,8 +1529,8 @@ implementation
           { add initialization with original value if it's a parameter }
           if (sym.typ=paravarsym) then
             begin
-              old_filepos:=current_filepos;
-              fillchar(current_filepos,sizeof(current_filepos),0);
+              old_filepos:=CurrentFilePos;
+              fillchar(CurrentFilePos,sizeof(CurrentFilePos),0);
               initcode:=cloadnode.create(sym,sym.owner);
               { indicate that this load should not be transformed into a load
                 from the parentfpstruct, but instead should load the original
@@ -1548,7 +1548,7 @@ implementation
                 initcode);
               tblocknode(pd.parentfpinitblock).left:=cstatementnode.create
                 (initcode,tblocknode(pd.parentfpinitblock).left);
-              current_filepos:=old_filepos;
+              CurrentFilePos:=old_filepos;
 
               { also add the associated high para, if any. It may not be accessed
                 during code generation, and we need to catch 'em all (TM) during
@@ -1672,7 +1672,7 @@ implementation
       stringdispose(orgpd.import_dll);
       orgpd.import_nr:=0;
       newpd.setmangledname(newname);
-      finish_copied_procdef(newpd,'__FPC_IMPL_EXTERNAL_REDIRECT_'+newname,current_module.localsymtable,nil);
+      finish_copied_procdef(newpd,'__FPC_IMPL_EXTERNAL_REDIRECT_'+newname,CurrentModule.localsymtable,nil);
       newpd.forwarddef:=false;
       { ideally we would prefix the parameters of the original routine here, but since it
         can be an interface definition, we cannot do that without risking to change the
@@ -1684,22 +1684,22 @@ implementation
     end;
 
 
-  function generate_pkg_stub(pd:tprocdef):tnode;
+  function generate_pkg_stub(pd:tprocdef):TNode;
     var
       stat: tstatementnode;
       handlevar: tstaticvarsym;
       instance: tsym;
     begin
-      if target_info.system in systems_all_windows then
+      if TargetInfo.system in systems_all_windows then
         begin
           insert_funcret_local(pd);
           result:=internalstatements(stat);
-          if target_info.system=system_x86_64_win64 then
+          if TargetInfo.system=system_x86_64_win64 then
             begin
               handlevar:=cstaticvarsym.create_C('FPC_PACKAGE_HANDLE','FPC_PACKAGE_HANDLE',
                 vs_value,sizeuinttype);
               include(handlevar.varoptions,vo_is_external);
-              current_module.localsymtable.insertsym(handlevar);
+              CurrentModule.localsymtable.insertsym(handlevar);
               instance:=tsym(pd.parast.find('HINSTANCE'));
               addstatement(stat,cassignmentnode.create(
                 cloadnode.create(handlevar,handlevar.owner),
@@ -1736,7 +1736,7 @@ implementation
           ps.register_sym;
           { the RTTI always references this symbol }
           inc(ps.refs);
-          current_module.localsymtable.insertsym(ps);
+          CurrentModule.localsymtable.insertsym(ps);
           pd:=cprocdef.create(normal_function_level,true);
           { always register the def }
           pd.register_def;

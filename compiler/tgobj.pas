@@ -42,7 +42,7 @@ unit tgobj;
     type
       ptemprecord = ^ttemprecord;
       ttemprecord = record
-         temptype   : ttemptype;
+         temptype   : TTempType;
          { finalize this temp if it's a managed type }
          fini       : boolean;
          alignment  : shortint;
@@ -53,7 +53,7 @@ unit tgobj;
          nextfree   : ptemprecord; { for faster freeblock checking }
 {$ifdef EXTDEBUG}
          posinfo,
-         releaseposinfo : tfileposinfo;
+         releaseposinfo : TFilePosInfo;
 {$endif}
       end;
 
@@ -63,9 +63,9 @@ unit tgobj;
        protected
           { contains all free temps using nextfree links }
           tempfreelist  : ptemprecord;
-          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; def: tdef; fini: boolean; out ref: treference); virtual;
-          procedure freetemp(list: TAsmList; pos: treftemppos; temptypes: ttemptypeset);virtual;
-          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; def: tdef; fini: boolean; out ref : treference);
+          procedure alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref: treference); virtual;
+          procedure freetemp(list: TAsmList; pos: treftemppos; temptypes: TTempTypeSet);virtual;
+          procedure gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref : treference);
           procedure freetemphook(list: TAsmList; temp: ptemprecord); virtual;
        public
           { contains all temps }
@@ -97,15 +97,15 @@ unit tgobj;
 
             the forcesize parameter is so that it can be used for defs that
             don't have an inherent size (e.g., array of const) }
-          procedure gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: ttemptype; out ref: treference); virtual;
-          procedure gethltempmanaged(list: TAsmList; def: tdef; temptype: ttemptype; out ref: treference); virtual;
-          procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; out ref : treference);
-          procedure gettempmanaged(list: TAsmList; def:tdef;temptype:ttemptype;out ref : treference);
+          procedure gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: TTempType; out ref: treference); virtual;
+          procedure gethltempmanaged(list: TAsmList; def: tdef; temptype: TTempType; out ref: treference); virtual;
+          procedure gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : treference);
+          procedure gettempmanaged(list: TAsmList; def:tdef;temptype:TTempType;out ref : treference);
           procedure ungettemp(list: TAsmList; const ref : treference); virtual;
 
           function sizeoftemp(list: TAsmList; const ref: treference): asizeint;
-          function changetemptype(list: TAsmList; const ref:treference;temptype:ttemptype):boolean;
-          function gettypeoftemp(const ref:treference): ttemptype;
+          function changetemptype(list: TAsmList; const ref:treference;temptype:TTempType):boolean;
+          function gettypeoftemp(const ref:treference): TTempType;
           function isstartoftemp(const ref: treference): boolean;
           {# Returns a reference corresponding to a temp }
           procedure temp_to_ref(p: ptemprecord; out ref: treference); virtual;
@@ -154,7 +154,7 @@ implementation
       FreeTempTypes = [tt_free,tt_freenoreuse,tt_freeregallocator];
 
 {$ifdef EXTDEBUG}
-      TempTypeStr : array[ttemptype] of string[18] = (
+      TempTypeStr : array[TTempType] of string[18] = (
           '<none>',
           'free','normal','persistent',
           'noreuse','freenoreuse',
@@ -162,7 +162,7 @@ implementation
       );
 {$endif EXTDEBUG}
 
-      Used2Free : array[ttemptype] of ttemptype = (
+      Used2Free : array[TTempType] of TTempType = (
         tt_none,
         tt_none,tt_free,tt_free,
         tt_freenoreuse,tt_none,
@@ -254,12 +254,12 @@ implementation
       end;
 
 
-    procedure ttgobj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; def :tdef; fini: boolean; out ref: treference);
+    procedure ttgobj.alloctemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def :tdef; fini: boolean; out ref: treference);
       var
          tl,htl,
          bestslot,bestprev,
          hprev,hp : ptemprecord;
-         freetype : ttemptype;
+         freetype : TTempType;
          adjustedpos : longint;
          bestatend,
          fitatbegin,
@@ -269,7 +269,7 @@ implementation
          bestslot:=nil;
          tl:=nil;
          bestatend:=false;
-         current_procinfo.updatestackalignment(alignment);
+         CurrentProcInfo.updatestackalignment(alignment);
 
          if size=0 then
           begin
@@ -340,17 +340,17 @@ implementation
                            ((not bestatend and
                              (direction=-1)) or
                             (bestatend and
-                             isbetteralignedthan(abs(bestslot^.pos+hp^.size-size),abs(adjustedpos+hp^.size-size),current_settings.alignment.localalignmax)));
+                             isbetteralignedthan(abs(bestslot^.pos+hp^.size-size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.localalignmax)));
                          fitatbegin:=fitatbegin and
                            (not bestatend or
                             (direction=1)) and
-                           isbetteralignedthan(abs(adjustedpos+size),abs(bestslot^.pos+size),current_settings.alignment.localalignmax);
+                           isbetteralignedthan(abs(adjustedpos+size),abs(bestslot^.pos+size),CurrentSettings.alignment.localalignmax);
                        end;
                      if fitatend and
                         fitatbegin then
-                       if isbetteralignedthan(abs(adjustedpos+hp^.size-size),abs(adjustedpos+size),current_settings.alignment.localalignmax) then
+                       if isbetteralignedthan(abs(adjustedpos+hp^.size-size),abs(adjustedpos+size),CurrentSettings.alignment.localalignmax) then
                          fitatbegin:=false
-                       else if isbetteralignedthan(abs(adjustedpos+size),abs(adjustedpos+hp^.size-size),current_settings.alignment.localalignmax) then
+                       else if isbetteralignedthan(abs(adjustedpos+size),abs(adjustedpos+hp^.size-size),CurrentSettings.alignment.localalignmax) then
                          fitatend:=false
                        else if (direction=1) then
                          fitatend:=false
@@ -462,7 +462,7 @@ implementation
             templist:=tl;
           end;
 {$ifdef EXTDEBUG}
-         tl^.posinfo:=current_filepos;
+         tl^.posinfo:=CurrentFilePos;
          if assigned(tl^.def) then
            list.concat(tai_tempalloc.allocinfo(tl^.pos,tl^.size,'allocated with type '+TempTypeStr[tl^.temptype]+' for def '+tl^.def.typename))
          else
@@ -475,7 +475,7 @@ implementation
       end;
 
 
-    procedure ttgobj.FreeTemp(list: TAsmList; pos: treftemppos; temptypes: ttemptypeset);
+    procedure ttgobj.FreeTemp(list: TAsmList; pos: treftemppos; temptypes: TTempTypeSet);
       var
          hp,hnext,hprev,hprevfree : ptemprecord;
       begin
@@ -569,29 +569,29 @@ implementation
       end;
 
 
-    procedure ttgobj.gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: ttemptype; out ref: treference);
+    procedure ttgobj.gethltemp(list: TAsmList; def: tdef; forcesize: asizeint; temptype: TTempType; out ref: treference);
       begin
         gettemp(list,forcesize,def.alignment,temptype,ref);
       end;
 
 
-    procedure ttgobj.gethltempmanaged(list: TAsmList; def: tdef; temptype: ttemptype; out ref: treference);
+    procedure ttgobj.gethltempmanaged(list: TAsmList; def: tdef; temptype: TTempType; out ref: treference);
       begin
         gettempmanaged(list,def,temptype,ref);
       end;
 
 
-    procedure ttgobj.gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; out ref : treference);
+    procedure ttgobj.gettemp(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; out ref : treference);
       begin
         gettempinternal(list,size,alignment,temptype,nil,false,ref);
       end;
 
 
-    procedure ttgobj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: ttemptype; def: tdef; fini: boolean; out ref : treference);
+    procedure ttgobj.gettempinternal(list: TAsmList; size: asizeint; alignment: shortint; temptype: TTempType; def: tdef; fini: boolean; out ref : treference);
       var
         varalign : shortint;
       begin
-        varalign:=used_align(alignment,current_settings.alignment.localalignmin,current_settings.alignment.localalignmax);
+        varalign:=used_align(alignment,CurrentSettings.alignment.localalignmin,CurrentSettings.alignment.localalignmax);
         alloctemp(list,size,varalign,temptype,def,fini,ref);
       end;
 
@@ -602,7 +602,7 @@ implementation
       end;
 
 
-    procedure ttgobj.gettempmanaged(list: TAsmList; def:tdef;temptype:ttemptype;out ref : treference);
+    procedure ttgobj.gettempmanaged(list: TAsmList; def:tdef;temptype:TTempType;out ref : treference);
       begin
         gettempinternal(list,def.size,def.alignment,temptype,def,true,ref);
       end;
@@ -636,7 +636,7 @@ implementation
       end;
 
 
-    function ttgobj.changetemptype(list: tasmList; const ref:treference; temptype:ttemptype):boolean;
+    function ttgobj.changetemptype(list: tasmList; const ref:treference; temptype:TTempType):boolean;
       var
         hp : ptemprecord;
       begin
@@ -677,7 +677,7 @@ implementation
       end;
 
 
-    function ttgobj.gettypeoftemp(const ref:treference): ttemptype;
+    function ttgobj.gettypeoftemp(const ref:treference): TTempType;
       var
         hp : ptemprecord;
       begin
@@ -733,7 +733,7 @@ implementation
         t: treftemppos;
       begin
         t.val:=p^.pos;
-        reference_reset_base(ref,current_procinfo.framepointer,p^.pos,t,p^.alignment,[]);
+        reference_reset_base(ref,CurrentProcInfo.framepointer,p^.pos,t,p^.alignment,[]);
       end;
 
 
@@ -763,7 +763,7 @@ implementation
       var
         lalign : shortint;
       begin
-        lalign:=used_align(alignment,current_settings.alignment.localalignmin,current_settings.alignment.localalignmax);
+        lalign:=used_align(alignment,CurrentSettings.alignment.localalignmin,CurrentSettings.alignment.localalignmax);
         if (explicitalignment>lalign) then
           begin
             if assigned(sym) then
@@ -771,7 +771,7 @@ implementation
             else
               CGMessage1(scanner_w_local_alignment_larger_than_max,def.typename);
           end
-        else if (alignment>lalign) and (current_settings.alignment.localalignmax>1) then
+        else if (alignment>lalign) and (CurrentSettings.alignment.localalignmax>1) then
           begin
             if assigned(sym) then
               CGMessage1(scanner_n_local_alignment_larger_than_max,sym.name)

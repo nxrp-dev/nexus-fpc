@@ -87,21 +87,21 @@ tpcompilerreal,
        treelogfilename = 'tree.log';
 
 {$ifdef FPC_LITTLE_ENDIAN}
-       MathQNaN : tcompdoublerec = (bytes : (0,0,0,0,0,0,252,255));
-       MathInf : tcompdoublerec = (bytes : (0,0,0,0,0,0,240,127));
-       MathNegInf : tcompdoublerec = (bytes : (0,0,0,0,0,0,240,255));
-       MathPosZero : tcompdoublerec = (bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : tcompdoublerec = (bytes : (0,0,0,0,0,0,0,128));
-       MathPi : tcompdoublerec = (bytes : (24,45,68,84,251,33,9,64));
-       MathPiExtended : tcompextendedrec = (bytes : (53,194,104,33,162,218,15,201,0,64));
+       MathQNaN : TCompDoubleRec = (bytes : (0,0,0,0,0,0,252,255));
+       MathInf : TCompDoubleRec = (bytes : (0,0,0,0,0,0,240,127));
+       MathNegInf : TCompDoubleRec = (bytes : (0,0,0,0,0,0,240,255));
+       MathPosZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,0));
+       MathNegZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,128));
+       MathPi : TCompDoubleRec = (bytes : (24,45,68,84,251,33,9,64));
+       MathPiExtended : TCompExtendedRec = (bytes : (53,194,104,33,162,218,15,201,0,64));
 {$else FPC_LITTLE_ENDIAN}
-       MathQNaN : tcompdoublerec = (bytes : (255,252,0,0,0,0,0,0));
-       MathInf : tcompdoublerec = (bytes : (127,240,0,0,0,0,0,0));
-       MathNegInf : tcompdoublerec = (bytes : (255,240,0,0,0,0,0,0));
-       MathPosZero : tcompdoublerec = (bytes : (0,0,0,0,0,0,0,0));
-       MathNegZero : tcompdoublerec = (bytes : (128,0,0,0,0,0,0,0));
-       MathPi : tcompdoublerec =  (bytes : (64,9,33,251,84,68,45,24));
-       MathPiExtended : tcompextendedrec = (bytes : (64,0,201,15,218,162,33,104,194,53));
+       MathQNaN : TCompDoubleRec = (bytes : (255,252,0,0,0,0,0,0));
+       MathInf : TCompDoubleRec = (bytes : (127,240,0,0,0,0,0,0));
+       MathNegInf : TCompDoubleRec = (bytes : (255,240,0,0,0,0,0,0));
+       MathPosZero : TCompDoubleRec = (bytes : (0,0,0,0,0,0,0,0));
+       MathNegZero : TCompDoubleRec = (bytes : (128,0,0,0,0,0,0,0));
+       MathPi : TCompDoubleRec =  (bytes : (64,9,33,251,84,68,45,24));
+       MathPiExtended : TCompExtendedRec = (bytes : (64,0,201,15,218,162,33,104,194,53));
 {$endif FPC_LITTLE_ENDIAN}
 
        CP_UTF8 = 65001;
@@ -150,19 +150,19 @@ Const
          it used to required to be packed,
          but this requirement is now obsolete,
          as the fields are written one by one. PM 2012-06-13 }
-       tsettings = record
-         alignment       : talignmentinfo;
-         globalswitches  : tglobalswitches;
-         targetswitches  : ttargetswitches;
-         moduleswitches  : tmoduleswitches;
-         localswitches   : tlocalswitches;
-         modeswitches    : tmodeswitches;
-         optimizerswitches : toptimizerswitches;
+       TSettings = record
+         alignment       : TAlignmentInfo;
+         globalswitches  : TGlobalSwitches;
+         targetswitches  : TTargetSwitches;
+         moduleswitches  : TModuleSwitches;
+         localswitches   : TLocalSwitches;
+         modeswitches    : TModeSwitches;
+         optimizerswitches : TOptimizerSwitches;
          { generate information necessary to perform these wpo's during a subsequent compilation }
-         genwpoptimizerswitches: twpoptimizerswitches;
+         genwpoptimizerswitches: TWPOptimizerSwitches;
          { perform these wpo's using information generated during a previous compilation }
-         dowpoptimizerswitches: twpoptimizerswitches;
-         debugswitches   : tdebugswitches;
+         dowpoptimizerswitches: TWPOptimizerSwitches;
+         debugswitches   : TDebugSwitches;
          { 0: old behaviour for sets <=256 elements
            >0: round to this size }
          setalloc,
@@ -178,15 +178,15 @@ Const
          asmcputype      : tcputype;
          fputype         : tfputype;
          asmmode         : tasmmode;
-         interfacetype   : tinterfacetypes;
-         defproccall     : tproccalloption;
-         sourcecodepage  : tstringencoding;
+         interfacetype   : TInterfaceTypes;
+         defproccall     : TProcCallOption;
+         sourcecodepage  : TStringEncoding;
 
-         minfpconstprec  : tfloattype;
+         minfpconstprec  : TFloatType;
 
          disabledircache : boolean;
 
-         tlsmodel : ttlsmodel;
+         tlsmodel : TTLSModel;
 
         { CPU targets with microcontroller support can add a controller specific unit }
          controllertype   : tcontrollertype;
@@ -194,9 +194,9 @@ Const
          { WARNING: pmessage cannot be written as such in record token
               pmessage is the top of a stack of message/verbosity changes
               RestoreLocalVerbosity applies the current stack. }
-         pmessage : pmessagestaterecord;
+         pmessage : PMessageStateRecord;
 
-         lineendingtype : tlineendingtype;
+         lineendingtype : TLineEndingType;
 
          whitespacetrimcount : word;
 
@@ -207,7 +207,7 @@ Const
 {$endif}
 {$if defined(generic_cpu)}
    {$ifdef generic_cpu} 1:({$endif}
-           x86memorymodel  : tx86memorymodel;
+           x86memorymodel  : TX86MemoryModel;
    {$ifdef generic_cpu}   );{$endif}
 {$endif defined(generic_cpu)}
 
@@ -252,7 +252,7 @@ Const
         property items[I:longint]:TLinkRec read getlinkrec; default;
       end;
 
-      tpendingstateflag = (
+      TPendingStateFlag = (
         psf_alignment_changed,
         psf_verbosity_full_switched,
         psf_local_switches_changed,
@@ -262,21 +262,21 @@ Const
         psf_asmmode_changed,
         psf_optimizerswitches_changed
       );
-      tpendingstateflags = set of tpendingstateflag;
+      TPendingStateFlags = set of TPendingStateFlag;
 
-      tpendingstate = record
+      TPendingState = record
         nextverbositystr : shortstring;
-        nextlocalswitches : tlocalswitches;
+        nextlocalswitches : TLocalSwitches;
         nextverbosityfullswitch: longint;
         nextcallingstr : shortstring;
-        nextmessagerecord : pmessagestaterecord;
-        nextalignment : talignmentinfo;
+        nextmessagerecord : PMessageStateRecord;
+        nextalignment : TAlignmentInfo;
         nextpackenum : shortint;
         nextpackrecords : shortint;
         nextsetalloc : shortint;
         nextasmmode : tasmmode;
-        nextoptimizerswitches : toptimizerswitches;
-        flags : tpendingstateflags;
+        nextoptimizerswitches : TOptimizerSwitches;
+        flags : TPendingStateFlags;
       end;
 
 
@@ -348,7 +348,7 @@ Const
        // During scanning/parsing, a module may not yet be available.
        // Scanner checks first current_namespacelist, then local_namespacelist
        premodule_namespacelist,                    // always set: used as long as current_namespacelist is not correctly set.
-       current_namespacelist : TCmdStrList;        // Set when parsing module to the current module's namespace.
+       CurrentNamespaceList : TCmdStrList;        // Set when parsing module to the current module's namespace.
        { contains tpackageentry entries }
        packagelist : TFPHashList;
        package_sdk_identity, package_build_identity: shortstring;
@@ -392,13 +392,13 @@ Const
        iPhoneOSVersionMin: tversion;
        RelocSectionSetExplicitly : boolean;
 
-       current_tokenpos,                  { position of the last token }
-       current_filepos : tfileposinfo;    { current position }
+       CurrentTokenPos,                  { position of the last token }
+       CurrentFilePos : TFilePosInfo;    { current position }
 
-       codegenerror : boolean;           { true if there is an error reported }
+       CodeGenError : boolean;           { true if there is an error reported }
        exception_raised : boolean;           { true if there is an exception reported }
 
-       block_type : tblock_type;         { type of currently parsed block }
+       block_type : TBlockType;         { type of currently parsed block }
 
        exceptblockcounter    : integer;  { each except block gets a unique number check gotos      }
        current_exceptblock        : integer;  { the exceptblock number of the current block (0 if none) }
@@ -406,15 +406,15 @@ Const
        LinkLibraryOrder   : TLinkStrMap;
 
 
-       init_settings,
-       current_settings   : tsettings;
+       InitSettings,
+       CurrentSettings   : TSettings;
 
        { The default text type belongs to the compiler invocation, not to
          an individual module or its language mode. }
        compilerwide_unicode_strings : boolean;
        compilerwide_string_mode_explicit : boolean;
 
-       pendingstate       : tpendingstate;
+       pendingstate       : TPendingState;
      { Memory sizes }
        heapsize,
        maxheapsize : int64;
@@ -426,9 +426,9 @@ Const
 {$EndIf EXTDEBUG}
        { Application type (platform specific)
          see globtype.pas for description }
-       apptype : tapptype;
+       apptype : TAppType;
 
-       features : tfeatures;
+       features : TFeatures;
 
        { prefix added to automatically generated setters/getters. If empty,
          no getters/setters will be automatically generated except if required
@@ -578,14 +578,14 @@ Const
     function  string2guid(const s: string; var GUID: TGUID): boolean;
     function  guid2string(const GUID: TGUID): string;
 
-    function SetAktProcCall(const s:string; var a:tproccalloption):boolean;
+    function SetAktProcCall(const s:string; var a:TProcCallOption):boolean;
     function Setabitype(const s:string;var a:tabi):boolean;
     function Setoptimizecputype(const s:string;var a:tcputype):boolean;
-    function Setcputype(const s:string;var a:tsettings):boolean;
+    function Setcputype(const s:string;var a:TSettings):boolean;
     function SetFpuType(const s:string;var a:tfputype):boolean;
     function SetControllerType(const s:string;var a:tcontrollertype):boolean;
     function HandleFeature(const s : string) : boolean;
-    function SetMinFPConstPrec(const s: string; var a: tfloattype) : boolean;
+    function SetMinFPConstPrec(const s: string; var a: TFloatType) : boolean;
 
     {# Routine to get the required alignment for size of data, which will
        be placed in bss segment, according to the current alignment requirements }
@@ -603,7 +603,7 @@ Const
     ExecuteProcess = 'Do not use' deprecated 'Use cfileutil.RequotedExecuteProcess instead, ExecuteProcess cannot deal with single quotes as used by Unix command lines';
 
   var
-    AllowedFilenameTransFormations : tfilenametransformations = AllTransformations;
+    AllowedFilenameTransFormations : TFileNameTransformations = AllTransformations;
 
 
 implementation
@@ -893,18 +893,18 @@ implementation
          Replace(s,'$FPCVERSION',version_string);
          Replace(s,'$FPCFULLVERSION',full_version_string);
          Replace(s,'$FPCDATE',date_string);
-         Replace(s,'$FPCCPU',target_cpu_string);
-         Replace(s,'$FPCOS',target_os_string);
+         Replace(s,'$FPCCPU',TargetCPUString);
+         Replace(s,'$FPCOS',TargetOSString);
          Replace(s,'$FPCBINDIR',exepath);
-         if (tf_use_8_3 in Source_Info.Flags) or
-            (tf_use_8_3 in Target_Info.Flags) then
-           Replace(s,'$FPCTARGET',target_os_string)
+         if (tf_use_8_3 in SourceInfo.Flags) or
+            (tf_use_8_3 in TargetInfo.Flags) then
+           Replace(s,'$FPCTARGET',TargetOSString)
          else if subtarget<>'' then
-           Replace(s,'$FPCTARGET',target_full_string+'-'+lower(subtarget))
+           Replace(s,'$FPCTARGET',TargetFullString+'-'+lower(subtarget))
          else
-           Replace(s,'$FPCTARGET',target_full_string);
-         Replace(s,'$FPCSUBARCH',lower(cputypestr[init_settings.cputype]));
-         Replace(s,'$FPCABI',lower(abiinfo[target_info.abi].name));
+           Replace(s,'$FPCTARGET',TargetFullString);
+         Replace(s,'$FPCSUBARCH',lower(cputypestr[InitSettings.cputype]));
+         Replace(s,'$FPCABI',lower(abiinfo[TargetInfo.abi].name));
 
          Replace(s,'$FPCMEMORYMODEL','flat');
 
@@ -1015,7 +1015,7 @@ implementation
         if bestrealrec(r).Sign then Result:=-1 else Result:=1;
       end;
 
-    function convertdoublerec(d : tcompdoublerec) : tcompdoublerec;{$ifdef USEINLINE}inline;{$endif}
+    function convertdoublerec(d : TCompDoubleRec) : TCompDoubleRec;{$ifdef USEINLINE}inline;{$endif}
       begin
         result:=d;
       end;
@@ -1102,9 +1102,9 @@ implementation
       end;
 
 
-    function SetAktProcCall(const s:string; var a:tproccalloption):boolean;
+    function SetAktProcCall(const s:string; var a:TProcCallOption):boolean;
       const
-        DefProcCallName : array[tproccalloption] of string[16] = ('',
+        DefProcCallName : array[TProcCallOption] of string[16] = ('',
          'CDECL',
          'CPPDECL',
          'FAR16',
@@ -1126,7 +1126,7 @@ implementation
          'VECTORCALL'
         );
       var
-        t  : tproccalloption;
+        t  : TProcCallOption;
         hs : string;
       begin
         result:=false;
@@ -1139,7 +1139,7 @@ implementation
             result := true;
             exit;
           end;
-        for t:=low(tproccalloption) to high(tproccalloption) do
+        for t:=low(TProcCallOption) to high(TProcCallOption) do
          if DefProcCallName[t]=hs then
           begin
             a:=t;
@@ -1162,7 +1162,7 @@ implementation
             begin
               a:=t;
               { abi_old_win32_gnu is a win32 i386 specific "feature" }
-              if (t<>abi_old_win32_gnu) or (target_info.system=system_i386_win32) then
+              if (t<>abi_old_win32_gnu) or (TargetInfo.system=system_i386_win32) then
                 result:=true;
               break;
             end;
@@ -1186,7 +1186,7 @@ implementation
       end;
 
 
-    function Setcputype(const s:string;var a:tsettings):boolean;
+    function Setcputype(const s:string;var a:TSettings):boolean;
       var
         t  : tcputype;
         hs : string;
@@ -1250,10 +1250,10 @@ implementation
 
     function HandleFeature(const s : string) : boolean;
       var
-        i : tfeature;
+        i : TFeature;
       begin
         result:=true;
-        for i:=low(tfeature) to high(tfeature) do
+        for i:=low(TFeature) to high(TFeature) do
           if s=featurestr[i] then
             begin
               include(features,i);
@@ -1261,7 +1261,7 @@ implementation
             end;
         { Also support -Sfnoheap to exclude heap }
         if Copy(S,1,2)='NO' then
-          for i:=low(tfeature) to high(tfeature) do
+          for i:=low(TFeature) to high(TFeature) do
             if s='NO'+featurestr[i] then
               begin
                 exclude(features,i);
@@ -1271,7 +1271,7 @@ implementation
       end;
 
 
-    function SetMinFPConstPrec(const s: string; var a: tfloattype) : boolean;
+    function SetMinFPConstPrec(const s: string; var a: TFloatType) : boolean;
       var
         value, error: longint;
       begin
@@ -1316,7 +1316,7 @@ implementation
 
     function var_align(want_align: longint): shortint;
       begin
-        var_align := used_align(want_align,current_settings.alignment.varalignmin,current_settings.alignment.varalignmax);
+        var_align := used_align(want_align,CurrentSettings.alignment.varalignmin,CurrentSettings.alignment.varalignmax);
       end;
 
 
@@ -1329,7 +1329,7 @@ implementation
 
     function const_align(want_align: longint): shortint;
       begin
-        const_align := used_align(want_align,current_settings.alignment.constalignmin,current_settings.alignment.constalignmax);
+        const_align := used_align(want_align,CurrentSettings.alignment.constalignmin,CurrentSettings.alignment.constalignmax);
       end;
 
 
@@ -1344,7 +1344,7 @@ implementation
 
     function floating_point_range_check_error : boolean;
       begin
-        result:=cs_ieee_errors in current_settings.localswitches;
+        result:=cs_ieee_errors in CurrentSettings.localswitches;
       end;
 
 
@@ -1375,7 +1375,7 @@ implementation
        if localexepath='' then
         begin
           hs1 := ExtractFileName(exeName);
-          hs1 := ChangeFileExt(hs1,source_info.exeext);
+          hs1 := ChangeFileExt(hs1,SourceInfo.exeext);
           FindFile(hs1,GetEnvironmentVariable('PATH'),false,localExepath);
           localExepath:=ExtractFilePath(localExepath);
         end;
@@ -1457,7 +1457,7 @@ implementation
        namespacelist := nil;
        premodule_namespacelist.Free;
        premodule_namespacelist := nil;
-       current_namespacelist:=Nil;
+       CurrentNamespaceList:=Nil;
      end;
 
    procedure InitGlobals;
@@ -1468,7 +1468,7 @@ implementation
         do_build:=false;
         do_release:=false;
         do_make:=true;
-        codegenerror:=false;
+        CodeGenError:=false;
         global_unit_count:=0;
 
         { Output }
@@ -1500,10 +1500,10 @@ implementation
         embed_package_metadata:=true;
         namespacelist:=TCmdStrList.Create;
         premodule_namespacelist:=TCmdStrList.Create;
-        current_namespacelist:=Nil;
+        CurrentNamespaceList:=Nil;
         { Def file }
         usewindowapi:=false;
-        description:='Compiled by FPC '+version_string+' - '+target_cpu_string;
+        description:='Compiled by FPC '+version_string+' - '+TargetCPUString;
         DescriptionSetExplicity:=false;
         SetPEFlagsSetExplicity:=false;
         SetPEOptFlagsSetExplicity:=false;
@@ -1533,15 +1533,15 @@ implementation
         { Init values }
         compilerwide_unicode_strings:=false;
         compilerwide_string_mode_explicit:=false;
-        init_settings:=default_settings;
-        if init_settings.optimizecputype=cpu_none then
-          init_settings.optimizecputype:=init_settings.cputype;
+        InitSettings:=default_settings;
+        if InitSettings.optimizecputype=cpu_none then
+          InitSettings.optimizecputype:=InitSettings.cputype;
 
         LinkLibraryAliases :=TLinkStrMap.Create;
         LinkLibraryOrder   :=TLinkStrMap.Create;
 
         { enable all features by default }
-        features:=[low(Tfeature)..high(Tfeature)];
+        features:=[low(TFeature)..high(TFeature)];
 
         callinitprocs;
      end;

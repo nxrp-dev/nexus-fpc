@@ -31,7 +31,7 @@ interface
 
     type
       tcgnestgotonode = class(tcggotonode)
-        function pass_typecheck: tnode; override;
+        function pass_typecheck: TNode; override;
       end;
 
 implementation
@@ -42,10 +42,10 @@ implementation
       symdef,symsym,symcreat;
 
 
-    function tcgnestgotonode.pass_typecheck: tnode;
+    function tcgnestgotonode.pass_typecheck: TNode;
       begin
         result:=inherited;
-        if (m_non_local_goto in current_settings.modeswitches) and
+        if (m_non_local_goto in CurrentSettings.modeswitches) and
            assigned(labelsym) and
            assigned(labelsym.jumpbuf) then
           begin

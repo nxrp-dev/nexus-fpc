@@ -103,7 +103,7 @@ implementation
           end;
 
         { check that all methods have overload directive }
-        if not(m_fpc in current_settings.modeswitches) then
+        if not(m_fpc in CurrentSettings.modeswitches) then
           begin
             for i:=0 to _class.vmtentries.count-1 do
               begin
@@ -795,7 +795,7 @@ implementation
         vmtdef:=crecorddef.create_internal(
           '$vmtdef',
           0,
-          target_info.alignment.recordalignmin,
+          TargetInfo.alignment.recordalignmin,
           _class.symtable);
 
         { standard VMT fields }
@@ -860,8 +860,8 @@ implementation
         old_current_structdef : tabstractrecorddef;
         overridesclasshelper : boolean;
       begin
-        old_current_structdef:=current_structdef;
-        current_structdef:=_class;
+        old_current_structdef:=CurrentStructDef;
+        CurrentStructDef:=_class;
 
         { inherit (copy) VMT from parent object }
         if assigned(_class.childof) then
@@ -892,7 +892,7 @@ implementation
             intf_allocate_vtbls;
           end;
         create_vmt_def;
-        current_structdef:=old_current_structdef;
+        CurrentStructDef:=old_current_structdef;
       end;
 
 

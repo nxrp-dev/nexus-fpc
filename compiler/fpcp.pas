@@ -143,7 +143,7 @@ implementation
          exit;
        end;
     { check the target processor }
-      if TSystemCPU(pcpfile.header.common.cpu)<>target_cpu then
+      if TSystemCPU(pcpfile.header.common.cpu)<>TargetCPU then
        begin
          pcpfile.free;
          pcpfile:=nil;
@@ -151,7 +151,7 @@ implementation
          exit;
        end;
     { check target }
-      if TSystem(pcpfile.header.common.target)<>target_info.system then
+      if TSystem(pcpfile.header.common.target)<>TargetInfo.system then
        begin
          pcpfile.free;
          pcpfile:=nil;
@@ -617,8 +617,8 @@ implementation
         pcpfile.header.common.size:=pcpfile.size;
         pcpfile.header.checksum:=pcpfile.crc;
         pcpfile.header.common.compiler:=wordversion;
-        pcpfile.header.common.cpu:=word(target_cpu);
-        pcpfile.header.common.target:=word(target_info.system);
+        pcpfile.header.common.cpu:=word(TargetCPU);
+        pcpfile.header.common.target:=word(TargetInfo.system);
         //pcpfile.header.flags:=flags;
         pcpfile.header.ppulistsize:=containedmodules.count;
         pcpfile.header.requiredlistsize:=requiredpackages.count;
@@ -653,11 +653,11 @@ implementation
           end
         else if SysUtils.FileExists(pcpfilename) and not SysUtils.DeleteFile(pcpfilename) then
           Comment(V_Fatal,'Cannot remove stale package sidecar '+pcpfilename);
-        lSection:=new_section(current_asmdata.asmlists[al_rotypedconsts],
+        lSection:=new_section(CurrentAsmData.asmlists[al_rotypedconsts],
           sec_user,NexusPackageMetadataSection,1);
         lSection.secprogbits:=SPB_PROGBITS;
         lSection.secflags:=[];
-        current_asmdata.asmlists[al_rotypedconsts].concat(
+        CurrentAsmData.asmlists[al_rotypedconsts].concat(
           tai_string.Create_Data(PChar(@lEncoded[0]),Length(lEncoded),false));
 
         { save crc in current module also }

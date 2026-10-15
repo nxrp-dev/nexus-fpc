@@ -188,7 +188,7 @@ implementation
                 (ref.symbol.bind in [AB_LOCAL,AB_GLOBAL])) or
                ((ref.symbol.typ=AT_DATA) and
                 (ref.symbol.bind=AB_LOCAL)) or
-               (target_info.system=system_aarch64_win64) then
+               (TargetInfo.system=system_aarch64_win64) then
               href.refaddr:=addr_page
             else
               href.refaddr:=addr_gotpage;
@@ -202,7 +202,7 @@ implementation
                 (ref.symbol.bind in [AB_LOCAL,AB_GLOBAL])) or
                ((ref.symbol.typ=AT_DATA) and
                 (ref.symbol.bind=AB_LOCAL)) or
-               (target_info.system=system_aarch64_win64) then
+               (TargetInfo.system=system_aarch64_win64) then
               begin
                 href.base:=NR_NO;
                 href.refaddr:=addr_pageoffset;
@@ -572,9 +572,9 @@ implementation
     procedure tcgaarch64.a_call_name(list: TAsmList; const s: string; weak: boolean);
       begin
         if not weak then
-          list.concat(taicpu.op_sym(A_BL,current_asmdata.RefAsmSymbol(s,AT_FUNCTION)))
+          list.concat(taicpu.op_sym(A_BL,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION)))
         else
-          list.concat(taicpu.op_sym(A_BL,current_asmdata.WeakRefAsmSymbol(s,AT_FUNCTION)));
+          list.concat(taicpu.op_sym(A_BL,CurrentAsmData.WeakRefAsmSymbol(s,AT_FUNCTION)));
       end;
 
 
@@ -850,7 +850,7 @@ implementation
               reg:=makeregsize(reg,OS_64);
             fromsize:=tosize;
           end;
-        if not(target_info.system=system_aarch64_darwin) and (ref.alignment<>0) and
+        if not(TargetInfo.system=system_aarch64_darwin) and (ref.alignment<>0) and
            (ref.alignment<tcgsize2size[tosize]) then
           begin
             a_load_reg_ref_unaligned(list,fromsize,tosize,reg,ref);
@@ -899,7 +899,7 @@ implementation
         }
         if fromsize in [OS_8,OS_16,OS_32] then
           reg:=makeregsize(reg,OS_32);
-        if not(target_info.system=system_aarch64_darwin) and (ref.alignment<>0) and
+        if not(TargetInfo.system=system_aarch64_darwin) and (ref.alignment<>0) and
            (ref.alignment<tcgsize2size[fromsize]) then
           begin
             a_load_ref_reg_unaligned(list,fromsize,tosize,ref,reg);
@@ -947,7 +947,7 @@ implementation
               { split into two 32 bit loads }
               hreg1:=getintregister(list,OS_32);
               hreg2:=getintregister(list,OS_32);
-              if target_info.endian=endian_big then
+              if TargetInfo.endian=endian_big then
                 begin
                   tmpreg:=hreg1;
                   hreg1:=hreg2;
@@ -973,14 +973,14 @@ implementation
               if ref.alignment=2 then
                 begin
                   href:=ref;
-                  if target_info.endian=endian_big then
+                  if TargetInfo.endian=endian_big then
                     inc(href.offset,tcgsize2size[fromsize]-2);
                   tmpreg:=getintregister(list,OS_32);
                   a_load_ref_reg(list,OS_16,OS_32,href,tmpreg);
                   tmpreg2:=getintregister(list,OS_32);
                   for i:=1 to (tcgsize2size[fromsize]-1) div 2 do
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         dec(href.offset,2)
                       else
                         inc(href.offset,2);
@@ -992,14 +992,14 @@ implementation
               else
                 begin
                   href:=ref;
-                  if target_info.endian=endian_big then
+                  if TargetInfo.endian=endian_big then
                     inc(href.offset,tcgsize2size[fromsize]-1);
                   tmpreg:=getintregister(list,OS_32);
                   a_load_ref_reg(list,OS_8,OS_32,href,tmpreg);
                   tmpreg2:=getintregister(list,OS_32);
                   for i:=1 to tcgsize2size[fromsize]-1 do
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         dec(href.offset)
                       else
                         inc(href.offset);
@@ -1346,7 +1346,7 @@ implementation
             hreg2:=getintregister(list,OS_32);
             a_load_reg_reg(list,OS_32,OS_32,makeregsize(register,OS_32),hreg1);
             a_op_const_reg_reg(list,OP_SHR,OS_64,32,register,makeregsize(hreg2,OS_64));
-            if target_info.endian=endian_big then
+            if TargetInfo.endian=endian_big then
               begin
                 tmpreg:=hreg1;
                 hreg1:=hreg2;
@@ -1675,7 +1675,7 @@ implementation
       var
         ai: taicpu;
       begin
-        ai:=TAiCpu.op_sym(A_B,current_asmdata.RefAsmSymbol(l.name,AT_FUNCTION));
+        ai:=TAiCpu.op_sym(A_B,CurrentAsmData.RefAsmSymbol(l.name,AT_FUNCTION));
         ai.is_jmp:=true;
         list.Concat(ai);
       end;
@@ -1685,7 +1685,7 @@ implementation
       var
         ai: taicpu;
       begin
-        ai:=TAiCpu.op_sym(A_B,current_asmdata.RefAsmSymbol(s,AT_FUNCTION));
+        ai:=TAiCpu.op_sym(A_B,CurrentAsmData.RefAsmSymbol(s,AT_FUNCTION));
         ai.is_jmp:=true;
         list.Concat(ai);
       end;
@@ -1733,9 +1733,9 @@ implementation
         hl : tasmlabel;
         hflags : tresflags;
       begin
-        if not(cs_check_overflow in current_settings.localswitches) then
+        if not(cs_check_overflow in CurrentSettings.localswitches) then
           exit;
-        current_asmdata.getjumplabel(hl);
+        CurrentAsmData.getjumplabel(hl);
         case ovloc.loc of
           LOC_FLAGS:
             begin
@@ -1765,7 +1765,7 @@ implementation
         pairreg:=NR_NO;
         { for SEH on Win64 we can only store consecutive register pairs, others
           need to be stored with STR }
-        if target_info.system=system_aarch64_win64 then
+        if TargetInfo.system=system_aarch64_win64 then
           begin
             if rt=R_INTREGISTER then
               begin
@@ -1853,7 +1853,7 @@ implementation
          begin
            { windows guards only a few pages for stack growing,
              so we have to access every page first              }
-           if (target_info.system=system_aarch64_win64) and
+           if (TargetInfo.system=system_aarch64_win64) and
               (localsize>=winstackpagesize) then
              begin
                if localsize div winstackpagesize<=4 then
@@ -1869,7 +1869,7 @@ implementation
                  end
                else
                  begin
-                    current_asmdata.getjumplabel(again);
+                    CurrentAsmData.getjumplabel(again);
                     getcpuregister(list,NR_IP0);
                     a_load_const_reg(list,OS_ADDR,localsize div winstackpagesize,NR_IP0);
                     a_label(list,again);
@@ -1890,7 +1890,7 @@ implementation
              without this the .xdata is missing the frame size, and a function
              that needs no other directive gets no .pdata entry at all, so
              Windows treats it as a frameless leaf }
-           if target_info.system=system_aarch64_win64 then
+           if TargetInfo.system=system_aarch64_win64 then
              list.concat(cai_seh_directive.create_offset(ash_stackalloc,localsize));
          end;
       end;
@@ -1917,7 +1917,7 @@ implementation
         { pi_has_unwind_info may already be set at this point if there are
           SEH directives in assembler body. In this case, .seh_endprologue
           is expected to be one of those directives, and not generated here. }
-        suppress_endprologue:=(pi_has_unwind_info in current_procinfo.flags);
+        suppress_endprologue:=(pi_has_unwind_info in CurrentProcInfo.flags);
         genloadframeforexcept:=false;
 
         if not nostackframe then
@@ -1925,32 +1925,32 @@ implementation
             { stack pointer has to be aligned to 16 bytes at all times }
             localsize:=align(localsize,16);
 
-            if target_info.system=system_aarch64_win64 then
-              include(current_procinfo.flags,pi_has_unwind_info);
-            if not(pi_no_framepointer_needed in current_procinfo.flags) then
+            if TargetInfo.system=system_aarch64_win64 then
+              include(CurrentProcInfo.flags,pi_has_unwind_info);
+            if not(pi_no_framepointer_needed in CurrentProcInfo.flags) then
               begin
                 { save stack pointer and return address }
                 reference_reset_base(ref,NR_SP,-16,ctempposinvalid,16,[]);
                 ref.addressmode:=AM_PREINDEXED;
                 list.concat(taicpu.op_reg_reg_ref(A_STP,NR_FP,NR_LR,ref));
-                current_asmdata.asmcfi.cfa_def_cfa_offset(list,2*sizeof(pint));
-                current_asmdata.asmcfi.cfa_offset(list,NR_FP,-16);
-                current_asmdata.asmcfi.cfa_offset(list,NR_LR,-8);
-                if target_info.system=system_aarch64_win64 then
+                CurrentAsmData.asmcfi.cfa_def_cfa_offset(list,2*sizeof(pint));
+                CurrentAsmData.asmcfi.cfa_offset(list,NR_FP,-16);
+                CurrentAsmData.asmcfi.cfa_offset(list,NR_LR,-8);
+                if TargetInfo.system=system_aarch64_win64 then
                   list.concat(cai_seh_directive.create_offset(ash_savefplr_x,16));
                 { initialise frame pointer }
-                if current_procinfo.procdef.proctypeoption<>potype_exceptfilter then
+                if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
                   begin
                     a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_SP,NR_FP);
-                    current_asmdata.asmcfi.cfa_def_cfa_register(list,NR_FP);
-                    if target_info.system=system_aarch64_win64 then
+                    CurrentAsmData.asmcfi.cfa_def_cfa_register(list,NR_FP);
+                    if TargetInfo.system=system_aarch64_win64 then
                       list.concat(cai_seh_directive.create(ash_setfp));
                   end
                 else
                   begin
                     { do this after the prologue is done for aarch64-win64 as
                       there is no SEH directive for setting FP to a register }
-                    if target_info.system<>system_aarch64_win64 then
+                    if TargetInfo.system<>system_aarch64_win64 then
                       gen_load_frame_for_exceptfilter(list)
                     else
                       genloadframeforexcept:=true;
@@ -1958,14 +1958,14 @@ implementation
                       are SP-relative (not mapped to parent frame). Allocate
                       enough stack for all handler temps (calc_stackframe_size)
                       and also for the handler's outgoing call parameters. }
-                    if target_info.system=system_aarch64_win64 then
+                    if TargetInfo.system=system_aarch64_win64 then
                       begin
-                        localsize:=current_procinfo.calc_stackframe_size;
-                        if Align(current_procinfo.maxpushedparasize,16)>localsize then
-                          localsize:=Align(current_procinfo.maxpushedparasize,16);
+                        localsize:=CurrentProcInfo.calc_stackframe_size;
+                        if Align(CurrentProcInfo.maxpushedparasize,16)>localsize then
+                          localsize:=Align(CurrentProcInfo.maxpushedparasize,16);
                       end
                     else
-                      localsize:=current_procinfo.maxpushedparasize;
+                      localsize:=CurrentProcInfo.maxpushedparasize;
                   end;
               end;
 
@@ -1983,7 +1983,7 @@ implementation
             if localsize<>0 then
               begin
                 localsize:=align(localsize,16);
-                current_procinfo.final_localsize:=localsize;
+                CurrentProcInfo.final_localsize:=localsize;
                 g_stackpointer_alloc(list,localsize);
                 inc(totalstackframesize,localsize);
               end;
@@ -1991,7 +1991,7 @@ implementation
             { Store total stack frame size for use by exceptfilter temp access.
               This is the offset from FP to SP after prolog completes, including
               saved registers and local variables. }
-            tcpuprocinfo(current_procinfo).total_stackframe_size:=totalstackframesize;
+            tcpuprocinfo(CurrentProcInfo).total_stackframe_size:=totalstackframesize;
             { By default, we use the frame pointer to access parameters passed via
               the stack and the stack pointer to address local variables and temps
               because
@@ -2018,18 +2018,18 @@ implementation
               less efficiently from nested routines, but those accesses are indirect
               anyway and at least this way they can be accessed at all
             }
-            if current_procinfo.has_nestedprocs or
+            if CurrentProcInfo.has_nestedprocs or
                (
-                 (target_info.system=system_aarch64_win64) and
-                 (current_procinfo.flags*[pi_has_implicit_finally,pi_needs_implicit_finally,pi_uses_exceptions]<>[])
+                 (TargetInfo.system=system_aarch64_win64) and
+                 (CurrentProcInfo.flags*[pi_has_implicit_finally,pi_needs_implicit_finally,pi_uses_exceptions]<>[])
                ) then
               begin
-                current_procinfo.procdef.localst.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
-                current_procinfo.procdef.parast.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
+                CurrentProcInfo.procdef.localst.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
+                CurrentProcInfo.procdef.parast.SymList.ForEachCall(@FixupOffsets,@totalstackframesize);
               end;
           end;
 
-        if not (pi_has_unwind_info in current_procinfo.flags) then
+        if not (pi_has_unwind_info in CurrentProcInfo.flags) then
           begin
             if genloadframeforexcept then
               gen_load_frame_for_exceptfilter(list);
@@ -2037,7 +2037,7 @@ implementation
           end;
 
         { Generate unwind data for aarch64-win64 }
-        seh_proc:=cai_seh_directive.create_name(ash_proc,current_procinfo.procdef.mangledname);
+        seh_proc:=cai_seh_directive.create_name(ash_proc,CurrentProcInfo.procdef.mangledname);
         if assigned(hitem) then
           list.insertafter(seh_proc,hitem)
         else
@@ -2050,8 +2050,8 @@ implementation
           begin
             templist.concat(cai_seh_directive.create(ash_endprologue));
           end;
-        if assigned(current_procinfo.endprologue_ai) then
-          current_procinfo.aktproccode.insertlistafter(current_procinfo.endprologue_ai,templist)
+        if assigned(CurrentProcInfo.endprologue_ai) then
+          CurrentProcInfo.aktproccode.insertlistafter(CurrentProcInfo.endprologue_ai,templist)
         else
           list.concatlist(templist);
         templist.free;
@@ -2087,7 +2087,7 @@ implementation
         regcount:=0;
         { due to SEH on Win64 we can only load consecutive registers and single
           ones are done using LDR, so we need to handle this differently there }
-        if target_info.system=system_aarch64_win64 then
+        if TargetInfo.system=system_aarch64_win64 then
           begin
             setlength(aiarr,highsr-lowsr+1);
             pairreg:=NR_NO;
@@ -2167,7 +2167,7 @@ implementation
             * the entry stack frame must be normally generated because the subroutine could be still left by
               an exception and then the unwinding code might need to restore the registers stored by the entry code
           }
-          not(po_noreturn in current_procinfo.procdef.procoptions) then
+          not(po_noreturn in CurrentProcInfo.procdef.procoptions) then
           begin
             { if no registers have been stored, we don't have to subtract the
               allocated temp space from the stack pointer }
@@ -2188,40 +2188,40 @@ implementation
             { restore registers (and stack pointer) }
             if regsstored then
               begin
-                if current_procinfo.final_localsize<>0 then
-                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,NR_SP,current_procinfo.final_localsize,NR_SP,NR_IP0,false,true);
+                if CurrentProcInfo.final_localsize<>0 then
+                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,NR_SP,CurrentProcInfo.final_localsize,NR_SP,NR_IP0,false,true);
                 load_regs(list,R_MMREGISTER,RS_D8,RS_D15,R_SUBMMD);
                 load_regs(list,R_INTREGISTER,RS_X19,RS_X28,R_SUBWHOLE);
                 { on Windows also restore SP even if the add should be enough
                   to have matching exit sequence to the entry sequence.
                   Skip for exceptfilters where FP points to parent's frame, not local frame. }
-                if (target_info.system=system_aarch64_win64) and
-                   (current_procinfo.procdef.proctypeoption<>potype_exceptfilter) then
+                if (TargetInfo.system=system_aarch64_win64) and
+                   (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) then
                   a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
               end
-            else if current_procinfo.final_localsize<>0 then
+            else if CurrentProcInfo.final_localsize<>0 then
               begin
                 { restore stack pointer }
                 { Note: for Windows we need to restore the stack using an ADD
                         and to set FP back to SP }
-                if target_info.system=system_aarch64_win64 then
+                if TargetInfo.system=system_aarch64_win64 then
                   begin
-                    handle_reg_imm12_reg(list,A_ADD,OS_ADDR,current_procinfo.framepointer,current_procinfo.final_localsize,
-                      current_procinfo.framepointer,NR_IP0,false,true);
+                    handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.framepointer,CurrentProcInfo.final_localsize,
+                      CurrentProcInfo.framepointer,NR_IP0,false,true);
                     { Skip mov sp,fp for exceptfilters where FP points to parent's frame }
-                    if not (pi_no_framepointer_needed in current_procinfo.flags) and
-                       (current_procinfo.procdef.proctypeoption<>potype_exceptfilter) then
+                    if not (pi_no_framepointer_needed in CurrentProcInfo.flags) and
+                       (CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter) then
                       a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
                   end
-                else if pi_no_framepointer_needed in current_procinfo.flags then
-                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,current_procinfo.framepointer,current_procinfo.final_localsize,
-                    current_procinfo.framepointer,NR_IP0,false,true)
-                else if current_procinfo.procdef.proctypeoption<>potype_exceptfilter then
+                else if pi_no_framepointer_needed in CurrentProcInfo.flags then
+                  handle_reg_imm12_reg(list,A_ADD,OS_ADDR,CurrentProcInfo.framepointer,CurrentProcInfo.final_localsize,
+                    CurrentProcInfo.framepointer,NR_IP0,false,true)
+                else if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
                   { Skip for exceptfilters where FP points to parent's frame }
                   a_load_reg_reg(list,OS_ADDR,OS_ADDR,NR_FP,NR_SP);
               end;
 
-            if not(pi_no_framepointer_needed in current_procinfo.flags) then
+            if not(pi_no_framepointer_needed in CurrentProcInfo.flags) then
               begin
                 { restore framepointer and return address }
                 reference_reset_base(ref,NR_SP,16,ctempposinvalid,16,[]);
@@ -2232,9 +2232,9 @@ implementation
 
         { return }
         list.concat(taicpu.op_none(A_RET));
-        if (pi_has_unwind_info in current_procinfo.flags) then
+        if (pi_has_unwind_info in CurrentProcInfo.flags) then
           begin
-            tcpuprocinfo(current_procinfo).dump_scopes(list);
+            tcpuprocinfo(CurrentProcInfo).dump_scopes(list);
             list.concat(cai_seh_directive.create(ash_endproc));
           end;
       end;
@@ -2565,11 +2565,11 @@ implementation
             unscaledloadop:=A_LDUR;
           end;
         { we only need 4 instructions extra to call FPC_MOVE }
-        if cs_opt_size in current_settings.optimizerswitches then
+        if cs_opt_size in CurrentSettings.optimizerswitches then
           maxlenunrolled:=maxlenunrolled div 2;
         if (len>maxlenunrolled) and
            (len>totalalign*8) and
-           (pi_do_call in current_procinfo.flags) then
+           (pi_do_call in CurrentProcInfo.flags) then
           begin
             g_concatcopy_move(list,source,dest,len);
             exit;
@@ -2651,7 +2651,7 @@ implementation
             makesimpleforcopy(list,loadop,opsize,postfix,true,tmpsource,sourcebasereplaced);
             storeop:=scaledstoreop;
             makesimpleforcopy(list,storeop,opsize,postfix,true,tmpdest,destbasereplaced);
-            current_asmdata.getjumplabel(hl);
+            CurrentAsmData.getjumplabel(hl);
             countreg:=getintregister(list,OS_32);
             if loadop=A_LDP then
               a_load_const_reg(list,OS_32,len div (tcgsize2size[opsize]*2),countreg)
@@ -2696,15 +2696,15 @@ implementation
         l1,l2: TAsmLabel;
       begin
         { so far, we assume all flavours of AArch64 need explicit floating point exception checking }
-        if ((cs_check_fpu_exceptions in current_settings.localswitches) and
-            (force or current_procinfo.FPUExceptionCheckNeeded)) then
+        if ((cs_check_fpu_exceptions in CurrentSettings.localswitches) and
+            (force or CurrentProcInfo.FPUExceptionCheckNeeded)) then
           begin
             r:=getintregister(list,OS_INT);
             tmpreg:=getintregister(list,OS_INT);
             list.concat(taicpu.op_reg_reg(A_MRS,r,NR_FPSR));
             list.concat(taicpu.op_reg_reg_const(A_AND,tmpreg,r,$1f));
-            current_asmdata.getjumplabel(l1);
-            current_asmdata.getjumplabel(l2);
+            CurrentAsmData.getjumplabel(l1);
+            CurrentAsmData.getjumplabel(l2);
             ai:=taicpu.op_reg_sym_ofs(A_CBNZ,tmpreg,l1,0);
             ai.is_jmp:=true;
             list.concat(ai);
@@ -2718,7 +2718,7 @@ implementation
             dealloccpuregisters(list,R_INTREGISTER,paramanager.get_volatile_registers_int(pocall_default));
             a_label(list,l2);
             if clear then
-              current_procinfo.FPUExceptionCheckNeeded:=false;
+              CurrentProcInfo.FPUExceptionCheckNeeded:=false;
           end;
       end;
 
@@ -2730,7 +2730,7 @@ implementation
         reg: tregister;
         href: treference;
       begin
-        if target_info.system<>system_aarch64_win64 then
+        if TargetInfo.system<>system_aarch64_win64 then
           begin
             inherited g_local_unwind(list,l);
             exit;
@@ -2788,22 +2788,22 @@ implementation
              for_finalization=false, current_procinfo IS the exceptfilter
           2. hlcgobj.pas (finalizetempvariables) - during finalization for parent procs
              for_finalization=true, current_procinfo is parent with exceptfilter finalize_procinfo }
-        if target_info.system<>system_aarch64_win64 then
+        if TargetInfo.system<>system_aarch64_win64 then
           exit;
 
         if for_finalization then
           begin
             { Finalization context: current_procinfo is the parent,
               finalize_procinfo is the exceptfilter we're generating finalization for }
-            if not assigned(current_procinfo.finalize_procinfo) then
+            if not assigned(CurrentProcInfo.finalize_procinfo) then
               exit;
-            if current_procinfo.finalize_procinfo.procdef.proctypeoption<>potype_exceptfilter then
+            if CurrentProcInfo.finalize_procinfo.procdef.proctypeoption<>potype_exceptfilter then
               exit;
-            if ref.base<>current_procinfo.framepointer then
+            if ref.base<>CurrentProcInfo.framepointer then
               exit;
-            if current_procinfo.framepointer=NR_FRAME_POINTER_REG then
+            if CurrentProcInfo.framepointer=NR_FRAME_POINTER_REG then
               exit;
-            stackframe_size:=tcpuprocinfo(current_procinfo).total_stackframe_size;
+            stackframe_size:=tcpuprocinfo(CurrentProcInfo).total_stackframe_size;
           end
         else
           begin
@@ -2813,13 +2813,13 @@ implementation
               the boundary) must be converted to FP-relative to access the
               parent's stack frame. Handler temps (offset at or above the
               boundary) stay SP-relative in the handler's own stack frame. }
-            if current_procinfo.procdef.proctypeoption<>potype_exceptfilter then
+            if CurrentProcInfo.procdef.proctypeoption<>potype_exceptfilter then
               exit;
             if ref.base<>NR_STACK_POINTER_REG then
               exit;
-            if ref.offset>=tcgprocinfo(current_procinfo.parent).exceptfilter_parent_tempend then
+            if ref.offset>=tcgprocinfo(CurrentProcInfo.parent).exceptfilter_parent_tempend then
               exit;
-            stackframe_size:=tcpuprocinfo(current_procinfo.parent).total_stackframe_size;
+            stackframe_size:=tcpuprocinfo(CurrentProcInfo.parent).total_stackframe_size;
           end;
 
         ref.base:=NR_FRAME_POINTER_REG;

@@ -30,8 +30,8 @@ interface
 
     type
        tcgnestloadparentfpnode = class(tcgloadparentfpnode)
-          function pass_typecheck: tnode; override;
-          function pass_1: tnode; override;
+          function pass_typecheck: TNode; override;
+          function pass_1: TNode; override;
           procedure pass_generate_code;override;
        end;
 
@@ -53,7 +53,7 @@ implementation
                         TCGLOADPARENTFPNODE
 *****************************************************************************}
 
-    function tcgnestloadparentfpnode.pass_typecheck: tnode;
+    function tcgnestloadparentfpnode.pass_typecheck: TNode;
       var
         hsym        : tparavarsym;
         currpi,
@@ -61,10 +61,10 @@ implementation
       begin
         result:=inherited;
         if assigned(result) or
-           (assigned(current_procinfo) and
-            (df_generic in current_procinfo.procdef.defoptions)) then
+           (assigned(CurrentProcInfo) and
+            (df_generic in CurrentProcInfo.procdef.defoptions)) then
           exit;
-        currpi:=current_procinfo.parent;
+        currpi:=CurrentProcInfo.parent;
         { current_procinfo.parent is not assigned for specialised generic routines in the
           top-level scope }
         while assigned(currpi) and
@@ -76,7 +76,7 @@ implementation
           end;
         { mark all parent parentfp parameters for inclusion in the struct that
           holds all locals accessed from nested routines }
-        currpi:=current_procinfo.parent;
+        currpi:=CurrentProcInfo.parent;
         if assigned(currpi) then
           begin
             nextpi:=currpi.parent;
@@ -92,7 +92,7 @@ implementation
       end;
 
 
-    function tcgnestloadparentfpnode.pass_1: tnode;
+    function tcgnestloadparentfpnode.pass_1: TNode;
       var
         fsym        : tfieldvarsym;
         hsym        : tparavarsym;
@@ -104,22 +104,22 @@ implementation
           nested routine does nothing for which it needs the nestedfp pointer
           of the current routine (and hence it has not been moved into the
           nestedfp struct), get the original nestedfp parameter }
-        useparentfppara:=not assigned(current_procinfo.procdef.parentfpstruct);
-        hsym:=tparavarsym(current_procinfo.procdef.parast.Find('parentfp'));
-        if current_procinfo.procdef.parast.symtablelevel>parentpd.parast.symtablelevel then
+        useparentfppara:=not assigned(CurrentProcInfo.procdef.parentfpstruct);
+        hsym:=tparavarsym(CurrentProcInfo.procdef.parast.Find('parentfp'));
+        if CurrentProcInfo.procdef.parast.symtablelevel>parentpd.parast.symtablelevel then
           useparentfppara:=
             useparentfppara or
-            (find_sym_in_parentfpstruct(current_procinfo.procdef,hsym)=nil);
+            (find_sym_in_parentfpstruct(CurrentProcInfo.procdef,hsym)=nil);
         if useparentfppara then
           begin
             result:=cloadnode.create(hsym,hsym.owner);
-            currpi:=current_procinfo.parent;
+            currpi:=CurrentProcInfo.parent;
           end
         else
           begin
-            result:=caddrnode.create_internal(cloadnode.create(current_procinfo.procdef.parentfpstruct,current_procinfo.procdef.parentfpstruct.owner));
+            result:=caddrnode.create_internal(cloadnode.create(CurrentProcInfo.procdef.parentfpstruct,CurrentProcInfo.procdef.parentfpstruct.owner));
             include(taddrnode(result).addrnodeflags,anf_typedaddr);
-            currpi:=current_procinfo;
+            currpi:=CurrentProcInfo;
           end;
         { follow the chain of parentfpstructs until we arrive at the one we
           need }

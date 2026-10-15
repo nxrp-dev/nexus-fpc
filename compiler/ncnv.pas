@@ -48,32 +48,32 @@ interface
        );
        ttypeconvnodeflags = set of ttypeconvnodeflag;
 
-       ttypeconvnode = class(tunarynode)
+       ttypeconvnode = class(TUnaryNode)
           totypedef   : tdef;
           totypedefderef : tderef;
           convtype : tconverttype;
           convnodeflags : ttypeconvnodeflags;
           warn_pointer_to_signed,
           assignment_side: boolean;
-          constructor create(node : tnode;def:tdef);virtual;
-          constructor create_explicit(node : tnode;def:tdef);
-          constructor create_internal(node : tnode;def:tdef);
-          constructor create_proc_to_procvar(node : tnode);
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(node : TNode;def:tdef);virtual;
+          constructor create_explicit(node : TNode;def:tdef);
+          constructor create_internal(node : TNode;def:tdef);
+          constructor create_proc_to_procvar(node : TNode);
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function dogetcopy : tnode;override;
+          function dogetcopy : TNode;override;
           procedure printnodeinfo(var t : text);override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
 {$endif DEBUG_NODE_XML}
           procedure convert_deferred_stmt_expr;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean):tnode; override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean):TNode; override;
           procedure mark_write;override;
-          function docompare(p: tnode) : boolean; override;
+          function docompare(p: TNode) : boolean; override;
           function retains_value_location:boolean;
           function assign_allowed:boolean;
           procedure second_call_helper(c : tconverttype);
@@ -90,130 +90,130 @@ interface
             according to compare_defs() }
           class function target_specific_need_equal_typeconv(fromdef, todef: tdef): boolean; virtual;
        protected
-          function typecheck_int_to_int : tnode; virtual;
-          function typecheck_cord_to_pointer : tnode; virtual;
-          function typecheck_chararray_to_string : tnode; virtual;
-          function typecheck_string_to_chararray : tnode; virtual;
-          function typecheck_string_to_string : tnode; virtual;
-          function typecheck_char_to_string : tnode; virtual;
-          function typecheck_char_to_chararray : tnode; virtual;
-          function typecheck_int_to_real : tnode; virtual;
-          function typecheck_real_to_real : tnode; virtual;
-          function typecheck_real_to_currency : tnode; virtual;
-          function typecheck_cchar_to_pchar : tnode; virtual;
-          function typecheck_cstring_to_pchar : tnode; virtual;
-          function typecheck_cstring_to_int : tnode; virtual;
-          function typecheck_char_to_char : tnode; virtual;
-          function typecheck_arrayconstructor_to_set : tnode; virtual;
-          function typecheck_set_to_set : tnode; virtual;
-          function typecheck_pchar_to_string : tnode; virtual;
-          function typecheck_interface_to_string : tnode; virtual;
-          function typecheck_interface_to_guid : tnode; virtual;
-          function typecheck_dynarray_to_openarray : tnode; virtual;
-          function typecheck_pwchar_to_string : tnode; virtual;
-          function typecheck_variant_to_dynarray : tnode; virtual;
-          function typecheck_dynarray_to_variant : tnode; virtual;
-          function typecheck_variant_to_enum : tnode; virtual;
-          function typecheck_enum_to_variant : tnode; virtual;
-          function typecheck_proc_to_procvar : tnode; virtual;
-          function typecheck_variant_to_interface : tnode; virtual;
-          function typecheck_interface_to_variant : tnode; virtual;
-          function typecheck_array_2_dynarray : tnode; virtual;
-          function typecheck_elem_2_openarray : tnode; virtual;
-          function typecheck_arrayconstructor_to_dynarray : tnode; virtual;
-          function typecheck_arrayconstructor_to_array : tnode; virtual;
-          function typecheck_anonproc_2_funcref : tnode; virtual;
-          function typecheck_procvar_2_funcref : tnode; virtual;
+          function typecheck_int_to_int : TNode; virtual;
+          function typecheck_cord_to_pointer : TNode; virtual;
+          function typecheck_chararray_to_string : TNode; virtual;
+          function typecheck_string_to_chararray : TNode; virtual;
+          function typecheck_string_to_string : TNode; virtual;
+          function typecheck_char_to_string : TNode; virtual;
+          function typecheck_char_to_chararray : TNode; virtual;
+          function typecheck_int_to_real : TNode; virtual;
+          function typecheck_real_to_real : TNode; virtual;
+          function typecheck_real_to_currency : TNode; virtual;
+          function typecheck_cchar_to_pchar : TNode; virtual;
+          function typecheck_cstring_to_pchar : TNode; virtual;
+          function typecheck_cstring_to_int : TNode; virtual;
+          function typecheck_char_to_char : TNode; virtual;
+          function typecheck_arrayconstructor_to_set : TNode; virtual;
+          function typecheck_set_to_set : TNode; virtual;
+          function typecheck_pchar_to_string : TNode; virtual;
+          function typecheck_interface_to_string : TNode; virtual;
+          function typecheck_interface_to_guid : TNode; virtual;
+          function typecheck_dynarray_to_openarray : TNode; virtual;
+          function typecheck_pwchar_to_string : TNode; virtual;
+          function typecheck_variant_to_dynarray : TNode; virtual;
+          function typecheck_dynarray_to_variant : TNode; virtual;
+          function typecheck_variant_to_enum : TNode; virtual;
+          function typecheck_enum_to_variant : TNode; virtual;
+          function typecheck_proc_to_procvar : TNode; virtual;
+          function typecheck_variant_to_interface : TNode; virtual;
+          function typecheck_interface_to_variant : TNode; virtual;
+          function typecheck_array_2_dynarray : TNode; virtual;
+          function typecheck_elem_2_openarray : TNode; virtual;
+          function typecheck_arrayconstructor_to_dynarray : TNode; virtual;
+          function typecheck_arrayconstructor_to_array : TNode; virtual;
+          function typecheck_anonproc_2_funcref : TNode; virtual;
+          function typecheck_procvar_2_funcref : TNode; virtual;
        private
-          function _typecheck_int_to_int : tnode;
-          function _typecheck_cord_to_pointer : tnode;
-          function _typecheck_chararray_to_string : tnode;
-          function _typecheck_string_to_chararray : tnode;
-          function _typecheck_string_to_string : tnode;
-          function _typecheck_char_to_string : tnode;
-          function _typecheck_char_to_chararray : tnode;
-          function _typecheck_int_to_real : tnode;
-          function _typecheck_real_to_real : tnode;
-          function _typecheck_real_to_currency : tnode;
-          function _typecheck_cchar_to_pchar : tnode;
-          function _typecheck_cstring_to_pchar : tnode;
-          function _typecheck_cstring_to_int : tnode;
-          function _typecheck_char_to_char : tnode;
-          function _typecheck_arrayconstructor_to_set : tnode;
-          function _typecheck_set_to_set : tnode;
-          function _typecheck_pchar_to_string : tnode;
-          function _typecheck_interface_to_string : tnode;
-          function _typecheck_interface_to_guid : tnode;
-          function _typecheck_dynarray_to_openarray : tnode;
-          function _typecheck_pwchar_to_string : tnode;
-          function _typecheck_variant_to_dynarray : tnode;
-          function _typecheck_dynarray_to_variant : tnode;
-          function _typecheck_variant_to_enum : tnode;
-          function _typecheck_enum_to_variant : tnode;
-          function _typecheck_proc_to_procvar : tnode;
-          function _typecheck_variant_to_interface : tnode;
-          function _typecheck_interface_to_variant : tnode;
-          function _typecheck_array_2_dynarray : tnode;
-          function _typecheck_elem_2_openarray : tnode;
-          function _typecheck_arrayconstructor_to_dynarray : tnode;
-          function _typecheck_arrayconstructor_to_array : tnode;
-          function _typecheck_anonproc_to_funcref : tnode;
-          function _typecheck_procvar_to_funcref : tnode;
+          function _typecheck_int_to_int : TNode;
+          function _typecheck_cord_to_pointer : TNode;
+          function _typecheck_chararray_to_string : TNode;
+          function _typecheck_string_to_chararray : TNode;
+          function _typecheck_string_to_string : TNode;
+          function _typecheck_char_to_string : TNode;
+          function _typecheck_char_to_chararray : TNode;
+          function _typecheck_int_to_real : TNode;
+          function _typecheck_real_to_real : TNode;
+          function _typecheck_real_to_currency : TNode;
+          function _typecheck_cchar_to_pchar : TNode;
+          function _typecheck_cstring_to_pchar : TNode;
+          function _typecheck_cstring_to_int : TNode;
+          function _typecheck_char_to_char : TNode;
+          function _typecheck_arrayconstructor_to_set : TNode;
+          function _typecheck_set_to_set : TNode;
+          function _typecheck_pchar_to_string : TNode;
+          function _typecheck_interface_to_string : TNode;
+          function _typecheck_interface_to_guid : TNode;
+          function _typecheck_dynarray_to_openarray : TNode;
+          function _typecheck_pwchar_to_string : TNode;
+          function _typecheck_variant_to_dynarray : TNode;
+          function _typecheck_dynarray_to_variant : TNode;
+          function _typecheck_variant_to_enum : TNode;
+          function _typecheck_enum_to_variant : TNode;
+          function _typecheck_proc_to_procvar : TNode;
+          function _typecheck_variant_to_interface : TNode;
+          function _typecheck_interface_to_variant : TNode;
+          function _typecheck_array_2_dynarray : TNode;
+          function _typecheck_elem_2_openarray : TNode;
+          function _typecheck_arrayconstructor_to_dynarray : TNode;
+          function _typecheck_arrayconstructor_to_array : TNode;
+          function _typecheck_anonproc_to_funcref : TNode;
+          function _typecheck_procvar_to_funcref : TNode;
        protected
-          function first_int_to_int : tnode;virtual;
-          function first_cstring_to_pchar : tnode;virtual;
-          function first_cstring_to_int : tnode;virtual;
-          function first_string_to_chararray : tnode;virtual;
-          function first_char_to_string : tnode;virtual;
-          function first_char_to_chararray : tnode; virtual;
-          function first_nothing : tnode;virtual;
-          function first_array_to_pointer : tnode;virtual;
-          function first_int_to_real : tnode;virtual;
-          function first_real_to_real : tnode;virtual;
-          function first_pointer_to_array : tnode;virtual;
-          function first_cchar_to_pchar : tnode;virtual;
-          function first_bool_to_int : tnode;virtual;
-          function first_int_to_bool : tnode;virtual;
-          function first_bool_to_bool : tnode;virtual;
-          function first_proc_to_procvar : tnode;virtual;
-          function first_nil_to_methodprocvar : tnode;virtual;
-          function first_set_to_set : tnode;virtual;
-          function first_cord_to_pointer : tnode;virtual;
-          function first_ansistring_to_pchar : tnode;virtual;
-          function first_arrayconstructor_to_set : tnode;virtual;
-          function first_class_to_intf : tnode;virtual;
-          function first_char_to_char : tnode;virtual;
-          function first_string_to_string : tnode;virtual;
-          function first_call_helper(c : tconverttype) : tnode;
-          function typecheck_call_helper(c : tconverttype) : tnode;
+          function first_int_to_int : TNode;virtual;
+          function first_cstring_to_pchar : TNode;virtual;
+          function first_cstring_to_int : TNode;virtual;
+          function first_string_to_chararray : TNode;virtual;
+          function first_char_to_string : TNode;virtual;
+          function first_char_to_chararray : TNode; virtual;
+          function first_nothing : TNode;virtual;
+          function first_array_to_pointer : TNode;virtual;
+          function first_int_to_real : TNode;virtual;
+          function first_real_to_real : TNode;virtual;
+          function first_pointer_to_array : TNode;virtual;
+          function first_cchar_to_pchar : TNode;virtual;
+          function first_bool_to_int : TNode;virtual;
+          function first_int_to_bool : TNode;virtual;
+          function first_bool_to_bool : TNode;virtual;
+          function first_proc_to_procvar : TNode;virtual;
+          function first_nil_to_methodprocvar : TNode;virtual;
+          function first_set_to_set : TNode;virtual;
+          function first_cord_to_pointer : TNode;virtual;
+          function first_ansistring_to_pchar : TNode;virtual;
+          function first_arrayconstructor_to_set : TNode;virtual;
+          function first_class_to_intf : TNode;virtual;
+          function first_char_to_char : TNode;virtual;
+          function first_string_to_string : TNode;virtual;
+          function first_call_helper(c : tconverttype) : TNode;
+          function typecheck_call_helper(c : tconverttype) : TNode;
        private
           { these wrapper are necessary, because the first_* stuff is called }
           { through a table. Without the wrappers override wouldn't have     }
           { any effect                                                       }
-          function _first_int_to_int : tnode;
-          function _first_cstring_to_pchar : tnode;
-          function _first_cstring_to_int : tnode;
-          function _first_string_to_chararray : tnode;
-          function _first_char_to_string : tnode;
-          function _first_char_to_chararray : tnode;
-          function _first_nothing : tnode;
-          function _first_array_to_pointer : tnode;
-          function _first_int_to_real : tnode;
-          function _first_real_to_real: tnode;
-          function _first_pointer_to_array : tnode;
-          function _first_cchar_to_pchar : tnode;
-          function _first_bool_to_int : tnode;
-          function _first_int_to_bool : tnode;
-          function _first_bool_to_bool : tnode;
-          function _first_proc_to_procvar : tnode;
-          function _first_nil_to_methodprocvar : tnode;
-          function _first_cord_to_pointer : tnode;
-          function _first_ansistring_to_pchar : tnode;
-          function _first_arrayconstructor_to_set : tnode;
-          function _first_class_to_intf : tnode;
-          function _first_char_to_char : tnode;
-          function _first_set_to_set : tnode;
-          function _first_string_to_string : tnode;
+          function _first_int_to_int : TNode;
+          function _first_cstring_to_pchar : TNode;
+          function _first_cstring_to_int : TNode;
+          function _first_string_to_chararray : TNode;
+          function _first_char_to_string : TNode;
+          function _first_char_to_chararray : TNode;
+          function _first_nothing : TNode;
+          function _first_array_to_pointer : TNode;
+          function _first_int_to_real : TNode;
+          function _first_real_to_real: TNode;
+          function _first_pointer_to_array : TNode;
+          function _first_cchar_to_pchar : TNode;
+          function _first_bool_to_int : TNode;
+          function _first_int_to_bool : TNode;
+          function _first_bool_to_bool : TNode;
+          function _first_proc_to_procvar : TNode;
+          function _first_nil_to_methodprocvar : TNode;
+          function _first_cord_to_pointer : TNode;
+          function _first_ansistring_to_pchar : TNode;
+          function _first_arrayconstructor_to_set : TNode;
+          function _first_class_to_intf : TNode;
+          function _first_char_to_char : TNode;
+          function _first_set_to_set : TNode;
+          function _first_string_to_string : TNode;
 
           procedure _second_int_to_int;virtual;
           procedure _second_string_to_string;virtual;
@@ -267,13 +267,13 @@ interface
        ttypeconvnodeclass = class of ttypeconvnode;
 
        { common functionality of as-nodes and is-nodes }
-       tasisnode = class(tbinarynode)
+       tasisnode = class(TBinaryNode)
           protected
            { if non-standard usage of as-nodes is possible, targets can override
            this method and return true in case the conditions are fulfilled }
           function target_specific_typecheck: boolean;virtual;
          public
-          function pass_typecheck:tnode;override;
+          function pass_typecheck:TNode;override;
        end;
 
        tasnode = class(tasisnode)
@@ -288,20 +288,20 @@ interface
 
             so the call field is required
           }
-          call: tnode;
-          constructor create(l,r : tnode);virtual;
-          constructor create_internal(l,r : tnode);virtual;
-          function pass_1 : tnode;override;
-          function dogetcopy: tnode;override;
-          function docompare(p: tnode): boolean; override;
+          call: TNode;
+          constructor create(l,r : TNode);virtual;
+          constructor create_internal(l,r : TNode);virtual;
+          function pass_1 : TNode;override;
+          function dogetcopy: TNode;override;
+          function docompare(p: TNode): boolean; override;
           destructor destroy; override;
        end;
        tasnodeclass = class of tasnode;
 
        tisnode = class(tasisnode)
-          constructor create(l,r : tnode);virtual;
-          constructor create_internal(l,r : tnode);virtual;
-          function pass_1 : tnode;override;
+          constructor create(l,r : TNode);virtual;
+          constructor create_internal(l,r : TNode);virtual;
+          function pass_1 : TNode;override;
           procedure pass_generate_code;override;
        end;
        tisnodeclass = class of tisnode;
@@ -311,15 +311,15 @@ interface
        casnode : tasnodeclass = tasnode;
        cisnode : tisnodeclass=tisnode;
 
-    procedure inserttypeconv(var p:tnode;def:tdef);
-    procedure inserttypeconv_explicit(var p:tnode;def:tdef);
-    procedure inserttypeconv_internal(var p:tnode;def:tdef);
-    procedure arrayconstructor_to_set(var p : tnode);inline;
-    function arrayconstructor_to_set(p:tnode;freep:boolean):tnode;
-    function arrayconstructor_can_be_set(p:tnode):boolean;
-    procedure insert_varargstypeconv(var p : tnode; iscvarargs: boolean);
+    procedure inserttypeconv(var p:TNode;def:tdef);
+    procedure inserttypeconv_explicit(var p:TNode;def:tdef);
+    procedure inserttypeconv_internal(var p:TNode;def:tdef);
+    procedure arrayconstructor_to_set(var p : TNode);inline;
+    function arrayconstructor_to_set(p:TNode;freep:boolean):TNode;
+    function arrayconstructor_can_be_set(p:TNode):boolean;
+    procedure insert_varargstypeconv(var p : TNode; iscvarargs: boolean);
 
-    function maybe_global_proc_to_nested(var fromnode: tnode; todef: tdef): boolean;
+    function maybe_global_proc_to_nested(var fromnode: TNode; todef: tdef): boolean;
 
 
 implementation
@@ -340,13 +340,13 @@ implementation
     type
       ttypeconvnodetype = (tct_implicit,tct_explicit,tct_internal);
 
-    procedure do_inserttypeconv(var p: tnode;def: tdef; convtype: ttypeconvnodetype);
+    procedure do_inserttypeconv(var p: TNode;def: tdef; convtype: ttypeconvnodetype);
 
       begin
         if not assigned(p.resultdef) then
          begin
-           typecheckpass(p);
-           if codegenerror then
+           TypeCheckPass(p);
+           if CodeGenError then
             exit;
          end;
 
@@ -388,25 +388,25 @@ implementation
            if not (nf_internal in p.flags) and is_currency(def) then
              Include(p.flags, nf_is_currency);
            p.fileinfo:=ttypeconvnode(p).left.fileinfo;
-           typecheckpass(p);
+           TypeCheckPass(p);
          end;
       end;
 
 
-    procedure inserttypeconv(var p:tnode;def:tdef);
+    procedure inserttypeconv(var p:TNode;def:tdef);
 
       begin
         do_inserttypeconv(p,def,tct_implicit);
       end;
 
 
-    procedure inserttypeconv_explicit(var p: tnode; def: tdef);
+    procedure inserttypeconv_explicit(var p: TNode; def: tdef);
 
       begin
         do_inserttypeconv(p,def,tct_explicit);
       end;
 
-    procedure inserttypeconv_internal(var p:tnode;def:tdef);
+    procedure inserttypeconv_internal(var p:TNode;def:tdef);
 
       begin
         do_inserttypeconv(p,def,tct_internal);
@@ -417,17 +417,17 @@ implementation
                     Array constructor to Set Conversion
 *****************************************************************************}
 
-    procedure arrayconstructor_to_set(var p : tnode);
+    procedure arrayconstructor_to_set(var p : TNode);
       begin
         p:=arrayconstructor_to_set(p,true);
       end;
 
-    function arrayconstructor_to_set(p:tnode;freep:boolean):tnode;
+    function arrayconstructor_to_set(p:TNode;freep:boolean):TNode;
       var
         constp      : tsetconstnode;
-        p2,p3,p4    : tnode;
+        p2,p3,p4    : TNode;
         hdef        : tdef;
-        constset    : Pconstset;
+        constset    : PConstSet;
         constsetlo,
         constsethi  : TConstExprInt;
 
@@ -506,7 +506,7 @@ implementation
         l : Longint;
         lr,hr : TConstExprInt;
         hp : tarrayconstructornode;
-        oldfilepos: tfileposinfo;
+        oldfilepos: TFilePosInfo;
         first: Boolean;
       begin
         { keep in sync with arrayconstructor_can_be_set }
@@ -515,13 +515,13 @@ implementation
         { A generic body is parsed again when specializing. Do not lower a set
           constructor before its element types are known: even a fixed set
           destination can contain expressions whose type is a parameter. }
-        if assigned(current_procinfo) and
-           (df_generic in current_procinfo.procdef.defoptions) then
+        if assigned(CurrentProcInfo) and
+           (df_generic in CurrentProcInfo.procdef.defoptions) then
           begin
             hp:=tarrayconstructornode(p);
             while assigned(hp) and assigned(hp.left) do
               begin
-                typecheckpass(hp.left);
+                TypeCheckPass(hp.left);
                 if hp.left.nodetype=arrayconstructorrangen then
                   begin
                     p2:=tarrayconstructorrangenode(hp.left).left;
@@ -542,7 +542,7 @@ implementation
                     constp:=csetconstnode.create(nil,csetdef.create(nil,0,0,true));
                     constp.value_set:=constset;
                     result:=constp;
-                    typecheckpass(result);
+                    TypeCheckPass(result);
                     if freep then
                       p.free;
                     exit;
@@ -583,17 +583,17 @@ implementation
                  hp.left:=nil;
                  p3:=nil;
                end;
-              typecheckpass(p2);
+              TypeCheckPass(p2);
               set_varstate(p2,vs_read,[vsf_must_be_valid]);
               if assigned(p3) then
                 begin
-                  typecheckpass(p3);
+                  TypeCheckPass(p3);
                   set_varstate(p3,vs_read,[vsf_must_be_valid]);
                 end;
-              if codegenerror then
+              if CodeGenError then
                break;
-              oldfilepos:=current_filepos;
-              current_filepos:=p2.fileinfo;
+              oldfilepos:=CurrentFilePos;
+              CurrentFilePos:=p2.fileinfo;
               case p2.resultdef.typ of
                 enumdef,
                 orddef:
@@ -603,7 +603,7 @@ implementation
                       begin
                         if block_type<>bt_const then
                           inserttypeconv(p2,cansichartype);
-                        if (p2.nodetype<>ordconstn) and not (m_default_unicodestring in current_settings.modeswitches) then
+                        if (p2.nodetype<>ordconstn) and not (m_default_unicodestring in CurrentSettings.modeswitches) then
                           incompatibletypes(cwidechartype,cansichartype);
                       end;
 
@@ -614,9 +614,9 @@ implementation
                          begin
                            if block_type<>bt_const then
                              inserttypeconv(p3,cansichartype);
-                           if (p3.nodetype<>ordconstn) and not (m_default_unicodestring in current_settings.modeswitches) then
+                           if (p3.nodetype<>ordconstn) and not (m_default_unicodestring in CurrentSettings.modeswitches) then
                              begin
-                               current_filepos:=p3.fileinfo;
+                               CurrentFilePos:=p3.fileinfo;
                                incompatibletypes(cwidechartype,cansichartype);
                              end;
                          end;
@@ -722,7 +722,7 @@ implementation
               tarrayconstructornode(p2).right:=nil;
               if freep then
                 p2.free; // no nil needed
-              current_filepos:=oldfilepos;
+              CurrentFilePos:=oldfilepos;
               first:=false;
             end;
           if (hdef=nil) then
@@ -737,13 +737,13 @@ implementation
         { set the initial set type }
         constp.resultdef:=csetdef.create(hdef,constsetlo.svalue,constsethi.svalue,true);
         { determine the resultdef for the tree }
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
-    function arrayconstructor_can_be_set(p:tnode):boolean;
+    function arrayconstructor_can_be_set(p:TNode):boolean;
       var
-        p1,p2 : tnode;
+        p1,p2 : TNode;
         hdef : tdef;
       begin
         { keep in sync with arrayconstructor_to_set }
@@ -782,7 +782,7 @@ implementation
                         begin
                           if p1.nodetype<>ordconstn then
                             exit
-                          else if (tordconstnode(p1).value.uvalue>high(byte)) and not (m_default_unicodestring in current_settings.modeswitches) then
+                          else if (tordconstnode(p1).value.uvalue>high(byte)) and not (m_default_unicodestring in CurrentSettings.modeswitches) then
                             exit;
                         end;
 
@@ -792,7 +792,7 @@ implementation
                             begin
                               if p2.nodetype<>ordconstn then
                                 exit
-                              else if (tordconstnode(p2).value.uvalue>high(byte)) and not (m_default_unicodestring in current_settings.modeswitches) then
+                              else if (tordconstnode(p2).value.uvalue>high(byte)) and not (m_default_unicodestring in CurrentSettings.modeswitches) then
                                 exit;
                             end;
 
@@ -820,7 +820,7 @@ implementation
       end;
 
 
-    procedure insert_varargstypeconv(var p : tnode; iscvarargs: boolean);
+    procedure insert_varargstypeconv(var p : TNode; iscvarargs: boolean);
       begin
         { procvars without arguments in variant arrays are always called by
           Delphi }
@@ -849,7 +849,7 @@ implementation
               begin
                 if is_integer(p.resultdef) and
                    not(is_64bitint(p.resultdef)) then
-                  if not(m_delphi in current_settings.modeswitches) then
+                  if not(m_delphi in CurrentSettings.modeswitches) then
                     p:=ctypeconvnode.create(p,s32inttype)
                   else
                     { delphi doesn't generate a range error when passing a
@@ -862,7 +862,7 @@ implementation
                 else if is_void(p.resultdef) then
                   CGMessagePos1(p.fileinfo,type_e_wrong_type_in_array_constructor,p.resultdef.typename)
                 else if iscvarargs and is_currency(p.resultdef)
-                    and (current_settings.fputype<>fpu_none) then
+                    and (CurrentSettings.fputype<>fpu_none) then
                   p:=ctypeconvnode.create(p,s64floattype);
               end;
             floatdef :
@@ -874,10 +874,10 @@ implementation
               else
                 begin
                   if (is_constrealnode(p) and not(nf_explicit in p.flags)) or
-                     ((target_info.system=system_x86_64_win64) and is_extended(p.resultdef)) then
+                     ((TargetInfo.system=system_x86_64_win64) and is_extended(p.resultdef)) then
                     MessagePos(p.fileinfo,type_w_double_c_varargs);
                   if (tfloatdef(p.resultdef).floattype in [s32real,s64currency]) or
-                     ((target_info.system=system_x86_64_win64) and is_extended(p.resultdef)) or
+                     ((TargetInfo.system=system_x86_64_win64) and is_extended(p.resultdef)) or
                      (is_constrealnode(p) and
                       not(nf_explicit in p.flags)) then
                     p:=ctypeconvnode.create(p,s64floattype);
@@ -909,7 +909,7 @@ implementation
             else
               CGMessagePos1(p.fileinfo,type_e_wrong_type_in_array_constructor,p.resultdef.typename);
           end;
-        typecheckpass(p);
+        TypeCheckPass(p);
       end;
 
 
@@ -921,13 +921,13 @@ implementation
       procvar parameters or assigning them to nested procvars. The
       solution is to remove the (wrong) conversion to a global procvar,
       and instead insert a conversion to the local procvar type. }
-    function maybe_global_proc_to_nested(var fromnode: tnode; todef: tdef): boolean;
+    function maybe_global_proc_to_nested(var fromnode: TNode; todef: tdef): boolean;
       var
-        hp: tnode;
+        hp: TNode;
       begin
         result:=false;
-        if (m_nested_procvars in current_settings.modeswitches) and
-           not(m_tp_procvar in current_settings.modeswitches) and
+        if (m_nested_procvars in CurrentSettings.modeswitches) and
+           not(m_tp_procvar in CurrentSettings.modeswitches) and
            (todef.typ=procvardef) and
            is_nested_pd(tprocvardef(todef)) and
            (fromnode.nodetype=typeconvn) and
@@ -938,7 +938,7 @@ implementation
             hp:=fromnode;
             fromnode:=ctypeconvnode.create_proc_to_procvar(ttypeconvnode(fromnode).left);
             ttypeconvnode(fromnode).totypedef:=todef;
-            typecheckpass(fromnode);
+            TypeCheckPass(fromnode);
             ttypeconvnode(hp).left:=nil;
             hp.free;
             hp := nil;
@@ -951,12 +951,12 @@ implementation
       procvar of object. pexpr.do_proc_call() stores the symtable of classtype
       in the loadnode so we can retrieve it here (rather than the symtable in
       which method was found, which may be a parent class) }
-    function maybe_classmethod_to_methodprocvar(var fromnode: tnode; todef: tdef): boolean;
+    function maybe_classmethod_to_methodprocvar(var fromnode: TNode; todef: tdef): boolean;
       var
-        hp: tnode;
+        hp: TNode;
       begin
         result:=false;
-        if not(m_tp_procvar in current_settings.modeswitches) and
+        if not(m_tp_procvar in CurrentSettings.modeswitches) and
            (todef.typ=procvardef) and
            is_methodpointer(tprocvardef(todef)) and
            (fromnode.nodetype=typeconvn) and
@@ -973,7 +973,7 @@ implementation
               tloadnode(fromnode).set_mp(cloadvmtaddrnode.create(ctypenode.create(tdef(tloadnode(fromnode).symtable.defowner))));
             fromnode:=ctypeconvnode.create_proc_to_procvar(fromnode);
             ttypeconvnode(fromnode).totypedef:=todef;
-            typecheckpass(fromnode);
+            TypeCheckPass(fromnode);
             ttypeconvnode(hp).left:=nil;
             hp.free;
             hp := nil;
@@ -986,7 +986,7 @@ implementation
 *****************************************************************************}
 
 
-    constructor ttypeconvnode.create(node : tnode;def:tdef);
+    constructor ttypeconvnode.create(node : TNode;def:tdef);
 
       begin
          inherited create(typeconvn,node);
@@ -1020,7 +1020,7 @@ implementation
       end;
 
 
-    constructor ttypeconvnode.create_explicit(node : tnode;def:tdef);
+    constructor ttypeconvnode.create_explicit(node : TNode;def:tdef);
 
       begin
          self.create(node,def);
@@ -1028,7 +1028,7 @@ implementation
       end;
 
 
-    constructor ttypeconvnode.create_internal(node : tnode;def:tdef);
+    constructor ttypeconvnode.create_internal(node : TNode;def:tdef);
 
       begin
          self.create(node,def);
@@ -1038,7 +1038,7 @@ implementation
       end;
 
 
-    constructor ttypeconvnode.create_proc_to_procvar(node : tnode);
+    constructor ttypeconvnode.create_proc_to_procvar(node : TNode);
 
       begin
          self.create(node,voidtype);
@@ -1046,7 +1046,7 @@ implementation
       end;
 
 
-    constructor ttypeconvnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor ttypeconvnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(totypedefderef);
@@ -1078,7 +1078,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.dogetcopy : tnode;
+    function ttypeconvnode.dogetcopy : TNode;
       var
          n : ttypeconvnode;
       begin
@@ -1139,7 +1139,7 @@ implementation
       end;
 {$endif DEBUG_NODE_XML}
 
-    function ttypeconvnode.typecheck_cord_to_pointer : tnode;
+    function ttypeconvnode.typecheck_cord_to_pointer : TNode;
 
       begin
         result:=nil;
@@ -1158,7 +1158,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_chararray_to_string : tnode;
+    function ttypeconvnode.typecheck_chararray_to_string : TNode;
       var
         chartype : string[8];
         newblock : tblocknode;
@@ -1215,7 +1215,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_string_to_chararray : tnode;
+    function ttypeconvnode.typecheck_string_to_chararray : TNode;
       var
         newblock : tblocknode;
         newstat  : tstatementnode;
@@ -1235,7 +1235,7 @@ implementation
         if (left.nodetype = stringconstn) and
            (tstringconstnode(left).cst_type=cst_conststring) then
            begin
-             if (m_iso in current_settings.modeswitches) and (arrsize<>tstringconstnode(left).len) and
+             if (m_iso in CurrentSettings.modeswitches) and (arrsize<>tstringconstnode(left).len) and
                 is_char(tarraydef(resultdef).elementdef) then
                Message2(type_w_array_size_does_not_match_size_of_constant_string,tostr(tstringconstnode(left).len),tostr(arrsize));
              { if the array of char is large enough we can use the string
@@ -1251,7 +1251,7 @@ implementation
                      left.free;
                      left:=cstringconstnode.createpchar(pchtemp,arrsize,nil);
                      freemem(pchtemp);
-                     typecheckpass(left);
+                     TypeCheckPass(left);
                    end;
                  exit;
                end;
@@ -1283,7 +1283,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_char_to_string : tnode;
+    function ttypeconvnode.typecheck_char_to_string : TNode;
       var
         procname: string[31];
         para : tcallparanode;
@@ -1315,7 +1315,7 @@ implementation
                 begin
                   if (torddef(left.resultdef).ordtype=uwidechar) then
                     begin
-                      if not((current_settings.sourcecodepage=CP_UTF8) or
+                      if not((CurrentSettings.sourcecodepage=CP_UTF8) or
                              ((tstringdef(resultdef).stringtype=st_ansistring) and
                               (tstringdef(resultdef).encoding=CP_UTF8))) then
                         begin
@@ -1410,7 +1410,7 @@ implementation
                { create word(byte(char) shl 8 or 1) for little endian machines}
                { and word(byte(char) or 256) for big endian machines          }
                left := ctypeconvnode.create_internal(left,exprtype);
-               if (target_info.endian = endian_little) then
+               if (TargetInfo.endian = endian_little) then
                  left := caddnode.create(orn,
                    cshlshrnode.create(shln,left,cordconstnode.create(8,exprtype,false)),
                    cordconstnode.create(1,exprtype,false))
@@ -1418,11 +1418,11 @@ implementation
                  left := caddnode.create(orn,left,
                    cordconstnode.create(1 shl 8,exprtype,false));
                left := ctypeconvnode.create_internal(left,u16inttype);
-               typecheckpass(left);
+               TypeCheckPass(left);
              end;
       end;
 
-    function ttypeconvnode.typecheck_string_to_string : tnode;
+    function ttypeconvnode.typecheck_string_to_string : TNode;
       begin
         result:=nil;
         if (left.nodetype=stringconstn) and
@@ -1483,13 +1483,13 @@ implementation
           end
       end;
 
-    function ttypeconvnode.typecheck_char_to_chararray : tnode;
+    function ttypeconvnode.typecheck_char_to_chararray : TNode;
       begin
         result:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_char_to_char : tnode;
+    function ttypeconvnode.typecheck_char_to_char : TNode;
       var
         hp : tordconstnode;
       begin
@@ -1497,12 +1497,12 @@ implementation
          if (left.nodetype=ordconstn) and
             ((torddef(resultdef).ordtype<>uchar) or
              (torddef(left.resultdef).ordtype<>uwidechar) or
-             (current_settings.sourcecodepage<>CP_UTF8))
+             (CurrentSettings.sourcecodepage<>CP_UTF8))
          then
            begin
              if (torddef(resultdef).ordtype=uchar) and
                 (torddef(left.resultdef).ordtype=uwidechar) and
-                (current_settings.sourcecodepage<>CP_UTF8) then
+                (CurrentSettings.sourcecodepage<>CP_UTF8) then
               begin
                 if tordconstnode(left).value.uvalue>127 then
                   Message(type_w_unicode_data_loss);
@@ -1526,7 +1526,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_int_to_int : tnode;
+    function ttypeconvnode.typecheck_int_to_int : TNode;
       var
         v : TConstExprInt;
         n : TNode;
@@ -1604,7 +1604,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_int_to_real : tnode;
+    function ttypeconvnode.typecheck_int_to_real : TNode;
       var
         rv : bestreal;
         n : TNode;
@@ -1665,7 +1665,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_real_to_currency : tnode;
+    function ttypeconvnode.typecheck_real_to_currency : TNode;
       var
         n: TNode;
       begin
@@ -1696,7 +1696,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_real_to_real : tnode;
+    function ttypeconvnode.typecheck_real_to_real : TNode;
       begin
          result:=nil;
          if not(nf_internal in flags) then
@@ -1705,7 +1705,7 @@ implementation
                and (nf_is_currency in left.flags) and is_currency(left.resultdef) then
                begin
                  left:=caddnode.create_internal(slashn,left,crealconstnode.create_currency_scalar(left.resultdef));
-                 typecheckpass(left);
+                 TypeCheckPass(left);
                end
              else
                if (nf_is_currency in flags) and is_currency(resultdef) and
@@ -1713,7 +1713,7 @@ implementation
                  begin
                    left:=caddnode.create_internal(muln,left,crealconstnode.create_currency_scalar(left.resultdef));
                    include(left.flags,nf_is_currency);
-                   typecheckpass(left);
+                   TypeCheckPass(left);
                  end;
              { comp is handled by the fpu but not a floating type point }
              if is_fpucomp(resultdef) and not(is_fpucomp(left.resultdef)) and
@@ -1723,7 +1723,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_cchar_to_pchar : tnode;
+    function ttypeconvnode.typecheck_cchar_to_pchar : TNode;
 
       begin
          result:=nil;
@@ -1739,7 +1739,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_cstring_to_pchar : tnode;
+    function ttypeconvnode.typecheck_cstring_to_pchar : TNode;
 
       begin
          result:=nil;
@@ -1763,7 +1763,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_cstring_to_int : tnode;
+    function ttypeconvnode.typecheck_cstring_to_int : TNode;
       var
         fcc : cardinal;
         pb  : pbyte;
@@ -1771,7 +1771,7 @@ implementation
          result:=nil;
          if left.nodetype<>stringconstn then
            internalerror(200510012);
-         if (m_mac in current_settings.modeswitches) and
+         if (m_mac in CurrentSettings.modeswitches) and
             is_integer(resultdef) and
             (tstringconstnode(left).cst_type=cst_conststring) and
             (tstringconstnode(left).len=4) then
@@ -1785,9 +1785,9 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_arrayconstructor_to_set : tnode;
+    function ttypeconvnode.typecheck_arrayconstructor_to_set : TNode;
       var
-        hp : tnode;
+        hp : TNode;
       begin
         result:=nil;
         if left.nodetype<>arrayconstructorn then
@@ -1819,13 +1819,13 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_set_to_set : tnode;
+    function ttypeconvnode.typecheck_set_to_set : TNode;
       begin
         result:=nil;
         { constant sets can be converted by changing the type only }
         if (left.nodetype=setconstn) then
          begin
-           if (cs_check_range in current_settings.localswitches) and (tsetconstnode(left).elements>0) and ((tsetconstnode(left).low<tsetdef(resultdef).setlow) or (tsetconstnode(left).high>tsetdef(resultdef).setmax)) then
+           if (cs_check_range in CurrentSettings.localswitches) and (tsetconstnode(left).elements>0) and ((tsetconstnode(left).low<tsetdef(resultdef).setlow) or (tsetconstnode(left).high>tsetdef(resultdef).setmax)) then
              Message(parser_e_range_check_error);
 
            left.resultdef:=resultdef;
@@ -1836,7 +1836,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_pchar_to_string : tnode;
+    function ttypeconvnode.typecheck_pchar_to_string : TNode;
       var
         newblock : tblocknode;
         newstat  : tstatementnode;
@@ -1870,7 +1870,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_interface_to_string : tnode;
+    function ttypeconvnode.typecheck_interface_to_string : TNode;
       begin
         if assigned(tobjectdef(left.resultdef).iidstr) then
           begin
@@ -1884,7 +1884,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_interface_to_guid : tnode;
+    function ttypeconvnode.typecheck_interface_to_guid : TNode;
       begin
         if assigned(tobjectdef(left.resultdef).iidguid) then
           begin
@@ -1897,14 +1897,14 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_dynarray_to_openarray : tnode;
+    function ttypeconvnode.typecheck_dynarray_to_openarray : TNode;
       begin
         if (actualtargetnode(@left)^.nodetype in [pointerconstn,niln]) then
           CGMessage(type_e_no_addr_of_constant);
         { a dynamic array is a pointer to an array, so to convert it to }
         { an open array, we have to dereference it (JM)                 }
         result:=ctypeconvnode.create_internal(left,cpointerdef.getreusable(resultdef));
-        typecheckpass(result);
+        TypeCheckPass(result);
         { left is reused }
         left:=nil;
         result:=cderefnode.create(result);
@@ -1912,7 +1912,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_pwchar_to_string : tnode;
+    function ttypeconvnode.typecheck_pwchar_to_string : TNode;
       var
         newblock : tblocknode;
         newstat  : tstatementnode;
@@ -1952,31 +1952,31 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_variant_to_dynarray : tnode;
+    function ttypeconvnode.typecheck_variant_to_dynarray : TNode;
       begin
         result := ccallnode.createinternres(
           'fpc_variant_to_dynarray',
           ccallparanode.create(caddrnode.create_internal(crttinode.create(tstoreddef(resultdef),initrtti,rdt_normal)),
             ccallparanode.create(left,nil)
           ),resultdef);
-        typecheckpass(result);
+        TypeCheckPass(result);
         left:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_dynarray_to_variant : tnode;
+    function ttypeconvnode.typecheck_dynarray_to_variant : TNode;
       begin
         result := ccallnode.createinternres(
           'fpc_dynarray_to_variant',
           ccallparanode.create(caddrnode.create_internal(crttinode.create(tstoreddef(left.resultdef),initrtti,rdt_normal)),
             ccallparanode.create(ctypeconvnode.create_explicit(left,voidpointertype),nil)
           ),resultdef);
-        typecheckpass(result);
+        TypeCheckPass(result);
         left:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_variant_to_interface : tnode;
+    function ttypeconvnode.typecheck_variant_to_interface : TNode;
       begin
         if def_is_related(tobjectdef(resultdef),tobjectdef(search_system_type('IDISPATCH').typedef)) then
           result := ccallnode.createinternres(
@@ -1988,12 +1988,12 @@ implementation
             'fpc_variant_to_interface',
               ccallparanode.create(left,nil)
             ,resultdef);
-        typecheckpass(result);
+        TypeCheckPass(result);
         left:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_interface_to_variant : tnode;
+    function ttypeconvnode.typecheck_interface_to_variant : TNode;
       begin
         if def_is_related(tobjectdef(left.resultdef),tobjectdef(search_system_type('IDISPATCH').typedef)) then
           result := ccallnode.createinternres(
@@ -2005,34 +2005,34 @@ implementation
             'fpc_interface_to_variant',
               ccallparanode.create(left,nil)
             ,resultdef);
-        typecheckpass(result);
+        TypeCheckPass(result);
         left:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_variant_to_enum : tnode;
+    function ttypeconvnode.typecheck_variant_to_enum : TNode;
 
       begin
         result := ctypeconvnode.create_internal(left,sinttype);
         result := ctypeconvnode.create_internal(result,resultdef);
-        typecheckpass(result);
+        TypeCheckPass(result);
         { left is reused }
         left := nil;
       end;
 
 
-    function ttypeconvnode.typecheck_enum_to_variant : tnode;
+    function ttypeconvnode.typecheck_enum_to_variant : TNode;
 
       begin
         result := ctypeconvnode.create_internal(left,sinttype);
         result := ctypeconvnode.create_internal(result,cvarianttype);
-        typecheckpass(result);
+        TypeCheckPass(result);
         { left is reused }
         left := nil;
       end;
 
 
-    function ttypeconvnode.typecheck_array_2_dynarray : tnode;
+    function ttypeconvnode.typecheck_array_2_dynarray : TNode;
       var
         newstatement : tstatementnode;
         temp         : ttempcreatenode;
@@ -2086,19 +2086,19 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_elem_2_openarray : tnode;
+    function ttypeconvnode.typecheck_elem_2_openarray : TNode;
       begin
         result:=nil;
       end;
 
 
-    function ttypeconvnode.typecheck_arrayconstructor_to_dynarray : tnode;
+    function ttypeconvnode.typecheck_arrayconstructor_to_dynarray : TNode;
       var
         newstatement,
         assstatement : tstatementnode;
         arrnode : ttempcreatenode;
         temp2 : ttempcreatenode;
-        assnode : tnode;
+        assnode : TNode;
         paracount : integer;
         elemnode : tarrayconstructornode;
       begin
@@ -2179,13 +2179,13 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_arrayconstructor_to_array : tnode;
+    function ttypeconvnode.typecheck_arrayconstructor_to_array : TNode;
       var
         newstatement,
         assstatement : tstatementnode;
         arrnode : ttempcreatenode;
         temp2 : ttempcreatenode;
-        assnode : tnode;
+        assnode : TNode;
         paracount : integer;
         elemnode : tarrayconstructornode;
       begin
@@ -2237,205 +2237,205 @@ implementation
       end;
 
 
-    function ttypeconvnode._typecheck_int_to_int : tnode;
+    function ttypeconvnode._typecheck_int_to_int : TNode;
       begin
         result := typecheck_int_to_int;
       end;
 
 
-    function ttypeconvnode._typecheck_cord_to_pointer : tnode;
+    function ttypeconvnode._typecheck_cord_to_pointer : TNode;
       begin
         result := typecheck_cord_to_pointer;
       end;
 
 
-    function ttypeconvnode._typecheck_chararray_to_string : tnode;
+    function ttypeconvnode._typecheck_chararray_to_string : TNode;
       begin
         result := typecheck_chararray_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_string_to_chararray : tnode;
+    function ttypeconvnode._typecheck_string_to_chararray : TNode;
       begin
         result := typecheck_string_to_chararray;
       end;
 
 
-    function ttypeconvnode._typecheck_string_to_string: tnode;
+    function ttypeconvnode._typecheck_string_to_string: TNode;
       begin
         result := typecheck_string_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_char_to_string : tnode;
+    function ttypeconvnode._typecheck_char_to_string : TNode;
       begin
         result := typecheck_char_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_char_to_chararray : tnode;
+    function ttypeconvnode._typecheck_char_to_chararray : TNode;
       begin
         result := typecheck_char_to_chararray;
       end;
 
 
-    function ttypeconvnode._typecheck_int_to_real : tnode;
+    function ttypeconvnode._typecheck_int_to_real : TNode;
       begin
         result := typecheck_int_to_real;
       end;
 
 
-    function ttypeconvnode._typecheck_real_to_real : tnode;
+    function ttypeconvnode._typecheck_real_to_real : TNode;
       begin
         result := typecheck_real_to_real;
       end;
 
 
-    function ttypeconvnode._typecheck_real_to_currency : tnode;
+    function ttypeconvnode._typecheck_real_to_currency : TNode;
       begin
         result := typecheck_real_to_currency;
       end;
 
 
-    function ttypeconvnode._typecheck_cchar_to_pchar : tnode;
+    function ttypeconvnode._typecheck_cchar_to_pchar : TNode;
       begin
         result := typecheck_cchar_to_pchar;
       end;
 
 
-    function ttypeconvnode._typecheck_cstring_to_pchar : tnode;
+    function ttypeconvnode._typecheck_cstring_to_pchar : TNode;
       begin
         result := typecheck_cstring_to_pchar;
       end;
 
 
-    function ttypeconvnode._typecheck_cstring_to_int : tnode;
+    function ttypeconvnode._typecheck_cstring_to_int : TNode;
       begin
         result := typecheck_cstring_to_int;
       end;
 
 
-    function ttypeconvnode._typecheck_char_to_char : tnode;
+    function ttypeconvnode._typecheck_char_to_char : TNode;
       begin
         result := typecheck_char_to_char;
       end;
 
 
-    function ttypeconvnode._typecheck_arrayconstructor_to_set : tnode;
+    function ttypeconvnode._typecheck_arrayconstructor_to_set : TNode;
       begin
         result := typecheck_arrayconstructor_to_set;
       end;
 
 
-    function ttypeconvnode._typecheck_set_to_set : tnode;
+    function ttypeconvnode._typecheck_set_to_set : TNode;
       begin
         result := typecheck_set_to_set;
       end;
 
 
-    function ttypeconvnode._typecheck_pchar_to_string : tnode;
+    function ttypeconvnode._typecheck_pchar_to_string : TNode;
       begin
         result := typecheck_pchar_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_interface_to_string : tnode;
+    function ttypeconvnode._typecheck_interface_to_string : TNode;
       begin
         result := typecheck_interface_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_interface_to_guid : tnode;
+    function ttypeconvnode._typecheck_interface_to_guid : TNode;
       begin
         result := typecheck_interface_to_guid;
       end;
 
 
-    function ttypeconvnode._typecheck_dynarray_to_openarray : tnode;
+    function ttypeconvnode._typecheck_dynarray_to_openarray : TNode;
       begin
         result := typecheck_dynarray_to_openarray;
       end;
 
 
-    function ttypeconvnode._typecheck_pwchar_to_string : tnode;
+    function ttypeconvnode._typecheck_pwchar_to_string : TNode;
       begin
         result := typecheck_pwchar_to_string;
       end;
 
 
-    function ttypeconvnode._typecheck_variant_to_dynarray : tnode;
+    function ttypeconvnode._typecheck_variant_to_dynarray : TNode;
       begin
         result := typecheck_variant_to_dynarray;
       end;
 
 
-    function ttypeconvnode._typecheck_dynarray_to_variant : tnode;
+    function ttypeconvnode._typecheck_dynarray_to_variant : TNode;
       begin
         result := typecheck_dynarray_to_variant;
       end;
 
 
-    function ttypeconvnode._typecheck_variant_to_enum : tnode;
+    function ttypeconvnode._typecheck_variant_to_enum : TNode;
       begin
         result := typecheck_variant_to_enum;
       end;
 
 
-    function ttypeconvnode._typecheck_enum_to_variant : tnode;
+    function ttypeconvnode._typecheck_enum_to_variant : TNode;
       begin
         result := typecheck_enum_to_variant;
       end;
 
 
-    function ttypeconvnode._typecheck_proc_to_procvar : tnode;
+    function ttypeconvnode._typecheck_proc_to_procvar : TNode;
       begin
         result := typecheck_proc_to_procvar;
       end;
 
 
-    function ttypeconvnode._typecheck_variant_to_interface : tnode;
+    function ttypeconvnode._typecheck_variant_to_interface : TNode;
       begin
         result := typecheck_variant_to_interface;
       end;
 
 
-    function ttypeconvnode._typecheck_interface_to_variant : tnode;
+    function ttypeconvnode._typecheck_interface_to_variant : TNode;
       begin
         result := typecheck_interface_to_variant;
       end;
 
 
-    function ttypeconvnode._typecheck_array_2_dynarray : tnode;
+    function ttypeconvnode._typecheck_array_2_dynarray : TNode;
       begin
         result := typecheck_array_2_dynarray;
       end;
 
 
-    function ttypeconvnode._typecheck_elem_2_openarray : tnode;
+    function ttypeconvnode._typecheck_elem_2_openarray : TNode;
       begin
         result := typecheck_elem_2_openarray;
       end;
 
 
-    function ttypeconvnode._typecheck_arrayconstructor_to_dynarray : tnode;
+    function ttypeconvnode._typecheck_arrayconstructor_to_dynarray : TNode;
       begin
         result:=typecheck_arrayconstructor_to_dynarray;
       end;
 
 
-    function ttypeconvnode._typecheck_arrayconstructor_to_array : tnode;
+    function ttypeconvnode._typecheck_arrayconstructor_to_array : TNode;
       begin
         result:=typecheck_arrayconstructor_to_array;
       end;
 
 
-    function ttypeconvnode._typecheck_procvar_to_funcref : tnode;
+    function ttypeconvnode._typecheck_procvar_to_funcref : TNode;
       begin
         result:=typecheck_procvar_2_funcref;
       end;
 
 
-    function ttypeconvnode._typecheck_anonproc_to_funcref : tnode;
+    function ttypeconvnode._typecheck_anonproc_to_funcref : TNode;
       begin
         result:=typecheck_anonproc_2_funcref;
       end;
@@ -2467,7 +2467,7 @@ implementation
       psym_mapping = ^tsym_mapping;
 
 
-    function replace_self_sym(var n:tnode;arg:pointer):foreachnoderesult;
+    function replace_self_sym(var n:TNode;arg:pointer):foreachnoderesult;
       var
         mapping : psym_mapping absolute arg;
         ld : tloadnode;
@@ -2486,14 +2486,14 @@ implementation
                     ld.left.free;
                     ld.left:=nil;
                   end;
-                typecheckpass(n);
+                TypeCheckPass(n);
               end;
           end;
         result:=fen_true;
       end;
 
 
-    function ttypeconvnode.typecheck_proc_to_procvar : tnode;
+    function ttypeconvnode.typecheck_proc_to_procvar : TNode;
 
       function is_self_sym(sym:tsym):boolean;
         begin
@@ -2504,7 +2504,7 @@ implementation
       var
         pd : tabstractprocdef;
         copytype : tproccopytyp;
-        source: pnode;
+        source: PNode;
         fpsym,
         selfsym,
         sym : tsym;
@@ -2618,7 +2618,7 @@ implementation
                               { we can't use the captured symbol for the struct as that
                                 might be the self of a type helper, thus we need to find
                                 the parent procinfo that provides the Self }
-                              tprocdef(pd).struct:=current_procinfo.get_normal_proc.procdef.struct;
+                              tprocdef(pd).struct:=CurrentProcInfo.get_normal_proc.procdef.struct;
                             if not assigned(tprocdef(pd).struct) then
                               internalerror(2021062204);
 
@@ -2644,7 +2644,7 @@ implementation
 
                             { the anonymous function can only be a direct child of the
                               current_procinfo }
-                            pi:=current_procinfo.get_first_nestedproc;
+                            pi:=CurrentProcInfo.get_first_nestedproc;
                             while assigned(pi) do
                               begin
                                 if pi.procdef=pd then
@@ -2716,9 +2716,9 @@ implementation
                         (left.nodetype=loadn) then
                       begin
                         tloadnode(left).left:=cloadparentfpnode.create(tprocdef(tloadnode(left).symtable.defowner),lpf_forload);
-                        typecheckpass(tloadnode(left).left);
+                        TypeCheckPass(tloadnode(left).left);
 
-                        pi:=current_procinfo.get_first_nestedproc;
+                        pi:=CurrentProcInfo.get_first_nestedproc;
                         while assigned(pi) do
                           begin
                             if pi.procdef=pd then
@@ -2739,7 +2739,7 @@ implementation
              a methodpointer. }
            if (left.nodetype=loadn) and
               not assigned(tloadnode(left).left) and
-              (not(m_nested_procvars in current_settings.modeswitches) or
+              (not(m_nested_procvars in CurrentSettings.modeswitches) or
                not is_nested_pd(tabstractprocdef(tloadnode(left).resultdef))) then
              copytype:=pc_address_only
            else
@@ -2749,16 +2749,16 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_procvar_2_funcref : tnode;
+    function ttypeconvnode.typecheck_procvar_2_funcref : TNode;
       var
         capturer : tsym;
         intfdef : tdef;
-        ld,blck,hp : tnode;
+        ld,blck,hp : TNode;
         stmt : tstatementnode;
       begin
         result:=nil;
 
-        if not(m_tp_procvar in current_settings.modeswitches) and
+        if not(m_tp_procvar in CurrentSettings.modeswitches) and
            is_invokable(resultdef) and
            (left.nodetype=typeconvn) and
            (ttypeconvnode(left).convtype=tc_proc_2_procvar) and
@@ -2774,13 +2774,13 @@ implementation
               tloadnode(left).set_mp(cloadvmtaddrnode.create(ctypenode.create(tdef(tloadnode(left).symtable.defowner))));
             left:=ctypeconvnode.create_proc_to_procvar(left);
             ttypeconvnode(left).totypedef:=resultdef;
-            typecheckpass(left);
+            TypeCheckPass(left);
             ttypeconvnode(hp).left:=nil;
             hp.free;
             hp := nil;
           end;
 
-        intfdef:=capturer_add_procvar_or_proc(current_procinfo,left,capturer,hp);
+        intfdef:=capturer_add_procvar_or_proc(CurrentProcInfo,left,capturer,hp);
         if assigned(intfdef) then
           begin
             if assigned(capturer) then
@@ -2806,13 +2806,13 @@ implementation
       end;
 
 
-    function ttypeconvnode.typecheck_anonproc_2_funcref : tnode;
+    function ttypeconvnode.typecheck_anonproc_2_funcref : TNode;
       var
         capturer : tsym;
         intfdef : tdef;
-        ldnode : tnode;
+        ldnode : TNode;
       begin
-        intfdef:=capturer_add_anonymous_proc(current_procinfo,tprocdef(left.resultdef),capturer);
+        intfdef:=capturer_add_anonymous_proc(CurrentProcInfo,tprocdef(left.resultdef),capturer);
         if assigned(intfdef) then
           begin
             if assigned(capturer) then
@@ -2837,10 +2837,10 @@ implementation
       var
         stmt : tstatementnode;
         resulttemp : ttempcreatenode;
-        valuenode,onnode : tnode;
+        valuenode,onnode : TNode;
         i : longint;
 
-        procedure assign_to_temp(var n : tnode);
+        procedure assign_to_temp(var n : TNode);
           begin
             if assigned(n) then
               n:=cassignmentnode.create(ctemprefnode.create(resulttemp),n);
@@ -2899,10 +2899,10 @@ implementation
             stmt:=tstatementnode(stmt.right);
           end;
 
-        typecheckpass(left);
+        TypeCheckPass(left);
       end;
 
-    function ttypeconvnode.typecheck_call_helper(c : tconverttype) : tnode;
+    function ttypeconvnode.typecheck_call_helper(c : tconverttype) : TNode;
       const
          resultdefconvert : array[tconverttype] of pointer = (
           {none} nil,
@@ -2952,7 +2952,7 @@ implementation
           { procvar_2_funcref } @ttypeconvnode._typecheck_procvar_to_funcref
          );
       type
-         tprocedureofobject = function : tnode of object;
+         tprocedureofobject = function : TNode of object;
       var
          r : TMethod;
       begin
@@ -2966,15 +2966,15 @@ implementation
       end;
 
 
-    function ttypeconvnode.pass_typecheck:tnode;
+    function ttypeconvnode.pass_typecheck:TNode;
       var
         hdef : tdef;
-        hp : tnode;
+        hp : TNode;
         currprocdef : tabstractprocdef;
         aprocdef : tprocdef;
         eq : tequaltype;
         cdoptions : tcompare_defs_options;
-        selfnode : tnode;
+        selfnode : TNode;
         newblock: tblocknode;
         newstatement: tstatementnode;
         tempnode: ttempcreatenode;
@@ -2982,15 +2982,15 @@ implementation
         result:=nil;
         resultdef:=totypedef;
 
-        typecheckpass(left);
-        if codegenerror then
+        TypeCheckPass(left);
+        if CodeGenError then
           exit;
 
         if is_deferred_stmt_expr(left) and
             ((resultdef.typ=procvardef) or is_funcref(resultdef)) then
           begin
             convert_deferred_stmt_expr;
-            if codegenerror then
+            if CodeGenError then
               exit;
           end;
 
@@ -3091,7 +3091,7 @@ implementation
 
               te_convert_operator :
                 begin
-                  include(current_procinfo.flags,pi_do_call);
+                  include(CurrentProcInfo.flags,pi_do_call);
                   addsymref(aprocdef.procsym,aprocdef);
                   hp:=ccallnode.create(ccallparanode.create(left,nil),Tprocsym(aprocdef.procsym),nil,nil,[],nil);
                   { tell explicitly which def we must use !! (PM) }
@@ -3110,7 +3110,7 @@ implementation
                      is_array_constructor(left.resultdef) then
                     begin
                       arrayconstructor_to_set(left);
-                      typecheckpass(left);
+                      TypeCheckPass(left);
                     end;
 
                   { Procedures have a resultdef of voiddef and functions of their
@@ -3124,8 +3124,8 @@ implementation
                        is_invokable(resultdef)
                      ) and
                      (
-                      (m_tp_procvar in current_settings.modeswitches) or
-                      (m_mac_procvar in current_settings.modeswitches)
+                      (m_tp_procvar in CurrentSettings.modeswitches) or
+                      (m_mac_procvar in CurrentSettings.modeswitches)
                      ) then
                    begin
                      if assigned(tcallnode(left).right) then
@@ -3163,7 +3163,7 @@ implementation
                            else
                              tloadnode(hp).set_mp(load_self_node);
                          end;
-                        typecheckpass(hp);
+                        TypeCheckPass(hp);
                       end;
                      left.free;
                      left:=hp;
@@ -3251,7 +3251,7 @@ implementation
                          { Add runtime check? }
                          if not is_objc_class_or_protocol(resultdef) and
                             not is_objc_class_or_protocol(left.resultdef) and
-                            (cs_check_object in current_settings.localswitches) and
+                            (cs_check_object in CurrentSettings.localswitches) and
                             not(nf_internal in flags) then
                            begin
                              { we can translate the typeconvnode to 'as' when
@@ -3384,7 +3384,7 @@ implementation
 
       We do this on 64 bit CPUs as well, they benefit from it as well }
 
-    function checkremovebiginttypeconvs(n: tnode; out gotsint: boolean;validints : tordtypeset;const l,h : Tconstexprint): boolean;
+    function checkremovebiginttypeconvs(n: TNode; out gotsint: boolean;validints : tordtypeset;const l,h : Tconstexprint): boolean;
       var
         gotminus1,
         gotsigned,
@@ -3393,7 +3393,7 @@ implementation
 
       { checks whether a node has an accepted resultdef, or originally
         had one but was implicitly converted to s64bit                 }
-      function wasoriginallysmallerint(n: tnode): boolean;
+      function wasoriginallysmallerint(n: TNode): boolean;
         begin
           if (n.resultdef.typ<>orddef) then
             exit(false);
@@ -3440,7 +3440,7 @@ implementation
         end;
 
 
-      function docheckremoveinttypeconvs(n: tnode): boolean;
+      function docheckremoveinttypeconvs(n: TNode): boolean;
         begin
           if wasoriginallysmallerint(n) then
             exit(true);
@@ -3451,28 +3451,28 @@ implementation
                 if n.nodetype=subn then
                   gotsint:=true;
                 result:=
-                  docheckremoveinttypeconvs(tbinarynode(n).left) and
-                  docheckremoveinttypeconvs(tbinarynode(n).right);
+                  docheckremoveinttypeconvs(TBinaryNode(n).left) and
+                  docheckremoveinttypeconvs(TBinaryNode(n).right);
               end;
             unaryminusn:
               begin
                 gotsint:=true;
-                result:=docheckremoveinttypeconvs(tunarynode(n).left);
+                result:=docheckremoveinttypeconvs(TUnaryNode(n).left);
               end;
             shrn:
               begin
-                result:=wasoriginallysmallerint(tbinarynode(n).left) and
-                  docheckremoveinttypeconvs(tbinarynode(n).right);
+                result:=wasoriginallysmallerint(TBinaryNode(n).left) and
+                  docheckremoveinttypeconvs(TBinaryNode(n).right);
               end;
             notn:
-              result:=docheckremoveinttypeconvs(tunarynode(n).left);
+              result:=docheckremoveinttypeconvs(TUnaryNode(n).left);
             addn,muln,divn,modn,andn,shln:
               begin
                 if n.nodetype in [divn,modn] then
                   gotdivmod:=true;
                 result:=
-                  (docheckremoveinttypeconvs(tbinarynode(n).left) and
-                   docheckremoveinttypeconvs(tbinarynode(n).right) and
+                  (docheckremoveinttypeconvs(TBinaryNode(n).left) and
+                   docheckremoveinttypeconvs(TBinaryNode(n).right) and
 
                    (not(n.nodetype in [modn,divn]) or (not(gotminus1)))
                   ) or
@@ -3481,8 +3481,8 @@ implementation
                     (
                       { Right node is more likely to be a constant, so check
                         this one first }
-                      wasoriginallysmallerint(tbinarynode(n).right) or
-                      wasoriginallysmallerint(tbinarynode(n).left)
+                      wasoriginallysmallerint(TBinaryNode(n).right) or
+                      wasoriginallysmallerint(TBinaryNode(n).left)
                     )
                   );
               end;
@@ -3504,7 +3504,7 @@ implementation
 
 
     { remove int type conversions and set the result to the given type }
-    procedure doremoveinttypeconvs(level : dword;var n: tnode; todef: tdef; forceunsigned: boolean; signedtype,unsignedtype : tdef);
+    procedure doremoveinttypeconvs(level : dword;var n: TNode; todef: tdef; forceunsigned: boolean; signedtype,unsignedtype : tdef);
 
       function SmallerOrSigned(def: tdef): Boolean;
         begin
@@ -3518,7 +3518,7 @@ implementation
       var
         newblock: tblocknode;
         newstatements: tstatementnode;
-        originaldivtree: tnode;
+        originaldivtree: TNode;
         tempnode: ttempcreatenode;
         NeedMinus1Check: Boolean;
       begin
@@ -3554,17 +3554,17 @@ implementation
 
                       { If the operand size is equal or smaller, the -1 check isn't necessary }
                       if (
-                          SmallerOrSigned(tbinarynode(n).left.resultdef) or
+                          SmallerOrSigned(TBinaryNode(n).left.resultdef) or
                           (
-                            (tbinarynode(n).left.nodetype = typeconvn) and
-                            SmallerOrSigned(ttypeconvnode(tbinarynode(n).left).left.resultdef)
+                            (TBinaryNode(n).left.nodetype = typeconvn) and
+                            SmallerOrSigned(ttypeconvnode(TBinaryNode(n).left).left.resultdef)
                           )
                         ) and
                         (
-                          SmallerOrSigned(tbinarynode(n).right.resultdef) or
+                          SmallerOrSigned(TBinaryNode(n).right.resultdef) or
                           (
-                            (tbinarynode(n).right.nodetype = typeconvn) and
-                            SmallerOrSigned(ttypeconvnode(tbinarynode(n).right).left.resultdef)
+                            (TBinaryNode(n).right.nodetype = typeconvn) and
+                            SmallerOrSigned(ttypeconvnode(TBinaryNode(n).right).left.resultdef)
                           )
                         ) then
                         NeedMinus1Check := False;
@@ -3574,8 +3574,8 @@ implementation
                   if NeedMinus1Check then
                     originaldivtree:=n.getcopy;
 
-                  doremoveinttypeconvs(level+1,tbinarynode(n).left,signedtype,false,signedtype,unsignedtype);
-                  doremoveinttypeconvs(level+1,tbinarynode(n).right,signedtype,false,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TBinaryNode(n).left,signedtype,false,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TBinaryNode(n).right,signedtype,false,signedtype,unsignedtype);
                   n.resultdef:=signedtype;
 
                   if NeedMinus1Check then
@@ -3584,10 +3584,10 @@ implementation
                       tempnode:=ctempcreatenode.create(n.resultdef,n.resultdef.size,tt_persistent,true);
                       addstatement(newstatements,tempnode);
                       addstatement(newstatements,cifnode.create_internal(
-                        caddnode.create_internal(equaln,tbinarynode(n).right.getcopy,cordconstnode.create(-1,n.resultdef,false)),
+                        caddnode.create_internal(equaln,TBinaryNode(n).right.getcopy,cordconstnode.create(-1,n.resultdef,false)),
                           cassignmentnode.create_internal(
                             ctemprefnode.create(tempnode),
-                            cmoddivnode.create(n.nodetype,tbinarynode(originaldivtree).left.getcopy,cordconstnode.create(-1,tbinarynode(originaldivtree).right.resultdef,false))
+                            cmoddivnode.create(n.nodetype,TBinaryNode(originaldivtree).left.getcopy,cordconstnode.create(-1,TBinaryNode(originaldivtree).right.resultdef,false))
                           ),
                           cassignmentnode.create_internal(
                             ctemprefnode.create(tempnode),n
@@ -3597,15 +3597,15 @@ implementation
                       addstatement(newstatements,ctempdeletenode.create_normal_temp(tempnode));
                       addstatement(newstatements,ctemprefnode.create(tempnode));
                       n:=newblock;
-                      do_typecheckpass(n);
+                      DoTypeCheckPass(n);
                       originaldivtree.free;
                       originaldivtree := nil;
                     end;
                 end
               else
                 begin
-                  doremoveinttypeconvs(level+1,tbinarynode(n).left,unsignedtype,forceunsigned,signedtype,unsignedtype);
-                  doremoveinttypeconvs(level+1,tbinarynode(n).right,unsignedtype,forceunsigned,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TBinaryNode(n).left,unsignedtype,forceunsigned,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TBinaryNode(n).right,unsignedtype,forceunsigned,signedtype,unsignedtype);
                   n.resultdef:=unsignedtype;
                 end;
               //if ((n.nodetype=andn) and (tbinarynode(n).left.nodetype=ordconstn) and
@@ -3622,12 +3622,12 @@ implementation
               if not forceunsigned and
                  is_signed(n.resultdef) then
                 begin
-                  doremoveinttypeconvs(level+1,tunarynode(n).left,signedtype,false,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TUnaryNode(n).left,signedtype,false,signedtype,unsignedtype);
                   n.resultdef:=signedtype;
                 end
               else
                 begin
-                  doremoveinttypeconvs(level+1,tunarynode(n).left,unsignedtype,forceunsigned,signedtype,unsignedtype);
+                  doremoveinttypeconvs(level+1,TUnaryNode(n).left,unsignedtype,forceunsigned,signedtype,unsignedtype);
                   n.resultdef:=unsignedtype;
                 end;
             end;
@@ -3638,7 +3638,7 @@ implementation
                 from 64 bit to a 64 bit, and now becomes 64 bit to 32 bit }
               n.resultdef:=nil;
               ttypeconvnode(n).convtype:=tc_none;
-              typecheckpass(n);
+              TypeCheckPass(n);
             end;
           else
             inserttypeconv_internal(n,todef);
@@ -3667,9 +3667,9 @@ implementation
         end;
       end;
 
-    function ttypeconvnode.simplify(forinline : boolean): tnode;
+    function ttypeconvnode.simplify(forinline : boolean): TNode;
       var
-        hp: tnode;
+        hp: TNode;
         v: Tconstexprint;
         f: bestreal;
 {$ifndef CPUNO32BITOPS}
@@ -3822,7 +3822,7 @@ implementation
                    else
                      begin
                        { for constant values on absolute variables, swapping is required }
-                       if (target_info.endian = endian_big) and (nf_absolute in flags) then
+                       if (TargetInfo.endian = endian_big) and (nf_absolute in flags) then
                          swap_const_value(tordconstnode(left).value,tordconstnode(left).resultdef.size);
                        if not(nf_generic_para in flags) then
                           adaptrange(
@@ -3833,7 +3833,7 @@ implementation
                             nf_explicit in flags,
                             cs_check_range in localswitches);
                        { swap value back, but according to new type }
-                       if (target_info.endian = endian_big) and (nf_absolute in flags) then
+                       if (TargetInfo.endian = endian_big) and (nf_absolute in flags) then
                          swap_const_value(tordconstnode(left).value,resultdef.size);
 
                        { cut off the new value? }
@@ -3978,7 +3978,7 @@ implementation
           left.mark_write;
       end;
 
-    function ttypeconvnode.first_cord_to_pointer : tnode;
+    function ttypeconvnode.first_cord_to_pointer : TNode;
 
       begin
         result:=nil;
@@ -3986,7 +3986,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_int_to_int : tnode;
+    function ttypeconvnode.first_int_to_int : TNode;
 
       begin
         first_int_to_int:=nil;
@@ -4005,7 +4005,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_cstring_to_pchar : tnode;
+    function ttypeconvnode.first_cstring_to_pchar : TNode;
 
       begin
          result:=nil;
@@ -4013,7 +4013,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_cstring_to_int : tnode;
+    function ttypeconvnode.first_cstring_to_int : TNode;
 
       begin
         result:=nil;
@@ -4021,7 +4021,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_string_to_chararray : tnode;
+    function ttypeconvnode.first_string_to_chararray : TNode;
 
       begin
          first_string_to_chararray:=nil;
@@ -4029,17 +4029,17 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_char_to_string : tnode;
+    function ttypeconvnode.first_char_to_string : TNode;
 
       begin
          first_char_to_string:=nil;
          if tstringdef(resultdef).stringtype=st_shortstring then
-           inc(current_procinfo.estimatedtempsize,256);
+           inc(CurrentProcInfo.estimatedtempsize,256);
          expectloc:=LOC_REFERENCE;
       end;
 
 
-    function ttypeconvnode.first_char_to_chararray : tnode;
+    function ttypeconvnode.first_char_to_chararray : TNode;
 
       begin
         if resultdef.size <> 1 then
@@ -4055,13 +4055,13 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_nothing : tnode;
+    function ttypeconvnode.first_nothing : TNode;
       begin
          first_nothing:=nil;
       end;
 
 
-    function ttypeconvnode.first_array_to_pointer : tnode;
+    function ttypeconvnode.first_array_to_pointer : TNode;
 
       begin
          first_array_to_pointer:=nil;
@@ -4070,7 +4070,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_int_to_real: tnode;
+    function ttypeconvnode.first_int_to_real: TNode;
       var
         fname: string[32];
       begin
@@ -4096,7 +4096,7 @@ implementation
                   fname:='int32_to_'
                 else
                   fname:='int64_to_';
-                firstpass(left);
+                FirstPass(left);
               end;
             if tfloatdef(resultdef).floattype=s64real then
               fname:=fname+'float64'
@@ -4105,13 +4105,13 @@ implementation
             result:=ctypeconvnode.create_internal(ccallnode.createintern(fname,ccallparanode.create(
               left,nil)),resultdef);
             left:=nil;
-            firstpass(result);
+            FirstPass(result);
             exit;
           end;
       end;
 
 
-    function ttypeconvnode.first_real_to_real : tnode;
+    function ttypeconvnode.first_real_to_real : TNode;
       begin
         first_real_to_real:=nil;
         if not use_vectorfpu(resultdef) then
@@ -4121,7 +4121,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_pointer_to_array : tnode;
+    function ttypeconvnode.first_pointer_to_array : TNode;
 
       begin
          first_pointer_to_array:=nil;
@@ -4129,7 +4129,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_cchar_to_pchar : tnode;
+    function ttypeconvnode.first_cchar_to_pchar : TNode;
 
       begin
          first_cchar_to_pchar:=nil;
@@ -4137,7 +4137,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_bool_to_int : tnode;
+    function ttypeconvnode.first_bool_to_int : TNode;
 
       begin
          first_bool_to_int:=nil;
@@ -4154,7 +4154,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_int_to_bool : tnode;
+    function ttypeconvnode.first_int_to_bool : TNode;
 
       begin
          first_int_to_bool:=nil;
@@ -4180,14 +4180,14 @@ implementation
             and is_cbool(resultdef) then
            begin
              left:=ctypeconvnode.create_internal(left,s32inttype);
-             firstpass(left);
+             FirstPass(left);
              exit;
            end;
          expectloc:=LOC_REGISTER;
       end;
 
 
-    function ttypeconvnode.first_bool_to_bool : tnode;
+    function ttypeconvnode.first_bool_to_bool : TNode;
       begin
          first_bool_to_bool:=nil;
          if (left.expectloc in [LOC_FLAGS,LOC_JUMP]) and
@@ -4203,7 +4203,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_char_to_char : tnode;
+    function ttypeconvnode.first_char_to_char : TNode;
       var
         fname: string[18];
       begin
@@ -4218,11 +4218,11 @@ implementation
 
         result := ccallnode.createintern(fname,ccallparanode.create(left,nil));
         left:=nil;
-        firstpass(result);
+        FirstPass(result);
       end;
 
 
-    function ttypeconvnode.first_proc_to_procvar : tnode;
+    function ttypeconvnode.first_proc_to_procvar : TNode;
       begin
          first_proc_to_procvar:=nil;
          { if we take the address of a nested function, the current function/
@@ -4233,7 +4233,7 @@ implementation
               not (po_anonymous in tprocdef(left.resultdef).procoptions) or
               (po_delphi_nested_cc in tprocvardef(resultdef).procoptions)
             ) then
-           include(current_procinfo.flags,pi_needs_stackframe);
+           include(CurrentProcInfo.flags,pi_needs_stackframe);
          if tabstractprocdef(resultdef).is_addressonly then
            expectloc:=LOC_REGISTER
          else
@@ -4241,14 +4241,14 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_nil_to_methodprocvar : tnode;
+    function ttypeconvnode.first_nil_to_methodprocvar : TNode;
       begin
         first_nil_to_methodprocvar:=nil;
         expectloc:=LOC_REGISTER;
       end;
 
 
-    function ttypeconvnode.first_set_to_set : tnode;
+    function ttypeconvnode.first_set_to_set : TNode;
       var
         newstatement : tstatementnode;
         temp         : ttempcreatenode;
@@ -4299,7 +4299,7 @@ implementation
                 addstatement(newstatement,ctempdeletenode.create_normal_temp(temp));
                 addstatement(newstatement,ctemprefnode.create(temp));
                 left:=result;
-                firstpass(left);
+                FirstPass(left);
                 { recreate the result's internalstatements list }
                 result:=internalstatements(newstatement);
               end;
@@ -4322,21 +4322,21 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_ansistring_to_pchar : tnode;
+    function ttypeconvnode.first_ansistring_to_pchar : TNode;
       begin
          first_ansistring_to_pchar:=nil;
          expectloc:=LOC_REGISTER;
       end;
 
 
-    function ttypeconvnode.first_arrayconstructor_to_set : tnode;
+    function ttypeconvnode.first_arrayconstructor_to_set : TNode;
       begin
         first_arrayconstructor_to_set:=nil;
         internalerror(200104022);
       end;
 
 
-    function ttypeconvnode.first_class_to_intf : tnode;
+    function ttypeconvnode.first_class_to_intf : TNode;
       var
         hd : tobjectdef;
         ImplIntf : TImplementedInterface;
@@ -4399,7 +4399,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.first_string_to_string : tnode;
+    function ttypeconvnode.first_string_to_string : TNode;
       var
         procname: string[31];
         newblock : tblocknode;
@@ -4434,127 +4434,127 @@ implementation
       end;
 
 
-    function ttypeconvnode._first_int_to_int : tnode;
+    function ttypeconvnode._first_int_to_int : TNode;
       begin
          result:=first_int_to_int;
       end;
 
-    function ttypeconvnode._first_cstring_to_pchar : tnode;
+    function ttypeconvnode._first_cstring_to_pchar : TNode;
       begin
          result:=first_cstring_to_pchar;
       end;
 
-    function ttypeconvnode._first_cstring_to_int : tnode;
+    function ttypeconvnode._first_cstring_to_int : TNode;
       begin
          result:=first_cstring_to_int;
       end;
 
-    function ttypeconvnode._first_string_to_chararray : tnode;
+    function ttypeconvnode._first_string_to_chararray : TNode;
       begin
          result:=first_string_to_chararray;
       end;
 
-    function ttypeconvnode._first_char_to_string : tnode;
+    function ttypeconvnode._first_char_to_string : TNode;
       begin
          result:=first_char_to_string;
       end;
 
-    function ttypeconvnode._first_char_to_chararray: tnode;
+    function ttypeconvnode._first_char_to_chararray: TNode;
       begin
         result:=first_char_to_chararray;
       end;
 
-    function ttypeconvnode._first_nothing : tnode;
+    function ttypeconvnode._first_nothing : TNode;
       begin
          result:=first_nothing;
       end;
 
-    function ttypeconvnode._first_array_to_pointer : tnode;
+    function ttypeconvnode._first_array_to_pointer : TNode;
       begin
          result:=first_array_to_pointer;
       end;
 
-    function ttypeconvnode._first_int_to_real : tnode;
+    function ttypeconvnode._first_int_to_real : TNode;
       begin
          result:=first_int_to_real;
       end;
 
-    function ttypeconvnode._first_real_to_real : tnode;
+    function ttypeconvnode._first_real_to_real : TNode;
       begin
          result:=first_real_to_real;
       end;
 
-    function ttypeconvnode._first_pointer_to_array : tnode;
+    function ttypeconvnode._first_pointer_to_array : TNode;
       begin
          result:=first_pointer_to_array;
       end;
 
-    function ttypeconvnode._first_cchar_to_pchar : tnode;
+    function ttypeconvnode._first_cchar_to_pchar : TNode;
       begin
          result:=first_cchar_to_pchar;
       end;
 
-    function ttypeconvnode._first_bool_to_int : tnode;
+    function ttypeconvnode._first_bool_to_int : TNode;
       begin
          result:=first_bool_to_int;
       end;
 
-    function ttypeconvnode._first_int_to_bool : tnode;
+    function ttypeconvnode._first_int_to_bool : TNode;
       begin
          result:=first_int_to_bool;
       end;
 
-    function ttypeconvnode._first_bool_to_bool : tnode;
+    function ttypeconvnode._first_bool_to_bool : TNode;
       begin
          result:=first_bool_to_bool;
       end;
 
-    function ttypeconvnode._first_proc_to_procvar : tnode;
+    function ttypeconvnode._first_proc_to_procvar : TNode;
       begin
          result:=first_proc_to_procvar;
       end;
 
-    function ttypeconvnode._first_nil_to_methodprocvar : tnode;
+    function ttypeconvnode._first_nil_to_methodprocvar : TNode;
       begin
          result:=first_nil_to_methodprocvar;
       end;
 
-    function ttypeconvnode._first_set_to_set : tnode;
+    function ttypeconvnode._first_set_to_set : TNode;
       begin
          result:=first_set_to_set;
       end;
 
-    function ttypeconvnode._first_cord_to_pointer : tnode;
+    function ttypeconvnode._first_cord_to_pointer : TNode;
       begin
          result:=first_cord_to_pointer;
       end;
 
-    function ttypeconvnode._first_ansistring_to_pchar : tnode;
+    function ttypeconvnode._first_ansistring_to_pchar : TNode;
       begin
          result:=first_ansistring_to_pchar;
       end;
 
-    function ttypeconvnode._first_arrayconstructor_to_set : tnode;
+    function ttypeconvnode._first_arrayconstructor_to_set : TNode;
       begin
          result:=first_arrayconstructor_to_set;
       end;
 
-    function ttypeconvnode._first_class_to_intf : tnode;
+    function ttypeconvnode._first_class_to_intf : TNode;
       begin
          result:=first_class_to_intf;
       end;
 
-    function ttypeconvnode._first_char_to_char : tnode;
+    function ttypeconvnode._first_char_to_char : TNode;
       begin
          result:=first_char_to_char;
       end;
 
-    function ttypeconvnode._first_string_to_string : tnode;
+    function ttypeconvnode._first_string_to_string : TNode;
       begin
         result:=first_string_to_string;
       end;
 
-    function ttypeconvnode.first_call_helper(c : tconverttype) : tnode;
+    function ttypeconvnode.first_call_helper(c : tconverttype) : TNode;
 
       const
          firstconvert : array[tconverttype] of pointer = (
@@ -4605,7 +4605,7 @@ implementation
            nil
          );
       type
-         tprocedureofobject = function : tnode of object;
+         tprocedureofobject = function : TNode of object;
       var
          r : TMethod;
       begin
@@ -4619,13 +4619,13 @@ implementation
       end;
 
 
-    function ttypeconvnode.pass_1 : tnode;
+    function ttypeconvnode.pass_1 : TNode;
       begin
         if warn_pointer_to_signed then
           cgmessage(type_w_pointer_to_signed);
         result:=nil;
-        firstpass(left);
-        if codegenerror then
+        FirstPass(left);
+        if CodeGenError then
          exit;
         expectloc:=left.expectloc;
 
@@ -4691,7 +4691,7 @@ implementation
       end;
 
 
-    function ttypeconvnode.docompare(p: tnode) : boolean;
+    function ttypeconvnode.docompare(p: TNode) : boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -4910,18 +4910,18 @@ implementation
       end;
 
 
-    function tasisnode.pass_typecheck: tnode;
+    function tasisnode.pass_typecheck: TNode;
       var
-        hp : tnode;
+        hp : TNode;
       begin
         result:=nil;
-        typecheckpass(right);
-        typecheckpass(left);
+        TypeCheckPass(right);
+        TypeCheckPass(left);
 
         set_varstate(right,vs_read,[vsf_must_be_valid]);
         set_varstate(left,vs_read,[vsf_must_be_valid]);
 
-        if codegenerror then
+        if CodeGenError then
           exit;
 
         if target_specific_typecheck then
@@ -5015,7 +5015,7 @@ implementation
                         else
                           internalerror(201006132);
                       end;
-                    typecheckpass(right);
+                    TypeCheckPass(right);
                   end;
               end;
           end
@@ -5027,14 +5027,14 @@ implementation
                                 TISNODE
 *****************************************************************************}
 
-    constructor tisnode.create(l,r : tnode);
+    constructor tisnode.create(l,r : TNode);
 
       begin
          inherited create(isn,l,r);
       end;
 
 
-    constructor tisnode.create_internal(l, r: tnode);
+    constructor tisnode.create_internal(l, r: TNode);
 
       begin
         create(l,r);
@@ -5042,7 +5042,7 @@ implementation
       end;
 
 
-    function tisnode.pass_1 : tnode;
+    function tisnode.pass_1 : TNode;
       var
         procname: string;
         statement : tstatementnode;
@@ -5110,7 +5110,7 @@ implementation
         left := nil;
         right := nil;
         //firstpass(call);
-        if codegenerror then
+        if CodeGenError then
           exit;
       end;
 
@@ -5125,7 +5125,7 @@ implementation
                                 TASNODE
 *****************************************************************************}
 
-    constructor tasnode.create(l,r : tnode);
+    constructor tasnode.create(l,r : TNode);
 
       begin
          inherited create(asn,l,r);
@@ -5133,7 +5133,7 @@ implementation
       end;
 
 
-    constructor tasnode.create_internal(l,r : tnode);
+    constructor tasnode.create_internal(l,r : TNode);
 
       begin
         create(l,r);
@@ -5150,7 +5150,7 @@ implementation
       end;
 
 
-    function tasnode.dogetcopy: tnode;
+    function tasnode.dogetcopy: TNode;
       begin
         result := inherited dogetcopy;
         if assigned(call) then
@@ -5160,7 +5160,7 @@ implementation
       end;
 
 
-    function tasnode.docompare(p: tnode): boolean;
+    function tasnode.docompare(p: TNode): boolean;
       begin
         result:=
           inherited docompare(p) and
@@ -5168,7 +5168,7 @@ implementation
       end;
 
 
-    function tasnode.pass_1 : tnode;
+    function tasnode.pass_1 : TNode;
       var
         procname: string;
       begin
@@ -5206,8 +5206,8 @@ implementation
               end;
             left := nil;
             right := nil;
-            firstpass(call);
-            if codegenerror then
+            FirstPass(call);
+            if CodeGenError then
               exit;
            expectloc:=call.expectloc;
          end;

@@ -261,15 +261,15 @@ implementation
 
     function create_smartlink_sections:boolean;inline;
       begin
-        result:=(af_smartlink_sections in target_asm.flags) and
-                (tf_smartlink_sections in target_info.flags);
+        result:=(af_smartlink_sections in TargetAsm.flags) and
+                (tf_smartlink_sections in TargetInfo.flags);
       end;
 
 
     function create_smartlink_library:boolean;inline;
       begin
-        result:=(cs_Create_smart in current_settings.moduleswitches) and
-                (tf_smartlink_library in target_info.flags) and
+        result:=(cs_Create_smart in CurrentSettings.moduleswitches) and
+                (tf_smartlink_library in TargetInfo.flags) and
                 not create_smartlink_sections;
       end;
 
@@ -277,12 +277,12 @@ implementation
     function create_smartlink:boolean;inline;
       begin
         result:=(
-                 (af_smartlink_sections in target_asm.flags) and
-                 (tf_smartlink_sections in target_info.flags)
+                 (af_smartlink_sections in TargetAsm.flags) and
+                 (tf_smartlink_sections in TargetInfo.flags)
                 ) or
                 (
-                 (cs_Create_smart in current_settings.moduleswitches) and
-                 (tf_smartlink_library in target_info.flags)
+                 (cs_Create_smart in CurrentSettings.moduleswitches) and
+                 (tf_smartlink_library in TargetInfo.flags)
                 );
       end;
 
@@ -295,20 +295,20 @@ implementation
         charstoremove: integer;
       begin
         Result:=s;
-        rchar:=target_asm.dollarsign;
+        rchar:=TargetAsm.dollarsign;
         ochar:='$';
         if (ochar<>rchar) then
           for  i:=1 to Length(Result) do
             if Result[i]=ochar then
               Result[i]:=rchar;
-        if (target_asm.labelmaxlen<>-1) and (Length(Result)>target_asm.labelmaxlen) then
+        if (TargetAsm.labelmaxlen<>-1) and (Length(Result)>TargetAsm.labelmaxlen) then
           begin
             crc:=0;
             crc:=UpdateCrc32(crc,Result[1],Length(Result));
-            charstoremove:=Length(Result)-target_asm.labelmaxlen+13;
+            charstoremove:=Length(Result)-TargetAsm.labelmaxlen+13;
             Delete(Result,(Length(Result)-charstoremove) div 2,charstoremove);
-            Result:='_'+target_asm.dollarsign+'CRC'+hexstr(crc,8)+Result;
-            if Length(Result)>target_asm.labelmaxlen then
+            Result:='_'+TargetAsm.dollarsign+'CRC'+hexstr(crc,8)+Result;
+            if Length(Result)>TargetAsm.labelmaxlen then
               Internalerror(2020042502);
           end;
       end;
@@ -366,7 +366,7 @@ implementation
 
     constructor TAsmLabel.Createlocal(AList: TFPHashObjectList; nr: longint; ltyp: TAsmLabelType);
       begin
-        create_non_global(AList,nr,ltyp,target_asm.labelprefix);
+        create_non_global(AList,nr,ltyp,TargetAsm.labelprefix);
       end;
 
 

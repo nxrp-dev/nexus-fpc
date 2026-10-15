@@ -628,7 +628,7 @@ unit rgobj;
         generate_interference_graph(list,headertai);
 {$ifdef DEBUG_SPILLCOALESCE}
         if maxreg>first_imaginary then
-          writeln(current_procinfo.procdef.mangledname, ': register allocation [',regtype,']');
+          writeln(CurrentProcInfo.procdef.mangledname, ': register allocation [',regtype,']');
 {$endif DEBUG_SPILLCOALESCE}
 {$ifdef DEBUG_REGALLOC}
         if maxreg>first_imaginary then
@@ -636,7 +636,7 @@ unit rgobj;
 {$endif DEBUG_REGALLOC}
         inc(rtindex);
         { Don't do the real allocation when -sr is passed }
-        if (cs_no_regalloc in current_settings.globalswitches) then
+        if (cs_no_regalloc in CurrentSettings.globalswitches) then
           exit;
         { Spill registers which interfere with all usable real registers.
           It is pointless to keep them for further processing. Also it may
@@ -766,9 +766,9 @@ unit rgobj;
     var f:text;
         i,j:cardinal;
     begin
-      assign(f,outputunitdir+current_procinfo.procdef.mangledname+'_igraph'+tostr(loopidx));
+      assign(f,outputunitdir+CurrentProcInfo.procdef.mangledname+'_igraph'+tostr(loopidx));
       rewrite(f);
-      writeln(f,'Interference graph of ',current_procinfo.procdef.fullprocname(true));
+      writeln(f,'Interference graph of ',CurrentProcInfo.procdef.fullprocname(true));
       writeln(f,'Register type: ',regtype,', First imaginary register is ',first_imaginary,' ($',hexstr(first_imaginary,2),')');
       writeln(f);
       write(f,'                                   ');
@@ -896,7 +896,7 @@ unit rgobj;
       begin
         supreg:=getsupreg(r);
 {$ifdef extdebug}
-        if not (cs_no_regalloc in current_settings.globalswitches) and
+        if not (cs_no_regalloc in CurrentSettings.globalswitches) and
            (supreg>=maxreginfo) then
           internalerror(200411061);
 {$endif extdebug}
@@ -2054,7 +2054,7 @@ unit rgobj;
               ait_instruction:
                 with Taicpu(p) do
                   begin
-                    current_filepos:=fileinfo;
+                    CurrentFilePos:=fileinfo;
                     {For speed reasons, get_alias isn't used here, instead,
                      assign_colours will also set the colour of coalesced nodes.
                      If there are registers with colour=0, then the coalescednodes
@@ -2287,7 +2287,7 @@ unit rgobj;
                 begin
                   if (getregtype(tai_varloc(p).newlocation)=regtype) then
                     begin
-                      if (cs_asm_source in current_settings.globalswitches) then
+                      if (cs_asm_source in CurrentSettings.globalswitches) then
                         begin
                           s:=get_reg_name_full(tai_varloc(p).newlocation,tai_varloc(p).newlocationhi=NR_NO);
                           if s<>'' then
@@ -2309,7 +2309,7 @@ unit rgobj;
               ait_instruction:
                 with Taicpu(p) do
                   begin
-                    current_filepos:=fileinfo;
+                    CurrentFilePos:=fileinfo;
                     {For speed reasons, get_alias isn't used here, instead,
                      assign_colours will also set the colour of coalesced nodes.
                      If there are registers with colour=0, then the coalescednodes
@@ -2401,7 +2401,7 @@ unit rgobj;
             end;
             p:=Tai(p.next);
           end;
-        current_filepos:=current_procinfo.exitpos;
+        CurrentFilePos:=CurrentProcInfo.exitpos;
       end;
 
 
@@ -2466,7 +2466,7 @@ unit rgobj;
                 interfere but are connected by a move instruction
 
                 doing so might save some mem->mem moves }
-              if (cs_opt_level3 in current_settings.optimizerswitches) and
+              if (cs_opt_level3 in CurrentSettings.optimizerswitches) and
                  getnewspillloc and
                  assigned(reginfo[t].movelist) then
                 for j:=0 to reginfo[t].movelist^.header.count-1 do
@@ -2560,7 +2560,7 @@ unit rgobj;
                 with tai_cpu_abstract_sym(p) do
                   begin
 //                    writeln(gas_op2str[tai_cpu_abstract_sym(p).opcode]);
-                    current_filepos:=fileinfo;
+                    CurrentFilePos:=fileinfo;
                     if instr_spill_register(list,tai_cpu_abstract_sym(p),regs_to_spill_set,spill_temps) then
                       spill_registers:=true;
                   end;
@@ -2569,7 +2569,7 @@ unit rgobj;
             end;
             p:=Tai(p.next);
           end;
-        current_filepos:=current_procinfo.exitpos;
+        CurrentFilePos:=CurrentProcInfo.exitpos;
         {Safe: this procedure is only called if there are spilled nodes.}
         with spillednodes do
           for i:=0 to length-1 do
@@ -3035,7 +3035,7 @@ unit rgobj;
         if spillingcounter>0 then
           begin
             d:=(1.0-spill_weight/all_weight)*100.0;
-            writeln(current_procinfo.procdef.mangledname,' [',regtype,']: spill stats: NUM: ',spillingcounter, ', EFF: ',d:4:1,'%');
+            writeln(CurrentProcInfo.procdef.mangledname,' [',regtype,']: spill stats: NUM: ',spillingcounter, ', EFF: ',d:4:1,'%');
           end;
       end;
 {$endif DEBUG_SPILLCOALESCE}

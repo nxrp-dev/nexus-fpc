@@ -30,17 +30,17 @@ interface
       node,
       globals;
 
-    function new_dispose_statement(is_new:boolean) : tnode;
-    function new_function : tnode;
+    function new_dispose_statement(is_new:boolean) : TNode;
+    function new_function : TNode;
 
-    function inline_setlength : tnode;
-    function inline_setstring : tnode;
-    function inline_initialize : tnode;
-    function inline_finalize : tnode;
-    function inline_copy : tnode;
-    function inline_insert : tnode;
-    function inline_delete : tnode;
-    function inline_concat : tnode;
+    function inline_setlength : TNode;
+    function inline_setstring : TNode;
+    function inline_initialize : TNode;
+    function inline_finalize : TNode;
+    function inline_copy : TNode;
+    function inline_insert : TNode;
+    function inline_delete : TNode;
+    function inline_concat : TNode;
 
 
 implementation
@@ -59,19 +59,19 @@ implementation
        pbase,pexpr;
 
 
-    function new_dispose_statement(is_new:boolean) : tnode;
+    function new_dispose_statement(is_new:boolean) : TNode;
       var
         newstatement : tstatementnode;
         temp         : ttempcreatenode;
         para         : tcallparanode;
-        p,p2     : tnode;
+        p,p2     : TNode;
         again    : boolean; { dummy for do_proc_call }
         destructorname : TIDString;
         sym      : tsym;
         classh   : tobjectdef;
         callflag : tcallnodeflag;
         destructorpos,
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         variantdesc : pvariantrecdesc;
         found : boolean;
         variantselectsymbol : tfieldvarsym;
@@ -80,14 +80,14 @@ implementation
         var
           i,j : longint;
         begin
-          if (([m_iso,m_extpas]*current_settings.modeswitches)<>[]) and (is_record(tpointerdef(p.resultdef).pointeddef)) then
+          if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) and (is_record(tpointerdef(p.resultdef).pointeddef)) then
             begin
               variantdesc:=trecorddef(tpointerdef(p.resultdef).pointeddef).variantrecdesc;
-              while (current_scanner.token=_COMMA) and assigned(variantdesc) do
+              while (CurrentScanner.token=_COMMA) and assigned(variantdesc) do
                 begin
                   consume(_COMMA);
                   p2:=factor(false,[]);
-                  do_typecheckpass(p2);
+                  DoTypeCheckPass(p2);
                   if p2.nodetype=ordconstn then
                     begin
                       found:=false;
@@ -139,7 +139,7 @@ implementation
           end
         else
           set_varstate(p,vs_readwritten,[vsf_must_be_valid]);
-        if (m_mac in current_settings.modeswitches) and
+        if (m_mac in CurrentSettings.modeswitches) and
            is_class(p.resultdef) then
           begin
             classh:=tobjectdef(p.resultdef);
@@ -177,7 +177,7 @@ implementation
             do_member_read(classh,false,sym,p2,again,[],nil);
 
             { we need the real called method }
-            do_typecheckpass(p2);
+            DoTypeCheckPass(p2);
 
             if (p2.nodetype=calln) and
                assigned(tcallnode(p2).procdefinition) then
@@ -188,7 +188,7 @@ implementation
                       Message(parser_e_expr_have_to_be_constructor_call);
                     p2.resultdef:=p.resultdef;
                     p2:=cassignmentnode.create(p,p2);
-                    typecheckpass(p2);
+                    TypeCheckPass(p2);
                   end
                 else
                   begin
@@ -203,14 +203,14 @@ implementation
             new_dispose_statement := p2;
           end
         { constructor,destructor specified }
-        else if (([m_mac,m_iso,m_extpas]*current_settings.modeswitches)=[]) and
+        else if (([m_mac,m_iso,m_extpas]*CurrentSettings.modeswitches)=[]) and
                 try_to_consume(_COMMA) then
           begin
             { extended syntax of new and dispose }
             { function styled new is handled in factor }
             { destructors have no parameters }
-            destructorname:=current_scanner.pattern;
-            destructorpos:=current_tokenpos;
+            destructorname:=CurrentScanner.pattern;
+            destructorpos:=CurrentTokenPos;
             consume(_ID);
 
             if is_typeparam(p.resultdef) then
@@ -257,10 +257,10 @@ implementation
                  exit;
               end;
             { search cons-/destructor, also in parent classes }
-            storepos:=current_tokenpos;
-            current_tokenpos:=destructorpos;
+            storepos:=CurrentTokenPos;
+            CurrentTokenPos:=destructorpos;
             sym:=search_struct_member(classh,destructorname);
-            current_tokenpos:=storepos;
+            CurrentTokenPos:=storepos;
 
             { the second parameter of new/dispose must be a call }
             { to a cons-/destructor                              }
@@ -285,7 +285,7 @@ implementation
                   end
                 else
                   p2:=cderefnode.create(p);
-                do_typecheckpass(p2);
+                DoTypeCheckPass(p2);
                 if is_new then
                   callflag:=cnf_new_call
                 else
@@ -294,7 +294,7 @@ implementation
                   do_member_read(classh,false,sym,p2,again,[callflag],nil)
                 else
                   begin
-                    if not(m_fpc in current_settings.modeswitches) then
+                    if not(m_fpc in CurrentSettings.modeswitches) then
                       do_member_read(classh,false,sym,p2,again,[callflag],nil)
                     else
                       begin
@@ -313,7 +313,7 @@ implementation
                   end;
 
                 { we need the real called method }
-                do_typecheckpass(p2);
+                DoTypeCheckPass(p2);
 
                 if (p2.nodetype=calln) and
                    assigned(tcallnode(p2).procdefinition) then
@@ -368,7 +368,7 @@ implementation
                   if (tpointerdef(p.resultdef).pointeddef.typ=orddef) and
                      (torddef(tpointerdef(p.resultdef).pointeddef).ordtype=uvoid) then
                     begin
-                      if m_delphi in current_settings.modeswitches then
+                      if m_delphi in CurrentSettings.modeswitches then
                        Message(parser_w_no_new_dispose_on_void_pointers)
                       else
                        Message(parser_e_no_new_dispose_on_void_pointers);
@@ -393,7 +393,7 @@ implementation
 
                      { create call to fpc_initialize }
                      if is_managed_type(tpointerdef(p.resultdef).pointeddef) or
-                       ((m_isolike_io in current_settings.modeswitches) and (tpointerdef(p.resultdef).pointeddef.typ=filedef)) then
+                       ((m_isolike_io in CurrentSettings.modeswitches) and (tpointerdef(p.resultdef).pointeddef.typ=filedef)) then
                        addstatement(newstatement,cnodeutils.initialize_data_node(cderefnode.create(ctemprefnode.create(temp)),false));
 
                      { copy the temp to the destination }
@@ -438,9 +438,9 @@ implementation
       end;
 
 
-    function new_function : tnode;
+    function new_function : TNode;
       var
-        p1,p2  : tnode;
+        p1,p2  : TNode;
         classh : tobjectdef;
         srsym    : tsym;
         srsymtable : TSymtable;
@@ -498,15 +498,15 @@ implementation
             { use the objectdef for loading the VMT }
             p2:=p1;
             p1:=ctypenode.create(tpointerdef(p1.resultdef).pointeddef);
-            do_typecheckpass(p1);
+            DoTypeCheckPass(p1);
             { search the constructor also in the symbol tables of
               the parents }
             afterassignment:=false;
-            searchsym_in_class(classh,classh,current_scanner.pattern,srsym,srsymtable,[ssf_search_helper]);
+            searchsym_in_class(classh,classh,CurrentScanner.pattern,srsym,srsymtable,[ssf_search_helper]);
             consume(_ID);
             do_member_read(classh,false,srsym,p1,again,[cnf_new_call],nil);
             { we need to know which procedure is called }
-            do_typecheckpass(p1);
+            DoTypeCheckPass(p1);
             if not(
                    (p1.nodetype=calln) and
                    assigned(tcallnode(p1).procdefinition) and
@@ -524,9 +524,9 @@ implementation
       end;
 
 
-    function inline_setlength : tnode;
+    function inline_setlength : TNode;
       var
-        paras: tnode;
+        paras: TNode;
       begin
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
@@ -541,11 +541,11 @@ implementation
       end;
 
 
-    function inline_setstring : tnode;
+    function inline_setstring : TNode;
       var
-        paras, strpara, pcharpara: tnode;
+        paras, strpara, pcharpara: TNode;
         procname: string;
-        cp: tstringencoding;
+        cp: TStringEncoding;
       begin
         consume(_LKLAMMER);
         paras:=parse_paras(false,false,_RKLAMMER);
@@ -555,8 +555,8 @@ implementation
            assigned(tcallparanode(paras).right) and
            assigned(tcallparanode(tcallparanode(paras).right).right) then
           begin
-            do_typecheckpass(tcallparanode(tcallparanode(paras).right).left);
-            do_typecheckpass(tcallparanode(tcallparanode(tcallparanode(paras).right).right).left);
+            DoTypeCheckPass(tcallparanode(tcallparanode(paras).right).left);
+            DoTypeCheckPass(tcallparanode(tcallparanode(tcallparanode(paras).right).right).left);
             pcharpara:=tcallparanode(tcallparanode(paras).right).left;
             strpara:=tcallparanode(tcallparanode(tcallparanode(paras).right).right).left;
             if strpara.resultdef.typ=stringdef then
@@ -586,9 +586,9 @@ implementation
         { default version (for error message) in case of missing or wrong
           parameters }
         if procname='' then
-          if m_default_unicodestring in current_settings.modeswitches then
+          if m_default_unicodestring in CurrentSettings.modeswitches then
             procname:='fpc_setstring_unicodestr_pwidechar'
-          else if m_default_ansistring in current_settings.modeswitches then
+          else if m_default_ansistring in CurrentSettings.modeswitches then
             procname:='fpc_setstring_ansistr_pansichar'
           else
             procname:='fpc_setstring_shortstr';
@@ -596,10 +596,10 @@ implementation
       end;
 
 
-    function inline_initfinal(isinit: boolean): tnode;
+    function inline_initfinal(isinit: boolean): TNode;
       var
         newblock,
-        paras   : tnode;
+        paras   : TNode;
         npara,
         destppn,
         ppn     : tcallparanode;
@@ -655,21 +655,21 @@ implementation
       end;
 
 
-    function inline_initialize : tnode;
+    function inline_initialize : TNode;
       begin
         result:=inline_initfinal(true);
       end;
 
 
-    function inline_finalize : tnode;
+    function inline_finalize : TNode;
       begin
         result:=inline_initfinal(false);
       end;
 
 
-    function inline_copy_insert_delete(nr:tinlinenumber;const name:string;checkempty:boolean) : tnode;
+    function inline_copy_insert_delete(nr:tinlinenumber;const name:string;checkempty:boolean) : TNode;
       var
-        paras   : tnode;
+        paras   : TNode;
         { for easy exiting if something goes wrong }
       begin
         result := cerrornode.create;
@@ -687,25 +687,25 @@ implementation
       end;
 
 
-    function inline_copy: tnode;
+    function inline_copy: TNode;
       begin
         result:=inline_copy_insert_delete(in_copy_x,'Copy',false);
       end;
 
 
-    function inline_insert: tnode;
+    function inline_insert: TNode;
       begin
         result:=inline_copy_insert_delete(in_insert_x_y_z,'Insert',false);
       end;
 
 
-    function inline_delete: tnode;
+    function inline_delete: TNode;
       begin
         result:=inline_copy_insert_delete(in_delete_x_y_z,'Delete',false);
       end;
 
 
-    function inline_concat: tnode;
+    function inline_concat: TNode;
       begin
         result:=inline_copy_insert_delete(in_concat_x,'Concat',false);
       end;

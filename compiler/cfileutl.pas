@@ -103,7 +103,7 @@ interface
     function  GetCurrentDir:TCmdStr;
     {Gives the relative path to the current directory,
      with a trailing dir separator. E. g. on unix ./ }
-    function CurDirRelPath(systeminfo: tsysteminfo): TCmdStr;
+    function CurDirRelPath(systeminfo: TSystemInfo): TCmdStr;
     function  path_absolute(const s : TCmdStr) : boolean;
     Function  PathExists (const F : TCmdStr;allowcache:boolean) : Boolean;
     Function  FileExists (const F : TCmdStr;allowcache:boolean) : Boolean;
@@ -180,7 +180,7 @@ end;
         Result:=True;
         if FCached then
           exit;
-        if not current_settings.disabledircache then
+        if not CurrentSettings.disabledircache then
           ForceUseCache
         else
           Result:=False;
@@ -201,7 +201,7 @@ end;
       var
         i: Integer;
       begin
-        if not(tf_files_case_aware in source_info.flags) then
+        if not(tf_files_case_aware in SourceInfo.flags) then
           exit;
         for i := 0 to DirectoryEntries.Count-1 do
           dispose(PCachedDirectoryEntry(DirectoryEntries[i]));
@@ -212,8 +212,8 @@ end;
       var
         entry: PCachedDirectoryEntry;
       begin
-        if not(tf_files_case_sensitive in source_info.flags) then
-          if (tf_files_case_aware in source_info.flags) then
+        if not(tf_files_case_sensitive in SourceInfo.flags) then
+          if (tf_files_case_aware in SourceInfo.flags) then
             begin
               entry:=PCachedDirectoryEntry(DirectoryEntries.Find(Lower(AName)));
               if assigned(entry) then
@@ -246,8 +246,8 @@ end;
                     to be able to see the difference in the directoryentries lookup if a file
                     exists or not }
                   Dir.Attr:=Dir.Attr or faArchive;
-                  if not(tf_files_case_sensitive in source_info.flags) then
-                    if (tf_files_case_aware in source_info.flags) then
+                  if not(tf_files_case_sensitive in SourceInfo.flags) then
+                    if (tf_files_case_aware in SourceInfo.flags) then
                       begin
                         new(entry);
                         entry^.RealName:=Dir.Name;
@@ -287,7 +287,7 @@ end;
       var
         entry : PCachedDirectoryEntry;
       begin
-        if (tf_files_case_aware in source_info.flags) then
+        if (tf_files_case_aware in SourceInfo.flags) then
           begin
             if not TryUseCache then
               begin
@@ -353,7 +353,7 @@ end;
         DirName   : TCmdStr;
       begin
         if ADir='' then
-          DirName:='.'+source_info.DirSep
+          DirName:='.'+SourceInfo.DirSep
         else
           DirName:=ADir;
         CachedDir:=TCachedDirectory(FDirectories.Find(DirName));
@@ -415,7 +415,7 @@ end;
       begin
         if Res.EntryIndex<Res.CachedDir.DirectoryEntries.Count then
           begin
-            if (tf_files_case_aware in source_info.flags) then
+            if (tf_files_case_aware in SourceInfo.flags) then
               begin
                 entry:=Res.CachedDir.DirectoryEntries[Res.EntryIndex];
                 Res.Name:=entry^.RealName;
@@ -474,7 +474,7 @@ end;
 
    {Gives the relative path to the current directory,
     with a trailing dir separator. E. g. on unix ./ }
-   function CurDirRelPath(systeminfo: tsysteminfo): TCmdStr;
+   function CurDirRelPath(systeminfo: TSystemInfo): TCmdStr;
 
    begin
      CurDirRelPath:= '.'+systeminfo.DirSep
@@ -532,7 +532,7 @@ end;
         fn2 : TCmdStr;
       begin
         result:=false;
-        if tf_files_case_sensitive in source_info.flags then
+        if tf_files_case_sensitive in SourceInfo.flags then
           begin
             {
               Search order for case sensitive systems:
@@ -574,7 +574,7 @@ end;
               end;
           end
         else
-          if tf_files_case_aware in source_info.flags then
+          if tf_files_case_aware in SourceInfo.flags then
             begin
               {
                 Search order for case aware systems:
@@ -643,7 +643,7 @@ end;
 
     Function RemoveDir(d:TCmdStr):boolean;
       begin
-        if d[length(d)]=source_info.DirSep then
+        if d[length(d)]=SourceInfo.DirSep then
          Delete(d,length(d),1);
         {$push}{$I-}
          rmdir(d);
@@ -652,7 +652,7 @@ end;
       end;
 
 
-    Function _FixPath(const s:TCmdStr;allowdot:boolean;const info:tsysteminfo;const drivesep:string):TCmdStr;
+    Function _FixPath(const s:TCmdStr;allowdot:boolean;const info:TSystemInfo;const drivesep:string):TCmdStr;
       var
         i, L : sizeint;
       begin
@@ -679,11 +679,11 @@ end;
 
     Function FixPath(const s:TCmdStr;allowdot:boolean):TCmdStr;
       begin
-        Result:=_FixPath(s,allowdot,source_info,DriveSeparator);
+        Result:=_FixPath(s,allowdot,SourceInfo,DriveSeparator);
       end;
 
 
-   function _FixFileName(const s:TCmdStr; const info:tsysteminfo):TCmdStr;
+   function _FixFileName(const s:TCmdStr; const info:TSystemInfo):TCmdStr;
      var
        i      : sizeint;
      begin
@@ -703,19 +703,19 @@ end;
 
    function FixFileName(const s:TCmdStr):TCmdStr;
      begin
-       result:=_FixFileName(s,source_info);
+       result:=_FixFileName(s,SourceInfo);
      end;
 
 
    Function TargetFixPath(s:TCmdStr;allowdot:boolean):TCmdStr;
      begin
-       result:=_FixPath(s,allowdot,target_info,':');
+       result:=_FixPath(s,allowdot,TargetInfo,':');
      end;
 
 
    function TargetFixFileName(const s:TCmdStr):TCmdStr;
      begin
-       result:=_FixFileName(s,target_info);
+       result:=_FixFileName(s,TargetInfo);
      end;
 
 
@@ -823,13 +823,13 @@ end;
          if (length(currPath) >0) and (currPath[1]='=') then
            currPath:=sysroot+FixPath(copy(currPath,2,length(currPath)-1),false);
          if currPath='' then
-           currPath:= CurDirRelPath(source_info)
+           currPath:= CurDirRelPath(SourceInfo)
          else
           begin
             currPath:=FixPath(ExpandFileName(currpath),false);
             if (CurrentDir<>'') and (Copy(currPath,1,length(CurrentDir))=CurrentDir) then
              begin
-               currPath:= CurDirRelPath(source_info)+Copy(currPath,length(CurrentDir)+1,length(currPath));
+               currPath:= CurDirRelPath(SourceInfo)+Copy(currPath,length(CurrentDir)+1,length(currPath));
              end;
           end;
          { wildcard adding ? }
@@ -1029,8 +1029,8 @@ end;
      begin
        { change extension only on platforms that use an exe extension, otherwise on OpenBSD
          'ld.bfd' gets converted to 'ld' }
-       if source_info.exeext<>'' then
-         b:=ChangeFileExt(bin,source_info.exeext)
+       if SourceInfo.exeext<>'' then
+         b:=ChangeFileExt(bin,SourceInfo.exeext)
        else
          b:=bin;
        FindExe:=FindFileInExeLocations(b,allowcache,foundfile);
@@ -1073,10 +1073,10 @@ end;
       quote_char: ansichar;
       quoted : boolean;
     begin
-      if not(cs_link_on_target in current_settings.globalswitches) then
-        quote_script:=source_info.script
+      if not(cs_link_on_target in CurrentSettings.globalswitches) then
+        quote_script:=SourceInfo.script
       else
-        quote_script:=target_info.script;
+        quote_script:=TargetInfo.script;
       if quote_script=script_dos then
         forbidden_chars:=FORBIDDEN_CHARS_DOS
       else
@@ -1199,10 +1199,10 @@ end;
       var
         quote_script: tscripttype;
       begin
-        if not(cs_link_on_target in current_settings.globalswitches) then
-          quote_script:=source_info.script
+        if not(cs_link_on_target in CurrentSettings.globalswitches) then
+          quote_script:=SourceInfo.script
         else
-          quote_script:=target_info.script;
+          quote_script:=TargetInfo.script;
         result:=maybequoted_for_script(s,quote_script);
       end;
 
@@ -1272,10 +1272,10 @@ end;
         if do_checkverbosity(V_Executable) then
           do_comment(V_Executable,'Executing "'+Path+'" with command line "'+
             ComLine+'"');
-        if (cs_link_on_target in current_settings.globalswitches) then
-          quote_script:=target_info.script
+        if (cs_link_on_target in CurrentSettings.globalswitches) then
+          quote_script:=TargetInfo.script
         else
-          quote_script:=source_info.script;
+          quote_script:=SourceInfo.script;
         if quote_script=script_unix then
           result:=sysutils.ExecuteProcess(Path,UnixRequoteWithDoubleQuotes(ComLine),Flags)
         else

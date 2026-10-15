@@ -353,7 +353,7 @@ interface
     type
 
       TOmfAssembler = class(tinternalassembler)
-        constructor create(info: pasminfo; smart:boolean);override;
+        constructor create(info: PAsmInfo; smart:boolean);override;
       end;
 
     function StripDllExt(const DllName:TSymStr):TSymStr;
@@ -389,7 +389,7 @@ implementation
 
     procedure MayBeSwapTISTrailer(var h: TTISTrailer);
       begin
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           with h do
             begin
               tis_vendor:=swapendian(tis_vendor);
@@ -599,7 +599,7 @@ implementation
         CObjSymbol:=TOmfObjSymbol;
         CObjSection:=TOmfObjSection;
         createsectiongroup('DGROUP');
-        FMainSource:=current_module.mainsource;
+        FMainSource:=CurrentModule.mainsource;
         FImportLibraryList:=TFPHashObjectList.Create(true);
         FExportedSymbolList:=TFPHashObjectList.Create(true);
       end;
@@ -635,7 +635,7 @@ implementation
             if omf_secnames[atype]=omf_secnames[sec_code] then
               secname:=CodeSectionName(aname)
             else if omf_segclass(atype)='FAR_DATA' then
-              secname:=current_module.modulename^ + '_DATA'
+              secname:=CurrentModule.modulename^ + '_DATA'
             else
               secname:=omf_secnames[atype];
             if create_smartlink_sections and (aname<>'') then
@@ -694,7 +694,7 @@ implementation
       var
         secname: string;
       begin
-        secname:=current_module.modulename^ + '_DATA';
+        secname:=CurrentModule.modulename^ + '_DATA';
 
         result:=TObjSection(ObjSectionList.Find(secname));
         if not assigned(result) then
@@ -1129,7 +1129,7 @@ implementation
         { write header record }
         RawRecord:=TOmfRawRecord.Create;
         Header:=TOmfRecord_THEADR.Create;
-        if cs_debuginfo in current_settings.moduleswitches then
+        if cs_debuginfo in CurrentSettings.moduleswitches then
           Header.ModuleName:=TOmfObjData(Data).MainSource
         else
           Header.ModuleName:=Data.Name;
@@ -1142,15 +1142,15 @@ implementation
         Translator_COMENT:=TOmfRecord_COMENT.Create;
         Translator_COMENT.CommentClass:=CC_Translator;
         Translator_COMENT.CommentString:='FPC '+full_version_string+
-        ' ['+date_string+'] for '+target_cpu_string+' - '+target_info.shortname;
+        ' ['+date_string+'] for '+TargetCPUString+' - '+TargetInfo.shortname;
         Translator_COMENT.EncodeTo(RawRecord);
         RawRecord.WriteTo(FWriter);
         Translator_COMENT.Free;
         Translator_COMENT := nil;
 
-        if (target_dbg.id=dbg_codeview) or
-           ((ds_dwarf_omf_linnum in current_settings.debugswitches) and
-            (target_dbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5])) then
+        if (TargetDbg.id=dbg_codeview) or
+           ((ds_dwarf_omf_linnum in CurrentSettings.debugswitches) and
+            (TargetDbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5])) then
           begin
             DebugFormat_COMENT:=TOmfRecord_COMENT.Create;
             DebugFormat_COMENT.CommentClass:=CC_NewOmfExtension;
@@ -2577,7 +2577,7 @@ implementation
             UniSeg.CalcMemPos;
             if UniSeg.Size>$10000 then
               begin
-                if current_settings.x86memorymodel=mm_tiny then
+                if CurrentSettings.x86memorymodel=mm_tiny then
                   Message1(link_e_program_segment_too_large,IntToStr(UniSeg.Size-$10000))
                 else if UniSeg.SegClass='CODE' then
                   Message2(link_e_code_segment_too_large,UniSeg.SegName,IntToStr(UniSeg.Size-$10000))
@@ -2629,7 +2629,7 @@ implementation
             UniGrp.CalcMemPos;
             if UniGrp.Size>$10000 then
               begin
-                if current_settings.x86memorymodel=mm_tiny then
+                if CurrentSettings.x86memorymodel=mm_tiny then
                   Message1(link_e_program_segment_too_large,IntToStr(UniGrp.Size-$10000))
                 else if UniGrp.Name='DGROUP' then
                   Message2(link_e_data_segment_too_large,UniGrp.Name,IntToStr(UniGrp.Size-$10000))
@@ -2762,7 +2762,7 @@ implementation
         heapmin_paragraphs: Integer;
         heapmax_paragraphs: Integer;
       begin
-        if current_settings.x86memorymodel in x86_far_data_models then
+        if CurrentSettings.x86memorymodel in x86_far_data_models then
           begin
             { calculate the additional number of paragraphs needed }
             heapmin_paragraphs:=(heapsize + 15) div 16;
@@ -3344,11 +3344,11 @@ cleanup:
             if not Result then
               exit;
           end;
-        if ((cs_debuginfo in current_settings.moduleswitches) and
-            (target_dbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5])) and
+        if ((cs_debuginfo in CurrentSettings.moduleswitches) and
+            (TargetDbg.id in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5])) and
            ((ExeWriteMode=ewm_dbgonly) or
             ((ExeWriteMode=ewm_exefull) and
-              not(cs_link_strip in current_settings.globalswitches))) then
+              not(cs_link_strip in CurrentSettings.globalswitches))) then
           Result:=writeDebugElf;
       end;
 
@@ -3385,7 +3385,7 @@ cleanup:
                                TOmfAssembler
 ****************************************************************************}
 
-    constructor TOmfAssembler.Create(info: pasminfo; smart:boolean);
+    constructor TOmfAssembler.Create(info: PAsmInfo; smart:boolean);
       begin
         inherited;
         CObjOutput:=TOmfObjOutput;

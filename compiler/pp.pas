@@ -169,7 +169,7 @@ begin
      { we cannot use current_filepos.file because all memory might have been
        freed already !
        But we can use global parser_current_file var }
-     Writeln('Compilation aborted ',parser_current_file,':',current_filepos.line);
+     Writeln('Compilation aborted ',parser_current_file,':',CurrentFilePos.line);
    end;
 end;
 

@@ -310,7 +310,7 @@ Unit Rax86int;
       begin
         actoperextention := '';
 
-        c:=current_scanner.c;
+        c:=CurrentScanner.c;
         { save old token and reset new token }
         prevasmtoken:=actasmtoken;
         actasmtoken:=AS_NONE;
@@ -319,10 +319,10 @@ Unit Rax86int;
         actasmpattern:='';
         { while space and tab , continue scan... }
         while (c in [' ',#9]) do
-          c:=current_scanner.asmgetchar;
+          c:=CurrentScanner.asmgetchar;
         { get token pos }
         if not (c in [#10,#13,'{',';','(','/']) then
-          current_scanner.gettokenpos;
+          CurrentScanner.gettokenpos;
       { Local Label, Label, Directive, Prefix or Opcode }
         if firsttoken and not (c in [#10,#13,'{',';','(','/']) then
          begin
@@ -333,11 +333,11 @@ Unit Rax86int;
            if c = '.' then
             begin
               actasmpattern:='.';
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               while c in ['A'..'Z','a'..'z','0'..'9','_'] do
                 begin
                  actasmpattern:=actasmpattern+c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                 end;
               { directives are case sensitive!! }
               if is_asmdirective(actasmpattern) then
@@ -360,14 +360,14 @@ Unit Rax86int;
                forcelabel:=TRUE;
               inc(len);
               actasmpattern[len]:=c;
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
             end;
            actasmpattern[0]:=chr(len);
            actasmpattern_origcase:=actasmpattern;
            uppervar(actasmpattern);
            { allow spaces }
            while (c in [' ',#9]) do
-             c:=current_scanner.asmgetchar;
+             c:=CurrentScanner.asmgetchar;
            { label ? }
            if c = ':' then
             begin
@@ -376,7 +376,7 @@ Unit Rax86int;
               else
                 actasmtoken:=AS_LABEL;
               { let us point to the next character }
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               firsttoken:=true;
               exit;
             end;
@@ -405,11 +405,11 @@ Unit Rax86int;
                    {                - @Result, @Code or @Data special variables.     }
                begin
                  actasmpattern:=c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  while c in  ['A'..'Z','a'..'z','0'..'9','_','@','$','&','?'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern_origcase:=actasmpattern;
                  uppervar(actasmpattern);
@@ -420,11 +420,11 @@ Unit Rax86int;
              'A'..'Z','a'..'z','_': { identifier, register, opcode, prefix or directive }
                begin
                  actasmpattern:=c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  while c in  ['A'..'Z','a'..'z','0'..'9','_'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern_origcase:=actasmpattern;
                  uppervar(actasmpattern);
@@ -441,24 +441,24 @@ Unit Rax86int;
                  if (actasmpattern = 'ST') and (c='(') then
                   Begin
                     actasmpattern:=actasmpattern+c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                     { allow spaces }
                     while (c in [' ',#9]) do
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                     if c in ['0'..'7'] then
                      actasmpattern:=actasmpattern + c
                     else
                      Message(asmr_e_invalid_fpu_register);
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                     { allow spaces }
                     while (c in [' ',#9]) do
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                     if c <> ')' then
                      Message(asmr_e_invalid_fpu_register)
                     else
                      Begin
                        actasmpattern:=actasmpattern + c;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                      end;
                   end;
                  //if prevasmtoken in [AS_LOPMASK,AS_LOPZEROMASK,AS_LOPBCST,AS_LOPSAE,AS_LOPER] then
@@ -467,22 +467,22 @@ Unit Rax86int;
                     if (prevasmtoken = AS_LOPER) and (c = '-') then
                      begin
                        actasmpattern := actasmpattern + c;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        while c in  ['A'..'Z','a'..'z'] do
                        begin
                          actasmpattern:=actasmpattern + c;
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                        end;
                      end;
 
 
                     { allow spaces }
                     while (c in [' ',#9]) do
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
 
                     if c = '}' then
                      begin
-                       current_scanner.readchar;
+                       CurrentScanner.readchar;
                        case prevasmtoken of
                          AS_LOPMASK: if (length(actasmpattern) = 2) and
                                         (actasmpattern[2] in ['1'..'7']) then
@@ -534,8 +534,8 @@ Unit Rax86int;
                      end
                     else
                      begin
-                       if c = '{' then current_scanner.inc_comment_level;
-                       current_scanner.skipcomment(false); // is comment
+                       if c = '{' then CurrentScanner.inc_comment_level;
+                       CurrentScanner.skipcomment(false); // is comment
                        actasmpattern := '';
                        actasmtoken := AS_NONE;
                        exit;
@@ -549,7 +549,7 @@ Unit Rax86int;
                   exit;
                  { allow spaces }
                  while (c in [' ',#9]) do
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                  { if next is a '.' and this is a unitsym then we also need to
                    parse the identifier }
                  if (c='.') then
@@ -562,14 +562,14 @@ Unit Rax86int;
                      begin
                        { Add . to create System.Identifier }
                        actasmpattern:=actasmpattern+c;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        { Delphi allows System.@Halt, just ignore the @ }
                        if c='@' then
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                        while c in  ['A'..'Z','a'..'z','0'..'9','_','$'] do
                         begin
                           actasmpattern:=actasmpattern + upcase(c);
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                      end;
                   end;
@@ -583,7 +583,7 @@ Unit Rax86int;
                  repeat
                    if c = '''' then
                     begin
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                       if c in [#10,#13] then
                        begin
                          Message(scan_f_string_exceeds_line);
@@ -592,11 +592,11 @@ Unit Rax86int;
                       repeat
                         if c='''' then
                          begin
-                           c:=current_scanner.asmgetchar;
+                           c:=CurrentScanner.asmgetchar;
                            if c='''' then
                             begin
                               actasmpattern:=actasmpattern+'''';
-                              c:=current_scanner.asmgetchar;
+                              c:=CurrentScanner.asmgetchar;
                               if c in [#10,#13] then
                                begin
                                  Message(scan_f_string_exceeds_line);
@@ -609,7 +609,7 @@ Unit Rax86int;
                         else
                          begin
                            actasmpattern:=actasmpattern+c;
-                           c:=current_scanner.asmgetchar;
+                           c:=CurrentScanner.asmgetchar;
                            if c in [#10,#13] then
                             begin
                               Message(scan_f_string_exceeds_line);
@@ -631,7 +631,7 @@ Unit Rax86int;
                  repeat
                    if c = '"' then
                     begin
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                       if c in [#10,#13] then
                        begin
                          Message(scan_f_string_exceeds_line);
@@ -640,11 +640,11 @@ Unit Rax86int;
                       repeat
                         if c='"' then
                          begin
-                           c:=current_scanner.asmgetchar;
+                           c:=CurrentScanner.asmgetchar;
                            if c='"' then
                             begin
                               actasmpattern:=actasmpattern+'"';
-                              c:=current_scanner.asmgetchar;
+                              c:=CurrentScanner.asmgetchar;
                               if c in [#10,#13] then
                                begin
                                  Message(scan_f_string_exceeds_line);
@@ -657,7 +657,7 @@ Unit Rax86int;
                         else
                          begin
                            actasmpattern:=actasmpattern+c;
-                           c:=current_scanner.asmgetchar;
+                           c:=CurrentScanner.asmgetchar;
                            if c in [#10,#13] then
                             begin
                               Message(scan_f_string_exceeds_line);
@@ -675,11 +675,11 @@ Unit Rax86int;
 
              '$' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  while c in ['0'..'9','A'..'F','a'..'f'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern:=tostr(ParseVal(actasmpattern,16));
                  actasmtoken:=AS_INTNUM;
@@ -689,11 +689,11 @@ Unit Rax86int;
              '&' : { identifier }
                begin
                  actasmpattern:='';
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  while c in  ['A'..'Z','a'..'z','0'..'9','_'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern_origcase:=actasmpattern;
                  uppervar(actasmpattern);
@@ -704,30 +704,30 @@ Unit Rax86int;
              ',' :
                begin
                  actasmtoken:=AS_COMMA;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '[' :
                begin
                  actasmtoken:=AS_LBRACKET;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              ']' :
                begin
                  actasmtoken:=AS_RBRACKET;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '(' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c='*' then
                    begin
-                     current_scanner.skipoldtpcomment(true);
+                     CurrentScanner.skipoldtpcomment(true);
                      GetToken;
                    end
                  else
@@ -738,28 +738,28 @@ Unit Rax86int;
              ')' :
                begin
                  actasmtoken:=AS_RPAREN;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              ':' :
                begin
                  actasmtoken:=AS_COLON;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '.' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
 {$ifdef x86_64}
                  if c='.' then
                    begin
                      actasmpattern:='..';
-                     c:=current_scanner.asmgetchar;
+                     c:=CurrentScanner.asmgetchar;
                      repeat
                        actasmpattern:=actasmpattern+c;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                      until not(c in ['A'..'Z','a'..'z','0'..'9','_']);
                      if upper(actasmpattern)<>'..GOTPCREL' then
                        begin
@@ -777,30 +777,30 @@ Unit Rax86int;
              '+' :
                begin
                  actasmtoken:=AS_PLUS;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '-' :
                begin
                  actasmtoken:=AS_MINUS;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '*' :
                begin
                  actasmtoken:=AS_STAR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '/' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c='/' then
                    begin
-                     current_scanner.skipdelphicomment;
+                     CurrentScanner.skipdelphicomment;
                      GetToken;
                    end
                  else
@@ -813,16 +813,16 @@ Unit Rax86int;
                  if prevasmtoken = AS_LOPBCST then
                  begin
                    actasmpattern:=c;
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                    { Get the possible characters }
                    while c in ['1','2','3','4','6','8','t','T','o','O'] do
                     begin
                       actasmpattern:=actasmpattern + c;
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                     end;
 
                    while (c in [' ',#9]) do
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
 
                    if c = '}' then
                     begin
@@ -835,12 +835,12 @@ Unit Rax86int;
                        else if (actasmpattern = '1TO16') then actasmtoken := AS_OPBCST1TO16
                        else if (actasmpattern = '1TO32') then actasmtoken := AS_OPBCST1TO32
                        else actasmpattern := actasmpattern_origcase;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                     end
                     else
                     begin
-                      if c = '{' then current_scanner.inc_comment_level;
-                      current_scanner.skipcomment(false); // is comment
+                      if c = '{' then CurrentScanner.inc_comment_level;
+                      CurrentScanner.skipcomment(false); // is comment
                     end;
 
                     actasmpattern := '';
@@ -850,12 +850,12 @@ Unit Rax86int;
                  begin
 
                    actasmpattern:=c;
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                    { Get the possible characters }
                    while c in ['0'..'9','A'..'F','a'..'f'] do
                     begin
                       actasmpattern:=actasmpattern + c;
-                      c:=current_scanner.asmgetchar;
+                      c:=CurrentScanner.asmgetchar;
                     end;
                    { Get ending character }
                    actasmpattern_origcase:=actasmpattern;
@@ -877,14 +877,14 @@ Unit Rax86int;
                           Begin
                             actasmpattern:=tostr(ParseVal(actasmpattern,8));
                             actasmtoken:=AS_INTNUM;
-                            c:=current_scanner.asmgetchar;
+                            c:=CurrentScanner.asmgetchar;
                             exit;
                           end;
                         'H' :
                           Begin
                             actasmpattern:=tostr(ParseVal(actasmpattern,16));
                             actasmtoken:=AS_INTNUM;
-                            c:=current_scanner.asmgetchar;
+                            c:=CurrentScanner.asmgetchar;
                             exit;
                           end;
                         else { must be an integer number }
@@ -900,8 +900,8 @@ Unit Rax86int;
 
              #13,#10:
                begin
-                 current_scanner.linebreak;
-                 c:=current_scanner.asmgetchar;
+                 CurrentScanner.linebreak;
+                 c:=CurrentScanner.asmgetchar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
@@ -909,7 +909,7 @@ Unit Rax86int;
 
              ';':
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
@@ -917,13 +917,13 @@ Unit Rax86int;
 
              '{':
                begin
-                 if not(check_operand_extention) then current_scanner.skipcomment(true)
+                 if not(check_operand_extention) then CurrentScanner.skipcomment(true)
                   else  // exists operand extention e.g. AVX512 {k1..k7} or {z} or {1to8}
                   begin
-                    case current_scanner.asmgetchar of
+                    case CurrentScanner.asmgetchar of
                       '{': begin
-                             current_scanner.inc_comment_level;
-                             current_scanner.skipcomment(true);
+                             CurrentScanner.inc_comment_level;
+                             CurrentScanner.skipcomment(true);
                            end;
                       '}': ; // local comment closed
                       'k',
@@ -952,7 +952,7 @@ Unit Rax86int;
                              exit;
                            end;
                       else begin
-                             current_scanner.skipcomment(false);
+                             CurrentScanner.skipcomment(false);
                            end;
                     end;
                   end;
@@ -961,7 +961,7 @@ Unit Rax86int;
                end;
 
               else
-                 current_scanner.illegal_char(c);
+                 CurrentScanner.illegal_char(c);
            end;
          end;
       end;
@@ -1871,7 +1871,7 @@ Unit Rax86int;
                                       (oper.opr.ref.index<>NR_NO) or
                                       (oper.opr.ref.offset<>0) then
                                      Message(asmr_e_wrong_gotpcrel_intel_syntax);
-                                   if tf_no_pic_supported in target_info.flags then
+                                   if tf_no_pic_supported in TargetInfo.flags then
                                      Message(asmr_e_no_gotpcrel_support);
                                    oper.opr.ref.refaddr:=addr_pic;
                                    oper.opr.ref.base:=NR_RIP;
@@ -1904,7 +1904,7 @@ Unit Rax86int;
                     end;
                    if GotOffset then
                     begin
-                      if oper.hasvar and (oper.opr.ref.base=current_procinfo.framepointer) then
+                      if oper.hasvar and (oper.opr.ref.base=CurrentProcInfo.framepointer) then
                        begin
                          if (oper.opr.typ=OPR_REFERENCE) then
                            oper.opr.ref.base:=NR_NO;
@@ -2128,7 +2128,7 @@ Unit Rax86int;
                     Message(asmr_e_only_add_relocatable_symbol);
                    if not assigned(oper.opr.ref.symbol) then
                      begin
-                       oper.opr.ref.symbol:=current_asmdata.RefAsmSymbol(tempstr,tempsymtyp);
+                       oper.opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
 
                      end
                    else
@@ -2249,7 +2249,7 @@ Unit Rax86int;
           begin
             oper.opr.typ:=OPR_SYMBOL;
             oper.opr.symofs:=l;
-            oper.opr.symbol:=current_asmdata.RefAsmSymbol(tempstr,tempsymtyp);
+            oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
             oper.opr.symseg:=cseof_isseg in cse_out_flags;
             oper.opr.sym_farproc_entry:=cseof_is_farproc_entry in cse_out_flags;
           end
@@ -2338,7 +2338,7 @@ Unit Rax86int;
                         if (hs <> '') then
                           begin
                             oper.opr.typ:=OPR_SYMBOL;
-                            oper.opr.symbol:=current_asmdata.RefAsmSymbol(hs,AT_FUNCTION);
+                            oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(hs,AT_FUNCTION);
                           end
                         else
                           begin
@@ -2392,7 +2392,7 @@ Unit Rax86int;
                       relative accesses)
                     }
                     if (actasmtoken=AS_OFFSET) and
-                       (cs_create_pic in current_settings.moduleswitches) then
+                       (cs_create_pic in CurrentSettings.moduleswitches) then
                       begin
                         Consume(AS_OFFSET);
                         oper.opr.ref.refaddr:=addr_pic;
@@ -2439,7 +2439,7 @@ Unit Rax86int;
                 Consume(AS_PTR);
                 { in delphi mode, allow e.g. call dword ptr eax,
                   see also tbs/tw18225.pas }
-                if not(m_delphi in current_settings.modeswitches) then
+                if not(m_delphi in CurrentSettings.modeswitches) then
                   oper.InitRef;
                 { if the operand subscripts a record, the typesize will be
                   rest -> save it here and restore it afterwards }
@@ -2477,7 +2477,7 @@ Unit Rax86int;
                  end
                 else
                 { support result for delphi modes }
-                 if (m_objpas in current_settings.modeswitches) and (actasmpattern='RESULT') then
+                 if (m_objpas in CurrentSettings.modeswitches) and (actasmpattern='RESULT') then
                   begin
                     oper.SetUpResult;
                     Consume(AS_ID);
@@ -3095,7 +3095,7 @@ Unit Rax86int;
       curlist:=TAsmList.Create;
       { we might need to know which parameters are passed in registers }
       if not parse_generic then
-        current_procinfo.generate_parameter_info;
+        CurrentProcInfo.generate_parameter_info;
       { start tokenizer }
       gettoken;
       { main loop }

@@ -101,7 +101,7 @@ type
     condition : tasmcond;
     ops       : byte;
     labeled   : boolean;
-    filepos  : tfileposinfo;
+    filepos  : TFilePosInfo;
     constructor create(optype : tcoperand);virtual;
     destructor  destroy;override;
     { converts the instruction to an instruction how it's used by the assembler writer
@@ -185,7 +185,7 @@ Function AsmRegisterPara(sym: tabstractnormalvarsym): boolean;
   Procedure ConcatLabel(p: TAsmList;var l : tasmlabel);
   Procedure ConcatConstant(p : TAsmList;value: tcgint; constsize:byte);
   Procedure ConcatConstSymbol(p : TAsmList;const sym,endsym:string;symtyp:tasmsymtype;l:tcgint;constsize:byte;isofs:boolean);
-  Procedure ConcatRealConstant(p : TAsmList;value: bestreal; real_typ : tfloattype);
+  Procedure ConcatRealConstant(p : TAsmList;value: bestreal; real_typ : TFloatType);
   Procedure ConcatString(p : TAsmList;s:string);
   procedure ConcatAlign(p:TAsmList;l:tcgint);
   Procedure ConcatPublic(p:TAsmList;const s : string);
@@ -675,7 +675,7 @@ function TOperand.SetupResult:boolean;
 begin
   SetupResult:=false;
   { replace by correct offset. }
-  with current_procinfo.procdef do
+  with CurrentProcInfo.procdef do
     if (not is_void(returndef)) then
       begin
         SetupResult:=setupvar('result',false)
@@ -688,7 +688,7 @@ end;
 Function TOperand.SetupSelf:boolean;
 Begin
   SetupSelf:=false;
-  if assigned(current_structdef) then
+  if assigned(CurrentStructDef) then
     SetupSelf:=setupvar('self',false)
   else
     Message(asmr_e_cannot_use_SELF_outside_a_method);
@@ -698,7 +698,7 @@ end;
 Function TOperand.SetupOldEBP:boolean;
 Begin
   SetupOldEBP:=false;
-  if current_procinfo.procdef.parast.symtablelevel>normal_function_level then
+  if CurrentProcInfo.procdef.parast.symtablelevel>normal_function_level then
     SetupOldEBP:=setupvar('parentframe',false)
   else
     Message(asmr_e_cannot_use_OLDEBP_outside_nested_procedure);
@@ -931,13 +931,13 @@ Begin
           staticvarsym :
             begin
               initref;
-              opr.ref.symbol:=current_asmdata.RefAsmSymbol(tstaticvarsym(sym).mangledname,AT_DATA);
+              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tstaticvarsym(sym).mangledname,AT_DATA);
               Inc(opr.ref.offset,absoffset);
             end;
           paravarsym,
           localvarsym :
             begin
-              tmpprocinfo:=current_procinfo;
+              tmpprocinfo:=CurrentProcInfo;
               while assigned(tmpprocinfo) do
                 begin
                   if (sym.owner=tmpprocinfo.procdef.localst) or
@@ -970,12 +970,12 @@ Begin
                   indexreg:=NR_NO;
                 end;
               opr.typ:=OPR_LOCAL;
-              if assigned(current_procinfo.parent) and
-                 not(po_inline in current_procinfo.procdef.procoptions) and
-                 (sym.owner<>current_procinfo.procdef.localst) and
-                 (sym.owner<>current_procinfo.procdef.parast) and
-                 (current_procinfo.procdef.localst.symtablelevel>normal_function_level) and
-                 symtable_has_localvarsyms(current_procinfo.procdef.localst) then
+              if assigned(CurrentProcInfo.parent) and
+                 not(po_inline in CurrentProcInfo.procdef.procoptions) and
+                 (sym.owner<>CurrentProcInfo.procdef.localst) and
+                 (sym.owner<>CurrentProcInfo.procdef.parast) and
+                 (CurrentProcInfo.procdef.localst.symtablelevel>normal_function_level) and
+                 symtable_has_localvarsyms(CurrentProcInfo.procdef.localst) then
                 message1(asmr_e_local_para_unreachable,s);
               opr.localsym:=tabstractnormalvarsym(sym);
               opr.localsymofs:=absoffset;
@@ -985,7 +985,7 @@ Begin
               opr.localindexreg:=indexreg;
               opr.localscale:=0;
               opr.localgetoffset:=GetOffset;
-              if paramanager.push_addr_param(tabstractvarsym(sym).varspez,tabstractvarsym(sym).vardef,current_procinfo.procdef.proccalloption) then
+              if paramanager.push_addr_param(tabstractvarsym(sym).varspez,tabstractvarsym(sym).vardef,CurrentProcInfo.procdef.proccalloption) then
                 SetSize(sizeof(pint),false);
             end;
           else
@@ -1022,14 +1022,14 @@ Begin
         case opr.typ of
           OPR_REFERENCE:
             begin
-              opr.ref.symbol:=current_asmdata.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
+              opr.ref.symbol:=CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
               Inc(opr.ref.offset,absoffset);
 
             end;
           OPR_NONE:
             begin
               opr.typ:=OPR_SYMBOL;
-              opr.symbol:=current_asmdata.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
+              opr.symbol:=CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION);
 
               opr.symofs:=absoffset;
             end;
@@ -1195,7 +1195,7 @@ constructor TInstruction.create(optype : tcoperand);
     Condition:=C_NONE;
     Ops:=0;
     }
-    filepos:=current_filepos;
+    filepos:=CurrentFilePos;
     for i:=1 to max_operands do
       Operands[i]:=optype.create;
     Labeled:=false;
@@ -1285,7 +1285,7 @@ begin
        AddAbsoluteSymRefs(tabsolutevarsym(sym));
      staticvarsym:
        if not(vo_is_external in tstaticvarsym(sym).varoptions) then
-         cnodeutils.RegisterUsedAsmSym(current_asmdata.RefAsmSymbol(sym.mangledname,AT_DATA),tstaticvarsym(sym).vardef,true);
+         cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(sym.mangledname,AT_DATA),tstaticvarsym(sym).vardef,true);
      procsym:
        begin
          { if it's a pure assembler routine, the definition of the symbol will also
@@ -1293,7 +1293,7 @@ begin
            it as used anyway, clang will get into trouble) }
          if not(po_assembler in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions) and
             not(po_external in tprocdef(tprocsym(sym).ProcdefList[0]).procoptions) then
-           cnodeutils.RegisterUsedAsmSym(current_asmdata.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION),tprocdef(tprocsym(sym).ProcdefList[0]),true);
+           cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(tprocdef(tprocsym(sym).ProcdefList[0]).mangledname,AT_FUNCTION),tprocdef(tprocsym(sym).ProcdefList[0]),true);
        end;
      else
        ;
@@ -1309,7 +1309,7 @@ begin
       ;
     toasm:
       begin
-        cnodeutils.RegisterUsedAsmSym(current_asmdata.RefAsmSymbol(sym.mangledname,AT_DATA),sym.vardef,true);
+        cnodeutils.RegisterUsedAsmSym(CurrentAsmData.RefAsmSymbol(sym.mangledname,AT_DATA),sym.vardef,true);
       end;
     tovar:
       begin
@@ -1507,7 +1507,7 @@ end;
 function AsmRegisterPara(sym: tabstractnormalvarsym): boolean;
 begin
   result:=
-    (po_assembler in current_procinfo.procdef.procoptions) and
+    (po_assembler in CurrentProcInfo.procdef.procoptions) and
     (sym.typ=paravarsym) and
     (tparavarsym(sym).paraloc[calleeside].Location^.Loc=LOC_REGISTER);
 end;
@@ -1538,7 +1538,7 @@ Begin
   base:=Copy(s,1,i-1);
   delete(s,1,i);
   if base='SELF' then
-   st:=current_structdef.symtable
+   st:=CurrentStructDef.symtable
   else
    begin
      asmsearchsym(base,sym,srsymtable);
@@ -1693,13 +1693,13 @@ Begin
 
               Tlabelsym(sym).nonlocal:=true;
             if emit then
-              include(current_procinfo.flags,pi_has_interproclabel);
+              include(CurrentProcInfo.flags,pi_has_interproclabel);
           end;
         if not(assigned(tlabelsym(sym).asmblocklabel)) then
           if Tlabelsym(sym).nonlocal then
-            current_asmdata.getglobaljumplabel(tlabelsym(sym).asmblocklabel)
+            CurrentAsmData.getglobaljumplabel(tlabelsym(sym).asmblocklabel)
           else
-            current_asmdata.getjumplabel(tlabelsym(sym).asmblocklabel);
+            CurrentAsmData.getjumplabel(tlabelsym(sym).asmblocklabel);
         hl:=tlabelsym(sym).asmblocklabel;
         if emit then
           begin
@@ -1785,7 +1785,7 @@ end;
   end;
 
 
-  Procedure ConcatRealConstant(p : TAsmList;value: bestreal; real_typ : tfloattype);
+  Procedure ConcatRealConstant(p : TAsmList;value: bestreal; real_typ : TFloatType);
   {***********************************************************************}
   { PROCEDURE ConcatRealConstant(value: bestreal; real_typ : tfloattype); }
   {  Description: This routine adds the value constant to the current     }

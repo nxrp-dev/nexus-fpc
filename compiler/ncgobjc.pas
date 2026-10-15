@@ -58,7 +58,7 @@ procedure tcgobjcselectornode.pass_generate_code;
     entry  : PHashSetItem;
     name   : pshortstring;
   begin
-    pool:=current_asmdata.ConstPools[sp_varnamerefs];
+    pool:=CurrentAsmData.ConstPools[sp_varnamerefs];
 
     case left.nodetype of
       loadn:

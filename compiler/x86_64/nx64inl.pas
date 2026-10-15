@@ -42,7 +42,7 @@ implementation
 
   procedure tx8664inlinenode.maybe_remove_round_trunc_typeconv;
     var
-      temp: tnode;
+      temp: TNode;
     begin
       { the prototype of trunc()/round() in the system unit is declared
         with valreal as parameter type, so the argument will always be

@@ -172,7 +172,7 @@ uses
         R : TResourceStringItem;
         resstrdef: tdef;
         tcb : ttai_typedconstbuilder;
-        enc : tstringencoding;
+        enc : TStringEncoding;
         charlen : longint;
         st : tstringtype;
         strcharpointertype: tdef;
@@ -183,15 +183,15 @@ uses
         tcb:=ctai_typedconstbuilder.create([tcalo_vectorized_dead_strip_start,tcalo_data_force_indirect,tcalo_is_public_asm]);
         { Write unitname entry }
         tcb.maybe_begin_aggregate(resstrdef);
-        namelab:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],@current_module.localsymtable.name^[1],length(current_module.localsymtable.name^),getansistringcodepage);
-        tcb.emit_string_offset(namelab,length(current_module.localsymtable.name^),st_ansistring,false,charpointertype);
+        namelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],@CurrentModule.localsymtable.name^[1],length(CurrentModule.localsymtable.name^),getansistringcodepage);
+        tcb.emit_string_offset(namelab,length(CurrentModule.localsymtable.name^),st_ansistring,false,charpointertype);
         tcb.emit_tai(tai_const.create_nil_dataptr,cansistringtype);
         tcb.emit_tai(tai_const.create_nil_dataptr,cansistringtype);
         tcb.emit_ord_const(0,u32inttype);
         tcb.maybe_end_aggregate(resstrdef);
-        current_asmdata.asmlists[al_resourcestrings].concatList(
+        CurrentAsmData.asmlists[al_resourcestrings].concatList(
           tcb.get_final_asmlist_vectorized_dead_strip(
-            nil,resstrdef,'RESSTR','',current_module.localsymtable,sizeof(pint)
+            nil,resstrdef,'RESSTR','',CurrentModule.localsymtable,sizeof(pint)
           )
         );
         tcb.free;
@@ -211,7 +211,7 @@ uses
               if R.isUnicode and assigned(R.WValue) then
                 begin
                   enc:=tstringdef(cunicodestringtype).encoding;
-                  valuelab:=tcb.emit_unicodestring_const(current_asmdata.asmlists[al_const],R.WValue,enc,False);
+                  valuelab:=tcb.emit_unicodestring_const(CurrentAsmData.asmlists[al_const],R.WValue,enc,False);
                   charlen:=getlengthwidestring(R.WValue);
                   st:=st_unicodestring;
                   strcharpointertype:=widecharpointertype;;
@@ -219,11 +219,11 @@ uses
               else
                 begin
                   if assigned(R.AValue) then
-                    valuelab:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],PAnsiChar(R.AValue),R.Len,getansistringcodepage);
+                    valuelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],PAnsiChar(R.AValue),R.Len,getansistringcodepage);
                 end;
               end;
-            current_asmdata.asmlists[al_const].concat(cai_align.Create(sizeof(pint)));
-            namelab:=tcb.emit_ansistring_const(current_asmdata.asmlists[al_const],@R.Name[1],length(R.name),getansistringcodepage);
+            CurrentAsmData.asmlists[al_const].concat(cai_align.Create(sizeof(pint)));
+            namelab:=tcb.emit_ansistring_const(CurrentAsmData.asmlists[al_const],@R.Name[1],length(R.name),getansistringcodepage);
             {
               Resourcestring index:
                   TResourceStringRecord = Packed Record
@@ -239,7 +239,7 @@ uses
             tcb.emit_string_offset(valuelab,charlen,st,false,strcharpointertype);
             tcb.emit_ord_const(R.hash,u32inttype);
             tcb.maybe_end_aggregate(resstrdef);
-            current_asmdata.asmlists[al_resourcestrings].concatList(
+            CurrentAsmData.asmlists[al_resourcestrings].concatList(
               tcb.get_final_asmlist_vectorized_dead_strip(
                 R.Sym,resstrdef,'RESSTR',R.Sym.Name,R.Sym.Owner,sizeof(pint))
             );
@@ -250,10 +250,10 @@ uses
         tcb:=ctai_typedconstbuilder.create([tcalo_vectorized_dead_strip_end,tcalo_data_force_indirect,tcalo_is_public_asm]);
         tcb.begin_anonymous_record(internaltypeprefixName[itp_emptyrec],
           default_settings.packrecords,sizeof(pint),
-          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
-        current_asmdata.AsmLists[al_resourcestrings].concatList(
+          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
+        CurrentAsmData.AsmLists[al_resourcestrings].concatList(
           tcb.get_final_asmlist_vectorized_dead_strip(
-            nil,tcb.end_anonymous_record,'RESSTR','',current_module.localsymtable,sizeof(pint)
+            nil,tcb.end_anonymous_record,'RESSTR','',CurrentModule.localsymtable,sizeof(pint)
           )
         );
         tcb.free;
@@ -271,7 +271,7 @@ uses
         P : PByte;
 
       begin
-        ResFileName:=ChangeFileExt(current_module.ppufilename,'.rsj');
+        ResFileName:=ChangeFileExt(CurrentModule.ppufilename,'.rsj');
         message1 (general_i_writingresourcefile,ExtractFileName(ResFileName));
         Assign(F,ResFileName);
         {$push}{$i-}
@@ -305,7 +305,7 @@ uses
             if Not r.isUnicode then
               begin
               initwidestring(W);
-              ascii2unicode(PAnsiChar(R.AValue),R.Len,current_settings.sourcecodepage,W);
+              ascii2unicode(PAnsiChar(R.AValue),R.Len,CurrentSettings.sourcecodepage,W);
               end
             else
               begin
@@ -357,9 +357,9 @@ uses
 
     procedure Tresourcestrings.RegisterResourceStrings;
       begin
-        if assigned(current_module.globalsymtable) then
-          current_module.globalsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
-        current_module.localsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
+        if assigned(CurrentModule.globalsymtable) then
+          CurrentModule.globalsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
+        CurrentModule.localsymtable.SymList.ForEachCall(@ConstSym_Register,nil);
       end;
 
 
@@ -368,22 +368,22 @@ uses
         resstrs : Tresourcestrings;
       begin
         { needed for the typed constant defs that get generated/looked up }
-        if assigned(current_module.globalsymtable) then
-          symtablestack.push(current_module.globalsymtable);
-        symtablestack.push(current_module.localsymtable);
+        if assigned(CurrentModule.globalsymtable) then
+          symtablestack.push(CurrentModule.globalsymtable);
+        symtablestack.push(CurrentModule.localsymtable);
         resstrs:=Tresourcestrings.Create;
         resstrs.RegisterResourceStrings;
         if not resstrs.List.Empty then
           begin
-            include(current_module.moduleflags,mf_has_resourcestrings);
+            include(CurrentModule.moduleflags,mf_has_resourcestrings);
             resstrs.CreateResourceStringData;
             resstrs.WriteRSJFile;
           end;
         resstrs.Free;
         resstrs := nil;
-        symtablestack.pop(current_module.localsymtable);
-        if assigned(current_module.globalsymtable) then
-          symtablestack.pop(current_module.globalsymtable);
+        symtablestack.pop(CurrentModule.localsymtable);
+        if assigned(CurrentModule.globalsymtable) then
+          symtablestack.pop(CurrentModule.globalsymtable);
       end;
 
 end.

@@ -85,10 +85,10 @@ implementation
         i : longint;
         ImportLibrary : TImportLibrary;
       begin
-        for i:=0 to current_module.ImportLibraryList.Count-1 do
+        for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
-            ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
-            current_module.linkothersharedlibs.add(ImportLibrary.Name,link_always);
+            ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
+            CurrentModule.linkothersharedlibs.add(ImportLibrary.Name,link_always);
           end;
       end;
 
@@ -107,31 +107,31 @@ implementation
         begin
           { The linker script keeps .fpc.n_links. References here retain
             otherwise unused smartlink exports. }
-          new_section(current_asmdata.asmlists[al_globals],sec_fpc,'links',0);
+          new_section(CurrentAsmData.asmlists[al_globals],sec_fpc,'links',0);
           if hp.is_var then
-            current_asmdata.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_DATA,0))
+            CurrentAsmData.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_DATA,0))
           else
-            current_asmdata.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_FUNCTION,0));
+            CurrentAsmData.asmlists[al_globals].concat(tai_const.Createname(hp.name^,AT_FUNCTION,0));
         end;
 
       begin
-        hp:=texported_item(current_module._exports.first);
+        hp:=texported_item(CurrentModule._exports.first);
         while assigned(hp) do
           begin
-            asmsym:=current_asmdata.getasmsymbol(hp.name^);
+            asmsym:=CurrentAsmData.getasmsymbol(hp.name^);
             if assigned(asmsym) and (asmsym.bind=AB_PRIVATE_EXTERN) then
               begin
                 { A version script cannot export an ELF HIDDEN symbol.
                   This includes procedures exported under their own name. }
                 asmsym.bind:=AB_GLOBAL;
-                current_module.add_public_asmsym(asmsym);
+                CurrentModule.add_public_asmsym(asmsym);
               end;
             hp:=texported_item(hp.next);
           end;
         inherited generatelib;
-        if current_module.is_unit then
+        if CurrentModule.is_unit then
           begin
-            hp:=texported_item(current_module._exports.first);
+            hp:=texported_item(CurrentModule._exports.first);
             while assigned(hp) do
               begin
                 { The alias now lives in the unit object. Only its name is
@@ -143,7 +143,7 @@ implementation
             exit;
           end;
 
-        hp:=texported_item(current_module._exports.first);
+        hp:=texported_item(CurrentModule._exports.first);
         while assigned(hp) do
           begin
             retainexport(hp);
@@ -159,7 +159,7 @@ implementation
                 while assigned(hp) do
                   begin
                     if assigned(exportedsymnames.FindCase(hp.name^)) and
-                       not current_module.ispackage then
+                       not CurrentModule.ispackage then
                       duplicatesymbol(hp.name^)
                     else
                       begin
@@ -304,9 +304,9 @@ begin
   hp:=tmodule(loaded_units.first);
   while assigned(hp) do
     begin
-      result:=Assigned(hp.ImportLibraryList.find(target_info.sharedClibprefix+'c'+target_info.sharedClibext));
+      result:=Assigned(hp.ImportLibraryList.find(TargetInfo.sharedClibprefix+'c'+TargetInfo.sharedClibext));
       if result then break;
-      result:=hp.linkothersharedlibs.find(target_info.sharedClibprefix+'c'+target_info.sharedClibext);
+      result:=hp.linkothersharedlibs.find(TargetInfo.sharedClibprefix+'c'+TargetInfo.sharedClibext);
       if result then break;
       result:=hp.linkothersharedlibs.find('c');
       if result then break;
@@ -345,7 +345,7 @@ begin
  {unknown :( }
 {$ifdef aarch64}   target_opt:='';{$endif} {unknown :( }
 
-  if cs_link_lld in current_settings.globalswitches then
+  if cs_link_lld in CurrentSettings.globalswitches then
     begin
       LdProgram:='ld.lld';
       target_opt:=' -b elf';
@@ -361,7 +361,7 @@ begin
        when targeting binutils 2.19 or later, we use the "INSERT" command to
        augment the default linkerscript, which also requires -T (normally that
        option means "completely replace the default linkerscript) }
-     if not(cs_link_pre_binutils_2_19 in current_settings.globalswitches) or
+     if not(cs_link_pre_binutils_2_19 in CurrentSettings.globalswitches) or
        (length(sysrootpath)>0) then
        begin
          ExeCmd[1]:=ExeCmd[1]+' -T';
@@ -383,7 +383,7 @@ procedure TLinkerLinux.LoadPredefinedLibraryOrder;
 // put your linkorder/linkalias overrides here.
 // Note: assumes only called when reordering/aliasing is used.
 Begin
-   if not (cs_link_no_default_lib_order in  current_settings.globalswitches) Then
+   if not (cs_link_no_default_lib_order in  CurrentSettings.globalswitches) Then
         Begin
           LinkLibraryOrder.add('gcc','',15);
           LinkLibraryOrder.add('c','',100);
@@ -406,10 +406,10 @@ Procedure TLinkerLinux.InitSysInitUnitName;
 begin
   linklibc:=ModulesLinkToLibc;
   reorder:=linklibc and ReOrderEntries;
-  sysinitunit:=defsinames[current_module.islibrary];
-  prtobj:=defprtnames[current_module.islibrary];
+  sysinitunit:=defsinames[CurrentModule.islibrary];
+  prtobj:=defprtnames[CurrentModule.islibrary];
 
-  if current_module.islibrary then
+  if CurrentModule.islibrary then
     exit;
   if linklibc then
     begin
@@ -434,7 +434,7 @@ begin
   with linkres do
     begin
       { Write path to search libraries }
-      HPath:=TCmdStrListItem(current_module.locallibrarysearchpath.First);
+      HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
       while assigned(HPath) do
        begin
          Add('SEARCH_DIR("'+HPath.Str+'")');
@@ -472,7 +472,7 @@ begin
 
       StartSection('INPUT(');
       { add objectfiles, start with prt0 always }
-      if not (target_info.system in systems_internal_sysinit) and (prtobj<>'') then
+      if not (TargetInfo.system in systems_internal_sysinit) and (prtobj<>'') then
        AddFileName(maybequoted(FindObjectFile(prtobj,'',false)));
       { try to add crti and crtbegin if linking to C }
       if linklibc and (libctype<>uclibc) then
@@ -484,7 +484,7 @@ begin
            Message1(exec_w_init_file_not_found,'crti.o');
 
          { then the crtbegin* }
-         if (cs_create_pic in current_settings.moduleswitches)
+         if (cs_create_pic in CurrentSettings.moduleswitches)
          then
            begin
              if librarysearchpath.FindFile('crtbeginS.o',false,s) then
@@ -493,7 +493,7 @@ begin
                Message1(exec_w_init_file_not_found,'crtbeginS.o');
            end
          else
-           if (cs_link_staticflag in current_settings.globalswitches) then
+           if (cs_link_staticflag in CurrentSettings.globalswitches) then
              begin
                if librarysearchpath.FindFile('crtbeginT.o',false,s) then
                  AddFileName(s)
@@ -555,7 +555,7 @@ begin
                  S:=SharedLibFiles.GetFirst;
                  if (s<>'c') or reorder then
                   begin
-                    i:=Pos(target_info.sharedlibext,S);
+                    i:=Pos(TargetInfo.sharedlibext,S);
                     if i>0 then
                      Delete(S,i,255);
                     Add('-l'+s);
@@ -569,18 +569,18 @@ begin
                This does not hurt as in case we use a dyn. library we depend on the dyn. linker anyways.
 
                All this does not apply if we link anyways against libc }
-             if libraryadded and not(linklibc) and not(isdll) and (tf_section_threadvars in target_info.flags) then
+             if libraryadded and not(linklibc) and not(isdll) and (tf_section_threadvars in TargetInfo.flags) then
                Add('-l:'+ExtractFileName(defdynlinker));
              Add(')');
            end
          else
            linklibc:=true;
-         if (cs_link_staticflag in current_settings.globalswitches) or
+         if (cs_link_staticflag in CurrentSettings.globalswitches) or
             (linklibc and not reorder) then
            begin
              Add('GROUP(');
              { when we have -static for the linker the we also need libgcc }
-             if (cs_link_staticflag in current_settings.globalswitches) then
+             if (cs_link_staticflag in CurrentSettings.globalswitches) then
                begin
                  Add('-lgcc');
                  if librarysearchpath.FindFile('libgcc_eh.a',false,s1) then
@@ -596,7 +596,7 @@ begin
       { objects which must be at the end }
       if linklibc and (libctype<>uclibc) then
        begin
-         if (cs_create_pic in current_settings.moduleswitches)
+         if (cs_create_pic in CurrentSettings.moduleswitches)
          then
            begin
              found1:=librarysearchpath.FindFile('crtendS.o',false,s1);
@@ -637,7 +637,7 @@ begin
 
       add('SECTIONS');
       add('{');
-      if not(cs_link_pre_binutils_2_19 in current_settings.globalswitches) then
+      if not(cs_link_pre_binutils_2_19 in CurrentSettings.globalswitches) then
         { we can't use ".data", as that would hide the .data from the
           original linker script in combination with the INSERT at the end }
         add('  .fpcdata           :')
@@ -646,14 +646,14 @@ begin
       add('  {');
       add('    KEEP (*(.fpc .fpc.n_version .fpc.n_links))');
       add('  }');
-      if not(cs_debuginfo in current_settings.moduleswitches) and
-         not(tf_use_psabieh in target_info.flags) then
+      if not(cs_debuginfo in CurrentSettings.moduleswitches) and
+         not(tf_use_psabieh in TargetInfo.flags) then
         add('  /DISCARD/ : {*(.debug_frame)}');
       add('  .threadvar : { *(.threadvar .threadvar.* .gnu.linkonce.tv.*) }');
       add('}');
       { this "INSERT" means "merge into the original linker script, even if
         -T is used" }
-      if not(cs_link_pre_binutils_2_19 in current_settings.globalswitches) then
+      if not(cs_link_pre_binutils_2_19 in CurrentSettings.globalswitches) then
         add('INSERT AFTER .data;');
       { Write and Close response }
       writetodisk;
@@ -679,8 +679,8 @@ var
   StaticStr,
   StripStr   : string[40];
 begin
-  if not(cs_link_nolink in current_settings.globalswitches) then
-   Message1(exec_i_linking,current_module.exefilename);
+  if not(cs_link_nolink in CurrentSettings.globalswitches) then
+   Message1(exec_i_linking,CurrentModule.exefilename);
 
 { Create some replacements }
   StaticStr:='';
@@ -690,14 +690,14 @@ begin
   mapstr:='';
   ltostr:='';
   rpathstr:='';
-  if (cs_link_staticflag in current_settings.globalswitches) then
+  if (cs_link_staticflag in CurrentSettings.globalswitches) then
    StaticStr:='-static';
-  if (cs_link_strip in current_settings.globalswitches) and
-     not(cs_link_separate_dbg_file in current_settings.globalswitches) then
+  if (cs_link_strip in CurrentSettings.globalswitches) and
+     not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
    StripStr:='-s';
-  if (cs_link_map in current_settings.globalswitches) then
-   mapstr:='-Map '+maybequoted(ChangeFileExt(current_module.exefilename,'.map'));
-  if (cs_link_smart in current_settings.globalswitches) and
+  if (cs_link_map in CurrentSettings.globalswitches) then
+   mapstr:='-Map '+maybequoted(ChangeFileExt(CurrentModule.exefilename,'.map'));
+  if (cs_link_smart in CurrentSettings.globalswitches) and
      create_smartlink_sections then
    GCSectionsStr:='--gc-sections';
   If (Info.DynamicLinker<>'') and (not SharedLibFiles.Empty) then
@@ -710,8 +710,8 @@ begin
    End;
 
   { add custom LTO library if using custom clang }
-  if (cs_lto in current_settings.moduleswitches) and
-     not(cs_link_on_target in current_settings.globalswitches) and
+  if (cs_lto in CurrentSettings.moduleswitches) and
+     not(cs_link_on_target in CurrentSettings.globalswitches) and
      (utilsdirectory<>'') and
      FileExists(utilsdirectory+'/../lib/LLVMgold.so',true) then
     begin
@@ -728,7 +728,7 @@ begin
 
 { Call linker }
   SplitBinCmd(Info.ExeCmd[1],binstr,cmdstr);
-  Replace(cmdstr,'$EXE',maybequoted(current_module.exefilename));
+  Replace(cmdstr,'$EXE',maybequoted(CurrentModule.exefilename));
   Replace(cmdstr,'$OPT',Info.ExtraOptions);
   Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
   Replace(cmdstr,'$STATIC',StaticStr);
@@ -744,10 +744,10 @@ begin
     cmdstr:=cmdstr+' -E';
 
   { create eh_frame_hdr section? }
-  if tf_use_psabieh in target_info.flags then
+  if tf_use_psabieh in TargetInfo.flags then
     cmdstr:=cmdstr+ ' --eh-frame-hdr';
 
-  if cs_large in current_settings.globalswitches then
+  if cs_large in CurrentSettings.globalswitches then
     cmdstr:=cmdstr+' --no-relax';
 
   s:=FindUtil(utilsprefix+BinStr+'.bfd',false);
@@ -760,15 +760,15 @@ begin
   success:=DoExec(binstr,CmdStr,true,false);
 
   { Create external .dbg file with debuginfo }
-  if success and (cs_link_separate_dbg_file in current_settings.globalswitches) then
+  if success and (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
     begin
       for i:=1 to 3 do
         begin
           SplitBinCmd(Info.ExtDbgCmd[i],binstr,cmdstr);
-          Replace(cmdstr,'$EXE',maybequoted(current_module.exefilename));
-          Replace(cmdstr,'$DBGFN',maybequoted(extractfilename(current_module.dbgfilename)));
-          Replace(cmdstr,'$DBGX',current_module.dbgfilename);
-          Replace(cmdstr,'$DBG',maybequoted(current_module.dbgfilename));
+          Replace(cmdstr,'$EXE',maybequoted(CurrentModule.exefilename));
+          Replace(cmdstr,'$DBGFN',maybequoted(extractfilename(CurrentModule.dbgfilename)));
+          Replace(cmdstr,'$DBGX',CurrentModule.dbgfilename);
+          Replace(cmdstr,'$DBG',maybequoted(CurrentModule.dbgfilename));
           success:=DoExec(FindUtil(utilsprefix+BinStr),CmdStr,true,false);
           if not success then
             break;
@@ -776,14 +776,14 @@ begin
     end;
 
   { Remove ResponseFile }
-  if (success) and not(cs_link_nolink in current_settings.globalswitches) then
+  if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
    DeleteFile(outputexedir+Info.ResName);
 
   { Post process,
     as it only writes sections sizes so far, do this only if V_Info is set }
-  if success and CheckVerbosity(V_Info) and not(cs_link_nolink in current_settings.globalswitches) then
+  if success and CheckVerbosity(V_Info) and not(cs_link_nolink in CurrentSettings.globalswitches) then
     { do not change success here as we are only writing some info, so if this fails, it does not matter }
-    { success:= }PostProcessExecutable(current_module.exefilename,false);
+    { success:= }PostProcessExecutable(CurrentModule.exefilename,false);
 
   MakeExecutable:=success;   { otherwise a recursive call to link method }
 end;
@@ -807,9 +807,9 @@ begin
   mapstr:='';
   ltostr:='';
   rpathstr:='';
-  if not(cs_link_nolink in current_settings.globalswitches) then
-   Message1(exec_i_linking,current_module.sharedlibfilename);
-  if (cs_link_smart in current_settings.globalswitches) and
+  if not(cs_link_nolink in CurrentSettings.globalswitches) then
+   Message1(exec_i_linking,CurrentModule.sharedlibfilename);
+  if (cs_link_smart in CurrentSettings.globalswitches) and
      create_smartlink_sections then
    GCSectionsStr:='--gc-sections'
   else
@@ -820,7 +820,7 @@ begin
 
  { Create some replacements }
  { note: linux does not use exportlib.initname/fininame due to the custom startup code }
-  if current_module.ispackage then
+  if CurrentModule.ispackage then
     begin
       { Pascal package lifecycle belongs to the shared manager, not ld.so. }
       InitStr:='';
@@ -831,13 +831,13 @@ begin
       InitStr:='-init FPC_SHARED_LIB_START';
       FiniStr:='-fini FPC_LIB_EXIT';
     end;
-  SoNameStr:='-soname '+ExtractFileName(current_module.sharedlibfilename);
-  if (cs_link_map in current_settings.globalswitches) then
-     mapstr:='-Map '+maybequoted(ChangeFileExt(current_module.sharedlibfilename,'.map'));
+  SoNameStr:='-soname '+ExtractFileName(CurrentModule.sharedlibfilename);
+  if (cs_link_map in CurrentSettings.globalswitches) then
+     mapstr:='-Map '+maybequoted(ChangeFileExt(CurrentModule.sharedlibfilename,'.map'));
 
   { add custom LTO library if using custom clang }
-  if (cs_lto in current_settings.moduleswitches) and
-     not(cs_link_on_target in current_settings.globalswitches) and
+  if (cs_lto in CurrentSettings.moduleswitches) and
+     not(cs_link_on_target in CurrentSettings.globalswitches) and
      (utilsdirectory<>'') and
      FileExists(utilsdirectory+'/../lib/LLVMgold.so',true) then
     begin
@@ -851,7 +851,7 @@ begin
 
  { Call linker }
   SplitBinCmd(Info.DllCmd[1],binstr,cmdstr);
-  Replace(cmdstr,'$EXE',maybequoted(current_module.sharedlibfilename));
+  Replace(cmdstr,'$EXE',maybequoted(CurrentModule.sharedlibfilename));
   Replace(cmdstr,'$OPT',Info.ExtraOptions);
   Replace(cmdstr,'$RES',maybequoted(outputexedir+Info.ResName));
   Replace(cmdstr,'$INIT',InitStr);
@@ -861,24 +861,24 @@ begin
   Replace(cmdstr,'$LTO',ltostr);
   Replace(cmdstr,'$RPATH',rpathstr);
   Replace(cmdstr,'$GCSECTIONS',GCSectionsStr);
-  if current_module.ispackage then
+  if CurrentModule.ispackage then
     { Owned definitions have one canonical address and per-image tables must
       not be preempted by equally named tables in a dependency. }
     cmdstr:=cmdstr+' -Bsymbolic -z defs -z text -z relro -z now';
   success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,false);
 
 { Strip the library ? }
-  if success and (cs_link_strip in current_settings.globalswitches) then
+  if success and (cs_link_strip in CurrentSettings.globalswitches) then
    begin
      { only remove non global symbols and debugging info for a library }
      Info.DllCmd[2]:='strip --discard-all --strip-debug $EXE';
      SplitBinCmd(Info.DllCmd[2],binstr,cmdstr);
-     Replace(cmdstr,'$EXE',maybequoted(current_module.sharedlibfilename));
+     Replace(cmdstr,'$EXE',maybequoted(CurrentModule.sharedlibfilename));
      success:=DoExec(FindUtil(utilsprefix+binstr),cmdstr,true,false);
    end;
 
 { Remove ResponseFile }
-  if (success) and not(cs_link_nolink in current_settings.globalswitches) then
+  if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
    DeleteFile(outputexedir+Info.ResName);
 
   MakeSharedLibrary:=success;   { otherwise a recursive call to link method }

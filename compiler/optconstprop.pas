@@ -50,7 +50,7 @@ unit optconstprop;
 
       will not result in any constant propagation.
     }
-    function do_optconstpropagate(var rootnode : tnode;out changed: boolean) : tnode;
+    function do_optconstpropagate(var rootnode : TNode;out changed: boolean) : TNode;
 
   implementation
 
@@ -61,11 +61,11 @@ unit optconstprop;
       nutils, nbas, ncnv, nld, nflw, ncal, ninl,
       optbase, optutils;
 
-    function check_written(var n: tnode; arg: pointer): foreachnoderesult;
+    function check_written(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
 
-        if n.isequal(tnode(arg)) and
+        if n.isequal(TNode(arg)) and
            ((n.flags*[nf_write,nf_modify])<>[]) then
           begin
             result:=fen_norecurse_true;
@@ -75,10 +75,10 @@ unit optconstprop;
 
     { propagates the constant assignment passed in arg into n, it returns true if
       the search can continue with the next statement }
-    function replaceBasicAssign(var n: tnode; arg: tnode; var tree_modified: boolean): boolean;
+    function replaceBasicAssign(var n: TNode; arg: TNode; var tree_modified: boolean): boolean;
       var
-        st2, oldnode: tnode;
-        old: pnode;
+        st2, oldnode: TNode;
+        old: PNode;
         changed, tree_modified2, tree_modified3: boolean;
         written, tree_modified4, tree_modified5: Boolean;
       begin
@@ -136,7 +136,7 @@ unit optconstprop;
                 { play safe and set the result which is check below }
                 result:=replaceBasicAssign(tfornode(n).t1, arg, tree_modified2);
                 tree_modified:=tree_modified or tree_modified2;
-                if result and (pi_dfaavailable in current_procinfo.flags) and
+                if result and (pi_dfaavailable in CurrentProcInfo.flags) and
                   { play safe }
                   assigned(tfornode(n).t2.optinfo) and assigned(tassignmentnode(arg).left.optinfo) then
                   begin
@@ -223,7 +223,7 @@ unit optconstprop;
             { constant inc'ed/dec'ed? }
             if (tinlinenode(n).inlinenumber=in_dec_x) or (tinlinenode(n).inlinenumber=in_inc_x) then
               begin
-                if tnode(tassignmentnode(arg).left).isequal(tcallparanode(tinlinenode(n).left).left) and
+                if TNode(tassignmentnode(arg).left).isequal(tcallparanode(tinlinenode(n).left).left) and
                   { Internal Inc/Dec flags are created through a tree transformation from
                     a previous ConstProp pass.  Setting it prevents an infinite loop where
                     Inc/Dec nodes are converted into an Add/Sub tree, and then converted
@@ -254,7 +254,7 @@ unit optconstprop;
             else if might_have_sideeffects(n) then
               exit(false);
 
-            result:=replaceBasicAssign(tunarynode(n).left, arg, tree_modified);
+            result:=replaceBasicAssign(TUnaryNode(n).left, arg, tree_modified);
           end
         else if n.nodetype=calln then
           begin
@@ -263,11 +263,11 @@ unit optconstprop;
             if (tassignmentnode(arg).left.nodetype=loadn) and
               (tabstractvarsym(tloadnode(tassignmentnode(arg).left).symtableentry).varregable in [vr_fpureg,vr_mmreg,vr_intreg]) then
               begin
-                result:=replaceBasicAssign(tnode(tcallnode(n).callinitblock), arg, tree_modified);
+                result:=replaceBasicAssign(TNode(tcallnode(n).callinitblock), arg, tree_modified);
                 result:=result and replaceBasicAssign(tcallnode(n).left, arg, tree_modified2);
                 result:=result and replaceBasicAssign(tcallnode(n).vmt_entry, arg, tree_modified3);
                 result:=result and replaceBasicAssign(tcallnode(n).right, arg, tree_modified4);
-                result:=result and replaceBasicAssign(tnode(tcallnode(n).callcleanupblock), arg, tree_modified5);
+                result:=result and replaceBasicAssign(TNode(tcallnode(n).callcleanupblock), arg, tree_modified5);
                 tree_modified:=tree_modified or tree_modified2 or tree_modified3 or tree_modified4 or tree_modified5;
 
                 { If the parameters were simplified, we may be able to simplify
@@ -281,31 +281,31 @@ unit optconstprop;
                 exit;
               end;
           end
-        else if n.InheritsFrom(tbinarynode) then
+        else if n.InheritsFrom(TBinaryNode) then
           begin
-            result:=replaceBasicAssign(tbinarynode(n).left, arg, tree_modified);
+            result:=replaceBasicAssign(TBinaryNode(n).left, arg, tree_modified);
             if result then
-              result:=replaceBasicAssign(tbinarynode(n).right, arg, tree_modified2);
+              result:=replaceBasicAssign(TBinaryNode(n).right, arg, tree_modified2);
             tree_modified:=tree_modified or tree_modified2;
           end
-        else if n.InheritsFrom(tunarynode) then
+        else if n.InheritsFrom(TUnaryNode) then
           begin
-            result:=replaceBasicAssign(tunarynode(n).left, arg, tree_modified);
+            result:=replaceBasicAssign(TUnaryNode(n).left, arg, tree_modified);
           end;
 
         if tree_modified and (n.nodetype<>callparan) then
           begin
             exclude(n.transientflags,tnf_pass1_done);
-            do_firstpass(n);
+            DoFirstPass(n);
           end;
       end;
 
 
-    function propagate(var n: tnode; arg: pointer): foreachnoderesult;
+    function propagate(var n: TNode; arg: pointer): foreachnoderesult;
       var
         l,
-        st, st2, oldnode: tnode;
-        old: pnode;
+        st, st2, oldnode: TNode;
+        old: PNode;
         a: tassignmentnode;
         tree_mod, changed: boolean;
       begin
@@ -339,10 +339,10 @@ unit optconstprop;
                          not(tabstractvarsym(tloadnode(l).symtableentry).addr_taken)) and
                          ((
                            (tloadnode(l).symtableentry.typ=localvarsym) and
-                           (tloadnode(l).symtable=current_procinfo.procdef.localst)
+                           (tloadnode(l).symtable=CurrentProcInfo.procdef.localst)
                           ) or
                           ((tloadnode(l).symtableentry.typ=paravarsym) and
-                           (tloadnode(l).symtable=current_procinfo.procdef.parast)
+                           (tloadnode(l).symtable=CurrentProcInfo.procdef.parast)
                           ) or
                           ((tloadnode(l).symtableentry.typ=staticvarsym) and
                            (tloadnode(l).symtable.symtabletype=staticsymtable)
@@ -402,7 +402,7 @@ unit optconstprop;
       end;
 
 
-    function do_optconstpropagate(var rootnode: tnode;out changed: boolean): tnode;
+    function do_optconstpropagate(var rootnode: TNode;out changed: boolean): TNode;
       var
         iteration_changed: Boolean;
       begin
@@ -422,7 +422,7 @@ unit optconstprop;
           printnode(output,rootnode);
           writeln('*******************************************************************************');
 {$endif DEBUG_CONSTPROP}
-        until not(cs_opt_level3 in current_settings.optimizerswitches) or not(iteration_changed);
+        until not(cs_opt_level3 in CurrentSettings.optimizerswitches) or not(iteration_changed);
         result:=rootnode;
       end;
 

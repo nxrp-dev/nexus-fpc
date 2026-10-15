@@ -35,16 +35,16 @@ interface
     type
       Tx86ATTAssembler=class(TGNUassembler)
         function sectionflags(secflags:TSectionFlags):string;override;
-        constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
+        constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
 
       Tx86AppleGNUAssembler=class(TAppleGNUassembler)
-        constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
+        constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
       end;
 
       Tx86AoutGNUAssembler=class(TAoutGNUassembler)
-        constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
+        constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
       end;
 
 
@@ -81,12 +81,12 @@ interface
       begin
         result:=inherited sectionflags(secflags);
         { COFF defaults unnamed attributes to writable data, unlike ELF. }
-        if (target_info.system in [system_i386_win32,system_x86_64_win64]) and
+        if (TargetInfo.system in [system_i386_win32,system_x86_64_win64]) and
            not (SF_W in secflags) then
           result:=result+'r';
       end;
 
-    constructor Tx86ATTAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
+    constructor Tx86ATTAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
         InstrWriter := Tx86InstrWriter.create(self);
@@ -98,7 +98,7 @@ interface
       begin
         result:=Inherited MakeCmdLine;
 {$ifdef i386}
-        case target_info.system of
+        case TargetInfo.system of
           system_i386_win32:
             FormatName:='win32';
           system_i386_linux:
@@ -110,7 +110,7 @@ interface
         end;
 {$endif i386}
 {$ifdef x86_64}
-        case target_info.system of
+        case TargetInfo.system of
           system_x86_64_win64:
             FormatName:='win64';
           system_x86_64_darwin:
@@ -128,7 +128,7 @@ interface
                           Tx86AppleGNUAssembler
  ****************************************************************************}
 
-    constructor Tx86AppleGNUAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
+    constructor Tx86AppleGNUAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
         InstrWriter := Tx86InstrWriter.create(self);
@@ -142,7 +142,7 @@ interface
                           Tx86AoutGNUAssembler
  ****************************************************************************}
 
-    constructor Tx86AoutGNUAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
+    constructor Tx86AoutGNUAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
         InstrWriter := Tx86InstrWriter.create(self);
@@ -428,7 +428,7 @@ interface
 
     const
 {$ifdef x86_64}
-       as_x86_64_as_info : tasminfo =
+       as_x86_64_as_info : TAsmInfo =
           (
             id     : as_gas;
             idtxt  : 'AS';
@@ -443,7 +443,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_yasm_info : tasminfo =
+       as_x86_64_yasm_info : TAsmInfo =
           (
             id     : as_yasm;
             idtxt  : 'YASM';
@@ -457,7 +457,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_gas_darwin_info : tasminfo =
+       as_x86_64_gas_darwin_info : TAsmInfo =
           (
             id     : as_darwin;
             idtxt  : 'AS-DARWIN';
@@ -471,7 +471,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_clang_darwin_info : tasminfo =
+       as_x86_64_clang_darwin_info : TAsmInfo =
           (
             id     : as_clang_asdarwin;
             idtxt  : 'CLANG';
@@ -485,7 +485,7 @@ interface
             dollarsign: '$';
           );
 
-       as_x86_64_clang_gas_info : tasminfo =
+       as_x86_64_clang_gas_info : TAsmInfo =
           (
             id     : as_clang_gas;
             idtxt  : 'AS-CLANG';
@@ -503,7 +503,7 @@ interface
 {$endif x86_64}
 
 {$ifdef i386}
-       as_i386_clang_gas_info : tasminfo =
+       as_i386_clang_gas_info : TAsmInfo =
           (
             id     : as_clang_gas;
             idtxt  : 'AS-CLANG';

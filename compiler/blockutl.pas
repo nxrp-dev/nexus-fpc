@@ -36,7 +36,7 @@ interface
     returns a node representing the converted code to implement this
     conversion (this node is valid both for typed constant declarations and
     in function bodies). The node is not reused }
-  function generate_block_for_procaddr(procloadnode: tloadnode): tnode;
+  function generate_block_for_procaddr(procloadnode: tloadnode): TNode;
 
   { for a procdef, return a recorddef representing a block literal for this
     procdef
@@ -178,7 +178,7 @@ implementation
       symtablestack.top.insertsym(descriptor);
       include(descriptor.symoptions,sp_internal);
       { create typed constant for the descriptor }
-      str_parse_typedconst(current_asmdata.AsmLists[al_const],
+      str_parse_typedconst(CurrentAsmData.AsmLists[al_const],
         '(reserved: 0; Block_size: '+tostr(block_literal_size)+
         '; signature: '''+objcencodemethod(invokepd)+''');',descriptor);
       result:=descriptor;
@@ -217,7 +217,7 @@ implementation
         convention }
       insert_self_and_vmt_para(result);
       insert_funcret_para(result);
-      finish_copied_procdef(result,wrappername,current_module.localsymtable,nil);
+      finish_copied_procdef(result,wrappername,CurrentModule.localsymtable,nil);
       if orgpd.is_addressonly then
         begin
           result.synthetickind:=tsk_callthrough;
@@ -257,7 +257,7 @@ implementation
       include(result.symoptions,sp_internal);
       symtablestack.top.insertsym(result);
       { initialise it }
-      str_parse_typedconst(current_asmdata.AsmLists[al_const],
+      str_parse_typedconst(CurrentAsmData.AsmLists[al_const],
         '(base: (isa        : @'+blockisasym.realname+
               '; flags     : '+tostr(blockflags)+
               '; reserved  : 0'+
@@ -269,7 +269,7 @@ implementation
 
 
   { compose an on-stack block literal for a "procedure of object" }
-  function get_pascal_method_literal(blockliteraldef: tdef; blockisasym: tstaticvarsym; blockflags: longint; procvarnode: tnode; invokepd: tprocdef; orgpv: tprocvardef; descriptor: tstaticvarsym): tnode;
+  function get_pascal_method_literal(blockliteraldef: tdef; blockisasym: tstaticvarsym; blockflags: longint; procvarnode: TNode; invokepd: tprocdef; orgpv: tprocvardef; descriptor: tstaticvarsym): TNode;
     var
       statement: tstatementnode;
       literaltemp: ttempcreatenode;
@@ -309,13 +309,13 @@ implementation
         Delphi/MacPas mode and the above node tree has been constructed for
         ObjFPC mode, which has been set by replace_scanner (in Delphi, the
         assignment to invoke would be without the proc_to_procvar conversion) }
-      typecheckpass(result);
+      TypeCheckPass(result);
     end;
 
 
-  function generate_block_for_procaddr(procloadnode: tloadnode): tnode;
+  function generate_block_for_procaddr(procloadnode: tloadnode): TNode;
     var
-      procvarnode: tnode;
+      procvarnode: TNode;
       { procvardef representing the original function we want to invoke }
       orgpv: tprocvardef;
       { procdef of the original function we want to invoke }
@@ -340,7 +340,7 @@ implementation
 
       { add every symbol that we create here to the unit-level symbol table }
       old_symtablestack:=symtablestack;
-      symtablestack:=old_symtablestack.getcopyuntil(current_module.localsymtable);
+      symtablestack:=old_symtablestack.getcopyuntil(CurrentModule.localsymtable);
       { save scanner state }
       replace_scanner('block literal creation',sstate);
 
@@ -348,7 +348,7 @@ implementation
       orgpd:=tprocdef(procloadnode.resultdef);
       { def representing the corresponding procvar type }
       procvarnode:=ctypeconvnode.create_proc_to_procvar(procloadnode.getcopy);
-      typecheckpass(procvarnode);
+      TypeCheckPass(procvarnode);
       orgpv:=tprocvardef(procvarnode.resultdef);
       { get blockdef for this kind of procdef }
       blockliteraldef:=get_block_literal_type_for_proc(orgpd);

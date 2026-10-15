@@ -86,19 +86,19 @@ implementation
             { need we to test the first value }
             if first and (t^._low>get_min_value(left.resultdef)) then
               begin
-                cg.a_cmp_const_reg_label(current_asmdata.CurrAsmList,opcgsize,jmp_lt,aint(t^._low.svalue),hregister,elselabel);
+                cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opcgsize,jmp_lt,aint(t^._low.svalue),hregister,elselabel);
               end;
             if t^._low=t^._high then
               begin
                  if t^._low-last=0 then
-                   cg.a_cmp_const_reg_label(current_asmdata.CurrAsmList, opcgsize, OC_EQ,0,hregister,blocklabel(t^.blockid))
+                   cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList, opcgsize, OC_EQ,0,hregister,blocklabel(t^.blockid))
                  else
                    begin
                      { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                        then genlinearlist wouldn't be used }
-                     cg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue-last.svalue), hregister, hregister,
+                     cg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue-last.svalue), hregister, hregister,
                        true,ovloc);
-                     cg.a_jmp_flags(current_asmdata.CurrAsmList,F_EQ,blocklabel(t^.blockid));
+                     cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_EQ,blocklabel(t^.blockid));
                    end;
                  last:=t^._low;
                  lastrange:=false;
@@ -115,7 +115,7 @@ implementation
                         begin
                           { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                             then genlinearlist wouldn't be use }
-                          cg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue), hregister, hregister,
+                          cg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue), hregister, hregister,
                             true,ovloc);
                         end;
                    end
@@ -127,19 +127,19 @@ implementation
 
                      { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                        then genlinearlist wouldn't be use }
-                     cg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue - last.svalue), hregister, hregister,
+                     cg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList, OP_SUB, unsigned_opcgsize, aint(t^._low.svalue - last.svalue), hregister, hregister,
                        true,ovloc);
                      { no jump necessary here if the new range starts at }
                      { at the value following the previous one           }
                      if (aint(t^._low.svalue - last.svalue) <> 1) or
                         (not lastrange) then
-                       cg.a_jmp_flags(current_asmdata.CurrAsmList,cond_lt,elselabel);
+                       cg.a_jmp_flags(CurrentAsmData.CurrAsmList,cond_lt,elselabel);
                    end;
                  { use unsigned_opcgsize here to avoid unnecessary sign extensions, at this place hregister will never be negative, because
                    then genlinearlist wouldn't be use }
-                 cg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList,OP_SUB,unsigned_opcgsize,aint(t^._high.svalue - t^._low.svalue), hregister, hregister,
+                 cg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,OP_SUB,unsigned_opcgsize,aint(t^._high.svalue - t^._low.svalue), hregister, hregister,
                    true,ovloc);
-                 cg.a_jmp_flags(current_asmdata.CurrAsmList,cond_le,blocklabel(t^.blockid));
+                 cg.a_jmp_flags(CurrentAsmData.CurrAsmList,cond_le,blocklabel(t^.blockid));
 
                  last:=t^._high;
                  lastrange:=true;
@@ -177,10 +177,10 @@ implementation
                 last:=0;
                 lastrange:=false;
                 first:=true;
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
                 genitem(hp);
-                cg.a_reg_dealloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                cg.a_jmp_always(current_asmdata.CurrAsmList,elselabel);
+                cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_jmp_always(CurrentAsmData.CurrAsmList,elselabel);
              end;
         end;
 
@@ -205,7 +205,7 @@ implementation
           i:=last.svalue+1;
           while i<=t^._low.svalue-1 do
             begin
-              if target_info.system=system_aarch64_win64 then
+              if TargetInfo.system=system_aarch64_win64 then
                 list.concat(Tai_const.Create_sym(elselabel))
               else
                 list.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,elselabel));
@@ -214,7 +214,7 @@ implementation
           i:=t^._low.svalue;
           while i<=t^._high.svalue do
             begin
-              if target_info.system=system_aarch64_win64 then
+              if TargetInfo.system=system_aarch64_win64 then
                 list.concat(Tai_const.Create_sym(blocklabel(t^.blockid)))
               else
                 list.concat(Tai_const.Create_rel_sym(jtitemconsttype,tablelabel,blocklabel(t^.blockid)));
@@ -226,7 +226,7 @@ implementation
         end;
 
       begin
-        if not(target_info.system in systems_darwin) then
+        if not(TargetInfo.system in systems_darwin) then
           jtitemconsttype:=aitconst_32bit
         else
           { see https://gmplib.org/list-archives/gmp-bugs/2012-December/002836.html }
@@ -235,60 +235,60 @@ implementation
         last:=min_;
         opcgsize:=def_cgsize(opsize);
         { a <= x <= b <-> unsigned(x-a) <= (b-a) }
-        cg.a_op_const_reg(current_asmdata.CurrAsmList,OP_SUB,opcgsize,aint(min_),hregister);
+        cg.a_op_const_reg(CurrentAsmData.CurrAsmList,OP_SUB,opcgsize,aint(min_),hregister);
         if not(jumptable_no_range) then
           begin
              { case expr greater than max_ => goto elselabel }
-             cg.a_cmp_const_reg_label(current_asmdata.CurrAsmList,opcgsize,OC_A,aint(max_)-aint(min_),hregister,elselabel);
+             cg.a_cmp_const_reg_label(CurrentAsmData.CurrAsmList,opcgsize,OC_A,aint(max_)-aint(min_),hregister,elselabel);
              min_:=0;
           end;
-        if target_info.system=system_aarch64_win64 then
-          current_asmdata.getstaticdatalabel(tablelabel)
+        if TargetInfo.system=system_aarch64_win64 then
+          CurrentAsmData.getstaticdatalabel(tablelabel)
         else
           { local label in order to avoid using GOT }
-          current_asmdata.getlabel(tablelabel,alt_data);
-        indexreg:=cg.makeregsize(current_asmdata.CurrAsmList,hregister,OS_ADDR);
-        cg.a_load_reg_reg(current_asmdata.CurrAsmList,opcgsize,OS_ADDR,hregister,indexreg);
+          CurrentAsmData.getlabel(tablelabel,alt_data);
+        indexreg:=cg.makeregsize(CurrentAsmData.CurrAsmList,hregister,OS_ADDR);
+        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opcgsize,OS_ADDR,hregister,indexreg);
         { load table address }
         reference_reset_symbol(href,tablelabel,0,4,[]);
-        basereg:=cg.getaddressregister(current_asmdata.CurrAsmList);
-        cg.a_loadaddr_ref_reg(current_asmdata.CurrAsmList,href,basereg);
+        basereg:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+        cg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList,href,basereg);
         { load the slot }
-        jumpreg:=cg.getaddressregister(current_asmdata.CurrAsmList);
-        if target_info.system=system_aarch64_win64 then
+        jumpreg:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+        if TargetInfo.system=system_aarch64_win64 then
           reference_reset_base(href,basereg,0,href.temppos,sizeof(aint),[])
         else
           reference_reset_base(href,basereg,0,href.temppos,4,[]);
         href.index:=indexreg;
         href.shiftmode:=SM_LSL;
-        if target_info.system=system_aarch64_win64 then
+        if TargetInfo.system=system_aarch64_win64 then
           begin
             { Use a 64-bit absolute table under aarch64-win64 }
             href.shiftimm:=3;
-            cg.a_load_ref_reg(current_asmdata.CurrAsmList,OS_ADDR,OS_ADDR,href,jumpreg);
+            cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,href,jumpreg);
           end
         else
           begin
             { load table slot, 32-bit sign extended }
             href.shiftimm:=2;
-            cg.a_load_ref_reg(current_asmdata.CurrAsmList,OS_S32,OS_ADDR,href,jumpreg);
+            cg.a_load_ref_reg(CurrentAsmData.CurrAsmList,OS_S32,OS_ADDR,href,jumpreg);
             { add table address }
-            cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_ADD,OS_ADDR,basereg,jumpreg);
+            cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_ADD,OS_ADDR,basereg,jumpreg);
           end;
         { and finally jump }
-        current_asmdata.CurrAsmList.concat(taicpu.op_reg(A_BR,jumpreg));
+        CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_BR,jumpreg));
         { generate jump table }
-        if target_info.system=system_aarch64_win64 then
+        if TargetInfo.system=system_aarch64_win64 then
           begin
             { For windows, it has to be in a data section otherwise an access violation
               will occur, but also full 64-bit references to avoid problems with
               relative references }
             sectype:=sec_rodata;
-            new_section(current_procinfo.aktlocaldata,sectype,lower(current_procinfo.procdef.mangledname),sizeof(aint));
+            new_section(CurrentProcInfo.aktlocaldata,sectype,lower(CurrentProcInfo.procdef.mangledname),sizeof(aint));
           end
         else
           begin
-            if not(target_info.system in systems_darwin) then
+            if not(TargetInfo.system in systems_darwin) then
               sectype:=sec_rodata
             else
               begin
@@ -305,18 +305,18 @@ implementation
                   same subsection that contains the routine's code }
                 sectype:=sec_code;
               end;
-            new_section(current_procinfo.aktlocaldata,sectype,current_procinfo.procdef.mangledname,4);
+            new_section(CurrentProcInfo.aktlocaldata,sectype,CurrentProcInfo.procdef.mangledname,4);
           end;
-        if target_info.system in systems_darwin then
+        if TargetInfo.system in systems_darwin then
           begin
             { additionally, these tables are now marked via ".data_region jt32"
               and ".end_data_region" }
-            current_procinfo.aktlocaldata.concat(tai_directive.Create(asd_data_region,'jt32'));
+            CurrentProcInfo.aktlocaldata.concat(tai_directive.Create(asd_data_region,'jt32'));
           end;
-        current_procinfo.aktlocaldata.concat(Tai_label.Create(tablelabel));
-        genitem(current_procinfo.aktlocaldata,hp);
-        if target_info.system in systems_darwin then
-          current_procinfo.aktlocaldata.concat(tai_directive.Create(asd_end_data_region,''));
+        CurrentProcInfo.aktlocaldata.concat(Tai_label.Create(tablelabel));
+        genitem(CurrentProcInfo.aktlocaldata,hp);
+        if TargetInfo.system in systems_darwin then
+          CurrentProcInfo.aktlocaldata.concat(tai_directive.Create(asd_end_data_region,''));
       end;
 
 

@@ -34,15 +34,15 @@ unit scandir;
 
     type
       tsavedswitchesstate = record
-        localsw: tlocalswitches;
+        localsw: TLocalSwitches;
         verbosity: longint;
-        pmessage : pmessagestaterecord;
-        alignment : talignmentinfo;
+        pmessage : PMessageStateRecord;
+        alignment : TAlignmentInfo;
         setalloc,
         packenum,
         packrecords : shortint;
         asmmode : tasmmode;
-        optimizerswitches : toptimizerswitches;
+        optimizerswitches : TOptimizerSwitches;
       end;
 
     type
@@ -78,7 +78,7 @@ unit scandir;
         state : char;
       begin
       { c contains the next char, a + or - would be fine }
-        state:=current_scanner.readstate;
+        state:=CurrentScanner.readstate;
         if state in ['-','+'] then
           HandleSwitch(sw,state);
       end;
@@ -89,62 +89,62 @@ unit scandir;
         state : char;
       begin
       { support ON/OFF }
-        state:=current_scanner.ReadState;
+        state:=CurrentScanner.ReadState;
         recordpendingverbosityswitch(flag,state);
       end;
 
 
-    procedure do_moduleswitch(sw:tmoduleswitch);
+    procedure do_moduleswitch(sw:TModuleSwitch);
       var
         state : char;
       begin
-        state:=current_scanner.readstate;
+        state:=CurrentScanner.readstate;
         if (sw<>cs_modulenone) and (state in ['-','+']) then
          begin
            if state='-' then
-            exclude(current_settings.moduleswitches,sw)
+            exclude(CurrentSettings.moduleswitches,sw)
            else
-            include(current_settings.moduleswitches,sw);
+            include(CurrentSettings.moduleswitches,sw);
          end;
       end;
 
 
-    procedure do_localswitch(sw:tlocalswitch);
+    procedure do_localswitch(sw:TLocalSwitch);
       var
         state : char;
       begin
-        state:=current_scanner.readstate;
+        state:=CurrentScanner.readstate;
         if (sw<>cs_localnone) and (state in ['-','+']) then
           recordpendinglocalswitch(sw,state);
       end;
 
-    function do_localswitchdefault(sw:tlocalswitch): char;
+    function do_localswitchdefault(sw:TLocalSwitch): char;
       begin
-        result:=current_scanner.readstatedefault;
+        result:=CurrentScanner.readstatedefault;
         if (sw<>cs_localnone) and (result in ['-','+','*']) then
           recordpendinglocalswitch(sw,result);
       end;
 
 
-    procedure do_moduleflagswitch(flag:tmoduleflag;optional:boolean);
+    procedure do_moduleflagswitch(flag:TModuleFlag;optional:boolean);
       var
         state : char;
       begin
         if optional then
-          state:=current_scanner.readoptionalstate('+')
+          state:=CurrentScanner.readoptionalstate('+')
         else
-          state:=current_scanner.readstate;
+          state:=CurrentScanner.readstate;
         if state='-' then
-          exclude(current_module.moduleflags,flag)
+          exclude(CurrentModule.moduleflags,flag)
         else
-          include(current_module.moduleflags,flag);
+          include(CurrentModule.moduleflags,flag);
       end;
 
 
     procedure do_message(w:integer);
       begin
-        current_scanner.skipspace;
-        Message1(w,current_scanner.readlongcomment);
+        CurrentScanner.skipspace;
+        Message1(w,CurrentScanner.readlongcomment);
       end;
 
 
@@ -157,9 +157,9 @@ unit scandir;
       begin
         { change description global var in all cases }
         { it not used but in win32 and os2 }
-        current_scanner.skipspace;
+        CurrentScanner.skipspace;
         { we should only accept Major.Minor format for win32 and os2 }
-        current_scanner.readnumber;
+        CurrentScanner.readnumber;
         major:=0;
         minor:=0;
         revision:=0;
@@ -168,32 +168,32 @@ unit scandir;
         majorl:=0;
         minorl:=0;
         revisionl:=0;
-        val(current_scanner.pattern,majorl,error);
+        val(CurrentScanner.pattern,majorl,error);
         if (error<>0) or (majorl > high(word)) or (majorl < 0) then
           begin
-            Message1(scan_w_wrong_version_ignored,current_scanner.pattern);
+            Message1(scan_w_wrong_version_ignored,CurrentScanner.pattern);
             exit;
           end;
         isset:=true;
-        if current_scanner.c='.' then
+        if CurrentScanner.c='.' then
           begin
-            current_scanner.readchar;
-            current_scanner.readnumber;
-            val(current_scanner.pattern,minorl,error);
+            CurrentScanner.readchar;
+            CurrentScanner.readnumber;
+            val(CurrentScanner.pattern,minorl,error);
             if (error<>0) or (minorl > high(word)) or (minorl < 0) then
               begin
-                Message1(scan_w_wrong_version_ignored,tostr(majorl)+'.'+current_scanner.pattern);
+                Message1(scan_w_wrong_version_ignored,tostr(majorl)+'.'+CurrentScanner.pattern);
                 exit;
               end;
-            if (current_scanner.c='.') and
+            if (CurrentScanner.c='.') and
                allowrevision then
               begin
-                 current_scanner.readchar;
-                 current_scanner.readnumber;
-                 val(current_scanner.pattern,revisionl,error);
+                 CurrentScanner.readchar;
+                 CurrentScanner.readnumber;
+                 val(CurrentScanner.pattern,revisionl,error);
                  if (error<>0) or (revisionl > high(word)) or (revisionl < 0) then
                    begin
-                      Message1(scan_w_wrong_version_ignored,tostr(majorl)+'.'+tostr(minorl)+'.'+current_scanner.pattern);
+                      Message1(scan_w_wrong_version_ignored,tostr(majorl)+'.'+tostr(minorl)+'.'+CurrentScanner.pattern);
                       exit;
                    end;
                  major:=word(majorl);
@@ -225,26 +225,26 @@ unit scandir;
         hs : string;
         b : longint;
       begin
-        current_scanner.skipspace;
-        if not(current_scanner.c in ['0'..'9']) then
+        CurrentScanner.skipspace;
+        if not(CurrentScanner.c in ['0'..'9']) then
          begin
            { Support also the ON and OFF as switch }
-           hs:=current_scanner.readid;
+           hs:=CurrentScanner.readid;
            if (hs='ON') then
-            current_settings.packrecords:=4
+            CurrentSettings.packrecords:=4
            else if (hs='OFF') then
-             current_settings.packrecords:=1
-           else if m_mac in current_settings.modeswitches then
+             CurrentSettings.packrecords:=1
+           else if m_mac in CurrentSettings.modeswitches then
              begin
                { Support switches used in Apples Universal Interfaces}
                if (hs='MAC68K') then
-                 current_settings.packrecords:=mac68k_alignment
+                 CurrentSettings.packrecords:=mac68k_alignment
                { "power" alignment is the default C packrecords setting on
                  Mac OS X }
                else if (hs='POWER') or (hs='POWERPC') then
-                 current_settings.packrecords:=C_alignment
+                 CurrentSettings.packrecords:=C_alignment
                else if (hs='RESET') then
-                 current_settings.packrecords:=default_settings.packrecords
+                 CurrentSettings.packrecords:=default_settings.packrecords
                else
                  Message1(scan_e_illegal_pack_records,hs);
              end
@@ -253,9 +253,9 @@ unit scandir;
          end
         else
          begin
-           b:=current_scanner.readval;
+           b:=CurrentScanner.readval;
            case b of
-             1,2,4,8,16,32 : current_settings.packrecords:=b;
+             1,2,4,8,16,32 : CurrentSettings.packrecords:=b;
            else
             Message1(scan_e_illegal_pack_records,tostr(b));
            end;
@@ -264,22 +264,22 @@ unit scandir;
 
     procedure dir_a1;
       begin
-        current_settings.packrecords:=1;
+        CurrentSettings.packrecords:=1;
       end;
 
     procedure dir_a2;
       begin
-        current_settings.packrecords:=2;
+        CurrentSettings.packrecords:=2;
       end;
 
     procedure dir_a4;
       begin
-        current_settings.packrecords:=4;
+        CurrentSettings.packrecords:=4;
       end;
 
     procedure dir_a8;
       begin
-        current_settings.packrecords:=8;
+        CurrentSettings.packrecords:=8;
       end;
 
     procedure dir_asmcpu;
@@ -288,14 +288,14 @@ unit scandir;
         cpu: tcputype;
         found: Boolean;
       begin
-        current_scanner.skipspace;
-        s:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        s:=CurrentScanner.readid;
         If Inside_asm_statement then
           Message1(scan_w_no_asm_reader_switch_inside_asm,s);
         if s='ANY' then
-          current_settings.asmcputype:=cpu_none
+          CurrentSettings.asmcputype:=cpu_none
         else if s='CURRENT' then
-          current_settings.asmcputype:=current_settings.cputype
+          CurrentSettings.asmcputype:=CurrentSettings.cputype
         else
           begin
             found:=false;
@@ -303,7 +303,7 @@ unit scandir;
               if s=cputypestr[cpu] then
                 begin
                   found:=true;
-                  current_settings.asmcputype:=cpu;
+                  CurrentSettings.asmcputype:=cpu;
                   break;
                 end;
             if not found then
@@ -316,12 +316,12 @@ unit scandir;
         s : string;
         asmmode: tasmmode;
       begin
-        current_scanner.skipspace;
-        s:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        s:=CurrentScanner.readid;
         If Inside_asm_statement then
           Message1(scan_w_no_asm_reader_switch_inside_asm,s);
         if s='DEFAULT' then
-          recordpendingasmmode(init_settings.asmmode)
+          recordpendingasmmode(InitSettings.asmmode)
         else
          if not SetAsmReadMode(s,asmmode) then
            Message1(scan_e_illegal_asmmode_specifier,s)
@@ -333,26 +333,26 @@ unit scandir;
       var
          hs : string;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           begin
-            if m_delphi in current_settings.modeswitches then
+            if m_delphi in CurrentSettings.modeswitches then
               Message(scan_n_app_type_not_support)
             else
               Message(scan_w_app_type_not_support);
           end
         else
           begin
-            if not current_module.in_global then
+            if not CurrentModule.in_global then
               Message(scan_w_switch_is_global)
             else
               begin
-                 current_scanner.skipspace;
-                 hs:=current_scanner.readid;
+                 CurrentScanner.skipspace;
+                 hs:=CurrentScanner.readid;
                  if hs='GUI' then
                    SetApptype(app_gui)
                  else if hs='CONSOLE' then
                    SetApptype(app_cui)
-                 else if (hs='NATIVE') and (target_info.system in systems_windows) then
+                 else if (hs='NATIVE') and (TargetInfo.system in systems_windows) then
                    SetApptype(app_native)
                  else
                    Message1(scan_w_unsupported_app_type,hs);
@@ -365,8 +365,8 @@ unit scandir;
       var
          hs : string;
       begin
-        current_scanner.skipspace;
-        hs:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        hs:=CurrentScanner.readid;
         if (hs='') then
           Message(parser_e_proc_directive_expected)
         else
@@ -380,7 +380,7 @@ unit scandir;
       begin
         switch:=do_localswitchdefault(cs_checkpointer);
         if (switch='+') and
-           not(target_info.system in systems_support_checkpointer) then
+           not(TargetInfo.system in systems_support_checkpointer) then
           Message1(scan_e_unsupported_switch,'CHECKPOINTER+');
       end;
 
@@ -443,12 +443,12 @@ unit scandir;
 
     procedure dir_description;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           Message(scan_w_description_not_support);
         { change description global var in all cases }
         { it not used but in win32 and os2 }
-        current_scanner.skipspace;
-        description:=current_scanner.readcomment;
+        CurrentScanner.skipspace;
+        description:=CurrentScanner.readcomment;
         DescriptionSetExplicity:=true;
       end;
 
@@ -474,27 +474,27 @@ unit scandir;
 
     procedure dir_fputype;
       begin
-        current_scanner.skipspace;
-        undef_system_macro('FPU'+fputypestr[current_settings.fputype]);
-        if not(SetFPUType(upper(current_scanner.readcomment),current_settings.fputype)) then
+        CurrentScanner.skipspace;
+        undef_system_macro('FPU'+fputypestr[CurrentSettings.fputype]);
+        if not(SetFPUType(upper(CurrentScanner.readcomment),CurrentSettings.fputype)) then
           comment(V_Error,'Illegal FPU type');
-        def_system_macro('FPU'+fputypestr[current_settings.fputype]);
+        def_system_macro('FPU'+fputypestr[CurrentSettings.fputype]);
      end;
 
     procedure dir_frameworkpath;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
          Message(scan_w_switch_is_global)
-        else if not(target_info.system in systems_darwin) then
+        else if not(TargetInfo.system in systems_darwin) then
           begin
             Message(scan_w_frameworks_darwin_only);
-            current_scanner.skipspace;
-            current_scanner.readcomment
+            CurrentScanner.skipspace;
+            CurrentScanner.readcomment
           end
         else
           begin
-            current_scanner.skipspace;
-            current_module.localframeworksearchpath.AddPath(current_scanner.readcomment,false);
+            CurrentScanner.skipspace;
+            CurrentModule.localframeworksearchpath.AddPath(CurrentScanner.readcomment,false);
           end;
       end;
 
@@ -515,10 +515,10 @@ unit scandir;
 
     procedure dir_imagebase;
       begin
-        if not (target_info.system in systems_windows) then
+        if not (TargetInfo.system in systems_windows) then
           Message(scan_w_imagebase_not_support);
-        current_scanner.skipspace;
-        imagebase:=current_scanner.readval;
+        CurrentScanner.skipspace;
+        imagebase:=CurrentScanner.readval;
         ImageBaseSetExplicity:=true
       end;
 
@@ -536,14 +536,14 @@ unit scandir;
       var
         path : string;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
          Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            path:=current_scanner.readcomment;
-            current_module.localincludesearchpath.AddPath(path,false);
-            Message2(general_t_includepath_local,current_module.realmodulename^,path);
+            CurrentScanner.skipspace;
+            path:=CurrentScanner.readcomment;
+            CurrentModule.localincludesearchpath.AddPath(path,false);
+            Message2(general_t_includepath_local,CurrentModule.realmodulename^,path);
           end;
       end;
 
@@ -562,15 +562,15 @@ unit scandir;
         hs : string;
       begin
         {corba/com/default}
-        current_scanner.skipspace;
-        hs:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        hs:=CurrentScanner.readid;
         if (hs='CORBA') then
-          current_settings.interfacetype:=it_interfacecorba
+          CurrentSettings.interfacetype:=it_interfacecorba
         else if (hs='COM') then
-          current_settings.interfacetype:=it_interfacecom
+          CurrentSettings.interfacetype:=it_interfacecom
         else
              if (hs='DEFAULT') then
-          current_settings.interfacetype:=init_settings.interfacetype
+          CurrentSettings.interfacetype:=InitSettings.interfacetype
         else
           Message(scan_e_invalid_interface_type);
       end;
@@ -589,14 +589,14 @@ unit scandir;
       var
         path : string;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
          Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            path:=current_scanner.readcomment;
-            current_module.locallibrarysearchpath.AddPath(path,false);
-            Message2(general_t_librarypath_local,current_module.realmodulename^,path);
+            CurrentScanner.skipspace;
+            path:=CurrentScanner.readcomment;
+            CurrentModule.locallibrarysearchpath.AddPath(path,false);
+            Message2(general_t_librarypath_local,CurrentModule.realmodulename^,path);
           end;
       end;
 
@@ -604,35 +604,35 @@ unit scandir;
       var
         s : string;
       begin
-        current_scanner.skipspace;
-        if current_scanner.c = '''' then
+        CurrentScanner.skipspace;
+        if CurrentScanner.c = '''' then
           begin
-            s:= current_scanner.readquotedstring;
-            current_scanner.readcomment
+            s:= CurrentScanner.readquotedstring;
+            CurrentScanner.readcomment
           end
         else
-          s:= trimspace(current_scanner.readcomment);
+          s:= trimspace(CurrentScanner.readcomment);
         s:=FixFileName(s);
         if ExtractFileExt(s)='' then
-          s:=ChangeFileExt(s,target_info.objext);
-        current_module.linkotherofiles.add(s,link_always);
+          s:=ChangeFileExt(s,TargetInfo.objext);
+        CurrentModule.linkotherofiles.add(s,link_always);
       end;
 
     procedure dir_linkframework;
       var
         s : string;
       begin
-        current_scanner.skipspace;
-        if current_scanner.c = '''' then
+        CurrentScanner.skipspace;
+        if CurrentScanner.c = '''' then
           begin
-            s:= current_scanner.readquotedstring;
-            current_scanner.readcomment
+            s:= CurrentScanner.readquotedstring;
+            CurrentScanner.readcomment
           end
         else
-          s:= trimspace(current_scanner.readcomment);
+          s:= trimspace(CurrentScanner.readcomment);
         s:=FixFileName(s);
-        if (target_info.system in systems_darwin) then
-          current_module.linkotherframeworks.add(s,link_always)
+        if (TargetInfo.system in systems_darwin) then
+          CurrentModule.linkotherframeworks.add(s,link_always)
         else
           Message(scan_w_frameworks_darwin_only);
       end;
@@ -649,16 +649,16 @@ unit scandir;
         p : longint;
         linkMode : tLinkMode;
       begin
-        current_scanner.skipspace;
-        if current_scanner.c = '''' then
+        CurrentScanner.skipspace;
+        if CurrentScanner.c = '''' then
           begin
-            libname:= current_scanner.readquotedstring;
-            s:= current_scanner.readcomment;
+            libname:= CurrentScanner.readquotedstring;
+            s:= CurrentScanner.readcomment;
             p:=pos(',',s);
           end
         else
           begin
-            s:= current_scanner.readcomment;
+            s:= CurrentScanner.readcomment;
             p:=pos(',',s);
             if p=0 then
               libname:=TrimSpace(s)
@@ -690,7 +690,7 @@ unit scandir;
         if linkModeStr='' then
          begin
            libext:=ExtractFileExt(libname);
-           if libext=target_info.staticClibext then
+           if libext=TargetInfo.staticClibext then
              linkMode:=lm_static;
          end
         else if linkModeStr='STATIC' then
@@ -702,9 +702,9 @@ unit scandir;
 
         { add to the list of other libraries }
         if linkMode=lm_static then
-         current_module.linkOtherStaticLibs.add(libname,link_always)
+         CurrentModule.linkOtherStaticLibs.add(libname,link_always)
         else
-         current_module.linkOtherSharedLibs.add(libname,link_always);
+         CurrentModule.linkOtherSharedLibs.add(libname,link_always);
       end;
 
     procedure dir_localsymbols;
@@ -728,20 +728,20 @@ unit scandir;
       var
         s: string;
       begin
-        current_scanner.skipspace;
-        s:=trimspace(current_scanner.readcomment);
-        if assigned(current_module.mainname) and
-           (s<>current_module.mainname^) then
+        CurrentScanner.skipspace;
+        s:=trimspace(CurrentScanner.readcomment);
+        if assigned(CurrentModule.mainname) and
+           (s<>CurrentModule.mainname^) then
           begin
-            Message1(scan_w_multiple_main_name_overrides,current_module.mainname^);
-            stringdispose(current_module.mainname)
+            Message1(scan_w_multiple_main_name_overrides,CurrentModule.mainname^);
+            stringdispose(CurrentModule.mainname)
           end
         else if (mainaliasname<>defaultmainaliasname) and
                 (mainaliasname<>s) then
           Message1(scan_w_multiple_main_name_overrides,mainaliasname);
         mainaliasname:=s;
         if (mainaliasname<>defaultmainaliasname) then
-          current_module.mainname:=stringdup(mainaliasname);
+          CurrentModule.mainname:=stringdup(mainaliasname);
       end;
 
     procedure dir_maxfpuregisters;
@@ -749,21 +749,21 @@ unit scandir;
          l  : integer;
          hs : string;
       begin
-         current_scanner.skipspace;
-         if not(current_scanner.c in ['0'..'9']) then
+         CurrentScanner.skipspace;
+         if not(CurrentScanner.c in ['0'..'9']) then
            begin
-              hs:=current_scanner.readid;
+              hs:=CurrentScanner.readid;
               if (hs='NORMAL') or (hs='DEFAULT') then
-                current_settings.maxfpuregisters:=-1
+                CurrentSettings.maxfpuregisters:=-1
               else
                 Message(scan_e_invalid_maxfpureg_value);
            end
          else
            begin
-              l:=current_scanner.readval;
+              l:=CurrentScanner.readval;
               case l of
                  0..8:
-                   current_settings.maxfpuregisters:=l;
+                   CurrentSettings.maxfpuregisters:=l;
                  else
                    Message(scan_e_invalid_maxfpureg_value);
               end;
@@ -772,10 +772,10 @@ unit scandir;
 
     procedure dir_maxstacksize;
       begin
-        if not (target_info.system in systems_windows) then
+        if not (TargetInfo.system in systems_windows) then
           Message(scan_w_maxstacksize_not_support);
-        current_scanner.skipspace;
-        maxstacksize:=current_scanner.readval;
+        CurrentScanner.skipspace;
+        maxstacksize:=CurrentScanner.readval;
         MaxStackSizeSetExplicity:=true;
       end;
 
@@ -787,8 +787,8 @@ unit scandir;
       begin
         heapsize_limit:=high(longint);
         maxheapsize_limit:=high(longint);
-        current_scanner.skipspace;
-        l:=current_scanner.readval;
+        CurrentScanner.skipspace;
+        l:=CurrentScanner.readval;
         if (l>=1024)
 
           and (l<67107840)
@@ -797,18 +797,18 @@ unit scandir;
           stacksize:=min(l,67107839)
         else
           Message(scan_w_invalid_stacksize);
-        if current_scanner.c=',' then
+        if CurrentScanner.c=',' then
           begin
-            current_scanner.readchar;
-            current_scanner.skipspace;
-            l:=current_scanner.readval64;
+            CurrentScanner.readchar;
+            CurrentScanner.skipspace;
+            l:=CurrentScanner.readval64;
             if l>=1024 then
               heapsize:=min(l,heapsize_limit);
-            if current_scanner.c=',' then
+            if CurrentScanner.c=',' then
               begin
-                current_scanner.readchar;
-                current_scanner.skipspace;
-                l:=current_scanner.readval64;
+                CurrentScanner.readchar;
+                CurrentScanner.skipspace;
+                l:=CurrentScanner.readval64;
                 if l>=heapsize then
                   maxheapsize:=min(l,maxheapsize_limit)
                 else
@@ -825,13 +825,13 @@ unit scandir;
         w  : longint;
       begin
         w:=0;
-        current_scanner.skipspace;
+        CurrentScanner.skipspace;
         { Message level specified? }
-        if current_scanner.c='''' then
+        if CurrentScanner.c='''' then
           w:=scan_n_user_defined
         else
           begin
-            hs:=current_scanner.readid;
+            hs:=CurrentScanner.readid;
             if (hs='WARN') or (hs='WARNING') then
               w:=scan_w_user_defined
             else
@@ -855,24 +855,24 @@ unit scandir;
         { Only print message when there was no error }
         if w<>0 then
           begin
-            current_scanner.skipspace;
-            if current_scanner.c='''' then
-              s:=current_scanner.readlongquotedstring
+            CurrentScanner.skipspace;
+            if CurrentScanner.c='''' then
+              s:=CurrentScanner.readlongquotedstring
             else
-              s:=current_scanner.readlongcomment;
+              s:=CurrentScanner.readlongcomment;
             Message1(w,s);
           end
         else
-          current_scanner.readcomment;
+          CurrentScanner.readcomment;
       end;
 
 
     procedure dir_minstacksize;
       begin
-        if not (target_info.system in systems_windows) then
+        if not (TargetInfo.system in systems_windows) then
           Message(scan_w_minstacksize_not_support);
-        current_scanner.skipspace;
-        minstacksize:=current_scanner.readval;
+        CurrentScanner.skipspace;
+        minstacksize:=CurrentScanner.readval;
         MinStackSizeSetExplicity:=true;
       end;
 
@@ -880,39 +880,39 @@ unit scandir;
     procedure dir_mode;
 
     begin
-      if not current_module.in_global then
+      if not CurrentModule.in_global then
         Message(scan_w_switch_is_global)
       else
         begin
-          current_scanner.skipspace;
-          current_scanner.readstring;
-          if not current_module.mode_switch_allowed and
-              not ((m_mac in current_settings.modeswitches) and (current_scanner.pattern='MACPAS')) then
-            Message1(scan_e_mode_switch_not_allowed,current_scanner.pattern)
-          else if not SetCompileMode(current_scanner.pattern,false) then
-            Message1(scan_w_illegal_switch,current_scanner.pattern)
+          CurrentScanner.skipspace;
+          CurrentScanner.readstring;
+          if not CurrentModule.mode_switch_allowed and
+              not ((m_mac in CurrentSettings.modeswitches) and (CurrentScanner.pattern='MACPAS')) then
+            Message1(scan_e_mode_switch_not_allowed,CurrentScanner.pattern)
+          else if not SetCompileMode(CurrentScanner.pattern,false) then
+            Message1(scan_w_illegal_switch,CurrentScanner.pattern)
         end;
-      current_module.mode_switch_allowed:= false;
+      CurrentModule.mode_switch_allowed:= false;
     end;
 
     procedure dir_multilinestringlineending;
       var
         s : string;
       begin
-        if not (m_multiline_strings in current_settings.modeswitches) then
+        if not (m_multiline_strings in CurrentSettings.modeswitches) then
           Message1(scan_e_illegal_directive,'MULTILINESTRINGLINEENDING');
-        current_scanner.skipspace;
-        s:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        s:=CurrentScanner.readid;
         if (s='CR') then
-          current_settings.lineendingtype:=le_cr
+          CurrentSettings.lineendingtype:=le_cr
         else if (s='CRLF') then
-          current_settings.lineendingtype:=le_crlf
+          CurrentSettings.lineendingtype:=le_crlf
         else if (s='LF') then
-          current_settings.lineendingtype:=le_lf
+          CurrentSettings.lineendingtype:=le_lf
         else if (s='PLATFORM') then
-          current_settings.lineendingtype:=le_platform
+          CurrentSettings.lineendingtype:=le_platform
         else if (s='SOURCE') then
-          current_settings.lineendingtype:=le_source
+          CurrentSettings.lineendingtype:=le_source
         else
           Message(scan_e_unknown_lineending_type);
       end;
@@ -921,18 +921,18 @@ unit scandir;
       var
         s : string;
       begin
-        if not (m_delphi in current_settings.modeswitches) then
+        if not (m_delphi in CurrentSettings.modeswitches) then
           Message1(scan_e_illegal_directive,'TEXTBLOCK');
-        current_scanner.skipspace;
-        s:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        s:=CurrentScanner.readid;
         if (s='CR') then
-          current_settings.lineendingtype:=le_cr
+          CurrentSettings.lineendingtype:=le_cr
         else if (s='CRLF') then
-          current_settings.lineendingtype:=le_crlf
+          CurrentSettings.lineendingtype:=le_crlf
         else if (s='LF') then
-          current_settings.lineendingtype:=le_lf
+          CurrentSettings.lineendingtype:=le_lf
         else if (s='NATIVE') then
-          current_settings.lineendingtype:=le_platform
+          CurrentSettings.lineendingtype:=le_platform
         else
           Message(scan_e_unknown_lineending_type);
       end;
@@ -942,37 +942,37 @@ unit scandir;
         count : longint;
         s : string;
       begin
-        if not (m_multiline_strings in current_settings.modeswitches) then
+        if not (m_multiline_strings in CurrentSettings.modeswitches) then
           Message1(scan_e_illegal_directive,'MULTILINESTRINGTRIMLEFT');
-        current_scanner.skipspace;
-        if (current_scanner.c in ['0'..'9']) then
+        CurrentScanner.skipspace;
+        if (CurrentScanner.c in ['0'..'9']) then
           begin
-            count:=current_scanner.readval;
+            count:=CurrentScanner.readval;
             if (count<0) or (count>high(word)) then
               Message(scan_e_trimcount_out_of_range)
             else
               begin
-                current_settings.whitespacetrimcount:=count;
-                current_settings.whitespacetrimauto:=false;
+                CurrentSettings.whitespacetrimcount:=count;
+                CurrentSettings.whitespacetrimauto:=false;
               end;
           end
         else
           begin
-            s:=current_scanner.readid;
+            s:=CurrentScanner.readid;
             if s='ALL' then
               begin
-                current_settings.whitespacetrimcount:=high(word);
-                current_settings.whitespacetrimauto:=false;
+                CurrentSettings.whitespacetrimcount:=high(word);
+                CurrentSettings.whitespacetrimauto:=false;
               end
             else if s='AUTO' then
               begin
-                current_settings.whitespacetrimcount:=0;
-                current_settings.whitespacetrimauto:=true;
+                CurrentSettings.whitespacetrimcount:=0;
+                CurrentSettings.whitespacetrimauto:=true;
               end
             else
               begin
-                current_settings.whitespacetrimcount:=0;
-                current_settings.whitespacetrimauto:=false;
+                CurrentSettings.whitespacetrimcount:=0;
+                CurrentSettings.whitespacetrimauto:=false;
               end;
           end;
       end;
@@ -981,17 +981,17 @@ unit scandir;
       var
         s : string;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
           Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            current_scanner.readstring;
-            s:=current_scanner.pattern;
+            CurrentScanner.skipspace;
+            CurrentScanner.readstring;
+            s:=CurrentScanner.pattern;
             { don't combine the assignments to s as the method call will be
               done before "current_scanner.pattern" is assigned to s and the method changes
               "current_scanner.pattern" }
-            s:=s+current_scanner.readoptionalstate('+');
+            s:=s+CurrentScanner.readoptionalstate('+');
             if not SetCompileModeSwitch(s,false) then
               Message1(scan_w_illegal_switch,s)
           end;
@@ -1005,27 +1005,27 @@ unit scandir;
         s : string;
 
     begin
-      if not current_module.in_global then
+      if not CurrentModule.in_global then
         Message(scan_w_switch_is_global)
       else
         begin
-          current_scanner.skipspace;
-          current_scanner.readstring;
-          s:=current_scanner.orgpattern;
+          CurrentScanner.skipspace;
+          CurrentScanner.readstring;
+          s:=CurrentScanner.orgpattern;
           While (s<>'') do
             begin
               // We may not yet have a correct module namespacelist.
-              if assigned(current_namespacelist) then
-                current_namespacelist.Insert(s)
+              if assigned(CurrentNamespaceList) then
+                CurrentNamespaceList.Insert(s)
               else // copied when correct module is activated
                 premodule_namespacelist.Insert(s);
               s:='';
-              if current_scanner.c=',' then
+              if CurrentScanner.c=',' then
                 begin
-                  current_scanner.readchar;
-                  current_scanner.skipspace;
-                  current_scanner.readstring;
-                  s:=current_scanner.orgpattern;
+                  CurrentScanner.readchar;
+                  CurrentScanner.skipspace;
+                  CurrentScanner.readstring;
+                  s:=CurrentScanner.orgpattern;
                 end;
             end;
         end;
@@ -1037,21 +1037,21 @@ unit scandir;
       begin
         { used to define Java package names for all types declared in the
           current unit }
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
           Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            current_scanner.readstring;
-            s:=current_scanner.orgpattern;
-            while current_scanner.c='.' do
+            CurrentScanner.skipspace;
+            CurrentScanner.readstring;
+            s:=CurrentScanner.orgpattern;
+            while CurrentScanner.c='.' do
               begin
-                current_scanner.readchar;
-                current_scanner.readstring;
-                s:=s+'.'+current_scanner.orgpattern;
+                CurrentScanner.readchar;
+                CurrentScanner.readstring;
+                s:=s+'.'+CurrentScanner.orgpattern;
               end;
-            disposestr(current_module.namespace);
-            current_module.namespace:=stringdup(s);
+            disposestr(CurrentModule.namespace);
+            CurrentModule.namespace:=stringdup(s);
           end;
       end;
 
@@ -1079,14 +1079,14 @@ unit scandir;
       var
         path : string;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
          Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            path:=current_scanner.readcomment;
-            current_module.localobjectsearchpath.AddPath(path,false);
-            Message2(general_t_objectpath_local,current_module.realmodulename^,path);
+            CurrentScanner.skipspace;
+            path:=CurrentScanner.readcomment;
+            CurrentModule.localobjectsearchpath.AddPath(path,false);
+            Message2(general_t_objectpath_local,CurrentModule.realmodulename^,path);
           end;
       end;
 
@@ -1099,21 +1099,21 @@ unit scandir;
       var
         hs : string;
       begin
-        current_scanner.skipspace;
+        CurrentScanner.skipspace;
         { Support also the ON and OFF as switch }
-        hs:=current_scanner.readid;
+        hs:=CurrentScanner.readid;
         if (hs='ON') then
           recordpendingoptimizerswitches(level2optimizerswitches)
         else if (hs='OFF') then
           recordpendingoptimizerswitches([])
         else if (hs='DEFAULT') then
-          recordpendingoptimizerswitches(init_settings.optimizerswitches)
+          recordpendingoptimizerswitches(InitSettings.optimizerswitches)
         else
           begin
-            if not UpdateOptimizerStr(hs,current_settings.optimizerswitches) then
+            if not UpdateOptimizerStr(hs,CurrentSettings.optimizerswitches) then
               Message1(scan_e_illegal_optimization_specifier,hs)
             else
-              recordpendingoptimizerswitches(current_settings.optimizerswitches)
+              recordpendingoptimizerswitches(CurrentSettings.optimizerswitches)
           end;
       end;
 
@@ -1127,10 +1127,10 @@ unit scandir;
         hs : string;
         v : longint;
       begin
-        current_scanner.skipspace;
-        if not(current_scanner.c in ['0'..'9']) then
+        CurrentScanner.skipspace;
+        if not(CurrentScanner.c in ['0'..'9']) then
          begin
-           hs:=current_scanner.readid;
+           hs:=CurrentScanner.readid;
            if (hs='NORMAL') or (hs='DEFAULT') then
             recordpendingpackenum(4)
            else
@@ -1138,11 +1138,11 @@ unit scandir;
          end
         else
          begin
-           v:=current_scanner.readval;
+           v:=CurrentScanner.readval;
            case v of
             1,2,4 : recordpendingpackenum(v);
            else
-            Message1(scan_e_illegal_pack_enum, current_scanner.pattern);
+            Message1(scan_e_illegal_pack_enum, CurrentScanner.pattern);
            end;
          end;
       end;
@@ -1150,9 +1150,9 @@ unit scandir;
 
     procedure dir_minfpconstprec;
       begin
-        current_scanner.skipspace;
-        if not SetMinFPConstPrec(current_scanner.readid,current_settings.minfpconstprec) then
-          Message1(scan_e_illegal_minfpconstprec, current_scanner.pattern);
+        CurrentScanner.skipspace;
+        if not SetMinFPConstPrec(CurrentScanner.readid,CurrentSettings.minfpconstprec) then
+          Message1(scan_e_illegal_minfpconstprec, CurrentScanner.pattern);
       end;
 
 
@@ -1161,10 +1161,10 @@ unit scandir;
         hs : string;
         v : longint;
       begin
-        current_scanner.skipspace;
-        if not(current_scanner.c in ['0'..'9']) then
+        CurrentScanner.skipspace;
+        if not(CurrentScanner.c in ['0'..'9']) then
          begin
-           hs:=current_scanner.readid;
+           hs:=CurrentScanner.readid;
            { C has the special recordalignmax of C_alignment }
            if (hs='C') then
             recordpendingpackrecords(C_alignment)
@@ -1176,11 +1176,11 @@ unit scandir;
          end
         else
          begin
-           v:=current_scanner.readval;
+           v:=CurrentScanner.readval;
            case v of
              1,2,4,8,16,32 : recordpendingpackrecords(v);
            else
-            Message1(scan_e_illegal_pack_records,current_scanner.pattern);
+            Message1(scan_e_illegal_pack_records,CurrentScanner.pattern);
            end;
          end;
       end;
@@ -1191,10 +1191,10 @@ unit scandir;
         hs : string;
         v : longint;
       begin
-        current_scanner.skipspace;
-        if not(current_scanner.c in ['1','2','4','8']) then
+        CurrentScanner.skipspace;
+        if not(CurrentScanner.c in ['1','2','4','8']) then
          begin
-           hs:=current_scanner.readid;
+           hs:=CurrentScanner.readid;
            if (hs='FIXED') or (hs='DEFAULT') OR (hs='NORMAL') then
             recordpendingsetalloc(0) {Fixed mode, sets are 4 or 32 bytes}
            else
@@ -1202,7 +1202,7 @@ unit scandir;
          end
         else
          begin
-           v:=current_scanner.readval;
+           v:=CurrentScanner.readval;
            case v of
             1,2,4,8 : recordpendingsetalloc(v);
            else
@@ -1215,7 +1215,7 @@ unit scandir;
     procedure dir_pic;
       begin
         { windows doesn't need/support pic }
-        if tf_no_pic_supported in target_info.flags then
+        if tf_no_pic_supported in TargetInfo.flags then
           message(scan_w_pic_ignored)
         else
           do_moduleswitch(cs_create_pic);
@@ -1239,7 +1239,7 @@ unit scandir;
           recordpendingoptimizerswitches(switchesstatestack[switchesstatestackpos].optimizerswitches);
           pendingstate.nextmessagerecord:=switchesstatestack[switchesstatestackpos].pmessage;
           { flushpendingswitchesstate will reset the message state }
-          current_settings.pmessage:=nil;
+          CurrentSettings.pmessage:=nil;
           { Do not activate these changes yet, as otherwise
             you get a problem if you put a $pop just right after
             a addition for instance for which you explicitly turned the overflow check
@@ -1264,7 +1264,7 @@ unit scandir;
       if psf_alignment_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].alignment:=pendingstate.nextalignment
       else
-        switchesstatestack[switchesstatestackpos].alignment:=current_settings.alignment;
+        switchesstatestack[switchesstatestackpos].alignment:=CurrentSettings.alignment;
 
       if psf_verbosity_full_switched in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].verbosity:=pendingstate.nextverbosityfullswitch
@@ -1274,32 +1274,32 @@ unit scandir;
       if psf_local_switches_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].localsw:=pendingstate.nextlocalswitches
       else
-        switchesstatestack[switchesstatestackpos].localsw:=current_settings.localswitches;
+        switchesstatestack[switchesstatestackpos].localsw:=CurrentSettings.localswitches;
 
       if psf_packenum_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].packenum:=pendingstate.nextpackenum
       else
-        switchesstatestack[switchesstatestackpos].packenum:=current_settings.packenum;
+        switchesstatestack[switchesstatestackpos].packenum:=CurrentSettings.packenum;
 
       if psf_packrecords_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].packrecords:=pendingstate.nextpackrecords
       else
-        switchesstatestack[switchesstatestackpos].packrecords:=current_settings.packrecords;
+        switchesstatestack[switchesstatestackpos].packrecords:=CurrentSettings.packrecords;
 
       if psf_setalloc_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].setalloc:=pendingstate.nextsetalloc
       else
-        switchesstatestack[switchesstatestackpos].setalloc:=current_settings.setalloc;
+        switchesstatestack[switchesstatestackpos].setalloc:=CurrentSettings.setalloc;
 
       if psf_asmmode_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].asmmode:=pendingstate.nextasmmode
       else
-        switchesstatestack[switchesstatestackpos].asmmode:=current_settings.asmmode;
+        switchesstatestack[switchesstatestackpos].asmmode:=CurrentSettings.asmmode;
 
       if psf_optimizerswitches_changed in pendingstate.flags then
         switchesstatestack[switchesstatestackpos].optimizerswitches:=pendingstate.nextoptimizerswitches
       else
-        switchesstatestack[switchesstatestackpos].optimizerswitches:=current_settings.optimizerswitches;
+        switchesstatestack[switchesstatestackpos].optimizerswitches:=CurrentSettings.optimizerswitches;
 
       switchesstatestack[switchesstatestackpos].pmessage:=pendingstate.nextmessagerecord;
       Inc(switchesstatestackpos);
@@ -1319,34 +1319,34 @@ unit scandir;
       var
         s : string;
       begin
-        current_scanner.skipspace;
-        if current_scanner.c = '''' then
+        CurrentScanner.skipspace;
+        if CurrentScanner.c = '''' then
           begin
-            s:= current_scanner.readquotedstring;
-            current_scanner.readcomment
+            s:= CurrentScanner.readquotedstring;
+            CurrentScanner.readcomment
           end
         else
-          s:= trimspace(current_scanner.readcomment);
+          s:= trimspace(CurrentScanner.readcomment);
 
         { replace * with the name of the main source.
           This should always be defined. }
         if s[1]='*' then
-          if Assigned(Current_Module) then
+          if Assigned(CurrentModule) then
             begin
               delete(S,1,1);
-              insert(ChangeFileExt(ExtractFileName(current_module.mainsource),''),S,1 );
+              insert(ChangeFileExt(ExtractFileName(CurrentModule.mainsource),''),S,1 );
             end;
         s:=FixFileName(s);
         if ExtractFileExt(s)='' then
-          s:=ChangeFileExt(s,target_info.resext);
-        if target_info.res<>res_none then
+          s:=ChangeFileExt(s,TargetInfo.resext);
+        if TargetInfo.res<>res_none then
           begin
-            include(current_module.moduleflags,mf_has_resourcefiles);
-            if (res_single_file in target_res.resflags) and
-                                   not (Current_module.ResourceFiles.Empty) then
+            include(CurrentModule.moduleflags,mf_has_resourcefiles);
+            if (res_single_file in TargetRes.resflags) and
+                                   not (CurrentModule.ResourceFiles.Empty) then
               Message(scan_w_only_one_resourcefile_supported)
             else
-              current_module.resourcefiles.insert(FixFileName(s));
+              CurrentModule.resourcefiles.insert(FixFileName(s));
           end
         else
           Message(scan_e_resourcefiles_not_supported);
@@ -1354,29 +1354,29 @@ unit scandir;
 
     procedure dir_rtti;
 
-      function read_rtti_options: trtti_visibilities;
+      function read_rtti_options: TRTTIVisibilities;
         var
           sym: ttypesym;
-          value: tnormalset;
+          value: TNormalSet;
         begin
           result:=[];
           sym:=search_system_type('TVISIBILITYCLASSES');
-          if current_scanner.readpreprocset(tsetdef(sym.typedef),value,'RTTI') then
+          if CurrentScanner.readpreprocset(tsetdef(sym.typedef),value,'RTTI') then
             begin
-              result:=prtti_visibilities(@value)^;
+              result:=PRTTIVisibilities(@value)^;
               // if the set was empty we need to read the next id
               if result=[] then
                 begin
-                  current_scanner.skipspace;
-                  current_scanner.readid
+                  CurrentScanner.skipspace;
+                  CurrentScanner.readid
                 end;
             end;
         end;
 
       var
-        dir: trtti_directive;
-        option: trtti_option;
-        options: array[trtti_option] of boolean;
+        dir: TRTTIDirective;
+        option: TRTTIOption;
+        options: array[TRTTIOption] of boolean;
       begin
         { the system unit has not yet loaded which means the directive is misplaced}
         if systemunit=nil then
@@ -1385,16 +1385,16 @@ unit scandir;
             exit;
           end;
 
-        dir:=default(trtti_directive);
+        dir:=default(TRTTIDirective);
 
         options[ro_fields]:=false;
         options[ro_methods]:=false;
         options[ro_properties]:=false;
 
         { read the clause }
-        current_scanner.skipspace;
-        current_scanner.readid;
-        case current_scanner.pattern of
+        CurrentScanner.skipspace;
+        CurrentScanner.readid;
+        case CurrentScanner.pattern of
           'INHERIT':
             dir.clause:=rtc_inherit;
           'EXPLICIT':
@@ -1404,14 +1404,14 @@ unit scandir;
         end;
 
         { read the visibility options}
-        current_scanner.skipspace;
-        current_scanner.readid;
+        CurrentScanner.skipspace;
+        CurrentScanner.readid;
         { the inherit clause doesn't require any options but explicit does }
-        if (current_scanner.pattern='') and (dir.clause=rtc_explicit) then
+        if (CurrentScanner.pattern='') and (dir.clause=rtc_explicit) then
           Message(scan_e_incomplete_rtti_clause);
-        while current_scanner.pattern<>'' do
+        while CurrentScanner.pattern<>'' do
           begin
-            case current_scanner.pattern of
+            case CurrentScanner.pattern of
               'METHODS':
                 option:=ro_methods;
               'PROPERTIES':
@@ -1420,15 +1420,15 @@ unit scandir;
                 option:=ro_fields;
               otherwise
                 begin
-                  if current_scanner.preproc_token=_ID then
-                    Message1(scan_e_invalid_rtti_option,current_scanner.pattern);
+                  if CurrentScanner.preproc_token=_ID then
+                    Message1(scan_e_invalid_rtti_option,CurrentScanner.pattern);
                   break;
                 end;
             end;
             { the option has already been used }
             if options[option] then
               begin
-                Message1(scan_e_duplicate_rtti_option,current_scanner.pattern);
+                Message1(scan_e_duplicate_rtti_option,CurrentScanner.pattern);
                 break;
               end;
             dir.options[option]:=read_rtti_options;
@@ -1436,7 +1436,7 @@ unit scandir;
           end;
 
         { set the directive in the module }
-        current_module.rtti_directive:=dir;
+        CurrentModule.rtti_directive:=dir;
       end;
 
     procedure dir_saturation;
@@ -1479,9 +1479,9 @@ unit scandir;
       var
         flags : int64;
       begin
-        if not (target_info.system in (systems_all_windows)) then
+        if not (TargetInfo.system in (systems_all_windows)) then
           Message(scan_w_setpeflags_not_support);
-        if current_scanner.readpreprocint(flags,'SETPEFLAGS') then
+        if CurrentScanner.readpreprocint(flags,'SETPEFLAGS') then
           begin
             if flags>$ffff then
               message(scan_e_illegal_peflag);
@@ -1494,9 +1494,9 @@ unit scandir;
       var
         flags : int64;
       begin
-        if not (target_info.system in (systems_all_windows)) then
+        if not (TargetInfo.system in (systems_all_windows)) then
           Message(scan_w_setpeoptflags_not_support);
-        if current_scanner.readpreprocint(flags,'SETPEOPTFLAGS') then
+        if CurrentScanner.readpreprocint(flags,'SETPEOPTFLAGS') then
           begin
             if flags>$ffff then
               message(scan_e_illegal_peoptflag);
@@ -1510,9 +1510,9 @@ unit scandir;
         dummystr : string;
         dummyrev : word;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           Message(scan_w_setpeuserversion_not_support);
-        if (not current_module.is_initial) then
+        if (not CurrentModule.is_initial) then
           Message(scan_n_only_exe_version)
         else
           do_version(peuserversionmajor,peuserversionminor,dummyrev,dummystr,false,SetPEUserVersionSetExplicitely);
@@ -1523,9 +1523,9 @@ unit scandir;
         dummystr : string;
         dummyrev : word;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           Message(scan_w_setpeosversion_not_support);
-        if (not current_module.is_initial) then
+        if (not CurrentModule.is_initial) then
           Message(scan_n_only_exe_version)
         else
           do_version(peosversionmajor,peosversionminor,dummyrev,dummystr,false,SetPEOSVersionSetExplicitely);
@@ -1536,9 +1536,9 @@ unit scandir;
         dummystr : string;
         dummyrev : word;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           Message(scan_w_setpesubsysversion_not_support);
-        if (not current_module.is_initial) then
+        if (not CurrentModule.is_initial) then
           Message(scan_n_only_exe_version)
         else
           do_version(pesubsysversionmajor,pesubsysversionminor,dummyrev,dummystr,false,SetPESubSysVersionSetExplicitely);
@@ -1547,27 +1547,27 @@ unit scandir;
     procedure dir_smartlink;
       begin
         do_moduleswitch(cs_create_smart);
-        if (target_dbg.id=dbg_dwarf3) and
-            not(target_info.system in systems_darwin) and
+        if (TargetDbg.id=dbg_dwarf3) and
+            not(TargetInfo.system in systems_darwin) and
             { smart linking does not yet work with DWARF debug info on most targets }
-            (cs_create_smart in current_settings.moduleswitches) and
-            not (af_outputbinary in target_asm.flags) then
+            (cs_create_smart in CurrentSettings.moduleswitches) and
+            not (af_outputbinary in TargetAsm.flags) then
         begin
           Message(option_dwarf_smart_linking);
-          Exclude(current_settings.moduleswitches,cs_create_smart);
+          Exclude(CurrentSettings.moduleswitches,cs_create_smart);
         end;
         { Also create a smartlinked version, on an assembler that
           does not support smartlink sections like nasm?
           This is not compatible with using internal linker. }
-       if ((cs_link_smart in current_settings.globalswitches) or
-           (cs_create_smart in current_settings.moduleswitches)) and
-          (af_needar in target_asm.flags) and
-          not (af_smartlink_sections in target_asm.flags) and
-          not (cs_link_extern in current_settings.globalswitches) then
+       if ((cs_link_smart in CurrentSettings.globalswitches) or
+           (cs_create_smart in CurrentSettings.moduleswitches)) and
+          (af_needar in TargetAsm.flags) and
+          not (af_smartlink_sections in TargetAsm.flags) and
+          not (cs_link_extern in CurrentSettings.globalswitches) then
          begin
            DoneLinker;
            Message(option_smart_link_requires_external_linker);
-           include(current_settings.globalswitches,cs_link_extern);
+           include(CurrentSettings.globalswitches,cs_link_extern);
            InitLinker;
          end
       end;
@@ -1593,13 +1593,13 @@ unit scandir;
         sctype : string;
         syscall : psyscallinfo;
       begin
-        current_scanner.skipspace;
-        sctype:=current_scanner.readid;
+        CurrentScanner.skipspace;
+        sctype:=CurrentScanner.readid;
 
         syscall:=get_syscall_by_name(sctype);
         if assigned(syscall) then
           begin
-            if not (target_info.system in syscall^.validon) then
+            if not (TargetInfo.system in syscall^.validon) then
               Message(scan_w_syscall_convention_not_useable_on_target)
             else
               set_default_syscall(syscall^.procoption);
@@ -1613,24 +1613,24 @@ unit scandir;
         name, value: string;
       begin
         { note: *not* recorded in the tokenstream, so not replayed for generics }
-        current_scanner.skipspace;
-        name:=current_scanner.readid;
-        if current_scanner.c='=' then
+        CurrentScanner.skipspace;
+        name:=CurrentScanner.readid;
+        if CurrentScanner.c='=' then
           begin
-            current_scanner.readchar;
-            current_scanner.readid;
-            value:=current_scanner.orgpattern;
-            if not UpdateTargetSwitchStr(name+'='+value,current_settings.targetswitches,current_module.in_global) then
+            CurrentScanner.readchar;
+            CurrentScanner.readid;
+            value:=CurrentScanner.orgpattern;
+            if not UpdateTargetSwitchStr(name+'='+value,CurrentSettings.targetswitches,CurrentModule.in_global) then
               Message1(scan_w_illegal_switch,name);
           end
-        else if current_scanner.c='-' then
+        else if CurrentScanner.c='-' then
           begin
-            current_scanner.readchar;
-            if not UpdateTargetSwitchStr(name+'-',current_settings.targetswitches,current_module.in_global) then
+            CurrentScanner.readchar;
+            if not UpdateTargetSwitchStr(name+'-',CurrentSettings.targetswitches,CurrentModule.in_global) then
               Message1(scan_w_illegal_switch,name);
           end
         else
-          if not UpdateTargetSwitchStr(name,current_settings.targetswitches,current_module.in_global) then
+          if not UpdateTargetSwitchStr(name,CurrentSettings.targetswitches,CurrentModule.in_global) then
             Message1(scan_w_illegal_switch,name);
       end;
 
@@ -1648,23 +1648,23 @@ unit scandir;
       var
         unitpath: TPathStr;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
          Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            unitpath:=current_scanner.readcomment;
-            if (current_module.path<>'') and
+            CurrentScanner.skipspace;
+            unitpath:=CurrentScanner.readcomment;
+            if (CurrentModule.path<>'') and
                not path_absolute(unitpath) then
-             unitpath:=current_module.path+source_info.DirSep+unitpath;
-            current_module.localunitsearchpath.AddPath(unitpath,false);
-            Message2(general_t_unitpath_local,current_module.realmodulename^,unitpath);
+             unitpath:=CurrentModule.path+SourceInfo.DirSep+unitpath;
+            CurrentModule.localunitsearchpath.AddPath(unitpath,false);
+            Message2(general_t_unitpath_local,CurrentModule.realmodulename^,unitpath);
           end;
       end;
 
     procedure dir_varparacopyoutcheck;
       begin
-        Message1(scan_w_illegal_switch,current_scanner.pattern);
+        Message1(scan_w_illegal_switch,CurrentScanner.pattern);
       end;
 
     procedure dir_varpropsetter;
@@ -1682,36 +1682,36 @@ unit scandir;
         major, minor : longint;
         error : integer;
       begin
-        if not (target_info.system in systems_all_windows) then
+        if not (TargetInfo.system in systems_all_windows) then
           begin
             Message(scan_n_version_not_support);
             exit;
           end;
-        if (not current_module.is_initial) then
+        if (not CurrentModule.is_initial) then
           Message(scan_n_only_exe_version)
         else
           begin
             { change description global var in all cases }
             { it not used but in win32 and os2 }
-            current_scanner.skipspace;
+            CurrentScanner.skipspace;
             { we should only accept Major.Minor format for win32 and os2 }
-            current_scanner.readnumber;
+            CurrentScanner.readnumber;
             major:=0;
             minor:=0;
-            val(current_scanner.pattern,major,error);
+            val(CurrentScanner.pattern,major,error);
             if (error<>0) or (major > high(word)) or (major < 0) then
               begin
-                Message1(scan_w_wrong_version_ignored,current_scanner.pattern);
+                Message1(scan_w_wrong_version_ignored,CurrentScanner.pattern);
                 exit;
               end;
-            if current_scanner.c='.' then
+            if CurrentScanner.c='.' then
               begin
-                current_scanner.readchar;
-                current_scanner.readnumber;
-                val(current_scanner.pattern,minor,error);
+                CurrentScanner.readchar;
+                CurrentScanner.readnumber;
+                val(CurrentScanner.pattern,minor,error);
                 if (error<>0) or (minor > high(word)) or (minor < 0) then
                   begin
-                    Message1(scan_w_wrong_version_ignored,tostr(major)+'.'+current_scanner.pattern);
+                    Message1(scan_w_wrong_version_ignored,tostr(major)+'.'+CurrentScanner.pattern);
                     exit;
                   end;
                 dllmajor:=word(major);
@@ -1745,19 +1745,19 @@ unit scandir;
       var
         ident : string;
         state : string;
-        msgstate : tmsgstate;
+        msgstate : TMsgState;
         i : integer;
       begin
-        current_scanner.skipspace;
-        ident:=current_scanner.readid;
-        current_scanner.skipspace;
-        if current_scanner.c in ['+','-'] then
+        CurrentScanner.skipspace;
+        ident:=CurrentScanner.readid;
+        CurrentScanner.skipspace;
+        if CurrentScanner.c in ['+','-'] then
           begin
-            state:=current_scanner.c;
-            current_scanner.readchar;
+            state:=CurrentScanner.c;
+            CurrentScanner.readchar;
           end
         else
-          state:=current_scanner.readid;
+          state:=CurrentScanner.readid;
 
         { support both delphi and fpc switches }
         { use local ms_on/off/error tmsgstate values }
@@ -1880,17 +1880,17 @@ unit scandir;
 
     procedure dir_z1;
       begin
-        current_settings.packenum:=1;
+        CurrentSettings.packenum:=1;
       end;
 
     procedure dir_z2;
       begin
-        current_settings.packenum:=2;
+        CurrentSettings.packenum:=2;
       end;
 
     procedure dir_z4;
       begin
-        current_settings.packenum:=4;
+        CurrentSettings.packenum:=4;
       end;
 
     procedure dir_externalsym;
@@ -1907,7 +1907,7 @@ unit scandir;
 
     procedure dir_hugecode;
       begin
-        Message1(scan_n_ignored_switch,current_scanner.pattern);
+        Message1(scan_n_ignored_switch,CurrentScanner.pattern);
       end;
 
     procedure dir_hugepointernormalization;
@@ -1929,9 +1929,9 @@ unit scandir;
       var
         s : string;
       begin
-        current_scanner.skipspace;
-        s:=current_scanner.readcomment;
-        if not(UpdateAlignmentStr(s,current_settings.alignment)) then
+        CurrentScanner.skipspace;
+        s:=CurrentScanner.readcomment;
+        if not(UpdateAlignmentStr(s,CurrentSettings.alignment)) then
           message(scanner_e_illegal_alignment_directive);
       end;
 
@@ -1939,22 +1939,22 @@ unit scandir;
       var
          s : string;
       begin
-        if not current_module.in_global then
+        if not CurrentModule.in_global then
           Message(scan_w_switch_is_global)
         else
           begin
-            current_scanner.skipspace;
-            s:=current_scanner.readcomment;
+            CurrentScanner.skipspace;
+            s:=CurrentScanner.readcomment;
             if (upper(s)='UTF8') or (upper(s)='UTF-8') then
-              current_settings.sourcecodepage:=CP_UTF8
+              CurrentSettings.sourcecodepage:=CP_UTF8
             else if not cpavailable(s) then
               Message1(option_code_page_not_available,s)
             else
-              current_settings.sourcecodepage:=codepagebyname(s);
+              CurrentSettings.sourcecodepage:=codepagebyname(s);
             { we're not using the system code page now }
-            exclude(current_settings.modeswitches,m_systemcodepage);
-            exclude(current_settings.moduleswitches,cs_system_codepage);
-            include(current_settings.moduleswitches,cs_explicit_codepage);
+            exclude(CurrentSettings.modeswitches,m_systemcodepage);
+            exclude(CurrentSettings.moduleswitches,cs_system_codepage);
+            include(CurrentSettings.moduleswitches,cs_explicit_codepage);
           end;
       end;
 

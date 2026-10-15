@@ -549,7 +549,7 @@ uses
 
 {$ifndef GENERIC_CPU}
 {$ifdef heaptrc}
-         ppheap_register_file(f.path+f.name,current_module.moduleid*100000+f.ref_index);
+         ppheap_register_file(f.path+f.name,CurrentModule.moduleid*100000+f.ref_index);
 {$endif heaptrc}
 {$endif not GENERIC_CPU}
       end;
@@ -614,15 +614,15 @@ uses
                  p:=OutputExeDir;
            end;
          outputpath:=p;
-         asmfilename:=p+n+target_info.asmext;
-         objfilename:=p+n+target_info.objext;
-         ppufilename:=p+n+target_info.unitext;
+         asmfilename:=p+n+TargetInfo.asmext;
+         objfilename:=p+n+TargetInfo.objext;
+         ppufilename:=p+n+TargetInfo.unitext;
 {$ifdef DEBUG_NODE_XML}
          ppxfilename:=p+n+'-node-dump.xml';
 {$endif DEBUG_NODE_XML}
-         importlibfilename:=p+target_info.importlibprefix+n+target_info.importlibext;
-         staticlibfilename:=p+target_info.staticlibprefix+n+target_info.staticlibext;
-         exportfilename:=p+'exp'+n+target_info.objext;
+         importlibfilename:=p+TargetInfo.importlibprefix+n+TargetInfo.importlibext;
+         staticlibfilename:=p+TargetInfo.staticlibprefix+n+TargetInfo.staticlibext;
+         exportfilename:=p+'exp'+n+TargetInfo.objext;
 
          { output dir of exe can be specified separately }
          if AllowOutput and (OutputExeDir<>'') then
@@ -640,16 +640,16 @@ uses
            end
          else
            begin
-             exefilename:=p+n+target_info.exeext;
+             exefilename:=p+n+TargetInfo.exeext;
              if Assigned(OutputPrefix) then
                prefix := OutputPrefix^
              else
-               prefix := target_info.sharedlibprefix;
+               prefix := TargetInfo.sharedlibprefix;
              if Assigned(OutputSuffix) then
                suffix := OutputSuffix^
              else
                suffix := '';
-             sharedlibfilename:=p+prefix+n+suffix+target_info.sharedlibext;
+             sharedlibfilename:=p+prefix+n+suffix+TargetInfo.sharedlibext;
            end;
          mapfilename:=p+n+'.map';
          dbgfilename:=p+n+'.dbg';

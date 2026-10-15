@@ -122,12 +122,12 @@ implementation
       begin
         with pextra_info(p)^ do
          begin
-           line:=current_filepos.line;
-           col:=current_filepos.column;
-           if assigned(current_module) then
-            fileindex:=current_module.moduleid*100000+current_filepos.fileindex
+           line:=CurrentFilePos.line;
+           col:=CurrentFilePos.column;
+           if assigned(CurrentModule) then
+            fileindex:=CurrentModule.moduleid*100000+CurrentFilePos.fileindex
            else
-            fileindex:=current_filepos.fileindex;
+            fileindex:=CurrentFilePos.fileindex;
          end;
       end;
 

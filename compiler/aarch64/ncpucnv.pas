@@ -30,8 +30,8 @@ interface
     type
       taarch64typeconvnode = class(TCgTypeConvNode)
         protected
-         function typecheck_int_to_real: tnode; override;
-         function first_int_to_real: tnode; override;
+         function typecheck_int_to_real: TNode; override;
+         function first_int_to_real: TNode; override;
 
         { procedure second_int_to_int;override; }
         { procedure second_string_to_string;override; }
@@ -70,7 +70,7 @@ implementation
                              FirstTypeConv
 *****************************************************************************}
 
-  function taarch64typeconvnode.typecheck_int_to_real: tnode;
+  function taarch64typeconvnode.typecheck_int_to_real: TNode;
     begin
       { aarch64 supports converting everything to floating point, even fixed
         point! Unfortunately, it only supports fixed point with a power-of-2
@@ -102,7 +102,7 @@ implementation
     end;
 
 
-  function taarch64typeconvnode.first_int_to_real: tnode;
+  function taarch64typeconvnode.first_int_to_real: TNode;
     begin
       result:=nil;
       expectloc:=LOC_MMREGISTER;
@@ -118,8 +118,8 @@ implementation
       op: tasmop;
     begin
       location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-      location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
-      hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
+      location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+      hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
       if not(left.location.loc in [LOC_REGISTER,LOC_CREGISTER]) then
         internalerror(2014120401);
       case left.location.size of
@@ -134,7 +134,7 @@ implementation
         else
           internalerror(2014120402);
       end;
-      current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,location.register,left.location.register));
+      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,location.register,left.location.register));
       { no scaling for currency, that's handled in pass_typecheck }
     end;
 
@@ -153,8 +153,8 @@ implementation
       { can't use the generic code, as it assumes that OP_OR automatically sets
         the flags. We can also do things more efficiently directly }
 
-      secondpass(left);
-      if codegenerror then
+      SecondPass(left);
+      if CodeGenError then
        exit;
 
       case left.location.loc of
@@ -168,8 +168,8 @@ implementation
         LOC_CREGISTER,
         LOC_JUMP:
           begin
-             hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
-             current_asmdata.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,left.location.register,0));
+             hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,true);
+             CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_const(A_CMP,left.location.register,0));
              resflags:=F_NE;
           end;
         LOC_FLAGS :
@@ -179,17 +179,17 @@ implementation
       end;
       { load flags to register }
       location_reset(location,LOC_REGISTER,def_cgsize(resultdef));
-      location.register:=cg.getintregister(current_asmdata.CurrAsmList,location.size);
+      location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,location.size);
       if is_cbool(resultdef) then
         begin
-          current_asmdata.CurrAsmList.concat(taicpu.op_reg_cond(A_CSETM,location.register,flags_to_cond(resflags)));
+          CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_cond(A_CSETM,location.register,flags_to_cond(resflags)));
             { truncate? (in case cbools are ever made unsigned) }
             if resultdef.size<4 then
-              cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_32,location.size,location.register,location.register);
+              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_32,location.size,location.register,location.register);
         end
       else
-        cg.g_flags2reg(current_asmdata.CurrAsmList,location.size,resflags,location.register);
-      cg.a_reg_dealloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+        cg.g_flags2reg(CurrentAsmData.CurrAsmList,location.size,resflags,location.register);
+      cg.a_reg_dealloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
     end;
 
 

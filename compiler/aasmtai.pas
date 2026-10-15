@@ -419,7 +419,7 @@ interface
 
        { abstract assembler item with line information }
        tailineinfo = class(tai)
-        fileinfo : tfileposinfo;
+        fileinfo : TFilePosInfo;
         constructor Create;
         constructor ppuload(t:taitype;ppufile:tcompilerppufile);override;
         procedure ppuwrite(ppufile:tcompilerppufile);override;
@@ -1087,7 +1087,7 @@ implementation
     constructor tailineinfo.create;
      begin
        inherited create;
-       fileinfo:=current_filepos;
+       fileinfo:=CurrentFilePos;
      end;
 
 
@@ -1185,7 +1185,7 @@ implementation
       begin
          inherited Create;
          typ:=ait_datablock;
-         sym:=current_asmdata.DefineAsmSymbol(_name,AB_LOCAL,_typ,def);
+         sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_LOCAL,_typ,def);
          { keep things aligned }
          if _size<=0 then
            _size:=sizeof(aint);
@@ -1195,11 +1195,11 @@ implementation
 
     constructor tai_datablock.Create_hidden(const _name: string; _size: asizeint; def: tdef; _typ:Tasmsymtype);
       begin
-        if tf_supports_hidden_symbols in target_info.flags then
+        if tf_supports_hidden_symbols in TargetInfo.flags then
           begin
             inherited Create;
             typ:=ait_datablock;
-            sym:=current_asmdata.DefineAsmSymbol(_name,AB_PRIVATE_EXTERN,_typ,def);
+            sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_PRIVATE_EXTERN,_typ,def);
             { keep things aligned }
             if _size<=0 then
               _size:=sizeof(aint);
@@ -1215,7 +1215,7 @@ implementation
       begin
          inherited Create;
          typ:=ait_datablock;
-         sym:=current_asmdata.DefineAsmSymbol(_name,AB_GLOBAL,_typ,def);
+         sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_GLOBAL,_typ,def);
          { keep things aligned }
          if _size<=0 then
            _size:=sizeof(aint);
@@ -1296,7 +1296,7 @@ implementation
       begin
          inherited Create;
          typ:=ait_symbol;
-         sym:=current_asmdata.DefineAsmSymbol(_name,AB_LOCAL,_symtyp,def);
+         sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_LOCAL,_symtyp,def);
          size:=siz;
          is_global:=false;
       end;
@@ -1306,18 +1306,18 @@ implementation
       begin
          inherited Create;
          typ:=ait_symbol;
-         sym:=current_asmdata.DefineAsmSymbol(_name,AB_GLOBAL,_symtyp,def);
+         sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_GLOBAL,_symtyp,def);
          size:=siz;
          is_global:=true;
       end;
 
     constructor tai_symbol.Createname_hidden(const _name: string; _symtyp: Tasmsymtype; siz: longint; def: tdef);
       begin
-        if tf_supports_hidden_symbols in target_info.flags then
+        if tf_supports_hidden_symbols in TargetInfo.flags then
           begin
             inherited Create;
             typ:=ait_symbol;
-            sym:=current_asmdata.DefineAsmSymbol(_name,AB_PRIVATE_EXTERN,_symtyp,def);
+            sym:=CurrentAsmData.DefineAsmSymbol(_name,AB_PRIVATE_EXTERN,_symtyp,def);
             size:=siz;
             is_global:=true;
           end
@@ -1373,7 +1373,7 @@ implementation
       begin
          inherited Create;
          typ:=ait_symbol_end;
-         sym:=current_asmdata.GetAsmSymbol(_name);
+         sym:=CurrentAsmData.GetAsmSymbol(_name);
          if not assigned(sym) then
            internalerror(2013080301);
       end;
@@ -1699,14 +1699,14 @@ implementation
 
     constructor tai_const.Createname(const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
       begin
-         self.create_sym_offset(current_asmdata.RefAsmSymbol(name,_symtyp),ofs);
+         self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,_symtyp),ofs);
       end;
 
 
     constructor tai_const.Createname_rel(const name,endname:string);
       begin
-         self.create_sym_offset(current_asmdata.RefAsmSymbol(name,AT_NONE),0);
-         endsym:=current_asmdata.RefAsmSymbol(endname,AT_NONE)
+         self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,AT_NONE),0);
+         endsym:=CurrentAsmData.RefAsmSymbol(endname,AT_NONE)
       end;
 
 
@@ -1718,14 +1718,14 @@ implementation
 
     constructor tai_const.Create_type_name(_typ:taiconst_type;const name:string;_symtyp:Tasmsymtype;ofs:asizeint);
       begin
-         self.create_sym_offset(current_asmdata.RefAsmSymbol(name,_symtyp),ofs);
+         self.create_sym_offset(CurrentAsmData.RefAsmSymbol(name,_symtyp),ofs);
          consttype:=_typ;
       end;
 
 
     constructor tai_const.Create_type_name(_typ:taiconst_type;const name:string;symclass: TAsmSymbolClass;_symtyp:Tasmsymtype;ofs:asizeint);
       begin
-        self.create_sym_offset(current_asmdata.RefAsmSymbolByClass(symclass,name,_symtyp),ofs);
+        self.create_sym_offset(CurrentAsmData.RefAsmSymbolByClass(symclass,name,_symtyp),ofs);
         consttype:=_typ;
       end;
 
@@ -1861,7 +1861,7 @@ implementation
             result:=8;
           aitconst_secrel32_symbol,
           aitconst_rva_symbol :
-            if target_info.system in systems_peoptplus then
+            if TargetInfo.system in systems_peoptplus then
               result:=sizeof(longint)
             else
               result:=sizeof(pint);
@@ -2620,7 +2620,7 @@ implementation
               segprefix:=ref^.segment;
 {$endif}
 
-            if (cs_create_pic in current_settings.moduleswitches) and
+            if (cs_create_pic in CurrentSettings.moduleswitches) and
               assigned(r.symbol) and
               not assigned(r.relsymbol) and
               (r.refaddr=addr_no)

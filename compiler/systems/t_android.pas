@@ -91,10 +91,10 @@ const
         i : longint;
         ImportLibrary : TImportLibrary;
       begin
-        for i:=0 to current_module.ImportLibraryList.Count-1 do
+        for i:=0 to CurrentModule.ImportLibraryList.Count-1 do
           begin
-            ImportLibrary:=TImportLibrary(current_module.ImportLibraryList[i]);
-            current_module.linkothersharedlibs.add(ImportLibrary.Name,link_always);
+            ImportLibrary:=TImportLibrary(CurrentModule.ImportLibraryList[i]);
+            CurrentModule.linkothersharedlibs.add(ImportLibrary.Name,link_always);
           end;
       end;
 
@@ -126,7 +126,7 @@ const
           JNI_OnLoad().
         }
         // Check for the JNI_OnLoad export
-        if current_module.islibrary and not hp.is_var and assigned(hp.sym) and
+        if CurrentModule.islibrary and not hp.is_var and assigned(hp.sym) and
            (hp.sym.typ = procsym) and (eo_name in hp.options) and
            (hp.name^ = SJNI_OnLoad) and (tprocsym(hp.sym).procdeflist.count = 1) then
           begin
@@ -145,8 +145,8 @@ const
           exit;
         // If JNI_OnLoad is exported, export a system proxy function instead
         create_hlcodegen(nil);
-        new_section(current_asmdata.asmlists[al_procedures],sec_code,'',0);
-        hlcg.g_external_wrapper(current_asmdata.asmlists[al_procedures],nil,SJNI_OnLoad,'FPC_JNI_ON_LOAD_PROXY',true);
+        new_section(CurrentAsmData.asmlists[al_procedures],sec_code,'',0);
+        hlcg.g_external_wrapper(CurrentAsmData.asmlists[al_procedures],nil,SJNI_OnLoad,'FPC_JNI_ON_LOAD_PROXY',true);
         destroy_hlcodegen;
         exportedsymnames.insert(SJNI_OnLoad);
       end;
@@ -188,7 +188,7 @@ procedure TLinkerAndroid.LoadPredefinedLibraryOrder;
 // put your linkorder/linkalias overrides here.
 // Note: assumes only called when reordering/aliasing is used.
 Begin
-   if not (cs_link_no_default_lib_order in  current_settings.globalswitches) Then
+   if not (cs_link_no_default_lib_order in  CurrentSettings.globalswitches) Then
         Begin
           LinkLibraryOrder.add('gcc','',15);
           LinkLibraryOrder.add('c','',100);
@@ -200,7 +200,7 @@ End;
 Procedure TLinkerAndroid.InitSysInitUnitName;
 begin
   reorder := ReOrderEntries;
-  if current_module.islibrary then
+  if CurrentModule.islibrary then
     prtobj:='dllprt0'
   else
     prtobj:='prt0';
@@ -222,7 +222,7 @@ begin
   with linkres do
     begin
       { Write path to search libraries }
-      HPath:=TCmdStrListItem(current_module.locallibrarysearchpath.First);
+      HPath:=TCmdStrListItem(CurrentModule.locallibrarysearchpath.First);
       while assigned(HPath) do
        begin
          Add('SEARCH_DIR('+maybequoted(HPath.Str)+')');
@@ -240,7 +240,7 @@ begin
       { several RTL symbols of FPC-compiled shared libraries   }
       { will be bound to those of a single shared library or   }
       { to the main program                                    }
-      if isdll or (cs_create_pic in current_settings.moduleswitches) then
+      if isdll or (cs_create_pic in CurrentSettings.moduleswitches) then
         begin
           add('VERSION');
           add('{');
@@ -260,13 +260,13 @@ begin
 
       StartSection('INPUT(');
       { add objectfiles, start with prt0 always }
-      if not (target_info.system in systems_internal_sysinit) and (prtobj<>'') then
+      if not (TargetInfo.system in systems_internal_sysinit) and (prtobj<>'') then
         AddFileName(maybequoted(FindObjectFile(prtobj,'',false)));
       { Add libc startup object file }
       if isdll then
         s:='crtbegin_so.o'
       else
-        if cs_link_staticflag in current_settings.globalswitches then
+        if cs_link_staticflag in CurrentSettings.globalswitches then
           s:='crtbegin_static.o'
         else
           s:='crtbegin_dynamic.o';
@@ -306,7 +306,7 @@ begin
              While not SharedLibFiles.Empty do
               begin
                 S:=SharedLibFiles.GetFirst;
-                i:=Pos(target_info.sharedlibext,S);
+                i:=Pos(TargetInfo.sharedlibext,S);
                 if i>0 then
                   Delete(S,i,255);
                 Add('-l'+s);
@@ -314,12 +314,12 @@ begin
              Add(')');
            end;
 
-         if (cs_link_staticflag in current_settings.globalswitches) or
+         if (cs_link_staticflag in CurrentSettings.globalswitches) or
             (not reorder) then
            begin
              Add('GROUP(');
              { when we have -static for the linker the we also need libgcc }
-             if (cs_link_staticflag in current_settings.globalswitches) then
+             if (cs_link_staticflag in CurrentSettings.globalswitches) then
                begin
                  Add('-lgcc');
                  if librarysearchpath.FindFile('libgcc_eh.a',false,s1) then
@@ -388,23 +388,23 @@ var
 begin
   Result:=False;
   if IsSharedLib then
-    outname:=current_module.sharedlibfilename
+    outname:=CurrentModule.sharedlibfilename
   else
-    outname:=current_module.exefilename;
-  if not(cs_link_nolink in current_settings.globalswitches) then
+    outname:=CurrentModule.exefilename;
+  if not(cs_link_nolink in CurrentSettings.globalswitches) then
     Message1(exec_i_linking, outname);
 
   opts:='';
-  if not IsSharedLib and (cs_create_pic in current_settings.moduleswitches) then
+  if not IsSharedLib and (cs_create_pic in CurrentSettings.moduleswitches) then
     opts:=opts + ' --pic-executable';
-  if (cs_link_strip in current_settings.globalswitches) and
-     not (cs_link_separate_dbg_file in current_settings.globalswitches) then
+  if (cs_link_strip in CurrentSettings.globalswitches) and
+     not (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
     opts:=opts + ' -s';
-  if (cs_link_map in current_settings.globalswitches) then
+  if (cs_link_map in CurrentSettings.globalswitches) then
     opts:=opts + ' -Map '+maybequoted(ChangeFileExt(outname,'.map'));
   if create_smartlink_sections then
     opts:=opts + ' --gc-sections';
-  if (cs_link_staticflag in current_settings.globalswitches) then
+  if (cs_link_staticflag in CurrentSettings.globalswitches) then
     opts:=opts + ' -static'
   else
     if cshared then
@@ -439,8 +439,8 @@ begin
 
   { We should use BFD version of LD, since GOLD version does not support INSERT command in linker scripts }
   s:=utilsprefix+binstr+'.bfd';
-  if (source_info.exeext<>'') then
-    s:=s+source_info.exeext;
+  if (SourceInfo.exeext<>'') then
+    s:=s+SourceInfo.exeext;
   s:=FindUtil(s,false);
   if FileExists(s, True) then
     binstr:=s
@@ -451,14 +451,14 @@ begin
   success:=DoExec(binstr,CmdStr,true,false);
 
   { Create external .dbg file with debuginfo }
-  if success and (cs_link_separate_dbg_file in current_settings.globalswitches) then
+  if success and (cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
     begin
       for i:=1 to 3 do
         begin
           SplitBinCmd(Info.ExtDbgCmd[i],binstr,cmdstr);
           Replace(cmdstr,'$EXE',maybequoted(outname));
-          Replace(cmdstr,'$DBGFN',maybequoted(extractfilename(current_module.dbgfilename)));
-          Replace(cmdstr,'$DBG',maybequoted(current_module.dbgfilename));
+          Replace(cmdstr,'$DBGFN',maybequoted(extractfilename(CurrentModule.dbgfilename)));
+          Replace(cmdstr,'$DBG',maybequoted(CurrentModule.dbgfilename));
           success:=DoExec(FindUtil(utilsprefix+BinStr),CmdStr,true,false);
           if not success then
             break;
@@ -466,7 +466,7 @@ begin
     end;
 
   { Remove ResponseFile }
-  if (success) and not(cs_link_nolink in current_settings.globalswitches) then
+  if (success) and not(cs_link_nolink in CurrentSettings.globalswitches) then
     DeleteFile(outputexedir+Info.ResName);
 
   Result:=success;   { otherwise a recursive call to link method }

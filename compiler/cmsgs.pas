@@ -36,7 +36,7 @@ type
   TMsgStr = AnsiString;
 
   TArrayOfPChar = array of pchar;
-  TArrayOfState = array of tmsgstate;
+  TArrayOfState = array of TMsgState;
 
   TMsgIdx = array[1..maxmsgidxparts] of TArrayOfPChar;
   TMsgIdxMax = array[1..maxmsgidxparts] of longint;
@@ -65,7 +65,7 @@ type
     procedure ResetStates;
     procedure CreateIdx;
     { function  ClearVerbosity(nr:longint):boolean; not used anymore }
-    function  SetVerbosity(nr:longint;newstate:tmsgstate):boolean;
+    function  SetVerbosity(nr:longint;newstate:TMsgState):boolean;
     function  Get(nr:longint;const args:array of TMsgStr):TMsgStr;
     function  Valid(nr:longint):boolean;
   end;
@@ -409,10 +409,10 @@ begin
 end;
 
 
-function TMessage.SetVerbosity(nr:longint;newstate:tmsgstate):boolean;
+function TMessage.SetVerbosity(nr:longint;newstate:TMsgState):boolean;
 var
   i: longint;
-  oldstate : tmsgstate;
+  oldstate : TMsgState;
   is_global : boolean;
 begin
   result:=false;
@@ -425,7 +425,7 @@ begin
       is_global:=(ord(newstate) and ms_global_mask) <> 0;
       oldstate:=msgstates[i][nr mod 1000];
       if not is_global then
-        newstate:= tmsgstate((ord(newstate) and ms_local_mask) or (ord(oldstate) and ms_global_mask));
+        newstate:= TMsgState((ord(newstate) and ms_local_mask) or (ord(oldstate) and ms_global_mask));
       if newstate<>oldstate then
         has_local_changes:=true;
       msgstates[i][nr mod 1000]:=newstate;
@@ -475,7 +475,7 @@ end;
 procedure TMessage.ResetStates;
 var
   i,j,glob : longint;
-  state : tmsgstate;
+  state : TMsgState;
 begin
   if not has_local_changes then
     exit;
@@ -484,7 +484,7 @@ begin
       begin
         state:=msgstates[i][j];
         glob:=(ord(state) and ms_global_mask) shr ms_shift;
-        state:=tmsgstate((glob shl ms_shift) or glob);
+        state:=TMsgState((glob shl ms_shift) or glob);
         msgstates[i][j]:=state;
       end;
   has_local_changes:=false;

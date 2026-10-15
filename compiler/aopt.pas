@@ -272,7 +272,7 @@ Unit aopt;
         pass_1;
         While Assigned(BlockStart) Do
           Begin
-            if (cs_opt_peephole in current_settings.optimizerswitches) then
+            if (cs_opt_peephole in CurrentSettings.optimizerswitches) then
               begin
                 PrePeepHoleOpts;
                 PeepHoleOptPass1;

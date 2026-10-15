@@ -89,7 +89,7 @@ implementation
       { I suppose the parser/pass_1 must make sure the generated real  }
       { constants are actually supported by the target processor? (JM) }
       const
-        floattype2ait:array[tfloattype] of tairealconsttype=
+        floattype2ait:array[TFloatType] of tairealconsttype=
           (aitrealconst_s32bit,aitrealconst_s64bit,aitrealconst_s80bit,aitrealconst_s80bit,aitrealconst_s64comp,aitrealconst_s64comp);
 
       { Since the value is stored always as bestreal, we share a single pool
@@ -98,7 +98,7 @@ implementation
       type
         tfloatkey = record
           value: bestreal;
-          typ: tfloattype;
+          typ: TFloatType;
         end;
 
       var
@@ -118,33 +118,33 @@ implementation
             fillchar(key,sizeof(key),0);
             key.value:=value_real;
             key.typ:=tfloatdef(resultdef).floattype;
-            entry := current_asmdata.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
+            entry := CurrentAsmData.ConstPools[sp_floats].FindOrAdd(@key, sizeof(key));
 
             lab_real := TAsmLabel(entry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
              if not(assigned(lab_real)) then
                begin
-                  current_asmdata.getdatalabel(lastlabel);
+                  CurrentAsmData.getdatalabel(lastlabel);
                   entry^.Data:=lastlabel;
                   lab_real:=lastlabel;
-                  maybe_new_object_file(current_asmdata.asmlists[al_typedconsts]);
-                  new_section(current_asmdata.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,const_align(resultdef.alignment));
-                  current_asmdata.asmlists[al_typedconsts].concat(Tai_label.Create(lastlabel));
+                  maybe_new_object_file(CurrentAsmData.asmlists[al_typedconsts]);
+                  new_section(CurrentAsmData.asmlists[al_typedconsts],sec_rodata_norel,lastlabel.name,const_align(resultdef.alignment));
+                  CurrentAsmData.asmlists[al_typedconsts].concat(Tai_label.Create(lastlabel));
                   case realait of
                     aitrealconst_s32bit :
                       begin
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s32real(Single(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s32real(Single(value_real)));
                       end;
 
                     aitrealconst_s64bit :
                       begin
-                          current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(Double(value_real)));
+                          CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s64real(Double(value_real)));
                      end;
 
                     aitrealconst_s80bit :
                       begin
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,tfloatdef(resultdef).size));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s80real(value_real,tfloatdef(resultdef).size));
                       end;
 
                     { the round is necessary for native compilers where comp isn't a float }
@@ -152,10 +152,10 @@ implementation
                       if (value_real>bestreal(High(Int64))) or (value_real<bestreal(Low(Int64))) then
                         message(parser_e_range_check_error)
                       else
-                        current_asmdata.asmlists[al_typedconsts].concat(tai_realconst.create_s64compreal(Round(value_real)));
+                        CurrentAsmData.asmlists[al_typedconsts].concat(tai_realconst.create_s64compreal(Round(value_real)));
                   end;
-                  if (tf_needs_symbol_size in target_info.flags) then
-                    current_asmdata.asmlists[al_typedconsts].concat(Tai_symbol_end.Create(lastlabel));
+                  if (tf_needs_symbol_size in TargetInfo.flags) then
+                    CurrentAsmData.asmlists[al_typedconsts].concat(Tai_symbol_end.Create(lastlabel));
                end;
           end;
         location.reference.symbol:=lab_real;
@@ -240,11 +240,11 @@ implementation
             location.value:=0;
             exit;
           end;
-         winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in target_info.flags);
+         winlikewidestring:=(cst_type=cst_widestring) and (tf_winlikewidestring in TargetInfo.flags);
          { const already used ? }
          if not assigned(lab_str) then
            begin
-              pool := current_asmdata.ConstPools[PoolMap[cst_type]];
+              pool := CurrentAsmData.ConstPools[PoolMap[cst_type]];
 
               if cst_type in [cst_widestring, cst_unicodestring] then
                 entry := pool.FindOrAdd(pointer(valuews.data),len*cwidechartype.size)
@@ -267,7 +267,7 @@ implementation
                              InternalError(2008032301)   { empty string should be handled above }
                            else
                              begin
-                               lastlabel:=datatcb.emit_ansistring_const(current_asmdata.AsmLists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
+                               lastlabel:=datatcb.emit_ansistring_const(CurrentAsmData.AsmLists[al_typedconsts],asconstpchar,len,tstringdef(resultdef).encoding);
                                { because we hardcode the offset below due to it
                                  not being stored in the hashset, check here }
                                if lastlabel.ofs<>datatcb.get_string_symofs(st_ansistring,false) then
@@ -284,7 +284,7 @@ implementation
                              InternalError(2008032302)   { empty string should be handled above }
                            else
                              begin
-                               lastlabel:=datatcb.emit_unicodestring_const(current_asmdata.AsmLists[al_typedconsts],
+                               lastlabel:=datatcb.emit_unicodestring_const(CurrentAsmData.AsmLists[al_typedconsts],
                                                valuews,
                                                tstringdef(resultdef).encoding,
                                                winlikewidestring);
@@ -299,7 +299,7 @@ implementation
                         end;
                       cst_shortstring:
                         begin
-                          current_asmdata.getdatalabel(lastlabel.lab);
+                          CurrentAsmData.getdatalabel(lastlabel.lab);
 
                           { truncate strings larger than 255 chars }
                           if len>255 then
@@ -314,13 +314,13 @@ implementation
                           t:=Tai_string.Create_Data(asconstpchar,l,true);
                           datatcb.emit_tai(t,datadef);
                           datatcb.maybe_end_aggregate(datadef);
-                          current_asmdata.asmlists[al_typedconsts].concatList(
+                          CurrentAsmData.asmlists[al_typedconsts].concatList(
                             datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,const_align(sizeof(pint)))
                           );
                         end;
                       cst_conststring:
                         begin
-                          current_asmdata.getdatalabel(lastlabel.lab);
+                          CurrentAsmData.getdatalabel(lastlabel.lab);
 
                           { the data includes the terminating #0 because this
                             string can be used for pchar assignments (but it's
@@ -331,7 +331,7 @@ implementation
                           t:=Tai_string.Create_Data(asconstpchar,len,true);
                           datatcb.emit_tai(t,datadef);
                           datatcb.maybe_end_aggregate(datadef);
-                          current_asmdata.asmlists[al_typedconsts].concatList(
+                          CurrentAsmData.asmlists[al_typedconsts].concatList(
                             datatcb.get_final_asmlist(lastlabel.lab,datadef,sec_rodata_norel,lastlabel.lab.name,const_align(sizeof(pint)))
                           );
                         end;
@@ -347,7 +347,7 @@ implementation
          if cst_type in [cst_ansistring, cst_widestring, cst_unicodestring] then
            begin
              location_reset(location, LOC_REGISTER, def_cgsize(strpointerdef));
-             location.register:=hlcg.getaddressregister(current_asmdata.CurrAsmList,strpointerdef);
+             location.register:=hlcg.getaddressregister(CurrentAsmData.CurrAsmList,strpointerdef);
              load_dynstring(strpointerdef, elementdef, winlikewidestring);
            end
          else
@@ -365,7 +365,7 @@ implementation
         reference_reset_symbol(href, lab_str,
           ctai_typedconstbuilder.get_string_symofs(tstringdef(resultdef).stringtype, winlikewidestring),
           const_align(strpointerdef.size),[]);
-        hlcg.a_loadaddr_ref_reg(current_asmdata.CurrAsmList, elementdef, strpointerdef, href, location.register)
+        hlcg.a_loadaddr_ref_reg(CurrentAsmData.CurrAsmList, elementdef, strpointerdef, href, location.register)
       end;
 
 
@@ -382,19 +382,19 @@ implementation
         i: longint;
         tcb: ttai_typedconstbuilder;
       begin
-        current_asmdata.getdatalabel(lab);
+        CurrentAsmData.getdatalabel(lab);
         result:=lab;
         lab_set:=lab;
         tcb:=ctai_typedconstbuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
         tcb.maybe_begin_aggregate(resultdef);
-        if (source_info.endian=target_info.endian) then
+        if (SourceInfo.endian=TargetInfo.endian) then
           for i:=0 to resultdef.size-1 do
             tcb.emit_tai(tai_const.create_8bit(Psetbytes(value_set)^[i]),u8inttype)
         else
           for i:=0 to resultdef.size-1 do
             tcb.emit_tai(tai_const.create_8bit(reverse_byte(Psetbytes(value_set)^[i])),u8inttype);
         tcb.maybe_end_aggregate(resultdef);
-        current_asmdata.asmlists[al_typedconsts].concatlist(tcb.get_final_asmlist(
+        CurrentAsmData.asmlists[al_typedconsts].concatlist(tcb.get_final_asmlist(
           result,resultdef,sec_rodata_norel,result.name,const_align(8)));
         tcb.free;
         tcb := nil;
@@ -409,7 +409,7 @@ implementation
         { const already used ? }
         if not assigned(lab_set) then
           begin
-            entry := current_asmdata.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.size);
+            entry := CurrentAsmData.ConstPools[sp_varsets].FindOrAdd(value_set, resultdef.size);
 
              { :-(, we must generate a new entry }
              if not assigned(entry^.Data) then
@@ -428,7 +428,7 @@ implementation
         procedure smallsetconst;
           begin
             location_reset(location,LOC_CONSTANT,int_cgsize(resultdef.size));
-            if (source_info.endian=target_info.endian) then
+            if (SourceInfo.endian=TargetInfo.endian) then
               begin
                 { not plongint, because that will "sign extend" the set on 64 bit platforms }
                 { if changed to "paword", please also modify "32-resultdef.size*8" and      }
@@ -440,7 +440,7 @@ implementation
               begin
                 location.value:=aint(reverse_longword(Pcardinal(value_set)^));
               end;
-            if (target_info.endian=endian_big) then
+            if (TargetInfo.endian=endian_big) then
               location.value:=location.value shr (32-resultdef.size*8);
           end;
 
@@ -481,16 +481,16 @@ implementation
         { const already used ? }
         if not assigned(lab_set) then
           begin
-            entry:=current_asmdata.ConstPools[sp_guids].FindOrAdd(@value,sizeof(value));
+            entry:=CurrentAsmData.ConstPools[sp_guids].FindOrAdd(@value,sizeof(value));
             lab_set:=TAsmLabel(entry^.Data);  // is it needed anymore?
 
              { :-(, we must generate a new entry }
              if not assigned(entry^.Data) then
                begin
-                 current_asmdata.getdatalabel(lastlabel);
+                 CurrentAsmData.getdatalabel(lastlabel);
                  datatcb:=ctai_typedconstbuilder.create([tcalo_is_lab,tcalo_make_dead_strippable,tcalo_apply_constalign]);
                  datatcb.emit_guid_const(value);
-                 current_asmdata.asmlists[al_typedconsts].concatList(
+                 CurrentAsmData.asmlists[al_typedconsts].concatList(
                    datatcb.get_final_asmlist(lastlabel,rec_tguid,sec_rodata_norel,lastlabel.name,const_align(16)));
                  datatcb.free;
                  datatcb := nil;

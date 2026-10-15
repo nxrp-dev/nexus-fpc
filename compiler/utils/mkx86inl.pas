@@ -267,29 +267,29 @@ function GetLocStatement(AIndex: longint; const ATyp: string; AConst: boolean): 
   begin
     result:='';
     case ATyp of
-      'r8':    exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs8':   exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r16':   exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs16':  exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r32':   exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs32':  exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'r64':   exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'rs64':  exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'reg':   exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,uinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'sreg':  exit(format('hlcg.location_force_reg(current_asmdata.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,sinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f32':   exit(format('location_force_mmreg(current_asmdata.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'f64':   exit(format('location_force_mmreg(current_asmdata.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'mm':    exit(format('location_force_mmxreg(current_asmdata.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
-      'xmm':   exit(format('location_force_mmreg(current_asmdata.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r8':    exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs8':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u8inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r16':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs16':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u16inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r32':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs32':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u32inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'r64':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'rs64':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,u64inttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'reg':   exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,uinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'sreg':  exit(format('hlcg.location_force_reg(CurrentAsmData.CurrAsmList, paraarray[%d].location, paraarray[%d].resultdef,sinttype,%s);', [AIndex+1, AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f32':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'f64':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'mm':    exit(format('location_force_mmxreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
+      'xmm':   exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);', [AIndex+1, BoolToStr(aconst,'true','false')]));
 
       'implicit_xmm0':
-        exit(format('location_force_mmreg(current_asmdata.CurrAsmList, paraarray[%d].location, %s);'+LineEnding+
-                    '    hlcg.getcpuregister(current_asmdata.CurrAsmList,NR_XMM0);'+LineEnding+
-                    '    hlcg.a_loadmm_loc_reg(current_asmdata.CurrAsmList,paraarray[%d].resultdef,x86_m128type,paraarray[%d].location,NR_XMM0,nil);',
+        exit(format('location_force_mmreg(CurrentAsmData.CurrAsmList, paraarray[%d].location, %s);'+LineEnding+
+                    '    hlcg.getcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);'+LineEnding+
+                    '    hlcg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,x86_m128type,paraarray[%d].location,NR_XMM0,nil);',
                       [AIndex+1, BoolToStr(aconst,'true','false'), AIndex+1, AIndex+1]));
       'edi_ptr':
-        exit(format('hlcg.getcpuregister(current_asmdata.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
-                    '    hlcg.a_load_loc_reg(current_asmdata.CurrAsmList,paraarray[%d].resultdef,voidpointertype,paraarray[%d].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
+        exit(format('hlcg.getcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});'+LineEnding+
+                    '    hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,paraarray[%d].resultdef,voidpointertype,paraarray[%d].location,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});',
                       [AIndex+1, AIndex+1]));
 
       'ptr8',
@@ -305,9 +305,9 @@ function GetDeallocStatement(AIndex: longint; const ATyp: string): string;
     result:='';
     case ATyp of
       'implicit_xmm0':
-        exit('hlcg.ungetcpuregister(current_asmdata.CurrAsmList,NR_XMM0);');
+        exit('hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_XMM0);');
       'edi_ptr':
-        exit('hlcg.ungetcpuregister(current_asmdata.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});');
+        exit('hlcg.ungetcpuregister(CurrentAsmData.CurrAsmList,{$if defined(cpu64bitalu)}NR_RDI{$else}NR_EDI{$endif});');
     end;
   end;
 
@@ -372,20 +372,20 @@ function GetLocAllocation(const ATyp: string): string;
   begin
     result:='';
     case ATyp of
-      'r8':  exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_8);');
-      'rs8': exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_8);');
-      'r16':  exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_16);');
-      'rs16': exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_16);');
-      'r32':  exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_32);');
-      'rs32': exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_32);');
-      'r64':  exit('location.register64.reglo:=cg.getintregister(current_asmdata.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(current_asmdata.CurrAsmList, OS_32);');
-      'rs64': exit('location.register64.reglo:=cg.getintregister(current_asmdata.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(current_asmdata.CurrAsmList, OS_32);');
-      'reg':  exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_INT);');
-      'sreg': exit('location.register:=cg.getintregister(current_asmdata.CurrAsmList, OS_INT);');
-      'f32':  exit('location.register:=cg.getmmregister(current_asmdata.CurrAsmList, OS_M128);');
-      'f64':  exit('location.register:=cg.getmmregister(current_asmdata.CurrAsmList, OS_M128);');
-      'mm':   exit('location.register:=tcgx86(cg).getmmxregister(current_asmdata.CurrAsmList);');
-      'xmm':  exit('location.register:=cg.getmmregister(current_asmdata.CurrAsmList, OS_M128);');
+      'r8':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);');
+      'rs8': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_8);');
+      'r16':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);');
+      'rs16': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_16);');
+      'r32':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs32': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
+      'r64':  exit('location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
+      'rs64': exit('location.register64.reglo:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32); location.register64.reghi:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_32);');
+      'reg':  exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'sreg': exit('location.register:=cg.getintregister(CurrentAsmData.CurrAsmList, OS_INT);');
+      'f32':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'f64':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
+      'mm':   exit('location.register:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);');
+      'xmm':  exit('location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList, OS_M128);');
     end;
   end;
 
@@ -654,7 +654,7 @@ procedure ParseList(const APrefix, AFilename: string);
             fsecond.Add('    GetParameters('+inttostr(i)+');');
             fsecond.Add('');
 
-            fsecond.Add('    for i := 1 to '+inttostr(i)+' do secondpass(paraarray[i]);');
+            fsecond.Add('    for i := 1 to '+inttostr(i)+' do SecondPass(paraarray[i]);');
             fsecond.Add('');
 
             // Force inputs
@@ -737,7 +737,7 @@ procedure ParseList(const APrefix, AFilename: string);
 
             operline:=operline+')';
 
-            fsecond.Add('    current_asmdata.CurrAsmList.concat('+operline+');');
+            fsecond.Add('    CurrentAsmData.CurrAsmList.concat('+operline+');');
 
             // Deallocate CPU registers
             for i := 0 to opercnt-1 do

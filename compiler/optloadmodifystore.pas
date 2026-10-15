@@ -40,8 +40,8 @@ unit optloadmodifystore;
     uses
       node,nld;
 
-    procedure do_optloadmodifystore(var rootnode : tnode);
-    function try_opt_assignmentnode(assignmentnode : tassignmentnode): tnode;
+    procedure do_optloadmodifystore(var rootnode : TNode);
+    function try_opt_assignmentnode(assignmentnode : tassignmentnode): TNode;
 
   implementation
 
@@ -51,7 +51,7 @@ unit optloadmodifystore;
       nadd,ncal,ncon,ncnv,ninl,nmat,
       symdef;
 
-    function try_opt_assignmentnode(assignmentnode: tassignmentnode): tnode;
+    function try_opt_assignmentnode(assignmentnode: tassignmentnode): TNode;
 
       var
         newinlinenodetype: tinlinenumber;
@@ -286,23 +286,23 @@ unit optloadmodifystore;
 
               this handles the case, where there are no implicit type conversions }
             if (right.nodetype in [notn,unaryminusn]) and
-              (tunarynode(right).left.isequal(left)) and
-              is_integer(tunarynode(right).left.resultdef) and
+              (TUnaryNode(right).left.isequal(left)) and
+              is_integer(TUnaryNode(right).left.resultdef) and
               ((localswitches*[cs_check_overflow,cs_check_range])=[]) and
               ((right.localswitches*[cs_check_overflow,cs_check_range])=[]) and
-              valid_for_var(tunarynode(right).left,false) and
-              not(might_have_sideeffects(tunarynode(right).left)) then
+              valid_for_var(TUnaryNode(right).left,false) and
+              not(might_have_sideeffects(TUnaryNode(right).left)) then
               begin
                 if right.nodetype=notn then
                   newinlinenodetype:=in_not_assign_x
                 else
                   newinlinenodetype:=in_neg_assign_x;
                 result:=cinlinenode.createintern(
-                  newinlinenodetype,false,tunarynode(right).left);
+                  newinlinenodetype,false,TUnaryNode(right).left);
                 result.localswitches:=localswitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
-                tunarynode(right).left:=nil;
+                TUnaryNode(right).left:=nil;
                 exit;
               end;
             { replace i:=not i  by in_not_assign_x(i)
@@ -318,30 +318,30 @@ unit optloadmodifystore;
                (ttypeconvnode(right).left.nodetype in [notn,unaryminusn]) and
                is_integer(ttypeconvnode(right).left.resultdef) and
                (right.resultdef.size<=ttypeconvnode(right).left.resultdef.size) and
-               (tunarynode(ttypeconvnode(right).left).left.nodetype=typeconvn) and
-               (ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).convtype=tc_int_2_int) and
-               are_equal_ints(right.resultdef,ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left.resultdef) and
-               ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left.isequal(left) and
-               is_integer(ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left.resultdef) and
+               (TUnaryNode(ttypeconvnode(right).left).left.nodetype=typeconvn) and
+               (ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).convtype=tc_int_2_int) and
+               are_equal_ints(right.resultdef,ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left.resultdef) and
+               ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left.isequal(left) and
+               is_integer(ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left.resultdef) and
                ((localswitches*[cs_check_overflow,cs_check_range])=[]) and
                ((right.localswitches*[cs_check_overflow,cs_check_range])=[]) and
-               valid_for_var(ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left,false) and
-               not(might_have_sideeffects(ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left)) then
+               valid_for_var(ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left,false) and
+               not(might_have_sideeffects(ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left)) then
               begin
                 if ttypeconvnode(right).left.nodetype=notn then
                   newinlinenodetype:=in_not_assign_x
                 else
                   newinlinenodetype:=in_neg_assign_x;
                 result:=cinlinenode.createintern(
-                  newinlinenodetype,false,ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left);
+                  newinlinenodetype,false,ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left);
                 result.localswitches:=localswitches;
                 result.fileinfo:=fileinfo;
                 result.verbosity:=verbosity;
-                ttypeconvnode(tunarynode(ttypeconvnode(right).left).left).left:=nil;
+                ttypeconvnode(TUnaryNode(ttypeconvnode(right).left).left).left:=nil;
                 exit;
               end;
 
-            if not (cs_opt_use_load_modify_store in current_settings.optimizerswitches) then
+            if not (cs_opt_use_load_modify_store in CurrentSettings.optimizerswitches) then
               exit;
             { *** Here are more complex optimizations which are performed only
               when cs_opt_use_load_modify_store is enabled.
@@ -632,9 +632,9 @@ unit optloadmodifystore;
 
       end;
 
-    function try_opt_node(var n: tnode; arg: pointer): foreachnoderesult;
+    function try_opt_node(var n: TNode; arg: pointer): foreachnoderesult;
       var
-        hn : tnode;
+        hn : TNode;
       begin
         result:=fen_false;
         if n.nodetype=assignn then
@@ -644,14 +644,14 @@ unit optloadmodifystore;
               begin
                 n.free;
                 n:=hn;
-                typecheckpass(n);
-                do_firstpass(n);
+                TypeCheckPass(n);
+                DoFirstPass(n);
               end;
           end;
       end;
 
 
-    procedure do_optloadmodifystore(var rootnode : tnode);
+    procedure do_optloadmodifystore(var rootnode : TNode);
       begin
 
         foreachnodestatic(pm_postprocess,rootnode,@try_opt_node,nil);

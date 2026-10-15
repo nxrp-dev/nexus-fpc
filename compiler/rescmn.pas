@@ -30,7 +30,7 @@ uses
   Systems;
 
     const
-       res_elf_info : tresinfo =
+       res_elf_info : TResInfo =
           (
              id     : res_elf;
              resbin : 'fpcres';
@@ -42,7 +42,7 @@ uses
              resflags : [];
           );
 
-       res_xcoff_info : tresinfo =
+       res_xcoff_info : TResInfo =
           (
              id     : res_xcoff;
              resbin : 'fpcres';
@@ -54,7 +54,7 @@ uses
              resflags : [];
           );
 
-       res_ext_info : tresinfo =
+       res_ext_info : TResInfo =
           (
              id     : res_ext;
              resbin : 'fpcres';

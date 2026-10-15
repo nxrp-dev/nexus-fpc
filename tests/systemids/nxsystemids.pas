@@ -51,7 +51,7 @@ begin
   CheckOrdinal('system_aarch64_iphonesim', Ord(system_aarch64_iphonesim), 121);
   CheckOrdinal('CPU size', SizeOf(TSystemCPU), 1);
   CheckOrdinal('System size', SizeOf(TSystem), 1);
-  CheckOrdinal('CPU set size', SizeOf(TNXCPUSet), 3);
+  CheckOrdinal('CPU set size', SizeOf(TNXCPUSet), 4);
   CheckOrdinal('System set size', SizeOf(TNXSystemSet), 16);
   CheckOrdinal('highest CPU ID', Ord(High(TSystemCPU)), 16);
   CheckOrdinal('highest system ID', Ord(High(TSystem)), 121);

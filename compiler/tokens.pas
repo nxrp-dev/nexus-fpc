@@ -359,7 +359,7 @@ type
   tokenrec=record
     str     : string[tokenlenmax];
     special : boolean;
-    keyword : tmodeswitches;
+    keyword : TModeSwitches;
     op      : ttoken;
   end;
 

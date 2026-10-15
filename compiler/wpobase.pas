@@ -70,10 +70,10 @@ type
     class function getwpotype: twpotype; virtual; abstract;
 
     { whole program optimizations for which this class generates information }
-    class function generatesinfoforwposwitches: twpoptimizerswitches; virtual; abstract;
+    class function generatesinfoforwposwitches: TWPOptimizerSwitches; virtual; abstract;
 
     { whole program optimizations performed by this class }
-    class function performswpoforswitches: twpoptimizerswitches; virtual; abstract;
+    class function performswpoforswitches: TWPOptimizerSwitches; virtual; abstract;
 
     { returns the name of the section parsed by this class }
     class function sectionname: shortstring; virtual; abstract;
@@ -523,7 +523,7 @@ implementation
               wpotype:=sectionhandler.getwpotype;
               cgmessage2(wpo_found_section,sectionname,wpo2str[wpotype]);
               { do we need this information? }
-              if ((sectionhandler.performswpoforswitches * init_settings.dowpoptimizerswitches) <> []) then
+              if ((sectionhandler.performswpoforswitches * InitSettings.dowpoptimizerswitches) <> []) then
                 begin
                   { did some other section already generate this type of information? }
                   if assigned(fdest.wpoinfouse[wpotype]) then
@@ -663,7 +663,7 @@ implementation
       i: longint;
     begin
       { error if we don't have to optimize yet have an input feedback file }
-      if (init_settings.dowpoptimizerswitches=[]) and
+      if (InitSettings.dowpoptimizerswitches=[]) and
          assigned(freader) then
         begin
           cgmessage(wpo_input_without_info_use);
@@ -671,7 +671,7 @@ implementation
         end;
 
       { error if we have to optimize yet don't have an input feedback file }
-      if (init_settings.dowpoptimizerswitches<>[]) and
+      if (InitSettings.dowpoptimizerswitches<>[]) and
          not assigned(freader) then
         begin
           cgmessage(wpo_no_input_specified);
@@ -681,14 +681,14 @@ implementation
       { if we have to generate wpo information, check that a file has been
         specified and that we have something to write to it
       }
-      if (init_settings.genwpoptimizerswitches<>[]) and
+      if (InitSettings.genwpoptimizerswitches<>[]) and
          not assigned(fwriter) then
         begin
           cgmessage(wpo_no_output_specified);
           exit;
         end;
 
-      if (init_settings.genwpoptimizerswitches=[]) and
+      if (InitSettings.genwpoptimizerswitches=[]) and
          assigned(fwriter) then
         begin
           cgmessage(wpo_output_without_info_gen);
@@ -706,14 +706,14 @@ implementation
       { and for each specified optimization check whether the input feedback
         file contained the necessary information
       }
-      if (([cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts] * init_settings.dowpoptimizerswitches) <> []) and
+      if (([cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts] * InitSettings.dowpoptimizerswitches) <> []) and
          not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) then
         begin
           cgmessage1(wpo_not_enough_info,wpo2str[wpo_devirtualization_context_insensitive]);
           exit;
         end;
 
-      if (cs_wpo_symbol_liveness in init_settings.dowpoptimizerswitches) and
+      if (cs_wpo_symbol_liveness in InitSettings.dowpoptimizerswitches) and
          not assigned(wpoinfouse[wpo_live_symbol_information]) then
         begin
           cgmessage1(wpo_not_enough_info,wpo2str[wpo_live_symbol_information]);
@@ -724,7 +724,7 @@ implementation
         the selected optimizations and other switches
       }
       for i:=0 to fwpocomponents.count-1 do
-        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*init_settings.genwpoptimizerswitches)<>[] then
+        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*InitSettings.genwpoptimizerswitches)<>[] then
           twpocomponentbaseclass(fwpocomponents[i]).checkoptions
     end;
 
@@ -735,7 +735,7 @@ implementation
         item: TCmdStrListItem;
       begin
         result:=true;
-        item:=TCmdStrListItem(current_procinfo.procdef.aliasnames.first);
+        item:=TCmdStrListItem(CurrentProcInfo.procdef.aliasnames.first);
         while assigned(item) do
           begin
             if symbol_live(item.Str) then
@@ -746,13 +746,13 @@ implementation
       end;
 
     begin
-      if assigned(current_procinfo) and
-         not(po_inline in current_procinfo.procdef.procoptions) and
-         not symbol_live(current_procinfo.procdef.mangledname) and
+      if assigned(CurrentProcInfo) and
+         not(po_inline in CurrentProcInfo.procdef.procoptions) and
+         not symbol_live(CurrentProcInfo.procdef.mangledname) and
          not alias_symbol_live then
         begin
 {$ifdef debug_deadcode}
-          writeln(' NOT adding creation of ',fordef.typename,' because performed in dead stripped proc: ',current_procinfo.procdef.typename);
+          writeln(' NOT adding creation of ',fordef.typename,' because performed in dead stripped proc: ',CurrentProcInfo.procdef.typename);
 {$endif debug_deadcode}
           result:=false;
         end
@@ -771,7 +771,7 @@ implementation
 
       { let all wpo components gather the necessary info from the compiler state }
       for i:=0 to fwpocomponents.count-1 do
-        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*current_settings.genwpoptimizerswitches)<>[] then
+        if (twpocomponentbaseclass(fwpocomponents[i]).generatesinfoforwposwitches*CurrentSettings.genwpoptimizerswitches)<>[] then
           begin
             info:=twpocomponentbaseclass(fwpocomponents[i]).create;
             info.constructfromcompilerstate;

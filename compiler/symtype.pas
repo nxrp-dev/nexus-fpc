@@ -128,7 +128,7 @@ interface
       protected
        function registered : boolean;
       public
-         fileinfo   : tfileposinfo;
+         fileinfo   : TFilePosInfo;
          { size of fileinfo is 10 bytes, so if a >word aligned type would follow,
            two bytes of memory would be wasted, so we put two one byte fields over here }
          visibility : tvisibility;
@@ -211,13 +211,13 @@ interface
          procedure checkerror;
          procedure getguid(var g: tguid);
          function  getexprint:Tconstexprint;
-         procedure getposinfo(var p:tfileposinfo);
+         procedure getposinfo(var p:TFilePosInfo);
          procedure getderef(var d:tderef);
          function  getpropaccesslist:tpropaccesslist;
          function  getasmsymbol:tasmsymbol;
          procedure putguid(const g: tguid);
          procedure putexprint(const v:tconstexprint);
-         procedure putposinfo(const p:tfileposinfo);
+         procedure putposinfo(const p:TFilePosInfo);
          procedure putderef(const d:tderef);
          procedure putpropaccesslist(p:tpropaccesslist);
          procedure putasmsymbol(s:tasmsymbol);
@@ -465,14 +465,14 @@ implementation
         if (defid=defid_not_registered) or
            (defid=defid_registered_nost) then
           begin
-            if not assigned(current_module) then
+            if not assigned(CurrentModule) then
               internalerror(2015102505);
-            current_module.deflist.Add(self);
-            registered_in_module:=current_module;
+            CurrentModule.deflist.Add(self);
+            registered_in_module:=CurrentModule;
             { invert the defid to indicate that it was only set because we
               needed a unique number -- then add defid_not_registered so we
               don't get the values between defid_registered and 0 }
-            defid:=-(current_module.deflist.Count-1)+defid_not_registered-1;
+            defid:=-(CurrentModule.deflist.Count-1)+defid_not_registered-1;
           end;
         { use deflist_index so that it will remain the same if def first gets a
           defid just for the unique id (as above) and later it gets registered
@@ -540,10 +540,10 @@ implementation
           internalerror(2015111701)
         else if origowner.symtabletype=localsymtable then
           result:=origowner
-        else if assigned(current_module.localsymtable) then
-          result:=current_module.localsymtable
+        else if assigned(CurrentModule.localsymtable) then
+          result:=CurrentModule.localsymtable
         else
-          result:=current_module.globalsymtable;
+          result:=CurrentModule.globalsymtable;
       end;
 
 
@@ -578,16 +578,16 @@ implementation
         T: Text;
 
       begin
-        if current_module.ppxfilefail then
+        if CurrentModule.ppxfilefail then
           Exit;
 
-        Assign(T, current_module.ppxfilename);
+        Assign(T, CurrentModule.ppxfilename);
         {$push} {$I-}
         Append(T);
         if IOResult <> 0 then
           begin
-            Message1(exec_e_cant_create_archivefile,current_module.ppxfilename);
-            current_module.ppxfilefail := True;
+            Message1(exec_e_cant_create_archivefile,CurrentModule.ppxfilename);
+            CurrentModule.ppxfilefail := True;
             Exit;
           end;
         {$pop}
@@ -616,7 +616,7 @@ implementation
          typ:=st;
          RefList:=nil;
          symoptions:=[];
-         fileinfo:=current_tokenpos;
+         fileinfo:=CurrentTokenPos;
          isdbgwritten := false;
          visibility:=vis_public;
          deprecatedmsg:=nil;
@@ -634,7 +634,7 @@ implementation
     procedure Tsym.IncRefCount;
       begin
         inc(refs);
-        if cs_browser in current_settings.moduleswitches then
+        if cs_browser in CurrentSettings.moduleswitches then
           begin
             MaybeCreateRefList;
             AddRef;
@@ -656,7 +656,7 @@ implementation
       var
         RefItem: TRefItem;
       begin
-        RefItem:=TRefItem.Create(current_tokenpos);
+        RefItem:=TRefItem.Create(CurrentTokenPos);
         RefList.Concat(RefItem);
       end;
 
@@ -958,7 +958,7 @@ implementation
              begin
                { register that the unit is needed for resolving }
                data[len]:=ord(deref_unit);
-               idx:=current_module.derefidx_unit(st.moduleid);
+               idx:=CurrentModule.derefidx_unit(st.moduleid);
                unaligned(PUint16(@data[len+1{..len+2}])^):=NtoBE(uint16(idx));
                inc(len,3);
              end;
@@ -986,8 +986,8 @@ implementation
         data[0]:=len-1;
 
         { store index and write to derefdata }
-        dataidx:=current_module.derefdata.size;
-        current_module.derefdata.write(data,len);
+        dataidx:=CurrentModule.derefdata.size;
+        CurrentModule.derefdata.write(data,len);
       end;
 
 
@@ -1005,16 +1005,16 @@ implementation
         if dataidx<0 then
           internalerror(200306067);
         { read data }
-        current_module.derefdata.seek(dataidx);
-        if current_module.derefdata.read(len,1)<>1 then
+        CurrentModule.derefdata.seek(dataidx);
+        if CurrentModule.derefdata.read(len,1)<>1 then
           internalerror(200310221);
         if len>0 then
           begin
-            if current_module.derefdata.read(data,len)<>len then
+            if CurrentModule.derefdata.read(data,len)<>len then
               internalerror(200310222);
           end;
         { process data }
-        pm:=current_module;
+        pm:=CurrentModule;
         i:=0;
         while (i<len) do
           begin
@@ -1025,7 +1025,7 @@ implementation
                 begin
                   idx:=BEtoN(unaligned(PUint16(@data[i{..i+1}])^));
                   inc(i,2);
-                  pm:=current_module.resolve_unit(idx);
+                  pm:=CurrentModule.resolve_unit(idx);
                 end;
               deref_defid :
                 begin
@@ -1084,7 +1084,7 @@ implementation
     end;
 
 
-    procedure tcompilerppufile.getposinfo(var p:tfileposinfo);
+    procedure tcompilerppufile.getposinfo(var p:TFilePosInfo);
       var
         info : byte;
       begin
@@ -1113,7 +1113,7 @@ implementation
          2 : p.column:=(getbyte shl 16) or getword;
          3 : p.column:=getlongint;
         end;
-        p.moduleindex:=current_module.moduleid;
+        p.moduleindex:=CurrentModule.moduleid;
       end;
 
 
@@ -1169,7 +1169,7 @@ implementation
       end;
 
 
-    procedure tcompilerppufile.putposinfo(const p:tfileposinfo);
+    procedure tcompilerppufile.putposinfo(const p:TFilePosInfo);
       var
         oldcrc : boolean;
         info   : byte;

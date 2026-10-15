@@ -181,14 +181,14 @@ begin
   undef_system_macro('FPC_LINK_SMART');
   def_system_macro('FPC_LINK_STATIC');
   undef_system_macro('FPC_LINK_DYNAMIC');
-  init_settings.globalswitches:=init_settings.globalswitches+[cs_link_static];
-  init_settings.globalswitches:=init_settings.globalswitches-[cs_link_shared,cs_link_smart];
+  InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_static];
+  InitSettings.globalswitches:=InitSettings.globalswitches-[cs_link_shared,cs_link_smart];
 end;
 
 procedure set_endianess_macros;
   begin
     { endian define }
-    case target_info.endian of
+    case TargetInfo.endian of
       endian_little :
         begin
           def_system_macro('ENDIAN_LITTLE');
@@ -484,10 +484,10 @@ const
 
   procedure ListOptimizations (OrigString: TCmdStr);
   var
-    opt : toptimizerswitch;
+    opt : TOptimizerSwitch;
   begin
     SplitLine (OrigString, OptListPlaceholder, HS3);
-    for opt:=low(toptimizerswitch) to high(toptimizerswitch) do
+    for opt:=low(TOptimizerSwitch) to high(TOptimizerSwitch) do
      begin
       if opt in supported_optimizerswitches then
        begin
@@ -509,10 +509,10 @@ const
 
   procedure ListOptimizationsXML;
   var
-    opt: toptimizerswitch;
+    opt: TOptimizerSwitch;
   begin
     WriteLn(xmloutput,'    <optimizations>');
-    for opt:=low(toptimizerswitch) to high(toptimizerswitch) do
+    for opt:=low(TOptimizerSwitch) to high(TOptimizerSwitch) do
       if OptimizerSwitchStr[opt]<>'' then
         WriteLn(xmloutput,'      <optimization name="',OptimizerSwitchStr[opt],'"/>');
     WriteLn(xmloutput,'    </optimizations>');
@@ -520,10 +520,10 @@ const
 
   procedure ListWPOptimizations (OrigString: TCmdStr);
   var
-    wpopt: twpoptimizerswitch;
+    wpopt: TWPOptimizerSwitch;
   begin
     SplitLine (OrigString, WPOListPlaceholder, HS3);
-    for wpopt:=low(twpoptimizerswitch) to high(twpoptimizerswitch) do
+    for wpopt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
      begin
 {     currently all whole program optimizations are platform-independent
       if opt in supported_wpoptimizerswitches then
@@ -547,10 +547,10 @@ const
 
   procedure ListWPOptimizationsXML;
   var
-    wpopt: twpoptimizerswitch;
+    wpopt: TWPOptimizerSwitch;
   begin
     WriteLn(xmloutput,'    <wpoptimizations>');
-    for wpopt:=low(twpoptimizerswitch) to high(twpoptimizerswitch) do
+    for wpopt:=low(TWPOptimizerSwitch) to high(TWPOptimizerSwitch) do
       if WPOptimizerSwitchStr[wpopt]<>'' then
         WriteLn(xmloutput,'      <wpoptimization name="',WPOptimizerSwitchStr[wpopt],'"/>');
     WriteLn(xmloutput,'    </wpoptimizations>');
@@ -704,11 +704,11 @@ const
 
   procedure ListModeswitches (OrigString: TCmdStr);
   var
-    Modeswitch: TModeswitch;
+    Modeswitch: TModeSwitch;
   begin
     SplitLine (OrigString, ModeswitchListPlaceholder, HS3);
     HS1 := '';
-    for Modeswitch := Low (TModeswitch) to High (TModeswitch) do
+    for Modeswitch := Low (TModeSwitch) to High (TModeSwitch) do
      begin
       if (OrigString = '') then
        begin
@@ -742,10 +742,10 @@ const
 
   procedure ListModeswitchesXML;
   var
-    Modeswitch: TModeswitch;
+    Modeswitch: TModeSwitch;
   begin
     WriteLn(xmloutput,'    <modeswitches>');
-    for Modeswitch:=Low(TModeswitch) to High(TModeswitch) do
+    for Modeswitch:=Low(TModeSwitch) to High(TModeSwitch) do
        if ModeswitchStr [ord(Modeswitch)]<>'' then
          WriteLn(xmloutput,'      <modeswitch name="',ModeswitchStr [ord(Modeswitch)],'"/>');
     WriteLn(xmloutput,'    </modeswitches>');
@@ -1022,9 +1022,9 @@ begin
   def_system_macro('FPC_LINK_STATIC');
   undef_system_macro('FPC_LINK_SMART');
   undef_system_macro('FPC_LINK_DYNAMIC');
-  include(init_settings.globalswitches,cs_link_static);
-  exclude(init_settings.globalswitches,cs_link_smart);
-  exclude(init_settings.globalswitches,cs_link_shared);
+  include(InitSettings.globalswitches,cs_link_static);
+  exclude(InitSettings.globalswitches,cs_link_smart);
+  exclude(InitSettings.globalswitches,cs_link_shared);
   LinkTypeSetExplicitly:=true;
 end;
 
@@ -1160,12 +1160,12 @@ procedure TOption.MaybeSetDefaultMacVersionMacro;
 var
   envstr: ansistring;
 begin
-  if not(target_info.system in systems_darwin) then
+  if not(TargetInfo.system in systems_darwin) then
     exit;
   if MacVersionSet then
     exit;
   { check for deployment target set via environment variable }
-  if not(target_info.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
+  if not(TargetInfo.system in [system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) then
     begin
       envstr:=GetEnvironmentVariable('MACOSX_DEPLOYMENT_TARGET');
       if envstr<>'' then
@@ -1187,7 +1187,7 @@ begin
           exit;
     end;
   { nothing specified -> defaults }
-  case target_info.system of
+  case TargetInfo.system of
     system_i386_darwin,
     system_x86_64_darwin:
       begin
@@ -1229,7 +1229,7 @@ procedure TOption.VerifyTargetProcessor;
     if processorstr='' then
       exit;
     { custom target processor specified -> verify it's the one we support }
-    if upcase(processorstr)<>upcase(target_cpu_string) then
+    if upcase(processorstr)<>upcase(TargetCPUString) then
       Message1(option_invalid_target_architecture,processorstr);
   end;
 
@@ -1263,15 +1263,15 @@ begin
     the normal first-pass filter so PPUs are evaluated with the correct state. }
   if CompareText(opt,'-profile')=0 then
    begin
-    include(init_settings.moduleswitches,cs_nexus_profile);
-    include(current_settings.moduleswitches,cs_nexus_profile);
+    include(InitSettings.moduleswitches,cs_nexus_profile);
+    include(CurrentSettings.moduleswitches,cs_nexus_profile);
     exit;
    end;
 
   { only parse define,undef,target,verbosity,link etc options the firsttime
     -Us must now also be first-passed to avoid rejection of -Sf options
     earlier in command line }
-  if firstpass and
+  if FirstPass and
      not(
          (opt[1]='-') and
          (
@@ -1288,7 +1288,7 @@ begin
     '-' :
       begin
          more:=Copy(opt,3,2147483647);
-         if firstpass then
+         if FirstPass then
            Message1(option_interpreting_firstpass_option,opt)
          else
            Message1(option_interpreting_option,opt);
@@ -1648,14 +1648,14 @@ begin
      if length(opts)>0 then
        case opts[1] of
          '@' :
-           if not firstpass then
+           if not FirstPass then
            begin
              Delete(opts,1,1);
              Message1(option_reading_further_from,opts);
              interpret_file(opts);
            end;
          '!' :
-           if not firstpass then
+           if not FirstPass then
            begin
              Delete(opts,1,1);
              Message1(option_reading_further_from,'(env) '+opts);
@@ -1684,14 +1684,14 @@ begin
      Delete(cmd,1,i);
      case opts[1] of
        '@' :
-         if not firstpass then
+         if not FirstPass then
          begin
            Delete(opts,1,1);
            Message1(option_reading_further_from,opts);
            interpret_file(opts);
          end;
        '!' :
-         if not firstpass then
+         if not FirstPass then
          begin
            Delete(opts,1,1);
            Message1(option_reading_further_from,'(env) '+opts);
@@ -1742,7 +1742,7 @@ begin
           inc(i);
           case quickinfo[i] of
            'O' :
-             addinfo(lower(source_info.shortname));
+             addinfo(lower(SourceInfo.shortname));
            'P' :
              addinfo(source_cpu_string);
            else
@@ -1754,9 +1754,9 @@ begin
           inc(i);
           case quickinfo[i] of
            'O' :
-             addinfo(lower(target_info.shortname));
+             addinfo(lower(TargetInfo.shortname));
            'P' :
-             AddInfo(target_cpu_string);
+             AddInfo(TargetCPUString);
            'T' :
              begin
              addinfo(lower(self.parasubtarget));
@@ -1790,14 +1790,14 @@ procedure TOption.TargetOptions(def:boolean);
 var
   s : string;
   i : integer;
-  target_unsup_features : tfeatures;
+  target_unsup_features : TFeatures;
 begin
   if def then
-   def_system_macro(target_info.shortname)
+   def_system_macro(TargetInfo.shortname)
   else
-   undef_system_macro(target_info.shortname);
+   undef_system_macro(TargetInfo.shortname);
 
-  s:=target_info.extradefines;
+  s:=TargetInfo.extradefines;
   while (s<>'') do
    begin
      i:=pos(';',s);
@@ -1810,63 +1810,63 @@ begin
      delete(s,1,i);
    end;
 
-  if (tf_winlikewidestring in target_info.flags) then
+  if (tf_winlikewidestring in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_WINLIKEWIDESTRING')
     else
       undef_system_macro('FPC_WINLIKEWIDESTRING');
 
-  if (tf_requires_proper_alignment in target_info.flags) then
+  if (tf_requires_proper_alignment in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT')
     else
       undef_system_macro('FPC_REQUIRES_PROPER_ALIGNMENT');
 
-  if (tf_init_final_units_by_calls in target_info.flags) then
+  if (tf_init_final_units_by_calls in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_INIT_FINAL_UNITS_BY_CALLS')
     else
       undef_system_macro('FPC_INIT_FINAL_UNITS_BY_CALLS');
 
-  if source_info.system<>target_info.system then
+  if SourceInfo.system<>TargetInfo.system then
     if def then
       def_system_macro('FPC_CROSSCOMPILING')
     else
       undef_system_macro('FPC_CROSSCOMPILING');
 
-  if source_info.cpu<>target_info.cpu then
+  if SourceInfo.cpu<>TargetInfo.cpu then
     if def then
       def_system_macro('FPC_CPUCROSSCOMPILING')
     else
       undef_system_macro('FPC_CPUCROSSCOMPILING');
 
-  if (tf_no_generic_stackcheck in target_info.flags) then
+  if (tf_no_generic_stackcheck in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_NO_GENERIC_STACK_CHECK')
     else
       undef_system_macro('FPC_NO_GENERIC_STACK_CHECK');
 
-  if (tf_section_threadvars in target_info.flags) then
+  if (tf_section_threadvars in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_SECTION_THREADVARS')
     else
       undef_system_macro('FPC_SECTION_THREADVARS');
 
-  if (tf_use_psabieh in target_info.flags) then
+  if (tf_use_psabieh in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_USE_PSABIEH')
     else
       undef_system_macro('FPC_USE_PSABIEH');
 
   { Code generation flags }
-  if (tf_pic_default in target_info.flags) then
+  if (tf_pic_default in TargetInfo.flags) then
     if def then
-      include(init_settings.moduleswitches,cs_create_pic)
+      include(InitSettings.moduleswitches,cs_create_pic)
     else
-      exclude(init_settings.moduleswitches,cs_create_pic);
+      exclude(InitSettings.moduleswitches,cs_create_pic);
 
   { Resources support }
-  if (tf_has_winlike_resources in target_info.flags) then
+  if (tf_has_winlike_resources in TargetInfo.flags) then
     if def then
       def_system_macro('FPC_HAS_WINLIKERESOURCES')
     else
@@ -1886,7 +1886,7 @@ var
   requestedwin64clang,
   win64clanglld : boolean;
 begin
-  if (target_info.system in systems_windows) and
+  if (TargetInfo.system in systems_windows) and
      (paratargetdbg=dbg_dwarf5) then
     UnsupportedPara('-gw5');
 
@@ -1894,38 +1894,38 @@ begin
   if (paratargetasm=as_clang_gas) and
      assigned(asminfos[as_clang_gas]) then
     requestedwin64clang:=
-      ((target_info.system in asminfos[as_clang_gas]^.supported_targets) or
+      ((TargetInfo.system in asminfos[as_clang_gas]^.supported_targets) or
        (system_any in asminfos[as_clang_gas]^.supported_targets)) and
       (af_llvm in asminfos[as_clang_gas]^.flags);
   win64clanglld:=
-    (target_info.system in [system_x86_64_win64,system_aarch64_win64]) and
-    (((target_asm.id=as_clang_gas) and
-      (af_llvm in target_asm.flags)) or
+    (TargetInfo.system in [system_x86_64_win64,system_aarch64_win64]) and
+    (((TargetAsm.id=as_clang_gas) and
+      (af_llvm in TargetAsm.flags)) or
      requestedwin64clang) and
-    (((cs_link_extern in init_settings.globalswitches) and
-      (target_info.linkextern=ld_lld_windows)) or
-     (not(cs_link_extern in init_settings.globalswitches) and
-      (target_info.link=ld_lld_windows)));
+    (((cs_link_extern in InitSettings.globalswitches) and
+      (TargetInfo.linkextern=ld_lld_windows)) or
+     (not(cs_link_extern in InitSettings.globalswitches) and
+      (TargetInfo.link=ld_lld_windows)));
 
 
 
 
 
   if (paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) and
-     not(target_info.system in systems_darwin) and
+     not(TargetInfo.system in systems_darwin) and
      not win64clanglld then
     begin
       { smartlink creation does not yet work with DWARF
         debug info on most targets, but it works in internal assembler }
-      if (cs_create_smart in init_settings.moduleswitches) and
-         not (af_outputbinary in target_asm.flags) then
+      if (cs_create_smart in InitSettings.moduleswitches) and
+         not (af_outputbinary in TargetAsm.flags) then
         begin
           Message(option_dwarf_smartlink_creation);
-          exclude(init_settings.moduleswitches,cs_create_smart);
+          exclude(InitSettings.moduleswitches,cs_create_smart);
         end;
 
       { smart linking does not yet work with DWARF debug info on most targets }
-      if (cs_link_smart in init_settings.globalswitches) then
+      if (cs_link_smart in InitSettings.globalswitches) then
         begin
           Message(option_dwarf_smart_linking);
           ForceStaticLinking;
@@ -1933,26 +1933,26 @@ begin
     end;
 
   { external debug info is only supported for DWARF on darwin }
-  if (target_info.system in systems_darwin) and
-     (cs_link_separate_dbg_file in init_settings.globalswitches) and
+  if (TargetInfo.system in systems_darwin) and
+     (cs_link_separate_dbg_file in InitSettings.globalswitches) and
      not(paratargetdbg in [dbg_dwarf3,dbg_dwarf4,dbg_dwarf5]) then
     begin
       Message(option_debug_external_unsupported);
-      exclude(init_settings.globalswitches,cs_link_separate_dbg_file);
+      exclude(InitSettings.globalswitches,cs_link_separate_dbg_file);
     end;
   { Also create a smartlinked version, on an assembler that
     does not support smartlink sections like nasm?
     This is not compatible with using internal linker. }
-  if ((cs_link_smart in init_settings.globalswitches) or
-      (cs_create_smart in init_settings.moduleswitches)) and
-     (af_needar in target_asm.flags) and
-     not (af_smartlink_sections in target_asm.flags) and
-     not (cs_link_extern in init_settings.globalswitches) and
-     (target_info.link<>ld_none) and
-      not (cs_link_nolink in init_settings.globalswitches) then
+  if ((cs_link_smart in InitSettings.globalswitches) or
+      (cs_create_smart in InitSettings.moduleswitches)) and
+     (af_needar in TargetAsm.flags) and
+     not (af_smartlink_sections in TargetAsm.flags) and
+     not (cs_link_extern in InitSettings.globalswitches) and
+     (TargetInfo.link<>ld_none) and
+      not (cs_link_nolink in InitSettings.globalswitches) then
     begin
       Message(option_smart_link_requires_external_linker);
-      include(init_settings.globalswitches,cs_link_extern);
+      include(InitSettings.globalswitches,cs_link_extern);
     end;
 end;
 
@@ -2016,21 +2016,21 @@ var
   j : integer;
 
 begin
-  include(init_settings.globalswitches,cs_asm_leave);
+  include(InitSettings.globalswitches,cs_asm_leave);
   j:=1;
   while j<=length(more) do
    begin
      case more[j] of
        'l' :
-         include(init_settings.globalswitches,cs_asm_source);
+         include(InitSettings.globalswitches,cs_asm_source);
        'r' :
-         include(init_settings.globalswitches,cs_asm_regalloc);
+         include(InitSettings.globalswitches,cs_asm_regalloc);
        'R' :
-         include(init_settings.globalswitches,cs_asm_rtti_source);
+         include(InitSettings.globalswitches,cs_asm_rtti_source);
        't' :
-         include(init_settings.globalswitches,cs_asm_tempalloc);
+         include(InitSettings.globalswitches,cs_asm_tempalloc);
        'n' :
-         include(init_settings.globalswitches,cs_asm_nodes);
+         include(InitSettings.globalswitches,cs_asm_nodes);
        { -ao option must be the last, everything behind it is passed directly to
          external assembler, it is ignored if internal assembler is used. }
        'o' :
@@ -2040,14 +2040,14 @@ begin
          end;
        'p' :
          begin
-           exclude(init_settings.globalswitches,cs_asm_leave);
+           exclude(InitSettings.globalswitches,cs_asm_leave);
            if UnsetBool(More, 0, opt, false) then
-             exclude(init_settings.globalswitches,cs_asm_pipe)
+             exclude(InitSettings.globalswitches,cs_asm_pipe)
            else
-             include(init_settings.globalswitches,cs_asm_pipe);
+             include(InitSettings.globalswitches,cs_asm_pipe);
          end;
        '-' :
-         init_settings.globalswitches:=init_settings.globalswitches -
+         InitSettings.globalswitches:=InitSettings.globalswitches -
              [cs_asm_leave, cs_asm_source,cs_asm_regalloc, cs_asm_tempalloc,
               cs_asm_nodes, cs_asm_pipe];
        else
@@ -2064,7 +2064,7 @@ begin
   if CompareText(More,'DEFAULT') = 0 then
     paratargetasm:=as_default
   else
-    paratargetasm:=find_asm_by_string(More);
+    paratargetasm:=FindAsmByString(More);
   if paratargetasm=as_none then
     IllegalPara(opt);
 end;
@@ -2074,9 +2074,9 @@ procedure TOption.Interpret_B_l(opt, more: TCmdStr);
 
 begin
   if UnsetBool(More,0,opt,false) then
-    init_settings.moduleswitches:=init_settings.moduleswitches-[cs_browser]
+    InitSettings.moduleswitches:=InitSettings.moduleswitches-[cs_browser]
   else
-    init_settings.moduleswitches:=init_settings.moduleswitches+[cs_browser];
+    InitSettings.moduleswitches:=InitSettings.moduleswitches+[cs_browser];
   if More<>'' then
     IllegalPara(opt);
 end;
@@ -2109,13 +2109,13 @@ begin
      case more[j] of
        '3' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_ieee_errors)
+           exclude(InitSettings.localswitches,cs_ieee_errors)
          Else
-           include(init_settings.localswitches,cs_ieee_errors);
+           include(InitSettings.localswitches,cs_ieee_errors);
        'a' :
          begin
            s:=upper(copy(more,j+1));
-           if not(SetAbiType(s,target_info.abi)) then
+           if not(SetAbiType(s,TargetInfo.abi)) then
              IllegalPara(opt);
            ABISetExplicitly:=true;
            break;
@@ -2124,49 +2124,49 @@ begin
        'b' :
           begin
             if UnsetBool(More, j, opt, false) then
-              target_info.endian:=endian_little
+              TargetInfo.endian:=endian_little
             else
-              target_info.endian:=endian_big;
+              TargetInfo.endian:=endian_big;
             set_endianess_macros;
           end;
 
        'c' :
           begin
-            if not SetAktProcCall(upper(copy(more,j+1)),init_settings.defproccall) then
+            if not SetAktProcCall(upper(copy(more,j+1)),InitSettings.defproccall) then
              IllegalPara(opt);
             break;
           end;
        'E' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_fpu_exceptions)
+           exclude(InitSettings.localswitches,cs_check_fpu_exceptions)
          Else
-           include(init_settings.localswitches,cs_check_fpu_exceptions);
+           include(InitSettings.localswitches,cs_check_fpu_exceptions);
        'f' :
          begin
            s:=upper(copy(more,j+1));
-           if not(SetFpuType(s,init_settings.fputype)) then
+           if not(SetFpuType(s,InitSettings.fputype)) then
              IllegalPara(opt);
            FPUSetExplicitly:=True;
            break;
          end;
        'F' :
           begin
-            if not SetMinFPConstPrec(copy(more,j+1),init_settings.minfpconstprec) then
+            if not SetMinFPConstPrec(copy(more,j+1),InitSettings.minfpconstprec) then
               IllegalPara(opt);
             break;
           end;
        'g' :
           begin
-            if tf_no_pic_supported in target_info.flags then
+            if tf_no_pic_supported in TargetInfo.flags then
               begin
                 { consume a possible '-' coming after it }
                 UnsetBool(More, j, opt, false);
                 message(scan_w_pic_ignored);
               end
             else if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.moduleswitches,cs_create_pic)
+              exclude(InitSettings.moduleswitches,cs_create_pic)
             else
-              include(init_settings.moduleswitches,cs_create_pic);
+              include(InitSettings.moduleswitches,cs_create_pic);
          end;
        'h' :
          begin
@@ -2193,25 +2193,25 @@ begin
          end;
        'i' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_io)
+           exclude(InitSettings.localswitches,cs_check_io)
          else
-           include(init_settings.localswitches,cs_check_io);
+           include(InitSettings.localswitches,cs_check_io);
 
        'n' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.globalswitches,cs_link_nolink)
+           exclude(InitSettings.globalswitches,cs_link_nolink)
          Else
-           include(init_settings.globalswitches,cs_link_nolink);
+           include(InitSettings.globalswitches,cs_link_nolink);
        'o' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_overflow)
+           exclude(InitSettings.localswitches,cs_check_overflow)
          Else
-           include(init_settings.localswitches,cs_check_overflow);
+           include(InitSettings.localswitches,cs_check_overflow);
        'O' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_ordinal_size)
+           exclude(InitSettings.localswitches,cs_check_ordinal_size)
          Else
-           include(init_settings.localswitches,cs_check_ordinal_size);
+           include(InitSettings.localswitches,cs_check_ordinal_size);
        'p' :
          begin
            s:=upper(copy(more,j+1));
@@ -2253,7 +2253,7 @@ begin
            else
              extrasettings:='';
 {$endif cpucapabilities}
-           if not(Setcputype(s,init_settings)) then
+           if not(Setcputype(s,InitSettings)) then
              IllegalPara(opt);
 {$ifdef cpucapabilities}
            while extrasettings<>'' do
@@ -2284,9 +2284,9 @@ begin
                    if s=cpuflagsstr then
                      begin
                        if includecapability then
-                         Include(cpu_capabilities[init_settings.cputype],cf)
+                         Include(cpu_capabilities[InitSettings.cputype],cf)
                        else
-                         Exclude(cpu_capabilities[init_settings.cputype],cf);
+                         Exclude(cpu_capabilities[InitSettings.cputype],cf);
                        s:='';
                        break;
                      end;
@@ -2307,9 +2307,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     init_settings.setalloc:=0;
+                     InitSettings.setalloc:=0;
                    '1','2','4','8':
-                     init_settings.setalloc:=StrToInt(more);
+                     InitSettings.setalloc:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end
@@ -2319,9 +2319,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     init_settings.packenum:=4;
+                     InitSettings.packenum:=4;
                    '1','2','4':
-                     init_settings.packenum:=StrToInt(more);
+                     InitSettings.packenum:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end;
@@ -2331,9 +2331,9 @@ begin
                  delete(more,1,pos('=',more));
                  case more of
                    '0','DEFAULT','NORMAL':
-                     init_settings.packrecords:=default_settings.packrecords;
+                     InitSettings.packrecords:=default_settings.packrecords;
                    '1','2','4','8','16','32':
-                     init_settings.packrecords:=StrToInt(more);
+                     InitSettings.packrecords:=StrToInt(more);
                    else
                      IllegalPara(opt);
                  end;
@@ -2344,19 +2344,19 @@ begin
          end;
        'r' :
          If UnsetBool(More, j, opt, false) then
-           exclude(init_settings.localswitches,cs_check_range)
+           exclude(InitSettings.localswitches,cs_check_range)
          Else
-           include(init_settings.localswitches,cs_check_range);
+           include(InitSettings.localswitches,cs_check_range);
        'R' :
          If UnsetBool(More, j, opt, false) then
            begin
-             exclude(init_settings.localswitches,cs_check_range);
-             exclude(init_settings.localswitches,cs_check_object);
+             exclude(InitSettings.localswitches,cs_check_range);
+             exclude(InitSettings.localswitches,cs_check_object);
            end
          Else
            begin
-             include(init_settings.localswitches,cs_check_range);
-             include(init_settings.localswitches,cs_check_object);
+             include(InitSettings.localswitches,cs_check_range);
+             include(InitSettings.localswitches,cs_check_object);
            end;
        's' :
          begin
@@ -2371,17 +2371,17 @@ begin
          end;
        't' :
           If UnsetBool(More, j, opt, false) then
-            exclude(init_settings.localswitches,cs_check_stack)
+            exclude(InitSettings.localswitches,cs_check_stack)
           Else
-            include(init_settings.localswitches,cs_check_stack);
+            include(InitSettings.localswitches,cs_check_stack);
        'X' :
           If UnsetBool(More, j, opt, false) then
-            exclude(init_settings.moduleswitches,cs_create_smart)
+            exclude(InitSettings.moduleswitches,cs_create_smart)
           Else
-            include(init_settings.moduleswitches,cs_create_smart);
+            include(InitSettings.moduleswitches,cs_create_smart);
        'T' :
          begin
-           if not UpdateTargetSwitchStr(copy(more,j+1),init_settings.targetswitches,true) then
+           if not UpdateTargetSwitchStr(copy(more,j+1),InitSettings.targetswitches,true) then
              IllegalPara(opt);
            break;
          end;
@@ -2391,9 +2391,9 @@ begin
          begin
            s:=upper(copy(more,j+1));
            if s='GLOBAL-DYNAMIC' then
-             init_settings.tlsmodel:=tlsm_global_dynamic
+             InitSettings.tlsmodel:=tlsm_global_dynamic
            else if s='LOCAL-EXEC' then
-             init_settings.tlsmodel:=tlsm_local_exec
+             InitSettings.tlsmodel:=tlsm_local_exec
            else
              IllegalPara(opt);
            break;
@@ -2435,7 +2435,7 @@ begin
       end;
     if l>0 then
       begin
-        if cs_support_macro in init_settings.moduleswitches then
+        if cs_support_macro in InitSettings.moduleswitches then
           set_system_macro(hs,Copy(more,l+2))
         else
           set_system_compvar(hs,Copy(more,l+2));
@@ -2453,13 +2453,13 @@ var
 begin
   j:=1;
   if length(more)=0 then
-    include(init_settings.globalswitches,cs_link_deffile);
+    include(InitSettings.globalswitches,cs_link_deffile);
   while j<=length(more) do
     begin
       case more[j] of
        'd' :
          begin
-           include(init_settings.globalswitches,cs_link_deffile);
+           include(InitSettings.globalswitches,cs_link_deffile);
            description:=Copy(more,j+1);
            break;
          end;
@@ -2475,7 +2475,7 @@ begin
          end;
        'v' :
          begin
-           include(init_settings.globalswitches,cs_link_deffile);
+           include(InitSettings.globalswitches,cs_link_deffile);
            dllversion:=Copy(more,j+1);
            l:=pos('.',dllversion);
            dllminor:=0;
@@ -2507,12 +2507,12 @@ begin
          end;
        'w' :
          begin
-           include(init_settings.globalswitches,cs_link_deffile);
+           include(InitSettings.globalswitches,cs_link_deffile);
            usewindowapi:=true;
           end;
        '-' :
          begin
-           exclude(init_settings.globalswitches,cs_link_deffile);
+           exclude(InitSettings.globalswitches,cs_link_deffile);
            usewindowapi:=false;
          end;
        else
@@ -2534,9 +2534,9 @@ procedure TOption.Interpret_E_U(opt, more: TCmdStr);
 
 begin
   if UnsetBool(More, 0, opt, true) then
-    exclude(init_settings.globalswitches,cs_link_nolink)
+    exclude(InitSettings.globalswitches,cs_link_nolink)
   else
-    include(init_settings.globalswitches,cs_link_nolink);
+    include(InitSettings.globalswitches,cs_link_nolink);
 end;
 
 
@@ -2545,10 +2545,10 @@ procedure TOption.Interpret_F_l(opt, more: TCmdStr);
 begin
   if more='PIC' then
     begin
-      if tf_no_pic_supported in target_info.flags then
+      if tf_no_pic_supported in TargetInfo.flags then
         message(scan_w_pic_ignored)
       else
-        include(init_settings.moduleswitches,cs_create_pic)
+        include(InitSettings.moduleswitches,cs_create_pic)
     end
   else
     IllegalPara(opt);
@@ -2579,20 +2579,20 @@ begin
           flag that we're using the system code page again }
         SetCompileModeSwitch('SYSTEMCODEPAGE-',true);
         if (upper(more)='UTF8') or (upper(more)='UTF-8') then
-          init_settings.sourcecodepage:=CP_UTF8
+          InitSettings.sourcecodepage:=CP_UTF8
         else if not(cpavailable(more)) then
           Message1(option_code_page_not_available,more)
         else
-          init_settings.sourcecodepage:=codepagebyname(more);
-        include(init_settings.moduleswitches,cs_explicit_codepage);
+          InitSettings.sourcecodepage:=codepagebyname(more);
+        include(InitSettings.moduleswitches,cs_explicit_codepage);
       end;
     'C' :
       RCCompiler:=More;
     'd' :
       if UnsetBool(more, 0, opt, true) then
-        init_settings.disabledircache:=false
+        InitSettings.disabledircache:=false
       else
-        init_settings.disabledircache:=true;
+        InitSettings.disabledircache:=true;
     'D' :
       utilsdirectory:=FixPath(More,true);
     'e' :
@@ -2600,7 +2600,7 @@ begin
     'E' :
       OutputExeDir:=FixPath(More,true);
     'f' :
-        if (target_info.system in systems_darwin) then
+        if (TargetInfo.system in systems_darwin) then
           if ispara then
             ParaFrameworkPath.AddPath(More,false)
           else
@@ -2738,18 +2738,18 @@ var
 begin
   if UnsetBool(More, 0, opt, false) then
    begin
-     exclude(init_settings.moduleswitches,cs_debuginfo);
-     exclude(init_settings.globalswitches,cs_use_heaptrc);
-     exclude(init_settings.globalswitches,cs_use_lineinfo);
-     exclude(init_settings.localswitches,cs_checkpointer);
+     exclude(InitSettings.moduleswitches,cs_debuginfo);
+     exclude(InitSettings.globalswitches,cs_use_heaptrc);
+     exclude(InitSettings.globalswitches,cs_use_lineinfo);
+     exclude(InitSettings.localswitches,cs_checkpointer);
      paratargetdbg:=dbg_none;
      localvartrashing := -1;
    end
   else
    begin
-     include(init_settings.moduleswitches,cs_debuginfo);
+     include(InitSettings.moduleswitches,cs_debuginfo);
      if paratargetdbg=dbg_none then
-       paratargetdbg:=target_info.dbg;
+       paratargetdbg:=TargetInfo.dbg;
    end;
   if not RelocSectionSetExplicitly then
     RelocSection:=false;
@@ -2760,13 +2760,13 @@ begin
         'c' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_checkpointer)
-            else if (target_info.system in systems_support_checkpointer) then
+              exclude(InitSettings.localswitches,cs_checkpointer)
+            else if (TargetInfo.system in systems_support_checkpointer) then
               begin
                 if do_release then
                   Message(option_gc_incompatible_with_release_flag)
                 else
-                  include(init_settings.localswitches,cs_checkpointer);
+                  include(InitSettings.localswitches,cs_checkpointer);
               end
             else
               UnsupportedPara('-gc');
@@ -2774,21 +2774,21 @@ begin
         'h' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_use_heaptrc)
+              exclude(InitSettings.globalswitches,cs_use_heaptrc)
             else
               begin
-                if cs_gdb_valgrind in init_settings.globalswitches then
+                if cs_gdb_valgrind in InitSettings.globalswitches then
                   Message2(option_valgrind_heaptrc_mismatch,'-gh', '-gv');
-                include(init_settings.globalswitches,cs_use_heaptrc);
+                include(InitSettings.globalswitches,cs_use_heaptrc);
               end;
           end;
         'l' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_use_lineinfo)
+              exclude(InitSettings.globalswitches,cs_use_lineinfo)
             else
               begin
-                include(init_settings.globalswitches,cs_use_lineinfo);
+                include(InitSettings.globalswitches,cs_use_lineinfo);
               end;
           end;
         'm' :
@@ -2797,16 +2797,16 @@ begin
           end;
         'o' :
           begin
-            if not UpdateDebugStr(copy(more,j+1),init_settings.debugswitches) then
+            if not UpdateDebugStr(copy(more,j+1),InitSettings.debugswitches) then
               IllegalPara(opt);
             break;
           end;
         'p' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_stabs_preservecase)
+              exclude(InitSettings.globalswitches,cs_stabs_preservecase)
             else
-              include(init_settings.globalswitches,cs_stabs_preservecase);
+              include(InitSettings.globalswitches,cs_stabs_preservecase);
           end;
         's' :
           begin
@@ -2822,12 +2822,12 @@ begin
         'v' :
           begin
             if UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_gdb_valgrind)
+              exclude(InitSettings.globalswitches,cs_gdb_valgrind)
             else
               begin
-                if cs_use_heaptrc in init_settings.globalswitches then
+                if cs_use_heaptrc in InitSettings.globalswitches then
                   Message2(option_valgrind_heaptrc_mismatch,'-gh', '-gv');
-                include(init_settings.globalswitches,cs_gdb_valgrind);
+                include(InitSettings.globalswitches,cs_gdb_valgrind);
               end;
           end;
         'w' :
@@ -2979,13 +2979,13 @@ begin
    begin
      case more[j] of
        '1' :
-         init_settings.optimizerswitches:=init_settings.optimizerswitches+level1optimizerswitches;
+         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level1optimizerswitches;
        '2' :
-         init_settings.optimizerswitches:=init_settings.optimizerswitches+level2optimizerswitches;
+         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level2optimizerswitches;
        '3' :
-         init_settings.optimizerswitches:=init_settings.optimizerswitches+level3optimizerswitches;
+         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level3optimizerswitches;
        '4' :
-         init_settings.optimizerswitches:=init_settings.optimizerswitches+level4optimizerswitches;
+         InitSettings.optimizerswitches:=InitSettings.optimizerswitches+level4optimizerswitches;
        'a' :
          begin
            if not(UpdateAlignmentStr(Copy(Opt,j+3,255),ParaAlignment)) then
@@ -2993,10 +2993,10 @@ begin
            break;
          end;
        's' :
-         include(init_settings.optimizerswitches,cs_opt_size);
+         include(InitSettings.optimizerswitches,cs_opt_size);
        'p' :
          begin
-           if not Setoptimizecputype(copy(more,j+1),init_settings.optimizecputype) then
+           if not Setoptimizecputype(copy(more,j+1),InitSettings.optimizecputype) then
              begin
                OptCPUSetExplicitly:=true;
                 { Give warning for old i386 switches }
@@ -3010,24 +3010,24 @@ begin
          end;
        'o' :
          begin
-           if not UpdateOptimizerStr(copy(more,j+1),init_settings.optimizerswitches) then
+           if not UpdateOptimizerStr(copy(more,j+1),InitSettings.optimizerswitches) then
             IllegalPara(opt);
            break;
          end;
        '-' :
          begin
-           init_settings.optimizerswitches:=[];
+           InitSettings.optimizerswitches:=[];
            FillChar(ParaAlignment,sizeof(ParaAlignment),0);
          end;
        'w' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),init_settings.dowpoptimizerswitches) then
+           if not UpdateWpoStr(copy(more,j+1),InitSettings.dowpoptimizerswitches) then
              IllegalPara(opt);
            break;
          end;
        'W' :
          begin
-           if not UpdateWpoStr(copy(more,j+1),init_settings.genwpoptimizerswitches) then
+           if not UpdateWpoStr(copy(more,j+1),InitSettings.genwpoptimizerswitches) then
              IllegalPara(opt);
            break;
          end;
@@ -3053,7 +3053,7 @@ end;
 procedure TOption.Interpret_R_U(opt, more: TCmdStr);
 
 begin
-  if not SetAsmReadMode(More,init_settings.asmmode) then
+  if not SetAsmReadMode(More,InitSettings.asmmode) then
     IllegalPara(opt);
 end;
 
@@ -3063,21 +3063,21 @@ procedure TOption.Interpret_S_l(opt, more: TCmdStr);
 begin
   if UnsetBool(More, 0, opt, false) then
     begin
-      init_settings.globalswitches:=init_settings.globalswitches-[cs_asm_extern,cs_link_extern,cs_link_nolink];
+      InitSettings.globalswitches:=InitSettings.globalswitches-[cs_asm_extern,cs_link_extern,cs_link_nolink];
       if more<>'' then
         IllegalPara(opt);
     end
   else
     begin
-      init_settings.globalswitches:=init_settings.globalswitches+[cs_asm_extern,cs_link_extern,cs_link_nolink];
+      InitSettings.globalswitches:=InitSettings.globalswitches+[cs_asm_extern,cs_link_extern,cs_link_nolink];
       if more='h' then
-        init_settings.globalswitches:=init_settings.globalswitches-[cs_link_on_target,cs_assemble_on_target]
+        InitSettings.globalswitches:=InitSettings.globalswitches-[cs_link_on_target,cs_assemble_on_target]
       else if more='t' then
-        init_settings.globalswitches:=init_settings.globalswitches+[cs_link_on_target,cs_assemble_on_target]
+        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_on_target,cs_assemble_on_target]
       else if more='T' then
-        init_settings.globalswitches:=init_settings.globalswitches+[cs_link_on_target]-[cs_asm_extern]
+        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_link_on_target]-[cs_asm_extern]
       else if more='r' then
-        init_settings.globalswitches:=init_settings.globalswitches+[cs_asm_leave,cs_no_regalloc]
+        InitSettings.globalswitches:=InitSettings.globalswitches+[cs_asm_leave,cs_no_regalloc]
       else if more<>'' then
         IllegalPara(opt);
     end;
@@ -3095,9 +3095,9 @@ begin
   if more[1]='I' then
     begin
       if upper(more)='ICOM' then
-        init_settings.interfacetype:=it_interfacecom
+        InitSettings.interfacetype:=it_interfacecom
       else if upper(more)='ICORBA' then
-        init_settings.interfacetype:=it_interfacecorba
+        InitSettings.interfacetype:=it_interfacecorba
       else
         IllegalPara(opt);
     end
@@ -3111,19 +3111,19 @@ begin
             SetCompileMode('OBJFPC',true);
           'a' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_do_assertion)
+              exclude(InitSettings.localswitches,cs_do_assertion)
             else
-              include(init_settings.localswitches,cs_do_assertion);
+              include(InitSettings.localswitches,cs_do_assertion);
           'c' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.moduleswitches,cs_support_c_operators)
+              exclude(InitSettings.moduleswitches,cs_support_c_operators)
             else
-              include(init_settings.moduleswitches,cs_support_c_operators);
+              include(InitSettings.moduleswitches,cs_support_c_operators);
           'C':
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_check_all_case_coverage)
+              exclude(InitSettings.localswitches,cs_check_all_case_coverage)
             else
-              include(init_settings.localswitches,cs_check_all_case_coverage);
+              include(InitSettings.localswitches,cs_check_all_case_coverage);
           'd' : //an alternative to -Mdelphi
             SetCompileMode('DELPHI',true);
           'e' :
@@ -3133,7 +3133,7 @@ begin
             end;
           'f' :
             begin
-              if not(cs_compilesystem in init_settings.moduleswitches) then
+              if not(cs_compilesystem in InitSettings.moduleswitches) then
                 Message(option_features_only_for_system_unit);
               inc(j);
               if more[j]='-' then
@@ -3153,9 +3153,9 @@ begin
             end;
           'g' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.moduleswitches,cs_support_goto)
+              exclude(InitSettings.moduleswitches,cs_support_goto)
             else
-              include(init_settings.moduleswitches,cs_support_goto);
+              include(InitSettings.moduleswitches,cs_support_goto);
           'h' :
             begin
               { Accepted for seed-era command lines, but the compiler-wide
@@ -3165,33 +3165,33 @@ begin
             end;
           'i' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_do_inline)
+              exclude(InitSettings.localswitches,cs_do_inline)
             else
-              include(init_settings.localswitches,cs_do_inline);
+              include(InitSettings.localswitches,cs_do_inline);
           'j' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_typed_const_writable)
+              exclude(InitSettings.localswitches,cs_typed_const_writable)
             else
-              include(init_settings.localswitches,cs_typed_const_writable);
+              include(InitSettings.localswitches,cs_typed_const_writable);
           'm' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.moduleswitches,cs_support_macro)
+              exclude(InitSettings.moduleswitches,cs_support_macro)
             else
-              include(init_settings.moduleswitches,cs_support_macro);
+              include(InitSettings.moduleswitches,cs_support_macro);
           'r' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_transparent_file_names)
+              exclude(InitSettings.globalswitches,cs_transparent_file_names)
             else
-              include(init_settings.globalswitches,cs_transparent_file_names);
+              include(InitSettings.globalswitches,cs_transparent_file_names);
           {$ifdef gpc_mode}
           'p' : //an alternative to -Mgpc
             SetCompileMode('GPC',true);
           {$endif}
           'v' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.globalswitches,cs_support_vectors)
+              exclude(InitSettings.globalswitches,cs_support_vectors)
             else
-              include(init_settings.globalswitches,cs_support_vectors);
+              include(InitSettings.globalswitches,cs_support_vectors);
           'x' :
             If UnsetBool(More, j, opt, false) then
               SetCompileModeSwitch('EXCEPTIONS-',true)
@@ -3199,18 +3199,18 @@ begin
               SetCompileModeSwitch('EXCEPTIONS',true);
           'y' :
             If UnsetBool(More, j, opt, false) then
-              exclude(init_settings.localswitches,cs_typed_addresses)
+              exclude(InitSettings.localswitches,cs_typed_addresses)
             else
-              include(init_settings.localswitches,cs_typed_addresses);
+              include(InitSettings.localswitches,cs_typed_addresses);
           '-' :
             begin
-              init_settings.globalswitches:=init_settings.globalswitches - [cs_support_exceptions,
+              InitSettings.globalswitches:=InitSettings.globalswitches - [cs_support_exceptions,
                                                                             cs_support_vectors];
 
-              init_settings.localswitches:=init_settings.localswitches - [cs_do_assertion,cs_do_inline,
+              InitSettings.localswitches:=InitSettings.localswitches - [cs_do_assertion,cs_do_inline,
                                                                           cs_typed_addresses];
 
-              init_settings.moduleswitches:=init_settings.moduleswitches - [cs_support_c_operators, cs_support_goto,
+              InitSettings.moduleswitches:=InitSettings.moduleswitches - [cs_support_c_operators, cs_support_goto,
                                                                             cs_support_macro];
             end;
           else
@@ -3247,17 +3247,17 @@ begin
      { remove old target define }
      TargetOptions(false);
      { load new target }
-     paratarget:=find_system_by_string(More);
+     paratarget:=FindSystemByString(More);
      if paratarget<>system_none then
-       set_target(paratarget)
+       SetTarget(paratarget)
      else
        IllegalPara(opt);
      { set new define }
      TargetOptions(true);
    end
   else
-   if More<>upper(target_info.shortname) then
-    Message1(option_target_is_already_set,target_info.shortname);
+   if More<>upper(TargetInfo.shortname) then
+    Message1(option_target_is_already_set,TargetInfo.shortname);
 end;
 
 
@@ -3303,22 +3303,22 @@ begin
           end;
 {$endif UNITALIASES}
        'n' :
-         exclude(init_settings.globalswitches,cs_check_unit_name);
+         exclude(InitSettings.globalswitches,cs_check_unit_name);
        'r' :
          begin
            do_release:=true;
-           if (cs_checkpointer in init_settings.localswitches) then
+           if (cs_checkpointer in InitSettings.localswitches) then
              begin
                Message(option_gc_incompatible_with_release_flag);
-               exclude(init_settings.localswitches,cs_checkpointer);
+               exclude(InitSettings.localswitches,cs_checkpointer);
              end;
          end;
        's' :
-         include(init_settings.moduleswitches,cs_compilesystem);
+         include(InitSettings.moduleswitches,cs_compilesystem);
        '-' :
          begin
-           exclude(init_settings.moduleswitches,cs_compilesystem);
-           exclude(init_settings.globalswitches,cs_check_unit_name);
+           exclude(InitSettings.moduleswitches,cs_compilesystem);
+           exclude(InitSettings.globalswitches,cs_check_unit_name);
          end;
        else
          IllegalPara(opt);
@@ -3356,7 +3356,7 @@ begin
      case More[j] of
        'A':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_cui)
@@ -3368,7 +3368,7 @@ begin
          end;
        'b':
          begin
-           if target_info.system in systems_darwin then
+           if TargetInfo.system in systems_darwin then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_cui)
@@ -3380,7 +3380,7 @@ begin
          end;
        'B':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                {  -WB200000 means set trefered base address
                  to $200000, but does not change relocsection boolean
@@ -3405,7 +3405,7 @@ begin
          end;
        'C':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_gui)
@@ -3417,7 +3417,7 @@ begin
          end;
        'D':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                UseDeffileForExports:=not UnsetBool(More, j, opt, false);
                UseDeffileForExportsSetExplicitly:=true;
@@ -3427,10 +3427,10 @@ begin
          end;
        'e':
          begin
-           if (target_info.system in systems_darwin) then
+           if (TargetInfo.system in systems_darwin) then
              begin
-               set_target_res(res_ext);
-               target_info.resobjext:='.fpcres';
+               SetTargetRes(res_ext);
+               TargetInfo.resobjext:='.fpcres';
              end
            else
              IllegalPara(opt);
@@ -3441,7 +3441,7 @@ begin
          end;
        'G':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                if UnsetBool(More, j, opt, false) then
                  SetApptype(app_cui)
@@ -3454,7 +3454,7 @@ begin
 
        'I':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                GenerateImportSection:=not UnsetBool(More,j,opt,false);
                GenerateImportSectionSetExplicitly:=true;
@@ -3464,11 +3464,11 @@ begin
          end;
        'i':
          begin
-           if (target_info.system in systems_darwin) then
+           if (TargetInfo.system in systems_darwin) then
              begin
-               set_target_res(res_macho);
-               target_info.resobjext:=
-                 targetinfos[Ord(target_info.system)]^.resobjext;
+               SetTargetRes(res_macho);
+               TargetInfo.resobjext:=
+                 targetinfos[Ord(TargetInfo.system)]^.resobjext;
              end
            else
              IllegalPara(opt);
@@ -3480,7 +3480,7 @@ begin
          end;
        'M':
          begin
-           if (target_info.system in (systems_darwin-[system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
+           if (TargetInfo.system in (systems_darwin-[system_i386_iphonesim,system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim])) and
               ParseMacVersionMin(MacOSXVersionMin,iPhoneOSVersionMin,'MAC_OS_X_VERSION_MIN_REQUIRED',copy(More,2),false) then
              begin
                break;
@@ -3490,7 +3490,7 @@ begin
          end;
        'N':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                RelocSection:=UnsetBool(More,j,opt,false);
                RelocSectionSetExplicitly:=true;
@@ -3504,7 +3504,7 @@ begin
          end;
        'P':
          begin
-           if (target_info.system in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) and
+           if (TargetInfo.system in [system_aarch64_ios,system_x86_64_iphonesim,system_aarch64_iphonesim]) and
               ParseMacVersionMin(iPhoneOSVersionMin,MacOSXVersionMin,'IPHONE_OS_VERSION_MIN_REQUIRED',copy(More,2),true) then
              begin
                break;
@@ -3514,7 +3514,7 @@ begin
          end;
        'R':
          begin
-           if target_info.system in systems_all_windows then
+           if TargetInfo.system in systems_all_windows then
              begin
                { support -WR+ / -WR- as synonyms to -WR / -WN }
                RelocSection:=not UnsetBool(More,j,opt,false);
@@ -3530,12 +3530,12 @@ begin
          end;
        'X':
          begin
-           if (target_info.system in systems_linux) then
+           if (TargetInfo.system in systems_linux) then
              begin
                if UnsetBool(More, j, opt, false) then
-                 exclude(init_settings.moduleswitches,cs_executable_stack)
+                 exclude(InitSettings.moduleswitches,cs_executable_stack)
                else
-                 include(init_settings.moduleswitches,cs_executable_stack)
+                 include(InitSettings.moduleswitches,cs_executable_stack)
              end
            else
              IllegalPara(opt);
@@ -3560,12 +3560,12 @@ begin
      case More[j] of
        '9' :
          begin
-           if target_info.system in systems_linux then
+           if TargetInfo.system in systems_linux then
              begin
                if UnsetBool(More, j, opt, false) then
-                 exclude(init_settings.globalswitches,cs_link_pre_binutils_2_19)
+                 exclude(InitSettings.globalswitches,cs_link_pre_binutils_2_19)
                else
-                 include(init_settings.globalswitches,cs_link_pre_binutils_2_19);
+                 include(InitSettings.globalswitches,cs_link_pre_binutils_2_19);
              end
            else
              IllegalPara(opt);
@@ -3573,9 +3573,9 @@ begin
        'a' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_large)
+             exclude(InitSettings.globalswitches,cs_large)
            else
-             include(init_settings.globalswitches,cs_large);
+             include(InitSettings.globalswitches,cs_large);
          end;
        'c' : Cshared:=TRUE;
        'd' : Dontlinkstdlibpath:=TRUE;
@@ -3583,40 +3583,40 @@ begin
          begin
            If UnsetBool(More, j, opt, false) then
              begin
-               exclude(init_settings.globalswitches,cs_link_extern);
+               exclude(InitSettings.globalswitches,cs_link_extern);
                LinkInternSetExplicitly:=true;
              end
            else
-             include(init_settings.globalswitches,cs_link_extern);
+             include(InitSettings.globalswitches,cs_link_extern);
          end;
        'g' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_separate_dbg_file)
+             exclude(InitSettings.globalswitches,cs_link_separate_dbg_file)
            else
-             include(init_settings.globalswitches,cs_link_separate_dbg_file);
+             include(InitSettings.globalswitches,cs_link_separate_dbg_file);
          end;
        'i' :
          begin
            If UnsetBool(More, j, opt, false) then
-             include(init_settings.globalswitches,cs_link_extern)
+             include(InitSettings.globalswitches,cs_link_extern)
            else
              begin
-               exclude(init_settings.globalswitches,cs_link_extern);
+               exclude(InitSettings.globalswitches,cs_link_extern);
                LinkInternSetExplicitly:=true;
              end;
          end;
        'm' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_map)
+             exclude(InitSettings.globalswitches,cs_link_map)
            else
-             include(init_settings.globalswitches,cs_link_map);
+             include(InitSettings.globalswitches,cs_link_map);
          end;
        'p' : ; { Ignore used by fpc.pas }
        'r' :
          begin
-           if (target_info.system in suppported_targets_x_smallr) then
+           if (TargetInfo.system in suppported_targets_x_smallr) then
              begin
                rlinkpath:=Copy(more,2);
                DefaultReplacements(rlinkpath);
@@ -3634,27 +3634,27 @@ begin
        's' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_strip)
+             exclude(InitSettings.globalswitches,cs_link_strip)
            else
-             include(init_settings.globalswitches,cs_link_strip);
+             include(InitSettings.globalswitches,cs_link_strip);
          end;
        't' :
-         include(init_settings.globalswitches,cs_link_staticflag);
+         include(InitSettings.globalswitches,cs_link_staticflag);
        'v' :
          begin
            If UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_opt_vtable)
+             exclude(InitSettings.globalswitches,cs_link_opt_vtable)
            else
-             include(init_settings.globalswitches,cs_link_opt_vtable);
+             include(InitSettings.globalswitches,cs_link_opt_vtable);
          end;
        'D' :
          begin
            def_system_macro('FPC_LINK_DYNAMIC');
            undef_system_macro('FPC_LINK_SMART');
            undef_system_macro('FPC_LINK_STATIC');
-           exclude(init_settings.globalswitches,cs_link_static);
-           exclude(init_settings.globalswitches,cs_link_smart);
-           include(init_settings.globalswitches,cs_link_shared);
+           exclude(InitSettings.globalswitches,cs_link_static);
+           exclude(InitSettings.globalswitches,cs_link_smart);
+           include(InitSettings.globalswitches,cs_link_shared);
            LinkTypeSetExplicitly:=true;
          end;
        'M' :
@@ -3685,15 +3685,15 @@ begin
                            if not LinkLibraryOrder.AddWeight(s) Then
                               IllegalPara(opt);
                           end;
-                    'D' : include(init_settings.globalswitches,cs_link_no_default_lib_order);
+                    'D' : include(InitSettings.globalswitches,cs_link_no_default_lib_order);
                     'L' :
                       begin
                         if UnsetBool(More, j, opt, false) then
-                          exclude(init_settings.globalswitches,cs_link_lld)
+                          exclude(InitSettings.globalswitches,cs_link_lld)
                         else
                           begin
-                            include(init_settings.globalswitches,cs_link_lld);
-                            include(init_settings.globalswitches,cs_link_extern);
+                            include(InitSettings.globalswitches,cs_link_lld);
+                            include(InitSettings.globalswitches,cs_link_extern);
                           end;
                        LinkerSetExplicitly:=true;
                      end
@@ -3710,11 +3710,11 @@ begin
        'V' :
          begin
            if UnsetBool(More, j, opt, false) then
-             exclude(init_settings.globalswitches,cs_link_vlink)
+             exclude(InitSettings.globalswitches,cs_link_vlink)
            else
              begin
-               include(init_settings.globalswitches,cs_link_vlink);
-               include(init_settings.globalswitches,cs_link_extern);
+               include(InitSettings.globalswitches,cs_link_vlink);
+               include(InitSettings.globalswitches,cs_link_extern);
              end;
            LinkerSetExplicitly:=true;
          end;
@@ -3723,16 +3723,16 @@ begin
            def_system_macro('FPC_LINK_SMART');
            undef_system_macro('FPC_LINK_STATIC');
            undef_system_macro('FPC_LINK_DYNAMIC');
-           exclude(init_settings.globalswitches,cs_link_static);
-           include(init_settings.globalswitches,cs_link_smart);
-           exclude(init_settings.globalswitches,cs_link_shared);
+           exclude(InitSettings.globalswitches,cs_link_static);
+           include(InitSettings.globalswitches,cs_link_smart);
+           exclude(InitSettings.globalswitches,cs_link_shared);
            LinkTypeSetExplicitly:=true;
          end;
        '-' :
          begin
-           exclude(init_settings.globalswitches,cs_link_staticflag);
-           exclude(init_settings.globalswitches,cs_link_strip);
-           exclude(init_settings.globalswitches,cs_link_map);
+           exclude(InitSettings.globalswitches,cs_link_staticflag);
+           exclude(InitSettings.globalswitches,cs_link_strip);
+           exclude(InitSettings.globalswitches,cs_link_map);
            set_default_link_type;
          end;
        else
@@ -3823,11 +3823,11 @@ procedure read_arguments(cmd:TCmdStr);
 
       for cputype:=low(tcputype) to high(tcputype) do
         undef_system_macro('CPU'+Cputypestr[cputype]);
-      def_system_macro('CPU'+Cputypestr[init_settings.cputype]);
+      def_system_macro('CPU'+Cputypestr[InitSettings.cputype]);
 
       for fputype:=low(tfputype) to high(tfputype) do
         undef_system_macro('FPU'+fputypestr[fputype]);
-      def_system_macro('FPU'+fputypestr[init_settings.fputype]);
+      def_system_macro('FPU'+fputypestr[InitSettings.fputype]);
 
 {$PUSH}
 {$WARN 6018 OFF} { Unreachable code due to compile time evaluation }
@@ -3839,7 +3839,7 @@ procedure read_arguments(cmd:TCmdStr);
               if s<>'' then
                 undef_system_macro('FPC_MCU_'+s);
             end;
-          s:=embedded_controllers[init_settings.controllertype].controllertypestr;
+          s:=embedded_controllers[InitSettings.controllertype].controllertypestr;
           if s<>'' then
             def_system_macro('FPC_MCU_'+s);
         end;
@@ -3848,16 +3848,16 @@ procedure read_arguments(cmd:TCmdStr);
       { define abi }
       for abi:=low(tabi) to high(tabi) do
         undef_system_macro('FPC_ABI_'+abiinfo[abi].name);
-      def_system_macro('FPC_ABI_'+abiinfo[target_info.abi].name);
+      def_system_macro('FPC_ABI_'+abiinfo[TargetInfo.abi].name);
 
       { this is not a switchable ABI in the sense of tabi, but it's an ABI
         nevertheless }
-      if target_info.system in systems_win64_abi then
+      if TargetInfo.system in systems_win64_abi then
         def_system_macro('FPC_ABI_WIN64');
 
       { Define FPC_ABI_EABI in addition to FPC_ABI_EABIHF on EABI VFP hardfloat
         systems since most code needs to behave the same on both}
-      if target_info.abi = abi_eabihf then
+      if TargetInfo.abi = abi_eabihf then
         def_system_macro('FPC_ABI_EABI');
 
       { using a case is pretty useless here (FK) }
@@ -3887,7 +3887,7 @@ procedure read_arguments(cmd:TCmdStr);
         def_system_macro('CPU64');
         def_system_macro('CPUX64');
         { Win64 Currency and Comp retain their integer representation. }
-        if target_info.system=system_x86_64_win64 then
+        if TargetInfo.system=system_x86_64_win64 then
           begin
             def_system_macro('FPC_CURRENCY_IS_INT64');
             def_system_macro('FPC_COMP_IS_INT64');
@@ -3962,7 +3962,7 @@ procedure read_arguments(cmd:TCmdStr);
 
 var
   env: ansistring;
-  i : tfeature;
+  i : TFeature;
   j : longint;
   tmplist : TCmdStrList;
   cmditem,
@@ -3998,7 +3998,7 @@ begin
     ppccfg:='fpc.cfg';
 
 { first pass reading of parameters, only -i -v -T etc.}
-  option.firstpass:=true;
+  option.FirstPass:=true;
   if cmd<>'' then
     option.parsecmd(cmd)
   else
@@ -4008,7 +4008,7 @@ begin
       if option.quickinfo<>'' then
         option.writequickinfo;
     end;
-  option.firstpass:=false;
+  option.FirstPass:=false;
 
   { redefine target options so all defines are written even if no -Txxx is passed on the command line }
   Option.TargetOptions(true);
@@ -4016,7 +4016,7 @@ begin
   SetApptype(apptype);
 
 { default defines }
-  def_system_macro(target_info.shortname);
+  def_system_macro(TargetInfo.shortname);
   def_system_macro('FPC');
   def_system_macro('VER'+version_nr);
   def_system_macro('VER'+version_nr+'_'+release_nr);
@@ -4037,7 +4037,7 @@ begin
   if (Option.parasubtarget<>'') then
     begin
     def_system_macro('FPC_SUBTARGET_'+Option.parasubtarget);
-    if cs_support_macro in init_settings.moduleswitches then
+    if cs_support_macro in InitSettings.moduleswitches then
       set_system_macro('FPC_SUBTARGET',Option.parasubtarget)
     else
       set_system_compvar('FPC_SUBTARGET',Option.parasubtarget);
@@ -4049,8 +4049,8 @@ begin
   def_cpu_macros;
   set_endianess_macros;
 
-  if tf_cld in target_info.flags then
-    if not UpdateTargetSwitchStr('CLD', init_settings.targetswitches, true) then
+  if tf_cld in TargetInfo.flags then
+    if not UpdateTargetSwitchStr('CLD', InitSettings.targetswitches, true) then
       InternalError(2013092801);
 
   { Android uses the NDK's unprefixed Clang with an explicit target triple.
@@ -4126,8 +4126,8 @@ begin
     begin
       if FileExists(inputfilepath+ChangeFileExt(inputfilename,sourceext)) then
         inputfilename:=ChangeFileExt(inputfilename,sourceext)
-      else if ((m_mac in current_settings.modeswitches) or
-              (tf_p_ext_support in target_info.flags))
+      else if ((m_mac in CurrentSettings.modeswitches) or
+              (tf_p_ext_support in TargetInfo.flags))
              and FileExists(inputfilepath+ChangeFileExt(inputfilename,pext)) then
         inputfilename:=ChangeFileExt(inputfilename,pext);
     end;
@@ -4185,9 +4185,9 @@ begin
    Unitsearchpath.AddPath(inputfilepath,true);
   if not disable_configfile then
     begin
-      env:=GetEnvironmentVariable(target_info.unit_env);
+      env:=GetEnvironmentVariable(TargetInfo.unit_env);
       if env<>'' then
-        UnitSearchPath.AddPath(GetEnvironmentVariable(target_info.unit_env),false);
+        UnitSearchPath.AddPath(GetEnvironmentVariable(TargetInfo.unit_env),false);
     end;
 
 {$ifdef Unix}
@@ -4213,23 +4213,23 @@ begin
   if not disable_configfile then
     begin
       if PathExists(FpcDir+'rtl',true) then
-        if (tf_use_8_3 in Source_Info.Flags) or
-           (tf_use_8_3 in Target_Info.Flags) then
-          UnitSearchPath.AddPath(FpcDir+'rtl/'+target_os_string,false)
+        if (tf_use_8_3 in SourceInfo.Flags) or
+           (tf_use_8_3 in TargetInfo.Flags) then
+          UnitSearchPath.AddPath(FpcDir+'rtl/'+TargetOSString,false)
         else
-          UnitSearchPath.AddPath(FpcDir+'rtl/'+target_full_string,false)
+          UnitSearchPath.AddPath(FpcDir+'rtl/'+TargetFullString,false)
       else
-        if (tf_use_8_3 in Source_Info.Flags) or
-           (tf_use_8_3 in Target_Info.Flags) then
-          UnitSearchPath.AddPath(FpcDir+'units/'+target_os_string+'/rtl',false)
+        if (tf_use_8_3 in SourceInfo.Flags) or
+           (tf_use_8_3 in TargetInfo.Flags) then
+          UnitSearchPath.AddPath(FpcDir+'units/'+TargetOSString+'/rtl',false)
         else
-          UnitSearchPath.AddPath(FpcDir+'units/'+target_full_string+'/rtl',false);
+          UnitSearchPath.AddPath(FpcDir+'units/'+TargetFullString+'/rtl',false);
     end;
   { Add exepath if the exe is not in the current dir, because that is always searched already.
     Do not add it when linking on the target because then we can maybe already find
     .o files that are not for the target }
   if (ExePath<>cfileutl.GetCurrentDir) and
-     not(cs_link_on_target in init_settings.globalswitches) then
+     not(cs_link_on_target in InitSettings.globalswitches) then
    UnitSearchPath.AddPath(ExePath,false);
   { Add unit dir to the object and library path }
   objectsearchpath.AddList(unitsearchpath,false);
@@ -4241,19 +4241,19 @@ begin
     begin
       if (option.paratargetasm=as_default) then
         begin
-          if (target_info.endian<>source_info.endian) then
-            option.paratargetasm:=target_info.assemextern
+          if (TargetInfo.endian<>SourceInfo.endian) then
+            option.paratargetasm:=TargetInfo.assemextern
           else
-            option.paratargetasm:=target_info.assem;
+            option.paratargetasm:=TargetInfo.assem;
         end;
-      if not set_target_asm(option.paratargetasm) then
+      if not SetTargetAsm(option.paratargetasm) then
         begin
           if assigned(asminfos[option.paratargetasm]) then
-            Message2(option_incompatible_asm,asminfos[option.paratargetasm]^.idtxt,target_info.name)
+            Message2(option_incompatible_asm,asminfos[option.paratargetasm]^.idtxt,TargetInfo.name)
           else
-            Message2(option_incompatible_asm,'<invalid assembler>',target_info.name);
-          set_target_asm(target_info.assemextern);
-          Message1(option_asm_forced,target_asm.idtxt);
+            Message2(option_incompatible_asm,'<invalid assembler>',TargetInfo.name);
+          SetTargetAsm(TargetInfo.assemextern);
+          Message1(option_asm_forced,TargetAsm.idtxt);
         end;
       if (af_no_debug in asminfos[option.paratargetasm]^.flags) and
          (option.paratargetdbg<>dbg_none) then
@@ -4261,7 +4261,7 @@ begin
           Message1(option_confict_asm_debug,
             asminfos[option.paratargetasm]^.idtxt);
           option.paratargetdbg:=dbg_none;
-          exclude(init_settings.moduleswitches,cs_debuginfo);
+          exclude(InitSettings.moduleswitches,cs_debuginfo);
         end;
       { Some assemblers, like clang, do not support
         stabs debugging format, switch to DWARF 3 in that case }
@@ -4277,25 +4277,25 @@ begin
 
   { maybe override debug info format }
   if (option.paratargetdbg<>dbg_none) then
-    if not set_target_dbg(option.paratargetdbg) then
+    if not SetTargetDbg(option.paratargetdbg) then
       Message(option_w_unsupported_debug_format);
 
   { switch assembler if it's binary and we got -a on the cmdline }
-  if (af_outputbinary in target_asm.flags) and
-     ((cs_asm_leave in init_settings.globalswitches) or
+  if (af_outputbinary in TargetAsm.flags) and
+     ((cs_asm_leave in InitSettings.globalswitches) or
       { if -s is passed, we shouldn't call the internal assembler }
-      (cs_asm_extern in init_settings.globalswitches)) or
-      ((option.paratargetasm=as_none) and (target_info.endian<>source_info.endian)) then
+      (cs_asm_extern in InitSettings.globalswitches)) or
+      ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
    begin
-     if ((option.paratargetasm=as_none) and (target_info.endian<>source_info.endian)) then
+     if ((option.paratargetasm=as_none) and (TargetInfo.endian<>SourceInfo.endian)) then
        begin
-         if not ((target_info.assem = target_info.assemextern) or (target_info.assem = as_none)) then
+         if not ((TargetInfo.assem = TargetInfo.assemextern) or (TargetInfo.assem = as_none)) then
            Message(option_switch_bin_to_src_assembler_cross_endian);
        end
      else
        Message(option_switch_bin_to_src_assembler);
 
-     set_target_asm(target_info.assemextern);
+     SetTargetAsm(TargetInfo.assemextern);
 
      { At least i8086 needs that for nasm and -CX
        which is incompatible with internal linker }
@@ -4304,42 +4304,42 @@ begin
 
   { Force use of external linker if there is no
     internal linker or the linking is skipped }
-  if not(cs_link_extern in init_settings.globalswitches) and
-     ((target_info.link=ld_none) or
-      (cs_link_nolink in init_settings.globalswitches)) then
+  if not(cs_link_extern in InitSettings.globalswitches) and
+     ((TargetInfo.link=ld_none) or
+      (cs_link_nolink in InitSettings.globalswitches)) then
     begin
-      include(init_settings.globalswitches,cs_link_extern);
+      include(InitSettings.globalswitches,cs_link_extern);
     end;
 
   { turn off stripping if compiling with debuginfo }
-  if (cs_debuginfo in init_settings.moduleswitches) and
-     not(cs_link_separate_dbg_file in init_settings.globalswitches) then
-    exclude(init_settings.globalswitches,cs_link_strip);
+  if (cs_debuginfo in InitSettings.moduleswitches) and
+     not(cs_link_separate_dbg_file in InitSettings.globalswitches) then
+    exclude(InitSettings.globalswitches,cs_link_strip);
 
   { choose a reasonable tls model }
-  if (tf_section_threadvars in target_info.flags) and (init_settings.tlsmodel=tlsm_none) then
+  if (tf_section_threadvars in TargetInfo.flags) and (InitSettings.tlsmodel=tlsm_none) then
     begin
-      if cs_create_pic in init_settings.moduleswitches then
-        init_settings.tlsmodel:=tlsm_global_dynamic
+      if cs_create_pic in InitSettings.moduleswitches then
+        InitSettings.tlsmodel:=tlsm_global_dynamic
       else
-        init_settings.tlsmodel:=tlsm_local_exec;
+        InitSettings.tlsmodel:=tlsm_local_exec;
     end;
 
   { set Mac OS X version default macros if not specified explicitly }
   option.MaybeSetDefaultMacVersionMacro;
 
 {$ifdef i386}
-  case target_info.system of
+  case TargetInfo.system of
     system_i386_android:
       begin
         { set default cpu type to PentiumM for Android unless specified otherwise }
         if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_PentiumM;
+          InitSettings.cputype:=cpu_PentiumM;
         if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_PentiumM;
+          InitSettings.optimizecputype:=cpu_PentiumM;
         { set default fpu type to SSSE3 for Android unless specified otherwise }
         if not option.FPUSetExplicitly then
-          init_settings.fputype:=fpu_ssse3;
+          InitSettings.fputype:=fpu_ssse3;
       end;
     else
       ;
@@ -4348,13 +4348,13 @@ begin
 
 
 {$ifdef aarch64}
-  case target_info.system of
+  case TargetInfo.system of
     system_aarch64_darwin:
       begin
         if not option.CPUSetExplicitly then
-          init_settings.cputype:=cpu_armv84a;
+          InitSettings.cputype:=cpu_armv84a;
         if not option.OptCPUSetExplicitly then
-          init_settings.optimizecputype:=cpu_armv84a;
+          InitSettings.optimizecputype:=cpu_armv84a;
       end;
     else
       ;
@@ -4373,14 +4373,14 @@ begin
     if asmcputype is cpu_none,
     at least as long as there is no explicit
     option to set it on command line PM }
-  if init_settings.asmcputype = cpu_none then
-    init_settings.asmcputype:=init_settings.cputype;
+  if InitSettings.asmcputype = cpu_none then
+    InitSettings.asmcputype:=InitSettings.cputype;
 
 {$if defined(cpucapabilities)}
   for cpuflag:=low(cpuflag) to high(cpuflag) do
     begin
       str(cpuflag,hs);
-      if cpuflag in cpu_capabilities[init_settings.cputype] then
+      if cpuflag in cpu_capabilities[InitSettings.cputype] then
         def_system_macro(hs)
       else
         undef_system_macro(hs);
@@ -4390,14 +4390,14 @@ begin
   for fpuflag:=low(fpuflag) to high(fpuflag) do
     begin
       str(fpuflag,hs);
-      if fpuflag in fpu_capabilities[init_settings.fputype] then
+      if fpuflag in fpu_capabilities[InitSettings.fputype] then
         def_system_macro(hs)
       else
         undef_system_macro(hs);
     end;
 {$endif defined(fpucapabilities)}
 
-  if init_settings.fputype<>fpu_none then
+  if InitSettings.fputype<>fpu_none then
     begin
 {$if defined(i386)}
       def_system_macro('FPC_HAS_TYPE_EXTENDED');
@@ -4413,17 +4413,17 @@ begin
     end;
     { Enable now for testing }
 {$ifndef DISABLE_TLS_DIRECTORY}
-    if target_info.system in systems_windows then
+    if TargetInfo.system in systems_windows then
       def_system_macro('FPC_USE_TLS_DIRECTORY');
 {$endif not DISABLE_TLS_DIRECTORY}
 
 {$ifndef DISABLE_WIN64_SEH}
-    if target_info.system=system_x86_64_win64 then
+    if TargetInfo.system=system_x86_64_win64 then
       def_system_macro('FPC_USE_WIN64_SEH');
 {$endif DISABLE_WIN64_SEH}
 
 {$ifndef DISABLE_WIN32_SEH}
-    if target_info.system=system_i386_win32 then
+    if TargetInfo.system=system_i386_win32 then
       def_system_macro('FPC_USE_WIN32_SEH');
 {$endif not DISABLE_WIN32_SEH}
 
@@ -4436,7 +4436,7 @@ begin
 
 { hardware FMA support }
 {$if defined(i386) or defined(x86_64)}
-  if (fpu_capabilities[current_settings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
+  if (fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[] then
     begin
       def_system_macro('FPC_HAS_FAST_FMA_SINGLE');
       def_system_macro('FPC_HAS_FAST_FMA_DOUBLE');
@@ -4449,17 +4449,17 @@ begin
 
   { Section smartlinking conflicts with import sections on Windows }
   if GenerateImportSection and
-     (target_info.system in [system_i386_win32,system_x86_64_win64,system_aarch64_win64]) then
-    exclude(target_info.flags,tf_smartlink_sections);
+     (TargetInfo.system in [system_i386_win32,system_x86_64_win64,system_aarch64_win64]) then
+    exclude(TargetInfo.flags,tf_smartlink_sections);
 
   if not option.LinkTypeSetExplicitly then
     set_default_link_type;
-  if source_info.endian<>target_info.endian then
+  if SourceInfo.endian<>TargetInfo.endian then
     begin
       if option.LinkInternSetExplicitly then
         Message(link_w_unsupported_cross_endian_internal_linker)
       else
-        include(init_settings.globalswitches,cs_link_extern);
+        include(InitSettings.globalswitches,cs_link_extern);
     end;
 
   { Default alignment settings,
@@ -4467,59 +4467,59 @@ begin
     2. adapt defaults specifically for the target
     3. override with generic optimizer setting (little size)
     4. override with the user specified -Oa }
-  UpdateAlignment(init_settings.alignment,target_info.alignment);
+  UpdateAlignment(InitSettings.alignment,TargetInfo.alignment);
 
 
-  if (cs_opt_size in init_settings.optimizerswitches) then
+  if (cs_opt_size in InitSettings.optimizerswitches) then
    begin
-     init_settings.alignment.procalign:=1;
-     init_settings.alignment.jumpalign:=1;
-     init_settings.alignment.coalescealign:=1;
-     init_settings.alignment.loopalign:=1;
+     InitSettings.alignment.procalign:=1;
+     InitSettings.alignment.jumpalign:=1;
+     InitSettings.alignment.coalescealign:=1;
+     InitSettings.alignment.loopalign:=1;
 {$ifdef x86}
      { constalignmax=1 keeps the executable and thus the memory foot print small but
        all processors except x86 are really hurt by this or might even crash ... }
 {$ifndef x86_64}
      { ... and will segfault if not aligned for SSE instructions }
-     if not (CPUX86_HAS_SSEUNIT in cpu_capabilities[init_settings.cputype]) then
-       init_settings.alignment.constalignmax:=1;
+     if not (CPUX86_HAS_SSEUNIT in cpu_capabilities[InitSettings.cputype]) then
+       InitSettings.alignment.constalignmax:=1;
 {$endif not x86_64}
 {$endif x86}
    end;
 
-  UpdateAlignment(init_settings.alignment,option.paraalignment);
+  UpdateAlignment(InitSettings.alignment,option.paraalignment);
 
   set_system_macro('FPC_VERSION',version_nr);
   set_system_macro('FPC_RELEASE',release_nr);
   set_system_macro('FPC_PATCH',patch_nr);
   set_system_macro('FPC_FULLVERSION',Format('%d%.02d%.02d',[StrToInt(version_nr),StrToInt(release_nr),StrToInt(patch_nr)]));
 
-  if target_info.system in systems_indirect_entry_information then
+  if TargetInfo.system in systems_indirect_entry_information then
     def_system_macro('FPC_HAS_INDIRECT_ENTRY_INFORMATION');
 
-  if not (tf_winlikewidestring in target_info.flags) then
+  if not (tf_winlikewidestring in TargetInfo.flags) then
     def_system_macro('FPC_WIDESTRING_EQUAL_UNICODESTRING');
 
-  if tf_supports_packages in target_info.flags then
+  if tf_supports_packages in TargetInfo.flags then
     def_system_macro('FPC_HAS_DYNAMIC_PACKAGES');
 
-  if target_info.system in systems_indirect_var_imports then
+  if TargetInfo.system in systems_indirect_var_imports then
     def_system_macro('FPC_HAS_INDIRECT_VAR_ACCESS');
 
-  if cs_compilesystem in init_settings.moduleswitches then
-    for i:=low(tfeature) to high(tfeature) do
+  if cs_compilesystem in InitSettings.moduleswitches then
+    for i:=low(TFeature) to high(TFeature) do
       if i in features then
         def_system_macro('FPC_HAS_FEATURE_'+featurestr[i]);
 
   { as stackalign is not part of the alignment record, we do not need to define the others alignments for symmetry yet }
-  set_system_macro('FPC_STACKALIGNMENT',tostr(target_info.stackalign));
+  set_system_macro('FPC_STACKALIGNMENT',tostr(TargetInfo.stackalign));
 
   option.free;
   Option:=nil;
 
   clearstack_pocalls := [pocall_cdecl,pocall_cppdecl,pocall_syscall,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
   cdecl_pocalls := [pocall_cdecl, pocall_cppdecl, pocall_mwpascal, pocall_sysv_abi_cdecl, pocall_ms_abi_cdecl];
-  if (tf_safecall_clearstack in target_info.flags) then
+  if (tf_safecall_clearstack in TargetInfo.flags) then
     begin
       include (cdecl_pocalls, pocall_safecall);
       include (clearstack_pocalls, pocall_safecall)

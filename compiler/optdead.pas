@@ -46,8 +46,8 @@ unit optdead;
         destructor destroy; override;
 
         class function  getwpotype: twpotype; override;
-        class function  generatesinfoforwposwitches: twpoptimizerswitches; override;
-        class function  performswpoforswitches: twpoptimizerswitches; override;
+        class function  generatesinfoforwposwitches: TWPOptimizerSwitches; override;
+        class function  performswpoforswitches: TWPOptimizerSwitches; override;
         class function  sectionname: shortstring; override;
 
         class procedure checkoptions; override;
@@ -118,13 +118,13 @@ unit optdead;
     end;
 
 
-  class function twpodeadcodeinfo.generatesinfoforwposwitches: twpoptimizerswitches;
+  class function twpodeadcodeinfo.generatesinfoforwposwitches: TWPOptimizerSwitches;
     begin
       result:=[cs_wpo_symbol_liveness];
     end;
 
 
-  class function twpodeadcodeinfo.performswpoforswitches: twpoptimizerswitches;
+  class function twpodeadcodeinfo.performswpoforswitches: TWPOptimizerSwitches;
     begin
       result:=[cs_wpo_symbol_liveness];
     end;
@@ -141,14 +141,14 @@ unit optdead;
       { we don't have access to the symbol info if the linking
         hasn't happened
       }
-      if (([cs_link_on_target,cs_link_nolink] * init_settings.globalswitches) <> []) then
+      if (([cs_link_on_target,cs_link_nolink] * InitSettings.globalswitches) <> []) then
         begin
           cgmessage(wpo_cannot_extract_live_symbol_info_no_link);
           exit;
         end;
 
       { without dead code stripping/smart linking, this doesn't make sense }
-      if not(cs_link_smart in init_settings.globalswitches) then
+      if not(cs_link_smart in InitSettings.globalswitches) then
         begin
           cgmessage(wpo_symbol_live_info_needs_smart_linking);
           exit;
@@ -208,7 +208,7 @@ const
       inherited checkoptions;
 
       { we need symbol information }
-      if (cs_link_strip in init_settings.globalswitches) then
+      if (cs_link_strip in InitSettings.globalswitches) then
         begin
           cgmessage(wpo_cannot_extract_live_symbol_info_strip);
           exit;
@@ -288,7 +288,7 @@ const
     function findutil(const utilname: string; out fullutilname, fullutilpath: tcmdstr): boolean;
       begin
         result:=false;
-        fullutilname:=utilsprefix+changefileext(utilname,source_info.exeext);
+        fullutilname:=utilsprefix+changefileext(utilname,SourceInfo.exeext);
         if utilsdirectory<>'' then
           result:=findfile(fullutilname,utilsdirectory,false,fullutilpath);
         if not result then
@@ -366,7 +366,7 @@ const
       if not symbolprogfound then
         symbolprogfound:=findutil('nm',nmfullname,symbolprogfullpath);
       if not symbolprogfound and
-         (target_info.system in systems_linux) then
+         (TargetInfo.system in systems_linux) then
         begin
           { try objdump }
           symbolprogfound:=findutil('objdump',objdumpfullname,symbolprogfullpath);
@@ -379,7 +379,7 @@ const
           { GNU nm shows 64 bit addresses when processing 32 bit binaries on
             a 64 bit platform, but only skips 8 spaces for the address in case
             of undefined symbols -> skip undefined symbols }
-          if target_info.system in (systems_linux+systems_windows) then
+          if TargetInfo.system in (systems_linux+systems_windows) then
             symbolprogfullpath:=symbolprogfullpath+'--defined-only ';
           symbolprogisnm:=true;
         end;
@@ -396,7 +396,7 @@ const
       { -p gives the same kind of output with Solaris nm as
         with GNU nm, and for GNU nm it simply means "unsorted"
       }
-      exitcode:=shell(symbolprogfullpath+maybequoted(current_module.exefilename)+' > '+fsymfilename);
+      exitcode:=shell(symbolprogfullpath+maybequoted(CurrentModule.exefilename)+' > '+fsymfilename);
       if (exitcode<>0) then
         begin
           cgmessage2(wpo_error_executing_symbol_prog,symbolprogfullpath,tostr(exitcode));

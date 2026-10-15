@@ -221,7 +221,7 @@ implementation
 
         procedure create_fpu_types;
         begin
-          if init_settings.fputype<>fpu_none then
+          if InitSettings.fputype<>fpu_none then
             begin
               s32floattype:=cfloatdef.create(s32real,true);
               s64floattype:=cfloatdef.create(s64real,true);
@@ -285,7 +285,7 @@ implementation
         { should we give a length to the default long and ansi string definition ?? }
         clongstringtype:=cstringdef.createlong(-1,true);
         cansistringtype:=cstringdef.createansi(0,true);
-        if target_info.system in systems_windows then
+        if TargetInfo.system in systems_windows then
           cwidestringtype:=cstringdef.createwide(true)
         else
           cwidestringtype:=cstringdef.createunicode(true);
@@ -295,7 +295,7 @@ implementation
         pvmt_name:='pvmt';
  {$ifdef x86}
         create_fpu_types;
-        if target_info.system=system_x86_64_win64 then
+        if TargetInfo.system=system_x86_64_win64 then
           s64currencytype:=corddef.create(scurrency,low(int64),high(int64),true)
         else
           s64currencytype:=cfloatdef.create(s64currency,true);
@@ -347,7 +347,7 @@ implementation
             colevarianttype:=cvariantdef.create(vt_olevariant);
           end;
 
-        if init_settings.fputype<>fpu_none then
+        if InitSettings.fputype<>fpu_none then
           begin
             addtype('Single',s32floattype);
             addtype('Double',s64floattype);
@@ -355,7 +355,7 @@ implementation
             addtype('Extended',pbestrealtype^);
             { CExtended corresponds to the C version of the Extended type
               (either "long double" or "double") }
-            if target_info.system in (systems_android+[system_x86_64_win64]) then
+            if TargetInfo.system in (systems_android+[system_x86_64_win64]) then
               { Microsoft C and Android x86 use Double at this boundary. }
               addtype('CExtended',s64floattype)
             else
@@ -365,7 +365,7 @@ implementation
                 addtype('CExtended',pbestrealtype^);
           end;
 {$ifdef x86}
-        if target_info.system<>system_x86_64_win64 then
+        if TargetInfo.system<>system_x86_64_win64 then
           addtype('Comp',cfloatdef.create(s64comp,true));
 {$endif x86}
         addtype('Currency',s64currencytype);
@@ -492,7 +492,7 @@ implementation
             addtype('$variant',cvarianttype);
             addtype('$olevariant',colevarianttype);
           end;
-        if init_settings.fputype<>fpu_none then
+        if InitSettings.fputype<>fpu_none then
           begin
             addtype('$s32real',s32floattype);
             addtype('$s64real',s64floattype);
@@ -502,7 +502,7 @@ implementation
         addtype('$s64currency',s64currencytype);
           begin
             { Add a type for virtual method tables }
-            hrecst:=trecordsymtable.create('',current_settings.packrecords,current_settings.alignment.recordalignmin);
+            hrecst:=trecordsymtable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
             vmttype:=crecorddef.create('',hrecst);
             pvmttype:=cpointerdef.create(vmttype);
             { can't use addtype for pvmt because the rtti of the pointed
@@ -527,13 +527,13 @@ implementation
             addtype('$vtblarray',vmtarraytype);
           end;
         { Add a type for methodpointers }
-        hrecst:=trecordsymtable.create('',1,current_settings.alignment.recordalignmin);
+        hrecst:=trecordsymtable.create('',1,CurrentSettings.alignment.recordalignmin);
         addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
         addfield(hrecst,cfieldvarsym.create('$self',vs_value,voidpointertype,[]));
         methodpointertype:=crecorddef.create('',hrecst);
         addtype('$methodpointer',methodpointertype);
         { Add a type for nested proc pointers }
-        hrecst:=trecordsymtable.create('',1,current_settings.alignment.recordalignmin);
+        hrecst:=trecordsymtable.create('',1,CurrentSettings.alignment.recordalignmin);
         addfield(hrecst,cfieldvarsym.create('$proc',vs_value,voidcodepointertype,[]));
         addfield(hrecst,cfieldvarsym.create('$parentfp',vs_value,parentfpvoidpointertype,[]));
         nestedprocpointertype:=crecorddef.create('',hrecst);
@@ -559,8 +559,8 @@ implementation
         oldcurrentmodule : tmodule;
         pvmt_name : shortstring;
       begin
-        oldcurrentmodule:=current_module;
-        set_current_module(nil);
+        oldcurrentmodule:=CurrentModule;
+        SetCurrentModule(nil);
         loadtype('byte',u8inttype);
         loadtype('shortint',s8inttype);
         loadtype('word',u16inttype);
@@ -593,7 +593,7 @@ implementation
         loadtype('unicodestring',cunicodestringtype);
         loadtype('openshortstring',openshortstringtype);
         loadtype('openchararray',openchararraytype);
-        if init_settings.fputype <> fpu_none then
+        if InitSettings.fputype <> fpu_none then
           begin
             loadtype('s32real',s32floattype);
             loadtype('s64real',s64floattype);
@@ -647,7 +647,7 @@ implementation
         loadtype('TTYPEKIND',typekindtype);
         set_default_int_types;
         set_default_ptr_types;
-        set_current_module(oldcurrentmodule);
+        SetCurrentModule(oldcurrentmodule);
       end;
 
 

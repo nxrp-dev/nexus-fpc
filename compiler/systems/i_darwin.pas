@@ -29,7 +29,7 @@ uses
    systems,nxartifactid;
 
 const
-   res_macho_info : tresinfo =
+   res_macho_info : TResInfo =
        (
          id     : res_macho;
          resbin : 'fpcres';
@@ -39,7 +39,7 @@ const
          resourcefileclass : nil;
          resflags : [];
        );
-   res_macosx_ext_info : tresinfo =
+   res_macosx_ext_info : TResInfo =
       (
          id     : res_ext;
          resbin : 'fpcres';
@@ -55,7 +55,7 @@ const
 
 
 
-   system_x86_64_darwin_info  : tsysteminfo =
+   system_x86_64_darwin_info  : TSystemInfo =
       (
         system       : system_x86_64_darwin;
         name         : 'Darwin for x86_64';
@@ -122,7 +122,7 @@ const
       );
 
 
-   system_x86_64_iphonesim_info  : tsysteminfo =
+   system_x86_64_iphonesim_info  : TSystemInfo =
       (
         system       : system_x86_64_iphonesim;
         name         : 'Darwin/iPhoneSim for x86_64';
@@ -192,7 +192,7 @@ const
 
 
 
-   system_aarch64_ios_info  : tsysteminfo =
+   system_aarch64_ios_info  : TSystemInfo =
       (
         system       : system_aarch64_ios;
         name         : 'iOS for AArch64';
@@ -259,7 +259,7 @@ const
         abi : abi_aarch64_darwin;
       );
 
-   system_aarch64_darwin_info  : tsysteminfo =
+   system_aarch64_darwin_info  : TSystemInfo =
       (
         system       : system_aarch64_darwin;
         name         : 'Darwin for AArch64';
@@ -327,7 +327,7 @@ const
       );
 
 
-   system_aarch64_iphonesim_info  : tsysteminfo =
+   system_aarch64_iphonesim_info  : TSystemInfo =
       (
         system       : system_aarch64_iphonesim;
         name         : 'Darwin/iPhoneSim for AArch64';
@@ -399,15 +399,15 @@ implementation
 initialization
   {$ifdef cpux86_64}
     {$ifdef Darwin}
-      set_source_info(system_x86_64_darwin_info);
+      SetSourceInfo(system_x86_64_darwin_info);
     {$endif}
   {$endif cpux86_64}
   {$ifdef cpuaarch64}
     {$ifdef Darwin}
       {$ifdef ios}
-        set_source_info(system_aarch64_ios_info);
+        SetSourceInfo(system_aarch64_ios_info);
       {$else}
-        set_source_info(system_aarch64_darwin_info);
+        SetSourceInfo(system_aarch64_darwin_info);
       {$endif}
     {$endif Darwin}
   {$endif cpuaarch64}

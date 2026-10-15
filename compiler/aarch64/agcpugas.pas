@@ -40,12 +40,12 @@ unit agcpugas;
       end;
 
       TAArch64Assembler=class(TGNUassembler)
-        constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
+        constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
 
       TAArch64AppleAssembler=class(TAppleGNUassembler)
-        constructor CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
+        constructor CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean); override;
         function MakeCmdLine: TCmdStr; override;
       end;
 
@@ -109,8 +109,8 @@ unit agcpugas;
       var
         cf: tcpuflags;
       begin
-        Result:='-march='+cputype_to_gas_march[current_settings.cputype];
-        for cf in cpu_capabilities[current_settings.cputype] do
+        Result:='-march='+cputype_to_gas_march[CurrentSettings.cputype];
+        for cf in cpu_capabilities[CurrentSettings.cputype] do
           begin
             case cf of
               CPUAARCH64_HAS_DOTPROD:
@@ -131,7 +131,7 @@ unit agcpugas;
                 { currently, clang on aarch64-darwin does not support pauth and as
                   it is actually part of -march==armv8.4-a (and higher) we actually don't need it,
                   so ignore it at this point }
-                if not(current_settings.cputype>=cpu_armv84a) then
+                if not(CurrentSettings.cputype>=cpu_armv84a) then
                   Result:=Result+'+pauth';
               CPUAARCH64_HAS_TME:
                 Result:=Result+'+tme';
@@ -149,7 +149,7 @@ unit agcpugas;
 {                      AArch64 Assembler writer                              }
 {****************************************************************************}
 
-    constructor TAArch64Assembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
+    constructor TAArch64Assembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
         InstrWriter := TAArch64InstrWriter.create(self);
@@ -158,7 +158,7 @@ unit agcpugas;
     function TAArch64Assembler.MakeCmdLine: TCmdStr;
       begin
         result:=inherited MakeCmdLine;
-        if cputype_to_gas_march[current_settings.cputype] <> '' then
+        if cputype_to_gas_march[CurrentSettings.cputype] <> '' then
           Replace(result,'$MARCHOPT',GetmarchStr)
         else
           Replace(result,'$MARCHOPT','');
@@ -168,7 +168,7 @@ unit agcpugas;
 {                      Apple AArch64 Assembler writer                        }
 {****************************************************************************}
 
-    constructor TAArch64AppleAssembler.CreateWithWriter(info: pasminfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
+    constructor TAArch64AppleAssembler.CreateWithWriter(info: PAsmInfo; wr: TExternalAssemblerOutputFile; freewriter, smart: boolean);
       begin
         inherited;
         InstrWriter := TAArch64InstrWriter.create(self);
@@ -178,7 +178,7 @@ unit agcpugas;
     function TAArch64AppleAssembler.MakeCmdLine: TCmdStr;
       begin
         result:=inherited MakeCmdLine;
-        if cputype_to_gas_march[current_settings.cputype] <> '' then
+        if cputype_to_gas_march[CurrentSettings.cputype] <> '' then
           Replace(result,'$MARCHOPT',GetmarchStr)
         else
           Replace(result,'$MARCHOPT','');
@@ -469,7 +469,7 @@ unit agcpugas;
                             { note: we can pass Nil here, because in case of a LLVM
                                     backend this whole code shouldn't be required
                                     anyway }
-                            xdatasym:=current_asmdata.DefineAsmSymbol('xdata_'+lastsym.sym.name,AB_LOCAL,AT_DATA,nil);
+                            xdatasym:=CurrentAsmData.DefineAsmSymbol('xdata_'+lastsym.sym.name,AB_LOCAL,AT_DATA,nil);
 
                             tmplist:=tasmlist.create;
                             pdatasection:=new_section(tmplist,sec_pdata,lastsec.name^,0);
@@ -534,7 +534,7 @@ unit agcpugas;
 
                             { exception record headers }
                             tmplist.concat(tai_const.Create_32bit(longint(unwindrec)));
-                            if cs_asm_source in init_settings.globalswitches then
+                            if cs_asm_source in InitSettings.globalswitches then
                               tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
 
                             if unwinddata.size div 4>31 then
@@ -545,7 +545,7 @@ unit agcpugas;
                                   comment(V_Error,'Too many unwind codes for SEH');
                                 unwindrec:=(unwinddata.size div 4) shl 16;
                                 tmplist.concat(tai_const.create_32bit(longint(unwindrec)));
-                                if cs_asm_source in init_settings.globalswitches then
+                                if cs_asm_source in InitSettings.globalswitches then
                                   tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
                               end;
 
@@ -555,13 +555,13 @@ unit agcpugas;
                               begin
                                 unwinddata.read(unwindrec,sizeof(longword));
                                 tmplist.concat(tai_const.Create_32bit(longint(unwindrec)));
-                                if cs_asm_source in init_settings.globalswitches then
+                                if cs_asm_source in InitSettings.globalswitches then
                                   tmplist.concat(tai_comment.create(strpnew(hexstr(unwindrec,8))));
                               end;
 
                             if handlerflags<>0 then
                               begin
-                                tmplist.concat(tai_const.Create_rva_sym(current_asmdata.RefAsmSymbol(handlername,AT_FUNCTION,false)));
+                                tmplist.concat(tai_const.Create_rva_sym(CurrentAsmData.RefAsmSymbol(handlername,AT_FUNCTION,false)));
                                 if length(handlerdata)>0 then
                                   begin
                                     tmplist.concat(handlerdatacount);
@@ -671,7 +671,7 @@ unit agcpugas;
     function TAArch64ClangGASAssembler.sectionflags(secflags:TSectionFlags):string;
       begin
         Result:=inherited sectionflags(secflags);
-        if (target_info.system=system_aarch64_win64) then
+        if (TargetInfo.system=system_aarch64_win64) then
           begin
             { we require an explicit "r" if write is not allowed }
             if not (SF_W in secflags) then
@@ -684,10 +684,10 @@ unit agcpugas;
       begin
         { clang does not support all the directives we need, so we need to
           manually transform them to pdata/xdata records }
-        if target_info.system=system_aarch64_win64 then
+        if TargetInfo.system=system_aarch64_win64 then
           begin
-            TransformSEHDirectives(current_asmdata.AsmLists[al_pure_assembler]);
-            TransformSEHDirectives(current_asmdata.AsmLists[al_procedures]);
+            TransformSEHDirectives(CurrentAsmData.AsmLists[al_pure_assembler]);
+            TransformSEHDirectives(CurrentAsmData.AsmLists[al_procedures]);
           end;
         inherited WriteAsmList;
       end;
@@ -697,7 +697,7 @@ unit agcpugas;
 {                  Helper routines for Instruction Writer                    }
 {****************************************************************************}
 
-    function getreferencestring(asminfo: pasminfo; var ref : treference) : string;
+    function getreferencestring(asminfo: PAsmInfo; var ref : treference) : string;
       const
         darwin_addrpage2str: array[addr_page..addr_gotpageoffset] of string[11] =
            ('@PAGE','@PAGEOFF','@GOTPAGE','@GOTPAGEOFF');
@@ -718,7 +718,7 @@ unit agcpugas;
                      (ref.shiftmode<>SM_None) or
                      (ref.offset<>0) then
                     internalerror(2014121501);
-                  if target_info.system in systems_darwin then
+                  if TargetInfo.system in systems_darwin then
                     result:=ref.symbol.name+darwin_addrpage2str[ref.refaddr]
                   else
                     result:=linux_addrpage2str[ref.refaddr]+ref.symbol.name
@@ -764,7 +764,7 @@ unit agcpugas;
                       addr_gotpageoffset,
                       addr_pageoffset:
                         begin
-                          if target_info.system in systems_darwin then
+                          if TargetInfo.system in systems_darwin then
                             result:=result+', '+ref.symbol.name+darwin_addrpage2str[ref.refaddr]
                           else
                             result:=result+', '+linux_addrpage2str[ref.refaddr]+ref.symbol.name
@@ -794,7 +794,7 @@ unit agcpugas;
       end;
 
 
-    function getopstr(asminfo: pasminfo; hp: taicpu; opnr: longint; const o: toper): string;
+    function getopstr(asminfo: PAsmInfo; hp: taicpu; opnr: longint; const o: toper): string;
       var
         i: longint;
         reg: tregister;
@@ -886,7 +886,7 @@ unit agcpugas;
 
 
     const
-       as_aarch64_gas_info : tasminfo =
+       as_aarch64_gas_info : TAsmInfo =
           (
             id     : as_gas;
             idtxt  : 'AS';
@@ -900,7 +900,7 @@ unit agcpugas;
             dollarsign: '$';
           );
 
-       as_aarch64_clang_darwin_info : tasminfo =
+       as_aarch64_clang_darwin_info : TAsmInfo =
           (
             id     : as_clang_asdarwin;
             idtxt  : 'CLANG';
@@ -914,7 +914,7 @@ unit agcpugas;
             dollarsign: '$';
           );
 
-       as_aarch64_clang_gas_info : tasminfo =
+       as_aarch64_clang_gas_info : TAsmInfo =
           (
             id     : as_clang_gas;
             idtxt  : 'AS-CLANG';
@@ -929,7 +929,7 @@ unit agcpugas;
           );
 
 
-       as_aarch64_win64_gas_info : tasminfo =
+       as_aarch64_win64_gas_info : TAsmInfo =
           (
             id     : as_win64_gas;
             idtxt  : 'WIN64-AS';

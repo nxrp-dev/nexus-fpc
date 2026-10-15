@@ -148,7 +148,7 @@ interface
       TAsmList = class(tlinkedlist)
          section_count : longint;
          constructor create;
-         function  getlasttaifilepos : pfileposinfo;
+         function  getlasttaifilepos : PFilePosInfo;
          { inserts another List at the begin and make this List empty }
          procedure insertList(p : TLinkedList); override;
          { inserts another List before the provided item and make this List empty }
@@ -261,7 +261,7 @@ interface
 
     var
       CAsmCFI : TAsmCFIClass;
-      current_asmdata : TAsmData;
+      CurrentAsmData : TAsmData;
 
 
 implementation
@@ -374,7 +374,7 @@ implementation
       end;
 
 
-    function TAsmList.getlasttaifilepos : pfileposinfo;
+    function TAsmList.getlasttaifilepos : PFilePosInfo;
       var
        hp : tlinkedlistitem;
       begin
@@ -612,7 +612,7 @@ implementation
           erroneous code (at least for targets using GOT) }
         if global then
           result:=DefineAsmSymbol(s,AB_GLOBAL,AT_FUNCTION,pd)
-        else if tf_supports_hidden_symbols in target_info.flags then
+        else if tf_supports_hidden_symbols in TargetInfo.flags then
           result:=DefineAsmSymbol(s,AB_PRIVATE_EXTERN,AT_FUNCTION,pd)
         else
           result:=DefineAsmSymbol(s,AB_LOCAL,AT_FUNCTION,pd);
@@ -691,7 +691,7 @@ implementation
 
     procedure TAsmData.getlabel(out l : TAsmLabel;alt:TAsmLabeltype);
       begin
-        if (target_info.system in (systems_linux + systems_android)) and
+        if (TargetInfo.system in (systems_linux + systems_android)) and
            { the next condition was
              (cs_create_smart in current_settings.moduleswitches) and
              but if we create_smartlink_sections, this is useless }

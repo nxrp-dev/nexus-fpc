@@ -69,7 +69,7 @@ Const
    {# Size of native extended floating point type }
    extended_size = 8;
    { target cpu string (used by compiler options) }
-   target_cpu_string = 'aarch64';
+   TargetCPUString = 'aarch64';
 
    { We know that there are fields after sramsize
      but we don't care about this warning }
@@ -88,7 +88,7 @@ Const
 
 var
    { calling conventions supported by the code generator }
-   supported_calling_conventions : tproccalloptions = [
+   supported_calling_conventions : TProcCallOptions = [
      pocall_internproc,
      pocall_safecall,
      pocall_stdcall,

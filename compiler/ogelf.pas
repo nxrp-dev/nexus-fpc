@@ -101,7 +101,7 @@ interface
        end;
 
        TElfAssembler = class(tinternalassembler)
-         constructor create(info: pasminfo; smart:boolean);override;
+         constructor create(info: PAsmInfo; smart:boolean);override;
        end;
 
        PSectionRec=^TSectionRec;
@@ -583,9 +583,9 @@ implementation
         else
           begin
             secname:=secnames[atype];
-            if (atype=sec_rodata) and (target_info.system=system_x86_64_linux) and
-               (tf_supports_packages in target_info.flags) and
-               (cs_create_pic in current_settings.moduleswitches) then
+            if (atype=sec_rodata) and (TargetInfo.system=system_x86_64_linux) and
+               (tf_supports_packages in TargetInfo.flags) and
+               (cs_create_pic in CurrentSettings.moduleswitches) then
               secname:='.data.rel.ro';
             if (atype=sec_fpc) and (Copy(aname,1,3)='res') then
               begin
@@ -595,9 +595,9 @@ implementation
 
             if atype=sec_threadvar then
               begin
-                if (target_info.system in systems_windows) then
+                if (TargetInfo.system in systems_windows) then
                   secname:='.tls'
-                else if (target_info.system in systems_linux) then
+                else if (TargetInfo.system in systems_linux) then
                   secname:='.tbss';
               end;
 
@@ -621,7 +621,7 @@ implementation
 
     procedure TElfObjData.CreateDebugSections;
       begin
-        if target_dbg.id=dbg_stabs then
+        if TargetDbg.id=dbg_stabs then
           begin
             stabssec:=createsection(sec_stab);
             stabstrsec:=createsection(sec_stabstr);
@@ -694,7 +694,7 @@ implementation
                 data:=0;
               end;
           end;
-        if target_info.endian<>source_info.endian then
+        if TargetInfo.endian<>SourceInfo.endian then
           begin
             ba.q:=0;
             if (len<=sizeof(data)) then
@@ -1058,11 +1058,11 @@ implementation
            shstrtabsect:=TElfObjSection.create_ext(data,'.shstrtab',SHT_STRTAB,0,1,0);
            { "no executable stack" marker }
            { TODO: used by OpenBSD/NetBSD as well? }
-           if (target_info.system in (systems_linux + systems_android)) and
-              not(cs_executable_stack in current_settings.moduleswitches) then
+           if (TargetInfo.system in (systems_linux + systems_android)) and
+              not(cs_executable_stack in CurrentSettings.moduleswitches) then
              TElfObjSection.create_ext(data,'.note.GNU-stack',SHT_PROGBITS,0,1,0);
            { symbol for filename }
-           symtabsect.fstrsec.writestr(ExtractFileName(current_module.mainsource));
+           symtabsect.fstrsec.writestr(ExtractFileName(CurrentModule.mainsource));
            symtabsect.writeInternalSymbol(0,1,STT_FILE,SHN_ABS);
            { calc amount of sections we have }
            nsections:=1;
@@ -1093,7 +1093,7 @@ implementation
            header.e_ident[EI_MAG2]:=ELFMAG2;
            header.e_ident[EI_MAG3]:=ELFMAG3;
            header.e_ident[EI_CLASS]:=ELFCLASS;
-           if target_info.endian=endian_big then
+           if TargetInfo.endian=endian_big then
              header.e_ident[EI_DATA]:=ELFDATA2MSB
            else
              header.e_ident[EI_DATA]:=ELFDATA2LSB;
@@ -1130,7 +1130,7 @@ implementation
                                TELFAssembler
 ****************************************************************************}
 
-    constructor TElfAssembler.Create(info: pasminfo; smart:boolean);
+    constructor TElfAssembler.Create(info: PAsmInfo; smart:boolean);
       begin
         inherited;
         CObjOutput:=TElfObjectOutput;
@@ -1471,7 +1471,7 @@ implementation
             InputError('Wrong ELF file class (32/64 bit mismatch)');
             exit;
           end;
-        if (header.e_ident[EI_DATA]<>1+ord(target_info.endian=endian_big)) then
+        if (header.e_ident[EI_DATA]<>1+ord(TargetInfo.endian=endian_big)) then
           begin
             InputError('ELF endianness does not match target');
             exit;
@@ -1570,7 +1570,7 @@ implementation
             InputError('Can''t read ELF section headers');
             exit;
           end;
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           for i:=0 to nsects-1 do
             MaybeSwapSecHeader(shdrs[i]);
 
@@ -1652,7 +1652,7 @@ implementation
                       SetLength(symversions,shdrs[i].sh_size);
                       FReader.seek(shdrs[i].sh_offset);
                       FReader.read(symversions[0],shdrs[i].sh_size);
-                      if source_info.endian<>target_info.endian then
+                      if SourceInfo.endian<>TargetInfo.endian then
                         for j:=0 to syms-1 do
                           symversions[j]:=SwapEndian(symversions[j]);
                     end;
@@ -1735,8 +1735,8 @@ implementation
             objsec:=TObjSection(objdata.ObjsectionList[i]);
             { skip debug sections }
             if (oso_debug in objsec.SecOptions) and
-               (cs_link_strip in current_settings.globalswitches) and
-               not(cs_link_separate_dbg_file in current_settings.globalswitches) then
+               (cs_link_strip in CurrentSettings.globalswitches) and
+               not(cs_link_separate_dbg_file in CurrentSettings.globalswitches) then
               continue;
 
             if FSecTbl[objsec.index].relocpos>0 then
@@ -1752,7 +1752,7 @@ implementation
                 FReader.Seek(shdrs[i+1].sh_offset);
                 { first dword is flags }
                 FReader.Read(tmp,sizeof(longword));
-                if source_info.endian<>target_info.endian then
+                if SourceInfo.endian<>TargetInfo.endian then
                   tmp:=SwapEndian(tmp);
                 if (tmp and GRP_COMDAT)<>0 then
                   grp.IsComdat:=true;
@@ -1762,7 +1762,7 @@ implementation
                 for j:=0 to count-1 do
                   begin
                     FReader.Read(tmp,sizeof(longword));
-                    if source_info.endian<>target_info.endian then
+                    if SourceInfo.endian<>TargetInfo.endian then
                       tmp:=SwapEndian(tmp);
                     if (tmp>=nsects) then
                       InternalError(2012110805);
@@ -1864,7 +1864,7 @@ implementation
         header.e_ident[EI_MAG2]:=ELFMAG2;
         header.e_ident[EI_MAG3]:=ELFMAG3;
         header.e_ident[EI_CLASS]:=ELFCLASS;
-        if target_info.endian=endian_big then
+        if TargetInfo.endian=endian_big then
           header.e_ident[EI_DATA]:=ELFDATA2MSB
         else
           header.e_ident[EI_DATA]:=ELFDATA2LSB;
@@ -2041,7 +2041,7 @@ implementation
     procedure TElfExeOutput.make_dynamic_if_undefweak(exesym:TExeSymbol);
       begin
         if (exesym.dynindex=0) and (exesym.state=symstate_undefweak) and
-          not (cs_link_staticflag in current_settings.globalswitches) then
+          not (cs_link_staticflag in CurrentSettings.globalswitches) then
           exesym.dynindex:=dynsymlist.add(exesym)+1;
       end;
 
@@ -2178,7 +2178,7 @@ implementation
         dynamiclink:=IsSharedLibrary or (dynsymlist.count>0) or
           (
             (UnresolvedExeSymbols.Count>0) and
-            not (cs_link_staticflag in current_settings.globalswitches)
+            not (cs_link_staticflag in CurrentSettings.globalswitches)
           );
         if dynamiclink then
           InitDynlink;
@@ -2356,7 +2356,7 @@ implementation
         { Drop unresolved symbols that aren't referenced, assign dynamic
           indices to remaining ones, but not if linking with -Xt.
           TODO: behavior of .so with -Xt ? }
-        if (cs_link_staticflag in current_settings.globalswitches) then
+        if (cs_link_staticflag in CurrentSettings.globalswitches) then
           UnresolvedExeSymbols.Clear
         else
         for i:=0 to UnresolvedExeSymbols.Count-1 do
@@ -2451,8 +2451,8 @@ implementation
         AttachSection(shstrtabsect);
 
         { Create the static symtable (.symtab and .strtab) }
-        if (cs_link_separate_dbg_file in current_settings.globalswitches) or
-          not(cs_link_strip in current_settings.globalswitches) then
+        if (cs_link_separate_dbg_file in CurrentSettings.globalswitches) or
+          not(cs_link_strip in CurrentSettings.globalswitches) then
           begin
             symtab:=TElfSymtab.Create(internalObjData,esk_exe);
             symtab.SecOptions:=[oso_debug];
@@ -2705,7 +2705,7 @@ implementation
         if (ExeWriteMode=ewm_dbgonly) or
           (
             (ExeWriteMode=ewm_exefull) and
-             not(cs_link_strip in current_settings.globalswitches)
+             not(cs_link_strip in CurrentSettings.globalswitches)
           ) then
           WriteStaticSymtable;
 
@@ -2879,7 +2879,7 @@ implementation
               j:=2+nbuckets+hashdata[j];
             hashdata[j]:=i+1;
           end;
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           for i:=0 to nchains+nbuckets+1 do
             hashdata[i]:=swapendian(hashdata[i]);
         hashobjsec.write(hashdata^,(2+nchains+nbuckets)*sizeof(longint));
@@ -2976,7 +2976,7 @@ implementation
         { If there are no needed versions, .gnu.version section is not needed }
         if verneedcount>0 then
           begin
-            if source_info.endian<>target_info.endian then
+            if SourceInfo.endian<>TargetInfo.endian then
               for i:=0 to dynsymlist.count+1 do
                 symversions[i]:=swapendian(symversions[i]);
             symversec.write(symversions[0],(dynsymlist.count+1)*sizeof(word));
@@ -3015,7 +3015,7 @@ implementation
         d: TElfDyn;
       begin
         d.d_tag:=aTag;
-        if source_info.endian<>target_info.endian then
+        if SourceInfo.endian<>TargetInfo.endian then
           d.d_tag:=swapendian(d.d_tag);
         dynamicsec.write(d.d_tag,sizeof(d.d_tag));
         { TODO: ignores endianness! }
@@ -3047,7 +3047,7 @@ implementation
 
         if IsSharedLibrary then
           begin
-            s:=dynsymtable.fstrsec.writestr(ExtractFileName(current_module.sharedlibfilename));
+            s:=dynsymtable.fstrsec.writestr(ExtractFileName(CurrentModule.sharedlibfilename));
             WriteDynTag(DT_SONAME,s);
             { TODO: names hardcoded here }
             sym:=TExeSymbol(ExeSymbolList.Find('FPC_SHARED_LIB_START'));

@@ -306,7 +306,7 @@ unit hlcg2ll;
           procedure location_force_mmregscalar(list:TAsmList;var l: tlocation;var size:tdef;maybeconst:boolean);override;
 //          procedure location_force_mmreg(list:TAsmList;var l: tlocation;size:tdef;maybeconst:boolean);override;
 
-          procedure maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel); override;
+          procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel); override;
 
           procedure gen_load_para_value(list:TAsmList);override;
          protected
@@ -1053,7 +1053,7 @@ implementation
                 begin
                   cg.a_label(list,l.truelabel);
                   cg.a_load_const_reg(list,OS_INT,1,hregister);
-                  current_asmdata.getjumplabel(hl);
+                  CurrentAsmData.getjumplabel(hl);
                   cg.a_jmp_always(list,hl);
                   cg.a_label(list,l.falselabel);
                   cg.a_load_const_reg(list,OS_INT,0,hregister);
@@ -1148,7 +1148,7 @@ implementation
 
                 cg.a_label(list,l.truelabel);
                 cg.a_load_const_reg(list,tmpsize,1,hregister);
-                current_asmdata.getjumplabel(hl);
+                CurrentAsmData.getjumplabel(hl);
                 cg.a_jmp_always(list,hl);
                 cg.a_label(list,l.falselabel);
                 cg.a_load_const_reg(list,tmpsize,0,hregister);
@@ -1171,7 +1171,7 @@ implementation
                    { be increased in this case, since they have the      }
                    { MSB first in memory and e.g. byte(word_var) should  }
                    { return  the second byte in this case (JM)           }
-                   if (target_info.endian = ENDIAN_BIG) and
+                   if (TargetInfo.endian = ENDIAN_BIG) and
                       (l.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                      begin
                        inc(l.reference.offset,TCGSize2Size[l.size]-TCGSize2Size[dst_cgsize]);
@@ -1313,7 +1313,7 @@ implementation
       ncgutil.location_force_mmreg(list,l,maybeconst);
     end;
 *)
-  procedure thlcg2ll.maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel);
+  procedure thlcg2ll.maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel);
     begin
       { loadregvars parameter is no longer used, should be removed from
          ncgutil version as well }
@@ -1350,16 +1350,16 @@ implementation
      currpara : tparavarsym;
      paraloc  : pcgparalocation;
    begin
-     if (po_assembler in current_procinfo.procdef.procoptions) or
+     if (po_assembler in CurrentProcInfo.procdef.procoptions) or
      { exceptfilters have a single hidden 'parentfp' parameter, which
        is handled by tcg.g_proc_entry. }
-        (current_procinfo.procdef.proctypeoption=potype_exceptfilter) then
+        (CurrentProcInfo.procdef.proctypeoption=potype_exceptfilter) then
        exit;
 
      { Allocate registers used by parameters }
-     for i:=0 to current_procinfo.procdef.paras.count-1 do
+     for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
        begin
-         currpara:=tparavarsym(current_procinfo.procdef.paras[i]);
+         currpara:=tparavarsym(CurrentProcInfo.procdef.paras[i]);
          paraloc:=currpara.paraloc[calleeside].location;
          while assigned(paraloc) do
            begin
@@ -1370,9 +1370,9 @@ implementation
        end;
 
      { Copy parameters to local references/registers }
-     for i:=0 to current_procinfo.procdef.paras.count-1 do
+     for i:=0 to CurrentProcInfo.procdef.paras.count-1 do
        begin
-         currpara:=tparavarsym(current_procinfo.procdef.paras[i]);
+         currpara:=tparavarsym(CurrentProcInfo.procdef.paras[i]);
          { don't use currpara.vardef, as this will be wrong in case of
            call-by-reference parameters (it won't contain the pointerdef) }
          gen_load_cgpara_loc(list,currpara.paraloc[calleeside].def,currpara.paraloc[calleeside],currpara.initialloc,paramanager.param_use_paraloc(currpara.paraloc[calleeside]));
@@ -1388,8 +1388,8 @@ implementation
      { generate copies of call by value parameters, must be done before
        the initialization and body is parsed because the refcounts are
        incremented using the local copies }
-     current_procinfo.procdef.parast.SymList.ForEachCall(@hlcg.g_copyvalueparas,list);
-     if not(po_assembler in current_procinfo.procdef.procoptions) then
+     CurrentProcInfo.procdef.parast.SymList.ForEachCall(@hlcg.g_copyvalueparas,list);
+     if not(po_assembler in CurrentProcInfo.procdef.procoptions) then
        begin
          { initialize refcounted paras, and trash others. Needed here
            instead of in gen_initialize_code, because when a reference is
@@ -1397,7 +1397,7 @@ implementation
            in a regvar, we add a register move and that one again has to
            come after the parameter loading code as far as the register
            allocator is concerned }
-         current_procinfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
+         CurrentProcInfo.procdef.parast.SymList.ForEachCall(@init_paras,list);
        end;
    end;
 
@@ -1712,7 +1712,7 @@ implementation
                       case tcgsize2size[paraloc^.size] of
                         8:
                           begin
-                            if (target_info.endian=ENDIAN_BIG) then
+                            if (TargetInfo.endian=ENDIAN_BIG) then
                               begin
                                 { paraloc^ -> high
                                   paraloc^.next -> low }
@@ -1740,7 +1740,7 @@ implementation
                               It is needed to copy them to 2 64-bit int registers.
                               A code generator or a target cpu must support loading of a 32-bit MM register to
                               a 64-bit int register, zero extending it. }
-                            if target_info.endian=ENDIAN_BIG then
+                            if TargetInfo.endian=ENDIAN_BIG then
                               internalerror(2018101702);  // Big endian support not implemented yet
                             gen_alloc_regloc(list,destloc,vardef);
                             tempreg:=cg.getintregister(list,OS_64);
@@ -1800,7 +1800,7 @@ implementation
 
 
                         2:
-                          if (target_info.endian=ENDIAN_BIG) then
+                          if (TargetInfo.endian=ENDIAN_BIG) then
                             begin
                               { paraloc^ -> high
                                 paraloc^.next -> low }
@@ -1935,7 +1935,7 @@ implementation
                   could reallocate this register and overwrite it }
                 unget_para(paraloc^);
                 gen_alloc_regloc(list,destloc,vardef);
-                if (target_info.endian=endian_big) then
+                if (TargetInfo.endian=endian_big) then
                   { paraloc^ -> high
                     paraloc^.next -> low }
                   reg64:=joinreg64(tempreg,paraloc^.register)

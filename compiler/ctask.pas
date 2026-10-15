@@ -148,7 +148,7 @@ end;
 procedure ttask.SaveState;
 begin
   if module.fromppu then exit;
-  set_current_module(module);
+  SetCurrentModule(module);
   if State=Nil then
     State:=tglobalstate.Create(true)
   else
@@ -169,11 +169,11 @@ begin
       Internalerror(2026030106);
     end;
   state.restore;
-  if assigned(current_scanner) and assigned(current_scanner.inputfile) then
-    if current_scanner.inputfile.closed then
+  if assigned(CurrentScanner) and assigned(CurrentScanner.inputfile) then
+    if CurrentScanner.inputfile.closed then
       begin
-        current_scanner.tempopeninputfile;
-        current_scanner.gettokenpos;
+        CurrentScanner.tempopeninputfile;
+        CurrentScanner.gettokenpos;
       end;
 end;
 
@@ -399,7 +399,7 @@ var
   t : ttask;
 
 begin
-  set_current_module(m);
+  SetCurrentModule(m);
   t:=findtask(m,true);
   if Assigned(t.state) then
     t.RestoreState;

@@ -108,11 +108,11 @@ implementation
       oldsymtablestack: tsymtablestack;
       key: tx86PtrDefKey;
     begin
-      if not assigned(current_module) then
+      if not assigned(CurrentModule) then
         internalerror(2011071102);
       key.def:=def;
       key.x86typ:=x86typ;
-      res:=current_module.ptrdefs.FindOrAdd(@key,sizeof(key));
+      res:=CurrentModule.ptrdefs.FindOrAdd(@key,sizeof(key));
       if not assigned(res^.Data) then
         begin
           { since these pointerdefs can be reused anywhere in the current

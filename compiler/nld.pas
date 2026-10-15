@@ -50,11 +50,11 @@ interface
          loadnf_only_uninitialized_hint
         );
 
-       tloadnode = class(tunarynode)
+       tloadnode = class(TUnaryNode)
        protected
           fprocdef : tprocdef;
           fprocdefderef : tderef;
-          function handle_threadvar_access: tnode; virtual;
+          function handle_threadvar_access: TNode; virtual;
        public
           loadnodeflags : set of tloadnodeflags;
           symtableentry : tsym;
@@ -62,17 +62,17 @@ interface
           symtable : TSymtable;
           constructor create(v : tsym;st : TSymtable);virtual;
           constructor create_procvar(v : tsym;d:tprocdef;st : TSymtable);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          procedure set_mp(p:tnode);
+          procedure set_mp(p:TNode);
           function  is_addr_param_load:boolean;virtual;
-          function  dogetcopy : tnode;override;
-          function  pass_1 : tnode;override;
-          function  pass_typecheck:tnode;override;
+          function  dogetcopy : TNode;override;
+          function  pass_1 : TNode;override;
+          function  pass_typecheck:TNode;override;
           procedure mark_write;override;
-          function  docompare(p: tnode): boolean; override;
+          function  docompare(p: TNode): boolean; override;
           procedure printnodedata(var t:text);override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeData(var T: Text); override;
@@ -91,25 +91,25 @@ interface
 
        TAssignmentNodeFlags = set of TAssignmentNodeFlag;
 
-       tassignmentnode = class(tbinarynode)
+       tassignmentnode = class(TBinaryNode)
          protected
           function direct_shortstring_assignment: boolean; virtual;
          public
           assignmentnodeflags : TAssignmentNodeFlags;
           assigntype : tassigntype;
-          constructor create(l,r : tnode);virtual;
+          constructor create(l,r : TNode);virtual;
           { no checks for validity of assignment }
-          constructor create_internal(l,r : tnode);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create_internal(l,r : TNode);virtual;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
        {$ifdef state_tracking}
           function track_state_pass(exec_known:boolean):boolean;override;
        {$endif state_tracking}
-          function docompare(p: tnode): boolean; override;
+          function docompare(p: TNode): boolean; override;
 {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
           procedure XMLPrintNodeData(var T: Text); override;
@@ -117,10 +117,10 @@ interface
        end;
        tassignmentnodeclass = class of tassignmentnode;
 
-       tarrayconstructorrangenode = class(tbinarynode)
-          constructor create(l,r : tnode);virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
+       tarrayconstructorrangenode = class(TBinaryNode)
+          constructor create(l,r : TNode);virtual;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
        end;
        tarrayconstructorrangenodeclass = class of tarrayconstructorrangenode;
 
@@ -132,20 +132,20 @@ interface
 
        TArrayConstructorNodeFlags = set of TArrayConstructorNodeFlag;
 
-       tarrayconstructornode = class(tbinarynode)
+       tarrayconstructornode = class(TBinaryNode)
           arrayconstructornodeflags : TArrayConstructorNodeFlags;
          private
           function has_range_node:boolean;
          protected
-          procedure wrapmanagedvarrec(var n : tnode);virtual;abstract;
+          procedure wrapmanagedvarrec(var n : TNode);virtual;abstract;
          public
-          constructor create(l,r : tnode);virtual;
-          constructor ppuload(t : tnodetype;ppufile : tcompilerppufile);override;
+          constructor create(l,r : TNode);virtual;
+          constructor ppuload(t : TNodeType;ppufile : tcompilerppufile);override;
           procedure ppuwrite(ppufile : tcompilerppufile);override;
-          function dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
+          function dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
           procedure force_type(def:tdef);
           procedure insert_typeconvs;
           function isempty : boolean;
@@ -155,7 +155,7 @@ interface
        end;
        tarrayconstructornodeclass = class of tarrayconstructornode;
 
-       ttypenode = class(tnode)
+       ttypenode = class(TNode)
           allowed : boolean;
           helperallowed : boolean;
           typedef : tdef;
@@ -163,32 +163,32 @@ interface
           typesym : tsym;
           typesymderef : tderef;
           constructor create(def:tdef);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function  dogetcopy : tnode;override;
-          function docompare(p: tnode): boolean; override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function  dogetcopy : TNode;override;
+          function docompare(p: TNode): boolean; override;
        end;
        ttypenodeclass = class of ttypenode;
 
-       trttinode = class(tnode)
+       trttinode = class(TNode)
           l1,l2  : longint;
           rttitype : trttitype;
           rttidef : tstoreddef;
           rttidefderef : tderef;
           rttidatatype : Trttidatatype;
           constructor create(def:tstoreddef;rt:trttitype;dt:Trttidatatype);virtual;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
           procedure buildderefimpl;override;
           procedure derefimpl;override;
-          function  dogetcopy : tnode;override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function docompare(p: tnode): boolean; override;
+          function  dogetcopy : TNode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function docompare(p: TNode): boolean; override;
        end;
        trttinodeclass = class of trttinode;
 
@@ -206,7 +206,7 @@ interface
        { Create a node tree to load a variable if symbol is assigned, otherwise an error node.
          Generates an internalerror if called for an absolutevarsym of the "tovar" kind (those
          are only supported for expansion in the parser) }
-       function gen_load_var(sym: tabstractvarsym): tnode;
+       function gen_load_var(sym: tabstractvarsym): TNode;
 
 implementation
 
@@ -223,7 +223,7 @@ implementation
       ;
 
 
-    function gen_load_var(sym: tabstractvarsym): tnode;
+    function gen_load_var(sym: tabstractvarsym): TNode;
       begin
         result:=nil;
         if assigned(sym) then
@@ -248,7 +248,7 @@ implementation
                              TLOADNODE
 *****************************************************************************}
 
-    function tloadnode.handle_threadvar_access: tnode;
+    function tloadnode.handle_threadvar_access: TNode;
       begin
         { nothing special by default }
         result:=nil;
@@ -277,7 +277,7 @@ implementation
       end;
 
 
-    constructor tloadnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tloadnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(symtableentryderef);
@@ -313,7 +313,7 @@ implementation
       end;
 
 
-    procedure tloadnode.set_mp(p:tnode);
+    procedure tloadnode.set_mp(p:TNode);
       begin
         { typen nodes should not be set }
         if p.nodetype=typen then
@@ -322,7 +322,7 @@ implementation
       end;
 
 
-    function tloadnode.dogetcopy : tnode;
+    function tloadnode.dogetcopy : TNode;
       var
          n : tloadnode;
          orglabel,
@@ -361,7 +361,7 @@ implementation
       end;
 
 
-    function tloadnode.pass_typecheck:tnode;
+    function tloadnode.pass_typecheck:TNode;
       begin
          result:=nil;
          case symtableentry.typ of
@@ -383,11 +383,11 @@ implementation
                  variable needs to be in memory.
                  It is too hard and the benefit is too small to detect whether a
                  variable is only used in the finalization to add support for it (PFV) }
-               if assigned(current_procinfo) and
+               if assigned(CurrentProcInfo) and
                   (symtable.symtabletype=staticsymtable) and
                   (
-                    (symtable.symtablelevel<>current_procinfo.procdef.localst.symtablelevel) or
-                    (current_procinfo.procdef.proctypeoption=potype_unitfinalize)
+                    (symtable.symtablelevel<>CurrentProcInfo.procdef.localst.symtablelevel) or
+                    (CurrentProcInfo.procdef.proctypeoption=potype_unitfinalize)
                   ) then
                  make_not_regable(self,[ra_different_scope]);
                resultdef:=tabstractvarsym(symtableentry).vardef;
@@ -401,26 +401,26 @@ implementation
                resultdef:=tabstractvarsym(symtableentry).vardef;
                { Nested variable? The we need to load the framepointer of
                  the parent procedure }
-               if assigned(current_procinfo) and
+               if assigned(CurrentProcInfo) and
                   (symtable.symtabletype in [localsymtable,parasymtable]) and
-                  (symtable.symtablelevel<>current_procinfo.procdef.parast.symtablelevel) then
+                  (symtable.symtablelevel<>CurrentProcInfo.procdef.parast.symtablelevel) then
                  begin
                    if assigned(left) then
                      internalerror(200309289);
                    left:=cloadparentfpnode.create(tprocdef(symtable.defowner),lpf_forload);
-                   current_procinfo.set_needs_parentfp(tprocdef(symtable.defowner).parast.symtablelevel);
+                   CurrentProcInfo.set_needs_parentfp(tprocdef(symtable.defowner).parast.symtablelevel);
                    { reference this as a captured symbol }
-                   current_procinfo.add_captured_sym(symtableentry,resultdef,fileinfo);
+                   CurrentProcInfo.add_captured_sym(symtableentry,resultdef,fileinfo);
                    { reference in nested procedures, variable needs to be in memory }
                    { and behaves as if its address escapes its parent block         }
                    make_not_regable(self,[ra_different_scope]);
                  end
                { if this is a nested function and it uses the Self parameter then
                  consider this as captured as well (needed for anonymous functions) }
-               else if assigned(current_procinfo) and
+               else if assigned(CurrentProcInfo) and
                    (vo_is_self in tabstractvarsym(symtableentry).varoptions) and
                    (symtable.symtablelevel>normal_function_level) then
-                 current_procinfo.add_captured_sym(symtableentry,resultdef,fileinfo);
+                 CurrentProcInfo.add_captured_sym(symtableentry,resultdef,fileinfo);
 
                { e.g. self for objects is passed as var-parameter on the caller
                  side, but on the callee-side we use it as a pointer ->
@@ -448,19 +448,19 @@ implementation
                  that the address needs to be returned }
                resultdef:=fprocdef;
 
-               if is_nested_pd(fprocdef) and is_nested_pd(current_procinfo.procdef) then
-                 current_procinfo.set_needs_parentfp(tprocdef(fprocdef.owner.defowner).parast.symtablelevel);
+               if is_nested_pd(fprocdef) and is_nested_pd(CurrentProcInfo.procdef) then
+                 CurrentProcInfo.set_needs_parentfp(tprocdef(fprocdef.owner.defowner).parast.symtablelevel);
 
                { process methodpointer/framepointer }
                if assigned(left) then
                  begin
-                   typecheckpass(left);
+                   TypeCheckPass(left);
                    if (po_classmethod in fprocdef.procoptions) and
                       is_class(left.resultdef) and
                       (left.nodetype<>niln) then
                      begin
                        left:=cloadvmtaddrnode.create(left);
-                       typecheckpass(left);
+                       TypeCheckPass(left);
                      end
                  end;
 
@@ -498,7 +498,7 @@ implementation
       include(flags,nf_write);
     end;
 
-    function tloadnode.pass_1 : tnode;
+    function tloadnode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_REFERENCE;
@@ -516,7 +516,7 @@ implementation
             paravarsym :
               begin
                 if assigned(left) then
-                  firstpass(left);
+                  FirstPass(left);
                 if not is_addr_param_load and
                    tabstractvarsym(symtableentry).is_regvar(is_addr_param_load) then
                   expectloc:=tvarregable2tcgloc[tabstractvarsym(symtableentry).varregable]
@@ -526,8 +526,8 @@ implementation
                 { call to get address of threadvar }
                 if (vo_is_thread_var in tabstractvarsym(symtableentry).varoptions) then
                   begin
-                    include(current_procinfo.flags,pi_do_call);
-                    include(current_procinfo.flags,pi_uses_threadvar);
+                    include(CurrentProcInfo.flags,pi_do_call);
+                    include(CurrentProcInfo.flags,pi_uses_threadvar);
                   end;
               end;
             procsym :
@@ -535,13 +535,13 @@ implementation
                 { initialise left for nested procs if necessary (this won't need
                   to pass true for the forfuncref parameter, cause code that would
                   need that wouldn't have been reworked before it reaches pass_1) }
-                if (m_nested_procvars in current_settings.modeswitches) then
+                if (m_nested_procvars in CurrentSettings.modeswitches) then
                   setprocdef(fprocdef,false);
                 { method pointer or nested proc ? }
                 if assigned(left) then
                   begin
                      expectloc:=LOC_CREGISTER;
-                     firstpass(left);
+                     FirstPass(left);
                   end;
               end;
             labelsym :
@@ -556,7 +556,7 @@ implementation
       end;
 
 
-    function tloadnode.docompare(p: tnode): boolean;
+    function tloadnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -599,14 +599,14 @@ implementation
              (po_delphi_nested_cc in p.procoptions)
            ) then
           begin
-            if not(m_nested_procvars in current_settings.modeswitches) then
+            if not(m_nested_procvars in CurrentSettings.modeswitches) then
               CGMessage(type_e_cant_take_address_of_local_subroutine)
             else
               begin
                 { parent frame pointer pointer as "self" }
                 left.free;
                 left:=cloadparentfpnode.create(tprocdef(p.owner.defowner),lpf_forpara);
-                typecheckpass(left);
+                TypeCheckPass(left);
               end;
           end
         { we should never go from nested to non-nested (except for an anonymous
@@ -637,7 +637,7 @@ implementation
       end;
 
 
-    constructor tassignmentnode.create(l,r : tnode);
+    constructor tassignmentnode.create(l,r : TNode);
 
       begin
          inherited create(assignn,l,r);
@@ -648,14 +648,14 @@ implementation
       end;
 
 
-    constructor tassignmentnode.create_internal(l, r: tnode);
+    constructor tassignmentnode.create_internal(l, r: TNode);
       begin
         create(l,r);
         include(flags,nf_internal);
       end;
 
 
-    constructor tassignmentnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tassignmentnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getset(tppuset1(assignmentnodeflags));
@@ -671,7 +671,7 @@ implementation
       end;
 
 
-    function tassignmentnode.dogetcopy : tnode;
+    function tassignmentnode.dogetcopy : TNode;
 
       var
          n : tassignmentnode;
@@ -684,7 +684,7 @@ implementation
       end;
 
 
-    function tassignmentnode.simplify(forinline : boolean) : tnode;
+    function tassignmentnode.simplify(forinline : boolean) : TNode;
       begin
         result:=nil;
         { assignment nodes can perform several floating point }
@@ -700,15 +700,15 @@ implementation
         { Perform simple optimizations when -O2 and the dedicated
           cs_opt_use_load_modify_store optimization pass is not enabled. }
         if (cs_opt_use_load_modify_store in supported_optimizerswitches) and
-           (cs_opt_level2 in current_settings.optimizerswitches) and
-           not (cs_opt_use_load_modify_store in current_settings.optimizerswitches) then
+           (cs_opt_level2 in CurrentSettings.optimizerswitches) and
+           not (cs_opt_use_load_modify_store in CurrentSettings.optimizerswitches) then
           result:=try_opt_assignmentnode(self);
       end;
 
 
-    function tassignmentnode.pass_typecheck:tnode;
+    function tassignmentnode.pass_typecheck:TNode;
       var
-        hp : tnode;
+        hp : TNode;
         useshelper : boolean;
         oldassignmentnode : tassignmentnode;
       begin
@@ -718,7 +718,7 @@ implementation
         { must be made unique }
         set_unique(left);
 
-        typecheckpass(left);
+        TypeCheckPass(left);
 
         left.mark_write;
 
@@ -726,12 +726,12 @@ implementation
           rawbytestring return needs to be replaced by left.resultdef }
         oldassignmentnode:=aktassignmentnode;
         aktassignmentnode:=self;
-        typecheckpass(right);
+        TypeCheckPass(right);
         aktassignmentnode:=oldassignmentnode;
 
         set_varstate(right,vs_read,[vsf_must_be_valid]);
         set_varstate(left,vs_written,[]);
-        if codegenerror then
+        if CodeGenError then
           exit;
 
         { just in case the typecheckpass of right optimized something here }
@@ -878,7 +878,7 @@ implementation
                       ttypeconvnode(right).convtype:=tc_real_2_real
                     else
                       ttypeconvnode(right).convtype:=tc_int_2_int;
-                    typecheckpass(right);
+                    TypeCheckPass(right);
                   end;
               end;
           end;
@@ -913,11 +913,11 @@ implementation
       end;
 
 
-    function tassignmentnode.pass_1 : tnode;
+    function tassignmentnode.pass_1 : TNode;
 
       function tempreturnfromcall:boolean;
         var
-          node:tnode;
+          node:TNode;
         begin
           result:=false;
           if not is_managed_type(right.resultdef) then
@@ -945,7 +945,7 @@ implementation
         end;
 
       var
-        hp: tnode;
+        hp: TNode;
         oldassignmentnode : tassignmentnode;
         hdef: tdef;
         hs: string;
@@ -954,7 +954,7 @@ implementation
          result:=nil;
          expectloc:=LOC_VOID;
 
-         firstpass(left);
+         FirstPass(left);
 
          { Optimize the reuse of the destination of the assignment in left.
            Allow the use of the left inside the tree generated on the right.
@@ -963,7 +963,7 @@ implementation
            save a temp allocation and copy of data (PFV) }
          oldassignmentnode:=aktassignmentnode;
          aktassignmentnode:=self;
-         firstpass(right);
+         FirstPass(right);
          aktassignmentnode:=oldassignmentnode;
          if anf_assign_done_in_right in assignmentnodeflags then
            begin
@@ -972,12 +972,12 @@ implementation
              exit;
            end;
 
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { assignment to refcounted variable -> inc/decref }
          if is_managed_type(left.resultdef) then
-           include(current_procinfo.flags,pi_do_call);
+           include(CurrentProcInfo.flags,pi_do_call);
 
          needrtti:=false;
 
@@ -995,7 +995,7 @@ implementation
                        (right,
                   ccallparanode.create(left,nil));
                  result:=ccallnode.createintern('fpc_'+tstringdef(right.resultdef).stringtypname+'_to_shortstr',hp);
-                 firstpass(result);
+                 FirstPass(result);
                  left:=nil;
                  right:=nil;
                end;
@@ -1020,7 +1020,7 @@ implementation
              result:=ccallnode.createintern('fpc_copy_with_move_semantics_proc',hp)
            else
              result:=ccallnode.createintern('fpc_copy_proc',hp);
-           firstpass(result);
+           FirstPass(result);
            left:=nil;
            right:=nil;
            exit;
@@ -1040,7 +1040,7 @@ implementation
                  left,hdef),
                nil));
            result:=ccallnode.createintern('fpc_variant_copy',hp);
-           firstpass(result);
+           FirstPass(result);
            left:=nil;
            right:=nil;
            exit;
@@ -1092,13 +1092,13 @@ implementation
               crttinode.create(tstoreddef(left.resultdef),initrtti,rdt_normal)),
             hp);
         result:=ccallnode.createintern(hs,hp);
-        firstpass(result);
+        FirstPass(result);
         left:=nil;
         right:=nil;
       end;
 
 
-    function tassignmentnode.docompare(p: tnode): boolean;
+    function tassignmentnode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -1117,8 +1117,8 @@ implementation
                 track_state_pass:=right.track_state_pass(exec_known);
                 {Force a new resultdef pass.}
                 right.resultdef:=nil;
-                do_typecheckpass(right);
-                typecheckpass(right);
+                DoTypeCheckPass(right);
+                TypeCheckPass(right);
                 aktstate.store_fact(left.getcopy,right.getcopy);
             end
         else
@@ -1165,26 +1165,26 @@ implementation
                            TARRAYCONSTRUCTORRANGENODE
 *****************************************************************************}
 
-    constructor tarrayconstructorrangenode.create(l,r : tnode);
+    constructor tarrayconstructorrangenode.create(l,r : TNode);
 
       begin
          inherited create(arrayconstructorrangen,l,r);
       end;
 
-    function tarrayconstructorrangenode.pass_typecheck:tnode;
+    function tarrayconstructorrangenode.pass_typecheck:TNode;
       begin
         result:=nil;
-        typecheckpass(left);
-        typecheckpass(right);
+        TypeCheckPass(left);
+        TypeCheckPass(right);
         set_varstate(left,vs_read,[vsf_must_be_valid]);
         set_varstate(right,vs_read,[vsf_must_be_valid]);
-        if codegenerror then
+        if CodeGenError then
          exit;
         resultdef:=left.resultdef;
       end;
 
 
-    function tarrayconstructorrangenode.pass_1 : tnode;
+    function tarrayconstructorrangenode.pass_1 : TNode;
       begin
         result:=nil;
         CGMessage(parser_e_illegal_expression);
@@ -1195,14 +1195,14 @@ implementation
                             TARRAYCONSTRUCTORNODE
 *****************************************************************************}
 
-    constructor tarrayconstructornode.create(l,r : tnode);
+    constructor tarrayconstructornode.create(l,r : TNode);
       begin
          inherited create(arrayconstructorn,l,r);
          arrayconstructornodeflags:=[];
       end;
 
 
-    constructor tarrayconstructornode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tarrayconstructornode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getset(tppuset1(arrayconstructornodeflags));
@@ -1216,7 +1216,7 @@ implementation
       end;
 
 
-    function tarrayconstructornode.dogetcopy : tnode;
+    function tarrayconstructornode.dogetcopy : TNode;
       var
          n : tarrayconstructornode;
       begin
@@ -1250,7 +1250,7 @@ implementation
       end;
 
 
-    function tarrayconstructornode.pass_typecheck:tnode;
+    function tarrayconstructornode.pass_typecheck:TNode;
       var
         hdef  : tdef;
         hp    : tarrayconstructornode;
@@ -1258,7 +1258,7 @@ implementation
         diff,
         varia : boolean;
         eq    : tequaltype;
-        hnodetype : tnodetype;
+        hnodetype : TNodeType;
       begin
         result:=nil;
 
@@ -1269,7 +1269,7 @@ implementation
         if not (acnf_allow_array_constructor in arrayconstructornodeflags) or has_range_node then
          begin
            hp:=tarrayconstructornode(getcopy);
-           arrayconstructor_to_set(tnode(hp));
+           arrayconstructor_to_set(TNode(hp));
            result:=hp;
            exit;
          end;
@@ -1285,7 +1285,7 @@ implementation
            hp:=self;
            while assigned(hp) do
             begin
-              typecheckpass(hp.left);
+              TypeCheckPass(hp.left);
               set_varstate(hp.left,vs_read,[vsf_must_be_valid]);
               if (hdef=nil) then
                 begin
@@ -1379,7 +1379,7 @@ implementation
            hp:=self;
            while assigned(hp) do
             begin
-              typecheckpass(hp.left);
+              TypeCheckPass(hp.left);
               { Insert typeconvs for array of const }
               if dovariant then
                 { at this time C varargs are no longer an arrayconstructornode }
@@ -1390,7 +1390,7 @@ implementation
       end;
 
 
-    function tarrayconstructornode.pass_1 : tnode;
+    function tarrayconstructornode.pass_1 : TNode;
       var
         hp : tarrayconstructornode;
         do_variant:boolean;
@@ -1413,8 +1413,8 @@ implementation
                      on the location in which the elements will be found in
                      pass 2.}
                     if not do_variant then
-                      include(current_procinfo.flags,pi_do_call);
-                    firstpass(hp.left);
+                      include(CurrentProcInfo.flags,pi_do_call);
+                    FirstPass(hp.left);
                   end;
                 hp:=tarrayconstructornode(hp.right);
               end;
@@ -1424,11 +1424,11 @@ implementation
           tarraydef(resultdef).elementdef:=search_system_type('TVARREC').typedef;
         expectloc:=LOC_CREFERENCE;
 
-        inc(current_procinfo.estimatedtempsize,(tarraydef(resultdef).highrange+1)*tarraydef(resultdef).elementdef.size);
+        inc(CurrentProcInfo.estimatedtempsize,(tarraydef(resultdef).highrange+1)*tarraydef(resultdef).elementdef.size);
       end;
 
 
-    function tarrayconstructornode.docompare(p: tnode): boolean;
+    function tarrayconstructornode.docompare(p: TNode): boolean;
       begin
         docompare:=inherited docompare(p);
       end;
@@ -1470,7 +1470,7 @@ implementation
       end;
 
 
-    constructor ttypenode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor ttypenode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(typedefderef);
@@ -1506,7 +1506,7 @@ implementation
       end;
 
 
-    function ttypenode.pass_typecheck:tnode;
+    function ttypenode.pass_typecheck:TNode;
       begin
         result:=nil;
         resultdef:=typedef;
@@ -1516,7 +1516,7 @@ implementation
       end;
 
 
-    function ttypenode.pass_1 : tnode;
+    function ttypenode.pass_1 : TNode;
       begin
          result:=nil;
          expectloc:=LOC_VOID;
@@ -1531,7 +1531,7 @@ implementation
       end;
 
 
-    function ttypenode.dogetcopy : tnode;
+    function ttypenode.dogetcopy : TNode;
       var
          n : ttypenode;
       begin
@@ -1544,7 +1544,7 @@ implementation
       end;
 
 
-    function ttypenode.docompare(p: tnode): boolean;
+    function ttypenode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and
@@ -1569,7 +1569,7 @@ implementation
       end;
 
 
-    constructor trttinode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor trttinode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t,ppufile);
         ppufile.getderef(rttidefderef);
@@ -1601,7 +1601,7 @@ implementation
       end;
 
 
-    function trttinode.dogetcopy : tnode;
+    function trttinode.dogetcopy : TNode;
       var
          n : trttinode;
       begin
@@ -1613,7 +1613,7 @@ implementation
       end;
 
 
-    function trttinode.pass_typecheck:tnode;
+    function trttinode.pass_typecheck:TNode;
       begin
         { rtti information will be returned as a void pointer }
         result:=nil;
@@ -1621,14 +1621,14 @@ implementation
       end;
 
 
-    function trttinode.pass_1 : tnode;
+    function trttinode.pass_1 : TNode;
       begin
         result:=nil;
         expectloc:=LOC_CREFERENCE;
       end;
 
 
-    function trttinode.docompare(p: tnode): boolean;
+    function trttinode.docompare(p: TNode): boolean;
       begin
         docompare :=
           inherited docompare(p) and

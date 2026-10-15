@@ -49,19 +49,19 @@ unit paramgr;
           { Returns true if a result variable should be allocated for an assembler routine }
           function asm_result_var(def:tdef;pd:tabstractprocdef):boolean;virtual;
 
-          function push_high_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;virtual;
-          function keep_para_array_range(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;virtual;
+          function push_high_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
+          function keep_para_array_range(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
 
           { Returns true if a parameter is too large to copy and only
             the address is pushed
           }
-          function push_addr_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;virtual;abstract;
+          function push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;abstract;
           { returns true if a parameter must be handled via copy-out (construct
             a reference, copy the parameter's value there in case of copy-in/out, pass the reference)
           }
-          function push_copyout_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;virtual;
+          function push_copyout_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;virtual;
           { return the size of a push }
-          function push_size(varspez:tvarspez;def : tdef;calloption : tproccalloption) : longint;virtual;
+          function push_size(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : longint;virtual;
           {# Returns a structure giving the information on
             the storage of the parameter (which must be
             an integer parameter). This is only used when calling
@@ -76,12 +76,12 @@ unit paramgr;
             @param(list Current assembler list)
             @param(nr Parameter number of routine, starting from 1)
           }
-          function get_para_align(calloption : tproccalloption):byte;virtual;
-          function get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;virtual;
-          function get_volatile_registers_address(calloption : tproccalloption):tcpuregisterset;virtual;
-          function get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;virtual;
-          function get_volatile_registers_flags(calloption : tproccalloption):tcpuregisterset;virtual;
-          function get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;virtual;
+          function get_para_align(calloption : TProcCallOption):byte;virtual;
+          function get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;virtual;
+          function get_volatile_registers_address(calloption : TProcCallOption):tcpuregisterset;virtual;
+          function get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;virtual;
+          function get_volatile_registers_flags(calloption : TProcCallOption):tcpuregisterset;virtual;
+          function get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;virtual;
           {# Registers which must be saved when calling a routine declared as
             cppdecl, cdecl, stdcall, safecall, palmossyscall. The registers
             saved should be the ones as defined in the target ABI and / or GCC.
@@ -89,10 +89,10 @@ unit paramgr;
             This value can be deduced from the CALLED_USED_REGISTERS array in the
             GCC source.
           }
-          function get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;virtual;
-          function get_saved_registers_address(calloption : tproccalloption):tcpuregisterarray;virtual;
-          function get_saved_registers_fpu(calloption : tproccalloption):tcpuregisterarray;virtual;
-          function get_saved_registers_mm(calloption : tproccalloption):tcpuregisterarray;virtual;
+          function get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;virtual;
+          function get_saved_registers_address(calloption : TProcCallOption):tcpuregisterarray;virtual;
+          function get_saved_registers_fpu(calloption : TProcCallOption):tcpuregisterarray;virtual;
+          function get_saved_registers_mm(calloption : TProcCallOption):tcpuregisterarray;virtual;
 
           { \brief Get a parameter location for calling a procdef directly instead of via a call node }
           { \returns parameter location in \c cgpara for parameter \c nr of \c pd }
@@ -146,9 +146,9 @@ unit paramgr;
           function  create_varargs_paraloc_info(p : tabstractprocdef; side: tcallercallee; varargspara:tvarargsparalist):longint;virtual;abstract;
 
           function is_stack_paraloc(paraloc: pcgparalocation): boolean;virtual;
-          procedure createtempparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
+          procedure createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);virtual;
           procedure duplicatecgparaloc(const orgparaloc: pcgparalocation; intonewparaloc: pcgparalocation);
-          procedure duplicateparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;var cgpara:TCGPara);
+          procedure duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;var cgpara:TCGPara);
 
           function parseparaloc(parasym : tparavarsym;const s : string) : boolean;virtual;
           function parsefuncretloc(p : tabstractprocdef; const s : string) : boolean;virtual;
@@ -233,7 +233,7 @@ implementation
       end;
 
 
-    function tparamanager.push_high_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;
+    function tparamanager.push_high_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;
       begin
          push_high_param:=not(calloption in cdecl_pocalls) and
                           (
@@ -244,20 +244,20 @@ implementation
       end;
 
 
-    function tparamanager.keep_para_array_range(varspez: tvarspez; def: tdef; calloption: tproccalloption): boolean;
+    function tparamanager.keep_para_array_range(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean;
       begin
         result:=push_high_param(varspez,def,calloption);
       end;
 
 
-    function tparamanager.push_copyout_param(varspez: tvarspez; def: tdef; calloption: tproccalloption): boolean;
+    function tparamanager.push_copyout_param(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean;
       begin
         push_copyout_param:=false;
       end;
 
 
     { return the size of a push }
-    function tparamanager.push_size(varspez:tvarspez;def : tdef;calloption : tproccalloption) : longint;
+    function tparamanager.push_size(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : longint;
       begin
         push_size:=-1;
         case varspez of
@@ -287,43 +287,43 @@ implementation
       end;
 
 
-    function tparamanager.get_para_align(calloption : tproccalloption):byte;
+    function tparamanager.get_para_align(calloption : TProcCallOption):byte;
       begin
         result:=std_param_align;
       end;
 
 
-    function tparamanager.get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;
+    function tparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_address(calloption : tproccalloption):tcpuregisterset;
+    function tparamanager.get_volatile_registers_address(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;
+    function tparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_flags(calloption : tproccalloption):tcpuregisterset;
+    function tparamanager.get_volatile_registers_flags(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;
+    function tparamanager.get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tparamanager.get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;
+    function tparamanager.get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;
       const
         inv: tcpuregisterarray = (RS_INVALID);
       begin
@@ -331,7 +331,7 @@ implementation
       end;
 
 
-    function tparamanager.get_saved_registers_address(calloption : tproccalloption):tcpuregisterarray;
+    function tparamanager.get_saved_registers_address(calloption : TProcCallOption):tcpuregisterarray;
       const
         inv: tcpuregisterarray = (RS_INVALID);
       begin
@@ -339,7 +339,7 @@ implementation
       end;
 
 
-    function tparamanager.get_saved_registers_fpu(calloption : tproccalloption):tcpuregisterarray;
+    function tparamanager.get_saved_registers_fpu(calloption : TProcCallOption):tcpuregisterarray;
       const
         inv: tcpuregisterarray = (RS_INVALID);
       begin
@@ -347,7 +347,7 @@ implementation
       end;
 
 
-    function tparamanager.get_saved_registers_mm(calloption : tproccalloption):tcpuregisterarray;
+    function tparamanager.get_saved_registers_mm(calloption : TProcCallOption):tcpuregisterarray;
       const
         inv: tcpuregisterarray = (RS_INVALID);
       begin
@@ -477,7 +477,7 @@ implementation
       end;
 
 
-    procedure tparamanager.createtempparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
+    procedure tparamanager.createtempparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;can_use_final_stack_loc : boolean;var cgpara:TCGPara);
       var
         href : treference;
         len  : aint;
@@ -570,7 +570,7 @@ implementation
       end;
 
 
-    procedure tparamanager.duplicateparaloc(list: TAsmList;calloption : tproccalloption;parasym : tparavarsym;var cgpara:TCGPara);
+    procedure tparamanager.duplicateparaloc(list: TAsmList;calloption : TProcCallOption;parasym : tparavarsym;var cgpara:TCGPara);
       var
         paraloc,
         newparaloc : pcgparalocation;
@@ -635,7 +635,7 @@ implementation
     function tparamanager.use_fixed_stack: boolean;
       begin
 {$ifdef i386}
-        result := target_info.stackalign > 4;
+        result := TargetInfo.stackalign > 4;
 {$else i386}
 {$ifdef cputargethasfixedstack}
         result := true;
@@ -718,7 +718,7 @@ implementation
           is always returned in param.
           Furthermore, any managed type is returned in param, in order to avoid
           its finalization on exception at callee side. }
-        if ((tf_safecall_exceptions in target_info.flags) and
+        if ((tf_safecall_exceptions in TargetInfo.flags) and
             (pd.proccalloption=pocall_safecall)) or
            (
              (pd.proctypeoption=potype_constructor) and
@@ -849,7 +849,7 @@ implementation
             and the parameter is not used by the routine
             and implementation of the routine is already processed.
         }
-        result:=(cs_opt_unused_para in current_settings.optimizerswitches) and
+        result:=(cs_opt_unused_para in CurrentSettings.optimizerswitches) and
           assigned(parasym.Owner) and
           (parasym.Owner.defowner.typ=procdef);
         if not result then

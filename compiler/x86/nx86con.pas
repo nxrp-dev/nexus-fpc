@@ -31,7 +31,7 @@ interface
 
     type
        tx86realconstnode = class(tcgrealconstnode)
-          function pass_1 : tnode;override;
+          function pass_1 : TNode;override;
           procedure pass_generate_code;override;
        end;
 
@@ -49,11 +49,11 @@ implementation
                            TX86REALCONSTNODE
 *****************************************************************************}
 
-    function tx86realconstnode.pass_1 : tnode;
+    function tx86realconstnode.pass_1 : TNode;
       begin
          result:=nil;
          if is_number_float(value_real) and not(use_vectorfpu(resultdef)) and ((value_real=1.0) or (value_real=-1.0) or ((value_real=0.0) and (get_real_sign(value_real)=1)) or
-           ((value_real=2.0) and (cs_create_pic in current_settings.moduleswitches))) then
+           ((value_real=2.0) and (cs_create_pic in CurrentSettings.moduleswitches))) then
            expectloc:=LOC_FPUREGISTER
          else if (value_real=0.0) and (get_real_sign(value_real)=1) and use_vectorfpu(resultdef) then
            expectloc:=LOC_MMREGISTER
@@ -73,7 +73,7 @@ implementation
                   location.register:=NR_ST;
                   tcgx86(cg).inc_fpu_stack;
                end
-             else if (value_real=2.0) and (cs_create_pic in current_settings.moduleswitches) and not(use_vectorfpu(resultdef)) then
+             else if (value_real=2.0) and (cs_create_pic in CurrentSettings.moduleswitches) and not(use_vectorfpu(resultdef)) then
                begin
                   emit_none(A_FLD1,S_NO);
                   emit_reg_reg(A_FADD,S_NO,NR_ST,NR_ST);
@@ -94,7 +94,7 @@ implementation
                  if use_vectorfpu(resultdef) then
                    begin
                      location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-                     location.register:=cg.getmmregister(current_asmdata.CurrAsmList,def_cgsize(resultdef));
+                     location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,def_cgsize(resultdef));
                      if UseAVX then
                        begin
                          if is_single(resultdef) then

@@ -516,7 +516,7 @@ interface
     function get_high_value_sym(vs: tparavarsym):tabstractvarsym; { marking it as inline causes IE 200311075 during loading from ppu file }
 
     procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring);inline;
-    procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring;filepos:tfileposinfo);
+    procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring;filepos:TFilePosInfo);
 
     function same_constvalue(consttyp:tconsttyp;const value1,value2:tconstvalue):boolean;
 
@@ -585,11 +585,11 @@ implementation
 
     procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring);
       begin
-        check_hints(srsym,symoptions,deprecatedmsg,current_filepos);
+        check_hints(srsym,symoptions,deprecatedmsg,CurrentFilePos);
       end;
 
 
-    procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring;filepos:tfileposinfo);
+    procedure check_hints(const srsym: tsym; const symoptions: tsymoptions; const deprecatedmsg : pshortstring;filepos:TFilePosInfo);
       var
         def : tdef;
         name : tmsgstr;
@@ -638,7 +638,7 @@ implementation
          inherited Create(st,ppufile.getstring);
 {$endif symansistr}
          SymId:=ppufile.getlongint;
-         current_module.symlist[SymId]:=self;
+         CurrentModule.symlist[SymId]:=self;
          ppufile.getposinfo(fileinfo);
          visibility:=tvisibility(ppufile.getbyte);
          ppufile.getset(tppuset2(symoptions));
@@ -744,15 +744,15 @@ implementation
         if assigned(owner) then
           begin
             tmod:=find_module_from_symtable(owner);
-            if assigned(tmod) and assigned(current_module) and (tmod<>current_module) then
+            if assigned(tmod) and assigned(CurrentModule) and (tmod<>CurrentModule) then
               begin
-                comment(v_error,'Symbol '+realname+' from module '+tmod.mainsource+' registered with current module '+current_module.mainsource);
+                comment(v_error,'Symbol '+realname+' from module '+tmod.mainsource+' registered with current module '+CurrentModule.mainsource);
               end;
             if not assigned(tmod) then
-              tmod:=current_module;
+              tmod:=CurrentModule;
           end
         else
-          tmod:=current_module;
+          tmod:=CurrentModule;
         { Register in current_module }
         if assigned(tmod) then
           begin
@@ -805,9 +805,9 @@ implementation
        if (asmblocklabel=nil) then
          begin
            if nonlocal then
-             current_asmdata.getglobaljumplabel(asmblocklabel)
+             CurrentAsmData.getglobaljumplabel(asmblocklabel)
            else
-             current_asmdata.getjumplabel(asmblocklabel);
+             CurrentAsmData.getjumplabel(asmblocklabel);
          end;
        result:=asmblocklabel.name;
      end;
@@ -915,7 +915,7 @@ implementation
       var
         i: longint;
       begin
-         if not(ts_lowercase_proc_start in current_settings.targetswitches) or
+         if not(ts_lowercase_proc_start in CurrentSettings.targetswitches) or
             (n='') then
            inherited create(procsym,n)
          else
@@ -1050,11 +1050,11 @@ implementation
                 { For mode macpas. Make implicit externals (procedures declared in the interface
                   section which do not have a counterpart in the implementation)
                   to be an imported procedure }
-                if (m_mac in current_settings.modeswitches) and
+                if (m_mac in CurrentSettings.modeswitches) and
                    (pd.interfacedef) then
                   begin
-                    pd.setmangledname(target_info.CPrefix+tprocdef(pd).procsym.realname);
-                    if (not current_module.interface_only) then
+                    pd.setmangledname(TargetInfo.CPrefix+tprocdef(pd).procsym.realname);
+                    if (not CurrentModule.interface_only) then
                       MessagePos1(pd.fileinfo,sym_w_forward_not_resolved,pd.fullprocname(false));
                   end
                 else
@@ -1557,7 +1557,7 @@ implementation
 
     function tprocsym.could_be_implicitly_specialized:boolean;
       begin
-        result:=(m_implicit_function_specialization in current_settings.modeswitches) and
+        result:=(m_implicit_function_specialization in CurrentSettings.modeswitches) and
                 (sp_generic_dummy in symoptions) and
                 assigned(genprocsymovlds);
       end;
@@ -1774,7 +1774,7 @@ implementation
               cpo:=[cpo_allowdefaults,cpo_ignorehidden];
               { allow var-parameters for setters in case of VARPROPSETTER+ }
               if (getset=palt_write) and
-                 (cs_varpropsetter in current_settings.localswitches) then
+                 (cs_varpropsetter in CurrentSettings.localswitches) then
                 include(cpo,cpo_ignorevarspez);
               propaccesslist[getset].procdef:=tprocsym(sym).find_procdef_bypara(accessordef.paras,accessordef.returndef,cpo);
               if not assigned(propaccesslist[getset].procdef) or
@@ -1976,10 +1976,10 @@ implementation
                registers is not valid anymore)
            - it has a local copy
            - the value needs to be in memory (i.e. reference counted) }
-        result:=(cs_opt_regvar in current_settings.optimizerswitches) and
-                not(pi_has_assembler_block in current_procinfo.flags) and
-                not(pi_uses_exceptions in current_procinfo.flags) and
-                not(pi_has_interproclabel in current_procinfo.flags) and
+        result:=(cs_opt_regvar in CurrentSettings.optimizerswitches) and
+                not(pi_has_assembler_block in CurrentProcInfo.flags) and
+                not(pi_uses_exceptions in CurrentProcInfo.flags) and
+                not(pi_has_interproclabel in CurrentProcInfo.flags) and
                 ((refpara and
                   (varregable <> vr_none)) or
                  (not refpara and
@@ -2025,7 +2025,7 @@ implementation
            (owner.symtabletype in [localsymtable, parasymtable]) or
            (
             (owner.symtabletype=staticsymtable) and
-            not(cs_create_pic in current_settings.moduleswitches)
+            not(cs_create_pic in CurrentSettings.moduleswitches)
            ) then
           begin
             if (tstoreddef(vardef).is_intregable and
@@ -2138,7 +2138,7 @@ implementation
             { when generating the debug info for the module in which the }
             { symbol is defined, the localsymtable of that module is     }
             { already popped from the symtablestack                      }
-            else if searchsym_in_module(current_module,lower(owner.name^)+'_'+name,srsym,srsymtable) then
+            else if searchsym_in_module(CurrentModule,lower(owner.name^)+'_'+name,srsym,srsymtable) then
               result:=srsym.mangledname
             else
               internalerror(2007012501);
@@ -2154,7 +2154,7 @@ implementation
 {$endif symansistr}
             else
               begin
-                result:=target_info.cprefix+'OBJC_IVAR_$_'+tobjectdef(owner.defowner).objextname^+'.'+RealName;
+                result:=TargetInfo.cprefix+'OBJC_IVAR_$_'+tobjectdef(owner.defowner).objextname^+'.'+RealName;
 {$ifdef symansistr}
                 cachedmangledname:=result;
 {$else symansistr}
@@ -2213,15 +2213,15 @@ implementation
         result:=
           (owner.symtabletype=globalsymtable) or
           (create_smartlink and
-           not(tf_smartlink_sections in target_info.flags)) or
-          current_module.islibrary or
-          (assigned(current_procinfo) and
-           ((po_inline in current_procinfo.procdef.procoptions) or
+           not(tf_smartlink_sections in TargetInfo.flags)) or
+          CurrentModule.islibrary or
+          (assigned(CurrentProcInfo) and
+           ((po_inline in CurrentProcInfo.procdef.procoptions) or
             { globalasmsym is called normally before the body of a subroutine is parsed
               so we cannot know if it will be auto inlined, so make all symbols of it
               global if asked }
-            (not(po_noinline in current_procinfo.procdef.procoptions) and
-             (cs_opt_autoinline in current_settings.optimizerswitches)))
+            (not(po_noinline in CurrentProcInfo.procdef.procoptions) and
+             (cs_opt_autoinline in CurrentSettings.optimizerswitches)))
           ) or
           (vo_is_public in varoptions);
       end;
@@ -2767,7 +2767,7 @@ implementation
     constructor tconstsym.ppuload(ppufile:tcompilerppufile);
       var
          pd : pbestreal;
-         ps : pnormalset;
+         ps : PNormalSet;
          pc : pchar;
          pw : tcompilerwidestring;
          i  : longint;
@@ -2867,7 +2867,7 @@ implementation
           constreal :
             dispose(pbestreal(value.valueptr));
           constset :
-            dispose(pnormalset(value.valueptr));
+            dispose(PNormalSet(value.valueptr));
           constguid :
             dispose(pguid(value.valueptr));
         end;

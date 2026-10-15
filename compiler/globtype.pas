@@ -106,28 +106,28 @@ interface
 
 
        { Use a variant record to be sure that the array if aligned correctly }
-       tcompdoublerec=record
+       TCompDoubleRec=record
          case byte of
            0 : (bytes:array[0..7] of byte);
            1 : (value:double);
        end;
        { Use a variant record to be sure that the array if aligned correctly }
-       tcompsinglerec=record
+       TCompSingleRec=record
          case byte of
            0 : (bytes:array[0..3] of byte);
            1 : (value:single);
        end;
-       tcompextendedrec=record
+       TCompExtendedRec=record
          case byte of
            0 : (bytes:array[0..9] of byte);
            1 : (value:extended);
        end;
 
-       pconstset = ^tconstset;
-       tconstset = set of 0..255;
+       PConstSet = ^TConstSet;
+       TConstSet = set of 0..255;
 
        { Switches which can be changed locally }
-       tlocalswitch = (cs_localnone,
+       TLocalSwitch = (cs_localnone,
          { codegen }
          cs_check_overflow,cs_check_range,cs_check_object,
          cs_check_io,cs_check_stack,
@@ -155,10 +155,10 @@ interface
          cs_hugeptr_comparison_normalization,
          cs_legacyifend
        );
-       tlocalswitches = set of tlocalswitch;
+       TLocalSwitches = set of TLocalSwitch;
 
        { Switches which can be changed only at the beginning of a new module }
-       tmoduleswitch = (cs_modulenone,
+       TModuleSwitch = (cs_modulenone,
          { parser }
          cs_extsyntax = 2,
          { support }
@@ -186,11 +186,11 @@ interface
          { Nexus procedure profiling for the current compiler session/module }
          cs_nexus_profile
        );
-       tmoduleswitches = set of tmoduleswitch;
+       TModuleSwitches = set of TModuleSwitch;
 
        { Switches which can be changed only for a whole program/compilation,
          mostly set with commandline }
-       tglobalswitch = (cs_globalnone,
+       TGlobalSwitch = (cs_globalnone,
          { parameter switches }
          cs_check_unit_name,cs_support_exceptions = 3,
          cs_support_c_objectivepas,
@@ -226,10 +226,10 @@ interface
 	 { Use ld.lld linker }
          cs_link_lld
        );
-       tglobalswitches = set of tglobalswitch;
+       TGlobalSwitches = set of TGlobalSwitch;
 
        { global switches specific to debug information }
-       tdebugswitch = (ds_none,
+       TDebugSwitch = (ds_none,
           { enable set support in dwarf debug info, breaks gdb versions }
           { without support for that tag (they refuse to parse the rest }
           { of the debug information)                                   }
@@ -257,10 +257,10 @@ interface
           { object modules for the line number information.             }
           ds_dwarf_omf_linnum
        );
-       tdebugswitches = set of tdebugswitch;
+       TDebugSwitches = set of TDebugSwitch;
 
        { global target-specific switches }
-       ttargetswitch = (ts_none,
+       TTargetSwitch = (ts_none,
          { when automatically generating getters/setters for properties, use
            these strings as prefixes for the generated getters/setter names }
          ts_auto_getter_prefix,
@@ -272,24 +272,24 @@ interface
          { emit a CLD instruction before using the x86 string instructions }
          ts_cld
        );
-       ttargetswitches = set of ttargetswitch;
+       TTargetSwitches = set of TTargetSwitch;
 
 
        { adding a new entry here requires also adding the appropriate define in
          systemh.inc (FK)
        }
-       tfeature = (
+       TFeature = (
          f_heap,f_init_final,f_rtti,f_classes,f_exceptions,f_exitcode,
          f_ansistrings,f_widestrings,f_textio,f_consoleio,f_fileio,
          f_random,f_variants,f_objects,f_dynarrays,f_threading,f_commandargs,
          f_processes,f_stackcheck,f_dynlibs,f_softfpu,f_objectivec1,f_resources,
          f_unicodestring,f_monitor
        );
-       tfeatures = set of tfeature;
+       TFeatures = set of TFeature;
 
      type
        { optimizer }
-       toptimizerswitch = (
+       TOptimizerSwitch = (
          cs_opt_level1,cs_opt_level2,cs_opt_level3,cs_opt_level4,
          cs_opt_regvar,cs_opt_uncertain,cs_opt_size,cs_opt_stackframe,
          cs_opt_peephole,cs_opt_loopunroll,cs_opt_tailrecursion,cs_opt_nodecse,
@@ -313,17 +313,17 @@ interface
          cs_opt_consts,
          cs_opt_forloop
        );
-       toptimizerswitches = set of toptimizerswitch;
+       TOptimizerSwitches = set of TOptimizerSwitch;
 
        { whole program optimizer }
-       twpoptimizerswitch = (
+       TWPOptimizerSwitch = (
          cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts,
          cs_wpo_symbol_liveness
        );
-       twpoptimizerswitches = set of twpoptimizerswitch;
+       TWPOptimizerSwitches = set of TWPOptimizerSwitch;
 
        { platform triplet style }
-       ttripletstyle = (
+       TTripletStyle = (
          { llvm toolchain parameters }
          triplet_llvm,
          { llvm run time library file names }
@@ -332,7 +332,7 @@ interface
        );
 
        { module flags (extra unit flags not in ppu header) }
-       tmoduleflag = (
+       TModuleFlag = (
          mf_init,                     { unit has initialization section }
          mf_finalize,                 { unit has finalization section   }
          mf_checkpointer_called,      { Unit uses experimental checkpointer test code }
@@ -360,10 +360,10 @@ interface
           mf_nexus_profile,            { unit contains Nexus procedure profiling instrumentation }
           mf_unicode_default           { unit was compiled with Unicode default text types }
        );
-       tmoduleflags = set of tmoduleflag;
+       TModuleFlags = set of TModuleFlag;
 
     type
-       ttargetswitchinfo = record
+       TTargetSwitchInfo = record
           name: string[22];
           { target switch can have an arbitrary value, not only on/off }
           hasvalue: boolean;
@@ -373,7 +373,7 @@ interface
        end;
 
     const
-       OptimizerSwitchStr : array[toptimizerswitch] of string[18] = (
+       OptimizerSwitchStr : array[TOptimizerSwitch] of string[18] = (
          'LEVEL1','LEVEL2','LEVEL3','LEVEL4',
          'REGVAR','UNCERTAIN','SIZE','STACKFRAME',
          'PEEPHOLE','LOOPUNROLL','TAILREC','CSE',
@@ -383,14 +383,14 @@ interface
          'DEADSTORE','FORCENOSTACKFRAME','USELOADMODIFYSTORE',
          'UNUSEDPARA','CONSTS','FORLOOP'
        );
-       WPOptimizerSwitchStr : array [twpoptimizerswitch] of string[14] = (
+       WPOptimizerSwitchStr : array [TWPOptimizerSwitch] of string[14] = (
          'DEVIRTCALLS','OPTVMTS','SYMBOLLIVENESS'
        );
 
-       DebugSwitchStr : array[tdebugswitch] of string[22] = ('',
+       DebugSwitchStr : array[TDebugSwitch] of string[22] = ('',
          'DWARFSETS','STABSABSINCLUDES','DWARFMETHODCLASSPREFIX','DWARFCPP','DWARFOMFLINNUM');
 
-       TargetSwitchStr : array[ttargetswitch] of ttargetswitchinfo = (
+       TargetSwitchStr : array[TTargetSwitch] of TTargetSwitchInfo = (
          (name: '';                    hasvalue: false; isglobal: true ; define: ''),
          (name: 'AUTOGETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
          (name: 'AUTOSETTERPREFIX';    hasvalue: true ; isglobal: false; define: ''),
@@ -411,7 +411,7 @@ interface
        }
        WPOptimizationsNeedingAllUnitInfo = [cs_wpo_devirtualize_calls,cs_wpo_optimize_vmts];
 
-       featurestr : array[tfeature] of string[14] = (
+       featurestr : array[TFeature] of string[14] = (
          'HEAP','INITFINAL','RTTI','CLASSES','EXCEPTIONS','EXITCODE',
          'ANSISTRINGS','WIDESTRINGS','TEXTIO','CONSOLEIO','FILEIO',
          'RANDOM','VARIANTS','OBJECTS','DYNARRAYS','THREADING','COMMANDARGS',
@@ -421,7 +421,7 @@ interface
 
     type
        { Switches which can be changed by a mode }
-       tmodeswitch = (m_none,
+       TModeSwitch = (m_none,
          { generic }
          m_fpc,m_objfpc,m_delphi,m_mac = 5,m_iso,m_extpas,
          {$ifdef gpc_mode}m_gpc,{$endif}
@@ -475,14 +475,14 @@ interface
          m_multiline_strings,    { multi-line strings denoted with '`' are enabled and valid }
          m_statement_expressions { if-, case-, try-except-expression }
        );
-       tmodeswitches = set of tmodeswitch;
+       TModeSwitches = set of TModeSwitch;
 
     const
        alllanguagemodes = [m_fpc,m_objfpc,m_delphi,m_mac,m_iso,m_extpas];
 
     type
        { Application types (platform specific) }
-       tapptype = (
+       TAppType = (
          app_none,
          app_native,    { native for Windows and NativeNT targets }
          app_gui,       { graphic user-interface application }
@@ -496,14 +496,14 @@ interface
        );
 
        { interface types }
-       tinterfacetypes = (
+       TInterfaceTypes = (
          it_interfacecom,
          it_interfacecorba,
          it_interfacejava
        );
 
        { currently parsed block type }
-       tblock_type = (
+       TBlockType = (
          bt_none,        { not assigned                              }
          bt_general,     { default                                   }
          bt_type,        { type section                              }
@@ -516,7 +516,7 @@ interface
        );
 
        { Temp types }
-       ttemptype = (tt_none,
+       TTempType = (tt_none,
                     { free temp location, can be reused for something else }
                     tt_free,
                     { temp location that will be freed when ttgobj.UnGetTemp/
@@ -538,10 +538,10 @@ interface
                     tt_regallocator,
                     { freed version of the above }
                     tt_freeregallocator);
-       ttemptypeset = set of ttemptype;
+       TTempTypeSet = set of TTempType;
 
        { calling convention for tprocdef and tprocvardef }
-       tproccalloption=(pocall_none,
+       TProcCallOption=(pocall_none,
          { procedure uses C styled calling }
          pocall_cdecl,
          { C++ calling conventions }
@@ -586,9 +586,9 @@ interface
          { for x86-64: Microsoft's "vectorcall" ABI }
          pocall_vectorcall
        );
-       tproccalloptions = set of tproccalloption;
+       TProcCallOptions = set of TProcCallOption;
 
-       tlineendingtype = ({Carriage return, aka #13}
+       TLineEndingType = ({Carriage return, aka #13}
                           le_cr,
                           {Carriage return + line feed, aka #13#10}
                           le_crlf,
@@ -600,7 +600,7 @@ interface
                           le_source);
 
      const
-       proccalloptionStr : array[tproccalloption] of string[16]=('',
+       proccalloptionStr : array[TProcCallOption] of string[16]=('',
            'CDecl',
            'CPPDecl',
            'Far16',
@@ -631,7 +631,7 @@ interface
 
        cstylearrayofconst = [pocall_cdecl,pocall_cppdecl,pocall_mwpascal,pocall_sysv_abi_cdecl,pocall_ms_abi_cdecl];
 
-       modeswitchstr : array[0..ord(high(tmodeswitch))] of string[30] = ('',
+       modeswitchstr : array[0..ord(high(TModeSwitch))] of string[30] = ('',
          '','','','','','','',
          {$ifdef gpc_mode}'',{$endif}
          { more specific }
@@ -683,7 +683,7 @@ interface
 
 
      type
-       tprocinfoflag=(
+       TProcInfoFlag=(
          { procedure has at least one assembler block }
          pi_has_assembler_block,
          { procedure does a call }
@@ -751,9 +751,9 @@ interface
          { procedure has been normalized so no expressions contain block nodes }
          pi_normalized
        );
-       tprocinfoflags=set of tprocinfoflag;
+       TProcInfoFlags=set of TProcInfoFlag;
 
-       ttlsmodel = (tlsm_none,
+       TTLSModel = (tlsm_none,
          { elf tls model: works for all kind of code and thread vars }
          tlsm_global_dynamic,
          { elf tls model: works only if the thread vars are declared and used in the same module,
@@ -768,7 +768,7 @@ interface
     type
       { float types -- warning, this enum/order is used internally by the RTL
         as well in rtl/inc/flt_conv.inc }
-      tfloattype = (
+      TFloatType = (
         s32real,s64real,s80real,sc80real { the C "long double" type on x86 },
         s64comp,s64currency
       );
@@ -784,8 +784,8 @@ interface
       TIDString = TSymStr;
 {$endif}
 
-      tnormalset = set of byte; { 256 elements set }
-      pnormalset = ^tnormalset;
+      TNormalSet = set of byte; { 256 elements set }
+      PNormalSet = ^TNormalSet;
 
       pboolean   = ^boolean;
       pdouble    = ^double;
@@ -794,17 +794,17 @@ interface
       plongint   = ^longint;
       plongintarray = plongint;
 
-      tfileposline = longint;
-      tfileposcolumn = word;
-      tfileposfileindex = word;
-      tfileposmoduleindex = word;
-      pfileposinfo = ^tfileposinfo;
-      tfileposinfo = record
+      TFilePosLine = longint;
+      TFilePosColumn = word;
+      TFilePosFileIndex = word;
+      TFilePosModuleIndex = word;
+      PFilePosInfo = ^TFilePosInfo;
+      TFilePosInfo = record
         { if types of column or fileindex are changed, modify tcompilerppufile.putposinfo }
-        line      : tfileposline;
-        column    : tfileposcolumn;
-        fileindex : tfileposfileindex;
-        moduleindex : tfileposmoduleindex;
+        line      : TFilePosLine;
+        column    : TFilePosColumn;
+        fileindex : TFilePosFileIndex;
+        moduleindex : TFilePosModuleIndex;
       end;
 
   {$ifndef xFPC}
@@ -818,8 +818,8 @@ interface
       end;
   {$endif}
 
-       tstringencoding = Word;
-       tcodepagestring = string[20];
+       TStringEncoding = Word;
+       TCodePageString = string[20];
 
     const
        { link options }
@@ -832,7 +832,7 @@ interface
 
     type
       { a message state }
-      tmsgstate = (
+      TMsgState = (
         ms_on := 1,
         ms_off := 2,
         ms_error := 3,
@@ -851,20 +851,20 @@ interface
       ms_shift = 4;
 
     type
-      pmessagestaterecord = ^tmessagestaterecord;
-      tmessagestaterecord = record
+      PMessageStateRecord = ^TMessageStateRecord;
+      TMessageStateRecord = record
         {$IFDEF DEBUG_MESSAGESTATE}
         owner: TObject; { tmodule }
         {$ENDIF}
-        next : pmessagestaterecord;
+        next : PMessageStateRecord;
         value : longint;
-        state : tmsgstate;
+        state : TMsgState;
       end;
 
     type
-      tx86memorymodel = (mm_tiny,mm_small,mm_medium,mm_compact,mm_large,mm_huge);
+      TX86MemoryModel = (mm_tiny,mm_small,mm_medium,mm_compact,mm_large,mm_huge);
     const
-      x86memorymodelstr : array[tx86memorymodel] of string[7]=(
+      x86memorymodelstr : array[TX86MemoryModel] of string[7]=(
         'TINY',
         'SMALL',
         'MEDIUM',
@@ -877,34 +877,34 @@ interface
     ExecuteProcess = 'Do not use' deprecated 'Use cfileutil.RequotedExecuteProcess instead, ExecuteProcess cannot deal with single quotes as used by Unix command lines';
 
   Type
-    tfilenametransformation = (ftNone,ftLowerCase,ftUpperCase,ft83);
-    tfilenametransformations = set of tfilenametransformation;
+    TFileNameTransformation = (ftNone,ftLowerCase,ftUpperCase,ft83);
+    TFileNameTransformations = set of TFileNameTransformation;
 
-   Const AllTransformations = [Low(tfilenametransformation)..high(tfilenametransformation)];
+   Const AllTransformations = [Low(TFileNameTransformation)..high(TFileNameTransformation)];
 
   { extended rtti directive }
   type
-    trtti_clause = (
+    TRTTIClause = (
       rtc_none,
       rtc_inherit,
       rtc_explicit
     );
-    trtti_visibility = (
+    TRTTIVisibility = (
       rv_private,
       rv_protected,
       rv_public,
       rv_published
     );
-    trtti_visibilities = set of trtti_visibility;
-    prtti_visibilities = ^trtti_visibilities;
-    trtti_option = (
+    TRTTIVisibilities = set of TRTTIVisibility;
+    PRTTIVisibilities = ^TRTTIVisibilities;
+    TRTTIOption = (
      ro_methods,
      ro_fields,
      ro_properties
     );
-    trtti_directive = record
-      clause: trtti_clause;
-      options: array[trtti_option] of trtti_visibilities;
+    TRTTIDirective = record
+      clause: TRTTIClause;
+      options: array[TRTTIOption] of TRTTIVisibilities;
     end;
 
 implementation

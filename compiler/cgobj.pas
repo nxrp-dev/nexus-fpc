@@ -1009,7 +1009,7 @@ implementation
                        begin
                          a_load_ref_reg(list,OS_32,location^.size,tmpref,location^.register);
                          dec(sizeleft,4);
-                         if target_info.endian=endian_big then
+                         if TargetInfo.endian=endian_big then
                            a_op_const_reg(list,OP_SHL,location^.size,sizeleft*8,location^.register);
                          inc(tmpref.offset,4);
                          reghasvalue:=true;
@@ -1022,7 +1022,7 @@ implementation
                          dec(sizeleft,2);
                          if reghasvalue then
                            begin
-                             if target_info.endian=endian_big then
+                             if TargetInfo.endian=endian_big then
                                a_op_const_reg(list,OP_SHL,location^.size,sizeleft*8,tmpreg)
                              else
                                a_op_const_reg(list,OP_SHL,location^.size,(orgsizeleft-(sizeleft+2))*8,tmpreg);
@@ -1030,7 +1030,7 @@ implementation
                            end
                          else
                            begin
-                             if target_info.endian=endian_big then
+                             if TargetInfo.endian=endian_big then
                                a_op_const_reg_reg(list,OP_SHL,location^.size,sizeleft*8,tmpreg,location^.register)
                              else
                                a_load_reg_reg(list,location^.size,location^.size,tmpreg,location^.register);
@@ -1045,7 +1045,7 @@ implementation
                          dec(sizeleft,1);
                          if reghasvalue then
                            begin
-                             if target_info.endian=endian_little then
+                             if TargetInfo.endian=endian_little then
                                a_op_const_reg(list,OP_SHL,location^.size,(orgsizeleft-(sizeleft+1))*8,tmpreg);
                              a_op_reg_reg(list,OP_OR,location^.size,tmpreg,location^.register)
                            end
@@ -1160,7 +1160,7 @@ implementation
               hreg:=paraloc.register;
               cgsize:=paraloc.size;
               if (paraloc.shiftval>0) and
-	        not ((target_info.endian=endian_big) and (sizeleft in [3,5,6,7])) then
+	        not ((TargetInfo.endian=endian_big) and (sizeleft in [3,5,6,7])) then
                 a_op_const_reg_reg(list,OP_SHL,OS_INT,paraloc.shiftval,paraloc.register,paraloc.register)
               { in case the original size was 3 or 5/6/7 bytes, the value was
                 shifted to the top of the to 4 resp. 8 byte register on the
@@ -1195,7 +1195,7 @@ implementation
                     a_load_reg_ref(list,paraloc.size,int_cgsize(sizeleft),hreg,ref);
                   3:
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         begin
                           href:=ref;
                           inc(href.offset,2);
@@ -1214,7 +1214,7 @@ implementation
                     end;
                   5:
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         begin
                           href:=ref;
                           inc(href.offset,4);
@@ -1233,7 +1233,7 @@ implementation
                     end;
                   6:
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         begin
                           href:=ref;
                           inc(href.offset,4);
@@ -1252,7 +1252,7 @@ implementation
                     end;
                   7:
                     begin
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         begin
                           href:=ref;
                           inc(href.offset,6);
@@ -1415,13 +1415,13 @@ implementation
                 begin
                   tmpreg:=getintregister(list,OS_16);
                   a_load_reg_reg(list,fromsize,OS_16,register,tmpreg);
-                  if target_info.endian=endian_big then
+                  if TargetInfo.endian=endian_big then
                     inc(tmpref.offset);
                   tmpreg:=makeregsize(list,tmpreg,OS_8);
                   a_load_reg_ref(list,OS_8,OS_8,tmpreg,tmpref);
                   tmpreg:=makeregsize(list,tmpreg,OS_16);
                   a_op_const_reg(list,OP_SHR,OS_16,8,tmpreg);
-                  if target_info.endian=endian_big then
+                  if TargetInfo.endian=endian_big then
                     dec(tmpref.offset)
                   else
                     inc(tmpref.offset);
@@ -1433,7 +1433,7 @@ implementation
                   { could add an optimised case for ref.alignment=2 }
                   tmpreg:=getintregister(list,OS_32);
                   a_load_reg_reg(list,fromsize,OS_32,register,tmpreg);
-                  if target_info.endian=endian_big then
+                  if TargetInfo.endian=endian_big then
                     inc(tmpref.offset,3);
                   tmpreg:=makeregsize(list,tmpreg,OS_8);
                   a_load_reg_ref(list,OS_8,OS_8,tmpreg,tmpref);
@@ -1441,7 +1441,7 @@ implementation
                   for i:=1 to 3 do
                     begin
                       a_op_const_reg(list,OP_SHR,OS_32,8,tmpreg);
-                      if target_info.endian=endian_big then
+                      if TargetInfo.endian=endian_big then
                         dec(tmpref.offset)
                       else
                         inc(tmpref.offset);
@@ -1484,13 +1484,13 @@ implementation
                       hisize:=OS_S8;
                     { first load in tmpreg, because the target register }
                     { may be used in ref as well                        }
-                    if target_info.endian=endian_little then
+                    if TargetInfo.endian=endian_little then
                       inc(tmpref.offset);
                     tmpreg:=getintregister(list,OS_8);
                     a_load_ref_reg(list,hisize,hisize,tmpref,tmpreg);
                     tmpreg:=makeregsize(list,tmpreg,FromSize);
                     a_op_const_reg(list,OP_SHL,FromSize,8,tmpreg);
-                    if target_info.endian=endian_little then
+                    if TargetInfo.endian=endian_little then
                       dec(tmpref.offset)
                     else
                       inc(tmpref.offset);
@@ -1502,12 +1502,12 @@ implementation
               OS_32,OS_S32:
                 if ref.alignment=2 then
                   begin
-                    if target_info.endian=endian_little then
+                    if TargetInfo.endian=endian_little then
                       inc(tmpref.offset,2);
                     tmpreg:=getintregister(list,OS_32);
                     a_load_ref_reg(list,OS_16,OS_32,tmpref,tmpreg);
                     a_op_const_reg(list,OP_SHL,OS_32,16,tmpreg);
-                    if target_info.endian=endian_little then
+                    if TargetInfo.endian=endian_little then
                       dec(tmpref.offset,2)
                     else
                       inc(tmpref.offset,2);
@@ -1518,7 +1518,7 @@ implementation
                   end
                 else
                   begin
-                    if target_info.endian=endian_little then
+                    if TargetInfo.endian=endian_little then
                       inc(tmpref.offset,3);
                     tmpreg:=getintregister(list,OS_32);
                     a_load_ref_reg(list,OS_8,OS_32,tmpref,tmpreg);
@@ -1526,7 +1526,7 @@ implementation
                     for i:=1 to 3 do
                       begin
                         a_op_const_reg(list,OP_SHL,OS_32,8,tmpreg);
-                        if target_info.endian=endian_little then
+                        if TargetInfo.endian=endian_little then
                           dec(tmpref.offset)
                         else
                           inc(tmpref.offset);
@@ -1692,7 +1692,7 @@ implementation
               { division by 1 returns result }
               if a = 1 then
                 op:=OP_NONE
-              else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in current_settings.localswitches) then
+              else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.localswitches) then
                 begin
                   a := powerval;
                   op:= OP_SHR;
@@ -1710,7 +1710,7 @@ implementation
                else
                  if a=0 then
                    op:=OP_MOVE
-               else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in current_settings.localswitches)  then
+               else if ispowerof2(int64(zeroext_a), powerval) and not(cs_check_overflow in CurrentSettings.localswitches)  then
                  begin
                    a := powerval;
                    op:= OP_SHL;
@@ -2328,7 +2328,7 @@ implementation
                     else
                       internalerror(2009112910);
                   end;
-                  if (target_info.endian=ENDIAN_BIG) then
+                  if (TargetInfo.endian=ENDIAN_BIG) then
                     begin
                       { paraloc^ -> high
                         paraloc^.next -> low }
@@ -2573,9 +2573,9 @@ implementation
         regs_to_save_address,
         regs_to_save_mm : tcpuregisterarray;
       begin
-        regs_to_save_int:=paramanager.get_saved_registers_int(current_procinfo.procdef.proccalloption);
-        regs_to_save_address:=paramanager.get_saved_registers_address(current_procinfo.procdef.proccalloption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(current_procinfo.procdef.proccalloption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
         { calculate temp. size }
         size:=0;
         for r:=low(regs_to_save_int) to high(regs_to_save_int) do
@@ -2601,11 +2601,11 @@ implementation
 
         if size>0 then
           begin
-            tg.GetTemp(list,size,sizeof(aint),tt_noreuse,current_procinfo.save_regs_ref);
-            include(current_procinfo.flags,pi_has_saved_regs);
+            tg.GetTemp(list,size,sizeof(aint),tt_noreuse,CurrentProcInfo.save_regs_ref);
+            include(CurrentProcInfo.flags,pi_has_saved_regs);
 
             { Copy registers to temp }
-            href:=current_procinfo.save_regs_ref;
+            href:=CurrentProcInfo.save_regs_ref;
             for r:=low(regs_to_save_int) to high(regs_to_save_int) do
               begin
                 if regs_to_save_int[r] in rg[R_INTREGISTER].used_in_proc then
@@ -2615,7 +2615,7 @@ implementation
                     include(rg[R_INTREGISTER].preserved_by_proc,regs_to_save_int[r]);
                   end;
               end;
-            current_procinfo.saved_regs_int := rg[R_INTREGISTER].preserved_by_proc;
+            CurrentProcInfo.saved_regs_int := rg[R_INTREGISTER].preserved_by_proc;
 
             if uses_registers(R_ADDRESSREGISTER) then
               begin
@@ -2629,7 +2629,7 @@ implementation
                       end;
                   end;
 
-                current_procinfo.saved_regs_mm := rg[R_MMREGISTER].preserved_by_proc;
+                CurrentProcInfo.saved_regs_mm := rg[R_MMREGISTER].preserved_by_proc;
               end;
 
             if uses_registers(R_MMREGISTER) then
@@ -2654,7 +2654,7 @@ implementation
                       end;
                   end;
 
-                current_procinfo.saved_regs_mm := rg[R_MMREGISTER].preserved_by_proc;
+                CurrentProcInfo.saved_regs_mm := rg[R_MMREGISTER].preserved_by_proc;
               end;
           end;
       end;
@@ -2669,13 +2669,13 @@ implementation
         regs_to_save_address,
         regs_to_save_mm : tcpuregisterarray;
       begin
-        if not(pi_has_saved_regs in current_procinfo.flags) then
+        if not(pi_has_saved_regs in CurrentProcInfo.flags) then
           exit;
-        regs_to_save_int:=paramanager.get_saved_registers_int(current_procinfo.procdef.proccalloption);
-        regs_to_save_address:=paramanager.get_saved_registers_address(current_procinfo.procdef.proccalloption);
-        regs_to_save_mm:=paramanager.get_saved_registers_mm(current_procinfo.procdef.proccalloption);
+        regs_to_save_int:=paramanager.get_saved_registers_int(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_address:=paramanager.get_saved_registers_address(CurrentProcInfo.procdef.proccalloption);
+        regs_to_save_mm:=paramanager.get_saved_registers_mm(CurrentProcInfo.procdef.proccalloption);
         { Copy registers from temp }
-        href:=current_procinfo.save_regs_ref;
+        href:=CurrentProcInfo.save_regs_ref;
         for r:=low(regs_to_save_int) to high(regs_to_save_int) do
           if regs_to_save_int[r] in rg[R_INTREGISTER].used_in_proc then
             begin
@@ -2714,7 +2714,7 @@ implementation
                   end;
               end;
           end;
-        tg.UnGetTemp(list,current_procinfo.save_regs_ref);
+        tg.UnGetTemp(list,CurrentProcInfo.save_regs_ref);
       end;
 
 
@@ -2766,29 +2766,29 @@ implementation
         symtyp: TAsmsymtype;
       begin
         result := NR_NO;
-        case target_info.system of
+        case TargetInfo.system of
           system_i386_darwin,
           system_i386_iphonesim:
             begin
               nlsymname:='L'+symname+'$non_lazy_ptr';
-              l:=current_asmdata.getasmsymbol(nlsymname);
+              l:=CurrentAsmData.getasmsymbol(nlsymname);
               if not(assigned(l)) then
                 begin
                   if is_data in flags then
                     symtyp:=AT_DATA
                   else
                     symtyp:=AT_FUNCTION;
-                  new_section(current_asmdata.asmlists[al_picdata],sec_data_nonlazy,'',sizeof(pint));
-                  l:=current_asmdata.DefineAsmSymbol(nlsymname,AB_LOCAL,AT_DATA,voidpointertype);
-                  current_asmdata.asmlists[al_picdata].concat(tai_symbol.create(l,0));
+                  new_section(CurrentAsmData.asmlists[al_picdata],sec_data_nonlazy,'',sizeof(pint));
+                  l:=CurrentAsmData.DefineAsmSymbol(nlsymname,AB_LOCAL,AT_DATA,voidpointertype);
+                  CurrentAsmData.asmlists[al_picdata].concat(tai_symbol.create(l,0));
                   if not(is_weak in flags) then
-                    current_asmdata.asmlists[al_picdata].concat(tai_directive.Create(asd_indirect_symbol,current_asmdata.RefAsmSymbol(symname,symtyp).Name))
+                    CurrentAsmData.asmlists[al_picdata].concat(tai_directive.Create(asd_indirect_symbol,CurrentAsmData.RefAsmSymbol(symname,symtyp).Name))
                   else
-                    current_asmdata.asmlists[al_picdata].concat(tai_directive.Create(asd_indirect_symbol,current_asmdata.WeakRefAsmSymbol(symname,symtyp).Name));
+                    CurrentAsmData.asmlists[al_picdata].concat(tai_directive.Create(asd_indirect_symbol,CurrentAsmData.WeakRefAsmSymbol(symname,symtyp).Name));
 {$ifdef cpu64bitaddr}
-                  current_asmdata.asmlists[al_picdata].concat(tai_const.create_64bit(0));
+                  CurrentAsmData.asmlists[al_picdata].concat(tai_const.create_64bit(0));
 {$else cpu64bitaddr}
-                  current_asmdata.asmlists[al_picdata].concat(tai_const.create_32bit(0));
+                  CurrentAsmData.asmlists[al_picdata].concat(tai_const.create_32bit(0));
 {$endif cpu64bitaddr}
                 end;
               result := getaddressregister(list);
@@ -2815,8 +2815,8 @@ implementation
     procedure tcg.g_call(list: TAsmList;const s: string);
       begin
         allocallcpuregisters(list);
-        if systemunit<>current_module.globalsymtable then
-          current_module.add_extern_asmsym(s,AB_EXTERNAL,AT_FUNCTION);
+        if systemunit<>CurrentModule.globalsymtable then
+          CurrentModule.add_extern_asmsym(s,AB_EXTERNAL,AT_FUNCTION);
         a_call_name(list,s,false);
         deallocallcpuregisters(list);
       end;
@@ -2939,7 +2939,7 @@ implementation
 
     procedure tcg.maybe_check_for_fpu_exception(list: TAsmList);
       begin
-        current_procinfo.FPUExceptionCheckNeeded:=true;
+        CurrentProcInfo.FPUExceptionCheckNeeded:=true;
         g_check_for_fpu_exception(list,false,true);
       end;
 
@@ -3157,7 +3157,7 @@ implementation
             { Order for multiple locations is always
                 paraloc^ -> high
                 paraloc^.next -> low }
-            if (target_info.endian=ENDIAN_BIG) then
+            if (TargetInfo.endian=ENDIAN_BIG) then
               begin
                 { paraloc^ -> high
                   paraloc^.next -> low }
@@ -3180,7 +3180,7 @@ implementation
             move(cgpara.location^,paraloclo^,sizeof(paraloclo^));
             move(cgpara.location^,paralochi^,sizeof(paralochi^));
             { for big endian low is at +8, for little endian high }
-            if target_info.endian = endian_big then
+            if TargetInfo.endian = endian_big then
               begin
                 inc(cgparalo.location^.reference.offset,8);
                 cgparalo.alignment:=newalignment(cgparalo.alignment,8);
@@ -3213,7 +3213,7 @@ implementation
         tmpreg: tregister;
         tmpref: treference;
       begin
-        if target_info.endian = endian_big then
+        if TargetInfo.endian = endian_big then
           begin
             tmpreg:=reg.reglo;
             reg.reglo:=reg.reghi;
@@ -3232,7 +3232,7 @@ implementation
         tmpreg: tregister;
         tmpref: treference;
       begin
-        if target_info.endian = endian_big then
+        if TargetInfo.endian = endian_big then
           begin
             tmpreg := reg.reglo;
             reg.reglo := reg.reghi;
@@ -3348,7 +3348,7 @@ implementation
         splitparaloc128(paraloc,tmploclo,tmplochi);
         tmprefhi:=r;
         tmpreflo:=r;
-        if target_info.endian=endian_big then
+        if TargetInfo.endian=endian_big then
           inc(tmpreflo.offset,8)
         else
           inc(tmprefhi.offset,8);

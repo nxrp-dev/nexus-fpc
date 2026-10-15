@@ -36,7 +36,7 @@ interface
       { pass_1 }
       node;
 
-    function  readconstant(const orgname:string;const filepos:tfileposinfo; out nodetype: tnodetype):tconstsym;
+    function  readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):tconstsym;
 
     procedure const_dec(out had_generic:boolean);
     procedure consts_dec(in_structure, allow_typed_const: boolean;out had_generic:boolean);
@@ -78,16 +78,16 @@ implementation
       Result:=def_is_related(def,class_tcustomattribute);
     end;
 
-    function readconstant(const orgname:string;const filepos:tfileposinfo; out nodetype: tnodetype):tconstsym;
+    function readconstant(const orgname:string;const filepos:TFilePosInfo; out nodetype: TNodeType):tconstsym;
       var
         hp : tconstsym;
-        p : tnode;
-        ps : pconstset;
+        p : TNode;
+        ps : PConstSet;
         pd : pbestreal;
         pg : pguid;
         sp : pchar;
         pw : tcompilerwidestring;
-        storetokenpos : tfileposinfo;
+        storetokenpos : TFilePosInfo;
       begin
         readconstant:=nil;
         if orgname='' then
@@ -95,8 +95,8 @@ implementation
         hp:=nil;
         p:=comp_expr([ef_accept_equal]);
         nodetype:=p.nodetype;
-        storetokenpos:=current_tokenpos;
-        current_tokenpos:=filepos;
+        storetokenpos:=CurrentTokenPos;
+        CurrentTokenPos:=filepos;
         case p.nodetype of
            ordconstn:
              begin
@@ -206,7 +206,7 @@ implementation
             include(hp.symoptions,sp_generic_const);
             include(hp.symoptions,sp_generic_para);
           end;
-        current_tokenpos:=storetokenpos;
+        CurrentTokenPos:=storetokenpos;
         p.free;
         p := nil;
         readconstant:=hp;
@@ -226,9 +226,9 @@ implementation
          flags : thccflags;
          dummysymoptions : tsymoptions;
          deprecatedmsg : pshortstring;
-         storetokenpos,filepos : tfileposinfo;
-         nodetype : tnodetype;
-         old_block_type : tblock_type;
+         storetokenpos,filepos : TFilePosInfo;
+         nodetype : TNodeType;
+         old_block_type : TBlockType;
          first,
          isgeneric,
          expect_directive,
@@ -241,11 +241,11 @@ implementation
          had_generic:=false;
          first:=true;
          repeat
-           orgname:=current_scanner.orgpattern;
-           filepos:=current_tokenpos;
-           isgeneric:=not (m_delphi in current_settings.modeswitches) and (current_scanner.token=_ID) and (current_scanner.idtoken=_GENERIC);
+           orgname:=CurrentScanner.orgpattern;
+           filepos:=CurrentTokenPos;
+           isgeneric:=not (m_delphi in CurrentSettings.modeswitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
            consume(_ID);
-           case current_scanner.token of
+           case CurrentScanner.token of
 
              _EQ:
                 begin
@@ -282,9 +282,9 @@ implementation
                    read_anon_type(hdef,false,nil);
                    block_type:=bt_const;
                    { create symbol }
-                   storetokenpos:=current_tokenpos;
-                   current_tokenpos:=filepos;
-                   if not (cs_typed_const_writable in current_settings.localswitches) then
+                   storetokenpos:=CurrentTokenPos;
+                   CurrentTokenPos:=filepos;
+                   if not (cs_typed_const_writable in CurrentSettings.localswitches) then
                      begin
                        varspez:=vs_const;
                        asmtype:=al_rotypedconsts;
@@ -313,7 +313,7 @@ implementation
                        symtablestack.top.insertsym(sym);
                      end;
                    sym.register_sym;
-                   current_tokenpos:=storetokenpos;
+                   CurrentTokenPos:=storetokenpos;
                    skip_initialiser:=false;
                    { Anonymous proctype definitions can have proc directives }
                    if (
@@ -342,12 +342,12 @@ implementation
                    if not skip_initialiser then
                     begin
                       consume(_EQ);
-                      read_typed_const(current_asmdata.asmlists[asmtype],tstaticvarsym(sym),in_structure);
+                      read_typed_const(CurrentAsmData.asmlists[asmtype],tstaticvarsym(sym),in_structure);
                     end;
                 end;
 
               else
-                if not first and isgeneric and (current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+                if not first and isgeneric and (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
                   begin
                     had_generic:=true;
                     break;
@@ -358,11 +358,11 @@ implementation
            end;
 
            first:=false;
-         until (current_scanner.token<>_ID) or
+         until (CurrentScanner.token<>_ID) or
                (in_structure and
-                ((current_scanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
-                 ((m_final_fields in current_settings.modeswitches) and
-                  (current_scanner.idtoken=_FINAL))));
+                ((CurrentScanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
+                 ((m_final_fields in CurrentSettings.modeswitches) and
+                  (CurrentScanner.idtoken=_FINAL))));
          block_type:=old_block_type;
       end;
 
@@ -372,26 +372,26 @@ implementation
         labelsym : tlabelsym;
       begin
          consume(_LABEL);
-         if not(cs_support_goto in current_settings.moduleswitches) then
+         if not(cs_support_goto in CurrentSettings.moduleswitches) then
            Message(sym_e_goto_and_label_not_supported);
          repeat
-           if not(current_scanner.token in [_ID,_INTCONST]) then
+           if not(CurrentScanner.token in [_ID,_INTCONST]) then
              consume(_ID)
            else
              begin
-                if current_scanner.token=_ID then
-                  labelsym:=clabelsym.create(current_scanner.orgpattern)
+                if CurrentScanner.token=_ID then
+                  labelsym:=clabelsym.create(CurrentScanner.orgpattern)
                 else
                   begin
                     { strip leading 0's in iso mode }
-                    if (([m_iso,m_extpas]*current_settings.modeswitches)<>[]) then
-                      while (length(current_scanner.pattern)>1) and (current_scanner.pattern[1]='0') do
-                        delete(current_scanner.pattern,1,1);
-                    labelsym:=clabelsym.create(current_scanner.pattern);
+                    if (([m_iso,m_extpas]*CurrentSettings.modeswitches)<>[]) then
+                      while (length(CurrentScanner.pattern)>1) and (CurrentScanner.pattern[1]='0') do
+                        delete(CurrentScanner.pattern,1,1);
+                    labelsym:=clabelsym.create(CurrentScanner.pattern);
                   end;
 
                 symtablestack.top.insertsym(labelsym);
-                if m_non_local_goto in current_settings.modeswitches then
+                if m_non_local_goto in CurrentSettings.modeswitches then
                   begin
                     if symtablestack.top.symtabletype=localsymtable then
                       begin
@@ -408,10 +408,10 @@ implementation
                     { the buffer will be setup later, but avoid a hint }
                     tabstractvarsym(labelsym.jumpbuf).varstate:=vs_written;
                   end;
-                consume(current_scanner.token);
+                consume(CurrentScanner.token);
              end;
-           if current_scanner.token<>_SEMICOLON then consume(_COMMA);
-         until not(current_scanner.token in [_ID,_INTCONST]);
+           if CurrentScanner.token<>_SEMICOLON then consume(_COMMA);
+         until not(CurrentScanner.token in [_ID,_INTCONST]);
          consume(_SEMICOLON);
       end;
 
@@ -430,9 +430,9 @@ implementation
 
     procedure parse_rttiattributes(var rtti_attrs_def:trtti_attribute_list);
 
-      function read_attr_paras:tnode;
+      function read_attr_paras:TNode;
         var
-          old_block_type : tblock_type;
+          old_block_type : TBlockType;
         begin
           if try_to_consume(_LKLAMMER) then
             begin
@@ -448,10 +448,10 @@ implementation
         end;
 
       var
-        p,paran,pcalln,ptmp : tnode;
+        p,paran,pcalln,ptmp : TNode;
         ecnt : longint;
         i,pcount : sizeint;
-        paras : array of tnode;
+        paras : array of TNode;
         od : tobjectdef;
         constrsym : tsymentry;
         typesym : ttypesym;
@@ -485,9 +485,9 @@ implementation
               pcalln:=ccallnode.create(paran,tprocsym(constrsym),od.symtable,cloadvmtaddrnode.create(p),[cnf_no_convert_procvar],nil);
               p:=nil;
               ecnt:=errorcount;
-              typecheckpass(pcalln);
+              TypeCheckPass(pcalln);
 
-              if (pcalln.nodetype=calln) and assigned(tcallnode(pcalln).procdefinition) and not codegenerror then
+              if (pcalln.nodetype=calln) and assigned(tcallnode(pcalln).procdefinition) and not CodeGenError then
                 begin
                   { TODO: once extended RTTI for methods is supported, reject a
                           constructor if it doesn't have extended RTTI enabled }
@@ -578,23 +578,23 @@ implementation
       begin
         newtype:=nil;
         wasforward:=false;
-        if ((current_scanner.token=_CLASS) or
-            (current_scanner.token=_INTERFACE) or
-            (current_scanner.token=_DISPINTERFACE) or
-            (current_scanner.token=_OBJCCLASS) or
-            (current_scanner.token=_OBJCPROTOCOL) or
-            (current_scanner.token=_OBJCCATEGORY)) and
+        if ((CurrentScanner.token=_CLASS) or
+            (CurrentScanner.token=_INTERFACE) or
+            (CurrentScanner.token=_DISPINTERFACE) or
+            (CurrentScanner.token=_OBJCCLASS) or
+            (CurrentScanner.token=_OBJCPROTOCOL) or
+            (CurrentScanner.token=_OBJCCATEGORY)) and
            (assigned(ttypesym(sym).typedef)) and
            is_implicit_pointer_object_type(ttypesym(sym).typedef) and
            (oo_is_forward in tobjectdef(ttypesym(sym).typedef).objectoptions) then
          begin
            wasforward:=true;
            objecttype:=odt_none;
-           case current_scanner.token of
+           case CurrentScanner.token of
              _CLASS :
                objecttype:=default_class_type;
              _INTERFACE :
-               case current_settings.interfacetype of
+               case CurrentSettings.interfacetype of
                  it_interfacecom:
                    objecttype:=odt_interfacecom;
                  it_interfacecorba:
@@ -612,7 +612,7 @@ implementation
              else
                internalerror(200811072);
            end;
-           consume(current_scanner.token);
+           consume(CurrentScanner.token);
            if assigned(genericdef) then
              gendef:=tstoreddef(genericdef)
            else
@@ -699,8 +699,8 @@ implementation
          sym      : tsym;
          hdef,
          hdef2    : tdef;
-         defpos,storetokenpos : tfileposinfo;
-         old_block_type : tblock_type;
+         defpos,storetokenpos : TFilePosInfo;
+         old_block_type : TBlockType;
          old_checkforwarddefs: TFPObjectList;
          flags : thccflags;
          setdummysym,
@@ -710,7 +710,7 @@ implementation
          istyperenaming : boolean;
          generictypelist : tfphashobjectlist;
          localgenerictokenbuf : tdynamicarray;
-         p:tnode;
+         p:TNode;
          gendef : tstoreddef;
          s : shortstring;
          i : longint;
@@ -721,42 +721,42 @@ implementation
          old_block_type:=block_type;
          { save unit container of forward declarations -
            we can be inside nested class type block }
-         old_checkforwarddefs:=current_module.checkforwarddefs;
-         current_module.checkforwarddefs:=TFPObjectList.Create(false);
+         old_checkforwarddefs:=CurrentModule.checkforwarddefs;
+         CurrentModule.checkforwarddefs:=TFPObjectList.Create(false);
          block_type:=bt_type;
          hdef:=nil;
          first:=true;
          had_generic:=false;
-         storetokenpos:=Default(tfileposinfo);
+         storetokenpos:=Default(TFilePosInfo);
          repeat
-           defpos:=current_tokenpos;
+           defpos:=CurrentTokenPos;
            istyperenaming:=false;
            setdummysym:=false;
            generictypelist:=nil;
            localgenerictokenbuf:=nil;
 
            { class attribute definitions? }
-           if m_prefixed_attributes in current_settings.modeswitches then
-             while current_scanner.token=_LECKKLAMMER do
+           if m_prefixed_attributes in CurrentSettings.modeswitches then
+             while CurrentScanner.token=_LECKKLAMMER do
                parse_rttiattributes(rtti_attrs_def);
 
            { fpc generic declaration? }
            if first then
-             had_generic:=not(m_delphi in current_settings.modeswitches) and try_to_consume(_GENERIC);
+             had_generic:=not(m_delphi in CurrentSettings.modeswitches) and try_to_consume(_GENERIC);
            isgeneric:=had_generic;
 
-           typename:=current_scanner.pattern;
-           orgtypename:=current_scanner.orgpattern;
+           typename:=CurrentScanner.pattern;
+           orgtypename:=CurrentScanner.orgpattern;
            consume(_ID);
 
            { delphi generic declaration? }
-           if (m_delphi in current_settings.modeswitches) then
-             isgeneric:=current_scanner.token=_LSHARPBRACKET;
+           if (m_delphi in CurrentSettings.modeswitches) then
+             isgeneric:=CurrentScanner.token=_LSHARPBRACKET;
 
            { Generic type declaration? }
            if isgeneric then
              begin
-               if assigned(current_genericdef) then
+               if assigned(CurrentGenericDef) then
                  Message(parser_f_no_generic_inside_generic);
 
                consume(_LSHARPBRACKET);
@@ -780,15 +780,15 @@ implementation
 
            { MacPas object model is more like Delphi's than like TP's, but }
            { uses the object keyword instead of class                      }
-           if (m_mac in current_settings.modeswitches) and
-              (current_scanner.token = _OBJECT) then
-             current_scanner.token := _CLASS;
+           if (m_mac in CurrentSettings.modeswitches) and
+              (CurrentScanner.token = _OBJECT) then
+             CurrentScanner.token := _CLASS;
 
            { Start recording a generic template }
            if assigned(generictypelist) then
              begin
                localgenerictokenbuf:=tdynamicarray.create(256);
-               current_scanner.startrecordtokens(localgenerictokenbuf);
+               CurrentScanner.startrecordtokens(localgenerictokenbuf);
              end;
 
            { is the type already defined? -- must be in the current symtable,
@@ -829,7 +829,7 @@ implementation
                 will give an error (PFV) }
               hdef:=generrordef;
               gendef:=nil;
-              storetokenpos:=current_tokenpos;
+              storetokenpos:=CurrentTokenPos;
               if isgeneric then
                 begin
                   { for generics we need to check whether a non-generic type
@@ -850,7 +850,7 @@ implementation
                     end
                   else
                     { this is not allowed in non-Delphi modes }
-                    if not (m_delphi in current_settings.modeswitches) then
+                    if not (m_delphi in CurrentSettings.modeswitches) then
                       Message1(sym_e_duplicate_id,genorgtypename)
                     else
                       begin
@@ -886,8 +886,8 @@ implementation
                   newtype.visibility:=symtablestack.top.currentvisibility;
                   symtablestack.top.insertsym(newtype);
                 end;
-              current_tokenpos:=defpos;
-              current_tokenpos:=storetokenpos;
+              CurrentTokenPos:=defpos;
+              CurrentTokenPos:=storetokenpos;
               { read the type definition }
               read_named_type(hdef,newtype,gendef,generictypelist,false,isunique);
               { update the definition of the type }
@@ -943,7 +943,7 @@ implementation
                             end;
                           if (hdef.typ in [pointerdef,classrefdef]) and
                              (tabstractpointerdef(hdef).pointeddef.typ=forwarddef) then
-                            current_module.checkforwarddefs.add(hdef);
+                            CurrentModule.checkforwarddefs.add(hdef);
                         end;
 
                       include(hdef.defoptions,df_unique);
@@ -963,7 +963,7 @@ implementation
                 without the generic suffix, so it can be found easily when
                 parsing method implementations }
               if isgeneric and assigned(sym) and
-                  not (m_delphi in current_settings.modeswitches) and
+                  not (m_delphi in CurrentSettings.modeswitches) and
                   (ttypesym(sym).typedef.typ=undefineddef) then
                 begin
                   { don't free the undefineddef as the defids rely on the count
@@ -974,14 +974,14 @@ implementation
               newtype.typedef:=hdef;
               { ensure that the type is registered when no specialization is
                 currently done }
-              if (current_scanner.replay_stack_depth=0) and
+              if (CurrentScanner.replay_stack_depth=0) and
                   (
                     (hdef.typ<>procvardef) or
                     not (po_is_function_ref in tabstractprocdef(hdef).procoptions)
                   ) then
                 hdef.register_def;
               { KAZ: handle TGUID declaration in system unit }
-              if (cs_compilesystem in current_settings.moduleswitches) and
+              if (cs_compilesystem in CurrentSettings.moduleswitches) and
                  assigned(hdef) and
                  (hdef.typ=recorddef) then
                 begin
@@ -1016,7 +1016,7 @@ implementation
   {$endif}
                       if try_to_consume(_NEAR) then
                        begin
-                         if current_scanner.token <> _SEMICOLON then
+                         if CurrentScanner.token <> _SEMICOLON then
                            begin
                              segment_register:=get_stringconst;
                              case UpCase(segment_register) of
@@ -1054,7 +1054,7 @@ implementation
                        parse_proctype_directives(tprocvardef(hdef));
                        if po_is_function_ref in tprocvardef(hdef).procoptions then
                          begin
-                           if not (m_function_references in current_settings.modeswitches) and
+                           if not (m_function_references in CurrentSettings.modeswitches) and
                                not (po_is_block in tprocvardef(hdef).procoptions) then
                              messagepos(storetokenpos,sym_e_error_in_type_def)
                            else
@@ -1065,7 +1065,7 @@ implementation
                                  dummysym:=nil;
                                adjust_funcref(hdef,newtype,dummysym);
                              end;
-                           if current_scanner.replay_stack_depth=0 then
+                           if CurrentScanner.replay_stack_depth=0 then
                              hdef.register_def;
                          end;
                        if hdef.typ=procvardef then
@@ -1169,7 +1169,7 @@ implementation
            { Stop recording a generic template }
            if assigned(generictypelist) then
              begin
-               current_scanner.stoprecordtokens;
+               CurrentScanner.stoprecordtokens;
                tstoreddef(hdef).generictokenbuf:=localgenerictokenbuf;
                { Generic is never a type renaming }
                hdef.typesym:=newtype;
@@ -1187,12 +1187,12 @@ implementation
                generictypelist := nil;
              end;
 
-           if not (m_delphi in current_settings.modeswitches) and
-               (current_scanner.token=_ID) and (current_scanner.idtoken=_GENERIC) then
+           if not (m_delphi in CurrentSettings.modeswitches) and
+               (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC) then
              begin
                had_generic:=true;
                consume(_ID);
-               if current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS] then
+               if CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS] then
                  break;
              end
            else
@@ -1206,16 +1206,16 @@ implementation
             hdef.XMLPrintDef(newtype);
  {$endif DEBUG_NODE_XML}
 
-         until ((current_scanner.token<>_ID) and (current_scanner.token<>_LECKKLAMMER)) or
+         until ((CurrentScanner.token<>_ID) and (CurrentScanner.token<>_LECKKLAMMER)) or
                (in_structure and
-                ((current_scanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
-                 ((m_final_fields in current_settings.modeswitches) and
-                  (current_scanner.idtoken=_FINAL))));
+                ((CurrentScanner.idtoken in [_PRIVATE,_PROTECTED,_PUBLIC,_PUBLISHED,_STRICT]) or
+                 ((m_final_fields in CurrentSettings.modeswitches) and
+                  (CurrentScanner.idtoken=_FINAL))));
          { resolve type block forward declarations and restore a unit
            container for them }
          resolve_forward_types;
-         current_module.checkforwarddefs.free;
-         current_module.checkforwarddefs:=old_checkforwarddefs;
+         CurrentModule.checkforwarddefs.free;
+         CurrentModule.checkforwarddefs:=old_checkforwarddefs;
          block_type:=old_block_type;
       end;
 
@@ -1245,7 +1245,7 @@ implementation
     procedure property_dec;
     { parses a global property (fpc mode feature) }
       var
-         old_block_type: tblock_type;
+         old_block_type: TBlockType;
       begin
          consume(_PROPERTY);
          if not(symtablestack.top.symtabletype in [staticsymtable,globalsymtable]) then
@@ -1255,7 +1255,7 @@ implementation
          repeat
            read_property_dec(false, nil);
            consume(_SEMICOLON);
-         until current_scanner.token<>_ID;
+         until CurrentScanner.token<>_ID;
          block_type:=old_block_type;
       end;
 
@@ -1280,11 +1280,11 @@ implementation
     procedure resourcestring_dec(out had_generic:boolean);
       var
          orgname : TIDString;
-         p : tnode;
+         p : TNode;
          dummysymoptions : tsymoptions;
          deprecatedmsg : pshortstring;
-         storetokenpos,filepos : tfileposinfo;
-         old_block_type : tblock_type;
+         storetokenpos,filepos : TFilePosInfo;
+         old_block_type : TBlockType;
          sp : pchar;
          sym : tsym;
          first,
@@ -1300,17 +1300,17 @@ implementation
          old_block_type:=block_type;
          block_type:=bt_const;
          repeat
-           orgname:=current_scanner.orgpattern;
-           filepos:=current_tokenpos;
-           isgeneric:=not (m_delphi in current_settings.modeswitches) and (current_scanner.token=_ID) and (current_scanner.idtoken=_GENERIC);
+           orgname:=CurrentScanner.orgpattern;
+           filepos:=CurrentTokenPos;
+           isgeneric:=not (m_delphi in CurrentSettings.modeswitches) and (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_GENERIC);
            consume(_ID);
-           case current_scanner.token of
+           case CurrentScanner.token of
              _EQ:
                 begin
                    consume(_EQ);
                    p:=comp_expr([ef_accept_equal]);
-                   storetokenpos:=current_tokenpos;
-                   current_tokenpos:=filepos;
+                   storetokenpos:=CurrentTokenPos;
+                   CurrentTokenPos:=filepos;
                    sym:=nil;
                    case p.nodetype of
                       ordconstn:
@@ -1361,7 +1361,7 @@ implementation
                       else
                         Message(parser_e_illegal_expression);
                    end;
-                   current_tokenpos:=storetokenpos;
+                   CurrentTokenPos:=storetokenpos;
                    { Support hint directives }
                    dummysymoptions:=[];
                    deprecatedmsg:=nil;
@@ -1380,7 +1380,7 @@ implementation
                 end;
               else
                 if not first and isgeneric and
-                    (current_scanner.token in [_PROCEDURE, _FUNCTION, _CLASS]) then
+                    (CurrentScanner.token in [_PROCEDURE, _FUNCTION, _CLASS]) then
                   begin
                     had_generic:=true;
                     break;
@@ -1389,7 +1389,7 @@ implementation
                   consume(_EQ);
            end;
            first:=false;
-         until current_scanner.token<>_ID;
+         until CurrentScanner.token<>_ID;
          block_type:=old_block_type;
       end;
 

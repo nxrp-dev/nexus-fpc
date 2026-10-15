@@ -1633,7 +1633,7 @@ implementation
     function is_mmx_able_array(p : tdef) : boolean;
       begin
 {$ifdef SUPPORT_MMX}
-         if (cs_mmx_saturation in current_settings.localswitches) then
+         if (cs_mmx_saturation in CurrentSettings.localswitches) then
            begin
               is_mmx_able_array:=(p.typ=arraydef) and
                 not(is_special_array(p)) and

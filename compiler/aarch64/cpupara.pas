@@ -34,12 +34,12 @@ unit cpupara;
 
     type
        tcpuparamanager = class(tarmgenparamanager)
-          function get_volatile_registers_int(calloption: tproccalloption): tcpuregisterset; override;
-          function get_volatile_registers_fpu(calloption: tproccalloption): tcpuregisterset; override;
-          function get_volatile_registers_mm(calloption: tproccalloption): tcpuregisterset; override;
-          function get_saved_registers_int(calloption: tproccalloption): tcpuregisterarray; override;
-          function get_saved_registers_mm(calloption: tproccalloption): tcpuregisterarray; override;
-          function push_addr_param(varspez: tvarspez; def: tdef; calloption: tproccalloption): boolean; override;
+          function get_volatile_registers_int(calloption: TProcCallOption): tcpuregisterset; override;
+          function get_volatile_registers_fpu(calloption: TProcCallOption): tcpuregisterset; override;
+          function get_volatile_registers_mm(calloption: TProcCallOption): tcpuregisterset; override;
+          function get_saved_registers_int(calloption: TProcCallOption): tcpuregisterarray; override;
+          function get_saved_registers_mm(calloption: TProcCallOption): tcpuregisterarray; override;
+          function push_addr_param(varspez: tvarspez; def: tdef; calloption: TProcCallOption): boolean; override;
           function ret_in_param(def: tdef; pd: tabstractprocdef):boolean;override;
           function create_paraloc_info(p: tabstractprocdef; side: tcallercallee):longint;override;
           function create_varargs_paraloc_info(p: tabstractprocdef; side: tcallercallee; varargspara: tvarargsparalist):longint;override;
@@ -52,7 +52,7 @@ unit cpupara;
 
           procedure init_para_alloc_values;
           procedure alloc_para(out result: tcgpara; p: tabstractprocdef; varspez: tvarspez; side: tcallercallee; paradef: tdef; isvariadic, isdelphinestedcc: boolean);
-          function getparaloc(calloption: tproccalloption; p: tdef): tcgloc;
+          function getparaloc(calloption: TProcCallOption; p: tdef): tcgloc;
 
           procedure create_paraloc_info_intern(p: tabstractprocdef; side: tcallercallee; paras: tparalist; isvariadic: boolean);
        end;
@@ -72,25 +72,25 @@ unit cpupara;
       RS_LAST_MM_PARAM_SUPREG = RS_D7;
 
 
-    function tcpuparamanager.get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=VOLATILE_INTREGISTERS
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[];
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_mm(calloption: tproccalloption): tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_mm(calloption: TProcCallOption): tcpuregisterset;
       begin
         result:=VOLATILE_MMREGISTERS;
       end;
 
 
-    function tcpuparamanager.get_saved_registers_int(calloption: tproccalloption): tcpuregisterarray;
+    function tcpuparamanager.get_saved_registers_int(calloption: TProcCallOption): tcpuregisterarray;
       const
         saved_regs : tcpuregisterarray =
           (RS_X19,RS_X20,RS_X21,RS_X22,RS_X23,RS_X24,RS_X25,RS_X26,RS_X27,RS_X28);
@@ -99,7 +99,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_saved_registers_mm(calloption: tproccalloption): tcpuregisterarray;
+    function tcpuparamanager.get_saved_registers_mm(calloption: TProcCallOption): tcpuregisterarray;
       const
         saved_mm_regs : tcpuregisterarray =
           (RS_D8,RS_D9,RS_D10,RS_D11,RS_D12,RS_D13,RS_D14,RS_D15);
@@ -108,7 +108,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.getparaloc(calloption: tproccalloption; p: tdef): tcgloc;
+    function tcpuparamanager.getparaloc(calloption: TProcCallOption; p: tdef): tcgloc;
       var
         hfabasedef: tdef;
       begin
@@ -162,7 +162,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.push_addr_param(varspez: tvarspez; def :tdef; calloption: tproccalloption): boolean;
+    function tcpuparamanager.push_addr_param(varspez: tvarspez; def :tdef; calloption: TProcCallOption): boolean;
       var
         hfabasedef: tdef;
       begin
@@ -186,7 +186,7 @@ unit cpupara;
               ((varspez=vs_const) and
                (
                  (calloption=pocall_mwpascal) or
-                 (target_info.system=system_aarch64_win64)
+                 (TargetInfo.system=system_aarch64_win64)
                )) or
               (not is_hfa(def,hfabasedef) and
                (def.size>16));
@@ -525,7 +525,7 @@ unit cpupara;
                     all other platforms. }
                  if (paradef.size<4) and is_ordinal(paradef) then
                    begin
-                     if target_info.abi=abi_aarch64_darwin then
+                     if TargetInfo.abi=abi_aarch64_darwin then
                        begin
                          if side=callerside then
                            begin
@@ -551,7 +551,7 @@ unit cpupara;
                    instructions loading consecutive registers from memory" ->
                    in case of big endian, values in not completely filled
                    registers must be shifted to the top bits }
-                 if (target_info.endian=endian_big) and
+                 if (TargetInfo.endian=endian_big) and
                     not(paraloc^.size in [OS_64,OS_S64]) and
                     (paradef.typ in [setdef,recorddef,arraydef,objectdef]) then
                    paraloc^.shiftval:=-(8-tcgsize2size[paraloc^.size])*8;
@@ -574,7 +574,7 @@ unit cpupara;
                   { the current stack offset may not be properly aligned in
                     case we're on Darwin and have allocated a non-variadic argument
                     < 8 bytes previously }
-                  if target_info.abi=abi_aarch64_darwin then
+                  if TargetInfo.abi=abi_aarch64_darwin then
                     begin
                       curstackoffset:=align(curstackoffset,paraloc^.def.alignment);
                       if firstparaloc then
@@ -584,7 +584,7 @@ unit cpupara;
                   { on Darwin, non-variadic arguments take up their actual size
                     on the stack; on other platforms, they take up a multiple of
                     8 bytes }
-                  if (target_info.abi=abi_aarch64_darwin) and
+                  if (TargetInfo.abi=abi_aarch64_darwin) and
                      not isvariadic then
                     stackslotlen:=paralen
                   else
@@ -594,7 +594,7 @@ unit cpupara;
                     have to occupy the lowest significant bits of a register
                     containing that value which is then stored to memory ->
                     in case of big endian, skip the alignment bytes (if any) }
-                  if target_info.endian=endian_little then
+                  if TargetInfo.endian=endian_little then
                     paraloc^.reference.offset:=curstackoffset
                   else
                     paraloc^.reference.offset:=curstackoffset+stackslotlen-paralen;
@@ -637,7 +637,7 @@ unit cpupara;
         if p.proccalloption in cstylearrayofconst then
           begin
             { on Darwin, we cannot use any registers for variadic parameters }
-            if target_info.abi=abi_aarch64_darwin then
+            if TargetInfo.abi=abi_aarch64_darwin then
               begin
                 curintreg:=succ(RS_LAST_INT_PARAM_SUPREG);
                 curmmreg:=succ(RS_LAST_MM_PARAM_SUPREG);

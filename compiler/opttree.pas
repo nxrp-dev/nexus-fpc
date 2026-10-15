@@ -39,7 +39,7 @@ unit opttree;
 
       returns true, if this was successful
     }
-    function normalize(var n : tnode) : Boolean;
+    function normalize(var n : TNode) : Boolean;
 
   implementation
 
@@ -52,14 +52,14 @@ unit opttree;
       nutils,
       pass_1;
 
-    function searchstatements(var n : tnode;arg : pointer) : foreachnoderesult;forward;
+    function searchstatements(var n : TNode;arg : pointer) : foreachnoderesult;forward;
 
     { success pointer shared across recursive searchstatements calls so nested
       blockns can be processed with the proper arg (their own statement chain) }
     var
       normalize_success : pboolean;
 
-    function hasblock(var n : tnode;arg : pointer) : foreachnoderesult;
+    function hasblock(var n : TNode;arg : pointer) : foreachnoderesult;
       begin
         result:=fen_false;
         if n.nodetype=blockn then
@@ -91,14 +91,14 @@ unit opttree;
           end;
       end;
 
-    function searchblock(var n : tnode;arg : pointer) : foreachnoderesult;
+    function searchblock(var n : TNode;arg : pointer) : foreachnoderesult;
       var
         hp,
         stmnt : tstatementnode;
-        res : pnode;
+        res : PNode;
         tempcreatenode : ttempcreatenode;
         tempdelnode : ttempdeletenode;
-        movedblock : tnode;
+        movedblock : TNode;
       begin
         result:=fen_true;
         if n.nodetype in [addn,orn] then
@@ -116,22 +116,22 @@ unit opttree;
               if assigned(tcallnode(n).callinitblock) then
                 begin
                   { create a new statement node and insert it }
-                  hp:=cstatementnode.create(tcallnode(n).callinitblock,pnode(arg)^);
-                  pnode(arg)^:=hp;
+                  hp:=cstatementnode.create(tcallnode(n).callinitblock,PNode(arg)^);
+                  PNode(arg)^:=hp;
                   { tree moved }
                   tcallnode(n).callinitblock:=nil;
                   { process the newly generated block }
-                  foreachnodestatic(pnode(arg)^,@searchstatements,nil);
+                  foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                 end;
               if assigned(tcallnode(n).callcleanupblock) then
                 begin
                   { create a new statement node and append it }
-                  hp:=cstatementnode.create(tcallnode(n).callcleanupblock,tstatementnode(pnode(arg)^).right);
-                  tstatementnode(pnode(arg)^).right:=hp;
+                  hp:=cstatementnode.create(tcallnode(n).callcleanupblock,tstatementnode(PNode(arg)^).right);
+                  tstatementnode(PNode(arg)^).right:=hp;
                   { tree moved }
                   tcallnode(n).callcleanupblock:=nil;
                   { process the newly generated block }
-                  foreachnodestatic(tstatementnode(pnode(arg)^).right,@searchstatements,nil);
+                  foreachnodestatic(tstatementnode(PNode(arg)^).right,@searchstatements,nil);
                 end;
             end;
           blockn:
@@ -189,8 +189,8 @@ unit opttree;
                             else
                               tempdelnode:=nil;
                             { create a new statement node and insert it }
-                            hp:=cstatementnode.create(n,pnode(arg)^);
-                            pnode(arg)^:=hp;
+                            hp:=cstatementnode.create(n,PNode(arg)^);
+                            PNode(arg)^:=hp;
                             { use the result node instead of the block node }
                             n:=res^;
                             { the old statement is not used anymore }
@@ -201,7 +201,7 @@ unit opttree;
                               tstatementnode(hp.right).right:=
                                 cstatementnode.create(tempdelnode,tstatementnode(hp.right).right);
                             { process the newly generated statement }
-                            foreachnodestatic(pnode(arg)^,@searchstatements,nil);
+                            foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                           end
                         else if assigned(res^.resultdef) and not(is_void(res^.resultdef)) then
                           begin
@@ -214,29 +214,29 @@ unit opttree;
                             { pass_1 on tempcreate sets pi_needs_implicit_finally
                               for managed typedefs; must fire before
                               add_entry_exit_code reads that flag }
-                            do_firstpass(tnode(tempcreatenode));
+                            DoFirstPass(TNode(tempcreatenode));
 
                             { rewrite block's last expression: "temp := <expr>" }
                             res^:=cassignmentnode.create_internal(ctemprefnode.create(tempcreatenode),res^);
-                            do_firstpass(res^);
+                            DoFirstPass(res^);
                             { replace blockn in source expression with a temprefn }
                             movedblock:=n;
                             n:=ctemprefnode.create(tempcreatenode);
-                            do_firstpass(n);
+                            DoFirstPass(n);
 
                             { tempdelete after origstmt }
                             hp:=cstatementnode.create(
                                   ctempdeletenode.create_normal_temp(tempcreatenode),
-                                  tstatementnode(pnode(arg)^).right);
-                            tstatementnode(pnode(arg)^).right:=hp;
+                                  tstatementnode(PNode(arg)^).right);
+                            tstatementnode(PNode(arg)^).right:=hp;
                             { movedblock before origstmt }
-                            hp:=cstatementnode.create(movedblock,pnode(arg)^);
-                            pnode(arg)^:=hp;
+                            hp:=cstatementnode.create(movedblock,PNode(arg)^);
+                            PNode(arg)^:=hp;
                             { tempcreate before movedblock }
-                            hp:=cstatementnode.create(tempcreatenode,pnode(arg)^);
-                            pnode(arg)^:=hp;
+                            hp:=cstatementnode.create(tempcreatenode,PNode(arg)^);
+                            PNode(arg)^:=hp;
 
-                            foreachnodestatic(pnode(arg)^,@searchstatements,nil);
+                            foreachnodestatic(PNode(arg)^,@searchstatements,nil);
                           end;
                       end;
                     end;
@@ -250,7 +250,7 @@ unit opttree;
     var
       searchstatementsproc : staticforeachnodefunction;
 
-    function searchstatements(var n : tnode;arg : pointer) : foreachnoderesult;
+    function searchstatements(var n : TNode;arg : pointer) : foreachnoderesult;
       begin
         if n.nodetype=statementn then
           begin
@@ -269,7 +269,7 @@ unit opttree;
       end;
 
 
-    function normalize(var n: tnode) : Boolean;
+    function normalize(var n: TNode) : Boolean;
       var
         success : Boolean;
       begin

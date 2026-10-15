@@ -31,7 +31,7 @@ interface
 
     type
       taarch64realconstnode = class(tcgrealconstnode)
-        function pass_1 : tnode;override;
+        function pass_1 : TNode;override;
         procedure pass_generate_code;override;
       end;
 
@@ -52,7 +52,7 @@ interface
                            TARMREALCONSTNODE
 *****************************************************************************}
 
-    function taarch64realconstnode.pass_1 : tnode;
+    function taarch64realconstnode.pass_1 : TNode;
       begin
         result:=nil;
         if IsFloatImmediate(tfloatdef(resultdef).floattype,value_real) then
@@ -69,17 +69,17 @@ interface
         if IsFloatImmediate(tfloatdef(resultdef).floattype,value_real) then
           begin
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
-            current_asmdata.CurrAsmList.concat(taicpu.op_reg_realconst(A_FMOV,
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_realconst(A_FMOV,
               location.register,value_real));
           end
         { cast and compare the bit pattern as we cannot handle -0.0 }
         else if IsPosZero(value_real) then
           begin
             location_reset(location,LOC_MMREGISTER,def_cgsize(resultdef));
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
             hreg:=newreg(R_MMREGISTER,getsupreg(location.register),R_SUBMM16B);
-            current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_EOR,
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg_reg(A_EOR,
               hreg,hreg,hreg));
           end
         else

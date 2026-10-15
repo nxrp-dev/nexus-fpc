@@ -30,7 +30,7 @@ unit optdeadstore;
     uses
       node;
 
-    function do_optdeadstoreelim(var rootnode : tnode;out changed: boolean) : tnode;
+    function do_optdeadstoreelim(var rootnode : TNode;out changed: boolean) : TNode;
 
   implementation
 
@@ -43,7 +43,7 @@ unit optdeadstore;
       symsym,symconst;
 
 
-    function deadstoreelim(var n: tnode; arg: pointer): foreachnoderesult;
+    function deadstoreelim(var n: TNode; arg: pointer): foreachnoderesult;
       var
         a: tassignmentnode;
         redundant: boolean;
@@ -64,20 +64,20 @@ unit optdeadstore;
                    not(tabstractvarsym(tloadnode(a.left).symtableentry).addr_taken) and
                    ((
                      (tloadnode(a.left).symtableentry.typ=localvarsym) and
-                     (tloadnode(a.left).symtable=current_procinfo.procdef.localst)) or
+                     (tloadnode(a.left).symtable=CurrentProcInfo.procdef.localst)) or
                     ((tloadnode(a.left).symtableentry.typ=paravarsym) and
-                     (tloadnode(a.left).symtable=current_procinfo.procdef.parast) and
+                     (tloadnode(a.left).symtable=CurrentProcInfo.procdef.parast) and
                      (tparavarsym(tloadnode(a.left).symtableentry).varspez in [vs_const,vs_value])) or
                     ((tloadnode(a.left).symtableentry.typ=staticvarsym) and
                      (tloadnode(a.left).symtable.symtabletype=staticsymtable) and
-                     (current_procinfo.procdef.proctypeoption<>potype_unitinit) and
+                     (CurrentProcInfo.procdef.proctypeoption<>potype_unitinit) and
                      not(vsa_different_scope in tstaticvarsym(tloadnode(a.left).symtableentry).varsymaccess)
                     )
                    ) and
                     ((a.right.nodetype in [niln,stringconstn,pointerconstn,setconstn,guidconstn]) or
-                     ((a.right.nodetype=ordconstn) and not(cs_check_range in current_settings.localswitches)) or
-                     ((a.right.nodetype=realconstn) and not(cs_ieee_errors in current_settings.localswitches)) or
-                    ((cs_opt_dead_values in current_settings.optimizerswitches) and not(might_have_sideeffects(a.right,[mhs_exceptions])))
+                     ((a.right.nodetype=ordconstn) and not(cs_check_range in CurrentSettings.localswitches)) or
+                     ((a.right.nodetype=realconstn) and not(cs_ieee_errors in CurrentSettings.localswitches)) or
+                    ((cs_opt_dead_values in CurrentSettings.optimizerswitches) and not(might_have_sideeffects(a.right,[mhs_exceptions])))
                    ) then
                   begin
                     redundant:=not(assigned(a.successor)) or not(DynSetIn(a.successor.optinfo^.life,a.left.optinfo^.index));
@@ -104,12 +104,12 @@ unit optdeadstore;
       end;
 
 
-    function do_optdeadstoreelim(var rootnode: tnode;out changed: boolean): tnode;
+    function do_optdeadstoreelim(var rootnode: TNode;out changed: boolean): TNode;
       begin
         changed:=false;
-        if not(pi_dfaavailable in current_procinfo.flags) then
+        if not(pi_dfaavailable in CurrentProcInfo.flags) then
           internalerror(2013110201);
-        if not current_procinfo.has_nestedprocs then
+        if not CurrentProcInfo.has_nestedprocs then
           foreachnodestatic(pm_postprocess, rootnode, @deadstoreelim, @changed);
 {$ifdef DEBUG_DEADSTORE}
         if changed then

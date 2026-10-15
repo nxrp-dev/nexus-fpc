@@ -55,11 +55,11 @@ interface
     procedure PrepareReport;
 
     function  CheckVerbosity(v:longint):boolean;
-    function  SetMessageVerbosity(v:longint;state:tmsgstate):boolean;
-    procedure RestoreLocalVerbosity(pstate : pmessagestaterecord);
-    procedure FreeLocalVerbosity(var fstate : pmessagestaterecord);
+    function  SetMessageVerbosity(v:longint;state:TMsgState):boolean;
+    procedure RestoreLocalVerbosity(pstate : PMessageStateRecord);
+    procedure FreeLocalVerbosity(var fstate : PMessageStateRecord);
 
-    function ChangeMessageVerbosity(s: ansistring; var i: integer;state:tmsgstate): boolean;
+    function ChangeMessageVerbosity(s: ansistring; var i: integer;state:TMsgState): boolean;
     procedure ShowStatus;
     function  ErrorCount:longint;
     procedure SetErrorFlags(const s:string);
@@ -73,21 +73,21 @@ interface
     procedure Message2(w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
     procedure Message3(w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
     procedure Message4(w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos(const pos:tfileposinfo;w:longint;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos1(const pos:tfileposinfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos2(const pos:tfileposinfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos3(const pos:tfileposinfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
-    procedure MessagePos4(const pos:tfileposinfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos(const pos:TFilePosInfo;w:longint;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos1(const pos:TFilePosInfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos2(const pos:TFilePosInfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos3(const pos:TFilePosInfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos4(const pos:TFilePosInfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
 
     { message calls with codegenerror support }
     procedure cgmessage(t : longint);
     procedure cgmessage1(t : longint;const s : TMsgStr);
     procedure cgmessage2(t : longint;const s1,s2 : TMsgStr);
     procedure cgmessage3(t : longint;const s1,s2,s3 : TMsgStr);
-    procedure CGMessagePos(const pos:tfileposinfo;t:longint);
-    procedure CGMessagePos1(const pos:tfileposinfo;t:longint;const s1:TMsgStr);
-    procedure CGMessagePos2(const pos:tfileposinfo;t:longint;const s1,s2:TMsgStr);
-    procedure CGMessagePos3(const pos:tfileposinfo;t:longint;const s1,s2,s3:TMsgStr);
+    procedure CGMessagePos(const pos:TFilePosInfo;t:longint);
+    procedure CGMessagePos1(const pos:TFilePosInfo;t:longint;const s1:TMsgStr);
+    procedure CGMessagePos2(const pos:TFilePosInfo;t:longint;const s1,s2:TMsgStr);
+    procedure CGMessagePos3(const pos:TFilePosInfo;t:longint;const s1,s2,s3:TMsgStr);
 
     procedure FlushOutput;
 
@@ -173,7 +173,7 @@ implementation
          writeln(status.reportbugfile,'FPC bug report file');
       end;
 
-    procedure RestoreLocalVerbosity(pstate : pmessagestaterecord);
+    procedure RestoreLocalVerbosity(pstate : PMessageStateRecord);
       { apply the whole stack of message/verbosity changes }
       var
         msgset : thashset;
@@ -186,7 +186,7 @@ implementation
         while assigned(pstate) do
           begin
             {$IFDEF DEBUG_MESSAGESTATE}
-            if assigned(pstate^.owner) and (pstate^.owner<>current_module) then
+            if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
               Internalerror(2026030702);
             {$ENDIF}
             msgfound:=false;
@@ -200,15 +200,15 @@ implementation
         msgset := nil;
       end;
 
-    procedure FreeLocalVerbosity(var fstate : pmessagestaterecord);
-    var pstate : pmessagestaterecord;
+    procedure FreeLocalVerbosity(var fstate : PMessageStateRecord);
+    var pstate : PMessageStateRecord;
       begin
         pstate:=unaligned(fstate);
         while assigned(pstate) do
           begin
             unaligned(fstate):=pstate^.next;
             {$IFDEF DEBUG_MESSAGESTATE}
-            if assigned(pstate^.owner) and (pstate^.owner<>current_module) then
+            if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
               Internalerror(2026030703);
             {$ENDIF}
             dispose(pstate);
@@ -216,7 +216,7 @@ implementation
           end;
       end;
 
-    function ChangeMessageVerbosity(s: ansistring; var i : integer;state:tmsgstate): boolean;
+    function ChangeMessageVerbosity(s: ansistring; var i : integer;state:TMsgState): boolean;
       var
         tok  : ansistring;
         msgnr, code : longint;
@@ -241,7 +241,7 @@ implementation
         result:=true;
       end;
 
-    function SetMessageVerbosity(v:longint;state:tmsgstate):boolean;
+    function SetMessageVerbosity(v:longint;state:TMsgState):boolean;
       begin
         result:=msg^.setverbosity(v,state);
       end;
@@ -254,7 +254,7 @@ implementation
 
     function SetVerbosity(const s:TCmdStr):boolean;
       const
-        message_verbosity:array[boolean] of tmsgstate=(ms_off_global,ms_on_global);
+        message_verbosity:array[boolean] of TMsgState=(ms_off_global,ms_on_global);
       var
         m : Longint;
         i : Integer;
@@ -458,20 +458,20 @@ implementation
         module : tmodule;
       begin
       { fix status }
-        status.currentline:=current_filepos.line;
-        status.currentcolumn:=current_filepos.column;
-        if (current_filepos.moduleindex <> lastmoduleidx) or
-           (current_filepos.fileindex <> lastfileidx) then
+        status.currentline:=CurrentFilePos.line;
+        status.currentcolumn:=CurrentFilePos.column;
+        if (CurrentFilePos.moduleindex <> lastmoduleidx) or
+           (CurrentFilePos.fileindex <> lastfileidx) then
         begin
-          module:=get_module(current_filepos.moduleindex);
+          module:=get_module(CurrentFilePos.moduleindex);
           if assigned(module) and assigned(module.sourcefiles) then
             begin
               { update status record }
               status.currentmodule:=module.modulename^;
               status.currentsourceppufilename:=module.ppufilename;
               status.currentmodulestate:=ModuleStateStr[module.state];
-              status.currentsource:=module.sourcefiles.get_file_name(current_filepos.fileindex);
-              status.currentsourcepath:=module.sourcefiles.get_file_path(current_filepos.fileindex);
+              status.currentsource:=module.sourcefiles.get_file_name(CurrentFilePos.fileindex);
+              status.currentsourcepath:=module.sourcefiles.get_file_path(CurrentFilePos.fileindex);
               status.sources_avail:=module.sources_avail;
               { if currentsourcepath is relative, make it absolute }
               if not path_absolute(status.currentsourcepath) then
@@ -479,7 +479,7 @@ implementation
 
               { update lastfileidx only if name known PM }
               if status.currentsource<>'' then
-                lastfileidx:=current_filepos.fileindex
+                lastfileidx:=CurrentFilePos.fileindex
               else
                 lastfileidx:=0;
 
@@ -641,7 +641,7 @@ implementation
          end;
       end;
 
-    function GetMessageState(m:longint):tmsgstate;
+    function GetMessageState(m:longint):TMsgState;
       var
         i: integer;
       begin
@@ -658,7 +658,7 @@ implementation
         idx,i,v : longint;
         dostop  : boolean;
         doqueue : boolean;
-        st      : tmsgstate;
+        st      : TMsgState;
         ch      : char;
       begin
       {Reset}
@@ -689,7 +689,7 @@ implementation
                     else
                       st:=GetMessageState(w);
                     { We only want to know about local value }
-                    st:= tmsgstate(ord(st) and ms_local_mask);
+                    st:= TMsgState(ord(st) and ms_local_mask);
                     if st=ms_error then
                       begin
                         v:=v or V_Error;
@@ -824,63 +824,63 @@ implementation
       end;
 
 
-    procedure MessagePos(const pos:tfileposinfo;w:longint;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos(const pos:TFilePosInfo;w:longint;onqueue:tmsgqueueevent=nil);
       var
-        oldpos : tfileposinfo;
+        oldpos : TFilePosInfo;
       begin
-        oldpos:=current_filepos;
-        current_filepos:=pos;
+        oldpos:=CurrentFilePos;
+        CurrentFilePos:=pos;
         MaybeLoadMessageFile;
         Msg2Comment(msg^.Get(w,[]),w,onqueue);
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
-    procedure MessagePos1(const pos:tfileposinfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos1(const pos:TFilePosInfo;w:longint;const s1:TMsgStr;onqueue:tmsgqueueevent=nil);
       var
-        oldpos : tfileposinfo;
+        oldpos : TFilePosInfo;
       begin
-        oldpos:=current_filepos;
-        current_filepos:=pos;
+        oldpos:=CurrentFilePos;
+        CurrentFilePos:=pos;
         MaybeLoadMessageFile;
         Msg2Comment(msg^.Get(w,[s1]),w,onqueue);
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
-    procedure MessagePos2(const pos:tfileposinfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos2(const pos:TFilePosInfo;w:longint;const s1,s2:TMsgStr;onqueue:tmsgqueueevent=nil);
       var
-        oldpos : tfileposinfo;
+        oldpos : TFilePosInfo;
       begin
-        oldpos:=current_filepos;
-        current_filepos:=pos;
+        oldpos:=CurrentFilePos;
+        CurrentFilePos:=pos;
         MaybeLoadMessageFile;
         Msg2Comment(msg^.Get(w,[s1,s2]),w,onqueue);
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
-    procedure MessagePos3(const pos:tfileposinfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos3(const pos:TFilePosInfo;w:longint;const s1,s2,s3:TMsgStr;onqueue:tmsgqueueevent=nil);
       var
-        oldpos : tfileposinfo;
+        oldpos : TFilePosInfo;
       begin
-        oldpos:=current_filepos;
-        current_filepos:=pos;
+        oldpos:=CurrentFilePos;
+        CurrentFilePos:=pos;
         MaybeLoadMessageFile;
         Msg2Comment(msg^.Get(w,[s1,s2,s3]),w,onqueue);
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
-    procedure MessagePos4(const pos:tfileposinfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
+    procedure MessagePos4(const pos:TFilePosInfo;w:longint;const s1,s2,s3,s4:TMsgStr;onqueue:tmsgqueueevent=nil);
       var
-        oldpos : tfileposinfo;
+        oldpos : TFilePosInfo;
       begin
-        oldpos:=current_filepos;
-        current_filepos:=pos;
+        oldpos:=CurrentFilePos;
+        CurrentFilePos:=pos;
         MaybeLoadMessageFile;
         Msg2Comment(msg^.Get(w,[s1,s2,s3,s4]),w,onqueue);
-        current_filepos:=oldpos;
+        CurrentFilePos:=oldpos;
       end;
 
 
@@ -892,11 +892,11 @@ implementation
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.Message(t);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
@@ -904,11 +904,11 @@ implementation
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.Message1(t,s);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
@@ -916,11 +916,11 @@ implementation
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.Message2(t,s1,s2);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
@@ -928,60 +928,60 @@ implementation
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.Message3(t,s1,s2,s3);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
 
-    procedure cgmessagepos(const pos:tfileposinfo;t : longint);
+    procedure cgmessagepos(const pos:TFilePosInfo;t : longint);
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.MessagePos(pos,t);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
-    procedure cgmessagepos1(const pos:tfileposinfo;t : longint;const s1 : TMsgStr);
+    procedure cgmessagepos1(const pos:TFilePosInfo;t : longint;const s1 : TMsgStr);
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.MessagePos1(pos,t,s1);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
-    procedure cgmessagepos2(const pos:tfileposinfo;t : longint;const s1,s2 : TMsgStr);
+    procedure cgmessagepos2(const pos:TFilePosInfo;t : longint;const s1,s2 : TMsgStr);
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.MessagePos2(pos,t,s1,s2);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 
-    procedure cgmessagepos3(const pos:tfileposinfo;t : longint;const s1,s2,s3 : TMsgStr);
+    procedure cgmessagepos3(const pos:TFilePosInfo;t : longint;const s1,s2,s3 : TMsgStr);
       var
          olderrorcount : longint;
       begin
-         if not(codegenerror) then
+         if not(CodeGenError) then
            begin
               olderrorcount:=Errorcount;
               verbose.MessagePos3(pos,t,s1,s2,s3);
-              codegenerror:=olderrorcount<>Errorcount;
+              CodeGenError:=olderrorcount<>Errorcount;
            end;
       end;
 

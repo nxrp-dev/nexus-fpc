@@ -165,8 +165,8 @@ begin
    begin
      case s[i] of
       '\' : gccfilename[i]:='/';
- 'A'..'Z' : if not (tf_files_case_aware in source_info.flags) and
-               not (tf_files_case_sensitive in source_info.flags) then
+ 'A'..'Z' : if not (tf_files_case_aware in SourceInfo.flags) and
+               not (tf_files_case_sensitive in SourceInfo.flags) then
               gccfilename[i]:=chr(ord(s[i])+32)
             else
               gccfilename[i]:=s[i];

@@ -127,7 +127,7 @@ Unit racpugas;
         i: TAsmSehDirective;
       begin
         result:=false;
-        if target_info.system<>system_aarch64_win64 then
+        if TargetInfo.system<>system_aarch64_win64 then
           exit;
 
         for i:=low(TAsmSehDirective) to high(TAsmSehDirective) do
@@ -142,7 +142,7 @@ Unit racpugas;
               end;
           end;
         { allow SEH directives only in pure assember routines }
-        if result and not (po_assembler in current_procinfo.procdef.procoptions) then
+        if result and not (po_assembler in CurrentProcInfo.procdef.procoptions) then
           begin
             Message(asmr_e_seh_in_pure_asm_only);
             result:=false;
@@ -721,7 +721,7 @@ Unit racpugas;
                     if (oper.opr.val<>0) then
                       Message(asmr_e_wrong_sym_type);
                     oper.opr.typ:=OPR_SYMBOL;
-                    oper.opr.symbol:=current_asmdata.RefAsmSymbol(mangledname,AT_FUNCTION);
+                    oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(mangledname,AT_FUNCTION);
                   end
                 else
                   inc(oper.opr.val,l);
@@ -1326,7 +1326,7 @@ Unit racpugas;
         if actasmtoken<>AS_TARGET_DIRECTIVE then
           InternalError(2020033102);
         Consume(AS_TARGET_DIRECTIVE);
-        Include(current_procinfo.flags,pi_has_unwind_info);
+        Include(CurrentProcInfo.flags,pi_has_unwind_info);
 
         case actsehdirective of
           ash_nop,

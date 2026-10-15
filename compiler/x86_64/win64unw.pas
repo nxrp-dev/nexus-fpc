@@ -190,7 +190,7 @@ begin
     CGMessage(asmw_e_missing_endprologue);
   if (FPrologueEndPos-FFrameStartSym.address) > 255 then
     CGMessage(asmw_e_prologue_too_large);
-  if codegenerror then
+  if CodeGenError then
     exit;
 
   FXdataSec:=objdata.createsection('.xdata$N_'+lower(FName^),4,[oso_data,oso_load]);
@@ -290,7 +290,7 @@ begin
   if FXdataSec=nil then
     generate_prologue_data(objdata);
 
-  if not codegenerror then
+  if not CodeGenError then
     begin
       pdatasec:=objdata.createsection(sec_pdata,lower(FName^));
       if oso_comdat in FFrameStartSec.SecOptions then

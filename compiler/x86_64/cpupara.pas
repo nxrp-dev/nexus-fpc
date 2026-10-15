@@ -38,13 +38,13 @@ unit cpupara;
                                                var intparareg,mmparareg,parasize:longint;varargsparas: boolean);
        public
           function param_use_paraloc(const cgpara:tcgpara):boolean;override;
-          function push_addr_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;override;
+          function push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;override;
           function ret_in_param(def:tdef;pd:tabstractprocdef):boolean;override;
-          function get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;override;
-          function get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;override;
-          function get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;override;
-          function get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;override;
-          function get_saved_registers_mm(calloption: tproccalloption):tcpuregisterarray;override;
+          function get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;override;
+          function get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;override;
+          function get_saved_registers_mm(calloption: TProcCallOption):tcpuregisterarray;override;
           function create_paraloc_info(p : tabstractprocdef; side: tcallercallee):longint;override;
           function create_varargs_paraloc_info(p : tabstractprocdef; side: tcallercallee; varargspara:tvarargsparalist):longint;override;
           function get_funcretloc(p : tabstractprocdef; side: tcallercallee; forcetempdef: tdef): tcgpara;override;
@@ -298,9 +298,9 @@ unit cpupara;
       end;
 
 
-    function classify_argument(calloption: tproccalloption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; byte_offset: aint; round_to_8: Boolean): longint; forward;
+    function classify_argument(calloption: TProcCallOption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; byte_offset: aint; round_to_8: Boolean): longint; forward;
 
-    function init_aggregate_classification(calloption: tproccalloption; def: tdef; parentdef: tdef; varspez: tvarspez; byte_offset: aint; out words: longint; out classes: tx64paraclasses): longint;
+    function init_aggregate_classification(calloption: TProcCallOption; def: tdef; parentdef: tdef; varspez: tvarspez; byte_offset: aint; out words: longint; out classes: tx64paraclasses): longint;
       var
         i: longint;
       begin
@@ -378,7 +378,7 @@ unit cpupara;
       end;
 
 
-    function classify_aggregate_element(calloption: tproccalloption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; new_byte_offset: aint): longint;
+    function classify_aggregate_element(calloption: TProcCallOption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; new_byte_offset: aint): longint;
       var
         subclasses: tx64paraclasses;
         i,
@@ -401,7 +401,7 @@ unit cpupara;
       end;
 
 
-    function finalize_aggregate_classification(calloption: tproccalloption; def: tdef; words: longint; var classes: tx64paraclasses): longint;
+    function finalize_aggregate_classification(calloption: TProcCallOption; def: tdef; words: longint; var classes: tx64paraclasses): longint;
       var
         i, vecsize, maxvecsize: longint;
       begin
@@ -753,7 +753,7 @@ unit cpupara;
       end;
 
 
-    function classify_record(calloption: tproccalloption; def: tdef; parentdef: tdef; varspez: tvarspez; var classes: tx64paraclasses; byte_offset: aint): longint;
+    function classify_record(calloption: TProcCallOption; def: tdef; parentdef: tdef; varspez: tvarspez; var classes: tx64paraclasses; byte_offset: aint): longint;
       var
         vs: tfieldvarsym;
         size,
@@ -835,7 +835,7 @@ unit cpupara;
       end;
 
 
-    function classify_normal_array(calloption: tproccalloption; def: tarraydef; parentdef: tdef; varspez: tvarspez; var classes: tx64paraclasses; byte_offset: aint): longint;
+    function classify_normal_array(calloption: TProcCallOption; def: tarraydef; parentdef: tdef; varspez: tvarspez; var classes: tx64paraclasses; byte_offset: aint): longint;
       var
         i, elecount: aword;
         size,
@@ -900,7 +900,7 @@ unit cpupara;
       end;
 
 
-    function classify_argument(calloption: tproccalloption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; byte_offset: aint; round_to_8: Boolean): longint;
+    function classify_argument(calloption: TProcCallOption; def: tdef; parentdef: tdef; varspez: tvarspez; real_size: aint; var classes: tx64paraclasses; byte_offset: aint; round_to_8: Boolean): longint;
       var
         rounded_offset: aint;
       begin
@@ -1045,7 +1045,7 @@ unit cpupara;
 
 
     { Returns the size of a single element in the aggregate, or the entire vector, if it is one of these types, 0 otherwise }
-    function is_simd_vector_type_or_homogeneous_aggregate(calloption: tproccalloption; def: tdef; varspez: tvarspez): aint;
+    function is_simd_vector_type_or_homogeneous_aggregate(calloption: TProcCallOption; def: tdef; varspez: tvarspez): aint;
       var
         numclasses,i,vecsize,veccount,maxvecsize:longint;
         classes: tx64paraclasses;
@@ -1163,7 +1163,7 @@ unit cpupara;
       end;
 
 
-    procedure getvalueparaloc(calloption: tproccalloption;varspez:tvarspez;def:tdef;var classes: tx64paraclasses);
+    procedure getvalueparaloc(calloption: TProcCallOption;varspez:tvarspez;def:tdef;var classes: tx64paraclasses);
       var
         size: aint;
         i: longint;
@@ -1253,7 +1253,7 @@ unit cpupara;
 
 
     { true if a parameter is too large to copy and only the address is pushed }
-    function tcpuparamanager.push_addr_param(varspez:tvarspez;def : tdef;calloption : tproccalloption) : boolean;
+    function tcpuparamanager.push_addr_param(varspez:tvarspez;def : tdef;calloption : TProcCallOption) : boolean;
       var
         classes: tx64paraclasses;
         numclasses: longint;
@@ -1348,7 +1348,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_int(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_int(calloption : TProcCallOption):tcpuregisterset;
       begin
         if x86_64_use_ms_abi(calloption) then
           result:=[RS_RAX,RS_RCX,RS_RDX,RS_R8,RS_R9,RS_R10,RS_R11]
@@ -1357,7 +1357,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_mm(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_mm(calloption : TProcCallOption):tcpuregisterset;
       begin
         if x86_64_use_ms_abi(calloption) then
           result:=[RS_XMM0..RS_XMM5]
@@ -1365,18 +1365,18 @@ unit cpupara;
           result:=[RS_XMM0..RS_XMM15];
 
         { Don't list registers that aren't available }
-        if FPUX86_HAS_32MMREGS in fpu_capabilities[current_settings.fputype] then
+        if FPUX86_HAS_32MMREGS in fpu_capabilities[CurrentSettings.fputype] then
           result:=result+[RS_XMM16..RS_XMM31];
       end;
 
 
-    function tcpuparamanager.get_volatile_registers_fpu(calloption : tproccalloption):tcpuregisterset;
+    function tcpuparamanager.get_volatile_registers_fpu(calloption : TProcCallOption):tcpuregisterset;
       begin
         result:=[RS_ST0..RS_ST7];
       end;
 
 
-    function tcpuparamanager.get_saved_registers_int(calloption : tproccalloption):tcpuregisterarray;
+    function tcpuparamanager.get_saved_registers_int(calloption : TProcCallOption):tcpuregisterarray;
       const
         win64_saved_std_regs : tcpuregisterarray = (RS_RBX,RS_RDI,RS_RSI,RS_R12,RS_R13,RS_R14,RS_R15,RS_RBP);
         others_saved_std_regs : tcpuregisterarray = (RS_RBX,RS_R12,RS_R13,RS_R14,RS_R15);
@@ -1388,7 +1388,7 @@ unit cpupara;
       end;
 
 
-    function tcpuparamanager.get_saved_registers_mm(calloption: tproccalloption):tcpuregisterarray;
+    function tcpuparamanager.get_saved_registers_mm(calloption: TProcCallOption):tcpuregisterarray;
       const
         win64_saved_xmm_regs : tcpuregisterarray = (RS_XMM6,RS_XMM7,
           RS_XMM8,RS_XMM9,RS_XMM10,RS_XMM11,RS_XMM12,RS_XMM13,RS_XMM14,RS_XMM15);
@@ -1496,7 +1496,7 @@ unit cpupara;
                             for backward compatibility. On other platforms, it
                             doesn't and hence we don't either }
                           if (i=0) and
-                             not(target_info.system in systems_darwin) and
+                             not(TargetInfo.system in systems_darwin) and
                              (result.intsize in [1,2]) then
                             begin
                               paraloc^.size:=int_cgsize(result.intsize);
@@ -1838,7 +1838,7 @@ unit cpupara;
                                 attributes by definition only apply to the
                                 caller side }
 
-                              if not(target_info.system in systems_darwin) and
+                              if not(TargetInfo.system in systems_darwin) and
                                  (side=calleeside) and
                                  (hp.paraloc[side].intsize in [1,2]) then
                                 begin
@@ -2023,7 +2023,7 @@ unit cpupara;
                   begin
                     with paraloc^ do
                      if (loc=LOC_REFERENCE) then
-                       inc(reference.offset,target_info.first_parm_offset);
+                       inc(reference.offset,TargetInfo.first_parm_offset);
                     paraloc:=paraloc^.next;
                   end;
               end;

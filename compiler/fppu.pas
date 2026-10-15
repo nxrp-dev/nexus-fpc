@@ -299,7 +299,7 @@ var
 
       function checkheader: boolean;
         var
-          psi: psysteminfo;
+          psi: PSystemInfo;
           system_name: shortstring;
         begin
           result:=false;
@@ -316,13 +316,13 @@ var
                exit;
              end;
           { check the target processor }
-            if TSystemCPU(ppufile.header.common.cpu)<>target_cpu then
+            if TSystemCPU(ppufile.header.common.cpu)<>TargetCPU then
              begin
                Message1(unit_u_ppu_invalid_processor,cpu2str[Ord(TSystemCPU(ppufile.header.common.cpu))],@queuecomment);
                exit;
              end;
           { check target }
-            if TSystem(ppufile.header.common.target)<>target_info.system then
+            if TSystem(ppufile.header.common.target)<>TargetInfo.system then
              begin
                psi:=targetinfos[Ord(TSystem(ppufile.header.common.target))];
                if assigned(psi) then
@@ -372,7 +372,7 @@ var
              not(mf_release in moduleflags) and
              not(mf_system_unit in moduleflags) and
              (mf_nexus_profile in moduleflags) and
-             not(cs_nexus_profile in current_settings.moduleswitches) then
+             not(cs_nexus_profile in CurrentSettings.moduleswitches) then
             begin
               Comment(V_Normal,
                 'PPU profiling state does not match the current Nexus profiling build');
@@ -450,7 +450,7 @@ var
            Found:=false;
            singlepathstring:=FixPath(s,false);
          { Check for PPU file }
-           Found:=UnitExists(target_info.unitext,hs,prefix);
+           Found:=UnitExists(TargetInfo.unitext,hs,prefix);
            if Found then
             Begin
               SetFileName(hs,false);
@@ -481,8 +481,8 @@ var
          { Check for Pascal source }
            Found:=UnitExists(sourceext,hs,prefix);
            if not Found and
-              ((m_mac in current_settings.modeswitches) or
-               (tf_p_ext_support in target_info.flags)) then
+              ((m_mac in CurrentSettings.modeswitches) or
+               (tf_p_ext_support in TargetInfo.flags)) then
             begin
               { Check for .p, if mode is macpas}
               Found:=UnitExists(pext,hs,prefix);
@@ -622,8 +622,8 @@ var
             if FindFile(ChangeFileExt(sourcefn,sourceext),'',true,hs) then
               include(fnd,auSrc);
             if (fnd=[]) and
-               ((m_mac in current_settings.modeswitches) or
-                (tf_p_ext_support in target_info.flags)) then
+               ((m_mac in CurrentSettings.modeswitches) or
+                (tf_p_ext_support in TargetInfo.flags)) then
              begin
                if CheckVerbosity(V_Tried) then
                  Message1(unit_t_unitsearch,ChangeFileExt(sourcefn,pext));
@@ -646,8 +646,8 @@ var
            begin
              fnd:=SearchSourcePaths('');
              // current_namespacelist is set to the current module's namespacelist.
-             if (fnd=[]) and assigned(current_namespacelist) and (current_namespacelist.count>0) then
-               fnd:=SearchNameSpaceList(current_namespacelist);
+             if (fnd=[]) and assigned(CurrentNamespaceList) and (CurrentNamespaceList.count>0) then
+               fnd:=SearchNameSpaceList(CurrentNamespaceList);
              if (fnd=[]) and (namespacelist.count>0) then
                fnd:=SearchNameSpaceList(namespacelist);
            end;
@@ -1023,7 +1023,7 @@ var
         flags : byte;
       begin
         { Optional metadata: units without exports retain the existing format. }
-        if not (target_info.system in (systems_windows+systems_linux)) or
+        if not (TargetInfo.system in (systems_windows+systems_linux)) or
            not assigned(_exports.first) then
           exit;
         hp:=texported_item(_exports.first);
@@ -1081,11 +1081,11 @@ var
           include(moduleflags,mf_release);
         if assigned(localsymtable) then
           include(moduleflags,mf_local_symtable);
-        if cs_checkpointer_called in current_settings.moduleswitches then
+        if cs_checkpointer_called in CurrentSettings.moduleswitches then
           include(moduleflags,mf_checkpointer_called);
-        if cs_compilesystem in current_settings.moduleswitches then
+        if cs_compilesystem in CurrentSettings.moduleswitches then
           include(moduleflags,mf_system_unit);
-        if cs_nexus_profile in current_settings.moduleswitches then
+        if cs_nexus_profile in CurrentSettings.moduleswitches then
           include(moduleflags,mf_nexus_profile);
          if compilerwide_unicode_strings then
            include(moduleflags,mf_unicode_default);
@@ -1515,7 +1515,7 @@ var
              ibmodulename :
                begin
                  newmodulename:=ppufile.getstring;
-                 if (cs_check_unit_name in current_settings.globalswitches) and
+                 if (cs_check_unit_name in CurrentSettings.globalswitches) and
                     (upper(newmodulename)<>modulename^) then
                    Message2(unit_f_unit_name_error,realmodulename^,newmodulename);
                  stringdispose(modulename);
@@ -1626,7 +1626,7 @@ var
       begin
          { A System unit built with a contradictory Char alias must never
            receive a PPU bearing the invocation's text-model flag. }
-         if (cs_compilesystem in current_settings.moduleswitches) and
+         if (cs_compilesystem in CurrentSettings.moduleswitches) and
             (search_system_type('CHAR').typedef.size <>
              1+Ord(compilerwide_unicode_strings)) then
            Comment(V_Fatal,'System.Char width does not match this compiler invocation''s default text model');
@@ -1665,7 +1665,7 @@ var
              ppufile.writeentry(ibmainname);
            end;
 
-         if cs_compilesystem in current_settings.moduleswitches then
+         if cs_compilesystem in CurrentSettings.moduleswitches then
            begin
              ppufile.putset(tppuset4(features));
              ppufile.writeentry(ibfeatures);
@@ -1710,7 +1710,7 @@ var
 
          { generate implementation deref data, the interface deref data is
            already generated when calculating the interface crc }
-         if (cs_compilesystem in current_settings.moduleswitches) then
+         if (cs_compilesystem in CurrentSettings.moduleswitches) then
            begin
              tstoredsymtable(globalsymtable).buildderef;
              derefdataintflen:=derefdata.size;
@@ -1760,7 +1760,7 @@ var
 
          { Calls and procedure addresses introduced by inlining or code
            generation need the same package import lookup as parsed calls. }
-         if tf_supports_packages in target_info.flags then
+         if tf_supports_packages in TargetInfo.flags then
            begin
              lAsmSymbols:=TAsmData(asmdata).AsmSymbolDict;
              for lIndex:=0 to lAsmSymbols.Count-1 do
@@ -1816,11 +1816,11 @@ var
          ppufile.header.interface_checksum:=interface_crc;
          ppufile.header.indirect_checksum:=indirect_crc;
          ppufile.header.common.compiler:=wordversion;
-         ppufile.header.common.cpu:=word(target_cpu);
-         ppufile.header.common.target:=word(target_info.system);
+         ppufile.header.common.cpu:=word(TargetCPU);
+         ppufile.header.common.target:=word(TargetInfo.system);
          ppufile.header.common.flags:=headerflags;
-         ppufile.header.deflistsize:=current_module.deflist.count;
-         ppufile.header.symlistsize:=current_module.symlist.count;
+         ppufile.header.deflistsize:=CurrentModule.deflist.count;
+         ppufile.header.symlistsize:=CurrentModule.symlist.count;
          ppufile.writeheader;
 
 
@@ -1906,8 +1906,8 @@ var
          ppufile.header.interface_checksum:=interface_crc;
          ppufile.header.indirect_checksum:=indirect_crc;
          ppufile.header.common.compiler:=wordversion;
-         ppufile.header.common.cpu:=word(target_cpu);
-         ppufile.header.common.target:=word(target_info.system);
+         ppufile.header.common.cpu:=word(TargetCPU);
+         ppufile.header.common.target:=word(TargetInfo.system);
          ppufile.header.common.flags:=headerflags;
          ppufile.writeheader;
 
@@ -1994,7 +1994,7 @@ var
       { self is a ppu (or in a package) }
       begin
         Result:=true;
-        if current_module<>self then
+        if CurrentModule<>self then
           internalerror(200212284);
 
         if not interface_compiled then
@@ -2003,10 +2003,10 @@ var
           in_interface:=true;
           if not load_usedunits_section then
             exit(false); { e.g. fail or some used unit interface is not ready }
-          if current_module<>self then
+          if CurrentModule<>self then
             internalerror(2026022317);
           { ok, now load the interface of this unit }
-          if current_module<>self then
+          if CurrentModule<>self then
             internalerror(200208187);
           deflist.count:=ppufile.header.deflistsize;
           symlist.count:=ppufile.header.symlistsize;
@@ -2034,7 +2034,7 @@ var
         begin
           if not load_usedunits_section then
             exit(false); { fail or some used unit interface is not ready }
-          if current_module<>self then
+          if CurrentModule<>self then
             internalerror(2026022316);
         end;
 
@@ -2240,7 +2240,7 @@ var
 
     procedure tppumodule.restore_state;
       begin
-        set_current_module(self);
+        SetCurrentModule(self);
         if stored_state<>nil then
           stored_state.restore;
       end;
@@ -2286,7 +2286,7 @@ var
       var
         was_interfaced_compiled: Boolean;
       begin
-        set_current_module(self);
+        SetCurrentModule(self);
         check_sources_for_recompile;
 
         {$IFDEF DEBUG_PPU_CYCLES}
@@ -2397,13 +2397,13 @@ var
 
         loadedfrommodule:=from_module;
 
-        old_module:=current_module;
-        set_current_module(self);
+        old_module:=CurrentModule;
+        SetCurrentModule(self);
 
         if check_loadfrompackage then
         begin
           Result:=continueloadppu;
-          set_current_module(old_module);
+          SetCurrentModule(old_module);
           {$IFDEF DEBUG_PPU_CYCLES}
           writeln('PPUALGO tppumodule.loadppu from package: ',modulename^,' (',statestr,') used by "',from_module.modulename^,'" (',from_module.statestr,')');
           {$ENDIF}
@@ -2429,7 +2429,7 @@ var
 
         Result:=continueloadppu;
 
-        set_current_module(old_module);
+        SetCurrentModule(old_module);
       end;
 
     function tppumodule.get_check_uses(out check_impl_uses, check_crc: boolean): boolean;
@@ -2458,7 +2458,7 @@ var
         old_module: tmodule;
       begin
         Result:=false;
-        old_module:=current_module;
+        old_module:=CurrentModule;
 
         restore_state;
 
@@ -2480,7 +2480,7 @@ var
             {$ENDIF}
             store_state;
             { loading unfinished or reset, restore current_module }
-            set_current_module(old_module);
+            SetCurrentModule(old_module);
             exit;
           end else if state<>ms_compile then
             internalerror(2026020510);
@@ -2501,7 +2501,7 @@ var
         FreeAndNil(stored_state);
 
         { we are back, restore current_module }
-        set_current_module(old_module);
+        SetCurrentModule(old_module);
       end;
 
     function tppumodule.canreload(out firstwaiting: tmodule; ignore_do_reload: boolean): boolean;
@@ -2558,7 +2558,7 @@ var
         {$ENDIF}
         Message(unit_u_forced_reload);
         do_reload:=false;
-        set_current_module(self);
+        SetCurrentModule(self);
         re_resolve;
       end;
 

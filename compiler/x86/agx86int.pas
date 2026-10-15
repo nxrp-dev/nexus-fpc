@@ -459,9 +459,9 @@ implementation
       if not assigned(p) then
        exit;
       { lineinfo is only needed for al_procedures (PFV) }
-      do_line:=((cs_asm_source in current_settings.globalswitches) or
-                (cs_lineinfo in current_settings.moduleswitches))
-                 and (p=current_asmdata.asmlists[al_procedures]);
+      do_line:=((cs_asm_source in CurrentSettings.globalswitches) or
+                (cs_lineinfo in CurrentSettings.moduleswitches))
+                 and (p=CurrentAsmData.asmlists[al_procedures]);
       InlineLevel:=0;
       DoNotSplitLine:=false;
       hp:=tai(p.first);
@@ -470,7 +470,7 @@ implementation
          prefetch(pointer(hp.next)^);
          if not(hp.typ in SkipLineInfo) then
           begin
-            current_filepos:=tailineinfo(hp).fileinfo;
+            CurrentFilePos:=tailineinfo(hp).fileinfo;
             { no line info for inlined code }
             if do_line and (inlinelevel=0) and not DoNotSplitLine then
               WriteSourceLine(hp as tailineinfo);
@@ -621,7 +621,7 @@ implementation
                               end;
                        end; { end for i:=0 to... }
                      if quoted then writer.AsmWrite('"');
-                       writer.AsmWrite(target_info.newline);
+                       writer.AsmWrite(TargetInfo.newline);
                      counter := counter+line_length;
                   end; { end for j:=0 ... }
                 { do last line of lines }
@@ -847,9 +847,9 @@ implementation
         sym : TAsmSymbol;
         i   : longint;
       begin
-        for i:=0 to current_asmdata.AsmSymbolDict.Count-1 do
+        for i:=0 to CurrentAsmData.AsmSymbolDict.Count-1 do
           begin
-            sym:=TAsmSymbol(current_asmdata.AsmSymbolDict[i]);
+            sym:=TAsmSymbol(CurrentAsmData.AsmSymbolDict[i]);
             if sym.bind in [AB_EXTERNAL,AB_EXTERNAL_INDIRECT] then
               begin
                 if asminfo^.id=as_x86_64_masm then
@@ -866,15 +866,15 @@ implementation
       hal : tasmlisttype;
     begin
 {$ifdef EXTDEBUG}
-      if current_module.mainsource<>'' then
-       comment(v_info,'Start writing intel-styled assembler output for '+current_module.mainsource);
+      if CurrentModule.mainsource<>'' then
+       comment(v_info,'Start writing intel-styled assembler output for '+CurrentModule.mainsource);
 {$endif}
       WriteExternals;
 
       for hal:=low(TasmlistType) to high(TasmlistType) do
         begin
           writer.AsmWriteLn(asminfo^.comment+'Begin asmlist '+AsmListTypeStr[hal]);
-          writetree(current_asmdata.asmlists[hal]);
+          writetree(CurrentAsmData.asmlists[hal]);
           writer.AsmWriteLn(asminfo^.comment+'End asmlist '+AsmListTypeStr[hal]);
         end;
 
@@ -894,8 +894,8 @@ implementation
       writer.AsmLn;
 
 {$ifdef EXTDEBUG}
-      if current_module.mainsource<>'' then
-       comment(v_info,'Done writing intel-styled assembler output for '+current_module.mainsource);
+      if CurrentModule.mainsource<>'' then
+       comment(v_info,'Done writing intel-styled assembler output for '+CurrentModule.mainsource);
 {$endif EXTDEBUG}
    end;
 
@@ -906,7 +906,7 @@ implementation
 
     const
 {$ifdef x86_64}
-       as_x86_64_masm_info : tasminfo =
+       as_x86_64_masm_info : TAsmInfo =
           (
             id     : as_x86_64_masm;
             idtxt  : 'MASM';

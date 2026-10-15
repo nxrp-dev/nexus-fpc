@@ -112,10 +112,12 @@ with normal and `-O2` builds, the Clang assembly/debug-information sample,
 and the relocated distribution smoke check passed. Execution logs confirm
 Clang and LLD were invoked; the compiler ELF records LLD 18.1.3.
 
-The unchanged `tests/systemids/nxsystemids.pas` fixture still expects a
+The original `tests/systemids/nxsystemids.pas` fixture expected a
 three-byte CPU-ID set; stock FPC 3.2.2 and both Nexus builds produce four.
-A diagnostic copy with that expectation corrected passes in normal and
-`-O2` builds. No compiler or RTL source changes were needed.
+A diagnostic copy with that expectation corrected passed in normal and
+`-O2` builds. The checked-in fixture now expects four bytes and passes with
+stock FPC 3.2.2 and NexusFPC at `-O1` and `-O2`. No compiler or RTL source
+changes were needed for this test correction.
 
 The local LLVM compiler and matching base RTL are under
 `output/nexus-fpc-linux-x86_64/`; its configuration selects `-Aas-clang -XLL`.

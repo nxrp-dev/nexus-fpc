@@ -1739,8 +1739,8 @@ Implementation
     begin
       Result := NR_NO;
       RegSet :=
-        paramanager.get_volatile_registers_int(current_procinfo.procdef.proccalloption) +
-        current_procinfo.saved_regs_int;
+        paramanager.get_volatile_registers_int(CurrentProcInfo.procdef.proccalloption) +
+        CurrentProcInfo.saved_regs_int;
 (*
       { Don't use the frame register unless explicitly allowed (fixes i40111) }
       if ([cs_useebp, cs_userbp] * current_settings.optimizerswitches) = [] then
@@ -1865,7 +1865,7 @@ Implementation
                     begin
                       Inc(Result);
                     end
-                  else if not (cs_opt_size in current_settings.optimizerswitches) and
+                  else if not (cs_opt_size in CurrentSettings.optimizerswitches) and
                     { CSEL with constants grows the code size }
                     TryCSELConst(hp1, SearchStart, BlockStop, Result) then
                     begin

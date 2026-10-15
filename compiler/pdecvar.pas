@@ -82,16 +82,16 @@ implementation
             sym : tsym;
             srsymtable : TSymtable;
             st  : TSymtable;
-            p   : tnode;
+            p   : TNode;
           begin
             result:=true;
             def:=nil;
-            if current_scanner.token=_ID then
+            if CurrentScanner.token=_ID then
              begin
                if assigned(astruct) then
-                 sym:=search_struct_member(astruct,current_scanner.pattern)
+                 sym:=search_struct_member(astruct,CurrentScanner.pattern)
                else
-                 searchsym(current_scanner.pattern,sym,srsymtable);
+                 searchsym(CurrentScanner.pattern,sym,srsymtable);
                if assigned(sym) then
                 begin
                   if assigned(astruct) and
@@ -111,7 +111,7 @@ implementation
                       end;
                     else
                       begin
-                        Message1(parser_e_illegal_field_or_method,current_scanner.orgpattern);
+                        Message1(parser_e_illegal_field_or_method,CurrentScanner.orgpattern);
                         def:=generrordef;
                         result:=false;
                       end;
@@ -119,13 +119,13 @@ implementation
                 end
                else
                 begin
-                  Message1(parser_e_illegal_field_or_method,current_scanner.orgpattern);
+                  Message1(parser_e_illegal_field_or_method,CurrentScanner.orgpattern);
                   def:=generrordef;
                   result:=false;
                 end;
                consume(_ID);
                repeat
-                 case current_scanner.token of
+                 case CurrentScanner.token of
                    _ID,
                    _SEMICOLON :
                      begin
@@ -141,9 +141,9 @@ implementation
                           st:=def.GetSymtable(gs_record);
                           if assigned(st) then
                            begin
-                             sym:=tsym(st.Find(current_scanner.pattern));
+                             sym:=tsym(st.Find(CurrentScanner.pattern));
                              if not(assigned(sym)) and is_object(def) then
-                               sym:=search_struct_member(tobjectdef(def),current_scanner.pattern);
+                               sym:=search_struct_member(tobjectdef(def),CurrentScanner.pattern);
                              if assigned(sym) then
                               begin
                                 pl.addsym(sl_subscript,sym);
@@ -152,14 +152,14 @@ implementation
                                     def:=tfieldvarsym(sym).vardef;
                                   else
                                     begin
-                                      Message1(sym_e_illegal_field,current_scanner.orgpattern);
+                                      Message1(sym_e_illegal_field,CurrentScanner.orgpattern);
                                       result:=false;
                                     end;
                                 end;
                               end
                              else
                               begin
-                                Message1(sym_e_illegal_field,current_scanner.orgpattern);
+                                Message1(sym_e_illegal_field,CurrentScanner.orgpattern);
                                 result:=false;
                               end;
                            end
@@ -184,7 +184,7 @@ implementation
                           begin
                             idx:=0;
                             p:=comp_expr([ef_accept_equal]);
-                            if (not codegenerror) then
+                            if (not CodeGenError) then
                              begin
                                if (p.nodetype=ordconstn) then
                                  begin
@@ -281,7 +281,7 @@ implementation
               var paranr: word);
             var
               hasread, haswrite: boolean;
-              pt: tnode;
+              pt: TNode;
               hdispid: longint;
               hparavs: tparavarsym;
             begin
@@ -346,7 +346,7 @@ implementation
          hdef : tdef;
          arraytype : tdef;
          def : tdef;
-         pt : tnode;
+         pt : TNode;
          sc : TFPObjectList;
          paranr : word;
          i      : longint;
@@ -376,14 +376,14 @@ implementation
              writeprocdef.procoptions:=[po_staticmethod,po_classmethod];
            end;
 
-         if current_scanner.token<>_ID then
+         if CurrentScanner.token<>_ID then
            begin
               consume(_ID);
               consume(_SEMICOLON);
               exit;
            end;
          { Generate propertysym and insert in symtablestack }
-         p:=cpropertysym.create(current_scanner.orgpattern);
+         p:=cpropertysym.create(CurrentScanner.orgpattern);
          p.visibility:=symtablestack.top.currentvisibility;
          p.default:=longint($80000000);
          if is_classproperty then
@@ -395,7 +395,7 @@ implementation
            begin
               { Published indexed properties are allowed in Delphi in interfaces compiled with $M+. }
               if (p.visibility=vis_published) and
-                not((m_delphi in current_settings.modeswitches) and is_interfacecom_or_dispinterface(astruct)) then
+                not((m_delphi in CurrentSettings.modeswitches) and is_interfacecom_or_dispinterface(astruct)) then
                 Message(parser_e_cant_publish_that_property);
               { create a list of the parameters }
               p.parast:=tparasymtable.create(nil,0);
@@ -408,14 +408,14 @@ implementation
                   varspez:=vs_const
                 else if try_to_consume(_CONSTREF) then
                   varspez:=vs_constref
-                else if (m_out in current_settings.modeswitches) and try_to_consume(_OUT) then
+                else if (m_out in CurrentSettings.modeswitches) and try_to_consume(_OUT) then
                   varspez:=vs_out
                 else
                   varspez:=vs_value;
                 sc.clear;
                 repeat
                   inc(paranr);
-                  hreadparavs:=cparavarsym.create(current_scanner.orgpattern,10*paranr,varspez,generrordef,[]);
+                  hreadparavs:=cparavarsym.create(CurrentScanner.orgpattern,10*paranr,varspez,generrordef,[]);
                   p.parast.insertsym(hreadparavs);
                   sc.add(hreadparavs);
                   consume(_ID);
@@ -457,7 +457,7 @@ implementation
          { force property interface
              there is a property parameter
              a global property }
-         if (current_scanner.token=_COLON) or (paranr>0) or (astruct=nil) then
+         if (CurrentScanner.token=_COLON) or (paranr>0) or (astruct=nil) then
            begin
               consume(_COLON);
               single_type(p.propdef,[stoAllowSpecialization]);
@@ -465,7 +465,7 @@ implementation
               if is_dispinterface(astruct) and not is_automatable(p.propdef) then
                 Message1(type_e_not_automatable,p.propdef.typename);
 
-              if (current_scanner.idtoken=_INDEX) then
+              if (CurrentScanner.idtoken=_INDEX) then
                 begin
                    consume(_INDEX);
                    pt:=comp_expr([ef_accept_equal]);
@@ -609,13 +609,13 @@ implementation
               begin
                 include(p.propoptions,ppo_stored);
                 p.propaccesslist[palt_stored].clear;
-                if current_scanner.token=_ID then
+                if CurrentScanner.token=_ID then
                   begin
                     { in the case that idtoken=_DEFAULT }
                     { we have to do nothing except      }
                     { setting ppo_stored, it's the same }
                     { as stored true                    }
-                    if current_scanner.idtoken<>_DEFAULT then
+                    if CurrentScanner.idtoken<>_DEFAULT then
                      begin
                        { parse_symlist cannot deal with constsyms, and
                          we also don't want to put constsyms in symlists
@@ -633,8 +633,8 @@ implementation
                        }
                        sym:=nil;
                        if (not assigned(astruct) or
-                           (search_struct_member(astruct,current_scanner.pattern)=nil)) and
-                          searchsym(current_scanner.pattern,sym,srsymtable) and
+                           (search_struct_member(astruct,CurrentScanner.pattern)=nil)) and
+                          searchsym(CurrentScanner.pattern,sym,srsymtable) and
                           (sym.typ = constsym) then
                          begin
                             addsymref(sym);
@@ -719,7 +719,7 @@ implementation
                      (pt.nodetype=arrayconstructorn) then
                     begin
                       arrayconstructor_to_set(pt);
-                      do_typecheckpass(pt);
+                      DoTypeCheckPass(pt);
                     end;
                   inserttypeconv(pt,p.propdef);
                   if not(is_constnode(pt)) then
@@ -728,7 +728,7 @@ implementation
                   case pt.nodetype of
                     setconstn :
                       begin
-                        if (source_info.endian=target_info.endian) then
+                        if (SourceInfo.endian=TargetInfo.endian) then
                           p.default:=plongint(tsetconstnode(pt).value_set)^
                         else
                           p.default:=longint(reverse_longword(plongword(tsetconstnode(pt).value_set)^));
@@ -757,7 +757,7 @@ implementation
                         p.default:=plongint(@s)^;
                         include(p.propoptions,ppo_default_is_single);
                       end;
-                    else if not codegenerror then
+                    else if not CodeGenError then
                       internalerror(2019050525);
                   end;
                   pt.free;
@@ -890,7 +890,7 @@ implementation
            until not try_to_consume(_COMMA);
 
          { register propgetter and propsetter procdefs }
-         if assigned(current_module) and current_module.in_interface then
+         if assigned(CurrentModule) and CurrentModule.in_interface then
            begin
              if readprocdef.proctypeoption=potype_propgetter then
                readprocdef.register_def
@@ -945,7 +945,7 @@ implementation
       { only allowed for one var }
       vs:=tabstractvarsym(sc[0]);
       if sc.count>1 then
-        Message1(parser_e_directive_only_one_var,arraytokeninfo[current_scanner.idtoken].str);
+        Message1(parser_e_directive_only_one_var,arraytokeninfo[CurrentScanner.idtoken].str);
       read_public_and_external(vs);
     end;
 
@@ -977,14 +977,14 @@ implementation
       C_name:=vs.realname;
 
       { macpas specific handling due to some switches}
-      if (m_mac in current_settings.modeswitches) then
+      if (m_mac in CurrentSettings.modeswitches) then
         begin
-          if (cs_external_var in current_settings.localswitches) then
+          if (cs_external_var in CurrentSettings.localswitches) then
             begin {The effect of this is the same as if cvar; external; has been given as directives.}
               is_cdecl:=true;
               is_external_var:=true;
             end
-          else if (cs_externally_visible in current_settings.localswitches) then
+          else if (cs_externally_visible in CurrentSettings.localswitches) then
             begin {The effect of this is the same as if cvar has been given as directives and it's made public.}
               is_cdecl:=true;
               is_public_var:=true;
@@ -1004,12 +1004,12 @@ implementation
          try_to_consume(_EXTERNAL) then
         begin
           is_external_var:=true;
-          if (current_scanner.idtoken<>_NAME) and (current_scanner.token<>_SEMICOLON) then
+          if (CurrentScanner.idtoken<>_NAME) and (CurrentScanner.token<>_SEMICOLON) then
             begin
               is_dll:=true;
               dll_name:=get_stringconst;
               if ExtractFileExt(dll_name)='' then
-                dll_name:=ChangeFileExt(dll_name,target_info.sharedlibext);
+                dll_name:=ChangeFileExt(dll_name,TargetInfo.sharedlibext);
             end;
           if not(is_cdecl) and try_to_consume(_NAME) then
             C_name:=get_stringconst;
@@ -1017,7 +1017,7 @@ implementation
         end;
 
       { export or public }
-      if current_scanner.idtoken in [_EXPORT,_PUBLIC] then
+      if CurrentScanner.idtoken in [_EXPORT,_PUBLIC] then
         begin
           consume(_ID);
           if is_external_var then
@@ -1027,7 +1027,7 @@ implementation
           if try_to_consume(_NAME) then
             C_name:=get_stringconst;
 {$ifndef DISABLE_TLS_DIRECTORY}
-          if (target_info.system in systems_windows) and
+          if (TargetInfo.system in systems_windows) and
              (vs.typ=staticvarsym) and
              try_to_consume (_SECTION) then
             section_name:=get_stringconst;
@@ -1037,7 +1037,7 @@ implementation
 
       { Windows uses an indirect reference using import tables }
       if is_dll and
-         (target_info.system in systems_all_windows) then
+         (TargetInfo.system in systems_all_windows) then
         include(vs.varoptions,vo_is_dll_var);
 
       { This can only happen if vs.typ=staticvarsym }
@@ -1052,9 +1052,9 @@ implementation
       if is_cdecl or
          (
           is_dll and
-          (target_info.system in systems_darwin)
+          (TargetInfo.system in systems_darwin)
          ) then
-        C_Name := target_info.Cprefix+C_Name;
+        C_Name := TargetInfo.Cprefix+C_Name;
 
       if is_public_var then
         begin
@@ -1074,21 +1074,21 @@ implementation
           include(vs.varoptions,vo_is_external);
           if (is_weak_external) then
             begin
-              if not(target_info.system in systems_weak_linking) then
+              if not(TargetInfo.system in systems_weak_linking) then
                 message(parser_e_weak_external_not_supported);
               include(vs.varoptions,vo_is_weak_external);
             end;
           vs.varregable := vr_none;
           if is_dll then
             begin
-              if target_info.system in systems_all_windows then
+              if TargetInfo.system in systems_all_windows then
                 mangledname:=make_dllmangledname(dll_name,C_name,0,pocall_none);
 
-              current_module.AddExternalImport(dll_name,C_Name,mangledname,0,true,false);
+              CurrentModule.AddExternalImport(dll_name,C_Name,mangledname,0,true,false);
             end
           else
-            if tf_has_dllscanner in target_info.flags then
-              current_module.dllscannerinputlist.Add(vs.mangledname,vs);
+            if tf_has_dllscanner in TargetInfo.flags then
+              CurrentModule.dllscannerinputlist.Add(vs.mangledname,vs);
         end;
 
       { Set the assembler name }
@@ -1099,7 +1099,7 @@ implementation
 
     procedure try_consume_sectiondirective(var asection: ansistring);
       begin
-        if current_scanner.idtoken=_SECTION then
+        if CurrentScanner.idtoken=_SECTION then
           begin
             consume(_ID);
             asection:=get_stringconst;
@@ -1129,7 +1129,7 @@ implementation
       { only allowed for one var }
       vs:=tabstractvarsym(sc[0]);
       if sc.count>1 then
-        Message1(parser_e_directive_only_one_var,arraytokeninfo[current_scanner.idtoken].str);
+        Message1(parser_e_directive_only_one_var,arraytokeninfo[CurrentScanner.idtoken].str);
       try_read_field_external(vs);
     end;
 
@@ -1163,14 +1163,14 @@ implementation
                 if not parse_generic then
                   begin
                     vs.defaultconstsym:=tcsym;
-                    current_asmdata.asmlists[al_typedconsts].concatlist(templist);
+                    CurrentAsmData.asmlists[al_typedconsts].concatlist(templist);
                   end;
                 templist.free;
                 templist := nil;
               end;
             staticvarsym :
               begin
-                read_typed_const(current_asmdata.asmlists[al_typedconsts],tstaticvarsym(vs),false);
+                read_typed_const(CurrentAsmData.asmlists[al_typedconsts],tstaticvarsym(vs),false);
               end;
             else
               internalerror(200611051);
@@ -1203,7 +1203,7 @@ implementation
         var
           vs     : tabstractvarsym;
           abssym : tabsolutevarsym;
-          pt,hp  : tnode;
+          pt,hp  : TNode;
           st     : tsymtable;
         begin
           abssym:=nil;
@@ -1262,7 +1262,7 @@ implementation
                   { check for implicit dereferencing and reject it }
                   if (hp.nodetype in [subscriptn,vecn]) then
                     begin
-                      if (tunarynode(hp).left.resultdef.typ in [pointerdef,classrefdef]) then
+                      if (TUnaryNode(hp).left.resultdef.typ in [pointerdef,classrefdef]) then
                         break;
                       { catch, e.g., 'var b: char absolute pchar_var[5];"
                         (pchar_var[5] is a pchar_2_string typeconv ->
@@ -1270,24 +1270,24 @@ implementation
                         I don't know if all of these type conversions are
                         possible, but they're definitely all bad.
                       }
-                      if (tunarynode(hp).left.nodetype=typeconvn) and
-                         (ttypeconvnode(tunarynode(hp).left).convtype in
+                      if (TUnaryNode(hp).left.nodetype=typeconvn) and
+                         (ttypeconvnode(TUnaryNode(hp).left).convtype in
                            [tc_pchar_2_string,tc_pointer_2_array,
                             tc_intf_2_string,tc_intf_2_guid,
                             tc_dynarray_2_variant,tc_interface_2_variant,
                             tc_array_2_dynarray]) then
                         break;
 
-                      if (tunarynode(hp).left.resultdef.typ=stringdef) and
-                         not(tstringdef(tunarynode(hp).left.resultdef).stringtype in [st_shortstring,st_longstring]) then
+                      if (TUnaryNode(hp).left.resultdef.typ=stringdef) and
+                         not(tstringdef(TUnaryNode(hp).left.resultdef).stringtype in [st_shortstring,st_longstring]) then
                         break;
-                      if (tunarynode(hp).left.resultdef.typ=objectdef) and
-                         (tobjectdef(tunarynode(hp).left.resultdef).objecttype<>odt_object) then
+                      if (TUnaryNode(hp).left.resultdef.typ=objectdef) and
+                         (tobjectdef(TUnaryNode(hp).left.resultdef).objecttype<>odt_object) then
                         break;
-                      if is_dynamic_array(tunarynode(hp).left.resultdef) then
+                      if is_dynamic_array(TUnaryNode(hp).left.resultdef) then
                         break;
                     end;
-                  hp:=tunarynode(hp).left;
+                  hp:=TUnaryNode(hp).left;
                 end;
               if (hp.nodetype=loadn) then
                 begin
@@ -1345,15 +1345,15 @@ implementation
          hasdefaultvalue : boolean;
          hintsymoptions  : tsymoptions;
          deprecatedmsg   : pshortstring;
-         old_block_type  : tblock_type;
+         old_block_type  : TBlockType;
          typepos,
          tmp_filepos,
-         old_current_filepos     : tfileposinfo;
+         old_current_filepos     : TFilePosInfo;
       begin
          old_block_type:=block_type;
          block_type:=bt_var;
          { Force an expected ID error message }
-         if not (current_scanner.token in [_ID,_CASE,_END]) then
+         if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
          { read vars }
          sc:=TFPObjectList.create(false);
@@ -1361,25 +1361,25 @@ implementation
          had_generic:=false;
          vs:=nil;
          fillchar(tmp_filepos,sizeof(tmp_filepos),0);
-         while (current_scanner.token=_ID) do
+         while (CurrentScanner.token=_ID) do
            begin
              semicoloneaten:=false;
              hasdefaultvalue:=false;
              allowdefaultvalue:=true;
              sc.clear;
              repeat
-               if (current_scanner.token = _ID) then
+               if (CurrentScanner.token = _ID) then
                  begin
                    isgeneric:=(vd_check_generic in options) and
-                                not (m_delphi in current_settings.modeswitches) and
-                                (current_scanner.idtoken=_GENERIC);
+                                not (m_delphi in CurrentSettings.modeswitches) and
+                                (CurrentScanner.idtoken=_GENERIC);
                    case symtablestack.top.symtabletype of
                      localsymtable :
-                       vs:=clocalvarsym.create(current_scanner.orgpattern,vs_value,generrordef,[]);
+                       vs:=clocalvarsym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
                      staticsymtable,
                      globalsymtable :
                        begin
-                         vs:=cstaticvarsym.create(current_scanner.orgpattern,vs_value,generrordef,[]);
+                         vs:=cstaticvarsym.create(CurrentScanner.orgpattern,vs_value,generrordef,[]);
                          if vd_threadvar in options then
                            include(vs.varoptions,vo_is_thread_var);
                        end;
@@ -1388,7 +1388,7 @@ implementation
                    end;
                    sc.add(vs);
                    if isgeneric then
-                     tmp_filepos:=current_filepos;
+                     tmp_filepos:=CurrentFilePos;
                  end
                else
                  isgeneric:=false;
@@ -1399,7 +1399,7 @@ implementation
                if not first
                    and isgeneric
                    and (sc.count=1)
-                   and (current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+                   and (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
                  begin
                    vs.free;
                    vs := nil;
@@ -1413,10 +1413,10 @@ implementation
                    if isgeneric then
                      begin
                        { ensure correct error position }
-                       old_current_filepos:=current_filepos;
-                       current_filepos:=tmp_filepos;
+                       old_current_filepos:=CurrentFilePos;
+                       CurrentFilePos:=tmp_filepos;
                        symtablestack.top.insertsym(vs);
-                       current_filepos:=old_current_filepos;
+                       CurrentFilePos:=old_current_filepos;
                      end
                    else
                      symtablestack.top.insertsym(vs);
@@ -1429,12 +1429,12 @@ implementation
              { read variable type def }
              block_type:=bt_var_type;
              consume(_COLON);
-             typepos:=current_tokenpos;
+             typepos:=CurrentTokenPos;
 
 {$ifdef gpc_mode}
-             if (m_gpc in current_settings.modeswitches) and
+             if (m_gpc in CurrentSettings.modeswitches) and
                 (token=_ID) and
-                (current_scanner.orgpattern='__asmname__') then
+                (CurrentScanner.orgpattern='__asmname__') then
                read_gpc_name(sc);
 {$endif}
 
@@ -1458,7 +1458,7 @@ implementation
                end;
 
              { Check for EXTERNAL etc directives before a semicolon }
-             if (current_scanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (current_scanner.idtoken = _WEAKEXTERNAL) then
+             if (CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL) then
                begin
                  read_public_and_external_sc(sc);
                  allowdefaultvalue:=false;
@@ -1480,7 +1480,7 @@ implementation
 
              { Handling of Delphi typed const = initialized vars }
              if allowdefaultvalue and
-                (current_scanner.token=_EQ) and
+                (CurrentScanner.token=_EQ) and
                 (symtablestack.top.symtabletype<>parasymtable) then
                begin
                  { Add calling convention for procvar }
@@ -1492,7 +1492,7 @@ implementation
                    begin
                      if po_is_function_ref in tprocvardef(hdef).procoptions then
                        begin
-                         if not (m_function_references in current_settings.modeswitches) and
+                         if not (m_function_references in CurrentSettings.modeswitches) and
                              not (po_is_block in tprocvardef(hdef).procoptions) then
                            messagepos(typepos,sym_e_error_in_type_def)
                          else
@@ -1504,7 +1504,7 @@ implementation
                                    vs:=tabstractvarsym(sc[i]);
                                    vs.vardef:=hdef;
                                  end;
-                             if current_scanner.replay_stack_depth=0 then
+                             if CurrentScanner.replay_stack_depth=0 then
                                hdef.register_def;
                            end;
                        end;
@@ -1531,7 +1531,7 @@ implementation
                  maybe_parse_proc_directives(hdef);
                  if (hdef.typ=procvardef) and (po_is_function_ref in tprocvardef(hdef).procoptions) then
                    begin
-                     if not (m_function_references in current_settings.modeswitches) and
+                     if not (m_function_references in CurrentSettings.modeswitches) and
                          not (po_is_block in tprocvardef(hdef).procoptions) then
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
@@ -1543,7 +1543,7 @@ implementation
                                vs:=tabstractvarsym(sc[i]);
                                vs.vardef:=hdef;
                              end;
-                         if current_scanner.replay_stack_depth=0 then
+                         if CurrentScanner.replay_stack_depth=0 then
                            hdef.register_def;
                        end;
                    end;
@@ -1554,7 +1554,7 @@ implementation
                    flags:=hcc_default_actions_intf_struct;
                  handle_calling_convention(hdef,flags);
                  { Handling of Delphi typed const = initialized vars }
-                 if (current_scanner.token=_EQ) and
+                 if (CurrentScanner.token=_EQ) and
                     (symtablestack.top.symtabletype<>parasymtable) then
                    begin
                      read_default_value(sc);
@@ -1565,14 +1565,14 @@ implementation
              { Check for EXTERNAL etc directives or, in macpas, if cs_external_var is set}
              if (
                  (
-                  ((current_scanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (current_scanner.idtoken = _WEAKEXTERNAL)) and
-                  (m_cvar_support in current_settings.modeswitches)
+                  ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
+                  (m_cvar_support in CurrentSettings.modeswitches)
                  ) or
                  (
-                  (m_mac in current_settings.modeswitches) and
+                  (m_mac in CurrentSettings.modeswitches) and
                   (
-                   (cs_external_var in current_settings.localswitches) or
-                   (cs_externally_visible in current_settings.localswitches)
+                   (cs_external_var in CurrentSettings.localswitches) or
+                   (cs_externally_visible in CurrentSettings.localswitches)
                   )
                  )
                 ) then
@@ -1587,7 +1587,7 @@ implementation
                     not(vo_is_external in vs.varoptions) then
                    cnodeutils.insertbssdata(tstaticvarsym(vs));
                  if vo_is_public in vs.varoptions then
-                   current_module.add_public_asmsym(vs.mangledname,AB_GLOBAL,AT_DATA);
+                   CurrentModule.add_public_asmsym(vs.mangledname,AB_GLOBAL,AT_DATA);
                end;
 
              first:=false;
@@ -1652,7 +1652,7 @@ implementation
          usedalign,
          maxalignment,startvarrecalign,
          maxpadalign, startpadalign: shortint;
-         pt : tnode;
+         pt : TNode;
          fieldvs   : tfieldvarsym;
          hstaticvs : tstaticvarsym;
          vs    : tabstractvarsym;
@@ -1669,33 +1669,33 @@ implementation
          semicoloneaten,
          removeclassoption: boolean;
          dummyattrelementcount : integer;
-         old_block_type: tblock_type;
-         typepos : tfileposinfo;
+         old_block_type: TBlockType;
+         typepos : TFilePosInfo;
       begin
          old_block_type:=block_type;
          block_type:=bt_var;
          recst:=tabstractrecordsymtable(symtablestack.top);
          { Force an expected ID error message }
-         if not (current_scanner.token in [_ID,_CASE,_END]) then
+         if not (CurrentScanner.token in [_ID,_CASE,_END]) then
            consume(_ID);
          { read vars }
          sc:=TFPObjectList.create(false);
          removeclassoption:=false;
          had_generic:=false;
          attr_element_count:=0;
-         while (current_scanner.token=_ID) and
+         while (CurrentScanner.token=_ID) and
             not(((vd_object in options) or
-                 ((vd_record in options) and (m_advanced_records in current_settings.modeswitches))) and
-                ((current_scanner.idtoken in [_PUBLIC,_PRIVATE,_PUBLISHED,_PROTECTED,_STRICT]) or
-                 ((m_final_fields in current_settings.modeswitches) and
-                  (current_scanner.idtoken=_FINAL)))) do
+                 ((vd_record in options) and (m_advanced_records in CurrentSettings.modeswitches))) and
+                ((CurrentScanner.idtoken in [_PUBLIC,_PRIVATE,_PUBLISHED,_PROTECTED,_STRICT]) or
+                 ((m_final_fields in CurrentSettings.modeswitches) and
+                  (CurrentScanner.idtoken=_FINAL)))) do
            begin
              visibility:=symtablestack.top.currentvisibility;
              semicoloneaten:=false;
              sc.clear;
              repeat
-               sorg:=current_scanner.orgpattern;
-               if current_scanner.token=_ID then
+               sorg:=CurrentScanner.orgpattern;
+               if CurrentScanner.token=_ID then
                  begin
                    vs:=cfieldvarsym.create(sorg,vs_value,generrordef,[]);
 
@@ -1704,7 +1704,7 @@ implementation
                      potentially mixed visibility, and then the individual
                      symbols need to have their visibility already set }
                    vs.visibility:=visibility;
-                   if (vd_check_generic in options) and (current_scanner.idtoken=_GENERIC) then
+                   if (vd_check_generic in options) and (CurrentScanner.idtoken=_GENERIC) then
                      had_generic:=true;
                  end
                else
@@ -1713,7 +1713,7 @@ implementation
                if assigned(vs) and
                   (
                     not had_generic or
-                    not (current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS])
+                    not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS])
                   ) then
                  begin
                    vs.register_sym;
@@ -1724,7 +1724,7 @@ implementation
                else
                  vs.free; // no nil needed
              until not try_to_consume(_COMMA);
-             if m_delphi in current_settings.modeswitches then
+             if m_delphi in CurrentSettings.modeswitches then
                block_type:=bt_var_type
              else
                block_type:=old_block_type;
@@ -1734,14 +1734,14 @@ implementation
              if attr_element_count=0 then
                attr_element_count:=sc.Count;
 
-             typepos:=current_filepos;
+             typepos:=CurrentFilePos;
 
              { make sure that the correct genericdef is set up, especially if
                we're dealing with anonymous type declarations }
              gendef:=nil;
-             if df_specialization in current_structdef.defoptions then
+             if df_specialization in CurrentStructDef.defoptions then
                begin
-                 srsymtable:=current_structdef.genericdef.getsymtable(gs_record);
+                 srsymtable:=CurrentStructDef.genericdef.getsymtable(gs_record);
                  if not assigned(srsymtable) then
                    internalerror(2024041204);
                  srsym:=tsym(srsymtable.find(tabstractvarsym(sc[0]).name));
@@ -1764,7 +1764,7 @@ implementation
 
              { field type is a generic param so set a flag in the struct }
              if assigned(hdef.typesym) and (sp_generic_para in hdef.typesym.symoptions) then
-               include(current_structdef.defoptions,df_has_generic_fields);
+               include(CurrentStructDef.defoptions,df_has_generic_fields);
 
              { Process procvar directives }
              if maybe_parse_proc_directives(hdef) then
@@ -1796,7 +1796,7 @@ implementation
 
              { Records and objects can't have default values }
              { for a record there doesn't need to be a ; before the END or )    }
-             if not(current_scanner.token in [_END,_RKLAMMER]) and
+             if not(CurrentScanner.token in [_END,_RKLAMMER]) and
                 not(semicoloneaten) then
                consume(_SEMICOLON);
 
@@ -1811,7 +1811,7 @@ implementation
                begin
                  if (hdef.typ=procvardef) and (po_is_function_ref in tprocvardef(hdef).procoptions) then
                    begin
-                     if not (m_function_references in current_settings.modeswitches) and
+                     if not (m_function_references in CurrentSettings.modeswitches) and
                          not (po_is_block in tprocvardef(hdef).procoptions) then
                        messagepos(typepos,sym_e_error_in_type_def)
                      else
@@ -1823,7 +1823,7 @@ implementation
                                fieldvs:=tfieldvarsym(sc[i]);
                                fieldvs.vardef:=hdef;
                              end;
-                         if current_scanner.replay_stack_depth=0 then
+                         if CurrentScanner.replay_stack_depth=0 then
                            hdef.register_def;
                        end;
                    end;
@@ -1854,7 +1854,7 @@ implementation
 
              if (visibility=vis_published) and
                 not(oo_can_have_published in tobjectdef(hdef).objectoptions) and
-                not(m_delphi in current_settings.modeswitches) then
+                not(m_delphi in CurrentSettings.modeswitches) then
                begin
                  MessagePos(tfieldvarsym(sc[0]).fileinfo,parser_e_only_publishable_classes_can_be_published);
                  visibility:=vis_public;
@@ -1899,7 +1899,7 @@ implementation
                reorderlist.concatlistcopy(sc)
            end;
 
-         if m_delphi in current_settings.modeswitches then
+         if m_delphi in CurrentSettings.modeswitches then
            block_type:=bt_var_type
          else
            block_type:=old_block_type;
@@ -1921,10 +1921,10 @@ implementation
 
               { including a field declaration? }
               fieldvs:=nil;
-              if current_scanner.token=_ID then
+              if CurrentScanner.token=_ID then
                 begin
-                  sorg:=current_scanner.orgpattern;
-                  hs:=current_scanner.pattern;
+                  sorg:=CurrentScanner.orgpattern;
+                  hs:=CurrentScanner.pattern;
                   searchsym(hs,srsym,srsymtable);
                   if not(assigned(srsym) and (srsym.typ in [typesym,unitsym])) then
                     begin
@@ -1950,7 +1950,7 @@ implementation
                 Message(type_e_ordinal_expr_expected);
               consume(_OF);
 
-              UnionSymtable:=trecordsymtable.create('',current_settings.packrecords,current_settings.alignment.recordalignmin);
+              UnionSymtable:=trecordsymtable.create('',CurrentSettings.packrecords,CurrentSettings.alignment.recordalignmin);
               UnionDef:=crecorddef.create('',unionsymtable);
               uniondef.isunion:=true;
 
@@ -1970,7 +1970,7 @@ implementation
                     Message(parser_e_illegal_expression);
                   inserttypeconv(pt,casetype);
                   { iso pascal does not support ranges in variant record definitions }
-                  if (([m_iso,m_extpas]*current_settings.modeswitches)=[]) and try_to_consume(_POINTPOINT) then
+                  if (([m_iso,m_extpas]*CurrentSettings.modeswitches)=[]) and try_to_consume(_POINTPOINT) then
                     pt:=crangenode.create(pt,comp_expr([ef_accept_equal]))
                   else
                     begin
@@ -1982,12 +1982,12 @@ implementation
                     end;
                   pt.free;
                   pt := nil;
-                  if current_scanner.token=_COMMA then
+                  if CurrentScanner.token=_COMMA then
                     consume(_COMMA)
                   else
                     break;
                 until false;
-                if m_delphi in current_settings.modeswitches then
+                if m_delphi in CurrentSettings.modeswitches then
                   block_type:=bt_var_type
                 else
                   block_type:=old_block_type;
@@ -1995,7 +1995,7 @@ implementation
                 { read the vars }
                 consume(_LKLAMMER);
                 inc(variantrecordlevel);
-                if current_scanner.token<>_RKLAMMER then
+                if CurrentScanner.token<>_RKLAMMER then
                   read_record_fields([vd_record],nil,@variantdesc^^.branches[high(variantdesc^^.branches)].nestedvariant,hadgendummy,dummyattrelementcount);
                 dec(variantrecordlevel);
                 consume(_RKLAMMER);
@@ -2008,11 +2008,11 @@ implementation
                 unionsymtable.datasize:=startvarrecsize;
                 unionsymtable.fieldalignment:=startvarrecalign;
                 unionsymtable.padalignment:=startpadalign;
-                if (current_scanner.token<>_END) and (current_scanner.token<>_RKLAMMER) then
+                if (CurrentScanner.token<>_END) and (CurrentScanner.token<>_RKLAMMER) then
                   consume(_SEMICOLON)
                 else
                   break;
-              until (current_scanner.token=_END) or (current_scanner.token=_RKLAMMER);
+              until (CurrentScanner.token=_END) or (CurrentScanner.token=_RKLAMMER);
               symtablestack.pop(UnionSymtable);
               { at last set the record size to that of the biggest variant }
               unionsymtable.datasize:=maxsize;
@@ -2024,7 +2024,7 @@ implementation
                 { (within the global min/max limits)                     }
                 0, { default }
                 C_alignment:
-                  usedalign:=used_align(unionsymtable.recordalignment,current_settings.alignment.recordalignmin,current_settings.alignment.maxCrecordalign);
+                  usedalign:=used_align(unionsymtable.recordalignment,CurrentSettings.alignment.recordalignmin,CurrentSettings.alignment.maxCrecordalign);
                 { 1 byte alignment if we are bitpacked }
                 bit_alignment:
                   usedalign:=1;
@@ -2033,7 +2033,7 @@ implementation
                 { otherwise alignment at the packrecords alignment of the }
                 { current record                                          }
                 else
-                  usedalign:=used_align(recst.fieldalignment,current_settings.alignment.recordalignmin,current_settings.alignment.recordalignmax);
+                  usedalign:=used_align(recst.fieldalignment,CurrentSettings.alignment.recordalignmin,CurrentSettings.alignment.recordalignmax);
               end;
               offset:=align(recst.datasize,usedalign);
               recst.datasize:=offset+unionsymtable.datasize;

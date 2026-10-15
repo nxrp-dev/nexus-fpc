@@ -30,7 +30,7 @@ unit i_win;
 
     const
 
-       system_i386_win32_info : tsysteminfo =
+       system_i386_win32_info : TSystemInfo =
           (
             system       : system_i386_win32;
             name         : 'Win32 for i386';
@@ -100,7 +100,7 @@ unit i_win;
             abi          : abi_default;
           );
 
-       system_x64_win64_info : tsysteminfo =
+       system_x64_win64_info : TSystemInfo =
           (
             system       : system_x86_64_win64;
             name         : 'Win64 for x64';
@@ -172,7 +172,7 @@ unit i_win;
           );
 
 
-       system_aarch64_win64_info : tsysteminfo =
+       system_aarch64_win64_info : TSystemInfo =
           (
             system       : system_aarch64_win64;
             name         : 'Win64 for Aarch64';
@@ -249,20 +249,20 @@ initialization
 
 {$ifdef CPUI386}
   {$ifdef WIN32}
-    set_source_info(system_i386_win32_info);
+    SetSourceInfo(system_i386_win32_info);
   {$endif WIN32}
 {$endif CPUI386}
 
 {$ifdef CPUX86_64}
   {$ifdef WIN64}
-      set_source_info(system_x64_win64_info);
+      SetSourceInfo(system_x64_win64_info);
   {$endif WIN64}
 {$endif CPUX86_64}
 
 
 {$ifdef CPUAARCH64}
   {$ifdef WIN64}
-    set_source_info(system_aarch64_win64_info);
+    SetSourceInfo(system_aarch64_win64_info);
   {$endif WIN64}
 {$endif CPUAARCH64}
 end.

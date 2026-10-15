@@ -59,25 +59,25 @@ implementation
         handled: boolean;
       begin
         handled:=false;
-        if (tf_section_threadvars in target_info.flags) then
+        if (tf_section_threadvars in TargetInfo.flags) then
           begin
-            if target_info.system in [system_i386_win32,system_x86_64_win64] then
+            if TargetInfo.system in [system_i386_win32,system_x86_64_win64] then
               begin
                 paraloc1.init;
                 pd:=search_system_proc('fpc_tls_add');
-                paramanager.getcgtempparaloc(current_asmdata.CurrAsmList,pd,1,paraloc1);
+                paramanager.getcgtempparaloc(CurrentAsmData.CurrAsmList,pd,1,paraloc1);
                 if not(vo_is_weak_external in gvs.varoptions) then
-                  reference_reset_symbol(href,current_asmdata.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(pint),[])
+                  reference_reset_symbol(href,CurrentAsmData.RefAsmSymbol(gvs.mangledname,AT_DATA,use_indirect_symbol(gvs)),0,sizeof(pint),[])
                 else
-                  reference_reset_symbol(href,current_asmdata.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(pint),[]);
-                cg.a_loadaddr_ref_cgpara(current_asmdata.CurrAsmList,href,paraloc1);
-                paramanager.freecgpara(current_asmdata.CurrAsmList,paraloc1);
+                  reference_reset_symbol(href,CurrentAsmData.WeakRefAsmSymbol(gvs.mangledname,AT_DATA),0,sizeof(pint),[]);
+                cg.a_loadaddr_ref_cgpara(CurrentAsmData.CurrAsmList,href,paraloc1);
+                paramanager.freecgpara(CurrentAsmData.CurrAsmList,paraloc1);
                 paraloc1.done;
 
-                cg.g_call(current_asmdata.CurrAsmList,'FPC_TLS_ADD');
-                cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_FUNCTION_RESULT_REG);
-                hregister:=cg.getaddressregister(current_asmdata.CurrAsmList);
-                cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,hregister);
+                cg.g_call(CurrentAsmData.CurrAsmList,'FPC_TLS_ADD');
+                cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_FUNCTION_RESULT_REG);
+                hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+                cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_FUNCTION_RESULT_REG,hregister);
                 location.reference.base:=hregister;
                 handled:=true;
               end;
@@ -86,13 +86,13 @@ implementation
         if not handled then
           inherited;
 
-        if (tf_section_threadvars in target_info.flags) then
+        if (tf_section_threadvars in TargetInfo.flags) then
           begin
 {$ifdef i386}
-            case target_info.system of
+            case TargetInfo.system of
               system_i386_linux,system_i386_android:
                 begin
-                  case current_settings.tlsmodel of
+                  case CurrentSettings.tlsmodel of
                     tlsm_local_exec:
                       begin
                         location.reference.segment:=NR_GS;
@@ -100,17 +100,17 @@ implementation
                       end;
                     tlsm_global_dynamic:
                       begin
-                        include(current_procinfo.flags,pi_needs_got);
+                        include(CurrentProcInfo.flags,pi_needs_got);
                         reference_reset(href,0,[]);
-                        location.reference.index:=current_procinfo.got;
+                        location.reference.index:=CurrentProcInfo.got;
                         location.reference.scalefactor:=1;
                         location.reference.refaddr:=addr_tlsgd;
-                        cg.getcpuregister(current_asmdata.CurrAsmList,NR_EAX);
-                        current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_L,location.reference,NR_EAX));
-                        cg.g_call(current_asmdata.CurrAsmList,'___tls_get_addr');
-                        cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_EAX);
-                        hregister:=cg.getaddressregister(current_asmdata.CurrAsmList);
-                        cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_ADDR,OS_ADDR,NR_EAX,hregister);
+                        cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_L,location.reference,NR_EAX));
+                        cg.g_call(CurrentAsmData.CurrAsmList,'___tls_get_addr');
+                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+                        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_EAX,hregister);
                         reference_reset(location.reference,location.reference.alignment,location.reference.volatility);
                         location.reference.base:=hregister;
                       end;
@@ -123,10 +123,10 @@ implementation
             end;
 {$endif i386}
 {$ifdef x86_64}
-            case target_info.system of
+            case TargetInfo.system of
               system_x86_64_linux:
                 begin
-                  case current_settings.tlsmodel of
+                  case CurrentSettings.tlsmodel of
                     tlsm_local_exec:
                       begin
                         location.reference.segment:=NR_FS;
@@ -134,21 +134,21 @@ implementation
                       end;
                     tlsm_global_dynamic:
                       begin
-                        current_asmdata.CurrAsmList.concat(tai_const.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
                         reference_reset(href,0,[]);
                         location.reference.base:=NR_RIP;
                         location.reference.scalefactor:=1;
                         location.reference.refaddr:=addr_tlsgd;
-                        cg.getcpuregister(current_asmdata.CurrAsmList,NR_RDI);
-                        current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_Q,location.reference,NR_RDI));
-                        current_asmdata.CurrAsmList.concat(tai_const.Create_8bit($66));
-                        current_asmdata.CurrAsmList.concat(tai_const.Create_8bit($66));
-                        current_asmdata.CurrAsmList.concat(tai_const.Create_8bit($48));
-                        cg.g_call(current_asmdata.CurrAsmList,'__tls_get_addr');
-                        cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_RDI);
-                        cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_EAX);
-                        hregister:=cg.getaddressregister(current_asmdata.CurrAsmList);
-                        cg.a_load_reg_reg(current_asmdata.CurrAsmList,OS_ADDR,OS_ADDR,NR_RAX,hregister);
+                        cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
+                        CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,S_Q,location.reference,NR_RDI));
+                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($66));
+                        CurrentAsmData.CurrAsmList.concat(tai_const.Create_8bit($48));
+                        cg.g_call(CurrentAsmData.CurrAsmList,'__tls_get_addr');
+                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_RDI);
+                        cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_EAX);
+                        hregister:=cg.getaddressregister(CurrentAsmData.CurrAsmList);
+                        cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,OS_ADDR,OS_ADDR,NR_RAX,hregister);
                         reference_reset(location.reference,location.reference.alignment,location.reference.volatility);
                         location.reference.base:=hregister;
                       end;

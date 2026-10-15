@@ -56,8 +56,8 @@ interface
       end;
 }
 
-    procedure firstcomplex(p : tbinarynode);
-    procedure maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel);
+    procedure firstcomplex(p : TBinaryNode);
+    procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel);
 //    procedure remove_non_regvars_from_loc(const t: tlocation; var regs:Tsuperregisterset);
 
     procedure location_force_mmreg(list:TAsmList;var l: tlocation;maybeconst:boolean);
@@ -77,7 +77,7 @@ interface
     procedure gen_save_used_regs(list:TAsmList);
     procedure gen_restore_used_regs(list:TAsmList);
 
-    procedure get_used_regvars(n: tnode; var rv: tusedregvars);
+    procedure get_used_regvars(n: TNode; var rv: tusedregvars);
     { adds the regvars used in n and its children to rv.allregvars,
       those which were already in rv.allregvars to rv.commonregvars and
       uses rv.myregvars as scratch (so that two uses of the same regvar
@@ -174,7 +174,7 @@ implementation
       end;
 
 
-    procedure firstcomplex(p : tbinarynode);
+    procedure firstcomplex(p : TBinaryNode);
       var
         fcl, fcr: longint;
         ncl, ncr: longint;
@@ -217,19 +217,19 @@ implementation
       end;
 
 
-    procedure maketojumpboollabels(list: TAsmList; p: tnode; truelabel, falselabel: tasmlabel);
+    procedure maketojumpboollabels(list: TAsmList; p: TNode; truelabel, falselabel: tasmlabel);
     {
       produces jumps to true respectively false labels using boolean expressions
     }
       var
         opsize : tcgsize;
-        storepos : tfileposinfo;
+        storepos : TFilePosInfo;
         tmpreg : tregister;
       begin
          if tnf_error in p.transientflags then
            exit;
-         storepos:=current_filepos;
-         current_filepos:=p.fileinfo;
+         storepos:=CurrentFilePos;
+         CurrentFilePos:=p.fileinfo;
          if is_boolean(p.resultdef) then
            begin
               if is_constboolnode(p) then
@@ -265,7 +265,7 @@ implementation
                              tmpreg:=cg.getintregister(list,OS_INT);
                              hlcg.a_load_ref_reg(list,u8inttype,osuinttype,p.location.sref.ref,tmpreg);
 
-                             if target_info.endian=endian_big then
+                             if TargetInfo.endian=endian_big then
                                hlcg.a_op_const_reg_reg(list,OP_AND,osuinttype,1 shl (8-(p.location.sref.startbit+1)),tmpreg,tmpreg)
                              else
                                hlcg.a_op_const_reg_reg(list,OP_AND,osuinttype,1 shl p.location.sref.startbit,tmpreg,tmpreg);
@@ -333,7 +333,7 @@ implementation
            end
          else
            internalerror(200112305);
-         current_filepos:=storepos;
+         CurrentFilePos:=storepos;
       end;
 
 
@@ -492,12 +492,12 @@ implementation
                  { variants are already handled by the call to fpc_variant_copy_overwrite if
                    they are passed by reference }
                  if not((tparavarsym(p).vardef.typ=variantdef) and
-                    paramanager.push_addr_param(tparavarsym(p).varspez,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption)) then
+                    paramanager.push_addr_param(tparavarsym(p).varspez,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)) then
                    begin
                      hlcg.location_get_data_ref(list,tparavarsym(p).vardef,tparavarsym(p).initialloc,href,
                        is_open_array(tparavarsym(p).vardef) or
-                       ((target_info.system in systems_caller_copy_addr_value_para) and
-                        paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,current_procinfo.procdef.proccalloption)),
+                       ((TargetInfo.system in systems_caller_copy_addr_value_para) and
+                        paramanager.push_addr_param(vs_value,tparavarsym(p).vardef,CurrentProcInfo.procdef.proccalloption)),
                         sizeof(pint));
                      if is_open_array(tparavarsym(p).vardef) then
                        begin
@@ -595,7 +595,7 @@ implementation
           if sym.initialloc.size in [OS_64,OS_S64] then
 {$endif defined(cpu64bitalu)}
             begin
-              if target_info.endian=endian_little then
+              if TargetInfo.endian=endian_little then
                 begin
                   reg:=sym.initialloc.register;
                   reg2:=sym.initialloc.registerhi;
@@ -656,7 +656,7 @@ implementation
               usedef:=sym.vardef;
             gen_alloc_regloc(list,sym.initialloc,usedef);
           end;
-        if (pi_has_label in current_procinfo.flags) then
+        if (pi_has_label in CurrentProcInfo.flags) then
           begin
             { Allocate register already, to prevent first allocation to be
               inside a loop }
@@ -707,7 +707,7 @@ implementation
         item:=TCmdStrListItem(pd.aliasnames.first);
         while assigned(item) do
           begin
-            current_asmdata.DefineProcAsmSymbol(pd,item.str,pd.needsglobalasmsym);
+            CurrentAsmData.DefineProcAsmSymbol(pd,item.str,pd.needsglobalasmsym);
             item:=TCmdStrListItem(item.next);
          end;
       end;
@@ -721,9 +721,9 @@ implementation
         item:=TCmdStrListItem(pd.aliasnames.first);
         while assigned(item) do
           begin
-            idx:=current_asmdata.AsmSymbolDict.findindexof(item.str);
+            idx:=CurrentAsmData.AsmSymbolDict.findindexof(item.str);
             if idx>=0 then
-              current_asmdata.AsmSymbolDict.Delete(idx);
+              CurrentAsmData.AsmSymbolDict.Delete(idx);
             item:=TCmdStrListItem(item.next);
           end;
       end;
@@ -735,39 +735,39 @@ implementation
         lotemp, stack_frame_size : longint;
       begin
         { generate call frame marker for dwarf call frame info }
-        current_asmdata.asmcfi.start_frame(list);
+        CurrentAsmData.asmcfi.start_frame(list);
 
         { labels etc. for exception frames are inserted here }
-        current_procinfo.start_eh(list);
+        CurrentProcInfo.start_eh(list);
 
-        if current_procinfo.procdef.proctypeoption=potype_proginit then
-          current_asmdata.asmcfi.outmost_frame(list);
+        if CurrentProcInfo.procdef.proctypeoption=potype_proginit then
+          CurrentAsmData.asmcfi.outmost_frame(list);
 
         { All temps are know, write offsets used for information }
-        if (cs_asm_source in current_settings.globalswitches) and
-           (current_procinfo.tempstart<>tg.lasttemp) then
+        if (cs_asm_source in CurrentSettings.globalswitches) and
+           (CurrentProcInfo.tempstart<>tg.lasttemp) then
           begin
             if tg.direction>0 then
               begin
-                lotemp:=current_procinfo.tempstart;
+                lotemp:=CurrentProcInfo.tempstart;
                 hitemp:=tg.lasttemp;
               end
             else
               begin
                 lotemp:=tg.lasttemp;
-                hitemp:=current_procinfo.tempstart;
+                hitemp:=CurrentProcInfo.tempstart;
               end;
-            list.concat(Tai_comment.Create(strpnew('Temps allocated between '+std_regname(current_procinfo.framepointer)+
-              tostr_with_plus(lotemp)+' and '+std_regname(current_procinfo.framepointer)+tostr_with_plus(hitemp))));
+            list.concat(Tai_comment.Create(strpnew('Temps allocated between '+std_regname(CurrentProcInfo.framepointer)+
+              tostr_with_plus(lotemp)+' and '+std_regname(CurrentProcInfo.framepointer)+tostr_with_plus(hitemp))));
           end;
 
          { generate target specific proc entry code }
-         stack_frame_size := current_procinfo.calc_stackframe_size;
+         stack_frame_size := CurrentProcInfo.calc_stackframe_size;
          if (stack_frame_size <> 0) and
-            (po_nostackframe in current_procinfo.procdef.procoptions) then
+            (po_nostackframe in CurrentProcInfo.procdef.procoptions) then
            message1(parser_e_nostackframe_with_locals,tostr(stack_frame_size));
 
-         hlcg.g_proc_entry(list,stack_frame_size,(po_nostackframe in current_procinfo.procdef.procoptions));
+         hlcg.g_proc_entry(list,stack_frame_size,(po_nostackframe in CurrentProcInfo.procdef.procoptions));
       end;
 
 
@@ -777,46 +777,46 @@ implementation
       begin
         { c style clearstack does not need to remove parameters from the stack, only the
           return value when it was pushed by arguments }
-        if current_procinfo.procdef.proccalloption in clearstack_pocalls then
+        if CurrentProcInfo.procdef.proccalloption in clearstack_pocalls then
           begin
             parasize:=0;
             { For safecall functions with safecall-exceptions enabled the funcret is always returned as a para
               which is considered a normal para on the c-side, so the funcret has to be pop'ed normally. }
-            if not current_procinfo.procdef.generate_safecall_wrapper and
-               paramanager.ret_in_param(current_procinfo.procdef.returndef,current_procinfo.procdef) then
+            if not CurrentProcInfo.procdef.generate_safecall_wrapper and
+               paramanager.ret_in_param(CurrentProcInfo.procdef.returndef,CurrentProcInfo.procdef) then
               inc(parasize,sizeof(pint));
           end
         else
           begin
-            parasize:=current_procinfo.para_stack_size;
+            parasize:=CurrentProcInfo.para_stack_size;
             { the parent frame pointer para has to be removed always by the caller in
               case of Delphi-style parent frame pointer passing }
-            if (not(paramanager.use_fixed_stack) or (target_info.abi=abi_i386_dynalignedstack)) and
-               (po_delphi_nested_cc in current_procinfo.procdef.procoptions) then
+            if (not(paramanager.use_fixed_stack) or (TargetInfo.abi=abi_i386_dynalignedstack)) and
+               (po_delphi_nested_cc in CurrentProcInfo.procdef.procoptions) then
               dec(parasize,sizeof(pint));
           end;
 
         { generate target specific proc exit code }
-        hlcg.g_proc_exit(list,parasize,(po_nostackframe in current_procinfo.procdef.procoptions));
+        hlcg.g_proc_exit(list,parasize,(po_nostackframe in CurrentProcInfo.procdef.procoptions));
 
         { labels etc. for exception frames are inserted here }
-        current_procinfo.end_eh(list);
+        CurrentProcInfo.end_eh(list);
 
         { release return registers, needed for optimizer }
-        if not is_void(current_procinfo.procdef.returndef) then
-          paramanager.freecgpara(list,current_procinfo.procdef.funcretloc[calleeside]);
+        if not is_void(CurrentProcInfo.procdef.returndef) then
+          paramanager.freecgpara(list,CurrentProcInfo.procdef.funcretloc[calleeside]);
 
         { end of frame marker for call frame info }
-        current_asmdata.asmcfi.end_frame(list);
+        CurrentAsmData.asmcfi.end_frame(list);
       end;
 
 
     procedure gen_save_used_regs(list:TAsmList);
       begin
-        if po_noreturn in current_procinfo.procdef.procoptions then
+        if po_noreturn in CurrentProcInfo.procdef.procoptions then
           exit;
         { Pure assembler routines need to save the registers themselves }
-        if (po_assembler in current_procinfo.procdef.procoptions) then
+        if (po_assembler in CurrentProcInfo.procdef.procoptions) then
           exit;
 
         cg.g_save_registers(list);
@@ -825,10 +825,10 @@ implementation
 
     procedure gen_restore_used_regs(list:TAsmList);
       begin
-        if po_noreturn in current_procinfo.procdef.procoptions then
+        if po_noreturn in CurrentProcInfo.procdef.procoptions then
           exit;
         { Pure assembler routines need to save the registers themselves }
-        if (po_assembler in current_procinfo.procdef.procoptions) then
+        if (po_assembler in CurrentProcInfo.procdef.procoptions) then
           exit;
 
         cg.g_restore_registers(list);
@@ -886,7 +886,7 @@ implementation
                   { Unused parameters need to be kept in the original location
                     to prevent allocation of registers/resources for them. }
                   else if not tparavarsym(vs).is_used and
-                    (cs_opt_unused_para in current_settings.optimizerswitches) then
+                    (cs_opt_unused_para in CurrentSettings.optimizerswitches) then
                     begin
                       tparavarsym(vs).paraloc[calleeside].get_location(vs.initialloc);
                     end
@@ -953,7 +953,7 @@ implementation
                       else
                         pd.funcretloc[calleeside].get_location(vs.initialloc);
                     end
-                  else if (m_delphi in current_settings.modeswitches) and
+                  else if (m_delphi in CurrentSettings.modeswitches) and
                      (po_assembler in pd.procoptions) and
                      (vo_is_funcret in vs.varoptions) and
                      (vs.refs=0) then
@@ -1016,7 +1016,7 @@ implementation
       end;
 
 
-    function do_get_used_regvars(var n: tnode; arg: pointer): foreachnoderesult;
+    function do_get_used_regvars(var n: TNode; arg: pointer): foreachnoderesult;
       var
         rv: pusedregvars absolute arg;
       begin
@@ -1039,15 +1039,15 @@ implementation
             if (tloadnode(n).symtableentry.typ in [staticvarsym,localvarsym,paravarsym]) then
               add_regvars(rv^,tabstractnormalvarsym(tloadnode(n).symtableentry).localloc);
           loadparentfpn:
-            if current_procinfo.procdef.parast.symtablelevel>tloadparentfpnode(n).parentpd.parast.symtablelevel then
-              add_regvars(rv^,tparavarsym(current_procinfo.procdef.parentfpsym).localloc);
+            if CurrentProcInfo.procdef.parast.symtablelevel>tloadparentfpnode(n).parentpd.parast.symtablelevel then
+              add_regvars(rv^,tparavarsym(CurrentProcInfo.procdef.parentfpsym).localloc);
           vecn:
             begin
               { range checks sometimes need the high parameter }
-              if (cs_check_range in current_settings.localswitches) and
+              if (cs_check_range in CurrentSettings.localswitches) and
                  (is_open_array(tvecnode(n).left.resultdef) or
                   is_array_of_const(tvecnode(n).left.resultdef)) and
-                 not(current_procinfo.procdef.proccalloption in cdecl_pocalls) then
+                 not(CurrentProcInfo.procdef.proccalloption in cdecl_pocalls) then
                 add_regvars(rv^,tabstractnormalvarsym(get_high_value_sym(tparavarsym(tloadnode(tvecnode(n).left).symtableentry))).localloc)
             end;
           else
@@ -1057,7 +1057,7 @@ implementation
       end;
 
 
-    procedure get_used_regvars(n: tnode; var rv: tusedregvars);
+    procedure get_used_regvars(n: TNode; var rv: tusedregvars);
       begin
         foreachnodestatic(n,@do_get_used_regvars,@rv);
       end;
@@ -1134,7 +1134,7 @@ implementation
                       in the parent procedures }
                     case localloc.loc of
                       LOC_CREGISTER :
-                        if (pi_has_label in current_procinfo.flags) then
+                        if (pi_has_label in CurrentProcInfo.flags) then
 {$if defined(cpu64bitalu)}
                           if localloc.size in [OS_128,OS_S128] then
                             begin
@@ -1154,7 +1154,7 @@ implementation
                       LOC_CFPUREGISTER,
                       LOC_CMMREGISTER,
                       LOC_CMMXREGISTER:
-                        if (pi_has_label in current_procinfo.flags) then
+                        if (pi_has_label in CurrentProcInfo.flags) then
                           cg.a_reg_sync(list,localloc.register);
                       LOC_REFERENCE :
                         begin
@@ -1163,7 +1163,7 @@ implementation
                             (gets freed in thlcgobj.gen_load_return_value();) }
                           if (typ in [localvarsym,paravarsym]) and
                              (([vo_is_funcret,vo_is_result]*varoptions)=[]) and
-                             ((current_procinfo.procdef.proctypeoption<>potype_constructor) or
+                             ((CurrentProcInfo.procdef.proctypeoption<>potype_constructor) or
                               not(vo_is_self in varoptions)) then
                             tg.Ungetlocal(list,localloc.reference);
                         end;
@@ -1188,7 +1188,7 @@ implementation
 
     function getprocalign : shortint;
       begin
-        result:=current_settings.alignment.procalign;
+        result:=CurrentSettings.alignment.procalign;
       end;
 
 
@@ -1197,7 +1197,7 @@ implementation
         para: tparavarsym;
         framesrc: tregister;
       begin
-        para:=tparavarsym(current_procinfo.procdef.paras[0]);
+        para:=tparavarsym(CurrentProcInfo.procdef.paras[0]);
         if not (vo_is_parentfp in para.varoptions) then
           InternalError(201201142);
         if (para.paraloc[calleeside].location^.loc<>LOC_REGISTER) or

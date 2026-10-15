@@ -43,7 +43,7 @@ implementation
 
     procedure read_typed_const(list:tasmlist;sym:tstaticvarsym;in_structure:boolean);
       var
-        storefilepos : tfileposinfo;
+        storefilepos : TFilePosInfo;
         tcbuilder    : ttypedconstbuilder;
         reslist,
         datalist     : tasmlist;
@@ -56,8 +56,8 @@ implementation
         sym.varregable:=vr_none;
 
         { generate data for typed const }
-        storefilepos:=current_filepos;
-        current_filepos:=sym.fileinfo;
+        storefilepos:=CurrentFilePos;
+        CurrentFilePos:=sym.fileinfo;
 
         maybe_new_object_file(list);
         tcbuilder:=tasmlisttypedconstbuilderclass(ctypedconstbuilder).create(sym);
@@ -72,15 +72,15 @@ implementation
         if not in_structure and
            (
             (
-             (current_scanner.token = _ID) and
-             ((current_scanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (current_scanner.idtoken = _WEAKEXTERNAL)) and
-             (m_cvar_support in current_settings.modeswitches)
+             (CurrentScanner.token = _ID) and
+             ((CurrentScanner.idtoken in [_EXPORT,_EXTERNAL,_PUBLIC,_CVAR]) or (CurrentScanner.idtoken = _WEAKEXTERNAL)) and
+             (m_cvar_support in CurrentSettings.modeswitches)
             ) or
             (
-             (m_mac in current_settings.modeswitches) and
+             (m_mac in CurrentSettings.modeswitches) and
              (
-              (cs_external_var in current_settings.localswitches) or
-              (cs_externally_visible in current_settings.localswitches)
+              (cs_external_var in CurrentSettings.localswitches) or
+              (cs_externally_visible in CurrentSettings.localswitches)
              )
             )
            ) then
@@ -90,7 +90,7 @@ implementation
         if not parse_generic then
           begin
             if vo_is_public in sym.varoptions then
-              current_module.add_public_asmsym(sym.mangledname,AB_GLOBAL,AT_DATA);
+              CurrentModule.add_public_asmsym(sym.mangledname,AB_GLOBAL,AT_DATA);
 
             { only now get the final asmlist, because inserting the symbol
               information depends on potential section information set above }
@@ -98,13 +98,13 @@ implementation
             { add the parsed value }
             list.concatlist(reslist);
             { and pointed data, if any }
-            current_asmdata.asmlists[al_const].concatlist(datalist);
+            CurrentAsmData.asmlists[al_const].concatlist(datalist);
             { the (empty) lists themselves are freed by tcbuilder }
           end;
 
         tcbuilder.free;
         tcbuilder := nil;
-        current_filepos:=storefilepos;
+        CurrentFilePos:=storefilepos;
       end;
 
 end.

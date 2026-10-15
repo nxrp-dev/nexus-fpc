@@ -36,7 +36,7 @@ interface
 
     { Generate a node loading the superclass structure necessary to call
       an inherited Objective-C method.  }
-    function objcsuperclassnode(def: tdef): tnode;
+    function objcsuperclassnode(def: tdef): TNode;
 
     { Encode a method's parameters and result type into the format used by the
       run time (for generating protocol and class rtti).  }
@@ -46,7 +46,7 @@ interface
     procedure exportobjcclass(def: tobjectdef);
 
     { loads a field of an Objective-C root class (such as ISA) }
-    function objcloadbasefield(n: tnode; const fieldname: string): tnode;
+    function objcloadbasefield(n: TNode; const fieldname: string): TNode;
 
 
 implementation
@@ -112,7 +112,7 @@ end;
                        objcsuperclassnode
 *******************************************************************}
 
-    function objcloadbasefield(n: tnode; const fieldname: string): tnode;
+    function objcloadbasefield(n: TNode; const fieldname: string): TNode;
       var
         vs         : tsym;
       begin
@@ -136,7 +136,7 @@ end;
       end;
 
 
-    function objcsuperclassnode(def: tdef): tnode;
+    function objcsuperclassnode(def: tdef): TNode;
       var
         para       : tcallparanode;
       begin
@@ -155,7 +155,7 @@ end;
                   for the fragile abi, and the metaclass of the superclass for the non-fragile ABI }
                 { NOTE: those send2 methods are only available on Mac OS X 10.6 and later!
                     (but also on all iPhone SDK revisions we support) }
-                if (target_info.system in systems_objc_nfabi) and
+                if (TargetInfo.system in systems_objc_nfabi) and
                    (not MacOSXVersionMin.isvalid or
                     (MacOSXVersionMin.relationto(10,6,0)>=0)) then
                   result:=cloadvmtaddrnode.create(ctypenode.create(tobjectdef(tclassrefdef(def).pointeddef).childof))
@@ -163,7 +163,7 @@ end;
                   result:=cloadvmtaddrnode.create(ctypenode.create(tobjectdef(tclassrefdef(def).pointeddef).childof.childof));
                 tloadvmtaddrnode(result).forcall:=true;
                 result:=cloadvmtaddrnode.create(result);
-                typecheckpass(result);
+                TypeCheckPass(result);
                 { we're done }
                 exit;
               end
@@ -188,11 +188,11 @@ end;
 
           NOTE: those send2 methods are only available on Mac OS X 10.6 and later!
             (but also on all iPhone SDK revisions we support) }
-        if not(target_info.system in systems_objc_nfabi) or
+        if not(TargetInfo.system in systems_objc_nfabi) or
            (MacOSXVersionMin.isvalid and
             (MacOSXVersionMin.relationto(10,6,0)<0)) then
           result:=objcloadbasefield(result,'SUPERCLASS');
-        typecheckpass(result);
+        TypeCheckPass(result);
       end;
 
 
@@ -268,7 +268,7 @@ end;
       vf: tfieldvarsym;
       prefix: string;
     begin
-      prefix:=target_info.cprefix+'OBJC_IVAR_$_'+objccls.objextname^+'.';
+      prefix:=TargetInfo.cprefix+'OBJC_IVAR_$_'+objccls.objextname^+'.';
       for i:=0 to objccls.symtable.SymList.Count-1 do
         if tsym(objccls.symtable.SymList[i]).typ=fieldvarsym then
           begin
@@ -283,7 +283,7 @@ end;
 
     procedure exportobjcclass(def: tobjectdef);
       begin
-        if (target_info.system in systems_objc_nfabi) then
+        if (TargetInfo.system in systems_objc_nfabi) then
           begin
             { export class and metaclass symbols }
             exportname(def.rtti_mangledname(objcclassrtti),[]);

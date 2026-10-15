@@ -956,7 +956,7 @@ implementation
            while (localsize>0) do
             begin
 
-              if (CPUX86_HAS_CMOV in cpu_capabilities[current_settings.cputype]) then
+              if (CPUX86_HAS_CMOV in cpu_capabilities[CurrentSettings.cputype]) then
                 begin
                   for j:=low(alignarray_cmovcpus) to high(alignarray_cmovcpus) do
                    if (localsize>=length(alignarray_cmovcpus[j])) then
@@ -1980,7 +1980,7 @@ implementation
 
         if (Insentry=nil) or (IF_PASS2 in InsEntry^.flags) then
          begin
-           current_filepos:=fileinfo;
+           CurrentFilePos:=fileinfo;
            { We need intel style operands }
            SetOperandOrder(op_intel);
            { create the .ot fields }
@@ -2259,7 +2259,7 @@ implementation
         if (Insentry=nil) and (InsSize=-1) then
           exit;
         { set the file position }
-        current_filepos:=fileinfo;
+        CurrentFilePos:=fileinfo;
         { Get InsEntry }
         if FindInsEntry(ObjData) then
          begin
@@ -2310,7 +2310,7 @@ implementation
         { error in pass1 ? }
         if insentry=nil then
          exit;
-        current_filepos:=fileinfo;
+        CurrentFilePos:=fileinfo;
         { Segment override }
         if (segprefix>=NR_ES) and (segprefix<=NR_GS) then
          begin
@@ -3599,7 +3599,7 @@ implementation
 
 {$ifdef i386}
                   if (oper[opidx]^.ref^.refaddr=addr_pic) and
-                     (tf_pic_uses_got in target_info.flags) then
+                     (tf_pic_uses_got in TargetInfo.flags) then
                     begin
                       currrelreloc:=RELOC_PLT32;
                       currabsreloc:=RELOC_GOT32;
@@ -3684,7 +3684,7 @@ implementation
              which needs a special relocation type R_386_GOTPC }
            if assigned (p) and
               (p.name='_GLOBAL_OFFSET_TABLE_') and
-              (tf_pic_uses_got in target_info.flags) then
+              (tf_pic_uses_got in TargetInfo.flags) then
              begin
                { nothing else than a 4 byte relocation should occur
                  for GOT }
@@ -4525,7 +4525,7 @@ implementation
                              currsym:=objdata.symbolref(oper[opidx]^.ref^.symbol);
 {$ifdef i386}
                              if (oper[opidx]^.ref^.refaddr=addr_pic) and
-                                (tf_pic_uses_got in target_info.flags) then
+                                (tf_pic_uses_got in TargetInfo.flags) then
                                currabsreloc:=RELOC_GOT32
                              else
 {$endif i386}
@@ -4568,7 +4568,7 @@ implementation
 {$endif x86_64}
 {$ifdef i386}
                          if (oper[opidx]^.ref^.refaddr=addr_pic) and
-                            (tf_pic_uses_got in target_info.flags) then
+                            (tf_pic_uses_got in TargetInfo.flags) then
                            currabsreloc:=RELOC_GOT32
                          else if oper[opidx]^.ref^.refaddr=addr_tlsgd then
                            currabsreloc:=RELOC_TLSGD
@@ -4774,7 +4774,7 @@ implementation
               result:=taicpu.op_ref_reg(A_MOV,reg2opsize(r),tmpref,r);
             end;
           R_MMREGISTER :
-            if current_settings.fputype in fpu_avx_instructionsets then
+            if CurrentSettings.fputype in fpu_avx_instructionsets then
               case getsubreg(r) of
                 R_SUBMMD:
                   result:=taicpu.op_ref_reg(A_VMOVSD,S_NO,tmpref,r);
@@ -4843,7 +4843,7 @@ implementation
               result:=taicpu.op_reg_ref(A_MOV,size,r,tmpref);
             end;
           R_MMREGISTER :
-            if current_settings.fputype in fpu_avx_instructionsets then
+            if CurrentSettings.fputype in fpu_avx_instructionsets then
               case getsubreg(r) of
                 R_SUBMMD:
                   result:=taicpu.op_reg_ref(A_VMOVSD,S_NO,r,tmpref);

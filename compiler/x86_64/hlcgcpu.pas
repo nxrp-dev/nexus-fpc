@@ -65,7 +65,7 @@ implementation
         Internalerror(200109191);
 
       make_global:=false;
-      if (not current_module.is_unit) or create_smartlink or
+      if (not CurrentModule.is_unit) or create_smartlink or
          (procdef.owner.defowner.owner.symtabletype=globalsymtable) then
         make_global:=true;
 
@@ -95,11 +95,11 @@ implementation
         end
       else
         begin
-          sym:=current_asmdata.RefAsmSymbol(procdef.mangledname,AT_FUNCTION);
+          sym:=CurrentAsmData.RefAsmSymbol(procdef.mangledname,AT_FUNCTION);
           reference_reset_symbol(r,sym,0,sizeof(pint),[]);
-          if (cs_create_pic in current_settings.moduleswitches) and
+          if (cs_create_pic in CurrentSettings.moduleswitches) and
              { darwin/x86_64's assembler doesn't want @PLT after call symbols }
-             not(target_info.system in systems_darwin) then
+             not(TargetInfo.system in systems_darwin) then
             r.refaddr:=addr_pic
           else
             r.refaddr:=addr_full;

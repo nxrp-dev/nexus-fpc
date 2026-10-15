@@ -92,11 +92,11 @@ interface
 
     var
       CDebugInfo : array[tdbg] of TDebugInfoClass;
-      current_debuginfo : tdebuginfo;
+      CurrentDebugInfo : tdebuginfo;
 
     procedure InitDebugInfo(hp:tmodule; restore_current_debuginfo : boolean);
     procedure DoneDebugInfo(hp:tmodule; out current_debuginfo_reset : boolean);
-    procedure RegisterDebugInfo(const r:tdbginfo;c:TDebugInfoClass);
+    procedure RegisterDebugInfo(const r:TDbgInfo;c:TDebugInfoClass);
 
 
 implementation
@@ -627,18 +627,18 @@ implementation
 
     procedure InitDebugInfo(hp:tmodule; restore_current_debuginfo : boolean);
       begin
-        if not assigned(CDebugInfo[target_dbg.id]) then
+        if not assigned(CDebugInfo[TargetDbg.id]) then
           begin
             Comment(V_Fatal,'cg_f_debuginfo_output_not_supported');
             exit;
           end;
 
-        hp.DebugInfo:=CDebugInfo[target_dbg.id].Create;
+        hp.DebugInfo:=CDebugInfo[TargetDbg.id].Create;
 
         if restore_current_debuginfo then
           begin
-            if current_debuginfo=nil then
-              current_debuginfo:=tdebuginfo(hp.DebugInfo)
+            if CurrentDebugInfo=nil then
+              CurrentDebugInfo:=tdebuginfo(hp.DebugInfo)
             else
               internalerror(2012032101);
           end;
@@ -650,9 +650,9 @@ implementation
         current_debuginfo_reset:=false;
         if assigned(hp.DebugInfo) then
           begin
-            if hp.DebugInfo=current_debuginfo then
+            if hp.DebugInfo=CurrentDebugInfo then
               begin
-                current_debuginfo:=nil;
+                CurrentDebugInfo:=nil;
                 current_debuginfo_reset:=true;
               end;
             hp.DebugInfo.Free;
@@ -661,7 +661,7 @@ implementation
       end;
 
 
-    procedure RegisterDebugInfo(const r:tdbginfo;c:TDebugInfoClass);
+    procedure RegisterDebugInfo(const r:TDbgInfo;c:TDebugInfoClass);
       var
         t : tdbg;
       begin
@@ -669,14 +669,14 @@ implementation
         if assigned(dbginfos[t]) then
           writeln('Warning: DebugInfo is already registered!')
         else
-          Getmem(dbginfos[t],sizeof(tdbginfo));
+          Getmem(dbginfos[t],sizeof(TDbgInfo));
         dbginfos[t]^:=r;
         CDebugInfo[t]:=c;
       end;
 
 
     const
-      dbg_none_info : tdbginfo =
+      dbg_none_info : TDbgInfo =
          (
            id     : dbg_none;
            idtxt  : 'NONE';

@@ -59,25 +59,25 @@ function TAsmDataDef.DefineAsmSymbolByClass(symclass: TAsmSymbolClass; const s: 
        (_bind in [AB_GLOBAL,AB_COMMON,AB_PRIVATE_EXTERN]) and
        (_typ<>AT_DATA_NOINDIRECT) and
        (((_typ=AT_DATA) and
-         (tf_supports_packages in target_info.flags) and
-         (target_info.system in systems_indirect_var_imports)
+         (tf_supports_packages in TargetInfo.flags) and
+         (TargetInfo.system in systems_indirect_var_imports)
         ) or
         (_typ=AT_DATA_FORCEINDIRECT)
        ) then
       begin
         ptrdef:=cpointerdef.getreusable(def);
-        symind:=current_asmdata.DefineAsmSymbol(s,AB_INDIRECT,AT_DATA,ptrdef);
+        symind:=CurrentAsmData.DefineAsmSymbol(s,AB_INDIRECT,AT_DATA,ptrdef);
         tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_new_section]);
         tcb.emit_tai(Tai_const.Create_sym_offset(result,0),ptrdef);
-        current_asmdata.AsmLists[al_indirectglobals].concatlist(tcb.get_final_asmlist(
+        CurrentAsmData.AsmLists[al_indirectglobals].concatlist(tcb.get_final_asmlist(
           symind,ptrdef,
           sec_rodata,
           lower(symind.name),
           ptrdef.alignment));
         tcb.free;
         tcb := nil;
-        if (_typ=AT_DATA_FORCEINDIRECT) and not (target_info.system in systems_indirect_var_imports) then
-          current_module.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
+        if (_typ=AT_DATA_FORCEINDIRECT) and not (TargetInfo.system in systems_indirect_var_imports) then
+          CurrentModule.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
       end;
   end;
 

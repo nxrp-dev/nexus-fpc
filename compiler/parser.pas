@@ -71,7 +71,7 @@ implementation
        module.end_of_parsing;
 
        { Restore all locally modified warning messages }
-       RestoreLocalVerbosity(current_settings.pmessage);
+       RestoreLocalVerbosity(CurrentSettings.pmessage);
        current_exceptblock:=0;
        exceptblockcounter:=0;
 
@@ -117,19 +117,19 @@ implementation
 {           if olddata.old_current_module<>current_module then
         set_current_module(olddata.old_current_module);}
 
-      FreeLocalVerbosity(current_settings.pmessage);
+      FreeLocalVerbosity(CurrentSettings.pmessage);
 
     end;
 
     procedure initparser;
       begin
          { Current compiled module/proc }
-         set_current_module(nil);
-         current_asmdata:=nil;
-         current_procinfo:=nil;
-         current_structdef:=nil;
-         current_genericdef:=nil;
-         current_specializedef:=nil;
+         SetCurrentModule(nil);
+         CurrentAsmData:=nil;
+         CurrentProcInfo:=nil;
+         CurrentStructDef:=nil;
+         CurrentGenericDef:=nil;
+         CurrentSpecializeDef:=nil;
 
          loaded_units:=TLinkedList.Create;
 
@@ -138,9 +138,9 @@ implementation
          unloaded_units:=TLinkedList.Create;
 
          { global switches }
-         current_settings.globalswitches:=init_settings.globalswitches;
+         CurrentSettings.globalswitches:=InitSettings.globalswitches;
 
-         current_settings.sourcecodepage:=init_settings.sourcecodepage;
+         CurrentSettings.sourcecodepage:=InitSettings.sourcecodepage;
 
          { initialize scanner }
          InitScanner;
@@ -156,19 +156,19 @@ implementation
 
          { memory sizes }
          if stacksize=0 then
-           stacksize:=target_info.stacksize;
+           stacksize:=TargetInfo.stacksize;
 
          { RTTI writer }
          RTTIWriter:=TRTTIWriter.Create;
 
          { open assembler response }
-         if cs_link_on_target in current_settings.globalswitches then
+         if cs_link_on_target in CurrentSettings.globalswitches then
            GenerateAsmRes(outputexedir+ChangeFileExt(inputfilename,'_ppas'))
          else
            GenerateAsmRes(outputexedir+'ppas');
 
          { open deffile }
-         DefFile:=TDefFile.Create(outputexedir+ChangeFileExt(inputfilename,target_info.defext));
+         DefFile:=TDefFile.Create(outputexedir+ChangeFileExt(inputfilename,TargetInfo.defext));
 
          { list of generated .o files, so the linker can remove them }
          SmartLinkOFiles:=TCmdStrList.Create;
@@ -184,12 +184,12 @@ implementation
       begin
          { Reset current compiling info, so destroy routines can't
            reference the data that might already be destroyed }
-         set_current_module(nil);
-         current_procinfo:=nil;
-         current_asmdata:=nil;
-         current_structdef:=nil;
-         current_genericdef:=nil;
-         current_specializedef:=nil;
+         SetCurrentModule(nil);
+         CurrentProcInfo:=nil;
+         CurrentAsmData:=nil;
+         CurrentStructDef:=nil;
+         CurrentGenericDef:=nil;
+         CurrentSpecializeDef:=nil;
 
          { unload units }
          if assigned(loaded_units) then
@@ -212,9 +212,9 @@ implementation
 
          { if there was an error in the scanner, the scanner is
            still assigned }
-         if assigned(current_scanner) then
+         if assigned(CurrentScanner) then
           begin
-            current_scanner.free; // no nil needed
+            CurrentScanner.free; // no nil needed
             set_current_scanner(nil);
           end;
 
@@ -245,72 +245,72 @@ implementation
       begin
          preprocfile:=tpreprocfile.create('pre_'+filename);
        { initialize a module }
-         set_current_module(tppumodule.create(nil,'',filename,false));
+         SetCurrentModule(tppumodule.create(nil,'',filename,false));
          macrosymtablestack:=TSymtablestack.create;
 
 
          set_current_scanner(tscannerfile.Create(filename));
-         current_scanner.firstfile;
-         current_module.scanner:=current_scanner;
+         CurrentScanner.firstfile;
+         CurrentModule.scanner:=CurrentScanner;
 
          { init macros before anything in the file is parsed.}
-         current_module.localmacrosymtable:= tmacrosymtable.create(false);
+         CurrentModule.localmacrosymtable:= tmacrosymtable.create(false);
          macrosymtablestack.push(initialmacrosymtable);
-         macrosymtablestack.push(current_module.localmacrosymtable);
+         macrosymtablestack.push(CurrentModule.localmacrosymtable);
 
          { read the first token }
          // current_scanner.readtoken(false);
 
-         main_module:=current_module;
+         main_module:=CurrentModule;
          repeat
-           current_scanner.readtoken(true);
+           CurrentScanner.readtoken(true);
            preprocfile.AddSpace;
-           case current_scanner.token of
+           case CurrentScanner.token of
              _ID :
                begin
-                 preprocfile.Add(current_scanner.orgpattern);
+                 preprocfile.Add(CurrentScanner.orgpattern);
                end;
              _REALNUMBER,
              _INTCONST :
-               preprocfile.Add(current_scanner.pattern);
+               preprocfile.Add(CurrentScanner.pattern);
              _CSTRING :
                begin
                  i:=0;
-                 while (i<length(current_scanner.cstringpattern)) do
+                 while (i<length(CurrentScanner.cstringpattern)) do
                   begin
                     inc(i);
-                    if current_scanner.cstringpattern[i]='''' then
+                    if CurrentScanner.cstringpattern[i]='''' then
                      begin
-                       insert('''',current_scanner.cstringpattern,i);
+                       insert('''',CurrentScanner.cstringpattern,i);
                        inc(i);
                      end;
                   end;
-                 preprocfile.Add(''''+current_scanner.cstringpattern+'''');
+                 preprocfile.Add(''''+CurrentScanner.cstringpattern+'''');
                end;
              _CCHAR :
                begin
-                 case current_scanner.pattern[1] of
+                 case CurrentScanner.pattern[1] of
                    #39 :
-                     current_scanner.pattern:='''''''';
+                     CurrentScanner.pattern:='''''''';
                    #0..#31,
                    #128..#255 :
                      begin
-                       str(ord(current_scanner.pattern[1]),current_scanner.pattern);
-                       current_scanner.pattern:='#'+current_scanner.pattern;
+                       str(ord(CurrentScanner.pattern[1]),CurrentScanner.pattern);
+                       CurrentScanner.pattern:='#'+CurrentScanner.pattern;
                      end;
                    else
-                     current_scanner.pattern:=''''+current_scanner.pattern[1]+'''';
+                     CurrentScanner.pattern:=''''+CurrentScanner.pattern[1]+'''';
                  end;
-                 preprocfile.Add(current_scanner.pattern);
+                 preprocfile.Add(CurrentScanner.pattern);
                end;
              _EOF :
                break;
              else
-               preprocfile.Add(tokeninfo^[current_scanner.token].str)
+               preprocfile.Add(tokeninfo^[CurrentScanner.token].str)
            end;
          until false;
        { free scanner }
-         current_scanner.free;
+         CurrentScanner.free;
          set_current_scanner(nil);
        { close }
          preprocfile.free;
@@ -333,9 +333,9 @@ implementation
          Result:=True;
 
          { parsing a procedure or declaration should be finished }
-         if assigned(current_procinfo) then
+         if assigned(CurrentProcInfo) then
            internalerror(200811121);
-         if assigned(current_structdef) then
+         if assigned(CurrentStructDef) then
            internalerror(200811122);
          inc(module.compilecount);
          parser_current_file:=module.mainsource;
@@ -356,21 +356,21 @@ implementation
          symtablestack:=tdefawaresymtablestack.create;
          macrosymtablestack:=TSymtablestack.create;
          systemunit:=nil;
-         current_settings.defproccall:=init_settings.defproccall;
+         CurrentSettings.defproccall:=InitSettings.defproccall;
          current_exceptblock:=0;
          exceptblockcounter:=0;
-         current_settings.maxfpuregisters:=-1;
-         current_settings.pmessage:=nil;
+         CurrentSettings.maxfpuregisters:=-1;
+         CurrentSettings.pmessage:=nil;
 
          { Load current state from the init values }
-         current_settings:=init_settings;
+         CurrentSettings:=InitSettings;
 
-         set_current_module(module);
+         SetCurrentModule(module);
          if not (module.state in [ms_compile]) then
            internalerror(200212281);
 
          { load current asmdata from current_module }
-         current_asmdata:=TAsmData(module.asmdata);
+         CurrentAsmData:=TAsmData(module.asmdata);
 
          { startup scanner and load the first file }
          sc:=tscannerfile.Create(module.mainsource);
@@ -385,7 +385,7 @@ implementation
          macrosymtablestack.push(module.localmacrosymtable);
 
          { read the first token }
-         current_scanner.readtoken(false);
+         CurrentScanner.readtoken(false);
 
          { this is set to false if a unit needs to wait for other units }
          finished:=true;
@@ -393,18 +393,18 @@ implementation
          { If the compile level > 1 we get a nice "unit expected" error
            message if we are trying to use a program as unit.}
          try
-           if (current_scanner.token=_UNIT) or (not module.is_initial) then
+           if (CurrentScanner.token=_UNIT) or (not module.is_initial) then
              begin
                module.is_unit:=true;
                finished:=proc_unit(module);
              end
-           else if (current_scanner.token=_ID) and (current_scanner.idtoken=_PACKAGE) then
+           else if (CurrentScanner.token=_ID) and (CurrentScanner.idtoken=_PACKAGE) then
              begin
                module.IsPackage:=true;
                finished:=proc_package(module);
              end
            else
-             finished:=proc_program(module,current_scanner.token=_LIBRARY);
+             finished:=proc_program(module,CurrentScanner.token=_LIBRARY);
          except
            on ECompilerAbort do
              raise;

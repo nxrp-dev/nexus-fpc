@@ -28,24 +28,24 @@ interface
 uses
   globtype;
 
-function tripletcpustr(tripletstyle: ttripletstyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
 
 implementation
 
 uses
   globals, systems, cpuinfo;
 
-function tripletcpustr(tripletstyle: ttripletstyle): ansistring;
+function tripletcpustr(tripletstyle: TTripletStyle): ansistring;
   begin
     if tripletstyle in [triplet_llvm,triplet_llvmrt] then
       begin
-        if target_info.system in systems_android then
+        if TargetInfo.system in systems_android then
           result:='i686'
         else
           result:='i386'
       end
-    else if (target_info.system in systems_darwin) or
-       (current_settings.cputype<cpu_Pentium2) then
+    else if (TargetInfo.system in systems_darwin) or
+       (CurrentSettings.cputype<cpu_Pentium2) then
       result:='i386'
     else
       result:='i686'

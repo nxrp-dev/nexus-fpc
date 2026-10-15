@@ -39,7 +39,7 @@ unit nx86add;
         function  getfpuresflags : tresflags;
         procedure left_must_be_reg(opdef: tdef; opsize:TCGSize;noswap:boolean);
         procedure force_left_and_right_fpureg;
-        procedure prepare_x87_locations(out refnode: tnode);
+        procedure prepare_x87_locations(out refnode: TNode);
         procedure emit_op_right_left(op:TAsmOp;opsize:TCgSize;AllocFlags:boolean);
         procedure emit_generic_code(op:TAsmOp;opsize:TCgSize;unsigned,extra_not,mboverflow:boolean);
 
@@ -48,8 +48,8 @@ unit nx86add;
         procedure second_addfloatsse;
         procedure second_addfloatavx;
       public
-        function pass_1 : tnode;override;
-        function simplify(forinline : boolean) : tnode; override;
+        function pass_1 : TNode;override;
+        function simplify(forinline : boolean) : TNode; override;
         function use_fma : boolean;override;
         procedure second_addfloat;override;
 
@@ -128,7 +128,7 @@ unit nx86add;
                 location_swap(left.location,right.location);
 
               if comparison then
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
               emit_reg_reg(op,TCGSize2Opsize[opsize],right.location.register,left.location.register);
             end;
@@ -139,15 +139,15 @@ unit nx86add;
            if (nodetype=subn) and (nf_swapped in flags) then
             begin
               if extra_not then
-                cg.a_op_reg_reg(current_asmdata.CurrAsmList,OP_NOT,opsize,left.location.register,left.location.register);
-              r:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
-              hlcg.a_load_loc_reg(current_asmdata.CurrAsmList,right.resultdef,cgsize_orddef(opsize),right.location,r);
+                cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,OP_NOT,opsize,left.location.register,left.location.register);
+              r:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+              hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,cgsize_orddef(opsize),right.location,r);
 
               if comparison then
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
               emit_reg_reg(op,TCGSize2Opsize[opsize],left.location.register,r);
-              cg.a_load_reg_reg(current_asmdata.CurrAsmList,opsize,opsize,r,left.location.register);
+              cg.a_load_reg_reg(CurrentAsmData.CurrAsmList,opsize,opsize,r,left.location.register);
             end
            else
             begin
@@ -161,7 +161,7 @@ unit nx86add;
                       spilling, while 'test %reg,%reg' still requires loading into register.
                       If spilling is not necessary, it is changed back into 'test %reg,%reg' by
                       peephole optimizer (this optimization is currently available only for i386). }
-                   cg.a_reg_alloc(current_asmdata.CurrAsmList,NR_DEFAULTFLAGS);
+                   cg.a_reg_alloc(CurrentAsmData.CurrAsmList,NR_DEFAULTFLAGS);
 {$ifdef i386}
                    emit_const_reg(A_TEST,TCGSize2Opsize[opsize],aint(-1),left.location.register)
 {$else i386}
@@ -203,19 +203,19 @@ unit nx86add;
                     reference_reset_base(href,left.location.register,0,ctempposinvalid,0,[]);
                     href.index:=left.location.register;
                     href.scalefactor:=int64(right.location.value)-1;
-                    left.location.register:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
-                    current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[opsize],href,left.location.register));
+                    left.location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+                    CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(A_LEA,TCgSize2OpSize[opsize],href,left.location.register));
                   end
                else
                  begin
                    if extra_not then
                      begin
-                        r:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
-                        hlcg.a_load_loc_reg(current_asmdata.CurrAsmList,right.resultdef,cgsize_orddef(opsize),right.location,r);
+                        r:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+                        hlcg.a_load_loc_reg(CurrentAsmData.CurrAsmList,right.resultdef,cgsize_orddef(opsize),right.location,r);
                         emit_reg(A_NOT,TCGSize2Opsize[opsize],r);
 
                         if comparison or (mboverflow and overflowcheck) then
-                          cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                          cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
                         emit_reg_reg(A_AND,TCGSize2Opsize[opsize],r,left.location.register);
                      end
@@ -233,16 +233,16 @@ unit nx86add;
          begin
            if overflowcheck then
             begin
-              current_asmdata.getjumplabel(hl4);
+              CurrentAsmData.getjumplabel(hl4);
               if unsigned then
-                cg.a_jmp_flags(current_asmdata.CurrAsmList,F_AE,hl4)
+                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_AE,hl4)
               else
-                cg.a_jmp_flags(current_asmdata.CurrAsmList,F_NO,hl4);
+                cg.a_jmp_flags(CurrentAsmData.CurrAsmList,F_NO,hl4);
 
               if not comparison then
-                cg.a_reg_dealloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-              cg.a_call_name(current_asmdata.CurrAsmList,'FPC_OVERFLOW',false);
-              cg.a_label(current_asmdata.CurrAsmList,hl4);
+                cg.a_reg_dealloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+              cg.a_call_name(CurrentAsmData.CurrAsmList,'FPC_OVERFLOW',false);
+              cg.a_label(CurrentAsmData.CurrAsmList,hl4);
             end;
          end;
       end;
@@ -268,7 +268,7 @@ unit nx86add;
               { maybe we can reuse a constant register when the
                 operation is a comparison that doesn't change the
                 value of the register }
-              hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,equaln,unequaln]));
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,equaln,unequaln]));
               location:=left.location;
             end
            else
@@ -276,15 +276,15 @@ unit nx86add;
               { maybe we can reuse a constant register when the
                 operation is a comparison that doesn't change the
                 value of the register }
-                hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,equaln,unequaln]));
+                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,(nodetype in [ltn,lten,gtn,gten,equaln,unequaln]));
             end;
           end;
         if (right.location.loc<>LOC_CONSTANT) and
            (tcgsize2unsigned[right.location.size]<>tcgsize2unsigned[opsize]) then
-          hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,opdef,true);
+          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,opdef,true);
         if (left.location.loc<>LOC_CONSTANT) and
            (tcgsize2unsigned[left.location.size]<>tcgsize2unsigned[opsize]) then
-          hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,false);
+          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
        end;
 
 
@@ -292,9 +292,9 @@ unit nx86add;
       begin
         if (right.location.loc<>LOC_FPUREGISTER) then
           begin
-            hlcg.location_force_fpureg(current_asmdata.CurrAsmList,right.location,right.resultdef,false);
+            hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,false);
             if (left.location.loc<>LOC_FPUREGISTER) then
-              hlcg.location_force_fpureg(current_asmdata.CurrAsmList,left.location,left.resultdef,false)
+              hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,false)
             else
               { left was on the stack => swap }
               toggleflag(nf_swapped);
@@ -302,7 +302,7 @@ unit nx86add;
         { the nominator in st0 }
         else if (left.location.loc<>LOC_FPUREGISTER) then
           begin
-            hlcg.location_force_fpureg(current_asmdata.CurrAsmList,left.location,left.resultdef,false)
+            hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,false)
           end
         else
           begin
@@ -315,22 +315,22 @@ unit nx86add;
     { Makes sides suitable for executing an x87 instruction:
       if either side is OS_F32/OS_F64-sized LOC_REFERENCE, it is returned in 'refnode'
       everything else is loaded to FPU stack. }
-    procedure tx86addnode.prepare_x87_locations(out refnode: tnode);
+    procedure tx86addnode.prepare_x87_locations(out refnode: TNode);
       begin
         refnode:=nil;
 
         { later on, no mm registers are allowed, so transfer everything to memory here
           below it is loaded into an fpu register if needed }
         if left.location.loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
-          hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
+          hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
 
         if right.location.loc in [LOC_CMMREGISTER,LOC_MMREGISTER] then
-          hlcg.location_force_mem(current_asmdata.CurrAsmList,right.location,right.resultdef);
+          hlcg.location_force_mem(CurrentAsmData.CurrAsmList,right.location,right.resultdef);
 
         case ord(left.location.loc=LOC_FPUREGISTER)+ord(right.location.loc=LOC_FPUREGISTER) of
           0:
             begin
-              hlcg.location_force_fpureg(current_asmdata.CurrAsmList,right.location,right.resultdef,false);
+              hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,false);
               if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                 InternalError(2013090803);
               if (left.location.size in [OS_F32,OS_F64]) then
@@ -339,7 +339,7 @@ unit nx86add;
                   toggleflag(nf_swapped);
                 end
               else
-                hlcg.location_force_fpureg(current_asmdata.CurrAsmList,left.location,left.resultdef,false);
+                hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,false);
             end;
           1:
             begin   { if left is on the stack then swap. }
@@ -351,7 +351,7 @@ unit nx86add;
                 InternalError(2013090801);
               if not (refnode.location.size in [OS_F32,OS_F64]) then
                 begin
-                  hlcg.location_force_fpureg(current_asmdata.CurrAsmList,refnode.location,refnode.resultdef,false);
+                  hlcg.location_force_fpureg(CurrentAsmData.CurrAsmList,refnode.location,refnode.resultdef,false);
                   if (refnode=right) then
                     toggleflag(nf_swapped);
                   refnode:=nil;
@@ -377,24 +377,24 @@ unit nx86add;
 {$endif x86_64}
       begin
         if (right.location.loc in [LOC_CSUBSETREG,LOC_SUBSETREG,LOC_SUBSETREF,LOC_CSUBSETREF]) then
-          hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,right.resultdef,true);
+          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,right.resultdef,true);
         { left must be a register }
         case right.location.loc of
           LOC_REGISTER,
           LOC_CREGISTER :
             begin
               if AllocFlags then
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-              current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],right.location.register,left.location.register));
+              CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],right.location.register,left.location.register));
             end;
           LOC_REFERENCE,
           LOC_CREFERENCE :
             begin
-              tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,right.location.reference);
+              tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
               if AllocFlags then
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-              current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(op,TCGSize2Opsize[opsize],right.location.reference,left.location.register));
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+              CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,TCGSize2Opsize[opsize],right.location.reference,left.location.register));
             end;
           LOC_CONSTANT :
             begin
@@ -403,19 +403,19 @@ unit nx86add;
               if (opsize in [OS_S64,OS_64]) and
                  ((right.location.value<low(longint)) or (right.location.value>high(longint))) then
                 begin
-                  tmpreg:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
-                  cg.a_load_const_reg(current_asmdata.CurrAsmList,opsize,right.location.value,tmpreg);
+                  tmpreg:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+                  cg.a_load_const_reg(CurrentAsmData.CurrAsmList,opsize,right.location.value,tmpreg);
                   if AllocFlags then
-                    cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
-                  current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],tmpreg,left.location.register));
+                    cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
+                  CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,TCGSize2Opsize[opsize],tmpreg,left.location.register));
                 end
               else
 {$endif x86_64}
                 begin
                   if AllocFlags then
-                    cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                    cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(op,TCGSize2Opsize[opsize],right.location.value,left.location.register));
+                  CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(op,TCGSize2Opsize[opsize],right.location.value,left.location.register));
                 end;
             end;
           else
@@ -548,9 +548,9 @@ unit nx86add;
                      opdef:=u32inttype;
                    end;
                  { bts requires both elements to be registers }
-                 hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,false);
-                 hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,opdef,true);
-                 register_maybe_adjust_setbase(current_asmdata.CurrAsmList,opdef,right.location,setbase);
+                 hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
+                 hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,opdef,true);
+                 register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,opdef,right.location,setbase);
                  op:=A_BTS;
                  noswap:=true;
                end
@@ -595,26 +595,26 @@ unit nx86add;
                 location_swap(left.location,right.location);
                 toggleflag(nf_swapped);
               end;
-            hlcg.location_force_reg(current_asmdata.currAsmList,right.location,right.resultdef,opdef,false);
+            hlcg.location_force_reg(CurrentAsmData.currAsmList,right.location,right.resultdef,opdef,false);
             emit_reg(A_NOT,TCGSize2Opsize[opsize],right.location.register);
             location:=right.location;
           end
         else
           begin
             { can we use the BMI1 instruction andn? }
-            if (op=A_AND) and extra_not and (CPUX86_HAS_BMI1 in cpu_capabilities[current_settings.cputype]) and
+            if (op=A_AND) and extra_not and (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.cputype]) and
               (resultdef.size in [4{$ifdef x86_64},8{$endif x86_64}]) then
               begin
                 location_reset(location,LOC_REGISTER,left.location.size);
-                location.register:=cg.getintregister(current_asmdata.currAsmList,left.location.size);
+                location.register:=cg.getintregister(CurrentAsmData.currAsmList,left.location.size);
                 if nf_swapped in flags then
                   begin
                     location_swap(left.location,right.location);
                     toggleflag(nf_swapped);
                   end;
-                hlcg.location_force_reg(current_asmdata.currAsmList,right.location,right.resultdef,opdef,true);
+                hlcg.location_force_reg(CurrentAsmData.currAsmList,right.location,right.resultdef,opdef,true);
                 if not(left.location.loc in [LOC_CREGISTER,LOC_REGISTER,LOC_CREFERENCE,LOC_REFERENCE]) then
-                  hlcg.location_force_reg(current_asmdata.currAsmList,left.location,left.resultdef,opdef,true);
+                  hlcg.location_force_reg(CurrentAsmData.currAsmList,left.location,left.resultdef,opdef,true);
                 case left.location.loc of
                   LOC_CREGISTER,LOC_REGISTER:
                     emit_reg_reg_reg(A_ANDN,TCGSize2Opsize[opsize],left.location.register,right.location.register,location.register);
@@ -629,7 +629,7 @@ unit nx86add;
                 { left must be a register }
                 left_must_be_reg(opdef,opsize,noswap);
                 emit_generic_code(op,opsize,true,extra_not,false);
-                location_freetemp(current_asmdata.CurrAsmList,right.location);
+                location_freetemp(CurrentAsmData.CurrAsmList,right.location);
 
                 { left is always a register and contains the result }
                 location:=left.location;
@@ -638,7 +638,7 @@ unit nx86add;
 
         { fix the changed opsize we did above because of the missing btsb }
         if opsize<>int_cgsize(resultdef.size) then
-          hlcg.location_force_reg(current_asmdata.CurrAsmList,location,opdef,cgsize_orddef(int_cgsize(resultdef.size)),false);
+          hlcg.location_force_reg(CurrentAsmData.CurrAsmList,location,opdef,cgsize_orddef(int_cgsize(resultdef.size)),false);
       end;
 
 
@@ -666,18 +666,18 @@ unit nx86add;
             if (right.location.loc = LOC_CONSTANT) then
               begin
                 mask:=aint(1 shl (right.location.value-setbase));
-                hlcg.a_op_const_reg_reg(current_asmdata.CurrAsmList,OP_OR,resultdef,
+                hlcg.a_op_const_reg_reg(CurrentAsmData.CurrAsmList,OP_OR,resultdef,
                   mask,left.location.register,location.register);
               end
             else
               begin
-                hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,resultdef,true);
-                register_maybe_adjust_setbase(current_asmdata.CurrAsmList,resultdef,right.location,setbase);
+                hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,resultdef,true);
+                register_maybe_adjust_setbase(CurrentAsmData.CurrAsmList,resultdef,right.location,setbase);
                 if left.location.loc <> LOC_CONSTANT then
-                  hlcg.a_load_reg_reg(current_asmdata.CurrAsmList,left.resultdef,resultdef,
+                  hlcg.a_load_reg_reg(CurrentAsmData.CurrAsmList,left.resultdef,resultdef,
                       left.location.register,location.register)
                 else
-                  hlcg.a_load_const_reg(current_asmdata.CurrAsmList,resultdef,
+                  hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,
                       left.location.value,location.register);
                 emit_reg_reg(A_BTS,TCGSize2Opsize[def_cgsize(resultdef)],right.location.register,location.register);
               end;
@@ -704,7 +704,7 @@ unit nx86add;
               if (not(nf_swapped in flags) and (nodetype = lten)) or
                  ((nf_swapped in flags) and (nodetype = gten)) then
                 swapleftright;
-              hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,opdef,false);
+              hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,opdef,false);
               emit_op_right_left(A_AND,opsize,False);
               op:=A_CMP;
               { warning: ugly hack, we need a JE so change the node to equaln }
@@ -716,8 +716,8 @@ unit nx86add;
         { left must be a register }
         left_must_be_reg(opdef,opsize,false);
         emit_generic_code(op,opsize,true,false,false);
-        location_freetemp(current_asmdata.CurrAsmList,right.location);
-        location_freetemp(current_asmdata.CurrAsmList,left.location);
+        location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+        location_freetemp(CurrentAsmData.CurrAsmList,left.location);
 
         location_reset(location,LOC_FLAGS,OS_NO);
         location.resflags:=getresflags(true);
@@ -747,7 +747,7 @@ unit nx86add;
         case nodetype of
           addn :
             begin
-              if (cs_mmx_saturation in current_settings.localswitches) then
+              if (cs_mmx_saturation in CurrentSettings.localswitches) then
                 begin
                    case mmxbase of
                       mmxs8bit:
@@ -789,7 +789,7 @@ unit nx86add;
             end;
           subn :
             begin
-              if (cs_mmx_saturation in current_settings.localswitches) then
+              if (cs_mmx_saturation in CurrentSettings.localswitches) then
                 begin
                    case mmxbase of
                       mmxs8bit:
@@ -845,7 +845,7 @@ unit nx86add;
               { register variable ? }
               if (left.location.loc=LOC_CMMXREGISTER) then
                begin
-                 hregister:=tcgx86(cg).getmmxregister(current_asmdata.CurrAsmList);
+                 hregister:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
                  emit_reg_reg(A_MOVQ,S_NO,left.location.register,hregister);
                end
               else
@@ -853,8 +853,8 @@ unit nx86add;
                  if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                   internalerror(200203245);
 
-                 hregister:=tcgx86(cg).getmmxregister(current_asmdata.CurrAsmList);
-                 tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,left.location.reference);
+                 hregister:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
+                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
                  emit_ref_reg(A_MOVQ,S_NO,left.location.reference,hregister);
                end;
 
@@ -868,7 +868,7 @@ unit nx86add;
          begin
            if (nodetype=subn) and (nf_swapped in flags) then
             begin
-              hreg:=tcgx86(cg).getmmxregister(current_asmdata.CurrAsmList);
+              hreg:=tcgx86(cg).getmmxregister(CurrentAsmData.CurrAsmList);
               if right.location.loc=LOC_CMMXREGISTER then
                begin
                  emit_reg_reg(A_MOVQ,S_NO,right.location.register,hreg);
@@ -878,7 +878,7 @@ unit nx86add;
                begin
                  if not(left.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                   internalerror(2002032412);
-                 tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,right.location.reference);
+                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
                  emit_ref_reg(A_MOVQ,S_NO,right.location.reference,hreg);
                  emit_reg_reg(op,S_NO,left.location.register,hreg);
                end;
@@ -892,7 +892,7 @@ unit nx86add;
                begin
                  if not(right.location.loc in [LOC_REFERENCE,LOC_CREFERENCE]) then
                   internalerror(200203246);
-                 tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,right.location.reference);
+                 tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
                  emit_ref_reg(op,S_NO,right.location.reference,left.location.register);
                end;
               location.register:=left.location.register;
@@ -914,9 +914,9 @@ unit nx86add;
             location.register:=left.location.register;
           end;
 
-        location_freetemp(current_asmdata.CurrAsmList,right.location);
+        location_freetemp(CurrentAsmData.CurrAsmList,right.location);
         if cmpop then
-          location_freetemp(current_asmdata.CurrAsmList,left.location);
+          location_freetemp(CurrentAsmData.CurrAsmList,left.location);
       end;
 {$endif SUPPORT_MMX}
 
@@ -929,10 +929,10 @@ unit nx86add;
       var
         op : topcg;
         sqr_sum : boolean;
-        tmp : tnode;
+        tmp : TNode;
       begin
         sqr_sum:=false;
-        if (current_settings.fputype>=fpu_sse3) and
+        if (CurrentSettings.fputype>=fpu_sse3) and
            use_vectorfpu(resultdef) and
            (nodetype in [addn,subn]) and
           (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_sqr_real) and
@@ -984,37 +984,37 @@ unit nx86add;
             if nf_swapped in flags then
               swapleftright;
 
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,left.location,left.resultdef,false);
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,right.location,right.resultdef,true);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,false);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,right.location,right.resultdef,true);
             location:=left.location;
             if is_double(resultdef) then
               begin
-                current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
-                    current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
                   subn:
-                    current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
                   else
                     internalerror(201108162);
                 end;
               end
             else
               begin
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
                 { ensure that bits 64..127 contain valid values }
-                current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
                 { the data is now in bits 0..32 and 64..95 }
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
                     begin
-                      current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
                     end;
                   subn:
                     begin
-                      current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
                     end;
                   else
                     internalerror(201108163);
@@ -1024,19 +1024,19 @@ unit nx86add;
         { we can use only right as left operand if the operation is commutative }
         else if (right.location.loc=LOC_MMREGISTER) and (op in [OP_ADD,OP_MUL]) then
           begin
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
-            cg.a_loadmm_reg_reg(current_asmdata.CurrAsmList,right.location.size,location.size,right.location.register,location.register,mms_movescalar);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            cg.a_loadmm_reg_reg(CurrentAsmData.CurrAsmList,right.location.size,location.size,right.location.register,location.register,mms_movescalar);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
             if left.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
-            cg.a_opmm_loc_reg(current_asmdata.CurrAsmList,op,location.size,left.location,location.register,mms_movescalar);
+              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
+            cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,location.size,left.location,location.register,mms_movescalar);
 
             if left.location.loc=LOC_REFERENCE then
-              tg.ungetiftemp(current_asmdata.CurrAsmList,left.location.reference);
+              tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.location.reference);
           end
         else
           begin
@@ -1049,13 +1049,13 @@ unit nx86add;
               copy instruction
             }
             if left.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
+              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
 
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,location.size);
-            cg.a_loadmm_loc_reg(current_asmdata.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,location.size);
+            cg.a_loadmm_loc_reg(CurrentAsmData.CurrAsmList,location.size,left.location,location.register,mms_movescalar);
 
             if left.location.loc=LOC_REFERENCE then
-              tg.ungetiftemp(current_asmdata.CurrAsmList,left.location.reference);
+              tg.ungetiftemp(CurrentAsmData.CurrAsmList,left.location.reference);
 
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
@@ -1063,12 +1063,12 @@ unit nx86add;
               copy instruction
             }
             if right.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.location_force_mem(current_asmdata.CurrAsmList,right.location,right.resultdef);
+              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,right.location,right.resultdef);
 
-            cg.a_opmm_loc_reg(current_asmdata.CurrAsmList,op,location.size,right.location,location.register,mms_movescalar);
+            cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,location.size,right.location,location.register,mms_movescalar);
 
             if right.location.loc=LOC_REFERENCE then
-              tg.ungetiftemp(current_asmdata.CurrAsmList,right.location.reference);
+              tg.ungetiftemp(CurrentAsmData.CurrAsmList,right.location.reference);
           end;
       end;
 
@@ -1078,12 +1078,12 @@ unit nx86add;
         op : topcg;
         sqr_sum : boolean;
         {$ifdef dummy}
-        tmp : tnode;
+        tmp : TNode;
         {$endif dummy}
       begin
         sqr_sum:=false;
 {$ifdef dummy}
-        if (current_settings.fputype>=fpu_sse3) and
+        if (CurrentSettings.fputype>=fpu_sse3) and
            use_vectorfpu(resultdef) and
            (nodetype in [addn,subn]) and
           (left.nodetype=inlinen) and (tinlinenode(left).inlinenumber=in_sqr_real) and
@@ -1136,37 +1136,37 @@ unit nx86add;
             if nf_swapped in flags then
               swapleftright;
 
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,left.location,left.resultdef,false);
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,right.location,right.resultdef,true);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,false);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,right.location,right.resultdef,true);
             location:=left.location;
             if is_double(resultdef) then
               begin
-                current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPD,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
-                    current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPD,S_NO,location.register,location.register));
                   subn:
-                    current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
+                    CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPD,S_NO,location.register,location.register));
                   else
                     internalerror(2011081601);
                 end;
               end
             else
               begin
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_UNPCKLPS,S_NO,right.location.register,location.register));
                 { ensure that bits 64..127 contain valid values }
-                current_asmdata.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg_reg(A_SHUFPD,S_NO,%00,location.register,location.register));
                 { the data is now in bits 0..32 and 64..95 }
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_MULPS,S_NO,location.register,location.register));
                 case nodetype of
                   addn:
                     begin
-                      current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HADDPS,S_NO,location.register,location.register));
                     end;
                   subn:
                     begin
-                      current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
+                      CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_HSUBPS,S_NO,location.register,location.register));
                     end;
                   else
                     internalerror(2011081604);
@@ -1176,9 +1176,9 @@ unit nx86add;
         { left*2 ? }
         else if (nodetype=muln) and is_constrealnode(right) and is_number_float(trealconstnode(right).value_real) and (trealconstnode(right).value_real=2) then
           begin
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,left.location.size);
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,left.location,left.resultdef,true);
-            cg.a_opmm_reg_reg_reg(current_asmdata.CurrAsmList,OP_ADD,location.size,
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,left.location.size);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
+            cg.a_opmm_reg_reg_reg(CurrentAsmData.CurrAsmList,OP_ADD,location.size,
               left.location.register,
               left.location.register,
               location.register,
@@ -1187,9 +1187,9 @@ unit nx86add;
         { right*2 ? }
         else if (nodetype=muln) and is_constrealnode(left) and is_number_float(trealconstnode(left).value_real) and (trealconstnode(left).value_real=2) then
           begin
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,right.location.size);
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,right.location,right.resultdef,true);
-            cg.a_opmm_reg_reg_reg(current_asmdata.CurrAsmList,OP_ADD,location.size,
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,right.location.size);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,right.location,right.resultdef,true);
+            cg.a_opmm_reg_reg_reg(CurrentAsmData.CurrAsmList,OP_ADD,location.size,
               right.location.register,
               right.location.register,
               location.register,
@@ -1198,15 +1198,15 @@ unit nx86add;
         { we can use only right as left operand if the operation is commutative }
         else if (right.location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) and (op in [OP_ADD,OP_MUL]) then
           begin
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,left.location.size);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,left.location.size);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
             if left.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
-            cg.a_opmm_loc_reg_reg(current_asmdata.CurrAsmList,op,location.size,
+              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
+            cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
               left.location,
               right.location.register,
               location.register,
@@ -1217,16 +1217,16 @@ unit nx86add;
             if (nf_swapped in flags) then
               swapleftright;
 
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,left.location,left.resultdef,true);
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,left.location.size);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,left.location.size);
             { force floating point reg. location to be written to memory,
               we don't force it to mm register because writing to memory
               allows probably shorter code because there is no direct fpu->mm register
               copy instruction
             }
             if right.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-              hlcg.location_force_mem(current_asmdata.CurrAsmList,right.location,right.resultdef);
-            cg.a_opmm_loc_reg_reg(current_asmdata.CurrAsmList,op,location.size,
+              hlcg.location_force_mem(CurrentAsmData.CurrAsmList,right.location,right.resultdef);
+            cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,location.size,
               right.location,
               left.location.register,
               location.register,
@@ -1235,15 +1235,15 @@ unit nx86add;
       end;
 
 
-    function tx86addnode.pass_1: tnode;
+    function tx86addnode.pass_1: TNode;
       begin
         { only pass_1 might set the resultdef as it could be set to nil by some previous
           code transformation. As we need a valid left/right.resultdef later on, ensure
           a valid result def is set, see also issue #40727 }
         if not(assigned(left.resultdef)) then
-          typecheckpass(left);
+          TypeCheckPass(left);
         if not(assigned(right.resultdef)) then
-          typecheckpass(right);
+          TypeCheckPass(right);
 
         { on x86, we do not support fpu registers, so in case of operations using the x87, it
           is normally useful, not to put the operands into registers which would be mm register
@@ -1264,7 +1264,7 @@ unit nx86add;
       end;
 
 
-    function tx86addnode.simplify(forinline : boolean) : tnode;
+    function tx86addnode.simplify(forinline : boolean) : TNode;
       var
         t, m, ThisNode, ConstNode: TNode;
         lt,rt, ThisType: TNodeType;
@@ -1281,9 +1281,9 @@ unit nx86add;
         DoOptimisation:=False;
 
 {$if defined(cpu64bitalu) or defined(cpu32bitalu)}
-        if (cs_opt_level1 in current_settings.optimizerswitches) and
+        if (cs_opt_level1 in CurrentSettings.optimizerswitches) and
           { The presence of overflow checks tends to cause internal errors with the multiplication nodes }
-          not (cs_check_overflow in current_settings.localswitches) and
+          not (cs_check_overflow in CurrentSettings.localswitches) and
           (nodetype in [equaln,unequaln]) then
           begin
             if (lt=modn) and (rt=ordconstn) and (TOrdConstNode(right).value.uvalue=0) then
@@ -1594,7 +1594,7 @@ unit nx86add;
 
         { test if the result stays in an xmm register, fiddeling with fpu registers and fma makes no sense }
         Result:=use_vectorfpu(resultdef) and
-          ((fpu_capabilities[current_settings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
+          ((fpu_capabilities[CurrentSettings.fputype]*[FPUX86_HAS_FMA,FPUX86_HAS_FMA4])<>[]);
 
       end;
 
@@ -1624,20 +1624,20 @@ unit nx86add;
           memory (not to mm registers because one of the memory locations can be used
           directly in compare instruction, yielding shorter code) }
         if left.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-          hlcg.location_force_mem(current_asmdata.CurrAsmList,left.location,left.resultdef);
+          hlcg.location_force_mem(CurrentAsmData.CurrAsmList,left.location,left.resultdef);
         if right.location.loc in [LOC_FPUREGISTER,LOC_CFPUREGISTER] then
-          hlcg.location_force_mem(current_asmdata.CurrAsmList,right.location,right.resultdef);
+          hlcg.location_force_mem(CurrentAsmData.CurrAsmList,right.location,right.resultdef);
 
         if (right.location.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
           begin
             case left.location.loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,left.location.reference);
-                  current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,left.location.reference,right.location.register));
+                  tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,left.location.reference);
+                  CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,left.location.reference,right.location.register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,left.location.register,right.location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,left.location.register,right.location.register));
               else
                 internalerror(200402221);
             end;
@@ -1645,22 +1645,22 @@ unit nx86add;
           end
         else
           begin
-            hlcg.location_force_mmregscalar(current_asmdata.CurrAsmList,left.location,left.resultdef,true);
+            hlcg.location_force_mmregscalar(CurrentAsmData.CurrAsmList,left.location,left.resultdef,true);
             case right.location.loc of
               LOC_REFERENCE,LOC_CREFERENCE:
                 begin
-                  tcgx86(cg).make_simple_ref(current_asmdata.CurrAsmList,right.location.reference);
-                  current_asmdata.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,right.location.reference,left.location.register));
+                  tcgx86(cg).make_simple_ref(CurrentAsmData.CurrAsmList,right.location.reference);
+                  CurrentAsmData.CurrAsmList.concat(taicpu.op_ref_reg(op,S_NO,right.location.reference,left.location.register));
                 end;
               LOC_MMREGISTER,LOC_CMMREGISTER:
-                current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,right.location.register,left.location.register));
+                CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(op,S_NO,right.location.register,left.location.register));
               else
                 internalerror(200402223);
             end;
           end;
         location.resflags:=getfpuresflags;
-        location_freetemp(current_asmdata.CurrAsmList,left.location);
-        location_freetemp(current_asmdata.CurrAsmList,right.location);
+        location_freetemp(CurrentAsmData.CurrAsmList,left.location);
+        location_freetemp(CurrentAsmData.CurrAsmList,right.location);
       end;
 
 
@@ -1693,28 +1693,28 @@ unit nx86add;
               begin
                 if UseAVX then
                   begin
-                    location.register:=cg.getmmregister(current_asmdata.CurrAsmList,OS_VECTOR);
-                    cg.a_opmm_loc_reg_reg(current_asmdata.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,right.location.register,location.register,nil);
+                    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
+                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,right.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=right.location.register;
-                    cg.a_opmm_loc_reg(current_asmdata.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,location.register,nil);
+                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,tfloat2tcgsize[tfloatdef(left.resultdef).floattype],left.location,location.register,nil);
                   end;
               end
             else
               begin
-                location_force_mmreg(current_asmdata.CurrAsmList,left.location,false);
+                location_force_mmreg(CurrentAsmData.CurrAsmList,left.location,false);
                 if UseAVX then
                   begin
-                    location.register:=cg.getmmregister(current_asmdata.CurrAsmList,OS_VECTOR);
-                    cg.a_opmm_loc_reg_reg(current_asmdata.CurrAsmList,op,
+                    location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,OS_VECTOR);
+                    cg.a_opmm_loc_reg_reg(CurrentAsmData.CurrAsmList,op,
                       tfloat2tcgsize[tfloatdef(tarraydef(left.resultdef).elementdef).floattype],right.location,left.location.register,location.register,nil);
                   end
                 else
                   begin
                     location.register:=left.location.register;
-                    cg.a_opmm_loc_reg(current_asmdata.CurrAsmList,op,
+                    cg.a_opmm_loc_reg(CurrentAsmData.CurrAsmList,op,
                       tfloat2tcgsize[tfloatdef(tarraydef(left.resultdef).elementdef).floattype],right.location,location.register,nil);
                   end;
               end;
@@ -1737,7 +1737,7 @@ unit nx86add;
         ops_rdiv: array[boolean] of TAsmOp = (A_FDIVRP,A_FDIVR);
       var
         op : TAsmOp;
-        refnode, hp: tnode;
+        refnode, hp: TNode;
         hasref : boolean;
       begin
         if use_vectorfpu(resultdef)
@@ -1820,7 +1820,7 @@ unit nx86add;
         force_left_and_right_fpureg;
 
 {$ifndef x86_64}
-        if current_settings.cputype<cpu_Pentium2 then
+        if CurrentSettings.cputype<cpu_Pentium2 then
           begin
             emit_none(A_FCOMPP,S_NO);
             tcgx86(cg).dec_fpu_stack;
@@ -1829,20 +1829,20 @@ unit nx86add;
             { load fpu flags }
 
               begin
-                cg.getcpuregister(current_asmdata.CurrAsmList,NR_AX);
+                cg.getcpuregister(CurrentAsmData.CurrAsmList,NR_AX);
                 emit_reg(A_FNSTSW,S_NO,NR_AX);
                 emit_none(A_SAHF,S_NO);
-                cg.ungetcpuregister(current_asmdata.CurrAsmList,NR_AX);
+                cg.ungetcpuregister(CurrentAsmData.CurrAsmList,NR_AX);
               end;
-            if cs_fpu_fwait in current_settings.localswitches then
-              current_asmdata.CurrAsmList.concat(Taicpu.Op_none(A_FWAIT,S_NO));
+            if cs_fpu_fwait in CurrentSettings.localswitches then
+              CurrentAsmData.CurrAsmList.concat(Taicpu.Op_none(A_FWAIT,S_NO));
           end
         else
 {$endif x86_64}
           begin
-            current_asmdata.CurrAsmList.concat(taicpu.op_reg_reg(A_FCOMIP,S_NO,NR_ST1,NR_ST0));
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg_reg(A_FCOMIP,S_NO,NR_ST1,NR_ST0));
             { fcomip pops only one fpu register }
-            current_asmdata.CurrAsmList.concat(taicpu.op_reg(A_FSTP,S_NO,NR_ST0));
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_reg(A_FSTP,S_NO,NR_ST0));
             tcgx86(cg).dec_fpu_stack;
             tcgx86(cg).dec_fpu_stack;
           end;
@@ -1896,7 +1896,7 @@ unit nx86add;
            begin
              { allocate registers }
              hlcg.location_force_reg(
-               current_asmdata.CurrAsmList,
+               CurrentAsmData.CurrAsmList,
                indexnode.location,
                indexnode.resultdef,
                resultdef,
@@ -1973,10 +1973,10 @@ unit nx86add;
        opsize:=def_cgsize(left.resultdef);
 
 
-       if (cs_opt_level2 in current_settings.optimizerswitches) then
+       if (cs_opt_level2 in CurrentSettings.optimizerswitches) then
          begin
            { BMI1 optimisations }
-           if (CPUX86_HAS_BMI1 in cpu_capabilities[current_settings.cputype]) then
+           if (CPUX86_HAS_BMI1 in cpu_capabilities[CurrentSettings.cputype]) then
              begin
                { Can we turn "x and (not y)" into an ANDN instruction instead? }
                if (nodetype = andn) and
@@ -1987,7 +1987,7 @@ unit nx86add;
                      code once everything is moved into registers (as a side-note,
                      "const and (not const)" and "variable and (not const)" will
                      have been simplified earlier to remove the NOT operation). }
-                   not (cs_opt_size in current_settings.optimizerswitches) or
+                   not (cs_opt_size in CurrentSettings.optimizerswitches) or
                    (
                      (left.location.loc <> LOC_CONSTANT) and
                      (right.location.loc <> LOC_CONSTANT)
@@ -2001,15 +2001,15 @@ unit nx86add;
                    if (right.nodetype <> notn) then
                      swapleftright;
 
-                   secondpass(left);
+                   SecondPass(left);
 
                    { Skip the not node completely }
                    Include(right.transientflags, tnf_do_not_execute);
-                   secondpass(tnotnode(right).left);
+                   SecondPass(tnotnode(right).left);
 
                    { allocate registers }
                    hlcg.location_force_reg(
-                     current_asmdata.CurrAsmList,
+                     CurrentAsmData.CurrAsmList,
                      tnotnode(right).left.location,
                      tnotnode(right).left.resultdef,
                      tnotnode(right).left.resultdef,
@@ -2021,7 +2021,7 @@ unit nx86add;
                        saving when it comes to pipeline stalls (left.location.loc
                        will become LOC_CREGISTER). }
                      hlcg.location_force_reg(
-                       current_asmdata.CurrAsmList,
+                       CurrentAsmData.CurrAsmList,
                        left.location,
                        left.resultdef,
                        left.resultdef,
@@ -2047,7 +2047,7 @@ unit nx86add;
              end;
 
            { BMI2 optimisations }
-           if (CPUX86_HAS_BMI2 in cpu_capabilities[current_settings.cputype]) and
+           if (CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and
              (opsize in [OS_32, OS_S32{$ifdef x86_64}, OS_64, OS_S64{$endif x86_64}]) then
              begin
                case nodetype of
@@ -2077,7 +2077,7 @@ unit nx86add;
                        if (right.nodetype <> subn) then
                          swapleftright;
 
-                       secondpass(left);
+                       SecondPass(left);
 
                        { Skip the subtract and shift nodes completely }
                        Include(right.transientflags, tnf_do_not_execute);
@@ -2095,14 +2095,14 @@ unit nx86add;
                            node_reset_flags(indexnode,[],[tnf_pass1_done]);
 
                            { We should't be getting any new errors }
-                           if do_firstpass(indexnode) then
+                           if DoFirstPass(indexnode) then
                              InternalError(2022110201);
 
                            { Keep things internally consistent in case indexnode changed }
                            tshlshrnode(taddnode(right).left).right := indexnode;
                          end;
 {$endif x86_64}
-                       secondpass(indexnode);
+                       SecondPass(indexnode);
 
                        MakeBZHI(False);
                        Exit;
@@ -2132,17 +2132,17 @@ unit nx86add;
                            node_reset_flags(indexnode,[],[tnf_pass1_done]);
 
                            { We should't be getting any new errors }
-                           if do_firstpass(indexnode) then
+                           if DoFirstPass(indexnode) then
                              InternalError(2022110202);
 
                            { Keep things internally consistent in case indexnode changed }
                            tshlshrnode(left).right := indexnode;
                          end;
 {$endif x86_64}
-                       secondpass(indexnode);
+                       SecondPass(indexnode);
 
-                       tmpreg := cg.getintregister(current_asmdata.CurrAsmList, opsize);
-                       cg.a_load_const_reg(current_asmdata.CurrAsmList, opsize, -1, tmpreg);
+                       tmpreg := cg.getintregister(CurrentAsmData.CurrAsmList, opsize);
+                       cg.a_load_const_reg(CurrentAsmData.CurrAsmList, opsize, -1, tmpreg);
 
                        MakeBZHI(True);
                        Exit;
@@ -2163,7 +2163,7 @@ unit nx86add;
            { 3 op mul makes only sense if a constant is involved }
            ((nodetype<>muln) or (left.location.loc=LOC_CONSTANT) or (right.location.loc=LOC_CONSTANT)
 
-            or ((CPUX86_HAS_BMI2 in cpu_capabilities[current_settings.cputype]) and (not(needoverflowcheck))
+            or ((CPUX86_HAS_BMI2 in cpu_capabilities[CurrentSettings.cputype]) and (not(needoverflowcheck))
                )
 
            ) and
@@ -2176,14 +2176,14 @@ unit nx86add;
            if nodetype<>subn then
             begin
               if checkoverflow then
-                cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
               if (right.location.loc<>LOC_CONSTANT) then
-                hlcg.a_op_reg_reg_reg_checkoverflow(current_asmdata.CurrAsmList,cgop,resultdef,
+                hlcg.a_op_reg_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
                    left.location.register,right.location.register,
                    location.register,checkoverflow,ovloc)
               else
-                hlcg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList,cgop,resultdef,
+                hlcg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,cgop,resultdef,
                    right.location.value,left.location.register,
                    location.register,checkoverflow,ovloc);
             end
@@ -2194,27 +2194,27 @@ unit nx86add;
               if left.location.loc<>LOC_CONSTANT then
                 begin
                   if checkoverflow then
-                    cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                    cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
                   if right.location.loc<>LOC_CONSTANT then
-                    hlcg.a_op_reg_reg_reg_checkoverflow(current_asmdata.CurrAsmList,OP_SUB,resultdef,
+                    hlcg.a_op_reg_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
                         right.location.register,left.location.register,
                         location.register,checkoverflow,ovloc)
                   else
-                    hlcg.a_op_const_reg_reg_checkoverflow(current_asmdata.CurrAsmList,OP_SUB,resultdef,
+                    hlcg.a_op_const_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
                       right.location.value,left.location.register,
                       location.register,checkoverflow,ovloc);
                 end
               else
                 begin
-                  tmpreg:=hlcg.getintregister(current_asmdata.CurrAsmList,resultdef);
-                  hlcg.a_load_const_reg(current_asmdata.CurrAsmList,resultdef,
+                  tmpreg:=hlcg.getintregister(CurrentAsmData.CurrAsmList,resultdef);
+                  hlcg.a_load_const_reg(CurrentAsmData.CurrAsmList,resultdef,
                     left.location.value,tmpreg);
 
                   if checkoverflow then
-                    cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                    cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                  hlcg.a_op_reg_reg_reg_checkoverflow(current_asmdata.CurrAsmList,OP_SUB,resultdef,
+                  hlcg.a_op_reg_reg_reg_checkoverflow(CurrentAsmData.CurrAsmList,OP_SUB,resultdef,
                     right.location.register,tmpreg,location.register,checkoverflow,ovloc);
                 end;
             end
@@ -2225,7 +2225,7 @@ unit nx86add;
            if left.location.loc<>LOC_REGISTER then
               begin
                 if right.location.loc<>LOC_REGISTER then
-                  hlcg.location_force_reg(current_asmdata.CurrAsmList,left.location,left.resultdef,left.resultdef,false)
+                  hlcg.location_force_reg(CurrentAsmData.CurrAsmList,left.location,left.resultdef,left.resultdef,false)
                 else
                   begin
                     location_swap(left.location,right.location);
@@ -2237,45 +2237,45 @@ unit nx86add;
            if right.location.loc=LOC_REGISTER then
              begin
                if checkoverflow then
-                 cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                 cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
                { when swapped another result register }
                if (nodetype=subn) and (nf_swapped in flags) then
                  begin
-                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,cgop,opsize,
+                   cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,cgop,opsize,
                      left.location.register,right.location.register);
                    location_swap(left.location,right.location);
                    toggleflag(nf_swapped);
                  end
                else
-                 cg.a_op_reg_reg(current_asmdata.CurrAsmList,cgop,opsize,
+                 cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,cgop,opsize,
                     right.location.register,left.location.register);
              end
            else
              begin
                { right.location<>LOC_REGISTER }
                if right.location.loc in [LOC_CSUBSETREF,LOC_CSUBSETREG,LOC_SUBSETREF,LOC_SUBSETREG] then
-                 hlcg.location_force_reg(current_asmdata.CurrAsmList,right.location,right.resultdef,left.resultdef,true);
+                 hlcg.location_force_reg(CurrentAsmData.CurrAsmList,right.location,right.resultdef,left.resultdef,true);
 
                if (nodetype=subn) and (nf_swapped in flags) then
                  begin
                    tmpreg:=left.location.register;
-                   left.location.register:=cg.getintregister(current_asmdata.CurrAsmList,opsize);
-                   cg.a_load_loc_reg(current_asmdata.CurrAsmList,opsize,right.location,left.location.register);
+                   left.location.register:=cg.getintregister(CurrentAsmData.CurrAsmList,opsize);
+                   cg.a_load_loc_reg(CurrentAsmData.CurrAsmList,opsize,right.location,left.location.register);
 
                    if checkoverflow then
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                     cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                   cg.a_op_reg_reg(current_asmdata.CurrAsmList,cgop,opsize,tmpreg,left.location.register);
+                   cg.a_op_reg_reg(CurrentAsmData.CurrAsmList,cgop,opsize,tmpreg,left.location.register);
                  end
                else
                  begin
                    if checkoverflow then
-                     cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+                     cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
 
-                   cg.a_op_loc_reg(current_asmdata.CurrAsmList,cgop,opsize,right.location,left.location.register);
+                   cg.a_op_loc_reg(CurrentAsmData.CurrAsmList,cgop,opsize,right.location,left.location.register);
                  end;
-               location_freetemp(current_asmdata.CurrAsmList,right.location);
+               location_freetemp(CurrentAsmData.CurrAsmList,right.location);
              end;
 
            location_copy(location,left.location);
@@ -2283,14 +2283,14 @@ unit nx86add;
 
        { emit overflow check if required }
        if checkoverflow then
-         cg.g_overflowcheck_loc(current_asmdata.CurrAsmList,Location,resultdef,ovloc);
+         cg.g_overflowcheck_loc(CurrentAsmData.CurrAsmList,Location,resultdef,ovloc);
      end;
 
 
     procedure tx86addnode.second_addboolean;
       begin
         if (nodetype in [orn,andn]) and
-           (not(cs_full_boolean_eval in current_settings.localswitches) or
+           (not(cs_full_boolean_eval in CurrentSettings.localswitches) or
           (anf_short_bool in addnodeflags)) then
           inherited second_addboolean
         else if is_64bit(left.resultdef) then
@@ -2322,16 +2322,16 @@ unit nx86add;
 {$endif x86_64}
          then
            begin
-             cg.a_reg_alloc(current_asmdata.CurrAsmList, NR_DEFAULTFLAGS);
+             cg.a_reg_alloc(CurrentAsmData.CurrAsmList, NR_DEFAULTFLAGS);
              emit_const_ref(A_CMP, TCGSize2Opsize[opsize], right.location.value, left.location.reference);
-             location_freetemp(current_asmdata.CurrAsmList,left.location);
+             location_freetemp(CurrentAsmData.CurrAsmList,left.location);
            end
          else
            begin
              left_must_be_reg(opdef,opsize,false);
              emit_generic_code(A_CMP,opsize,unsigned,false,false);
-             location_freetemp(current_asmdata.CurrAsmList,right.location);
-             location_freetemp(current_asmdata.CurrAsmList,left.location);
+             location_freetemp(CurrentAsmData.CurrAsmList,right.location);
+             location_freetemp(CurrentAsmData.CurrAsmList,left.location);
            end;
          location_reset(location,LOC_FLAGS,OS_NO);
          location.resflags:=getresflags(unsigned);

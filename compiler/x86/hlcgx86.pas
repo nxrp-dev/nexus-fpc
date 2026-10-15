@@ -71,20 +71,20 @@ implementation
       ref : treference;
       sym : tasmsymbol;
     begin
-     if (target_info.system = system_i386_darwin) then
+     if (TargetInfo.system = system_i386_darwin) then
        begin
          { a_jmp_name jumps to a stub which is always pic-safe on darwin }
          inherited;
          exit;
        end;
 
-      sym:=current_asmdata.RefAsmSymbol(externalname,AT_FUNCTION);
+      sym:=CurrentAsmData.RefAsmSymbol(externalname,AT_FUNCTION);
       reference_reset_symbol(ref,sym,0,sizeof(pint),[]);
 
       { create pic'ed? }
-      if (cs_create_pic in current_settings.moduleswitches) and
+      if (cs_create_pic in CurrentSettings.moduleswitches) and
          { darwin/x86_64's assembler doesn't want @PLT after call symbols }
-         not(target_info.system in [system_x86_64_darwin,system_i386_iphonesim,system_x86_64_iphonesim]) then
+         not(TargetInfo.system in [system_x86_64_darwin,system_i386_iphonesim,system_x86_64_iphonesim]) then
         ref.refaddr:=addr_pic
       else
         ref.refaddr:=addr_full;

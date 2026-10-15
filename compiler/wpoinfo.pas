@@ -131,7 +131,7 @@ implementation
       { don't load the wpo info from the units if we are not generating
         a wpo feedback file (that would just take time and memory)
       }
-      if (init_settings.genwpoptimizerswitches=[]) then
+      if (InitSettings.genwpoptimizerswitches=[]) then
         ppufile.skipdata(ppufile.entrysize)
       else
         begin
@@ -217,7 +217,7 @@ implementation
       i: longint;
 
     begin
-      if (init_settings.genwpoptimizerswitches=[]) or
+      if (InitSettings.genwpoptimizerswitches=[]) or
          not assigned(fcalledvmtentriestemplist) then
         exit;
 
@@ -255,7 +255,7 @@ implementation
     var
       i: longint;
     begin
-      if (init_settings.genwpoptimizerswitches=[]) or
+      if (InitSettings.genwpoptimizerswitches=[]) or
          not assigned(fcalledvmtentriestemplist) then
         exit;
 
@@ -273,7 +273,7 @@ implementation
   function twpoinfomanager.can_be_devirtualized(objdef, procdef: tdef; out name: TSymStr): boolean;
     begin
       if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
-         not(cs_wpo_devirtualize_calls in current_settings.dowpoptimizerswitches) then
+         not(cs_wpo_devirtualize_calls in CurrentSettings.dowpoptimizerswitches) then
         begin
           result:=false;
           exit;
@@ -285,7 +285,7 @@ implementation
   function twpoinfomanager.optimized_name_for_vmt(objdef, procdef: tdef; out name: TSymStr): boolean;
     begin
       if not assigned(wpoinfouse[wpo_devirtualization_context_insensitive]) or
-         not(cs_wpo_optimize_vmts in current_settings.dowpoptimizerswitches) then
+         not(cs_wpo_optimize_vmts in CurrentSettings.dowpoptimizerswitches) then
         begin
           result:=false;
           exit;
@@ -299,7 +299,7 @@ implementation
   function twpoinfomanager.symbol_live(const name: shortstring): boolean;
     begin
       if not assigned(wpoinfouse[wpo_live_symbol_information]) or
-         not(cs_wpo_symbol_liveness in current_settings.dowpoptimizerswitches) then
+         not(cs_wpo_symbol_liveness in CurrentSettings.dowpoptimizerswitches) then
         begin
           { if we don't know, say that the symbol is live }
           result:=true;

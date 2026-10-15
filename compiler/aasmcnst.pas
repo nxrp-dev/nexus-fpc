@@ -326,7 +326,7 @@ type
 
     protected
      procedure maybe_emit_tail_padding(def: tdef); virtual;
-     function emit_string_const_common(stringtype: tstringtype; len: asizeint; encoding: tstringencoding; var startlab: tasmlabel):tasmlabofs;
+     function emit_string_const_common(stringtype: tstringtype; len: asizeint; encoding: TStringEncoding; var startlab: tasmlabel):tasmlabofs;
      function get_dynstring_def_for_type(stringtype: tstringtype; winlikewidestring: boolean): tstringdef;
      procedure begin_aggregate_internal(def: tdef; anonymous: boolean); virtual;
      procedure end_aggregate_internal(def: tdef; anonymous: boolean); virtual;
@@ -351,8 +351,8 @@ type
      { the datalist parameter specifies where the data for the string constant
        will be emitted (via an internal data builder)
        Note: data does not have to be #0-terminated (len specifies the length of the valid data) }
-     function emit_ansistring_const(datalist: TAsmList; data: pchar; len: asizeint; encoding: tstringencoding): tasmlabofs;
-     function emit_unicodestring_const(datalist: TAsmList; data: tcompilerwidestring; encoding: tstringencoding; winlike: boolean):tasmlabofs;
+     function emit_ansistring_const(datalist: TAsmList; data: pchar; len: asizeint; encoding: TStringEncoding): tasmlabofs;
+     function emit_unicodestring_const(datalist: TAsmList; data: tcompilerwidestring; encoding: TStringEncoding; winlike: boolean):tasmlabofs;
      { emits a tasmlabofs as returned by emit_*string_const }
      procedure emit_string_offset(const ll: tasmlabofs; const strlength: longint; const st: tstringtype; const winlikewidestring: boolean; const charptrdef: tdef);virtual;
 
@@ -921,12 +921,12 @@ implementation
        { on Darwin, dead code/data stripping happens based on non-temporary
          labels (any label that doesn't start with "L" -- it doesn't have
          to be global) }
-       if target_info.system in systems_darwin then
-         current_asmdata.getstaticdatalabel(result)
+       if TargetInfo.system in systems_darwin then
+         CurrentAsmData.getstaticdatalabel(result)
        else if create_smartlink_library then
-         current_asmdata.getglobaldatalabel(result)
+         CurrentAsmData.getglobaldatalabel(result)
        else
-         current_asmdata.getlocaldatalabel(result);
+         CurrentAsmData.getlocaldatalabel(result);
      end;
 
 
@@ -934,16 +934,16 @@ implementation
      begin
        if create_smartlink_library then
          { all labels need to be global in case they're in another object }
-         current_asmdata.getglobaldatalabel(result)
+         CurrentAsmData.getglobaldatalabel(result)
        else
          { no special requirement for the label -> just get a local one }
-         current_asmdata.getlocaldatalabel(result);
+         CurrentAsmData.getlocaldatalabel(result);
      end;
 
 
    procedure ttai_typedconstbuilder.add_link_ordered_symbol(sym: tasmsymbol; const secname: TSymStr);
      begin
-       current_module.linkorderedsymbols.concat(sym.Name);
+       CurrentModule.linkorderedsymbols.concat(sym.Name);
      end;
 
 
@@ -1015,7 +1015,7 @@ implementation
          kept via the linker script) }
        if tcalo_no_dead_strip in options then
          begin
-           if (target_info.system in systems_darwin) then
+           if (TargetInfo.system in systems_darwin) then
              begin
               { Objective-C section declarations contain "no_dead_strip"
                 attributes if none of their symbols need to be stripped -> don't
@@ -1063,7 +1063,7 @@ implementation
           (sym.typ=AT_DATA) then
          begin
            ptrdef:=cpointerdef.getreusable(def);
-           symind:=current_asmdata.DefineAsmSymbol(sym.name,AB_INDIRECT,AT_DATA,ptrdef);
+           symind:=CurrentAsmData.DefineAsmSymbol(sym.name,AB_INDIRECT,AT_DATA,ptrdef);
            { reuse the section if possible }
            if section=sec_rodata then
              indsecname:=secname
@@ -1071,7 +1071,7 @@ implementation
              indsecname:=lower(symind.name);
            indtcb:=ctai_typedconstbuilder.create([tcalo_new_section,tcalo_make_dead_strippable]);
            indtcb.emit_tai(tai_const.create_sym_offset(sym,0),ptrdef);
-           current_asmdata.asmlists[al_indirectglobals].concatlist(indtcb.get_final_asmlist(
+           CurrentAsmData.asmlists[al_indirectglobals].concatlist(indtcb.get_final_asmlist(
              symind,
              ptrdef,
              sec_rodata,
@@ -1082,8 +1082,8 @@ implementation
 
            indtcb.free;
            indtcb := nil;
-           if not (target_info.system in systems_indirect_var_imports) then
-             current_module.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
+           if not (TargetInfo.system in systems_indirect_var_imports) then
+             CurrentModule.add_public_asmsym(symind.name,AB_INDIRECT,AT_DATA);
          end;
      end;
 
@@ -1133,9 +1133,9 @@ implementation
              asmtype:=AT_DATA_FORCEINDIRECT
            else
              asmtype:=AT_DATA;
-           asmsym:=current_asmdata.DefineAsmSymbol(make_mangledname(basename,st,itemname),AB_GLOBAL,asmtype,def);
+           asmsym:=CurrentAsmData.DefineAsmSymbol(make_mangledname(basename,st,itemname),AB_GLOBAL,asmtype,def);
            if tcalo_is_public_asm in options then
-             current_module.add_public_asmsym(asmsym);
+             CurrentModule.add_public_asmsym(asmsym);
            if not customsecname then
              secname:=make_mangledname(basename,st,'2_'+itemname);
          end;
@@ -1194,9 +1194,9 @@ implementation
    class function ttai_typedconstbuilder.get_string_symofs(typ: tstringtype; winlikewidestring: boolean): pint;
      begin
        { darwin's linker does not support negative offsets }
-       if not(target_info.system in systems_darwin) and
+       if not(TargetInfo.system in systems_darwin) and
           { it seems that clang's assembler has a bug with the ADRP instruction... }
-          (target_info.system<>system_aarch64_win64) then
+          (TargetInfo.system<>system_aarch64_win64) then
          result:=0
        else
          result:=get_string_header_size(typ,winlikewidestring);
@@ -1206,9 +1206,9 @@ implementation
    class function ttai_typedconstbuilder.get_dynarray_symofs:pint;
      begin
        { darwin's linker does not support negative offsets }
-       if not (target_info.system in systems_darwin) and
+       if not (TargetInfo.system in systems_darwin) and
           { it seems that clang's assembler has a bug with the ADRP instruction... }
-          (target_info.system<>system_aarch64_win64) then
+          (TargetInfo.system<>system_aarch64_win64) then
          result:=0
        else
          result:=get_dynarray_header_size;
@@ -1324,7 +1324,7 @@ implementation
                  temporary labels (any label that doesn't start with "L" -- it
                  doesn't have to be global) -> add a non-temporary lobel at the
                  start of every kind of subsection created in this builder }
-               if target_info.system in systems_darwin then
+               if TargetInfo.system in systems_darwin then
                  l:=get_internal_data_section_start_label;
              end;
            foundsec:=length(finternal_data_section_info);
@@ -1332,7 +1332,7 @@ implementation
            finternal_data_section_info[foundsec].sectype:=sectype;
          end;
        if not assigned(finternal_data_asmlist) and
-          (cs_create_smart in current_settings.moduleswitches) then
+          (cs_create_smart in CurrentSettings.moduleswitches) then
          begin
            l:=get_internal_data_section_start_label;
            { the internal data list should only be assigned by this routine,
@@ -1440,7 +1440,7 @@ implementation
      end;
 
 
-   function ttai_typedconstbuilder.emit_string_const_common(stringtype: tstringtype; len: asizeint; encoding: tstringencoding; var startlab: tasmlabel): tasmlabofs;
+   function ttai_typedconstbuilder.emit_string_const_common(stringtype: tstringtype; len: asizeint; encoding: TStringEncoding; var startlab: tasmlabel): tasmlabofs;
      var
        string_symofs: asizeint;
        charptrdef: tdef;
@@ -1490,7 +1490,7 @@ implementation
              name starts with target_asm.labelprefix in case it's AB_LOCAL,
              so we keep the difference depending on whether the original was
              allocated via getstatic/getlocal/getglobal datalabel) }
-           startlab:=tasmlabel.create(current_asmdata.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
+           startlab:=tasmlabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
          end;
        { sanity check }
        if result.ofs<>string_symofs then
@@ -1585,15 +1585,15 @@ implementation
              asmtype:=AT_DATA_FORCEINDIRECT
            else
              asmtype:=AT_DATA;
-           result:=current_asmdata.DefineAsmSymbol(name,AB_GLOBAL,asmtype,voidpointertype);
+           result:=CurrentAsmData.DefineAsmSymbol(name,AB_GLOBAL,asmtype,voidpointertype);
            if tcdssso_register_asmsym in options then
-             current_module.add_public_asmsym(result);
+             CurrentModule.add_public_asmsym(result);
          end
        else
          begin
-           result:=current_asmdata.RefAsmSymbol(name,AT_DATA,tcdssso_use_indirect in options);
+           result:=CurrentAsmData.RefAsmSymbol(name,AT_DATA,tcdssso_use_indirect in options);
            if tcdssso_register_asmsym in options then
-             current_module.add_extern_asmsym(result);
+             CurrentModule.add_extern_asmsym(result);
          end;
      end;
 
@@ -1618,9 +1618,9 @@ implementation
 
    class function ttai_typedconstbuilder.is_smartlink_vectorized_dead_strip: boolean;
      begin
-       result:=(tf_smartlink_sections in target_info.flags) and
-               (not(target_info.system in systems_darwin) or
-                (tf_supports_symbolorderfile in target_info.flags));
+       result:=(tf_smartlink_sections in TargetInfo.flags) and
+               (not(TargetInfo.system in systems_darwin) or
+                (tf_supports_symbolorderfile in TargetInfo.flags));
      end;
 
 
@@ -1697,7 +1697,7 @@ implementation
        else
          begin
            result:=crecorddef.create_global_internal('$'+name,4,
-             targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+             targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
            { length in bytes }
            result.add_field_by_def('',s32inttype);
            streledef:=cwidechartype;
@@ -1708,7 +1708,7 @@ implementation
      end;
 
 
-   function ttai_typedconstbuilder.emit_ansistring_const(datalist: TAsmList; data: pchar; len: asizeint; encoding: tstringencoding): tasmlabofs;
+   function ttai_typedconstbuilder.emit_ansistring_const(datalist: TAsmList; data: pchar; len: asizeint; encoding: TStringEncoding): tasmlabofs;
      var
        startlab: tasmlabel;
        ansistrrecdef: trecorddef;
@@ -1730,7 +1730,7 @@ implementation
      end;
 
 
-   function ttai_typedconstbuilder.emit_unicodestring_const(datalist: TAsmList; data: tcompilerwidestring; encoding: tstringencoding; winlike: boolean):tasmlabofs;
+   function ttai_typedconstbuilder.emit_unicodestring_const(datalist: TAsmList; data: tcompilerwidestring; encoding: TStringEncoding; winlike: boolean):tasmlabofs;
      var
        i, strlength: longint;
        string_symofs: asizeint;
@@ -1746,7 +1746,7 @@ implementation
            result.lab:=startlab;
            datatcb.begin_anonymous_record(get_dynstring_rec_name(st_widestring,true,strlength),
              4,4,
-             targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+             targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
            datatcb.emit_tai(Tai_const.Create_32bit(strlength*cwidechartype.size),s32inttype);
            { can we optimise by placing the string constant label at the
              required offset? }
@@ -1757,7 +1757,7 @@ implementation
                datatcb.emit_tai(Tai_label.Create(result.lab),widecharpointertype);
                { allocate a separate label for the start of the data (see
                  emit_string_const_common() for explanation) }
-               startlab:=tasmlabel.create(current_asmdata.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
+               startlab:=tasmlabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$strlab',startlab.bind,startlab.typ);
              end
            else
              internalerror(2015031502);
@@ -1821,7 +1821,7 @@ implementation
              name starts with target_asm.labelprefix in case it's AB_LOCAL,
              so we keep the difference depending on whether the original was
              allocated via getstatic/getlocal/getglobal datalabel) }
-           startlab:=tasmlabel.create(current_asmdata.AsmSymbolDict,startlab.name+'$dynarrlab',startlab.bind,startlab.typ);
+           startlab:=tasmlabel.create(CurrentAsmData.AsmSymbolDict,startlab.name+'$dynarrlab',startlab.bind,startlab.typ);
          end;
        { sanity check }
        if result.ofs<>dynarray_symofs then
@@ -1923,14 +1923,14 @@ implementation
        datadef : tdef;
        strtcb : ttai_typedconstbuilder;
      begin
-       pool:=current_asmdata.ConstPools[sp_shortstr];
+       pool:=CurrentAsmData.ConstPools[sp_shortstr];
 
        entry:=pool.FindOrAdd(@str[1],length(str));
 
        { :-(, we must generate a new entry }
        if not assigned(entry^.Data) then
          begin
-           current_asmdata.getglobaldatalabel(strlab);
+           CurrentAsmData.getglobaldatalabel(strlab);
 
            { include length and terminating zero for quick conversion to pchar }
            l:=length(str);
@@ -1945,7 +1945,7 @@ implementation
            strtcb.emit_tai(Tai_string.Create_Data(@str[0],l+1,true),datadef);
            strtcb.maybe_end_aggregate(datadef);
 
-           current_asmdata.asmlists[al_typedconsts].concatList(
+           CurrentAsmData.asmlists[al_typedconsts].concatList(
              strtcb.get_final_asmlist(strlab,datadef,sec_rodata_norel,strlab.name,const_align(sizeof(pint)))
            );
            strtcb.free;
@@ -2220,7 +2220,7 @@ implementation
            begin
              resourcestrrec:=trecorddef(search_system_type('TRESOURCESTRINGRECORD').typedef);
              queue_subscriptn_multiple_by_name(resourcestrrec,['CURRENTVALUE']);
-             queue_emit_asmsym(current_asmdata.RefAsmSymbol(
+             queue_emit_asmsym(CurrentAsmData.RefAsmSymbol(
                make_mangledname('RESSTR',cs.owner,cs.name),AT_DATA),resourcestrrec
              );
            end;
@@ -2345,7 +2345,7 @@ implementation
        { relocated before all other data, so make this data relocatable,  }
        { otherwise the end label won't be moved with the rest             }
        if (tcalo_vectorized_dead_strip_end in options) and
-          (target_info.system in systems_darwin) then
+          (TargetInfo.system in systems_darwin) then
          fasmlist.concat(Tai_const.create_sym(asmsym));
      end;
 

@@ -35,20 +35,20 @@ unit optdfa;
     type
       TDFABuilder = class
       protected
-        procedure CreateLifeInfo(node : tnode;map : TIndexedNodeSet);
+        procedure CreateLifeInfo(node : TNode;map : TIndexedNodeSet);
       public
-        resultnode : tnode;
+        resultnode : TNode;
         nodemap : TIndexedNodeSet;
         { reset all dfa info, this is required before creating dfa info
           if the tree has been changed without updating dfa }
-        procedure resetdfainfo(node : tnode);
+        procedure resetdfainfo(node : TNode);
 
-        procedure createdfainfo(node : tnode);
-        procedure redodfainfo(node : tnode);
+        procedure createdfainfo(node : TNode);
+        procedure redodfainfo(node : TNode);
         destructor destroy;override;
       end;
 
-    procedure CheckAndWarn(code : tnode;nodetosearch : tnode);
+    procedure CheckAndWarn(code : TNode;nodetosearch : TNode);
 
   implementation
 
@@ -113,7 +113,7 @@ unit optdfa;
       end;
       pdfainfo = ^tdfainfo;
 
-    function AddDefUse(var n: tnode; arg: pointer): foreachnoderesult;
+    function AddDefUse(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         case n.nodetype of
           tempcreaten:
@@ -145,7 +145,7 @@ unit optdfa;
       end;
 
 
-    function ResetProcessing(var n: tnode; arg: pointer): foreachnoderesult;
+    function ResetProcessing(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         exclude(n.transientflags,tnf_processing);
         { dfa works only on normalized trees, so do not recurse into expressions, because
@@ -160,7 +160,7 @@ unit optdfa;
       end;
 
 
-    function ResetDFA(var n: tnode; arg: pointer): foreachnoderesult;
+    function ResetDFA(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         if assigned(n.optinfo) then
           begin
@@ -176,17 +176,17 @@ unit optdfa;
       end;
 
 
-    procedure TDFABuilder.CreateLifeInfo(node : tnode;map : TIndexedNodeSet);
+    procedure TDFABuilder.CreateLifeInfo(node : TNode;map : TIndexedNodeSet);
 
       var
         changed : boolean;
 
-      procedure CreateInfo(node : tnode);
+      procedure CreateInfo(node : TNode);
 
         { update life entry of a node with l, set changed if this changes
           life info for the node
         }
-        procedure updatelifeinfo(n : tnode;const l : TDFASet);
+        procedure updatelifeinfo(n : TNode;const l : TDFASet);
           begin
             if not DynSetNotEqual(l,n.optinfo^.life) then
               exit;
@@ -203,7 +203,7 @@ unit optdfa;
             n.optinfo^.life:=l;
           end;
 
-        procedure calclife(n : tnode);
+        procedure calclife(n : TNode);
           var
             l : TDFASet;
           begin
@@ -605,7 +605,7 @@ unit optdfa;
 
     { reset all dfa info, this is required before creating dfa info
       if the tree has been changed without updating dfa }
-    procedure TDFABuilder.resetdfainfo(node : tnode);
+    procedure TDFABuilder.resetdfainfo(node : TNode);
       begin
         nodemap.Free;
         nodemap:=nil;
@@ -615,7 +615,7 @@ unit optdfa;
       end;
 
 
-    procedure TDFABuilder.createdfainfo(node : tnode);
+    procedure TDFABuilder.createdfainfo(node : TNode);
       var
         dfarec : tdfainfo;
       begin
@@ -623,12 +623,12 @@ unit optdfa;
           nodemap:=TIndexedNodeSet.Create;
 
         { create a fake node using the result which will be the last node }
-        if not(is_void(current_procinfo.procdef.returndef)) then
+        if not(is_void(CurrentProcInfo.procdef.returndef)) then
           begin
-            if current_procinfo.procdef.proctypeoption=potype_constructor then
+            if CurrentProcInfo.procdef.proctypeoption=potype_constructor then
               resultnode:=load_self_node
-            else if (current_procinfo.procdef.proccalloption=pocall_safecall) and
-              (tf_safecall_exceptions in target_info.flags) then
+            else if (CurrentProcInfo.procdef.proccalloption=pocall_safecall) and
+              (tf_safecall_exceptions in TargetInfo.flags) then
               resultnode:=load_safecallresult_node
             else
               resultnode:=load_result_node;
@@ -653,11 +653,11 @@ unit optdfa;
       end;
 
 
-    procedure TDFABuilder.redodfainfo(node: tnode);
+    procedure TDFABuilder.redodfainfo(node: TNode);
       begin
         resetdfainfo(node);
         createdfainfo(node);
-        include(current_procinfo.flags,pi_dfaavailable);
+        include(CurrentProcInfo.flags,pi_dfaavailable);
       end;
 
 
@@ -673,19 +673,19 @@ unit optdfa;
     type
       { helper structure to be able to pass more than one variable to the iterator function }
       TSearchNodeInfo = record
-        nodetosearch : tnode;
+        nodetosearch : TNode;
         { this contains a list of all file locations where a warning was thrown already,
           the same location might appear multiple times because nodes might have been copied }
-        warnedfilelocs : array of tfileposinfo;
+        warnedfilelocs : array of TFilePosInfo;
       end;
 
       PSearchNodeInfo = ^TSearchNodeInfo;
 
     { searches for a given node n and warns if the node is found as being uninitialized. If a node is
       found, searching is stopped so each call issues only one warning/hint }
-    function SearchNode(var n: tnode; arg: pointer): foreachnoderesult;
+    function SearchNode(var n: TNode; arg: pointer): foreachnoderesult;
 
-      function WarnedForLocation(f : tfileposinfo) : boolean;
+      function WarnedForLocation(f : TFilePosInfo) : boolean;
         var
           i : longint;
         begin
@@ -700,7 +700,7 @@ unit optdfa;
         end;
 
 
-      procedure AddFilepos(const f : tfileposinfo);
+      procedure AddFilepos(const f : TFilePosInfo);
         begin
           Setlength(PSearchNodeInfo(arg)^.warnedfilelocs,length(PSearchNodeInfo(arg)^.warnedfilelocs)+1);
           PSearchNodeInfo(arg)^.warnedfilelocs[high(PSearchNodeInfo(arg)^.warnedfilelocs)]:=f;
@@ -712,17 +712,17 @@ unit optdfa;
         symtables }
       function SymbolCandidateForWarningOrHint(sym : tabstractnormalvarsym) : Boolean;
         begin
-          Result:=(((sym.owner=current_procinfo.procdef.localst) and
-                    (current_procinfo.procdef.localst.symtablelevel=sym.owner.symtablelevel)
+          Result:=(((sym.owner=CurrentProcInfo.procdef.localst) and
+                    (CurrentProcInfo.procdef.localst.symtablelevel=sym.owner.symtablelevel)
                    ) or
-                   ((sym.owner=current_procinfo.procdef.parast) and
+                   ((sym.owner=CurrentProcInfo.procdef.parast) and
                     (sym.typ=paravarsym) and
-                    (current_procinfo.procdef.parast.symtablelevel=sym.owner.symtablelevel) and
+                    (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel) and
                     { all parameters except out parameters are initialized by the caller }
                     (tparavarsym(sym).varspez=vs_out)
                    ) or
                    ((vo_is_funcret in sym.varoptions) and
-                    (current_procinfo.procdef.parast.symtablelevel=sym.owner.symtablelevel)
+                    (CurrentProcInfo.procdef.parast.symtablelevel=sym.owner.symtablelevel)
                    )
                   ) and
                   not(vo_is_external in sym.varoptions) and
@@ -733,7 +733,7 @@ unit optdfa;
       var
         varsym : tabstractnormalvarsym;
         methodpointer,
-        hpt : tnode;
+        hpt : TNode;
       begin
         result:=fen_false;
         case n.nodetype of
@@ -745,7 +745,7 @@ unit optdfa;
                 begin
                   hpt:=tcallparanode(n).left;
                   while assigned(hpt) and (hpt.nodetype in [subscriptn,vecn,typeconvn]) do
-                    hpt:=tunarynode(hpt).left;
+                    hpt:=TUnaryNode(hpt).left;
                   if assigned(hpt) and (hpt.nodetype=loadn) and not(WarnedForLocation(hpt.fileinfo)) and
                     SymbolCandidateForWarningOrHint(tabstractnormalvarsym(tloadnode(hpt).symtableentry)) and
                     PSearchNodeInfo(arg)^.nodetosearch.isequal(hpt) then
@@ -780,7 +780,7 @@ unit optdfa;
                   { Remove all postfix operators }
                   hpt:=methodpointer;
                   while assigned(hpt) and (hpt.nodetype in [subscriptn,vecn]) do
-                    hpt:=tunarynode(hpt).left;
+                    hpt:=TUnaryNode(hpt).left;
 
                  { skip (absolute and other simple) type conversions -- only now,
                    because the checks above have to take type conversions into
@@ -838,9 +838,9 @@ unit optdfa;
 {$ifdef dummy}
                   { if a the variable we are looking for is passed as a var parameter, we stop searching }
                   else if assigned(varsym.owner) and
-                     (varsym.owner=current_procinfo.procdef.parast) and
+                     (varsym.owner=CurrentProcInfo.procdef.parast) and
                      (varsym.typ=paravarsym) and
-                     (current_procinfo.procdef.parast.symtablelevel=varsym.owner.symtablelevel) and
+                     (CurrentProcInfo.procdef.parast.symtablelevel=varsym.owner.symtablelevel) and
                      (tparavarsym(varsym).varspez=vs_var) then
                     result:=fen_norecurse_true;
 {$endif dummy}
@@ -852,22 +852,22 @@ unit optdfa;
       end;
 
 
-    procedure CheckAndWarn(code : tnode;nodetosearch : tnode);
+    procedure CheckAndWarn(code : TNode;nodetosearch : TNode);
 
       var
         SearchNodeInfo : TSearchNodeInfo;
 
-      function DoCheck(node : tnode) : boolean;
+      function DoCheck(node : TNode) : boolean;
         var
           i : longint;
           touchesnode : Boolean;
 
-        procedure MaybeDoCheck(n : tnode);inline;
+        procedure MaybeDoCheck(n : TNode);inline;
           begin
             Result:=Result or DoCheck(n);
           end;
 
-        procedure MaybeSearchIn(n : tnode);
+        procedure MaybeSearchIn(n : TNode);
           begin
             if touchesnode then
               Result:=Result or foreachnodestatic(pm_postprocess,n,@SearchNode,@SearchNodeInfo);
@@ -941,12 +941,12 @@ unit optdfa;
 
                   successor might be assigned in case of an inlined exit node, in this case we do not warn about an unassigned
                   result as this had happened already when the routine has been compiled }
-                if not(assigned(node.successor)) and not(Result) and not(is_void(current_procinfo.procdef.returndef)) and
+                if not(assigned(node.successor)) and not(Result) and not(is_void(CurrentProcInfo.procdef.returndef)) and
                   not(assigned(texitnode(node).resultexpr)) and
                   { don't warn about constructors }
-                  not(current_procinfo.procdef.proctypeoption in [potype_class_constructor,potype_constructor]) then
+                  not(CurrentProcInfo.procdef.proctypeoption in [potype_class_constructor,potype_constructor]) then
                   begin
-                    if is_managed_type(current_procinfo.procdef.returndef) then
+                    if is_managed_type(CurrentProcInfo.procdef.returndef) then
                       MessagePos(node.fileinfo,sym_w_managed_function_result_uninitialized)
                     else
                       MessagePos(node.fileinfo,sym_w_function_result_uninitialized);

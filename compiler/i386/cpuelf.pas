@@ -510,7 +510,7 @@ implementation
         encodeflags:       nil;
       );
 
-    as_i386_elf32_info : tasminfo =
+    as_i386_elf32_info : TAsmInfo =
        (
          id     : as_i386_elf32;
          idtxt  : 'ELF';

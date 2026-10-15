@@ -31,7 +31,7 @@ unit optcall;
     uses
       node;
 
-    procedure do_optinline(var rootnode : tnode;out changed: boolean);
+    procedure do_optinline(var rootnode : TNode;out changed: boolean);
 
   implementation
 
@@ -48,7 +48,7 @@ unit optcall;
       nbas,ncal,nld;
 
     { this procedure removes the user code flag because it prevents optimizations }
-    function removeusercodeflag(var n : tnode; arg : pointer) : foreachnoderesult;
+    function removeusercodeflag(var n : TNode; arg : pointer) : foreachnoderesult;
       begin
         result:=fen_false;
         if nf_usercode_entry in n.flags then
@@ -59,7 +59,7 @@ unit optcall;
       end;
 
 
-    function setinlinelevel(var n:tnode; arg:pointer):foreachnoderesult;
+    function setinlinelevel(var n:TNode; arg:pointer):foreachnoderesult;
       begin
         if n.nodetype=calln then
           tcallnode(n).inlinelevel:=PtrUInt(arg);
@@ -68,7 +68,7 @@ unit optcall;
 
 
     { reference symbols that are imported from another unit }
-    function importglobalsyms(var n:tnode; arg:pointer):foreachnoderesult;
+    function importglobalsyms(var n:TNode; arg:pointer):foreachnoderesult;
       var
         sym : tsym;
       begin
@@ -78,26 +78,26 @@ unit optcall;
             sym:=tloadnode(n).symtableentry;
             if sym.typ=staticvarsym then
               begin
-                if FindUnitSymtable(tloadnode(n).symtable).moduleid<>current_module.moduleid then
-                  current_module.addimportedsym(sym);
+                if FindUnitSymtable(tloadnode(n).symtable).moduleid<>CurrentModule.moduleid then
+                  CurrentModule.addimportedsym(sym);
               end
             else if (sym.typ=constsym) and (tconstsym(sym).consttyp in [constwresourcestring,constresourcestring]) then
               begin
-                if tloadnode(n).symtableentry.owner.moduleid<>current_module.moduleid then
-                  current_module.addimportedsym(sym);
+                if tloadnode(n).symtableentry.owner.moduleid<>CurrentModule.moduleid then
+                  CurrentModule.addimportedsym(sym);
               end;
           end
         else if (n.nodetype=calln) then
           begin
             if (assigned(tcallnode(n).procdefinition)) and
                (tcallnode(n).procdefinition.typ=procdef) and
-               (findunitsymtable(tcallnode(n).procdefinition.owner).moduleid<>current_module.moduleid) then
-              current_module.addimportedsym(tprocdef(tcallnode(n).procdefinition).procsym);
+               (findunitsymtable(tcallnode(n).procdefinition.owner).moduleid<>CurrentModule.moduleid) then
+              CurrentModule.addimportedsym(tprocdef(tcallnode(n).procdefinition).procsym);
           end;
       end;
 
 
-    function redoalinaparams(var n: tnode; arg: pointer): foreachnoderesult;
+    function redoalinaparams(var n: TNode; arg: pointer): foreachnoderesult;
       begin
         result:=fen_false;
         if n.nodetype=calln then
@@ -110,10 +110,10 @@ unit optcall;
       end;
 
 
-    function doinline(var _n: tnode; arg: pointer): foreachnoderesult;
+    function doinline(var _n: TNode; arg: pointer): foreachnoderesult;
       var
         n,
-        body : tnode;
+        body : TNode;
         para : tcallparanode;
         inlineblock,
         inlinecleanupblock : tblocknode;
@@ -138,7 +138,7 @@ unit optcall;
         callnode.inlinelocals:=TFPObjectList.create(true);
 
         { inherit flags }
-        current_procinfo.flags:=current_procinfo.flags+
+        CurrentProcInfo.flags:=CurrentProcInfo.flags+
           ((callnode.procdefinition as tprocdef).inlininginfo^.flags*inherited_inlining_flags);
 
         { Create new code block for inlining }
@@ -195,9 +195,9 @@ unit optcall;
               end;
           end;
 
-        typecheckpass(tnode(inlineblock));
-        doinlinesimplify(tnode(inlineblock));
-        firstpass(tnode(inlineblock));
+        TypeCheckPass(TNode(inlineblock));
+        doinlinesimplify(TNode(inlineblock));
+        FirstPass(TNode(inlineblock));
         _n:=inlineblock;
 
         { if the function result is used then verify that the blocknode
@@ -240,7 +240,7 @@ unit optcall;
       end;
 
 
-    procedure do_optinline(var rootnode: tnode;out changed: boolean);
+    procedure do_optinline(var rootnode: TNode;out changed: boolean);
       begin
         changed:=false;
 {$ifdef EXTDEBUG_INLINE}

@@ -35,13 +35,13 @@ type
 
   taddoptnode = class(taddnode)
      subnodetype: tsubnodetype;
-     constructor create(ts: tsubnodetype; l,r : tnode); virtual; reintroduce;
+     constructor create(ts: tsubnodetype; l,r : TNode); virtual; reintroduce;
      { pass_1 will be overridden by the separate subclasses    }
      { By default, pass_generate_code is the same as for addnode           }
      { Only if there's a processor specific implementation, it }
      { will be overridden.                                     }
-     function dogetcopy: tnode; override;
-     function docompare(p: tnode): boolean; override;
+     function dogetcopy: TNode; override;
+     function docompare(p: TNode): boolean; override;
   end;
 
   taddsstringoptnode = class(taddoptnode)
@@ -49,38 +49,38 @@ type
     { sometimes (it's initialized/updated by calling updatecurmaxlen)     }
     curmaxlen: byte;
     { pass_1 must be overridden, otherwise we get an endless loop }
-    function pass_typecheck: tnode; override;
-    function pass_1: tnode; override;
-    function dogetcopy: tnode; override;
-    function docompare(p: tnode): boolean; override;
+    function pass_typecheck: TNode; override;
+    function pass_1: TNode; override;
+    function dogetcopy: TNode; override;
+    function docompare(p: TNode): boolean; override;
    protected
     procedure updatecurmaxlen;
   end;
 
   { add a char to a shortstring }
   taddsstringcharoptnode = class(taddsstringoptnode)
-    constructor create(l,r : tnode); virtual; reintroduce;
+    constructor create(l,r : TNode); virtual; reintroduce;
   end;
   taddsstringcharoptnodeclass = class of taddsstringcharoptnode;
 
   { add a constant string to a short string }
   taddsstringcsstringoptnode = class(taddsstringoptnode)
-    constructor create(l,r : tnode); virtual; reintroduce;
-    function pass_1: tnode; override;
+    constructor create(l,r : TNode); virtual; reintroduce;
+    function pass_1: TNode; override;
   end;
   taddsstringcsstringoptnodeclass = class of taddsstringcsstringoptnode;
 
 function canbeaddsstringcharoptnode(p: taddnode): boolean;
-function genaddsstringcharoptnode(p: taddnode): tnode;
+function genaddsstringcharoptnode(p: taddnode): TNode;
 function canbeaddsstringcsstringoptnode(p: taddnode): boolean;
-function genaddsstringcsstringoptnode(p: taddnode): tnode;
+function genaddsstringcsstringoptnode(p: taddnode): TNode;
 function canbemultistringadd(p: taddnode): boolean;
-function genmultistringadd(p: taddnode): tnode;
+function genmultistringadd(p: taddnode): TNode;
 function canbemultidynarrayadd(p: taddnode): boolean;
-function genmultidynarrayadd(p: taddnode): tnode;
+function genmultidynarrayadd(p: taddnode): TNode;
 
 
-function is_addsstringoptnode(p: tnode): boolean;
+function is_addsstringoptnode(p: TNode): boolean;
 
 var
    caddsstringcharoptnode: taddsstringcharoptnodeclass;
@@ -98,7 +98,7 @@ uses cutils, systems,
                              TADDOPTNODE
 *****************************************************************************}
 
-constructor taddoptnode.create(ts: tsubnodetype; l,r : tnode);
+constructor taddoptnode.create(ts: tsubnodetype; l,r : TNode);
 begin
   { we need to keep the addn nodetype, otherwise taddnode.pass_generate_code will be }
   { confused. Comparison for equal nodetypes therefore has to be         }
@@ -107,7 +107,7 @@ begin
   subnodetype := ts;
 end;
 
-function taddoptnode.dogetcopy: tnode;
+function taddoptnode.dogetcopy: TNode;
 var
   hp: taddoptnode;
 begin
@@ -116,7 +116,7 @@ begin
   dogetcopy := hp;
 end;
 
-function taddoptnode.docompare(p: tnode): boolean;
+function taddoptnode.docompare(p: TNode): boolean;
 begin
   docompare :=
     inherited docompare(p) and
@@ -128,7 +128,7 @@ end;
                         TADDSSTRINGOPTNODE
 *****************************************************************************}
 
-function taddsstringoptnode.pass_typecheck: tnode;
+function taddsstringoptnode.pass_typecheck: TNode;
 begin
   result := nil;
   updatecurmaxlen;
@@ -140,15 +140,15 @@ begin
   resultdef := left.resultdef;
 end;
 
-function taddsstringoptnode.pass_1: tnode;
+function taddsstringoptnode.pass_1: TNode;
 begin
   pass_1 := nil;
   expectloc:= LOC_REFERENCE;
   { here we call STRCONCAT or STRCMP or STRCOPY }
-  include(current_procinfo.flags,pi_do_call);
+  include(CurrentProcInfo.flags,pi_do_call);
 end;
 
-function taddsstringoptnode.dogetcopy: tnode;
+function taddsstringoptnode.dogetcopy: TNode;
 var
   hp: taddsstringoptnode;
 begin
@@ -157,7 +157,7 @@ begin
   dogetcopy := hp;
 end;
 
-function taddsstringoptnode.docompare(p: tnode): boolean;
+function taddsstringoptnode.docompare(p: TNode): boolean;
 begin
   docompare :=
     inherited docompare(p) and
@@ -165,7 +165,7 @@ begin
 end;
 
 
-function is_addsstringoptnode(p: tnode): boolean;
+function is_addsstringoptnode(p: TNode): boolean;
 begin
   is_addsstringoptnode :=
     p.inheritsfrom(taddsstringoptnode);
@@ -213,7 +213,7 @@ end;
 *****************************************************************************}
 
 
-constructor taddsstringcharoptnode.create(l,r : tnode);
+constructor taddsstringcharoptnode.create(l,r : TNode);
 begin
   inherited create(addsstringcharoptn,l,r);
 end;
@@ -223,13 +223,13 @@ end;
 *****************************************************************************}
 
 
-constructor taddsstringcsstringoptnode.create(l,r : tnode);
+constructor taddsstringcsstringoptnode.create(l,r : TNode);
 begin
   inherited create(addsstringcsstringoptn,l,r);
 end;
 
 
-function taddsstringcsstringoptnode.pass_1: tnode;
+function taddsstringcsstringoptnode.pass_1: TNode;
 begin
   { create the call to the concat routine both strings as arguments }
   result := ccallnode.createintern('fpc_shortstr_append_shortstr',
@@ -246,7 +246,7 @@ end;
 function canbeaddsstringcharoptnode(p: taddnode): boolean;
 begin
   canbeaddsstringcharoptnode :=
-    (cs_opt_level1 in current_settings.optimizerswitches) and
+    (cs_opt_level1 in CurrentSettings.optimizerswitches) and
 
 {   the shortstring will be gotten through conversion if necessary (JM)
     is_shortstring(p.left.resultdef) and }
@@ -254,9 +254,9 @@ begin
      is_char(p.right.resultdef));
 end;
 
-function genaddsstringcharoptnode(p: taddnode): tnode;
+function genaddsstringcharoptnode(p: taddnode): TNode;
 var
-  hp: tnode;
+  hp: TNode;
 begin
   hp := caddsstringcharoptnode.create(p.left.getcopy,p.right.getcopy);
   hp.flags := p.flags;
@@ -268,7 +268,7 @@ end;
 function canbeaddsstringcsstringoptnode(p: taddnode): boolean;
 begin
   canbeaddsstringcsstringoptnode :=
-    (cs_opt_level1 in current_settings.optimizerswitches) and
+    (cs_opt_level1 in CurrentSettings.optimizerswitches) and
 
 {   the shortstring will be gotten through conversion if necessary (JM)
     is_shortstring(p.left.resultdef) and }
@@ -276,9 +276,9 @@ begin
      (p.right.nodetype = stringconstn));
 end;
 
-function genaddsstringcsstringoptnode(p: taddnode): tnode;
+function genaddsstringcsstringoptnode(p: taddnode): TNode;
 var
-  hp: tnode;
+  hp: TNode;
 begin
   hp := caddsstringcsstringoptnode.create(p.left.getcopy,p.right.getcopy);
   hp.flags := p.flags;
@@ -288,7 +288,7 @@ end;
 
 function canbemultistringadd(p: taddnode): boolean;
 var
-  hp : tnode;
+  hp : TNode;
   i  : longint;
 begin
   result:=false;
@@ -305,9 +305,9 @@ begin
 end;
 
 
-function genmultistringadd(p: taddnode): tnode;
+function genmultistringadd(p: taddnode): TNode;
 var
-  hp,sn : tnode;
+  hp,sn : TNode;
   arrp  : tarrayconstructornode;
   newstatement : tstatementnode;
   tempnode    : ttempcreatenode;
@@ -407,7 +407,7 @@ end;
 
 function canbemultidynarrayadd(p: taddnode): boolean;
 var
-  hp : tnode;
+  hp : TNode;
   i  : longint;
 begin
   result:=false;
@@ -424,9 +424,9 @@ begin
 end;
 
 
-function genmultidynarrayadd(p: taddnode): tnode;
+function genmultidynarrayadd(p: taddnode): TNode;
 var
-  hp    : tnode;
+  hp    : TNode;
   arrp  : tarrayconstructornode;
   newstatement : tstatementnode;
   tempnode    : ttempcreatenode;
@@ -436,17 +436,17 @@ var
     are anchored by that storage: they need no lifetime help and their
     refcount must stay untouched so fpc_dynarray_concat_multi can still
     detect refcount=1 and append to the destination in place }
-  function is_stored_operand(n: tnode): boolean;
+  function is_stored_operand(n: TNode): boolean;
     begin
       while n.nodetype in [subscriptn,vecn,derefn] do
-        n:=tunarynode(n).left;
+        n:=TUnaryNode(n).left;
       is_stored_operand:=n.nodetype=loadn;
     end;
 
   { store any other operand (call result, literal, nested concat) in a
     reference counted persistent temp so it stays alive until the concat
     call, then hand the helper a plain pointer to it }
-  function operandref(n: tnode): tnode;
+  function operandref(n: TNode): TNode;
     var
       optemp : ttempcreatenode;
     begin

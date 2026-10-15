@@ -253,7 +253,7 @@ implementation
                     internalerror(200408206);
                   if (location^.next^.loc<>LOC_REGISTER) then
                     internalerror(200408207);
-                  if (target_info.endian = ENDIAN_BIG) then
+                  if (TargetInfo.endian = ENDIAN_BIG) then
                     begin
                       newloc.register64.reghi:=location^.register;
                       newloc.register64.reglo:=location^.next^.register;

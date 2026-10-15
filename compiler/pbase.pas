@@ -68,7 +68,7 @@ interface
        parse_generic : boolean;
 
     procedure identifier_not_found(const s:string);
-    procedure identifier_not_found(const s:string;const filepos:tfileposinfo);
+    procedure identifier_not_found(const s:string;const filepos:TFilePosInfo);
 
 {    function tokenstring(i : ttoken):string;}
 
@@ -112,7 +112,7 @@ interface
 
     { just for an accurate position of the end of a procedure (PM) }
     var
-       last_endtoken_filepos: tfileposinfo;
+       last_endtoken_filepos: TFilePosInfo;
 
 
 implementation
@@ -129,21 +129,21 @@ implementation
          Message1(sym_e_id_not_found,s);
          { show a fatal that you need -S2 or -Sd, but only
            if we just parsed the a token that has m_class }
-         if not(m_class in current_settings.modeswitches) and
-            (Upper(s)=current_scanner.pattern) and
-            (m_class in tokeninfo^[current_scanner.idtoken].keyword) then
+         if not(m_class in CurrentSettings.modeswitches) and
+            (Upper(s)=CurrentScanner.pattern) and
+            (m_class in tokeninfo^[CurrentScanner.idtoken].keyword) then
            Message(parser_f_need_objfpc_or_delphi_mode);
        end;
 
 
-     procedure identifier_not_found(const s:string;const filepos:tfileposinfo);
+     procedure identifier_not_found(const s:string;const filepos:TFilePosInfo);
        begin
          MessagePos1(filepos,sym_e_id_not_found,s);
          { show a fatal that you need -S2 or -Sd, but only
            if we just parsed the a token that has m_class }
-         if not(m_class in current_settings.modeswitches) and
-            (Upper(s)=current_scanner.pattern) and
-            (m_class in tokeninfo^[current_scanner.idtoken].keyword) then
+         if not(m_class in CurrentSettings.modeswitches) and
+            (Upper(s)=CurrentScanner.pattern) and
+            (m_class in tokeninfo^[CurrentScanner.idtoken].keyword) then
            MessagePos(filepos,parser_f_need_objfpc_or_delphi_mode);
        end;
 
@@ -153,64 +153,64 @@ implementation
     procedure consume(i : ttoken);
 
     begin
-        if (current_scanner.token<>i) and (current_scanner.idtoken<>i) then
+        if (CurrentScanner.token<>i) and (CurrentScanner.idtoken<>i) then
           begin
-            if current_scanner.had_multiline_string then
+            if CurrentScanner.had_multiline_string then
               Message2(scan_f_unterminated_multiline_string,
-                       tostr(current_scanner.multiline_start_line),
-                       tostr(current_scanner.multiline_start_column))
-            else if current_scanner.token=_id then
-              Message2(scan_f_syn_expected,tokeninfo^[i].str,'identifier '+current_scanner.pattern)
+                       tostr(CurrentScanner.multiline_start_line),
+                       tostr(CurrentScanner.multiline_start_column))
+            else if CurrentScanner.token=_id then
+              Message2(scan_f_syn_expected,tokeninfo^[i].str,'identifier '+CurrentScanner.pattern)
             else
-              Message2(scan_f_syn_expected,tokeninfo^[i].str,tokeninfo^[current_scanner.token].str);
+              Message2(scan_f_syn_expected,tokeninfo^[i].str,tokeninfo^[CurrentScanner.token].str);
           end
         else
           begin
-            if current_scanner.token=_END then
-              last_endtoken_filepos:=current_tokenpos;
-            current_scanner.readtoken(true);
+            if CurrentScanner.token=_END then
+              last_endtoken_filepos:=CurrentTokenPos;
+            CurrentScanner.readtoken(true);
           end;
       end;
 
     procedure consume_last_dot;
 
     begin
-        if (current_scanner.token<>_POINT) then
+        if (CurrentScanner.token<>_POINT) then
           begin
-          if current_scanner.token=_id then
-            Message2(scan_f_syn_expected,tokeninfo^[_POINT].str,'identifier '+current_scanner.pattern)
+          if CurrentScanner.token=_id then
+            Message2(scan_f_syn_expected,tokeninfo^[_POINT].str,'identifier '+CurrentScanner.pattern)
           else
-            Message2(scan_f_syn_expected,tokeninfo^[_POINT].str,tokeninfo^[current_scanner.token].str)
+            Message2(scan_f_syn_expected,tokeninfo^[_POINT].str,tokeninfo^[CurrentScanner.token].str)
           end
-        else if current_scanner.c<>#0 then
-          current_scanner.readtoken(true);
+        else if CurrentScanner.c<>#0 then
+          CurrentScanner.readtoken(true);
     end;
 
     function try_to_consume(i:Ttoken):boolean;
       begin
         try_to_consume:=false;
-        if (current_scanner.token=i) or (current_scanner.idtoken=i) then
+        if (CurrentScanner.token=i) or (CurrentScanner.idtoken=i) then
          begin
            try_to_consume:=true;
-           if current_scanner.token=_END then
-            last_endtoken_filepos:=current_tokenpos;
-           current_scanner.readtoken(true);
+           if CurrentScanner.token=_END then
+            last_endtoken_filepos:=CurrentTokenPos;
+           CurrentScanner.readtoken(true);
          end;
       end;
 
 
     procedure consume_all_until(atoken : ttoken);
       begin
-         while (current_scanner.token<>atoken) and (current_scanner.idtoken<>atoken) do
+         while (CurrentScanner.token<>atoken) and (CurrentScanner.idtoken<>atoken) do
           begin
-            Consume(current_scanner.token);
-            if current_scanner.token=_EOF then
+            Consume(CurrentScanner.token);
+            if CurrentScanner.token=_EOF then
              begin
                Consume(atoken);
-               if current_scanner.had_multiline_string then
+               if CurrentScanner.had_multiline_string then
                  Message2(scan_f_unterminated_multiline_string,
-                          tostr(current_scanner.multiline_start_line),
-                          tostr(current_scanner.multiline_start_column))
+                          tostr(CurrentScanner.multiline_start_line),
+                          tostr(CurrentScanner.multiline_start_column))
                else
                  Message(scan_f_end_of_file);
                exit;
@@ -237,7 +237,7 @@ implementation
         t : ttoken;
       begin
         { first check for identifier }
-        if current_scanner.token<>_ID then
+        if CurrentScanner.token<>_ID then
           begin
             consume(_ID);
             srsym:=generrorsym;
@@ -245,15 +245,15 @@ implementation
             result:=false;
             exit;
           end;
-        searchsym(current_scanner.pattern,srsym,srsymtable);
+        searchsym(CurrentScanner.pattern,srsym,srsymtable);
         { handle unit specification like System.Writeln }
-        try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],current_scanner.pattern);
+        try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],CurrentScanner.pattern);
         { if nothing found give error and return errorsym }
         if assigned(srsym) then
           check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg)
         else
           begin
-            identifier_not_found(current_scanner.orgpattern);
+            identifier_not_found(CurrentScanner.orgpattern);
             srsym:=generrorsym;
             srsymtable:=nil;
           end;
@@ -270,7 +270,7 @@ implementation
         t : ttoken;
       begin
         { first check for identifier }
-        if current_scanner.token<>_ID then
+        if CurrentScanner.token<>_ID then
           begin
             consume(_ID);
             srsym:=generrorsym;
@@ -278,19 +278,19 @@ implementation
             result:=false;
             exit;
           end;
-        searchsym(current_scanner.pattern,srsym,srsymtable);
+        searchsym(CurrentScanner.pattern,srsym,srsymtable);
         { handle unit specification like System.Writeln }
-        try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],current_scanner.pattern);
+        try_consume_unitsym_no_specialize(srsym,srsymtable,t,[cuf_consume_id],CurrentScanner.pattern);
         { if nothing found give error and return errorsym }
         if assigned(srsym) then
           check_hints(srsym,srsym.symoptions,srsym.deprecatedmsg)
         else
           begin
-            identifier_not_found(current_scanner.orgpattern);
+            identifier_not_found(CurrentScanner.orgpattern);
             srsym:=generrorsym;
             srsymtable:=nil;
           end;
-        s:=current_scanner.orgpattern;
+        s:=CurrentScanner.orgpattern;
         consume(t);
         result:=assigned(srsym);
       end;
@@ -308,10 +308,10 @@ implementation
             while assigned(srsym) and (srsym.typ=namespacesym) do
               begin
                 { we have a namespace. the next identifier should be either a namespace or a unit }
-                searchsym_in_module(hmodule,ns+'.'+current_scanner.pattern,srsym,srsymtable);
+                searchsym_in_module(hmodule,ns+'.'+CurrentScanner.pattern,srsym,srsymtable);
                 if assigned(srsym) and (srsym.typ in [namespacesym,unitsym]) then
                   begin
-                    ns:=ns+'.'+current_scanner.pattern;
+                    ns:=ns+'.'+CurrentScanner.pattern;
                     nssym:=srsym;
                     consume(_ID);
                     consume(_POINT);
@@ -328,9 +328,9 @@ implementation
         tokentoconsume:=_ID;
         is_specialize:=false;
 
-        if not assigned(srsym) and (current_scanner.pattern<>'') and (namespacelist.count>0) then
+        if not assigned(srsym) and (CurrentScanner.pattern<>'') and (namespacelist.count>0) then
           begin
-            hmodule:=get_module(current_filepos.moduleindex);
+            hmodule:=get_module(CurrentFilePos.moduleindex);
             if not assigned(hmodule) then
               internalerror(2018050301);
 
@@ -358,13 +358,13 @@ implementation
             hmodule:=find_module_from_symtable(srsym.Owner);
             if not Assigned(hmodule) then
               internalerror(2010011201);
-            if hmodule.moduleid=current_filepos.moduleindex then
+            if hmodule.moduleid=CurrentFilePos.moduleindex then
               begin
                 if cuf_consume_id in flags then
                   begin
                     consume(_ID);
                     if (cuf_allow_unit_only in flags) and
-                       (current_scanner.token<>_POINT) then
+                       (CurrentScanner.token<>_POINT) then
                       begin
                         tokentoconsume:=NOTOKEN;
                         exit(true);
@@ -402,56 +402,56 @@ implementation
                         exit;
                       end;
                   end;
-                case current_scanner.token of
+                case CurrentScanner.token of
                   _ID:
                     begin
                       if cuf_check_attr_suffix in flags then
                         begin
-                          if searchsym_in_module(tunitsym(srsym).module,current_scanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
+                          if searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
                             exit(true);
                         end;
                       { Resolve the default Char/PChar from the invocation's
                         text model, regardless of the System alias. }
-                      if ((current_scanner.pattern='CHAR') or
-                          (current_scanner.pattern='PCHAR')) and
+                      if ((CurrentScanner.pattern='CHAR') or
+                          (CurrentScanner.pattern='PCHAR')) and
                          (tmodule(tunitsym(srsym).module).globalsymtable=systemunit) then
                         begin
-                          if current_scanner.pattern='PCHAR' then
-                            if m_default_unicodestring in current_settings.modeswitches then
+                          if CurrentScanner.pattern='PCHAR' then
+                            if m_default_unicodestring in CurrentSettings.modeswitches then
                               searchsym_in_module(tunitsym(srsym).module,'PWIDECHAR',srsym,srsymtable)
                             else
                               searchsym_in_module(tunitsym(srsym).module,'PANSICHAR',srsym,srsymtable)
-                          else if m_default_unicodestring in current_settings.modeswitches then
+                          else if m_default_unicodestring in CurrentSettings.modeswitches then
                             searchsym_in_module(tunitsym(srsym).module,'WIDECHAR',srsym,srsymtable)
                           else
                             searchsym_in_module(tunitsym(srsym).module,'ANSICHAR',srsym,srsymtable)
                         end
                       else
-                        if (cuf_allow_specialize in flags) and (current_scanner.idtoken=_SPECIALIZE) then
+                        if (cuf_allow_specialize in flags) and (CurrentScanner.idtoken=_SPECIALIZE) then
                           begin
                             consume(_ID);
                             is_specialize:=true;
-                            if current_scanner.token=_ID then
+                            if CurrentScanner.token=_ID then
                               begin
                                 if (cuf_check_attr_suffix in flags) and
-                                    searchsym_in_module(tunitsym(srsym).module,current_scanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
+                                    searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern+custom_attribute_suffix,srsym,srsymtable) then
                                   exit(true);
-                                searchsym_in_module(tunitsym(srsym).module,current_scanner.pattern,srsym,srsymtable);
+                                searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                               end;
                           end
                         else
-                          searchsym_in_module(tunitsym(srsym).module,current_scanner.pattern,srsym,srsymtable);
+                          searchsym_in_module(tunitsym(srsym).module,CurrentScanner.pattern,srsym,srsymtable);
                      end;
                   _STRING:
                     begin
-                      if cs_compilesystem in current_settings.moduleswitches then
+                      if cs_compilesystem in CurrentSettings.moduleswitches then
                         Message(parser_e_nostringaliasinsystem);
                       { system.string? }
                       if tmodule(tunitsym(srsym).module).globalsymtable=systemunit then
                         begin
-                          if cs_refcountedstrings in current_settings.localswitches then
+                          if cs_refcountedstrings in CurrentSettings.localswitches then
                             begin
-                              if m_default_unicodestring in current_settings.modeswitches then
+                              if m_default_unicodestring in CurrentSettings.modeswitches then
                                 searchsym_in_module(tunitsym(srsym).module,'UNICODESTRING',srsym,srsymtable)
                               else
                                 searchsym_in_module(tunitsym(srsym).module,'ANSISTRING',srsym,srsymtable)
@@ -488,15 +488,15 @@ implementation
         last_is_deprecated:boolean;
       begin
         try_consume_hintdirective:=false;
-        if not(m_hintdirective in current_settings.modeswitches) then
+        if not(m_hintdirective in CurrentSettings.modeswitches) then
           exit;
         repeat
           last_is_deprecated:=false;
-          case current_scanner.idtoken of
+          case CurrentScanner.idtoken of
             _LIBRARY:
               begin
                 if sp_hint_library in symopt then
-                  Message1(parser_e_dir_not_allowed,arraytokeninfo[current_scanner.idtoken].str)
+                  Message1(parser_e_dir_not_allowed,arraytokeninfo[CurrentScanner.idtoken].str)
                 else
                   include(symopt,sp_hint_library);
                 try_consume_hintdirective:=true;
@@ -504,7 +504,7 @@ implementation
             _DEPRECATED:
               begin
                 if sp_hint_deprecated in symopt then
-                  Message1(parser_e_dir_not_allowed,arraytokeninfo[current_scanner.idtoken].str)
+                  Message1(parser_e_dir_not_allowed,arraytokeninfo[CurrentScanner.idtoken].str)
                 else
                   include(symopt,sp_hint_deprecated);
                 try_consume_hintdirective:=true;
@@ -513,7 +513,7 @@ implementation
             _EXPERIMENTAL:
               begin
                 if sp_hint_experimental in symopt then
-                  Message1(parser_e_dir_not_allowed,arraytokeninfo[current_scanner.idtoken].str)
+                  Message1(parser_e_dir_not_allowed,arraytokeninfo[CurrentScanner.idtoken].str)
                 else
                   include(symopt,sp_hint_experimental);
                 try_consume_hintdirective:=true;
@@ -521,7 +521,7 @@ implementation
             _PLATFORM:
               begin
                 if sp_hint_platform in symopt then
-                  Message1(parser_e_dir_not_allowed,arraytokeninfo[current_scanner.idtoken].str)
+                  Message1(parser_e_dir_not_allowed,arraytokeninfo[CurrentScanner.idtoken].str)
                 else
                   include(symopt,sp_hint_platform);
                 try_consume_hintdirective:=true;
@@ -529,7 +529,7 @@ implementation
             _UNIMPLEMENTED:
               begin
                 if sp_hint_unimplemented in symopt then
-                  Message1(parser_e_dir_not_allowed,arraytokeninfo[current_scanner.idtoken].str)
+                  Message1(parser_e_dir_not_allowed,arraytokeninfo[CurrentScanner.idtoken].str)
                 else
                   include(symopt,sp_hint_unimplemented);
                 try_consume_hintdirective:=true;
@@ -537,18 +537,18 @@ implementation
             else
               break;
           end;
-          consume(current_scanner.token);
+          consume(CurrentScanner.token);
           { handle deprecated message }
-          if ((current_scanner.token=_CSTRING) or (current_scanner.token=_CCHAR)) and last_is_deprecated then
+          if ((CurrentScanner.token=_CSTRING) or (CurrentScanner.token=_CCHAR)) and last_is_deprecated then
             begin
               if not assigned(deprecatedmsg) then
                 begin
-                  if current_scanner.token=_CSTRING then
-                    deprecatedmsg:=stringdup(current_scanner.cstringpattern)
+                  if CurrentScanner.token=_CSTRING then
+                    deprecatedmsg:=stringdup(CurrentScanner.cstringpattern)
                   else
-                    deprecatedmsg:=stringdup(current_scanner.pattern);
+                    deprecatedmsg:=stringdup(CurrentScanner.pattern);
                 end;
-              consume(current_scanner.token);
+              consume(CurrentScanner.token);
               include(symopt,sp_has_deprecated_msg);
             end;
         until false;

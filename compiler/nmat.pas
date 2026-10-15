@@ -36,15 +36,15 @@ interface
 
        TModDivNodeFlags = set of TModDivNodeFlag;
 
-       tmoddivnode = class(tbinopnode)
+       tmoddivnode = class(TBinOpNode)
           moddivnodeflags : TModDivNodeFlags;
-          constructor create(t:tnodetype;l,r : tnode); override;
-          constructor ppuload(t:tnodetype;ppufile:tcompilerppufile);override;
+          constructor create(t:TNodeType;l,r : TNode); override;
+          constructor ppuload(t:TNodeType;ppufile:tcompilerppufile);override;
           procedure ppuwrite(ppufile:tcompilerppufile);override;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
-          function dogetcopy : tnode;override;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
+          function dogetcopy : TNode;override;
     {$ifdef DEBUG_NODE_XML}
           procedure XMLPrintNodeInfo(var T: Text); override;
     {$endif DEBUG_NODE_XML}
@@ -52,47 +52,47 @@ interface
           { override the following if you want to implement }
           { parts explicitely in the code generator (JM)    }
           function use_moddiv64bitint_helper: boolean; virtual;
-          function first_moddiv64bitint: tnode; virtual;
-          function firstoptimize: tnode; virtual;
-          function first_moddivint: tnode; virtual;
+          function first_moddiv64bitint: TNode; virtual;
+          function firstoptimize: TNode; virtual;
+          function first_moddivint: TNode; virtual;
        end;
        tmoddivnodeclass = class of tmoddivnode;
 
-       tshlshrnode = class(tbinopnode)
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
+       tshlshrnode = class(TBinOpNode)
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
           { override the following if you want to implement }
           { parts explicitely in the code generator (CEC)
             Should return nil, if everything will be handled
             in the code generator
           }
-          function first_shlshr64bitint: tnode; virtual;
+          function first_shlshr64bitint: TNode; virtual;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
        end;
        tshlshrnodeclass = class of tshlshrnode;
 
-       tunaryminusnode = class(tunarynode)
-          constructor create(expr : tnode);virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
+       tunaryminusnode = class(TUnaryNode)
+          constructor create(expr : TNode);virtual;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
        end;
        tunaryminusnodeclass = class of tunaryminusnode;
 
-       tunaryplusnode = class(tunarynode)
-         constructor create(expr : tnode);virtual;
-         function pass_1 : tnode;override;
-         function pass_typecheck:tnode;override;
+       tunaryplusnode = class(TUnaryNode)
+         constructor create(expr : TNode);virtual;
+         function pass_1 : TNode;override;
+         function pass_typecheck:TNode;override;
        end;
        tunaryplusnodeclass = class of tunaryplusnode;
 
-       tnotnode = class(tunarynode)
-          constructor create(expr : tnode);virtual;
-          function pass_1 : tnode;override;
-          function pass_typecheck:tnode;override;
-          function simplify(forinline : boolean) : tnode;override;
+       tnotnode = class(TUnaryNode)
+          constructor create(expr : TNode);virtual;
+          function pass_1 : TNode;override;
+          function pass_typecheck:TNode;override;
+          function simplify(forinline : boolean) : TNode;override;
        {$ifdef state_tracking}
           function track_state_pass(exec_known:boolean):boolean;override;
        {$endif}
@@ -124,14 +124,14 @@ implementation
  ****************************************************************************}
 
 
-    constructor tmoddivnode.create(t:tnodetype;l,r : tnode);
+    constructor tmoddivnode.create(t:TNodeType;l,r : TNode);
       begin
         inherited create(t, l, r);
         moddivnodeflags:=[];
       end;
 
 
-    constructor tmoddivnode.ppuload(t:tnodetype;ppufile:tcompilerppufile);
+    constructor tmoddivnode.ppuload(t:TNodeType;ppufile:tcompilerppufile);
       begin
         inherited ppuload(t, ppufile);
         ppufile.getset(tppuset1(moddivnodeflags));
@@ -145,10 +145,10 @@ implementation
       end;
 
 
-    function tmoddivnode.simplify(forinline : boolean):tnode;
+    function tmoddivnode.simplify(forinline : boolean):TNode;
       var
         rv,lv : tconstexprint;
-        hp: tnode;
+        hp: TNode;
       begin
         result:=nil;
 
@@ -247,7 +247,7 @@ implementation
       end;
 
 
-    function tmoddivnode.dogetcopy: tnode;
+    function tmoddivnode.dogetcopy: TNode;
       var
         n: tmoddivnode;
       begin
@@ -274,10 +274,10 @@ implementation
       end;
 
 
-    function tmoddivnode.pass_typecheck:tnode;
+    function tmoddivnode.pass_typecheck:TNode;
       var
         else_block,
-        hp,t : tnode;
+        hp,t : TNode;
         rd,ld : torddef;
         else_statements,
         statements : tstatementnode;
@@ -285,8 +285,8 @@ implementation
         nd : torddef;
       begin
          result:=nil;
-         typecheckpass(left);
-         typecheckpass(right);
+         TypeCheckPass(left);
+         TypeCheckPass(right);
 
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
@@ -297,7 +297,7 @@ implementation
 
          set_varstate(left,vs_read,[vsf_must_be_valid]);
          set_varstate(right,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { tp procvar support }
@@ -319,7 +319,7 @@ implementation
                Currency scale restored; the remainder already has that scale. }
              inserttypeconv(left,s64currencytype);
              inserttypeconv(right,s64currencytype);
-             if codegenerror then
+             if CodeGenError then
                exit;
              hp:=cmoddivnode.create(nodetype,
                ctypeconvnode.create_internal(left,s64inttype),
@@ -330,7 +330,7 @@ implementation
              if nodetype=divn then
                hp:=caddnode.create_internal(muln,hp,cordconstnode.create(10000,s64inttype,false));
              result:=ctypeconvnode.create_internal(hp,s64currencytype);
-             typecheckpass(result);
+             TypeCheckPass(result);
              include(result.flags,nf_is_currency);
              exit;
            end;
@@ -340,7 +340,7 @@ implementation
            inserttypeconv(left,sinttype);
          if (right.resultdef.typ<>orddef) then
            inserttypeconv(right,sinttype);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { Try only now to simply constant
@@ -510,7 +510,7 @@ implementation
       end;
 
 
-    function tmoddivnode.first_moddivint: tnode;
+    function tmoddivnode.first_moddivint: TNode;
 {$ifdef cpuneedsdivhelper}
       var
         procname: string[31];
@@ -548,7 +548,7 @@ implementation
           ccallparanode.create(right,nil)));
         left := nil;
         right := nil;
-        firstpass(result);
+        FirstPass(result);
 
         if result.resultdef.typ<>orddef then
           internalerror(2013031701);
@@ -564,7 +564,7 @@ implementation
 {$endif cpuneedsdiv32helper}
 
 
-    function tmoddivnode.first_moddiv64bitint: tnode;
+    function tmoddivnode.first_moddiv64bitint: TNode;
       var
         procname: string[31];
       begin
@@ -594,16 +594,16 @@ implementation
           ccallparanode.create(right,nil)));
         left := nil;
         right := nil;
-        firstpass(result);
+        FirstPass(result);
       end;
 
 
-    function tmoddivnode.firstoptimize: tnode;
+    function tmoddivnode.firstoptimize: TNode;
       var
         power,shiftval : longint;
         statements : tstatementnode;
         temp,resulttemp : ttempcreatenode;
-        masknode : tnode;
+        masknode : TNode;
         invertsign: Boolean;
       begin
         result := nil;
@@ -625,7 +625,7 @@ implementation
                   begin
                     invertsign:=tordconstnode(right).value<0;
                     if is_64bitint(left.resultdef) then
-                      if not (cs_opt_size in current_settings.optimizerswitches) then
+                      if not (cs_opt_size in CurrentSettings.optimizerswitches) then
                         shiftval:=63
                       else
                         { the shift code is a lot bigger than the call to }
@@ -693,7 +693,7 @@ implementation
               end
             else if is_signed(resultdef) then    { signed modulus }
               begin
-                if (cs_opt_size in current_settings.optimizerswitches) then
+                if (cs_opt_size in CurrentSettings.optimizerswitches) then
                   exit;
 
                 shiftval:=left.resultdef.size*8-1;
@@ -747,18 +747,18 @@ implementation
             { left and right are reused }
             left := nil;
             right := nil;
-            firstpass(result);
+            FirstPass(result);
             exit;
           end;
       end;
 
 
-    function tmoddivnode.pass_1 : tnode;
+    function tmoddivnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         firstpass(right);
-         if codegenerror then
+         FirstPass(left);
+         FirstPass(right);
+         if CodeGenError then
            exit;
 
          { Try to optimize mod/div }
@@ -810,7 +810,7 @@ implementation
                               TSHLSHRNODE
  ****************************************************************************}
 
-    function tshlshrnode.simplify(forinline : boolean):tnode;
+    function tshlshrnode.simplify(forinline : boolean):TNode;
       var
         lvalue, rvalue, mask : Tconstexprint;
         rangedef: tdef;
@@ -879,20 +879,20 @@ implementation
               end;
             { '0 shl x' and '0 shr x' are 0 }
             if (lvalue=0) and
-               ((cs_opt_level4 in current_settings.optimizerswitches) or
+               ((cs_opt_level4 in CurrentSettings.optimizerswitches) or
                 not might_have_sideeffects(right)) then
               result:=cordconstnode.create(0,resultdef,true);
           end;
       end;
 
 
-    function tshlshrnode.pass_typecheck:tnode;
+    function tshlshrnode.pass_typecheck:TNode;
       var
-         t : tnode;
+         t : TNode;
       begin
          result:=nil;
-         typecheckpass(left);
-         typecheckpass(right);
+         TypeCheckPass(left);
+         TypeCheckPass(right);
 
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) or is_typeparam(right.resultdef) then
@@ -903,7 +903,7 @@ implementation
 
          set_varstate(right,vs_read,[vsf_must_be_valid]);
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { tp procvar support }
@@ -919,7 +919,7 @@ implementation
            end;
 
 {$ifdef SUPPORT_MMX}
-         if (cs_mmx in current_settings.localswitches) and
+         if (cs_mmx in CurrentSettings.localswitches) and
            is_mmx_able_array(left.resultdef) and
            ((is_mmx_able_array(right.resultdef) and
              equal_defs(left.resultdef,right.resultdef)
@@ -970,14 +970,14 @@ implementation
 
 
 {$if not defined(cpu64bitalu) and not defined(cpuhighleveltarget)}
-    function tshlshrnode.first_shlshr64bitint: tnode;
+    function tshlshrnode.first_shlshr64bitint: TNode;
       var
         procname: string[31];
       begin
         result := nil;
         { Normally already done below, but called again,
           just in case it is called directly }
-        firstpass(left);
+        FirstPass(left);
         { otherwise create a call to a helper }
         if is_signed(left.resultdef) then
           procname:='int64'
@@ -993,17 +993,17 @@ implementation
           ccallparanode.create(left,nil)));
         left := nil;
         right := nil;
-        firstpass(result);
+        FirstPass(result);
       end;
 {$endif not cpu64bitalu and not cpuhighleveltarget}
 
 
-    function tshlshrnode.pass_1 : tnode;
+    function tshlshrnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         firstpass(right);
-         if codegenerror then
+         FirstPass(left);
+         FirstPass(right);
+         if CodeGenError then
            exit;
 
          expectloc:=LOC_REGISTER;
@@ -1019,13 +1019,13 @@ implementation
                             TUNARYMINUSNODE
  ****************************************************************************}
 
-    constructor tunaryminusnode.create(expr : tnode);
+    constructor tunaryminusnode.create(expr : TNode);
       begin
         inherited create(unaryminusn,expr);
       end;
 
 
-    function tunaryminusnode.simplify(forinline : boolean):tnode;
+    function tunaryminusnode.simplify(forinline : boolean):TNode;
       begin
         result:=nil;
         { constant folding }
@@ -1048,7 +1048,7 @@ implementation
 
               As this result in -(1.0-1.0)=0.0 instead of 0.0, this is only valid in fastmath mode
             }
-            if (cs_opt_fastmath in current_settings.optimizerswitches) and (left.nodetype=subn) then
+            if (cs_opt_fastmath in CurrentSettings.optimizerswitches) and (left.nodetype=subn) then
               begin
                 result:=caddnode.create(subn,taddnode(left).right.getcopy,taddnode(left).left.getcopy);
                 exit;
@@ -1094,7 +1094,7 @@ implementation
             }
             if left.nodetype=unaryminusn then
               begin
-                result:=tunarynode(left).left.getcopy;
+                result:=TUnaryNode(left).left.getcopy;
                 exit;
               end;
           end
@@ -1115,12 +1115,12 @@ implementation
       end;
 
 
-    function tunaryminusnode.pass_typecheck : tnode;
+    function tunaryminusnode.pass_typecheck : TNode;
       var
-         t : tnode;
+         t : TNode;
       begin
          result:=nil;
-         typecheckpass(left);
+         TypeCheckPass(left);
 
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) then
@@ -1130,7 +1130,7 @@ implementation
            end;
 
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          result:=simplify(false);
@@ -1148,14 +1148,14 @@ implementation
          else if left.resultdef.typ=floatdef then
            begin
              if not(tfloatdef(left.resultdef).floattype in [s64comp,s64currency]) and
-               (cs_excessprecision in current_settings.localswitches) then
+               (cs_excessprecision in CurrentSettings.localswitches) then
                begin
                  inserttypeconv(left,pbestrealtype^);
                  resultdef:=left.resultdef
                end;
            end
 {$ifdef SUPPORT_MMX}
-         else if (cs_mmx in current_settings.localswitches) and
+         else if (cs_mmx in CurrentSettings.localswitches) and
            is_mmx_able_array(left.resultdef) then
              begin
                { if saturation is on, left.resultdef isn't
@@ -1201,17 +1201,17 @@ implementation
     { generic code     }
     { overridden by:   }
     {   i386           }
-    function tunaryminusnode.pass_1 : tnode;
+    function tunaryminusnode.pass_1 : TNode;
       begin
         result:=nil;
-        firstpass(left);
-        if codegenerror then
+        FirstPass(left);
+        if CodeGenError then
           exit;
 
         if (left.resultdef.typ=floatdef) then
           expectloc:=LOC_FPUREGISTER
 {$ifdef SUPPORT_MMX}
-        else if (cs_mmx in current_settings.localswitches) and
+        else if (cs_mmx in CurrentSettings.localswitches) and
           is_mmx_able_array(left.resultdef) then
           expectloc:=LOC_MMXREGISTER
 {$endif SUPPORT_MMX}
@@ -1223,12 +1223,12 @@ implementation
                              TUNARYPLUSNODE
  ****************************************************************************}
 
-    constructor tunaryplusnode.create(expr: tnode);
+    constructor tunaryplusnode.create(expr: TNode);
       begin
         inherited create(unaryplusn,expr);
       end;
 
-    function tunaryplusnode.pass_1: tnode;
+    function tunaryplusnode.pass_1: TNode;
       begin
         result:=nil;
         { can never happen because all the conversions happen
@@ -1236,12 +1236,12 @@ implementation
         internalerror(201012250);
       end;
 
-    function tunaryplusnode.pass_typecheck: tnode;
+    function tunaryplusnode.pass_typecheck: TNode;
       var
-        t:tnode;
+        t:TNode;
       begin
         result:=nil;
-        typecheckpass(left);
+        TypeCheckPass(left);
 
         { avoid any problems with type parameters later on }
         if is_typeparam(left.resultdef) then
@@ -1251,7 +1251,7 @@ implementation
           end;
 
         set_varstate(left,vs_read,[vsf_must_be_valid]);
-        if codegenerror then
+        if CodeGenError then
           exit;
 
         if is_constintnode(left) or
@@ -1259,7 +1259,7 @@ implementation
            (left.resultdef.typ=floatdef) or
            is_currency(left.resultdef)
 {$ifdef SUPPORT_MMX}
-           or ((cs_mmx in current_settings.localswitches) and
+           or ((cs_mmx in CurrentSettings.localswitches) and
                 is_mmx_able_array(left.resultdef))
 {$endif SUPPORT_MMX}
         then
@@ -1306,20 +1306,20 @@ implementation
  ****************************************************************************}
 
     const
-      boolean_reverse:array[ltn..unequaln] of Tnodetype=(
+      boolean_reverse:array[ltn..unequaln] of TNodeType=(
         gten,gtn,lten,ltn,unequaln,equaln
       );
 
-    constructor tnotnode.create(expr : tnode);
+    constructor tnotnode.create(expr : TNode);
       begin
          inherited create(notn,expr);
       end;
 
 
-    function tnotnode.simplify(forinline : boolean):tnode;
+    function tnotnode.simplify(forinline : boolean):TNode;
       var
         v : tconstexprint;
-        t : tnode;
+        t : TNode;
         def : tdef;
       begin
         result:=nil;
@@ -1376,12 +1376,12 @@ implementation
       end;
 
 
-    function tnotnode.pass_typecheck : tnode;
+    function tnotnode.pass_typecheck : TNode;
       var
-         t : tnode;
+         t : TNode;
       begin
          result:=nil;
-         typecheckpass(left);
+         TypeCheckPass(left);
 
          { avoid any problems with type parameters later on }
          if is_typeparam(left.resultdef) then
@@ -1391,7 +1391,7 @@ implementation
            end;
 
          set_varstate(left,vs_read,[vsf_must_be_valid]);
-         if codegenerror then
+         if CodeGenError then
            exit;
 
          { tp procvar support }
@@ -1408,7 +1408,7 @@ implementation
            end
          else
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in current_settings.localswitches) and
+           if (cs_mmx in CurrentSettings.localswitches) and
              is_mmx_able_array(left.resultdef) then
              begin
              end
@@ -1438,11 +1438,11 @@ implementation
       end;
 
 
-    function tnotnode.pass_1 : tnode;
+    function tnotnode.pass_1 : TNode;
       begin
          result:=nil;
-         firstpass(left);
-         if codegenerror then
+         FirstPass(left);
+         if CodeGenError then
            exit;
 
          expectloc:=left.expectloc;
@@ -1459,7 +1459,7 @@ implementation
            end
          else
 {$ifdef SUPPORT_MMX}
-           if (cs_mmx in current_settings.localswitches) and
+           if (cs_mmx in CurrentSettings.localswitches) and
              is_mmx_able_array(left.resultdef) then
              expectloc:=LOC_MMXREGISTER
          else
@@ -1483,7 +1483,7 @@ implementation
         if left.track_state_pass(exec_known) then
           begin
             left.resultdef:=nil;
-            do_typecheckpass(left);
+            DoTypeCheckPass(left);
           end;
       end;
 {$endif}

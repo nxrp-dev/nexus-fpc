@@ -93,7 +93,7 @@ unit raatt;
          procedure SetupTables;
          procedure BuildConstant(constsize: byte);
          procedure BuildConstantOperand(oper : toperand);
-         procedure BuildRealConstant(typ : tfloattype);
+         procedure BuildRealConstant(typ : TFloatType);
          procedure BuildStringConstant(asciiz: boolean);
          procedure BuildRva;
          procedure BuildRecordOffsetSize(const expr: string;var offset:tcgint;var size:tcgint; var mangledname: string; needvmtofs: boolean);
@@ -179,13 +179,13 @@ unit raatt;
 
     procedure tattreader.handledollar;
       begin
-        c:=current_scanner.asmgetchar;
+        c:=CurrentScanner.asmgetchar;
         actasmtoken:=AS_DOLLAR;
       end;
 
     procedure tattreader.handlepercent;
       begin
-        c:=current_scanner.asmgetchar;
+        c:=CurrentScanner.asmgetchar;
         actasmtoken:=AS_MOD;
       end;
 
@@ -204,7 +204,7 @@ unit raatt;
         srsym : tsym;
         srsymtable : TSymtable;
       begin
-        c:=current_scanner.c;
+        c:=CurrentScanner.c;
         { save old token and reset new token }
         prevasmtoken:=actasmtoken;
         actasmtoken:=AS_NONE;
@@ -212,10 +212,10 @@ unit raatt;
         actasmpattern:='';
         { while space and tab , continue scan... }
         while c in [' ',#9] do
-         c:=current_scanner.asmgetchar;
+         c:=CurrentScanner.asmgetchar;
         { get token pos }
         if not (c in [#10,#13,'{',';','/','(']) then
-          current_scanner.gettokenpos;
+          CurrentScanner.gettokenpos;
         { Local Label, Label, Directive, Prefix or Opcode }
         if firsttoken and not(c in [#10,#13,'{',';','/','(']) then
          begin
@@ -227,12 +227,12 @@ unit raatt;
               inc(len);
               actasmpattern[len]:=c;
               { Let us point to the next character }
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               while c in ['A'..'Z','a'..'z','0'..'9','_','$','.'] do
                begin
                  inc(len);
                  actasmpattern[len]:=c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                end;
               actasmpattern[0]:=chr(len);
               { this is a local label... }
@@ -240,7 +240,7 @@ unit raatt;
                Begin
                  { local variables are case sensitive }
                  actasmtoken:=AS_LLABEL;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  firsttoken:=true;
                  exit;
                end
@@ -263,7 +263,7 @@ unit raatt;
             begin
               inc(len);
               actasmpattern[len]:=c;
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
             end;
            actasmpattern[0]:=chr(len);
            { Label ? }
@@ -271,7 +271,7 @@ unit raatt;
             begin
               actasmtoken:=AS_LABEL;
               { let us point to the next character }
-              c:=current_scanner.asmgetchar;
+              c:=CurrentScanner.asmgetchar;
               firsttoken:=true;
               exit;
             end;
@@ -282,7 +282,7 @@ unit raatt;
                begin
                  repeat
                    actasmpattern:=actasmpattern+c;
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                  until not(c in ['a'..'z','A'..'Z','0'..'9']);
                end;
            end;
@@ -312,16 +312,16 @@ unit raatt;
                begin
                  if (prevasmtoken in [AS_ID,AS_RPAREN]) then
                   begin
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                     actasmtoken:=AS_DOT;
                     exit;
                   end;
                  actasmpattern:=c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  while c in  ['A'..'Z','a'..'z','0'..'9','_','$'] do
                   begin
                     actasmpattern:=actasmpattern + c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  if is_asmdirective(actasmpattern) then
                   exit;
@@ -344,7 +344,7 @@ unit raatt;
                   begin
                     inc(len);
                     actasmpattern[len]:=c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern[0]:=chr(len);
                  uppervar(actasmpattern);
@@ -395,11 +395,11 @@ unit raatt;
                        srsym.owner.iscurrentunit then
                      begin
                        actasmpattern:=actasmpattern+c;
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        while c in  ['A'..'Z','a'..'z','0'..'9','_','$'] do
                         begin
                           actasmpattern:=actasmpattern + upcase(c);
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                      end;
                   end;
@@ -417,7 +417,7 @@ unit raatt;
                   Begin
                     inc(len);
                     actasmpattern[len]:=c;
-                    c:=current_scanner.asmgetchar;
+                    c:=CurrentScanner.asmgetchar;
                   end;
                  actasmpattern[0]:=chr(len);
                  actasmpattern:=tostr(ParseVal(actasmpattern,10));
@@ -427,15 +427,15 @@ unit raatt;
              '0' : { octal,hexa,real or binary number. }
                begin
                  actasmpattern:=c;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  case upcase(c) of
                    'B': { binary }
                      Begin
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        while c in ['0','1'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                        actasmpattern:=tostr(ParseVal(actasmpattern,2));
                        actasmtoken:=AS_INTNUM;
@@ -443,42 +443,42 @@ unit raatt;
                      end;
                    'D': { real }
                      Begin
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        { get ridd of the 0d }
                        if (c in ['+','-']) then
                         begin
                           actasmpattern:=c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end
                        else
                         actasmpattern:='';
                        while c in ['0'..'9'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                        if c='.' then
                         begin
                           actasmpattern:=actasmpattern + c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                           while c in ['0'..'9'] do
                            Begin
                              actasmpattern:=actasmpattern + c;
-                             c:=current_scanner.asmgetchar;
+                             c:=CurrentScanner.asmgetchar;
                            end;
                           if upcase(c) = 'E' then
                            begin
                              actasmpattern:=actasmpattern + c;
-                             c:=current_scanner.asmgetchar;
+                             c:=CurrentScanner.asmgetchar;
                              if (c in ['+','-']) then
                               begin
                                 actasmpattern:=actasmpattern + c;
-                                c:=current_scanner.asmgetchar;
+                                c:=CurrentScanner.asmgetchar;
                               end;
                              while c in ['0'..'9'] do
                               Begin
                                 actasmpattern:=actasmpattern + c;
-                                c:=current_scanner.asmgetchar;
+                                c:=CurrentScanner.asmgetchar;
                               end;
                            end;
                           actasmtoken:=AS_REALNUM;
@@ -492,11 +492,11 @@ unit raatt;
                      end;
                    'X': { hexadecimal }
                      Begin
-                       c:=current_scanner.asmgetchar;
+                       c:=CurrentScanner.asmgetchar;
                        while c in ['0'..'9','a'..'f','A'..'F'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                        actasmpattern:=tostr(ParseVal(actasmpattern,16));
                        actasmtoken:=AS_INTNUM;
@@ -508,7 +508,7 @@ unit raatt;
                        while c in ['0'..'7'] do
                         Begin
                           actasmpattern:=actasmpattern + c;
-                          c:=current_scanner.asmgetchar;
+                          c:=CurrentScanner.asmgetchar;
                         end;
                        actasmpattern:=tostr(ParseVal(actasmpattern,8));
                        actasmtoken:=AS_INTNUM;
@@ -525,7 +525,7 @@ unit raatt;
 
              '&' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  actasmtoken:=AS_AND;
                end;
 
@@ -533,18 +533,18 @@ unit raatt;
                begin
                  actasmpattern:='';
                  repeat
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                    case c of
                      '\' :
                        begin
                          { copy also the next char so \" is parsed correctly }
                          actasmpattern:=actasmpattern+c;
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                          actasmpattern:=actasmpattern+c;
                        end;
                      '''' :
                        begin
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                          break;
                        end;
                      #10,#13:
@@ -562,18 +562,18 @@ unit raatt;
                begin
                  actasmpattern:='';
                  repeat
-                   c:=current_scanner.asmgetchar;
+                   c:=CurrentScanner.asmgetchar;
                    case c of
                      '\' :
                        begin
                          { copy also the next char so \" is parsed correctly }
                          actasmpattern:=actasmpattern+c;
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                          actasmpattern:=actasmpattern+c;
                        end;
                      '"' :
                        begin
-                         c:=current_scanner.asmgetchar;
+                         c:=CurrentScanner.asmgetchar;
                          break;
                        end;
                      #10,#13:
@@ -596,21 +596,21 @@ unit raatt;
              '#' :
                begin
                  actasmtoken:=AS_HASH;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '[' :
                begin
                  actasmtoken:=AS_LBRACKET;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              ']' :
                begin
                  actasmtoken:=AS_RBRACKET;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
@@ -619,16 +619,16 @@ unit raatt;
 {$if defined(aarch64)}
                  // the arm assembler uses { ... } for register sets
                  // but compiler directives {$... } are still allowed
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c<>'$' then
                    actasmtoken:=AS_LSBRACKET
                  else
                    begin
-                     current_scanner.skipcomment(false);
+                     CurrentScanner.skipcomment(false);
                      GetToken;
                    end;
 {$else arm or aarch64}
-                 current_scanner.skipcomment(true);
+                 CurrentScanner.skipcomment(true);
                  GetToken;
 {$endif}
                  exit;
@@ -638,7 +638,7 @@ unit raatt;
              '}' :
                begin
                  actasmtoken:=AS_RSBRACKET;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 {$endif}
@@ -647,49 +647,49 @@ unit raatt;
              ',' :
                begin
                  actasmtoken:=AS_COMMA;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '<' :
                begin
                  actasmtoken:=AS_SHL;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c = '<' then
-                  c:=current_scanner.asmgetchar;
+                  c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '>' :
                begin
                  actasmtoken:=AS_SHR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c = '>' then
-                  c:=current_scanner.asmgetchar;
+                  c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '|' :
                begin
                  actasmtoken:=AS_OR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '^' :
                begin
                  actasmtoken:=AS_XOR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
 
              '(' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c='*' then
                    begin
-                     current_scanner.skipoldtpcomment(true);
+                     CurrentScanner.skipoldtpcomment(true);
                      GetToken;
                    end
                  else
@@ -700,44 +700,44 @@ unit raatt;
              ')' :
                begin
                  actasmtoken:=AS_RPAREN;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              ':' :
                begin
                  actasmtoken:=AS_COLON;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '+' :
                begin
                  actasmtoken:=AS_PLUS;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '-' :
                begin
                  actasmtoken:=AS_MINUS;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '*' :
                begin
                  actasmtoken:=AS_STAR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '/' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  if c='/' then
                    begin
-                     current_scanner.skipdelphicomment;
+                     CurrentScanner.skipdelphicomment;
                      GetToken;
                    end
                  else
@@ -748,28 +748,28 @@ unit raatt;
              '!' :
                begin
                  actasmtoken:=AS_NOT;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '~' :
                begin
                  actasmtoken:=AS_NOR;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              '@' :
                begin
                  actasmtoken:=AS_AT;
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  exit;
                end;
 
              #13,#10:
                begin
-                 current_scanner.linebreak;
-                 c:=current_scanner.asmgetchar;
+                 CurrentScanner.linebreak;
+                 c:=CurrentScanner.asmgetchar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
@@ -777,14 +777,14 @@ unit raatt;
 
              ';' :
                begin
-                 c:=current_scanner.asmgetchar;
+                 c:=CurrentScanner.asmgetchar;
                  firsttoken:=TRUE;
                  actasmtoken:=AS_SEPARATOR;
                  exit;
                end;
 
              else
-               current_scanner.illegal_char(c);
+               CurrentScanner.illegal_char(c);
            end;
          end;
       end;
@@ -874,7 +874,7 @@ unit raatt;
       end;
 
 
-    Procedure tattreader.BuildRealConstant(typ : tfloattype);
+    Procedure tattreader.BuildRealConstant(typ : TFloatType);
       var
         expr : string;
         r : bestreal;
@@ -1015,7 +1015,7 @@ unit raatt;
 
        { we might need to know which parameters are passed in registers }
        if not parse_generic then
-         current_procinfo.generate_parameter_info;
+         CurrentProcInfo.generate_parameter_info;
 
        lasTSec:=sec_code;
        { start tokenizer }
@@ -1051,28 +1051,28 @@ unit raatt;
 
            AS_DATA:
              Begin
-               new_section(curList,sec_data,lower(current_procinfo.procdef.mangledname),0);
+               new_section(curList,sec_data,lower(CurrentProcInfo.procdef.mangledname),0);
                lasTSec:=sec_data;
                Consume(AS_DATA);
              end;
 
            AS_TEXT:
              Begin
-               new_section(curList,sec_code,lower(current_procinfo.procdef.mangledname),0);
+               new_section(curList,sec_code,lower(CurrentProcInfo.procdef.mangledname),0);
                lasTSec:=sec_code;
                Consume(AS_TEXT);
              end;
 
            AS_INIT:
              Begin
-               new_section(curList,sec_init,lower(current_procinfo.procdef.mangledname),0);
+               new_section(curList,sec_init,lower(CurrentProcInfo.procdef.mangledname),0);
                lasTSec:=sec_init;
                Consume(AS_INIT);
              end;
 
            AS_FINI:
              Begin
-               new_section(curList,sec_fini,lower(current_procinfo.procdef.mangledname),0);
+               new_section(curList,sec_fini,lower(CurrentProcInfo.procdef.mangledname),0);
                lasTSec:=sec_fini;
                Consume(AS_FINI);
              end;
@@ -1248,7 +1248,7 @@ unit raatt;
              begin
                { .rva generally applies to systems with COFF output format,
                  not just Windows. }
-               if not (target_info.system in systems_all_windows) then
+               if not (TargetInfo.system in systems_all_windows) then
                  Message1(asmr_e_unsupported_directive,token2str[AS_RVA]);
                Consume(AS_RVA);
                BuildRva;
@@ -1357,7 +1357,7 @@ unit raatt;
        if lasTSec<>sec_code then
         begin
           Message(asmr_w_assembler_code_not_returned_to_text);
-          new_section(curList,sec_code,lower(current_procinfo.procdef.mangledname),0);
+          new_section(curList,sec_code,lower(CurrentProcInfo.procdef.mangledname),0);
         end;
        { Return the list in an asmnode }
        assemble:=curlist;
@@ -1758,7 +1758,7 @@ unit raatt;
          begin
            oper.opr.typ:=OPR_SYMBOL;
            oper.opr.symofs:=l;
-           oper.opr.symbol:=current_asmdata.RefAsmSymbol(tempstr,tempsymtyp);
+           oper.opr.symbol:=CurrentAsmData.RefAsmSymbol(tempstr,tempsymtyp);
          end
         else
          begin
@@ -1788,7 +1788,7 @@ unit raatt;
                 BuildConstSymbolExpression(false,false,false,value,asmsym,asmsymtyp);
                 if asmsym<>'' then
                  begin
-                   ai:=tai_const.create_type_sym(aitconst_rva_symbol,current_asmdata.RefAsmSymbol(asmsym,asmsymtyp));
+                   ai:=tai_const.create_type_sym(aitconst_rva_symbol,CurrentAsmData.RefAsmSymbol(asmsym,asmsymtyp));
                    ai.value:=value;
                    curlist.concat(ai);
                  end

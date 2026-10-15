@@ -56,10 +56,10 @@ implementation
       { Please leave this here, this module should NOT use
         these variables.
         Declaring it as string here results in an error when compiling (PFV) }
-      current_procinfo = 'error';
+      CurrentProcInfo = 'error';
 
     var
-      current_objectdef : tobjectdef absolute current_structdef;
+      current_objectdef : tobjectdef absolute CurrentStructDef;
 
 
     procedure constr_destr_finish_head(pd: tprocdef; const astruct: tabstractrecorddef);
@@ -101,7 +101,7 @@ implementation
         result:=nil;
         consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
-        parse_proc_head(current_structdef,potype_class_constructor,[],nil,nil,pd);
+        parse_proc_head(CurrentStructDef,potype_class_constructor,[],nil,nil,pd);
         if not assigned(pd) then
           begin
             consume(_SEMICOLON);
@@ -112,7 +112,7 @@ implementation
           Message(parser_e_no_paras_for_class_constructor);
         consume(_SEMICOLON);
         include(astruct.objectoptions,oo_has_class_constructor);
-        include(current_module.moduleflags,mf_classinits);
+        include(CurrentModule.moduleflags,mf_classinits);
         { no return value }
         pd.returndef:=voidtype;
         constr_destr_finish_head(pd,astruct);
@@ -126,14 +126,14 @@ implementation
         result:=nil;
         consume(_CONSTRUCTOR);
         { must be at same level as in implementation }
-        parse_proc_head(current_structdef,potype_constructor,[],nil,nil,pd);
+        parse_proc_head(CurrentStructDef,potype_constructor,[],nil,nil,pd);
         if not assigned(pd) then
           begin
             consume(_SEMICOLON);
             exit;
           end;
         consume(_SEMICOLON);
-        include(current_structdef.objectoptions,oo_has_constructor);
+        include(CurrentStructDef.objectoptions,oo_has_constructor);
         { Set return type, class and record constructors return the
           created instance, helper types return the extended type,
           object constructors return boolean }
@@ -162,22 +162,22 @@ implementation
         _symoptions: tsymoptions;
       begin
         { check for a class, record or helper }
-        if not((is_class_or_interface_or_dispinterface(current_structdef) or is_record(current_structdef) or
-                is_objectpascal_helper(current_structdef) or is_java_class_or_interface(current_structdef)) or
-               is_object(current_structdef)) then
+        if not((is_class_or_interface_or_dispinterface(CurrentStructDef) or is_record(CurrentStructDef) or
+                is_objectpascal_helper(CurrentStructDef) or is_java_class_or_interface(CurrentStructDef)) or
+               is_object(CurrentStructDef)) then
           Message(parser_e_syntax_error);
         consume(_PROPERTY);
-        p:=read_property_dec(is_classproperty,current_structdef);
+        p:=read_property_dec(is_classproperty,CurrentStructDef);
         consume(_SEMICOLON);
         if try_to_consume(_DEFAULT) then
           begin
-            if oo_has_default_property in current_structdef.objectoptions then
+            if oo_has_default_property in CurrentStructDef.objectoptions then
               message(parser_e_only_one_default_property);
-            include(current_structdef.objectoptions,oo_has_default_property);
+            include(CurrentStructDef.objectoptions,oo_has_default_property);
             include(p.propoptions,ppo_defaultproperty);
             if not(ppo_hasparameters in p.propoptions) then
               message(parser_e_property_need_paras);
-            if (current_scanner.token=_COLON) then
+            if (CurrentScanner.token=_COLON) then
               begin
                 Message(parser_e_field_not_allowed_here);
                 consume_all_until(_SEMICOLON);
@@ -187,23 +187,23 @@ implementation
         { parse possible enumerator modifier }
         if try_to_consume(_ENUMERATOR) then
           begin
-            if (current_scanner.token = _ID) then
+            if (CurrentScanner.token = _ID) then
             begin
-              if current_scanner.pattern='CURRENT' then
+              if CurrentScanner.pattern='CURRENT' then
               begin
-                if oo_has_enumerator_current in current_structdef.objectoptions then
+                if oo_has_enumerator_current in CurrentStructDef.objectoptions then
                   message(parser_e_only_one_enumerator_current);
                 if not p.propaccesslist[palt_read].empty then
                 begin
-                  include(current_structdef.objectoptions,oo_has_enumerator_current);
+                  include(CurrentStructDef.objectoptions,oo_has_enumerator_current);
                   include(p.propoptions,ppo_enumerator_current);
                 end
                 else
                   Message(parser_e_enumerator_current_is_not_valid) // property has no reader
               end
               else
-                Message1(parser_e_invalid_enumerator_identifier, current_scanner.pattern);
-              consume(current_scanner.token);
+                Message1(parser_e_invalid_enumerator_identifier, CurrentScanner.pattern);
+              consume(CurrentScanner.token);
             end
             else
               Message(parser_e_enumerator_identifier_required);
@@ -237,7 +237,7 @@ implementation
       begin
         result:=nil;
         consume(_DESTRUCTOR);
-        parse_proc_head(current_structdef,potype_class_destructor,[],nil,nil,pd);
+        parse_proc_head(CurrentStructDef,potype_class_destructor,[],nil,nil,pd);
         if not assigned(pd) then
           begin
             consume(_SEMICOLON);
@@ -248,7 +248,7 @@ implementation
           Message(parser_e_no_paras_for_class_destructor);
         consume(_SEMICOLON);
         include(astruct.objectoptions,oo_has_class_destructor);
-        include(current_module.moduleflags,mf_classinits);
+        include(CurrentModule.moduleflags,mf_classinits);
         { no return value }
         pd.returndef:=voidtype;
         constr_destr_finish_head(pd,astruct);
@@ -261,7 +261,7 @@ implementation
       begin
         result:=nil;
         consume(_DESTRUCTOR);
-        parse_proc_head(current_structdef,potype_destructor,[],nil,nil,pd);
+        parse_proc_head(CurrentStructDef,potype_destructor,[],nil,nil,pd);
         if not assigned(pd) then
           begin
             consume(_SEMICOLON);
@@ -269,11 +269,11 @@ implementation
           end;
         pd.calcparas;
         if not(pd.maxparacount=0) and
-           (m_fpc in current_settings.modeswitches) then
+           (m_fpc in CurrentSettings.modeswitches) then
           Message(parser_e_no_paras_for_destructor);
         consume(_SEMICOLON);
-        include(current_structdef.objectoptions,oo_has_destructor);
-        include(current_structdef.objectoptions,oo_has_new_destructor);
+        include(CurrentStructDef.objectoptions,oo_has_destructor);
+        include(CurrentStructDef.objectoptions,oo_has_new_destructor);
         { no return value }
         pd.returndef:=voidtype;
         constr_destr_finish_head(pd,pd.struct);
@@ -286,10 +286,10 @@ implementation
         i   : longint;
         def : tdef;
       begin
-        include(current_structdef.objectoptions,oo_has_virtual);
-        for i:=0 to current_structdef.symtable.DefList.count-1 do
+        include(CurrentStructDef.objectoptions,oo_has_virtual);
+        for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
           begin
-            def:=tdef(current_structdef.symtable.DefList[i]);
+            def:=tdef(CurrentStructDef.symtable.DefList[i]);
             if assigned(def) and
                (def.typ=procdef) then
               begin
@@ -305,9 +305,9 @@ implementation
         i   : longint;
         def : tdef;
       begin
-        for i:=0 to current_structdef.symtable.DefList.count-1 do
+        for i:=0 to CurrentStructDef.symtable.DefList.count-1 do
           begin
-            def:=tdef(current_structdef.symtable.DefList[i]);
+            def:=tdef(CurrentStructDef.symtable.DefList[i]);
             if assigned(def) and
                (def.typ=procdef) then
               begin
@@ -396,7 +396,7 @@ implementation
 
     procedure readinterfaceiid;
       var
-        p : tnode;
+        p : TNode;
         valid : boolean;
       begin
         p:=comp_expr([ef_accept_equal]);
@@ -408,7 +408,7 @@ implementation
             if (current_objectdef.objecttype in [odt_interfacecom,odt_dispinterface]) and
                not valid then
               Message(parser_e_improper_guid_syntax);
-            include(current_structdef.objectoptions,oo_has_valid_guid);
+            include(CurrentStructDef.objectoptions,oo_has_valid_guid);
           end
         else
           Message(parser_e_illegal_expression);
@@ -427,14 +427,14 @@ implementation
         if try_to_consume(_EXTERNAL) then
           begin
             hs:='';
-            if current_scanner.token in [_CSTRING,_CWSTRING,_CCHAR,_CWCHAR] then
+            if CurrentScanner.token in [_CSTRING,_CWSTRING,_CCHAR,_CWCHAR] then
               begin
                 { Always add library prefix and suffix to create an uniform name }
                 hs:=get_stringconst;
                 if ExtractFileExt(hs)='' then
-                  hs:=ChangeFileExt(hs,target_info.sharedlibext);
-                if Copy(hs,1,length(target_info.sharedlibprefix))<>target_info.sharedlibprefix then
-                  hs:=target_info.sharedlibprefix+hs;
+                  hs:=ChangeFileExt(hs,TargetInfo.sharedlibext);
+                if Copy(hs,1,length(TargetInfo.sharedlibprefix))<>TargetInfo.sharedlibprefix then
+                  hs:=TargetInfo.sharedlibprefix+hs;
               end;
             if hs<>'' then
               begin
@@ -490,13 +490,13 @@ implementation
               while true do
                 begin
                   if try_to_consume(_ABSTRACT) then
-                    include(current_structdef.objectoptions,oo_is_abstract)
+                    include(CurrentStructDef.objectoptions,oo_is_abstract)
                   else
                   if try_to_consume(_SEALED) then
-                    include(current_structdef.objectoptions,oo_is_sealed)
+                    include(CurrentStructDef.objectoptions,oo_is_sealed)
                   else if (current_objectdef.objecttype=odt_javaclass) and
-                          (current_scanner.token=_ID) and
-                          (current_scanner.idtoken=_EXTERNAL) then
+                          (CurrentScanner.token=_ID) and
+                          (CurrentScanner.idtoken=_EXTERNAL) then
                     begin
                       get_cpp_or_java_class_external_status(current_objectdef);
                       gotexternal:=true;
@@ -506,7 +506,7 @@ implementation
                 end;
               { don't use <=, because there's a bug in the 2.6.0 SPARC code
                 generator regarding handling this expression }
-              if ([oo_is_abstract, oo_is_sealed] * current_structdef.objectoptions) = [oo_is_abstract, oo_is_sealed] then
+              if ([oo_is_abstract, oo_is_sealed] * CurrentStructDef.objectoptions) = [oo_is_abstract, oo_is_sealed] then
                 Message(parser_e_abstract_and_sealed_conflict);
               { set default external name in case of no external directive }
               if (current_objectdef.objecttype=odt_javaclass) and
@@ -536,8 +536,8 @@ implementation
         hasparentdefined:=false;
 
         { reads the parent class }
-        if (current_scanner.token=_LKLAMMER) or
-           is_objccategory(current_structdef) then
+        if (CurrentScanner.token=_LKLAMMER) or
+           is_objccategory(CurrentStructDef) then
           begin
             consume(_LKLAMMER);
             { use single_type instead of id_type for specialize support }
@@ -547,7 +547,7 @@ implementation
               begin
                 if assigned(hdef) then
                   Message1(type_e_class_type_expected,hdef.typename)
-                else if is_objccategory(current_structdef) then
+                else if is_objccategory(CurrentStructDef) then
                   { a category must specify the class to extend }
                   Message(type_e_objcclass_type_expected);
               end
@@ -596,7 +596,7 @@ implementation
                        begin
                          if is_objcprotocol(childof) then
                            begin
-                             if not(oo_is_classhelper in current_structdef.objectoptions) then
+                             if not(oo_is_classhelper in CurrentStructDef.objectoptions) then
                                begin
                                  intfchildof:=childof;
                                  childof:=nil;
@@ -755,7 +755,7 @@ implementation
       var
         hdef: tdef;
       begin
-        if not is_objectpascal_helper(current_structdef) then
+        if not is_objectpascal_helper(CurrentStructDef) then
           Internalerror(2011021103);
 
         consume(_FOR);
@@ -795,7 +795,7 @@ implementation
                       { primitive types are allowed for record helpers in mode
                         delphi }
                       (hdef.typ<>recorddef) and
-                      not (m_delphi in current_settings.modeswitches)
+                      not (m_delphi in CurrentSettings.modeswitches)
                     ) then
                   Message1(type_e_record_type_expected,hdef.typename)
                 else
@@ -867,7 +867,7 @@ implementation
         oldparse_only: boolean;
         flags : tparse_proc_flags;
       begin
-        case current_scanner.token of
+        case CurrentScanner.token of
           _PROCEDURE,
           _FUNCTION:
             begin
@@ -901,7 +901,7 @@ implementation
                   { all Macintosh Object Pascal methods are virtual.  }
                   { this can't be a class method, because macpas mode }
                   { has no m_class                                    }
-                  if (m_mac in current_settings.modeswitches) then
+                  if (m_mac in CurrentSettings.modeswitches) then
                     include(result.procoptions,po_virtualmethod);
 
                   { for record and type helpers only static class methods are
@@ -967,7 +967,7 @@ implementation
               oldparse_only:=parse_only;
               parse_only:=true;
               if is_classdef then
-                result:=class_constructor_head(current_structdef)
+                result:=class_constructor_head(CurrentStructDef)
               else
                 begin
                   result:=constructor_head;
@@ -1014,7 +1014,7 @@ implementation
               oldparse_only:=parse_only;
               parse_only:=true;
               if is_classdef then
-                result:=class_destructor_head(current_structdef)
+                result:=class_destructor_head(CurrentStructDef)
               else
                 result:=destructor_head;
 
@@ -1032,7 +1032,7 @@ implementation
 
       var
         typedconstswritable: boolean;
-        object_member_blocktype : tblock_type;
+        object_member_blocktype : TBlockType;
         hadgeneric,
         fields_allowed, is_classdef, class_fields, is_final, final_fields,
         threadvar_fields : boolean;
@@ -1090,18 +1090,18 @@ implementation
           consume(_CLASS);
           { class modifier is only allowed for procedures, functions, }
           { constructors, destructors, fields and properties          }
-          if not((current_scanner.token in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_THREADVAR]) or (current_scanner.token=_CONSTRUCTOR)) then
+          if not((CurrentScanner.token in [_FUNCTION,_PROCEDURE,_PROPERTY,_VAR,_DESTRUCTOR,_THREADVAR]) or (CurrentScanner.token=_CONSTRUCTOR)) then
             Message(parser_e_procedure_or_function_expected);
 
           { class properties currently can't have attributes }
-          if not(current_scanner.token in [_FUNCTION,_PROCEDURE]) then
+          if not(CurrentScanner.token in [_FUNCTION,_PROCEDURE]) then
             check_unbound_attributes;
 
           { Java interfaces can contain final class vars }
-          if is_interface(current_structdef) or
-             (is_javainterface(current_structdef) and
+          if is_interface(CurrentStructDef) or
+             (is_javainterface(CurrentStructDef) and
               (not(is_final) or
-               (current_scanner.token<>_VAR))) then
+               (CurrentScanner.token<>_VAR))) then
             Message(parser_e_no_static_method_in_interfaces)
           else
             { class methods are also allowed for Objective-C protocols }
@@ -1114,17 +1114,17 @@ implementation
           { Objective-C and Java classes do not support "published",
             as basically everything is published.  }
           if (vis=vis_published) and
-             (is_objc_class_or_protocol(current_structdef) or
-              is_java_class_or_interface(current_structdef)) then
+             (is_objc_class_or_protocol(CurrentStructDef) or
+              is_java_class_or_interface(CurrentStructDef)) then
              Message(parser_e_no_objc_published)
-          else if is_interface(current_structdef) or
-             is_objc_protocol_or_category(current_structdef) or
-             is_javainterface(current_structdef) then
+          else if is_interface(CurrentStructDef) or
+             is_objc_protocol_or_category(CurrentStructDef) or
+             is_javainterface(CurrentStructDef) then
             Message(parser_e_no_access_specifier_in_interfaces);
-          current_structdef.symtable.currentvisibility:=vis;
-          consume(current_scanner.token);
+          CurrentStructDef.symtable.currentvisibility:=vis;
+          consume(CurrentScanner.token);
           if (oo<>oo_none) then
-            include(current_structdef.objectoptions,oo);
+            include(CurrentStructDef.objectoptions,oo);
           fields_allowed:=true;
           is_classdef:=false;
           class_fields:=false;
@@ -1137,14 +1137,14 @@ implementation
       begin
         { empty class declaration ? }
         if (current_objectdef.objecttype in [odt_class,odt_objcclass,odt_javaclass]) and
-           (current_scanner.token=_SEMICOLON) then
+           (CurrentScanner.token=_SEMICOLON) then
           exit;
 
         { in "publishable" classes the default access type is published }
-        if (oo_can_have_published in current_structdef.objectoptions) then
-          current_structdef.symtable.currentvisibility:=vis_published
+        if (oo_can_have_published in CurrentStructDef.objectoptions) then
+          CurrentStructDef.symtable.currentvisibility:=vis_published
         else
-          current_structdef.symtable.currentvisibility:=vis_public;
+          CurrentStructDef.symtable.currentvisibility:=vis_public;
         fields_allowed:=true;
         is_classdef:=false;
         class_fields:=false;
@@ -1156,7 +1156,7 @@ implementation
         object_member_blocktype:=bt_general;
         fieldlist:=tfpobjectlist.create(false);
         repeat
-          case current_scanner.token of
+          case CurrentScanner.token of
             _TYPE :
               begin
                 check_unbound_attributes;
@@ -1165,14 +1165,14 @@ implementation
                 consume(_TYPE);
                 object_member_blocktype:=bt_type;
 
-                if (current_scanner.token=_LECKKLAMMER) and (m_prefixed_attributes in current_settings.modeswitches) then
+                if (CurrentScanner.token=_LECKKLAMMER) and (m_prefixed_attributes in CurrentSettings.modeswitches) then
                   begin
                     check_unbound_attributes;
                     types_dec(true,hadgeneric, rtti_attrs_def);
                   end
                 else
                   { expect at least one type declaration }
-                  if current_scanner.token<>_ID then
+                  if CurrentScanner.token<>_ID then
                     consume(_ID);
               end;
             _VAR :
@@ -1181,7 +1181,7 @@ implementation
                 rtti_attrs_def := nil;
                 parse_var(false);
                 { expect at least one var declaration }
-                if current_scanner.token<>_ID then
+                if CurrentScanner.token<>_ID then
                   consume(_ID);
               end;
             _CONST:
@@ -1190,7 +1190,7 @@ implementation
                 rtti_attrs_def := nil;
                 parse_const;
                 { expect at least one constant declaration }
-                if current_scanner.token<>_ID then
+                if CurrentScanner.token<>_ID then
                   consume(_ID);
               end;
             _THREADVAR :
@@ -1204,19 +1204,19 @@ implementation
                   end;
                 parse_var(true);
                 { expect at least one threadvar declaration }
-                if current_scanner.token<>_ID then
+                if CurrentScanner.token<>_ID then
                   consume(_ID);
               end;
             _ID :
               begin
-                if is_objcprotocol(current_structdef) and
-                   ((current_scanner.idtoken=_REQUIRED) or
-                    (current_scanner.idtoken=_OPTIONAL)) then
+                if is_objcprotocol(CurrentStructDef) and
+                   ((CurrentScanner.idtoken=_REQUIRED) or
+                    (CurrentScanner.idtoken=_OPTIONAL)) then
                   begin
-                    current_structdef.symtable.currentlyoptional:=(current_scanner.idtoken=_OPTIONAL);
-                    consume(current_scanner.idtoken)
+                    CurrentStructDef.symtable.currentlyoptional:=(CurrentScanner.idtoken=_OPTIONAL);
+                    consume(CurrentScanner.idtoken)
                   end
-                else case current_scanner.idtoken of
+                else case CurrentScanner.idtoken of
                   _PRIVATE :
                     begin
                       parse_visibility(vis_private,oo_has_private);
@@ -1235,25 +1235,25 @@ implementation
                      end;
                    _STRICT :
                      begin
-                       if is_interface(current_structdef) or
-                          is_objc_protocol_or_category(current_structdef) or
-                          is_javainterface(current_structdef) then
+                       if is_interface(CurrentStructDef) or
+                          is_objc_protocol_or_category(CurrentStructDef) or
+                          is_javainterface(CurrentStructDef) then
                          Message(parser_e_no_access_specifier_in_interfaces);
                          consume(_STRICT);
-                        if current_scanner.token=_ID then
+                        if CurrentScanner.token=_ID then
                           begin
-                            case current_scanner.idtoken of
+                            case CurrentScanner.idtoken of
                               _PRIVATE:
                                 begin
                                   consume(_PRIVATE);
-                                  current_structdef.symtable.currentvisibility:=vis_strictprivate;
-                                  include(current_structdef.objectoptions,oo_has_strictprivate);
+                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprivate;
+                                  include(CurrentStructDef.objectoptions,oo_has_strictprivate);
                                 end;
                               _PROTECTED:
                                 begin
                                   consume(_PROTECTED);
-                                  current_structdef.symtable.currentvisibility:=vis_strictprotected;
-                                  include(current_structdef.objectoptions,oo_has_strictprotected);
+                                  CurrentStructDef.symtable.currentvisibility:=vis_strictprotected;
+                                  include(CurrentStructDef.objectoptions,oo_has_strictprotected);
                                 end;
                               else
                                 message(parser_e_protected_or_private_expected);
@@ -1269,64 +1269,64 @@ implementation
                         final_fields:=false;
                         object_member_blocktype:=bt_general;
                      end
-                    else if (m_final_fields in current_settings.modeswitches) and
-                            (current_scanner.token=_ID) and
-                            (current_scanner.idtoken=_FINAL) then
+                    else if (m_final_fields in CurrentSettings.modeswitches) and
+                            (CurrentScanner.token=_ID) and
+                            (CurrentScanner.idtoken=_FINAL) then
                       begin
                         { currently only supported for external classes, because
                           requires fully working DFA otherwise }
-                        if (current_structdef.typ<>objectdef) or
-                           not(oo_is_external in tobjectdef(current_structdef).objectoptions) then
+                        if (CurrentStructDef.typ<>objectdef) or
+                           not(oo_is_external in tobjectdef(CurrentStructDef).objectoptions) then
                           Message(parser_e_final_only_external);
                         consume(_final);
                         is_final:=true;
-                        if current_scanner.token=_CLASS then
+                        if CurrentScanner.token=_CLASS then
                           parse_class;
-                        if not(current_scanner.token in [_CONST,_VAR]) then
+                        if not(CurrentScanner.token in [_CONST,_VAR]) then
                           message(parser_e_final_only_const_var);
                       end
                     else
                       begin
                         if object_member_blocktype=bt_general then
                           begin
-                            if (current_scanner.idtoken=_GENERIC) and
-                                not (m_delphi in current_settings.modeswitches) and
+                            if (CurrentScanner.idtoken=_GENERIC) and
+                                not (m_delphi in CurrentSettings.modeswitches) and
                                 (
                                   not fields_allowed or
-                                  is_objectpascal_helper(current_structdef)
+                                  is_objectpascal_helper(CurrentStructDef)
                                 ) then
                               begin
                                 if hadgeneric then
                                   Message(parser_e_procedure_or_function_expected);
                                 consume(_ID);
                                 hadgeneric:=true;
-                                if not (current_scanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
+                                if not (CurrentScanner.token in [_PROCEDURE,_FUNCTION,_CLASS]) then
                                   Message(parser_e_procedure_or_function_expected);
                               end
                             else
                               begin
-                                if is_interface(current_structdef) or
-                                   is_objc_protocol_or_category(current_structdef) or
+                                if is_interface(CurrentStructDef) or
+                                   is_objc_protocol_or_category(CurrentStructDef) or
                                    (
-                                     is_objectpascal_helper(current_structdef) and
+                                     is_objectpascal_helper(CurrentStructDef) and
                                      not class_fields
                                    ) or
-                                   (is_javainterface(current_structdef) and
+                                   (is_javainterface(CurrentStructDef) and
                                     not(class_fields and final_fields)) then
                                   Message(parser_e_no_vars_in_interfaces);
 
-                                if (current_structdef.symtable.currentvisibility=vis_published) and
-                                   not(oo_can_have_published in current_structdef.objectoptions) then
+                                if (CurrentStructDef.symtable.currentvisibility=vis_published) and
+                                   not(oo_can_have_published in CurrentStructDef.objectoptions) then
                                   Message(parser_e_cant_have_published);
                                 if (not fields_allowed) then
                                   Message(parser_e_field_not_allowed_here);
 
                                 vdoptions:=[vd_object];
-                                if not (m_delphi in current_settings.modeswitches) then
+                                if not (m_delphi in CurrentSettings.modeswitches) then
                                   include(vdoptions,vd_check_generic);
                                 if class_fields then
                                   include(vdoptions,vd_class);
-                                if is_class(current_structdef) then
+                                if is_class(CurrentStructDef) then
                                   include(vdoptions,vd_canreorder);
                                 if final_fields then
                                   include(vdoptions,vd_final);
@@ -1379,13 +1379,13 @@ implementation
                               begin
                                 { the value of final fields cannot be changed
                                   once they've been assigned a value }
-                                typedconstswritable:=cs_typed_const_writable in current_settings.localswitches;
-                                exclude(current_settings.localswitches,cs_typed_const_writable);
+                                typedconstswritable:=cs_typed_const_writable in CurrentSettings.localswitches;
+                                exclude(CurrentSettings.localswitches,cs_typed_const_writable);
                               end;
-                            consts_dec(true,not is_javainterface(current_structdef),hadgeneric);
+                            consts_dec(true,not is_javainterface(CurrentStructDef),hadgeneric);
                             if final_fields and
                                typedconstswritable then
-                              include(current_settings.localswitches,cs_typed_const_writable);
+                              include(CurrentSettings.localswitches,cs_typed_const_writable);
                           end
                         else
                           internalerror(2010011103);
@@ -1405,7 +1405,7 @@ implementation
             _CONSTRUCTOR,
             _DESTRUCTOR :
               begin
-                method_def:=method_dec(current_structdef,is_classdef,hadgeneric);
+                method_def:=method_dec(CurrentStructDef,is_classdef,hadgeneric);
                 if assigned(rtti_attrs_def) then
                   begin
                   trtti_attribute_list.bind(rtti_attrs_def,method_def.rtti_attribute_list);
@@ -1417,7 +1417,7 @@ implementation
               end;
             _LECKKLAMMER:
               begin
-                if m_prefixed_attributes in current_settings.modeswitches then
+                if m_prefixed_attributes in CurrentSettings.modeswitches then
                   parse_rttiattributes(rtti_attrs_def)
                 else
                   consume(_ID);
@@ -1433,8 +1433,8 @@ implementation
           end;
         until false;
 
-        if is_class(current_structdef) then
-          tabstractrecordsymtable(current_structdef.symtable).addfieldlist(fieldlist,true);
+        if is_class(CurrentStructDef) then
+          tabstractrecordsymtable(CurrentStructDef.symtable).addfieldlist(fieldlist,true);
         fieldlist.free;
         fieldlist := nil;
       end;
@@ -1451,14 +1451,14 @@ implementation
         st: TSymtable;
         olddef: tdef;
       begin
-        old_current_structdef:=current_structdef;
-        old_current_genericdef:=current_genericdef;
-        old_current_specializedef:=current_specializedef;
+        old_current_structdef:=CurrentStructDef;
+        old_current_genericdef:=CurrentGenericDef;
+        old_current_specializedef:=CurrentSpecializeDef;
         old_parse_generic:=parse_generic;
 
-        current_structdef:=nil;
-        current_genericdef:=nil;
-        current_specializedef:=nil;
+        CurrentStructDef:=nil;
+        CurrentGenericDef:=nil;
+        CurrentSpecializeDef:=nil;
 
         { objects and class types can't be declared local }
         if not(symtablestack.top.symtabletype in [globalsymtable,staticsymtable,objectsymtable,recordsymtable]) and
@@ -1472,11 +1472,11 @@ implementation
               begin
                 Message(parser_e_forward_mismatch);
                 { recover }
-                current_structdef:=cobjectdef.create(objecttype,n,nil,true);
-                include(current_structdef.objectoptions,oo_is_forward);
+                CurrentStructDef:=cobjectdef.create(objecttype,n,nil,true);
+                include(CurrentStructDef.objectoptions,oo_is_forward);
               end
             else
-              current_structdef:=fd
+              CurrentStructDef:=fd
           end
         else
           begin
@@ -1485,31 +1485,31 @@ implementation
               Message(parser_f_no_anonym_objects);
 
             { create new class }
-            current_structdef:=cobjectdef.create(objecttype,n,nil,true);
-            tobjectdef(current_structdef).helpertype:=helpertype;
+            CurrentStructDef:=cobjectdef.create(objecttype,n,nil,true);
+            tobjectdef(CurrentStructDef).helpertype:=helpertype;
 
             { include always the forward flag, it'll be removed once the whole
               class has been parsed so that it can be used as a parent class
               of a nested class;
               Exception: for external classes this will be removed once the
               parent classes have been parsed }
-            include(current_structdef.objectoptions,oo_is_forward);
+            include(CurrentStructDef.objectoptions,oo_is_forward);
 
-            if (cs_compilesystem in current_settings.moduleswitches) then
+            if (cs_compilesystem in CurrentSettings.moduleswitches) then
               begin
                 case current_objectdef.objecttype of
                   odt_interfacecom :
-                    if (current_structdef.objname^='IUNKNOWN') then
+                    if (CurrentStructDef.objname^='IUNKNOWN') then
                       interface_iunknown:=current_objectdef
                     else
-                    if (current_structdef.objname^='IDISPATCH') then
+                    if (CurrentStructDef.objname^='IDISPATCH') then
                       interface_idispatch:=current_objectdef;
                   odt_class :
-                    if (current_structdef.objname^='TOBJECT') then
+                    if (CurrentStructDef.objname^='TOBJECT') then
                       class_tobject:=current_objectdef;
                   odt_javaclass:
                     begin
-                      if (current_structdef.objname^='TOBJECT') then
+                      if (CurrentStructDef.objname^='TOBJECT') then
                         class_tobject:=current_objectdef
                       else if (current_objectdef.objname^='JLOBJECT') then
                         java_jlobject:=current_objectdef
@@ -1536,7 +1536,7 @@ implementation
                     ;
                 end;
               end;
-            if (current_module.modulename^='OBJCBASE') then
+            if (CurrentModule.modulename^='OBJCBASE') then
               begin
                 case current_objectdef.objecttype of
                   odt_objcclass:
@@ -1550,27 +1550,27 @@ implementation
 
         { usage of specialized type inside its generic template }
         if assigned(genericdef) then
-          current_specializedef:=current_structdef;
+          CurrentSpecializeDef:=CurrentStructDef;
         { reject declaration of generic class inside generic class }
         if assigned(genericlist) then
-          current_genericdef:=current_structdef;
+          CurrentGenericDef:=CurrentStructDef;
 
         { nested types of specializations are specializations as well }
         if assigned(old_current_structdef) and
             (df_specialization in old_current_structdef.defoptions) then
-          include(current_structdef.defoptions,df_specialization);
+          include(CurrentStructDef.defoptions,df_specialization);
         if assigned(old_current_structdef) and
             (df_generic in old_current_structdef.defoptions) then
           begin
-            include(current_structdef.defoptions,df_generic);
-            current_genericdef:=current_structdef;
+            include(CurrentStructDef.defoptions,df_generic);
+            CurrentGenericDef:=CurrentStructDef;
           end;
 
         { set published flag in $M+ mode, it can also be inherited and will
           be added when the parent class set with tobjectdef.set_parent (PFV) }
-        if (cs_generate_rtti in current_settings.localswitches) and
+        if (cs_generate_rtti in CurrentSettings.localswitches) and
            (current_objectdef.objecttype in [odt_interfacecom,odt_interfacecorba,odt_class,odt_helper]) then
-          include(current_structdef.objectoptions,oo_can_have_published);
+          include(CurrentStructDef.objectoptions,oo_can_have_published);
 
         { Objective-C/Java objectdefs can be "formal definitions", in which case
           the syntax is "type tc = objcclass external;" -> we have to parse
@@ -1580,30 +1580,30 @@ implementation
           parse_object_options;
 
         { forward def? }
-        if current_scanner.token=_SEMICOLON then
+        if CurrentScanner.token=_SEMICOLON then
           begin
             if assigned(fd) then
               Message1(parser_e_type_alread_forward,n)
             else
               begin
-                if is_objectpascal_helper(current_structdef) then
+                if is_objectpascal_helper(CurrentStructDef) then
                   consume(_FOR);
                 { add to the list of definitions to check that the forward
                   is resolved. this is required for delphi mode }
-                current_module.checkforwarddefs.add(current_structdef);
+                CurrentModule.checkforwarddefs.add(CurrentStructDef);
 
-                symtablestack.push(current_structdef.symtable);
-                insert_generic_parameter_types(current_structdef,genericdef,genericlist,false);
+                symtablestack.push(CurrentStructDef.symtable);
+                insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,false);
                 { when we are parsing a generic already then this is a generic as
                   well }
                 if old_parse_generic then
-                  include(current_structdef.defoptions,df_generic);
-                parse_generic:=(df_generic in current_structdef.defoptions);
+                  include(CurrentStructDef.defoptions,df_generic);
+                parse_generic:=(df_generic in CurrentStructDef.defoptions);
 
                 { *don't* add the strict private symbol for non-Delphi modes for
                   forward defs }
 
-                symtablestack.pop(current_structdef.symtable);
+                symtablestack.pop(CurrentStructDef.symtable);
               end;
           end
         else
@@ -1612,7 +1612,7 @@ implementation
             if (objecttype=odt_objccategory) then
               begin
                 current_objectdef.objecttype:=odt_objcclass;
-                include(current_structdef.objectoptions,oo_is_classhelper);
+                include(CurrentStructDef.objectoptions,oo_is_classhelper);
               end;
 
             { include the class helper flag for Object Pascal helpers }
@@ -1623,13 +1623,13 @@ implementation
             if not(objecttype in [odt_objcclass,odt_objcprotocol,odt_objccategory,odt_javaclass,odt_interfacejava]) then
               parse_object_options;
 
-            symtablestack.push(current_structdef.symtable);
-            insert_generic_parameter_types(current_structdef,genericdef,genericlist,assigned(fd));
+            symtablestack.push(CurrentStructDef.symtable);
+            insert_generic_parameter_types(CurrentStructDef,genericdef,genericlist,assigned(fd));
             { when we are parsing a generic already then this is a generic as
               well }
             if old_parse_generic then
-              include(current_structdef.defoptions, df_generic);
-            parse_generic:=(df_generic in current_structdef.defoptions);
+              include(CurrentStructDef.defoptions, df_generic);
+            parse_generic:=(df_generic in CurrentStructDef.defoptions);
 
             { in non-Delphi modes we need a strict private symbol without type
               count and type parameters in the name to simplify resolving }
@@ -1638,7 +1638,7 @@ implementation
             { parse list of parent classes }
             { for record helpers in mode Delphi this is not allowed }
             if not (is_objectpascal_helper(current_objectdef) and
-                (m_delphi in current_settings.modeswitches) and
+                (m_delphi in CurrentSettings.modeswitches) and
                 (helpertype=ht_record)) then
               parse_parent_classes;
 
@@ -1647,7 +1647,7 @@ implementation
               exclude(current_objectdef.objectoptions,oo_is_forward);
 
             { parse extended type for helpers }
-            if is_objectpascal_helper(current_structdef) then
+            if is_objectpascal_helper(CurrentStructDef) then
               parse_extended_type(helpertype);
 
             if is_interface(current_objectdef) and
@@ -1667,26 +1667,26 @@ implementation
             if assigned(objsym) and not (objecttype in [odt_cppclass,odt_objccategory,odt_objcclass,odt_objcprotocol]) then
               begin
                 olddef:=ttypesym(objsym).typedef;
-                ttypesym(objsym).typedef:=current_structdef;
-                current_structdef.typesym:=objsym;
+                ttypesym(objsym).typedef:=CurrentStructDef;
+                CurrentStructDef.typesym:=objsym;
               end
             else
               olddef:=nil;
 
             { if set explicitly, apply $RTTI directive to current object }
-            if current_module.rtti_directive.clause<>rtc_none then
-              current_structdef.apply_rtti_directive(current_module.rtti_directive)
+            if CurrentModule.rtti_directive.clause<>rtc_none then
+              CurrentStructDef.apply_rtti_directive(CurrentModule.rtti_directive)
             else
               { if not set, and class has a parent, take parent object settings }
               if (objectType = odt_class) and assigned(current_objectdef.childof) then
-                current_structdef.apply_rtti_directive(current_objectdef.childof.rtti);
+                CurrentStructDef.apply_rtti_directive(current_objectdef.childof.rtti);
 
             { generate TObject VMT space }
             { We must insert the VMT at the start for system.tobject, and class_tobject was already set.
               The cs_compilesystem is superfluous, but we add it for safety.
 
             }
-            if (current_objectdef=class_tobject) and (cs_compilesystem in current_settings.moduleswitches) then
+            if (current_objectdef=class_tobject) and (cs_compilesystem in CurrentSettings.moduleswitches) then
               current_objectdef.insertvmt;
 
             { parse and insert object members }
@@ -1695,24 +1695,24 @@ implementation
             if assigned(olddef) then
               begin
                 ttypesym(objsym).typedef:=olddef;
-                current_structdef.typesym:=nil;
+                CurrentStructDef.typesym:=nil;
               end;
 
-          if not(oo_is_external in current_structdef.objectoptions) then
+          if not(oo_is_external in CurrentStructDef.objectoptions) then
             begin
               { In Java, constructors are not automatically inherited (so you can
                 hide them). Emulate the Pascal behaviour for classes implemented
                 in Pascal (we cannot do it for classes implemented in Java, since
                 we obviously cannot add constructors to those) }
-              if is_javaclass(current_structdef) then
+              if is_javaclass(CurrentStructDef) then
                 begin
-                  add_missing_parent_constructors_intf(tobjectdef(current_structdef),true,vis_none);
+                  add_missing_parent_constructors_intf(tobjectdef(CurrentStructDef),true,vis_none);
                 end;
             end;
 
-            symtablestack.pop(current_structdef.symtable);
+            symtablestack.pop(CurrentStructDef.symtable);
 
-            exclude(current_structdef.objectoptions,oo_is_forward);
+            exclude(CurrentStructDef.objectoptions,oo_is_forward);
           end;
 
         { generate vmt space if needed }
@@ -1720,39 +1720,39 @@ implementation
            Here we only do it for non-classes, all classes have it since they depend on TObject
            so their vmt is already created when TObject was parsed.
         }
-        if not(oo_has_vmt in current_structdef.objectoptions) and
+        if not(oo_has_vmt in CurrentStructDef.objectoptions) and
            not(current_objectdef.objecttype in [odt_class]) and
-           not(oo_is_forward in current_structdef.objectoptions) and
+           not(oo_is_forward in CurrentStructDef.objectoptions) and
            not(parse_generic) and
            { no vmt for helpers ever }
-           not is_objectpascal_helper(current_structdef) and
-            ([oo_has_virtual,oo_has_constructor,oo_has_destructor]*current_structdef.objectoptions<>[])
+           not is_objectpascal_helper(CurrentStructDef) and
+            ([oo_has_virtual,oo_has_constructor,oo_has_destructor]*CurrentStructDef.objectoptions<>[])
            then
           current_objectdef.insertvmt;
 
         { for implemented classes with a vmt check if there is a constructor }
-        if (oo_has_vmt in current_structdef.objectoptions) and
-           not(oo_is_forward in current_structdef.objectoptions) and
-           not(oo_has_constructor in current_structdef.objectoptions) and
-           not is_objc_class_or_protocol(current_structdef) and
-           not is_java_class_or_interface(current_structdef) then
-          Message1(parser_w_virtual_without_constructor,current_structdef.objrealname^);
+        if (oo_has_vmt in CurrentStructDef.objectoptions) and
+           not(oo_is_forward in CurrentStructDef.objectoptions) and
+           not(oo_has_constructor in CurrentStructDef.objectoptions) and
+           not is_objc_class_or_protocol(CurrentStructDef) and
+           not is_java_class_or_interface(CurrentStructDef) then
+          Message1(parser_w_virtual_without_constructor,CurrentStructDef.objrealname^);
 
-        if is_interface(current_structdef) or
-           is_objcprotocol(current_structdef) or
-           is_javainterface(current_structdef) then
+        if is_interface(CurrentStructDef) or
+           is_objcprotocol(CurrentStructDef) or
+           is_javainterface(CurrentStructDef) then
           setinterfacemethodoptions
-        else if is_objcclass(current_structdef) then
+        else if is_objcclass(CurrentStructDef) then
           setobjcclassmethodoptions;
 
         { we need to add this helper to the extendeddefs of the current module,
           as the global and static symtable are not pushed onto the symtable
           stack again (it will be removed when popping the symtable) }
-        if is_objectpascal_helper(current_structdef) and
+        if is_objectpascal_helper(CurrentStructDef) and
             (current_objectdef.extendeddef.typ<>errordef) then
           begin
             { the topmost symtable must be a static symtable }
-            st:=current_structdef.owner;
+            st:=CurrentStructDef.owner;
             while st.symtabletype in [objectsymtable,recordsymtable] do
               st:=st.defowner.owner;
             if st.symtabletype in [staticsymtable,globalsymtable] then
@@ -1762,13 +1762,13 @@ implementation
                 else
                   s:=make_mangledname('',current_objectdef.extendeddef.owner,current_objectdef.extendeddef.typesym.name);
                 Message1(sym_d_adding_helper_for,s);
-                list:=TFPObjectList(current_module.extendeddefs.Find(s));
+                list:=TFPObjectList(CurrentModule.extendeddefs.Find(s));
                 if not assigned(list) then
                   begin
                     list:=TFPObjectList.Create(false);
-                    current_module.extendeddefs.Add(s, list);
+                    CurrentModule.extendeddefs.Add(s, list);
                   end;
-                list.add(current_structdef);
+                list.add(CurrentStructDef);
               end;
           end;
         tabstractrecordsymtable(current_objectdef.symtable).addalignmentpadding;
@@ -1777,9 +1777,9 @@ implementation
         result:=current_objectdef;
 
         { restore old state }
-        current_structdef:=old_current_structdef;
-        current_genericdef:=old_current_genericdef;
-        current_specializedef:=old_current_specializedef;
+        CurrentStructDef:=old_current_structdef;
+        CurrentGenericDef:=old_current_genericdef;
+        CurrentSpecializeDef:=old_current_specializedef;
         parse_generic:=old_parse_generic;
       end;
 

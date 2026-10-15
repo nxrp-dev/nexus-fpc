@@ -74,7 +74,7 @@ implementation
               mmregs:=varargsparas.mmregsused
             else
               mmregs:=0;
-            current_asmdata.CurrAsmList.concat(taicpu.op_const_reg(A_MOV,S_Q,mmregs,NR_RAX))
+            CurrentAsmData.CurrAsmList.concat(taicpu.op_const_reg(A_MOV,S_Q,mmregs,NR_RAX))
           end;
       end;
 
@@ -89,7 +89,7 @@ implementation
            (retloc.location^.loc in [LOC_MMREGISTER,LOC_CMMREGISTER]) then
           begin
             location_reset(location,LOC_MMREGISTER,retloc.location^.size);
-            location.register:=cg.getmmregister(current_asmdata.CurrAsmList,retloc.location^.size);
+            location.register:=cg.getmmregister(CurrentAsmData.CurrAsmList,retloc.location^.size);
           end
         else
           inherited

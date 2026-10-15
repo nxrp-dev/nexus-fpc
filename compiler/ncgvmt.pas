@@ -232,7 +232,7 @@ implementation
       begin
          if assigned(p^.l) then
            writenames(tcb,p^.l);
-         tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,p^.nl);
+         tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,p^.nl);
          len:=length(p^.data.messageinf.str^);
          datatcb.maybe_begin_aggregate(carraydef.getreusable(cansichartype,len+1));
          datatcb.emit_tai(Tai_string.Create_Data(@p^.data.messageinf.str^[0],len+1,false),carraydef.getreusable(cansichartype,len+1));
@@ -276,7 +276,7 @@ implementation
            writenames(tcb,root);
 
          { now start writing the message string table }
-         tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
+         tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
          {
            TStringMessageTable = record
               count : longint;
@@ -347,7 +347,7 @@ implementation
                 msgs : array[0..0] of TMsgIntTable;
              end;
          }
-         tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
+         tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
          get_tabledef(itp_vmt_msgint_table_entries,s32inttype,msginttabledef,count,0,msgintdef,msgintarrdef);
          datatcb.maybe_begin_aggregate(msgintdef);
          datatcb.emit_tai(Tai_const.Create_32bit(count),s32inttype);
@@ -427,7 +427,7 @@ implementation
 
          if count>0 then
            begin
-              current_asmdata.getglobaldatalabel(r);
+              CurrentAsmData.getglobaldatalabel(r);
               gendmt:=r;
               al_globals.concat(cai_align.create(sizeof(pint)));
               al_globals.concat(Tai_label.Create(r));
@@ -493,7 +493,7 @@ implementation
                (pd.visibility=vis_published) then
               begin
                 { l: name_of_method }
-                lists^.pubmethodstcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,l);
+                lists^.pubmethodstcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,l);
                 namedef:=datatcb.emit_shortstring_const(tsym(p).realname);
                 lists^.pubmethodstcb.finish_internal_data_builder(datatcb,l,namedef,sizeof(pint));
                 { the tmethodnamerec }
@@ -527,7 +527,7 @@ implementation
          packrecords: longint;
       begin
         // TODO(ryan): is extended method table packed?
-        if (tf_requires_proper_alignment in target_info.flags) then
+        if (tf_requires_proper_alignment in TargetInfo.flags) then
           packrecords:=0
         else
           packrecords:=1;
@@ -549,11 +549,11 @@ implementation
                     entries : packed array[0..0] of tmethodnamerec;
                   end;
                }
-              tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,lists.pubmethodstcb,lab);
+              tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,lists.pubmethodstcb,lab);
               get_tabledef(itp_vmt_intern_tmethodnametable,u32inttype,lists.methodnamerec,count,packrecords,pubmethodsdef,pubmethodsarraydef);
               { begin record encompassing the tmethodnametable and the extended method table }
               lists.pubmethodstcb.begin_anonymous_record('',packrecords,
-                  pubmethodsdef.alignment, targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+                  pubmethodsdef.alignment, targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
               { begin tmethodnametable }
               lists.pubmethodstcb.maybe_begin_aggregate(pubmethodsdef);
               { emit count field }
@@ -619,7 +619,7 @@ implementation
 
         if (fieldcount>0) or (_class.rtti.options[ro_fields]<>[]) then
           begin
-            if (tf_requires_proper_alignment in target_info.flags) then
+            if (tf_requires_proper_alignment in TargetInfo.flags) then
               packrecords:=0
             else
               packrecords:=1;
@@ -627,10 +627,10 @@ implementation
             { generate the class table }
             if classtablelist.count>0 then
               begin
-                tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,classtable);
+                tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,classtable);
                 datatcb.begin_anonymous_record('$fpc_intern_classtable_'+tostr(classtablelist.Count-1),
                   packrecords,1,
-                  targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+                  targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
                 datatcb.emit_tai(Tai_const.Create_16bit(classtablelist.count),u16inttype);
                 for i:=0 to classtablelist.Count-1 do
                   begin
@@ -639,7 +639,7 @@ implementation
                     datatcb.queue_init(voidpointertype);
                     { reference to the vmt }
                     datatcb.queue_emit_asmsym(
-                      current_asmdata.RefAsmSymbol(classdef.vmt_mangledname,AT_DATA,true),
+                      CurrentAsmData.RefAsmSymbol(classdef.vmt_mangledname,AT_DATA,true),
                       tfieldvarsym(classdef.vmt_field).vardef);
                   end;
                 classtabledef:=datatcb.end_anonymous_record;
@@ -658,14 +658,14 @@ implementation
                 Fields: array[0..0] of TFieldInfo
               end;
             }
-            tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
+            tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
             { can't easily specify a name here for reuse of the constructed def,
               since it's full of variable length shortstrings (-> all of those
               lengths and their order would have to incorporated in the name,
               plus there would be very little chance that it could actually be
               reused }
             datatcb.begin_anonymous_record('',packrecords,1,
-              targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+              targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
             datatcb.emit_tai(Tai_const.Create_16bit(fieldcount),u16inttype);
             if classtable<>nil then
               datatcb.emit_tai(Tai_const.Create_sym(classtable),cpointerdef.getreusable(classtabledef))
@@ -695,7 +695,7 @@ implementation
                           end;
                         }
                         datatcb.begin_anonymous_record('$fpc_intern_fieldinfo_'+tostr(length(tfieldvarsym(sym).realname)),packrecords,1,
-                          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+                          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
                         datatcb.emit_tai(Tai_const.Create_sizeint(tfieldvarsym(sym).fieldoffset),sizeuinttype);
                         classindex:=classtablelist.IndexOf(tfieldvarsym(sym).vardef);
                         if classindex=-1 then
@@ -757,9 +757,9 @@ implementation
         hs : TSymStr;
         i  : longint;
       begin
-        tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,'',datatcb,fintfvtablelabels[intfindex]);
+        tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,'',datatcb,fintfvtablelabels[intfindex]);
         datatcb.begin_anonymous_record('',0,1,
-          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
         if assigned(AImplIntf.procdefs) then
           begin
             for i:=0 to AImplIntf.procdefs.count-1 do
@@ -796,7 +796,7 @@ implementation
           begin
             siid:=make_mangledname('IID',nonuniqueintf.owner,nonuniqueintf.objname^);
             tcb.emit_tai(Tai_const.Create_sym_offset(
-              current_asmdata.RefAsmSymbol(siid,AT_DATA,true),0),cpointerdef.getreusable(rec_tguid));
+              CurrentAsmData.RefAsmSymbol(siid,AT_DATA,true),0),cpointerdef.getreusable(rec_tguid));
           end
         else
           tcb.emit_tai(Tai_const.Create_nil_dataptr,cpointerdef.getreusable(rec_tguid));
@@ -833,7 +833,7 @@ implementation
         siidstr:=make_mangledname('IIDSTR',nonuniqueintf.owner,nonuniqueintf.objname^);
         tcb.queue_init(cpointerdef.getreusable(cshortstringtype));
         tcb.queue_emit_asmsym(
-          current_asmdata.RefAsmSymbol(
+          CurrentAsmData.RefAsmSymbol(
             siidstr,
             AT_DATA,
             true),
@@ -846,8 +846,8 @@ implementation
         if findunitsymtable(nonuniqueintf.owner).moduleid<>findunitsymtable(_Class.owner).moduleid then
           begin
             if siid<>'' then
-              current_module.add_extern_asmsym(siid,AB_EXTERNAL,AT_DATA);
-            current_module.add_extern_asmsym(siidstr,AB_EXTERNAL,AT_DATA);
+              CurrentModule.add_extern_asmsym(siid,AB_EXTERNAL,AT_DATA);
+            CurrentModule.add_extern_asmsym(siidstr,AB_EXTERNAL,AT_DATA);
           end;
       end;
 
@@ -879,9 +879,9 @@ implementation
               fintfvtablelabels[i]:=fintfvtablelabels[_class.ImplementedInterfaces.IndexOf(ImplIntf.VtblImplIntf)];
           end;
 
-        tcb.start_internal_data_builder(current_asmdata.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
+        tcb.start_internal_data_builder(CurrentAsmData.AsmLists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,lab);
         datatcb.begin_anonymous_record('',default_settings.packrecords,1,
-          targetinfos[Ord(target_info.system)]^.alignment.recordalignmin);
+          targetinfos[Ord(TargetInfo.system)]^.alignment.recordalignmin);
         datatcb.emit_tai(Tai_const.Create_sizeint(_class.ImplementedInterfaces.count),sizeuinttype);
         interfaceentrydef:=search_system_type('TINTERFACEENTRY').typedef;
         interfaceentrytypedef:=search_system_type('TINTERFACEENTRYTYPE').typedef;
@@ -916,7 +916,7 @@ implementation
           s:=make_mangledname('IID',_class.owner,_class.objname^);
           tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_data_force_indirect]);
           tcb.emit_guid_const(_class.iidguid^);
-          sym:=current_asmdata.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA_NOINDIRECT,rec_tguid);
+          sym:=CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA_NOINDIRECT,rec_tguid);
           list.concatlist(tcb.get_final_asmlist(
             sym,
             rec_tguid,
@@ -925,12 +925,12 @@ implementation
             sizeof(pint)));
           tcb.free;
           tcb := nil;
-          current_module.add_public_asmsym(sym);
+          CurrentModule.add_public_asmsym(sym);
         end;
       s:=make_mangledname('IIDSTR',_class.owner,_class.objname^);
       tcb:=ctai_typedconstbuilder.create([tcalo_make_dead_strippable,tcalo_data_force_indirect]);
       def:=tcb.emit_shortstring_const(_class.iidstr^);
-      sym:=current_asmdata.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA_NOINDIRECT,def);
+      sym:=CurrentAsmData.DefineAsmSymbol(s,AB_GLOBAL,AT_DATA_NOINDIRECT,def);
       list.concatlist(tcb.get_final_asmlist(
         sym,
         def,
@@ -939,7 +939,7 @@ implementation
         sizeof(pint)));
       tcb.free;
       tcb := nil;
-      current_module.add_public_asmsym(sym);
+      CurrentModule.add_public_asmsym(sym);
     end;
 
 
@@ -1018,24 +1018,24 @@ implementation
            if (po_abstractmethod in vmtpd.procoptions) then
              begin
                procname:='FPC_ABSTRACTERROR';
-               generate_abstract_stub(current_asmdata.AsmLists[al_procedures],vmtpd);
+               generate_abstract_stub(CurrentAsmData.AsmLists[al_procedures],vmtpd);
              end
-           else if (cs_opt_remove_empty_proc in current_settings.optimizerswitches) and RedirectToEmpty(vmtpd) then
+           else if (cs_opt_remove_empty_proc in CurrentSettings.optimizerswitches) and RedirectToEmpty(vmtpd) then
              begin
                procname:='FPC_EMPTYMETHOD';
-               if current_module.globalsymtable<>systemunit then
-                 current_module.add_extern_asmsym(procname,AB_EXTERNAL,AT_FUNCTION);
+               if CurrentModule.globalsymtable<>systemunit then
+                 CurrentModule.add_extern_asmsym(procname,AB_EXTERNAL,AT_FUNCTION);
              end
            else if not wpoinfomanager.optimized_name_for_vmt(_class,vmtpd,procname) then
              begin
                procname:=vmtpd.mangledname;
-               if current_module.moduleid<>vmtpd.owner.moduleid then
-                 current_module.addimportedsym(vmtpd.procsym);
+               if CurrentModule.moduleid<>vmtpd.owner.moduleid then
+                 CurrentModule.addimportedsym(vmtpd.procsym);
              end;
            tcb.emit_tai(Tai_const.Createname(procname,AT_FUNCTION,0),cprocvardef.getreusableprocaddr(vmtpd,pc_address_only));
 {$ifdef vtentry}
            hs:='VTENTRY'+'_'+_class.vmt_mangledname+'$$'+tostr(_class.vmtmethodoffset(i) div sizeof(pint));
-           current_asmdata.asmlists[al_globals].concat(tai_symbol.CreateName(hs,AT_DATA,0,voidpointerdef));
+           CurrentAsmData.asmlists[al_globals].concat(tai_symbol.CreateName(hs,AT_DATA,0,voidpointerdef));
 {$endif vtentry}
          end;
       end;
@@ -1073,7 +1073,7 @@ implementation
          { this code gets executed after the current module's symtable has
            already been removed from the symtablestack -> add it again, so that
            newly created defs here end up in the right unit }
-         symtablestack.push(current_module.localsymtable);
+         symtablestack.push(CurrentModule.localsymtable);
          strmessagetable:=nil;
          interfacetable:=nil;
          fieldtablelabel:=nil;
@@ -1096,7 +1096,7 @@ implementation
          if is_class(_class) then
           begin
             { write class name }
-            tcb.start_internal_data_builder(current_asmdata.asmlists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,classnamelabel);
+            tcb.start_internal_data_builder(CurrentAsmData.asmlists[al_const],sec_rodata,_class.vmt_mangledname,datatcb,classnamelabel);
             classnamedef:=datatcb.emit_shortstring_const(_class.RttiName);
             tcb.finish_internal_data_builder(datatcb,classnamelabel,classnamedef,sizeof(pint));
 
@@ -1150,12 +1150,12 @@ implementation
             (oo_has_vmt in _class.childof.objectoptions) then
            begin
              tcb.queue_init(parentvmtdef);
-             sym:=current_asmdata.RefAsmSymbol(_class.childof.vmt_mangledname,AT_DATA,true);
+             sym:=CurrentAsmData.RefAsmSymbol(_class.childof.vmt_mangledname,AT_DATA,true);
              tcb.queue_emit_asmsym(
                sym,
                tfieldvarsym(_class.childof.vmt_field).vardef);
-             if _class.childof.owner.moduleid<>current_module.moduleid then
-               current_module.add_extern_asmsym(sym);
+             if _class.childof.owner.moduleid<>CurrentModule.moduleid then
+               CurrentModule.add_extern_asmsym(sym);
            end
          else
            tcb.emit_tai(Tai_const.Create_nil_dataptr,parentvmtdef);
@@ -1224,11 +1224,11 @@ implementation
 
          tcb.maybe_end_aggregate(vmtdef);
 
-         sym:=current_asmdata.DefineAsmSymbol(_class.vmt_mangledname,AB_GLOBAL,AT_DATA_NOINDIRECT,vmtdef);
-         current_module.add_public_asmsym(sym);
+         sym:=CurrentAsmData.DefineAsmSymbol(_class.vmt_mangledname,AB_GLOBAL,AT_DATA_NOINDIRECT,vmtdef);
+         CurrentModule.add_public_asmsym(sym);
 
          { concatenate the VMT to the asmlist }
-         current_asmdata.asmlists[al_globals].concatlist(
+         CurrentAsmData.asmlists[al_globals].concatlist(
            tcb.get_final_asmlist(
              sym,
              vmtdef,sec_rodata,_class.vmt_mangledname,sizeof(pint)
@@ -1243,9 +1243,9 @@ implementation
            hs:=hs+_class.childof.vmt_mangledname
          else
            hs:=hs+_class.vmt_mangledname;
-         current_asmdata.asmlists[al_globals].concat(tai_symbol.CreateName(hs,AT_DATA,0,voidpointerdef));
+         CurrentAsmData.asmlists[al_globals].concat(tai_symbol.CreateName(hs,AT_DATA,0,voidpointerdef));
 {$endif vtentry}
-        symtablestack.pop(current_module.localsymtable);
+        symtablestack.pop(CurrentModule.localsymtable);
       end;
 
 
@@ -1258,7 +1258,7 @@ implementation
         wrapperpd: tprocdef;
         wrapperinfo: pskpara_interface_wrapper;
         tmplist: tasmlist;
-        oldfileposinfo: tfileposinfo;
+        oldfileposinfo: TFilePosInfo;
         usehighlevelwrapper: Boolean;
       begin
 {$if defined(cpuhighleveltarget)}
@@ -1269,7 +1269,7 @@ implementation
           between code fragments that use a different TOC (which has to be
           executed when that "branch" returns). So we can't use tail call
           branches to routines potentially using a different TOC there }
-        if target_info.abi in abis_ppc_toc then
+        if TargetInfo.abi in abis_ppc_toc then
           usehighlevelwrapper:=true
         else
           usehighlevelwrapper:=false;
@@ -1300,37 +1300,37 @@ implementation
                         symbol table, but set the owning "struct" to the current
                         class (so self will have the correct type) }
                       wrapperpd:=create_procdef_alias(pd,tmps,tmps,
-                        current_module.localsymtable,_class,
+                        CurrentModule.localsymtable,_class,
                         tsk_interface_wrapper,wrapperinfo);
                       include(wrapperpd.implprocoptions,pio_thunk);
                     end
                   else
                     begin
-                      oldfileposinfo:=current_filepos;
+                      oldfileposinfo:=CurrentFilePos;
                       if pd.owner.iscurrentunit then
-                        current_filepos:=pd.fileinfo
+                        CurrentFilePos:=pd.fileinfo
                       else
                         begin
-                          current_filepos.moduleindex:=current_module.moduleid;
-                          current_filepos.fileindex:=1;
-                          current_filepos.line:=1;
-                          current_filepos.column:=1;
+                          CurrentFilePos.moduleindex:=CurrentModule.moduleid;
+                          CurrentFilePos.fileindex:=1;
+                          CurrentFilePos.line:=1;
+                          CurrentFilePos.column:=1;
                         end;
                       { create wrapper code }
                       tmplist:=tasmlist.create;
-                      new_section(tmplist,sec_code,tmps,target_info.alignment.procalign);
+                      new_section(tmplist,sec_code,tmps,TargetInfo.alignment.procalign);
                       tmplist.Concat(tai_function_name.create(tmps));
                       hlcg.init_register_allocators;
                       hlcg.g_intf_wrapper(tmplist,pd,tmps,ImplIntf.ioffset);
                       hlcg.done_register_allocators;
-                      if ((cs_debuginfo in current_settings.moduleswitches) or
-                         (cs_use_lineinfo in current_settings.globalswitches)) and
-                         (target_dbg.id<>dbg_stabx) then
-                           current_debuginfo.insertlineinfo(tmplist);
+                      if ((cs_debuginfo in CurrentSettings.moduleswitches) or
+                         (cs_use_lineinfo in CurrentSettings.globalswitches)) and
+                         (TargetDbg.id<>dbg_stabx) then
+                           CurrentDebugInfo.insertlineinfo(tmplist);
                       list.concatlist(tmplist);
                       tmplist.Free;
                       tmplist := nil;
-                      current_filepos:=oldfileposinfo;
+                      CurrentFilePos:=oldfileposinfo;
                     end;
                   end;
               end;
@@ -1366,7 +1366,7 @@ implementation
                     begin
                       vmtwriter:=CVMTWriter.create(tobjectdef(def));
                       if is_interface(tobjectdef(def)) then
-                        vmtwriter.writeinterfaceids(current_asmdata.AsmLists[al_globals]);
+                        vmtwriter.writeinterfaceids(CurrentAsmData.AsmLists[al_globals]);
                       if (oo_has_vmt in tobjectdef(def).objectoptions) then
                         vmtwriter.writevmt;
                       vmtwriter.free;
@@ -1374,7 +1374,7 @@ implementation
                       include(def.defstates,ds_vmt_written);
                     end;
                   if is_class(def) then
-                    gen_intf_wrapper(current_asmdata.asmlists[al_procedures],tobjectdef(def));
+                    gen_intf_wrapper(CurrentAsmData.asmlists[al_procedures],tobjectdef(def));
                 end;
               procdef :
                 begin

@@ -33,17 +33,17 @@ function CheckSwitch(switch,state:char):boolean;
 function IsRecognizedSwitch(switch:char):boolean;
 
 procedure recordpendingverbosityswitch(sw: char; state: char);
-procedure recordpendingmessagestate(msg: longint; state: tmsgstate);
-procedure recordpendinglocalswitch(sw: tlocalswitch; state: char);
-procedure recordpendinglocalfullswitch(const switches: tlocalswitches);
+procedure recordpendingmessagestate(msg: longint; state: TMsgState);
+procedure recordpendinglocalswitch(sw: TLocalSwitch; state: char);
+procedure recordpendinglocalfullswitch(const switches: TLocalSwitches);
 procedure recordpendingverbosityfullswitch(verbosity: longint);
 procedure recordpendingcallingswitch(const str: shortstring);
-procedure recordpendingalignmentfullswitch(const alignment : talignmentinfo);
+procedure recordpendingalignmentfullswitch(const alignment : TAlignmentInfo);
 procedure recordpendingsetalloc(alloc:shortint);
 procedure recordpendingpackenum(size:shortint);
 procedure recordpendingpackrecords(size:shortint);
 procedure recordpendingasmmode(asmmode:tasmmode);
-procedure recordpendingoptimizerswitches(optimizerswitches:toptimizerswitches);
+procedure recordpendingoptimizerswitches(optimizerswitches:TOptimizerSwitches);
 procedure flushpendingswitchesstate;
 
 implementation
@@ -138,7 +138,7 @@ function IsRecognizedSwitch(switch:char):boolean;
     switch:=upcase(switch);
     if not(switch in ['A'..'Z']) then
       exit(false);
-    if m_mac in current_settings.modeswitches then
+    if m_mac in CurrentSettings.modeswitches then
       result:=macSwitchTable[switch].typesw<>unknownsw
     else
       result:=turboSwitchTable[switch].typesw<>unknownsw;
@@ -163,7 +163,7 @@ begin
    end;
 
 { Select switch table }
-  if m_mac in current_settings.modeswitches  then
+  if m_mac in CurrentSettings.modeswitches  then
     switchTablePtr:= @macSwitchTable
   else
     switchTablePtr:= @turboSwitchTable;
@@ -182,9 +182,9 @@ begin
        optimizersw :
          begin
            if state='+' then
-             current_settings.optimizerswitches:=level2optimizerswitches
+             CurrentSettings.optimizerswitches:=level2optimizerswitches
            else
-             current_settings.optimizerswitches:=[];
+             CurrentSettings.optimizerswitches:=[];
          end;
        ignoredsw :
          Message1(scan_n_ignored_switch,'$'+switch);
@@ -197,21 +197,21 @@ begin
        unsupportedsw :
          Message1(scan_w_unsupported_switch,'$'+switch);
        localsw :
-         recordpendinglocalswitch(tlocalswitch(setsw),state);
+         recordpendinglocalswitch(TLocalSwitch(setsw),state);
        modulesw :
          begin
-           if current_module.in_global then
+           if CurrentModule.in_global then
             begin
                 begin
                   if state='+' then
-                    include(current_settings.moduleswitches,tmoduleswitch(setsw))
+                    include(CurrentSettings.moduleswitches,TModuleSwitch(setsw))
                   else
                     begin
                       { Turning off debuginfo when lineinfo is requested
                         is not possible }
-                      if not((cs_use_lineinfo in current_settings.globalswitches) and
-                             (tmoduleswitch(setsw)=cs_debuginfo)) then
-                        exclude(current_settings.moduleswitches,tmoduleswitch(setsw));
+                      if not((cs_use_lineinfo in CurrentSettings.globalswitches) and
+                             (TModuleSwitch(setsw)=cs_debuginfo)) then
+                        exclude(CurrentSettings.moduleswitches,TModuleSwitch(setsw));
                     end;
                 end;
             end
@@ -220,12 +220,12 @@ begin
          end;
        globalsw :
          begin
-           if current_module.in_global and (current_module=main_module) then
+           if CurrentModule.in_global and (CurrentModule=main_module) then
             begin
               if state='+' then
-               include(current_settings.globalswitches,tglobalswitch(setsw))
+               include(CurrentSettings.globalswitches,TGlobalSwitch(setsw))
               else
-               exclude(current_settings.globalswitches,tglobalswitch(setsw));
+               exclude(CurrentSettings.globalswitches,TGlobalSwitch(setsw));
             end
            else
             Message(scan_w_switch_is_global);
@@ -233,9 +233,9 @@ begin
        packenumsw:
          begin
            if state='-' then
-             current_settings.packenum:=1
+             CurrentSettings.packenum:=1
            else
-             current_settings.packenum:=4;
+             CurrentSettings.packenum:=4;
          end;
        pentiumfdivsw:
          begin
@@ -245,7 +245,7 @@ begin
              Message1(scan_w_unsupported_switch,'$'+switch);
          end;
        targetsw:
-         UpdateTargetSwitchStr(TargetSwitchStr[ttargetswitch(setsw)].name+state,current_settings.targetswitches,current_module.in_global);
+         UpdateTargetSwitchStr(TargetSwitchStr[TTargetSwitch(setsw)].name+state,CurrentSettings.targetswitches,CurrentModule.in_global);
      end;
    end;
 end;
@@ -271,7 +271,7 @@ begin
    end;
 
 { Select switch table }
-  if m_mac in current_settings.modeswitches then
+  if m_mac in CurrentSettings.modeswitches then
     switchTablePtr:= @macSwitchTable
   else
     switchTablePtr:= @turboSwitchTable;
@@ -280,10 +280,10 @@ begin
    with switchTablePtr^[switch] do
    begin
      case typesw of
-      localsw : found:=(tlocalswitch(setsw) in current_settings.localswitches);
-     modulesw : found:=(tmoduleswitch(setsw) in current_settings.moduleswitches);
-     globalsw : found:=(tglobalswitch(setsw) in current_settings.globalswitches);
-     packenumsw : found := (current_settings.packenum = 4);
+      localsw : found:=(TLocalSwitch(setsw) in CurrentSettings.localswitches);
+     modulesw : found:=(TModuleSwitch(setsw) in CurrentSettings.moduleswitches);
+     globalsw : found:=(TGlobalSwitch(setsw) in CurrentSettings.globalswitches);
+     packenumsw : found := (CurrentSettings.packenum = 4);
       unknownsw :
         begin
           Message1(scan_w_illegal_switch,switch);
@@ -310,13 +310,13 @@ procedure recordpendingverbosityswitch(sw: char; state: char);
   end;
 
 
-procedure recordpendingmessagestate(msg: longint; state: tmsgstate);
+procedure recordpendingmessagestate(msg: longint; state: TMsgState);
   var
-    pstate : pmessagestaterecord;
+    pstate : PMessageStateRecord;
   begin
     new(pstate);
     {$IFDEF DEBUG_MESSAGESTATE}
-    pstate^.owner:=current_module; { nil for global option }
+    pstate^.owner:=CurrentModule; { nil for global option }
     {$ENDIF}
     pstate^.next:=pendingstate.nextmessagerecord;
     pstate^.value:=msg;
@@ -325,17 +325,17 @@ procedure recordpendingmessagestate(msg: longint; state: tmsgstate);
   end;
 
 
-procedure recordpendinglocalswitch(sw: tlocalswitch; state: char);
+procedure recordpendinglocalswitch(sw: TLocalSwitch; state: char);
   begin
     if not (psf_local_switches_changed in pendingstate.flags) then
-       pendingstate.nextlocalswitches:=current_settings.localswitches;
+       pendingstate.nextlocalswitches:=CurrentSettings.localswitches;
     if state='-' then
       exclude(pendingstate.nextlocalswitches,sw)
     else if state='+' then
       include(pendingstate.nextlocalswitches,sw)
     else { state = '*' }
       begin
-        if sw in init_settings.localswitches then
+        if sw in InitSettings.localswitches then
          include(pendingstate.nextlocalswitches,sw)
         else
          exclude(pendingstate.nextlocalswitches,sw);
@@ -344,14 +344,14 @@ procedure recordpendinglocalswitch(sw: tlocalswitch; state: char);
   end;
 
 
-procedure recordpendingalignmentfullswitch(const alignment : talignmentinfo);
+procedure recordpendingalignmentfullswitch(const alignment : TAlignmentInfo);
   begin
     pendingstate.nextalignment:=alignment;
     include(pendingstate.flags,psf_alignment_changed);
   end;
 
 
-procedure recordpendinglocalfullswitch(const switches: tlocalswitches);
+procedure recordpendinglocalfullswitch(const switches: TLocalSwitches);
   begin
     pendingstate.nextlocalswitches:=switches;
     include(pendingstate.flags,psf_local_switches_changed);
@@ -399,7 +399,7 @@ procedure recordpendingpackrecords(size:shortint);
   end;
 
 
-procedure recordpendingoptimizerswitches(optimizerswitches:toptimizerswitches);
+procedure recordpendingoptimizerswitches(optimizerswitches:TOptimizerSwitches);
   begin
     pendingstate.nextoptimizerswitches:=optimizerswitches;
     include(pendingstate.flags,psf_optimizerswitches_changed);
@@ -408,16 +408,16 @@ procedure recordpendingoptimizerswitches(optimizerswitches:toptimizerswitches);
 
 procedure flushpendingswitchesstate;
   var
-    tmpproccal: tproccalloption;
-    fstate, pstate : pmessagestaterecord;
+    tmpproccal: TProcCallOption;
+    fstate, pstate : PMessageStateRecord;
     msgset : thashset;
     msgfound : boolean;
   begin
     { process pending localswitches (range checking, etc) }
     if psf_local_switches_changed in pendingstate.flags then
       begin
-        current_settings.localswitches:=pendingstate.nextlocalswitches;
-        include(current_settings.localswitches,cs_refcountedstrings);
+        CurrentSettings.localswitches:=pendingstate.nextlocalswitches;
+        include(CurrentSettings.localswitches,cs_refcountedstrings);
         exclude(pendingstate.flags,psf_local_switches_changed);
       end;
     { process pending verbosity changes (warnings on, etc) }
@@ -428,32 +428,32 @@ procedure flushpendingswitchesstate;
       end;
     if psf_alignment_changed in pendingstate.flags then
       begin
-        current_settings.alignment:=pendingstate.nextalignment;
+        CurrentSettings.alignment:=pendingstate.nextalignment;
         exclude(pendingstate.flags,psf_alignment_changed);
       end;
     if psf_packenum_changed in pendingstate.flags then
       begin
-        current_settings.packenum:=pendingstate.nextpackenum;
+        CurrentSettings.packenum:=pendingstate.nextpackenum;
         exclude(pendingstate.flags,psf_packenum_changed);
       end;
     if psf_packrecords_changed in pendingstate.flags then
       begin
-        current_settings.packrecords:=pendingstate.nextpackrecords;
+        CurrentSettings.packrecords:=pendingstate.nextpackrecords;
         exclude(pendingstate.flags,psf_packrecords_changed);
       end;
     if psf_setalloc_changed in pendingstate.flags then
       begin
-        current_settings.setalloc:=pendingstate.nextsetalloc;
+        CurrentSettings.setalloc:=pendingstate.nextsetalloc;
         exclude(pendingstate.flags,psf_setalloc_changed);
       end;
     if psf_asmmode_changed in pendingstate.flags then
       begin
-        current_settings.asmmode:=pendingstate.nextasmmode;
+        CurrentSettings.asmmode:=pendingstate.nextasmmode;
         exclude(pendingstate.flags,psf_asmmode_changed);
       end;
     if psf_optimizerswitches_changed in pendingstate.flags then
       begin
-        current_settings.optimizerswitches:=pendingstate.nextoptimizerswitches;
+        CurrentSettings.optimizerswitches:=pendingstate.nextoptimizerswitches;
         exclude(pendingstate.flags,psf_optimizerswitches_changed);
       end;
     { process pending verbosity changes (warnings on, etc) }
@@ -463,7 +463,7 @@ procedure flushpendingswitchesstate;
         pendingstate.nextverbositystr:='';
       end;
     { we need to start from a clean slate }
-    if not assigned(current_settings.pmessage) then
+    if not assigned(CurrentSettings.pmessage) then
       RestoreLocalVerbosity(nil);
     fstate:=pendingstate.nextmessagerecord;
     pstate:=pendingstate.nextmessagerecord;
@@ -474,9 +474,9 @@ procedure flushpendingswitchesstate;
     while assigned(pstate) do
       begin
         {$IFDEF DEBUG_MESSAGESTATE}
-        if assigned(pstate^.owner) and (pstate^.owner<>current_module) then
+        if assigned(pstate^.owner) and (pstate^.owner<>CurrentModule) then
           begin
-            writeln('flushpendingswitchesstate cur: ',current_module.modulename^,' ',current_module.statestr);
+            writeln('flushpendingswitchesstate cur: ',CurrentModule.modulename^,' ',CurrentModule.statestr);
             writeln('flushpendingswitchesstate pstate: ',tmodule(pstate^.owner).modulename^,' ',tmodule(pstate^.owner).statestr);
             Internalerror(2026030701);
           end;
@@ -489,8 +489,8 @@ procedure flushpendingswitchesstate;
           SetMessageVerbosity(pstate^.value,pstate^.state);
         if not assigned(pstate^.next) then
           begin
-            pstate^.next:=current_settings.pmessage;
-            current_settings.pmessage:=fstate;
+            pstate^.next:=CurrentSettings.pmessage;
+            CurrentSettings.pmessage:=fstate;
             pstate:=nil;
           end
         else
@@ -507,7 +507,7 @@ procedure flushpendingswitchesstate;
         else if not(tmpproccal in supported_calling_conventions) then
           Message1(parser_e_illegal_calling_convention,pendingstate.nextcallingstr)
         else
-          current_settings.defproccall:=tmpproccal;
+          CurrentSettings.defproccall:=tmpproccal;
         pendingstate.nextcallingstr:='';
       end;
   end;
